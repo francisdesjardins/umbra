@@ -270,6 +270,42 @@ const flows = {
   },
 
   /** Section jump bars stick under the top bar (an ancestor `overflow` silently breaks this). */
+  /**
+   * A declared hotkey actually fires its action.
+   *
+   * This exists because a refactor once dropped `hotkey` from six playground examples and
+   * every one of the 403 library tests still passed — correctly, since the playground has no
+   * tests of its own by design. A hotkey that silently stops working is invisible to a probe
+   * that only checks a page renders, so it gets checked here.
+   */
+  async hotkey(page) {
+    const checks = [];
+    await gotoRoute(page, '/modal-actions');
+
+    const dialog = page.getByTestId('modal-confirm-hotkeys');
+    await page.getByRole('button', { name: /open confirm/i }).first().click();
+    await dialog.waitFor({ state: 'visible' });
+
+    // The button must advertise the shortcut, which is how the key path finds it at all.
+    const confirm = dialog.locator('button', { hasText: /confirm/i }).last();
+    const shortcut = await confirm.getAttribute('aria-keyshortcuts');
+    checks.push([shortcut !== null, 'the action button advertises aria-keyshortcuts', `${shortcut}`]);
+
+    // Enter is declared on `confirm`, so pressing it must close with that reason — the same
+    // outcome a click produces.
+    await page.keyboard.press('Enter');
+    const closed = await waitFor(async () => {
+      return !(await dialog.evaluate((n) => {
+        return n.hasAttribute('open');
+      }));
+    });
+    checks.push([closed, 'pressing the declared hotkey closes the modal']);
+
+    const text = ((await page.locator('body').textContent()) ?? '').replace(/\s+/g, ' ');
+    checks.push([/Closed: confirm/.test(text), "it closed with the action's own reason"]);
+    return checks;
+  },
+
   async sticky(page) {
     await gotoRoute(page, '/stories');
     await page.evaluate(() => window.scrollTo(0, 1400));
