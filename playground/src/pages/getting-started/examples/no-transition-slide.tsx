@@ -3,7 +3,8 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Stack } from '@mui/material';
-import { useSlideModal, useStore } from 'umbra/react';
+import { useSlideModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'no-transition-slide';
 

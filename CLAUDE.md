@@ -10,7 +10,7 @@ optional layer.
 
 | Specifier     | Contents                                                                                                                                                                                                                                            |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | `dialogManager`, `createDialogManager`, the store engine (`createStore`, `watch`, `shallowEqual`), `normalizeError`, `Key`, `setLogLevel`. No React.                                                                                                |
+| `umbra`       | `dialogManager`, `createDialogManager`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `setLogLevel`. No React.                                                                                                        |
 | `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `useStore`, `createStoreContext`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
 
 Adding a binding (Solid, Vue, a web component) means adding a sibling of `src/react.ts` and a

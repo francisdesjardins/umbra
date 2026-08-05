@@ -7,7 +7,8 @@ import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { Stack } from '@mui/material';
-import { ModalOutlet, dialogManager, useStore } from 'umbra/react';
+import { ModalOutlet, dialogManager } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'text-message-modal-demo';
 

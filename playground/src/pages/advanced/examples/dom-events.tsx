@@ -3,13 +3,8 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { Box, Stack, Typography } from '@mui/material';
-import {
-  MODAL_CLOSE_EVENT,
-  MODAL_OPEN_EVENT,
-  useMessageModal,
-  useSlideModal,
-  useStore,
-} from 'umbra/react';
+import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageModal, useSlideModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { useEffect } from 'react';
 

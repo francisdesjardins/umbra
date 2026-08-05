@@ -24,7 +24,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { Key, useMessageModal, useStore } from 'umbra/react';
+import { Key, useMessageModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

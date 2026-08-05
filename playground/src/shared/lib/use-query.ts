@@ -1,4 +1,5 @@
-import { createStore, useStore } from 'umbra/react';
+import { createStore } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 import { asyncIdle, runAsync, type AsyncState } from './async-state';
 import { createSingleFlight } from './single-flight';
 

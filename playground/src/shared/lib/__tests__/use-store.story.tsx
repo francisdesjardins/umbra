@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { createStore, shallowEqual } from '../../index.js';
-import { useStore } from '../index.js';
+import { createStore } from 'umbra/react';
+import { shallowEqual } from '../shallow-equal';
+import { useStore } from '../use-store';
 
 // ── Store ───────────────────────────────────────────────────────────────────
 // Factory (not module scope) so every mounted harness gets a fresh store —

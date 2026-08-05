@@ -831,7 +831,7 @@ The **snapshot** (state) is a plain object (POJO). `set`/`reset` replace it whol
 **Methods are not state.** The builder returns domain behavior that lives on the store instance but is never cloned, serialized, or compared. Only the snapshot participates in React subscriptions. Non-snapshot mutable state (resolver lists, RAF ids, handler registries) lives as closure variables inside the builder.
 
 ```typescript
-import { createStore, useStore } from 'umbra/react';
+import { createStore } from 'umbra/react';
 
 // Module-level — lives outside React
 const formStore = createStore(
@@ -914,153 +914,20 @@ per provider with `createStoreContext(() => createStore(initial, builder, { cont
 
 ---
 
-## useStore
+## Reading a store
 
-Subscribe to a `createStore` store from React with optional slice selectors.
+The library ships the engine, not the conveniences over it. `StoreContract` — the
+`{ subscribe, getSnapshot }` pair every store satisfies — is exactly what React's own
+`useSyncExternalStore` consumes, so no adapter is needed:
 
-```typescript
-import { useStore, shallowEqual } from 'umbra/react';
+```tsx
+import { useSyncExternalStore } from 'react';
 
-// Full snapshot — re-renders on any change
-const snap = useStore(formStore);
-
-// Selector shorthand — re-renders only when `name` changes
-const name = useStore(formStore, (s) => s.name);
-
-// Options form — selector + context + custom equality
-const slice = useStore(formStore, {
-  select: (s) => ({ x: s.x, y: s.y }),
-  context: { apiClient },
-  equals: shallowEqual,
-});
+const count = useSyncExternalStore(store.subscribe, () => store.getSnapshot().count);
 ```
 
-### Overloads
-
-| Signature                   | Returns               | Re-renders when                                      |
-| --------------------------- | --------------------- | ---------------------------------------------------- |
-| `useStore(store)`           | `TSnapshot`           | Any snapshot change                                  |
-| `useStore(store, selector)` | `TSlice`              | `Object.is(prev, next)` is `false`                   |
-| `useStore(store, options)`  | `TSnapshot \| TSlice` | Controlled by `options.equals` (default `Object.is`) |
-
-### `UseStoreOptions`
-
-| Option   | Type                                | Default     | Description                                                                               |
-| -------- | ----------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
-| `select` | `(snapshot: TSnapshot) => TSlice`   | identity    | Selector function. Component re-renders only when result changes under `equals`.          |
-| `equals` | `(a: TSlice, b: TSlice) => boolean` | `Object.is` | Custom equality. Use `shallowEqual` when `select` returns a new object literal each time. |
-
-Selectors that return **new object references** (`s => ({ a: s.a })`) need `equals: shallowEqual` to avoid re-rendering on every update.
-
----
-
-## watch
-
-Observe a store **outside React**. The non-React equivalent of `useStore` with a selector — fires `callback(newValue, oldValue)` only when the observed value changes. Returns an unsubscribe function. Zero React imports.
-
-```typescript
-import { watch, shallowEqual } from 'umbra';
-
-// Watch full snapshot
-const unsub = watch(store, (next, prev) => {
-  console.log('store changed', next, prev);
-});
-
-// Watch a slice — only fires when `count` changes
-const unsub = watch(
-  store,
-  (s) => s.count,
-  (next, prev) => {
-    console.log('count', prev, '→', next);
-  }
-);
-
-// Watch a derived object — suppress spurious calls with shallowEqual
-const unsub = watch(
-  store,
-  (s) => ({ x: s.x, y: s.y }),
-  (next, prev) => {
-    /* ... */
-  },
-  { equals: shallowEqual }
-);
-
-unsub(); // stop watching
-```
-
-| Parameter  | Type                                  | Description                                                                           |
-| ---------- | ------------------------------------- | ------------------------------------------------------------------------------------- |
-| `store`    | `Store`                               | Any store satisfying `StoreContract` (`subscribe` + `getSnapshot`)                    |
-| `selector` | `(snap: TSnapshot) => T` _(optional)_ | Slice selector. Omit to watch the full snapshot.                                      |
-| `callback` | `(next: T, prev: T) => void`          | Fires when the observed value changes                                                 |
-| `options`  | `WatchOptions<T>` _(optional)_        | `{ equals }` — defaults to `Object.is`. Pass `shallowEqual` for plain objects/arrays. |
-
-Does **not** fire immediately on subscription — only on the first mutation that produces a changed value.
-
----
-
-## createStoreContext
-
-Scopes a store to a React subtree. Each `Provider` mount creates its own store instance via the factory; descendants read it with `useStoreContext()` (full store) or `useSnapshot()` (reactive slice).
-
-```typescript
-createStoreContext(factory);
-createStoreContext(factory, options);
-```
-
-### Basic usage
-
-```typescript
-const CounterCtx = createStoreContext(
-  () =>
-    createStore({ count: 0 }, ({ update }) => ({
-      increment() {
-        update((d) => {
-          d.count += 1;
-        });
-      },
-    })),
-  { name: 'Counter' },
-);
-
-// Mount — creates a fresh store per Provider
-<CounterCtx.Provider>
-  <Counter />
-</CounterCtx.Provider>;
-
-// Consume — inside any descendant
-function Counter() {
-  const store = CounterCtx.useStoreContext(); // stable store ref (full method surface)
-  const count = CounterCtx.useSnapshot((s) => s.count); // reactive slice
-  return <button onClick={store.increment}>{count}</button>;
-}
-```
-
-### `useSnapshot` overloads
-
-```typescript
-// Full snapshot
-const snap = ctx.useSnapshot();
-
-// Selected slice — re-renders only when the result changes
-const count = ctx.useSnapshot((s) => s.count);
-
-// Custom equality — for selectors returning new object refs each call
-const pos = ctx.useSnapshot((s) => ({ x: s.x, y: s.y }), shallowEqual);
-```
-
-### Options
-
-| Option      | Type                      | Default          | Description                                         |
-| ----------- | ------------------------- | ---------------- | --------------------------------------------------- |
-| `name`      | `string`                  | `'StoreContext'` | Display name for React DevTools and error messages. |
-| `onUnmount` | `(store: TStore) => void` | —                | Called with the store when the Provider unmounts.   |
-
-### Types
-
-| Export                              | Description                                                |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `CreateStoreContextOptions<TStore>` | Options bag — `{ name?, onUnmount? }`                      |
-| `StoreContextResult`                | Return type — `{ Provider, useStoreContext, useSnapshot }` |
-
----
+`useStore` (selectors and custom equality), `createStoreContext` (a store scoped to a subtree),
+`watch` (observing outside React) and `shallowEqual` used to ship from here. They had no caller
+inside the library, and a dialog manager is not where anyone looks for state management — so
+they live in `playground/src/shared/lib/` now, as reference code to copy, on the same terms as
+the modal templates. The playground's examples run on those copies.

@@ -5,7 +5,8 @@ import { ContentTransition } from '@/entities/modal-template/ui/mui/shared/conte
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
 import { Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { useMessageModal, useStore } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'async-open';
 

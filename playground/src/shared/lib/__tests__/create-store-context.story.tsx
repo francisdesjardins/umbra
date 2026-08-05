@@ -1,5 +1,5 @@
-import { createStore } from '../../index.js';
-import { createStoreContext } from '../index.js';
+import { createStore } from 'umbra/react';
+import { createStoreContext } from '../create-store-context';
 
 // ── Context-scoped store ────────────────────────────────────────────────────
 // The factory runs once per Provider mount, so each Provider owns an isolated

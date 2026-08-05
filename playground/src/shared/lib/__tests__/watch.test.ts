@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { createStore } from '../create-store.js';
-import { watch } from '../watch.js';
+import { createStore } from 'umbra';
+import { watch } from '../watch';
 
 test.describe('watch', () => {
   test('fires callback(next, prev) when the selected slice changes', () => {

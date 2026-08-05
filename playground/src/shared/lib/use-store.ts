@@ -1,5 +1,5 @@
 import { useRef, useSyncExternalStore } from 'react';
-import type { StoreContract } from '../create-store.js';
+import type { StoreContract } from 'umbra/react';
 
 // ── useStore ──────────────────────────────────────────────────────────────────
 

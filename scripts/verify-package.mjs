@@ -79,10 +79,10 @@ try {
   writeFileSync(
     join(sandbox, 'root.ts'),
     [
-      "import { dialogManager, createDialogManager, createStore, watch, shallowEqual } from 'umbra';",
+      "import { dialogManager, createDialogManager, createStore } from 'umbra';",
       "import { normalizeError, Key, setLogLevel } from 'umbra';",
       "import type { ModalInfo, ModalPhase, DialogManager } from 'umbra';",
-      'export const used = [dialogManager, createDialogManager, createStore, watch, shallowEqual,',
+      'export const used = [dialogManager, createDialogManager, createStore,',
       '  normalizeError, Key, setLogLevel];',
       'export type Used = [ModalInfo, DialogManager];',
       '// A root consumer must be able to name the types the ones it was handed refer to.',
@@ -96,9 +96,9 @@ try {
     join(sandbox, 'react-entry.ts'),
     [
       "import { useModal, useMessageModal, useSlideModal } from 'umbra/react';",
-      "import { ModalOutlet, useStore, dialogManager } from 'umbra/react';",
+      "import { ModalOutlet, dialogManager } from 'umbra/react';",
       'export const used = [useModal, useMessageModal, useSlideModal,',
-      '  ModalOutlet, useStore, dialogManager];',
+      '  ModalOutlet, dialogManager];',
     ].join('\n')
   );
 

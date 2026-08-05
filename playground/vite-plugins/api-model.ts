@@ -89,9 +89,6 @@ const CATEGORIES: readonly CategoryDef[] = [
       'StoreApi',
       'StoreContract',
       'GenericStore',
-      'watch',
-      'WatchOptions',
-      'shallowEqual',
     ],
   },
   {
@@ -172,19 +169,6 @@ const CATEGORIES: readonly CategoryDef[] = [
       'useLookup',
       'DialogManagerProvider',
       'useDialogManagerContext',
-    ],
-  },
-  {
-    id: 'react-store',
-    label: 'Store in React',
-    specifier: REACT,
-    blurb: 'Subscribing a component to a store, and passing one down through context.',
-    symbols: [
-      'useStore',
-      'UseStoreOptions',
-      'createStoreContext',
-      'CreateStoreContextOptions',
-      'StoreContextResult',
     ],
   },
 ];

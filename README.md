@@ -19,10 +19,10 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 
 ## ◐ Entry points
 
-| Specifier     | Contents                                                                                                                                |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | The manager (`dialogManager`), the store engine (`createStore`, `watch`), `normalizeError`, `Key`. **No React.**                        |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `useStore` — **plus everything above**, so a React app imports one path. |
+| Specifier     | Contents                                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`       | The manager (`dialogManager`), the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No React.**    |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path. |
 
 The root resolves and runs with React not installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. That is
@@ -173,7 +173,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `useModal` — Base primitive
 - `useMessageModal` / `useSlideModal` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
-- `createStore` / `useStore` / `createStoreContext` / `watch` — State management (zero-dependency reactive cell)
+- `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close
 - `waitForClose()` — Go-style async result
 - `normalizeError` — turn whatever was thrown into an `Error`

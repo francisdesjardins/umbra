@@ -10,7 +10,8 @@ import {
   asyncRejected,
   type AsyncState,
 } from '@/shared/lib/async-state';
-import { useModal, useStore } from 'umbra/react';
+import { useModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'mui-form-example';
 

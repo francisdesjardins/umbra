@@ -25,11 +25,11 @@ import {
   Key,
   dialogManager,
   useSlideModal,
-  useStore,
   type SlideAlign,
   type SlideDirection,
   type ActionFactory,
 } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 const MODAL_ID = 'slide-modal-configurator';
 

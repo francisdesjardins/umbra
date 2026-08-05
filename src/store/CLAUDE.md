@@ -25,6 +25,26 @@ The whole thing is small (a `Set` of listeners + `get`/`set`), but the module st
 
 There are **no reserved keys** — the store contract (`subscribe`/`getSnapshot`) simply wins on the rare name clash.
 
+## What ships, and what does not
+
+`createStore` and `StoreContract` are exported, on one rule: **export what the library runs on
+and would otherwise be duplicated; do not export what it does not use.** The modal store, the
+action engine, the outlet and the manager are all built on `createStore`, so it stays in `src/`
+regardless — keeping it private would only force a second copy into the playground.
+`StoreContract` comes with it as the `{ subscribe, getSnapshot }` pair every store satisfies.
+
+Note what this is _not_ justified by. A second binding would live in this repo beside
+`src/react.ts` and import internals (`createModalStore`, `finalizeModalClose`) directly, none of
+which are exported — so "an external binding author needs it" is not the reason, and a Solid
+binding would reach for signals over this cell anyway.
+
+Everything built _over_ the engine is not exported. `useStore`, `createStoreContext`, `watch`
+and `shallowEqual` had no caller inside the library, and a dialog manager is not where anyone
+looks for state management — least of all when the same author ships `stardust` for exactly
+that. They live in `playground/src/shared/lib/` as reference code to copy, on the same terms as
+the modal templates. A consumer needs none of them to read a store: `StoreContract` is precisely
+what `useSyncExternalStore` takes.
+
 ## Primitives
 
 | Export                                     | Purpose                                                                                                                                      |

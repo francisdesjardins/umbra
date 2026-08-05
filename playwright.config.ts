@@ -60,7 +60,12 @@ export default defineConfig({
     },
     {
       name: 'component',
-      testMatch: ['**/__tests__/**/*.ct.tsx'],
+      // Rooted at the repo for the same reason as `unit`: a harness is a harness wherever it
+      // ships, and the patterns the playground owns (a store scoped to a subtree, a selector
+      // hook) have component tests of their own. Left at the default `./src`, moving one of
+      // those out of the library silently stops running it.
+      testDir: './',
+      testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Chrome'] },
     },
   ],

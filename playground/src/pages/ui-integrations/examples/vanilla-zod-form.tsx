@@ -6,7 +6,8 @@ import { createImmerStore } from '@/shared/lib/immer-store';
 import { isNullish } from '@/shared/lib/is-nullish';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { useModal, useStore } from 'umbra/react';
+import { useModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 import { z } from 'zod';
 
 export const MODAL_ID = 'vanilla-zod-form-example';

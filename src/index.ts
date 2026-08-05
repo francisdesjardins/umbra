@@ -66,10 +66,20 @@ export type { DialogPlacement, DialogPlacementOptions } from './core/placement.j
 
 // ── State ────────────────────────────────────────────────────────────────────
 //
-// The reactive cell itself. Its React bindings (`useStore`, `createStoreContext`) live in
-// `./react`; what is here is framework-neutral. A store exposes a subscribe + getter pair,
-// which is exactly what `useSyncExternalStore` — and Solid's `from`, and a Vue `ref` bridge
-// — consume, so a binding needs no adapter beyond that.
+// The reactive cell the library actually runs on: the modal store, the action engine, the
+// outlet and the manager are all built on it. The rule is **export what the library runs on and
+// would otherwise be duplicated; do not export what it does not use** — keeping this private
+// would force a second copy of the same file into the playground, which is worse than the name
+// it saves.
+//
+// `StoreContract` is the `{ subscribe, getSnapshot }` pair every store satisfies, and precisely
+// what `useSyncExternalStore` — and Solid's `from`, and a Vue `ref` bridge — consume, so reading
+// a store needs no helper from us.
+//
+// What is *not* here is everything built over it. `useStore`, `createStoreContext`, `watch` and
+// `shallowEqual` had no caller inside the library, and a dialog manager is not where anyone
+// looks for state management — least of all when the same author ships `stardust` for exactly
+// that. They live in the playground now, as patterns to copy.
 
 export { createStore } from './store/create-store.js';
 export type {
@@ -79,11 +89,6 @@ export type {
   StoreApi,
   StoreContract,
 } from './store/create-store.js';
-
-export { watch } from './store/watch.js';
-export type { WatchOptions } from './store/watch.js';
-
-export { shallowEqual } from './store/shallow-equal.js';
 
 // ── Errors ───────────────────────────────────────────────────────────────────
 //

@@ -4,7 +4,8 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Box, Typography } from '@mui/material';
-import { useMessageModal, useSlideModal, useStore } from 'umbra/react';
+import { useMessageModal, useSlideModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 const resultStore = createResultStore();
 

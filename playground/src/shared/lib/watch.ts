@@ -1,4 +1,4 @@
-import type { StoreContract } from './create-store.js';
+import type { StoreContract } from 'umbra';
 
 // ── watch ─────────────────────────────────────────────────────────────────────
 

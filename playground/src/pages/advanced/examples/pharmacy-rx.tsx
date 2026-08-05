@@ -27,7 +27,10 @@ import {
 import { createMutex } from '@/shared/lib/mutex';
 import { safeAwait } from '@/shared/lib/safe-await';
 import { createSingleFlight } from '@/shared/lib/single-flight';
-import { createStoreContext, useMessageModal, useSlideModal, useStore, watch } from 'umbra/react';
+import { useMessageModal, useSlideModal } from 'umbra/react';
+import { createStoreContext } from '@/shared/lib/create-store-context';
+import { useStore } from '@/shared/lib/use-store';
+import { watch } from '@/shared/lib/watch';
 import { useEffect } from 'react';
 
 type Patient = {

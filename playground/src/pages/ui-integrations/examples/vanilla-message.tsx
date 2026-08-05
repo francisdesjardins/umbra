@@ -4,7 +4,8 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { Key, useMessageModal, useStore } from 'umbra/react';
+import { Key, useMessageModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'vanilla-message-example';
 

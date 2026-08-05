@@ -73,8 +73,8 @@ import {
   UseLookupHarness,
   UseLookupUnregisteredHarness,
 } from '../../../../../src/manager/__tests__/use-lookup.story';
-import { StoreContextHarness } from '../../../../../src/store/react/__tests__/create-store-context.story';
-import { UseStoreHarness } from '../../../../../src/store/react/__tests__/use-store.story';
+import { StoreContextHarness } from '@/shared/lib/__tests__/create-store-context.story';
+import { UseStoreHarness } from '@/shared/lib/__tests__/use-store.story';
 import {
   AsyncOpenMessageHarness,
   BasicMessageHarness,

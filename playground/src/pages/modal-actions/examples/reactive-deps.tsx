@@ -4,7 +4,8 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { Alert, Box, Paper, Stack, TextField, Typography } from '@mui/material';
-import { useMessageModal, useStore } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'reactive-demo';
 

@@ -5,10 +5,10 @@
 // store primitives from, and the single swap point if the engine is replaced.
 // See `src/store/CLAUDE.md`.
 //
-// Scope: the reactive cell only. Its React bindings live in `./react`, so that
-// this barrel stays importable from the framework-agnostic package root — see
-// `./react/index.ts` for why that separation exists. Async coordination is
-// user-land and lives in the playground as reference code to copy.
+// Scope: the reactive cell, and nothing over it. `useStore`, `createStoreContext`,
+// `watch` and `shallowEqual` were conveniences the library never used itself, so
+// they live in the playground as reference code to copy — the same deal as the
+// modal templates. What ships is the engine a binding may need.
 
 export { createStore } from './create-store.js';
 export type {
@@ -18,8 +18,3 @@ export type {
   StoreApi,
   StoreContract,
 } from './create-store.js';
-
-export { watch } from './watch.js';
-export type { WatchOptions } from './watch.js';
-
-export { shallowEqual } from './shallow-equal.js';

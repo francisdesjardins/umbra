@@ -1,11 +1,7 @@
-// Deliberately the concrete module, not the `../store` barrel — the documented exception to
-// the barrel-only rule (see src/CLAUDE.md). This module is the root of the package's own
-// entry point, which must resolve without React, and the `../store` barrel re-exports
-// `useStore` and `createStoreContext`, both of which import React. Importing the barrel here
-// would leave the React-free property standing on Rollup tree-shaking the unused re-exports
-// back out — true of the built artifact, but a build-time accident rather than a guarantee.
-// `store/create-store` has no imports at all, so this edge keeps it structural.
-// Pinned by __tests__/root-react-free.test.ts.
+// The plain barrel: `../store` is framework-free, its React bindings living in
+// `../store/react`. This module is the root of an entry point that must resolve without React,
+// and that separation is what makes the import structural rather than dependent on Rollup
+// tree-shaking unused re-exports back out. Pinned by __tests__/root-react-free.test.ts.
 import { createStore } from '../store/index.js';
 import type { ModalStoreSnapshot } from '../core/types.js';
 import { createLogger } from '../utils/logger.js';

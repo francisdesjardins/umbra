@@ -25,14 +25,6 @@ export { useDialogManager } from './manager/use-dialog-manager.js';
 export type { DialogManagerSnapshot } from './manager/use-dialog-manager.js';
 export { useLookup } from './manager/use-lookup.js';
 
-// React bindings over the store engine. The engine itself ships from the root.
-export { createStoreContext, useStore } from './store/react/index.js';
-export type {
-  CreateStoreContextOptions,
-  StoreContextResult,
-  UseStoreOptions,
-} from './store/react/index.js';
-
 // The framework-agnostic core, re-exported wholesale: dialogManager, createStore, watch, the
 // async helpers, Key. A React consumer needs exactly one import path.
 //

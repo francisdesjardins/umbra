@@ -4,7 +4,8 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { useModal, useStore } from 'umbra/react';
+import { useModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'vanilla-form-example';
 

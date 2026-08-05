@@ -2,7 +2,8 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { Stack, Typography } from '@mui/material';
-import { dialogManager, useMessageModal, useStore } from 'umbra/react';
+import { dialogManager, useMessageModal } from 'umbra/react';
+import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
 // ── Module-level store ────────────────────────────────────────────────────
