@@ -25,3 +25,4 @@ export { BackdropHitTestHarness } from './use-modal/backdrop-hit-test.story';
 export { KeyPassthroughHarness } from './use-modal/key-passthrough.story.js';
 export { EscWithoutFocusHarness } from './use-modal/esc-without-focus.story.js';
 export { TransitionToggleHarness } from './use-modal/transition-toggle.story';
+export { ActionErrorHotkeyRetryHarness } from './use-modal/action-error-hotkey-retry.story.js';

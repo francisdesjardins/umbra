@@ -23,11 +23,13 @@ export const WARP_ID = 'cosmic-warp';
 const COSMIC_CSS = `
   dialog[data-modal-id="${WARP_ID}"] {
     --dialog-backdrop:
-      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
-      radial-gradient(2px 2px at 75% 15%, #a5f3fc, transparent),
-      radial-gradient(1px 1px at 45% 70%, #fff, transparent),
-      radial-gradient(1.5px 1.5px at 90% 60%, #f0abfc, transparent),
-      radial-gradient(ellipse at 50% 50%, #1e1b4b 0%, #020617 70%);
+      radial-gradient(1.5px 1.5px at 20% 30%, #fde68a, transparent),
+      radial-gradient(2px 2px at 75% 15%, #fbbf24, transparent),
+      radial-gradient(1px 1px at 45% 70%, #fef3c7, transparent),
+      radial-gradient(1.5px 1.5px at 90% 60%, #f59e0b, transparent),
+      radial-gradient(circle at 50% 50%,
+        transparent 24%, rgba(245,158,11,0.30) 33%, rgba(180,83,9,0.14) 44%, transparent 58%),
+      radial-gradient(ellipse at 50% 50%, #1e293b 0%, #020617 72%);
   }
 
   dialog[data-modal-id="${WARP_ID}"]::backdrop {
@@ -35,27 +37,54 @@ const COSMIC_CSS = `
   }
 
   @keyframes cosmic-drift {
-    to { background-position: 400px -240px, -300px 180px, 250px 120px, -180px -90px, 0 0; }
+    to {
+      background-position:
+        400px -240px, -300px 180px, 250px 120px, -180px -90px, 0 0, 0 0;
+    }
   }
 
-  @keyframes cosmic-spin {
+  @keyframes cosmic-corona {
     to { transform: rotate(360deg); }
   }
 
-  @keyframes cosmic-pulse {
-    50% { box-shadow: 0 0 90px 20px rgba(168, 85, 247, 0.55); }
+  @keyframes cosmic-flare {
+    50% { box-shadow: 0 0 90px 22px rgba(245, 158, 11, 0.5); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    dialog[data-modal-id="${WARP_ID}"]::backdrop { animation: none; }
   }
 `;
 
-/** A wormhole is a spinning conic gradient with a hole punched in it. The dialog never knows. */
-const wormholeSx = {
+/**
+ * The mascot's silhouette, in CSS: a dark body with the corona escaping around its rim. The
+ * ring turns and the umbra breathes; the dialog knows about none of it.
+ */
+const eclipseSx = {
+  position: 'relative',
   width: 110,
   height: 110,
-  borderRadius: '50%',
   flexShrink: 0,
-  background: 'conic-gradient(from 0deg, #a855f7, #22d3ee, #f0abfc, #a855f7)',
-  animation: 'cosmic-spin 6s linear infinite, cosmic-pulse 3s ease-in-out infinite',
-  maskImage: 'radial-gradient(circle, transparent 38%, #000 42%)',
+  '&::before, &::after': {
+    content: '""',
+    position: 'absolute',
+    borderRadius: '50%',
+  },
+  // The corona, masked to a ring so the flames only ever clear the rim.
+  '&::after': {
+    inset: 0,
+    background: 'conic-gradient(from 0deg, #b45309, #f59e0b, #fde68a, #f59e0b, #b45309)',
+    maskImage: 'radial-gradient(circle, transparent 62%, #000 66%)',
+    animation: 'cosmic-corona 9s linear infinite',
+    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+  },
+  // The umbra: the body doing the eclipsing, lit off-centre the way the mascot's disc is.
+  '&::before': {
+    inset: '9%',
+    background: 'radial-gradient(circle at 38% 32%, #334155, #0f172a 72%)',
+    animation: 'cosmic-flare 3.6s ease-in-out infinite',
+    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+  },
 };
 
 const panelSx = {
@@ -66,7 +95,7 @@ const panelSx = {
   justifyContent: 'center',
   gap: 2,
   p: 3,
-  color: '#e0e7ff',
+  color: '#e2e8f0',
   textAlign: 'center',
 };
 
@@ -74,30 +103,32 @@ const buttonSx = {
   px: 2,
   py: 1,
   borderRadius: 2,
-  border: '1px solid rgba(168,85,247,0.6)',
-  background: 'rgba(168,85,247,0.15)',
-  color: '#e9d5ff',
+  border: '1px solid rgba(245,158,11,0.6)',
+  background: 'rgba(245,158,11,0.14)',
+  color: '#fcd34d',
   font: 'inherit',
   cursor: 'pointer',
-  '&:hover': { background: 'rgba(168,85,247,0.32)' },
+  '&:hover': { background: 'rgba(245,158,11,0.3)' },
   '&:disabled': { opacity: 0.55, cursor: 'progress' },
 };
 
 /**
  * The gate collapses to a point instead of sliding away: a contained dialog is positioned
  * against its host, and a translate past the host's edge would grow the page's scroll area.
+ * It flares on the way out and does not spin — a diamond ring, then totality.
  */
 const GATE_ANIMATION = {
-  entrance: { opacity: 1, transform: 'scale(1) rotate(0deg)' },
-  exit: { opacity: 0, transform: 'scale(0.05) rotate(-140deg)' },
+  entrance: { opacity: 1, transform: 'scale(1)', filter: 'brightness(1)' },
+  exit: { opacity: 0, transform: 'scale(0.05)', filter: 'brightness(2.2)' },
   duration: 520,
   exitDuration: 340,
-  transitionProperty: 'opacity, transform',
+  transitionProperty: 'opacity, transform, filter',
 };
 
+/** The warp core leaves the other way an eclipse can end: the shadow passes and light floods. */
 const WARP_ANIMATION = {
-  entrance: { opacity: 1, transform: 'scale(1) rotateX(0deg)', filter: 'blur(0px)' },
-  exit: { opacity: 0, transform: 'scale(1.7) rotateX(35deg)', filter: 'blur(14px)' },
+  entrance: { opacity: 1, transform: 'scale(1) rotateX(0deg)', filter: 'brightness(1) blur(0px)' },
+  exit: { opacity: 0, transform: 'scale(1.7) rotateX(35deg)', filter: 'brightness(2) blur(14px)' },
   duration: 480,
   exitDuration: 320,
   transitionProperty: 'opacity, transform, filter',
@@ -125,7 +156,9 @@ export function CosmicOverrideExample() {
     modalType: 'cosmic',
     animation: WARP_ANIMATION,
     dismissKey: Key.Escape,
-    dismissOnBackdropClick: true,
+    // Off, so the corona is something to look at rather than a trapdoor: the backdrop is the
+    // artwork here, and a stray click on it should not end the demo. Escape and Abort remain.
+    dismissOnBackdropClick: false,
     render: ({ handle, action, error }) => {
       // Every field of an action's props is a real DOM prop except `loading`, which a raw
       // `<button>` would warn about — and `aria-keyshortcuts` rides along in the spread, which
@@ -142,14 +175,18 @@ export function CosmicOverrideExample() {
 
       return (
         <Box sx={{ ...panelSx, width: '80vw', maxWidth: 560, height: '60vh' }}>
-          <Box sx={wormholeSx} />
-          <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '0.12em' }}>
+          <Box sx={eclipseSx} />
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, letterSpacing: '0.12em', color: '#fcd34d' }}
+          >
             WARP CORE ONLINE
           </Typography>
           <Typography variant="body2" sx={{ maxWidth: 460, opacity: 0.85 }}>
-            The stars behind this panel are the browser&apos;s own <code>::backdrop</code>, restyled
-            by one selector in this file. Escape or a click outside dismisses; Enter engages,
-            because the action declared the hotkey and nothing else had to.
+            The corona burning behind this panel is the browser&apos;s own <code>::backdrop</code>,
+            restyled by one selector in this file — clicking it does nothing, because this modal
+            declines that dismissal. Escape still works, and Enter engages, because the action
+            declared the hotkey and nothing else had to.
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>
             <Box component="button" sx={buttonSx} {...engage}>
@@ -186,7 +223,9 @@ export function CosmicOverrideExample() {
     id: GATE_ID,
     modalType: 'cosmic',
     nonModal: true,
-    dismissOnClickOutside: true,
+    // A non-modal lets clicks through, so click-outside would dismiss the gate the moment you
+    // reach for anything else on the page — including the code viewer for this very example.
+    dismissOnClickOutside: false,
     animation: GATE_ANIMATION,
     render: ({ handle }) => {
       return (
@@ -195,20 +234,23 @@ export function CosmicOverrideExample() {
             ...panelSx,
             gap: 1.5,
             overflow: 'hidden',
-            background: 'linear-gradient(160deg, rgba(30,27,75,0.92), rgba(2,6,23,0.96))',
-            border: '1px solid rgba(168,85,247,0.45)',
+            background: 'linear-gradient(160deg, rgba(30,41,59,0.92), rgba(2,6,23,0.96))',
+            border: '1px solid rgba(245,158,11,0.45)',
             borderRadius: 3,
           }}
         >
-          <Box sx={{ ...wormholeSx, width: 72, height: 72 }} />
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: '0.1em' }}>
+          <Box sx={{ ...eclipseSx, width: 72, height: 72 }} />
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: 700, letterSpacing: '0.1em', color: '#fcd34d' }}
+          >
             GATE OPEN
           </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.8, maxWidth: 330 }}>
-            Rendered inline and positioned <code>{String(placement.dialog.position)}</code> against
-            a host the library owns, so it answers to this sector rather than the viewport and no
-            transformed ancestor can drag it away. Sized by its own content, because the library
-            never decides that. Click outside to dismiss.
+          <Typography variant="caption" sx={{ opacity: 0.8, maxWidth: 420 }}>
+            Positioned <code>{String(placement.dialog.position)}</code> against a host the library
+            owns, so it answers to this sector rather than the viewport and no transformed ancestor
+            can drag it away. Sized by its own content. Click-outside is declined, so it closes on
+            the button.
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>
             <Box
@@ -218,7 +260,7 @@ export function CosmicOverrideExample() {
                 void warp.open();
               }}
             >
-              Enter the wormhole
+              Enter the umbra
             </Box>
             <Box
               component="button"
@@ -255,10 +297,10 @@ export function CosmicOverrideExample() {
           // panel would size itself instead of the sector — the documented failure mode of
           // contained placement. The trigger below is centred on its own layer instead.
           background:
-            'radial-gradient(1.5px 1.5px at 15% 25%, #fff, transparent),' +
-            'radial-gradient(1px 1px at 65% 40%, #a5f3fc, transparent),' +
-            'radial-gradient(2px 2px at 85% 75%, #f0abfc, transparent),' +
-            'radial-gradient(ellipse at 30% 110%, #312e81 0%, #020617 65%)',
+            'radial-gradient(1.5px 1.5px at 15% 25%, #fde68a, transparent),' +
+            'radial-gradient(1px 1px at 65% 40%, #fbbf24, transparent),' +
+            'radial-gradient(2px 2px at 85% 75%, #f59e0b, transparent),' +
+            'radial-gradient(ellipse at 30% 110%, #422006 0%, #020617 65%)',
         }}
       >
         {!gate.isOpen && (

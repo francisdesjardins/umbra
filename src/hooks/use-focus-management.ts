@@ -12,6 +12,18 @@ import type { FocusManagementOptions, ModalHookContext } from './hook-types.js';
  *
  * Receives a `getDialog` getter to access the DOM element without passing refs.
  */
+
+/**
+ * Put focus back inside the dialog, verifying rather than assuming: focusing a `disabled`
+ * element is a silent no-op, and focus left on `<body>` is a modal with no keyboard — the
+ * dialog's keydown listener only hears keys raised inside it, so its hotkeys go dead.
+ */
+const restoreFocus = (dialog: HTMLDialogElement, preferred: HTMLElement | null) => {
+  (preferred ?? dialog).focus();
+  if (!dialog.contains(document.activeElement)) {
+    dialog.focus();
+  }
+};
 export function useFocusManagement(ctx: ModalHookContext, options: FocusManagementOptions): void {
   const { getDialog, phase } = ctx;
   const { engine } = options;
@@ -41,6 +53,23 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
     // `wasRunning` is closure-local — it only needs to survive between successive
     // check() calls within the same effect lifetime, not across re-runs.
     let wasRunning = false;
+    let frame = 0;
+
+    // The engine notifies synchronously, so at that instant the button that just ran is still
+    // rendered `disabled` and cannot take focus. A frame later React has committed the idle
+    // state and the button is focusable again — which is the difference between the hotkey
+    // working on the retry and the modal answering to nothing but the mouse.
+    const scheduleRestore = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const dialog = getDialog();
+        if (!dialog?.open) {
+          return;
+        }
+        restoreFocus(dialog, defaultFocusRef.current);
+      });
+    };
+
     const check = () => {
       if (phase !== 'open' && phase !== 'opening') {
         wasRunning = false;
@@ -60,14 +89,19 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
         // unconditionally — covers both async (focus escaped) and sync throws
         // (focus stays on the throwing button inside the dialog).
         wasRunning = false;
-        (defaultFocusRef.current ?? dialog).focus();
+        scheduleRestore();
         return;
       }
       // No action transition — restore only if focus escaped the dialog.
       if (!dialog.contains(document.activeElement)) {
-        (defaultFocusRef.current ?? dialog).focus();
+        restoreFocus(dialog, defaultFocusRef.current);
       }
     };
-    return engine.subscribe(check);
+
+    const unsubscribe = engine.subscribe(check);
+    return () => {
+      cancelAnimationFrame(frame);
+      unsubscribe();
+    };
   }, [engine, phase, getDialog]);
 }

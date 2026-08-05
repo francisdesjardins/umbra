@@ -9,6 +9,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-05
+
+### Fixed
+
+- **A hotkey went dead once its action failed.** An action's button is `disabled` for as long as
+  the action runs, so focus falls to `<body>` in the meantime. `useFocusManagement` restores it
+  when the action settles — but it ran in the same tick the engine reported the failure, before
+  React had re-rendered the button as enabled, and focusing a `disabled` element is a silent
+  no-op. Focus stayed outside the dialog, where its `keydown` listener never hears anything, so
+  the retry the error message invites could only be made with the mouse. The restore now waits a
+  frame and checks that it landed, falling back to the dialog itself. Guarded by
+  `action-error-hotkey-retry.story.tsx` and "the hotkey still fires on the retry" in
+  `use-modal.ct.tsx`, which fails on the old timing.
+
+### Changed (playground)
+
+- **Cosmic Override wears the mascot's colours.** The neon purple-and-cyan wormhole is an
+  eclipse: a dark slate body with the corona escaping around its rim, in `PeekingMoon`'s ambers,
+  down to the `::backdrop` — which is now a corona ring rather than a starfield, still one
+  selector keyed off `data-modal-id`. Both dialogs flare and contract on exit instead of spinning
+  away, because that is how the thing they are named after ends, and the example's infinite
+  animations now honour `prefers-reduced-motion` the way the mascot's do.
+- **Neither dialog dismisses by accident any more.** The warp core declines
+  `dismissOnBackdropClick` and the gate declines `dismissOnClickOutside`: the backdrop is the
+  artwork here, and a non-modal gate that closes the moment you reach for the code viewer under
+  it cannot be read alongside its own source. Escape, Abort and Close gate remain, and both
+  options are still declared at the call site — the example shows the knob by setting it.
+
 ## 2026-08-04
 
 ### Changed (the store's React half moved out of its framework-free half)

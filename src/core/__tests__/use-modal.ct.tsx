@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/experimental-ct-react';
 import {
+  ActionErrorHotkeyRetryHarness,
   BackdropHitTestHarness,
   EscWithoutFocusHarness,
   KeyPassthroughHarness,
@@ -702,6 +703,33 @@ test.describe('ESC does not depend on where focus is', () => {
     expect(desynced, 'the dialog was closed natively while the store still had it open').toBe(
       false
     );
+  });
+});
+
+test.describe('focus survives a failed action', () => {
+  test('the hotkey still fires on the retry', async ({ mount, page }) => {
+    // The failure this guards: the action's button is the autofocus target and goes `disabled`
+    // while it runs, so focus lands on `<body>`. Restoring it in the same tick the engine
+    // reports the failure focuses a button React has not re-enabled yet — a silent no-op that
+    // leaves the modal with no keyboard at all.
+    await mount(<ActionErrorHotkeyRetryHarness />);
+    await page.getByRole('button', { name: 'Open Retry' }).click();
+    await expect(page.getByTestId('retry-is-open')).toHaveText('open');
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('retry-error')).toHaveText('Save failed');
+    await expect(page.getByTestId('retry-attempts')).toHaveText('1');
+
+    expect(
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[data-testid="modal-action-error-retry"]');
+        return dialog?.contains(document.activeElement) ?? false;
+      }),
+      'focus was left outside the dialog after the action failed'
+    ).toBe(true);
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('retry-attempts')).toHaveText('2');
   });
 });
 
