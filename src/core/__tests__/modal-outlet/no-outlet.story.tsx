@@ -8,7 +8,7 @@ import { dialogStyle } from '../story-styles.js';
 export function NoOutletHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'no-outlet',
     render: ({ handle }) => {
       return (

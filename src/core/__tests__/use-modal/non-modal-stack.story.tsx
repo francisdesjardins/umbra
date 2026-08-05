@@ -5,7 +5,7 @@ import { dialogStyle } from '../story-styles.js';
  * Tests that two non-modal dialogs stack correctly via z-index.
  */
 export function NonModalStackHarness() {
-  const first = useModal({
+  const first = useModal<void, 'close'>({
     id: 'non-modal-first',
     nonModal: true,
     animation: {
@@ -38,7 +38,7 @@ export function NonModalStackHarness() {
     },
   });
 
-  const second = useModal({
+  const second = useModal<void, 'close'>({
     id: 'non-modal-second',
     nonModal: true,
     animation: {

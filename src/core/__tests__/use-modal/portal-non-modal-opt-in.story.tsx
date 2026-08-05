@@ -10,7 +10,7 @@ export function PortalNonModalOptInHarness() {
   const [lastReason, setLastReason] = useState('');
   const [dialogParent, setDialogParent] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'portal-non-modal-opt-in',
     nonModal: true,
     portal: true,

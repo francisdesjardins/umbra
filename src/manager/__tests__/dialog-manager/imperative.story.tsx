@@ -12,7 +12,7 @@ export function ImperativeHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { Modal, dialogManager } = useModal({
+  const { Modal, dialogManager } = useModal<void, 'close' | 'dm-imperative'>({
     id: 'dm-imperative',
     render: ({ handle }) => {
       return (

@@ -4,7 +4,7 @@ import { ContentTransition } from '@/entities/modal-template/ui/mui/shared/conte
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
-import { defineAction, useModalActions, useSlideModal, useStore } from 'umbra/react';
+import { useSlideModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'slide-async-open';
 
@@ -13,20 +13,15 @@ const resultStore = createResultStore();
 export function SlideAsyncOpenExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    close: defineAction(),
-  });
-
-  const panel = useSlideModal({
+  const panel = useSlideModal<void, 'close'>({
     id: MODAL_ID,
     direction: 'right',
-    actions,
     onOpen: async () => {
       await new Promise((resolve) => {
         return setTimeout(resolve, 2000);
       });
     },
-    render: ({ direction, isPreparing }) => {
+    render: ({ direction, isPreparing, action }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
@@ -61,7 +56,7 @@ export function SlideAsyncOpenExample() {
             </ContentTransition>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...actions.close()}>
+            <Shared.Button variant="outlined" {...action('close')}>
               Close
             </Shared.Button>
           </SlideModal.Footer>

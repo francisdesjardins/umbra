@@ -14,7 +14,7 @@ import type { FocusManagementOptions, ModalHookContext } from './hook-types.js';
  */
 export function useFocusManagement(ctx: ModalHookContext, options: FocusManagementOptions): void {
   const { getDialog, phase } = ctx;
-  const { bridge } = options;
+  const { engine } = options;
 
   const defaultFocusRef = useRef<HTMLElement | null>(null);
 
@@ -36,10 +36,6 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
       }
     }
 
-    if (!bridge) {
-      return;
-    }
-
     // Subscribe directly to the action state changes so focus restoration
     // fires on every isRunning transition regardless of whether useModal re-renders.
     // `wasRunning` is closure-local — it only needs to survive between successive
@@ -50,7 +46,7 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
         wasRunning = false;
         return;
       }
-      const { isRunning } = bridge.getState();
+      const { isRunning } = engine.aggregated();
       if (isRunning) {
         wasRunning = true;
         return;
@@ -72,6 +68,6 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
         (defaultFocusRef.current ?? dialog).focus();
       }
     };
-    return bridge.subscribe(check);
-  }, [bridge, phase, getDialog]);
+    return engine.subscribe(check);
+  }, [engine, phase, getDialog]);
 }

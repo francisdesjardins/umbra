@@ -14,7 +14,7 @@ const slidePanelStyle: CSSProperties = {
  * Tests that the direction string is exposed in the render context.
  */
 export function DirectionSlideHarness() {
-  const { open, Modal } = useSlideModal({
+  const { open, Modal } = useSlideModal<void, 'close'>({
     id: 'slide-direction',
     direction: 'right',
     render: ({ handle, direction }) => {

@@ -18,7 +18,7 @@ export function BlockingHarness() {
     return d.nonModal;
   });
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'blocking-modal',
     render: ({ handle }) => {
       return (
@@ -36,7 +36,7 @@ export function BlockingHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'non-blocking-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -87,7 +87,7 @@ export function BlockingHarness() {
  * Tests the getOpen() filter argument on the ModalLookup API.
  */
 export function BlockingLookupHarness() {
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'bl-modal',
     render: ({ handle }) => {
       return (
@@ -133,7 +133,7 @@ export function BlockingLookupHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'bl-non-modal',
     nonModal: true,
     render: ({ handle }) => {

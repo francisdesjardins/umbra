@@ -14,7 +14,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function MultiModalHarness() {
   const { openDialogs, foreground } = useDialogManager();
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'close'>({
     id: 'dm-first',
     render: ({ handle }) => {
       return (
@@ -39,7 +39,7 @@ export function MultiModalHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'close'>({
     id: 'dm-second',
     render: ({ handle }) => {
       return (

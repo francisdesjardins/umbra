@@ -10,7 +10,7 @@ export function NonModalHarness() {
   const [lastReason, setLastReason] = useState('');
   const [openCount, setOpenCount] = useState(0);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'non-modal-dialog',
     nonModal: true,
     animation: {

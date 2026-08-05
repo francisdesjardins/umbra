@@ -37,7 +37,7 @@ Three layers: framework-agnostic core, React binding, headless template hooks.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Eight methods, each a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isOpen, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons are `actions`, from `useModalActions`). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
+- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Eight methods, each a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isOpen, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
   - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — apply to your content wrapper. The `style` prop is `@internal` (template hooks only).
 - **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
 - **`DialogManagerProvider`** ([manager/dialog-manager-context.tsx](manager/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
@@ -102,30 +102,49 @@ Each wraps `useModal` with template-specific render context. Shared internals in
 
 ### Modal Actions
 
-**`useModalActions`** ([actions/use-modal-actions.tsx](actions/use-modal-actions.tsx)) — Action button management. For custom state, use `createStore`/`useStore` alongside.
+Actions are **declared by being rendered**. `render` is handed an `action` factory; calling it
+names the reason, binds the handler and returns the props to spread. There is no config object,
+no second hook, and nothing to pass into `useModal`.
 
-- Types in [actions/types.ts](actions/types.ts): `HotkeyDef`, `ActionDefinition`, `ActionCloseFn`, `ActionButtonProps`, `UseModalActionsReturn`, `ActionState`. The `useModal`-facing bridge (`ACTIONS_BRIDGE` symbol, `ActionsBridge`, `ActionsBinding`) lives in [actions/bridge.ts](actions/bridge.ts).
-- `defineAction<TData?>({ hotkey? })` → marker. **The config key is the action's identity**: it names the callable, it is the close reason, and it is what `ActionKeys<TConfig>` reports — one declaration, nothing to keep in sync. Action keys become callable: `actions.confirm(handler?)` → `{ onClick, loading, disabled }`. **Handler is optional** — omit it to auto-close with the action's reason (`actions.cancel()`). Spread is the single binding pattern; there is no `Action` component.
-- **Close payload**: `defineAction<Result>()` declares what that action's `close(data)` accepts. `ActionPayload<TConfig>` unions the declared payloads (dropping `void`), and `ActionsBinding` is covariant in it, so a bare action set binds to any modal while a payload-carrying one only binds to a modal that accepts it (`useModal<Result>`).
-- Public surface: the action callables + `isRunning` + `error`. Nothing else. `getState`/`trigger` were removed — reads go through the reactive `isRunning`/`error` fields.
-- `createActionEngine(actionKeys)` manages execution, handler registry (`Map`), close bridging. Pre-computes aggregated `isRunning`/`error` at write time — all reads O(1).
-- **Bridge isolation**: the plumbing `useModal` needs (`getState`, `subscribe`, generated `onKeyDown`, `actionHotkeys`, close registration) rides under the `ACTIONS_BRIDGE` symbol — off the string-key surface so users never see it. `useModal` reads it via `actions[ACTIONS_BRIDGE]`; the bridge object is stable per action-set identity.
-- Closure mutation in methods is safe — only direct property assignment on `useState` values is forbidden.
+- Types in [actions/types.ts](actions/types.ts): `ActionFactory`, `ActionOptions`,
+  `ActionButtonProps`, `ActionClickEvent`, `ActionCloseFn`, `HotkeyDef`, `ActionState`.
+- **The reason is the action's identity** — it names the action _and_ is the close reason.
+  `action('confirm')` closes with `reason: 'confirm'`; nothing restates it. The handler is
+  optional: omit it to auto-close with that reason.
+- **Declare the reasons on the hook**: `useModal<TData, 'save' | 'cancel'>`. Do this at every
+  call site. The `TReason = string` default accepts anything, which costs the three properties
+  the design exists for — a mistyped `action('savee')` rejected, autocomplete, and an exhaustive
+  `switch (result.reason)` in `onClose`. `'dismiss'` is always in the union: the library produces
+  it on Escape, backdrop click and teardown, and an action may also be named it.
+- **Close payload** is `useModal<Result>` — with no marker left to carry it, the modal declares
+  what it closes with.
+- **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state, React-free.
+  `useModal` builds one in the same `useState` initializer as the store and binds it straight to
+  `close`, which is why there is no bridge: nothing is handed _in_, so nothing needs bridging.
+- **Declaration window**: `useModal` wraps the `render` call in `beginRender()`/`endRender()`, so
+  the engine knows which actions the pass drew. Re-declaring per pass rather than accumulating is
+  what stops a hotkey outliving its button and going on suppressing the dismiss key.
+- The four internal hooks take the engine (as the payload-free `ActionGate`) and read it lazily —
+  `ownsHotkey` at keydown, not captured at render, because actions do not exist until render has
+  run.
+- Aggregated `isRunning` / `error` are pre-computed at write time and reach both the render args
+  and the hook's return, so a trigger button outside the dialog can read them.
 
 ### Hotkey System
 
 Declared at the action level, automatically wired — no `useHotkey` needed.
 
 ```typescript
-const actions = useModalActions({
-  cancel: defineAction({ hotkey: Key.Escape }),
-  confirm: defineAction({ hotkey: Key.Enter }),
-});
+render: ({ action }) => (
+  <>
+    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+  </>
+);
 
-<button {...actions.confirm(async close => { await api(); close(); })}>OK</button>
 ```
 
-**Flow:** `defineAction` stores `HotkeyDef` → `useModalActions` generates `onKeyDown` on the `ACTIONS_BRIDGE` bridge → `useDialogKeydown` reads it (via the bridge `useModal` passes down) and matches via `matchesHotkey()` → finds button by `aria-keyshortcuts` → `click()` runs same path as real click.
+**Flow:** `action(reason, { hotkey })` records it on the engine during render → `useDialogKeydown` asks the engine to match the event → finds the button by `aria-keyshortcuts` → `click()` runs the same path a real click does.
 
 **`aria-keyshortcuts` forwarding**: Custom button wrappers **must** forward this prop to the `<button>` element or hotkeys silently fail.
 
@@ -174,13 +193,19 @@ the `'opening'` phase) that would otherwise be written out three times and drift
 the payload a modal declares is the only payload any of its doors accepts:
 
 ```
-useModal<TData>
-├── ModalHandle<TData>.close(reason?, data?: TData)     ← render callback & hook return
-├── createModalStore<TData>  → ModalStoreSnapshot<TData>.closeResult: CloseResult<TData>
-│                            → setOnClose / runOnClose / addCloseResolver
-├── onClose(result: CloseResult<TData>)  ·  waitForClose(): [Error, null] | [null, CloseResult<TData>]
-└── actions: ActionsBinding<TData>     ← ActionPayload<TConfig> from the definitions
+useModal<TData, TReason>
+├── ModalHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
+├── ActionFactory<TData, TReason>      ← the `action` in the render args
+├── createModalStore<TData, TReason>   → ModalStoreSnapshot.closeResult: CloseResult<TData, TReason>
+│                                      → setOnClose / runOnClose / addCloseResolver
+└── onClose(result: CloseResult<TData, TReason>)  ·  waitForClose(): [Error, null] | [null, CloseResult]
 ```
+
+`TReason` defaults to `string`, but **declare it at every call site**
+(`useModal<Result, 'save' | 'cancel'>`). It is what rejects `action('savee')`, autocompletes the
+reason, constrains `handle.close`, and makes a `switch` on `result.reason` exhaustive.
+`'dismiss'` is unioned in throughout — the library produces it on Escape, backdrop click and
+teardown.
 
 Three design choices make that possible without a single assertion:
 
@@ -191,24 +216,21 @@ Three design choices make that possible without a single assertion:
 - **The store runs `onClose` (`runOnClose`) instead of returning it.** A `(result: CloseResult<TData>) => …`
   in an output position is checked contravariantly, which would make `ModalStore<TData>`
   unassignable to the plain `ModalStore` that non-generic consumers declare.
-- **The hooks take `ActionsGate`, not `ActionsBridge<TData>`** — the payload-free half of
-  the bridge. They gate dismissal and dispatch hotkeys; none of them closes _with data_, so none
-  of them has to become generic.
+- **The hooks take `ActionGate`, not `ActionEngine<TData>`** — the payload-free half of the
+  engine. They gate dismissal and dispatch hotkeys; none of them closes _with data_, so none of
+  them has to become generic.
 
 Pinned by [core/\_\_tests\_\_/type-model.test.ts](core/__tests__/type-model.test.ts) — compile-time
 assertions that the derivations still hold, plus `@ts-expect-error` checks that `ModalVariant`'s
 mutual exclusion, the payload rejection, and the action/modal payload match are all real.
 Flattening a derived type back into an equivalent-looking literal fails type-check there.
 
-**The payload is inferred, so do not restate it.** `defineAction<Result>()` is the one
-declaration; `useModal({ actions })` picks `TData` up from the binding, and so do
-`useMessageModal` and `useSlideModal`. Writing `useModal<Result>({ actions })` is a restatement
-that can only drift. The exceptions are real but narrow: an **all-bare** action set carries no
-payload (`ActionPayload` is `never`), so a modal that closes with data through `handle.close`
-rather than through an action still declares it — as does a modal with no `actions` at all. The
-inferred results and that `never` boundary are both asserted in `type-model.test.ts`, against
-the hooks' real signatures via type-only imports (the file is a unit test; it must not pull
-React in at runtime).
+**Declare the payload and the reasons on the hook.** With actions declared by use there is no
+marker to carry either, so `useModal<Result, 'save' | 'cancel'>` states both once, at the call.
+`type-model.test.ts` asserts what that buys — a mistyped reason rejected, the handle
+constrained, `onClose` exhaustive — against the hooks' real signatures via type-only imports
+(the file is a unit test; it must not pull React in at runtime), and `verify:package` re-checks
+the same guarantees against the published `.d.ts`.
 
 Two deliberate non-derivations:
 
@@ -225,7 +247,7 @@ Two deliberate non-derivations:
 - `CloseResult<TData>` — `{ reason, data?: TData }`; `TData = void` makes `data` unassignable
 - `waitForClose()` — Go-style `[error, result]` tuple (`WaitForCloseResult<TData>`); the
   `[Error, null]` branch is produced by `store.abandon()`
-- `ActionKeys<TConfig>` — the action names **and** the close reasons, since the key is the reason
+- `TReason` — the action names **and** the close reasons, since the reason is the identity
 - No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening
 
 ## Generated docs
@@ -238,7 +260,7 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   type users were asked to pass and could not name.
 - `intentionallyNotExported` lists the internal helpers that legitimately appear in a public
   signature's _structure_ without a user ever naming them (`ModalInfoBase`, `RegisteredStore`,
-  `ActionsBinding` …). Adding to it is a decision; check first whether the type should just be
+  `BaseRenderContext` …). Adding to it is a decision; check first whether the type should just be
   exported.
 - `notDocumented` is **off**. Turning it on flags exactly 67 things, all of them `Key`'s
   constants (`A: 'a'`, `Digit0`, `F12` …), whose names are their documentation. Nothing else in
@@ -278,7 +300,7 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 4. State → the `store/` module ([store/CLAUDE.md](store/CLAUDE.md)) — hand-rolled reactive cell, zero runtime deps
 5. Types → `core/types.ts` (modal + close result types), `manager/types.ts` (lookup), `actions/types.ts` (modal actions)
 6. Template shared → `templates/shared.ts`
-7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` that `useModalActions` reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land and lives in `playground/src/shared/lib/`, demonstrated and copied like the modal templates; a dialog manager is not where anyone looks for a mutex. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**: it exists for the lifecycle's own detached callbacks and is deliberately not exported
+7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` an action reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land and lives in `playground/src/shared/lib/`, demonstrated and copied like the modal templates; a dialog manager is not where anyone looks for a mutex. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**: it exists for the lifecycle's own detached callbacks and is deliberately not exported
 8. Non-React store observation → `watch` from `store/` — fires `callback(next, prev)` when the selected slice changes, returns unsubscribe; zero React imports
 
 ### State (store module)

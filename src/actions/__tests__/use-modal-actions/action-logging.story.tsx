@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
 import { setLogLevel } from '../../../utils/logger.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 /**
  * Exercises the action lifecycle logging at the `runAction` chokepoint.
@@ -22,27 +21,21 @@ export function ActionLoggingHarness({ payload }: { readonly payload: string }) 
     };
   }, []);
 
-  const actions = useModalActions({
-    confirm: defineAction<{ secret: string }>(),
-    boom: defineAction(),
-  });
-
   // The payload is `confirm`'s, inferred through `actions` — not restated here.
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<{ secret: string }, 'boom' | 'confirm'>({
     id: 'ctrl-logging',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <button
-            {...actions.confirm((close) => {
+            {...action('confirm', (close) => {
               close({ secret: payload });
             })}
           >
             Confirm
           </button>
           <button
-            {...actions.boom(() => {
+            {...action('boom', () => {
               throw new Error('boom failed');
             })}
           >

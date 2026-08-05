@@ -9,7 +9,7 @@ import { dialogStyle } from '../story-styles.js';
 export function NonModalClickOutsideDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'click-outside-default',
     nonModal: true,
     animation: {

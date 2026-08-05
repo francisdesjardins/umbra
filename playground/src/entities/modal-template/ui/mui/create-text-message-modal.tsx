@@ -1,7 +1,7 @@
 import { MessageModal } from '@/entities/modal-template/ui/mui/message-modal';
 import { AlertContent, Button } from '@/entities/modal-template/ui/mui/shared';
 import type { CloseResult, UseModalReturn } from 'umbra/react';
-import { defineAction, useMessageModal, useModalActions } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
 import type { ReactNode } from 'react';
 
 // ── Handler types ─────────────────────────────────────────────────────────────
@@ -184,17 +184,11 @@ export function useTextMessageModal(
 ): TextMessageModalReturn {
   const { id, _config: config } = definition;
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-    cancel: defineAction(),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id,
-    actions,
     onOpen: config.onOpen,
     onClose: config.onClose,
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <MessageModal.DefaultLayout>
           {config.title !== undefined && (
@@ -202,12 +196,12 @@ export function useTextMessageModal(
               <MessageModal.Title>{config.title}</MessageModal.Title>
             </MessageModal.Header>
           )}
-          {(config.message !== undefined || actions.error) && (
+          {(config.message !== undefined || error) && (
             <MessageModal.Content>
               {config.message}
-              {actions.error && (
+              {error && (
                 <AlertContent severity="error" sx={{ mt: config.message !== undefined ? 2 : 0 }}>
-                  {actions.error.message}
+                  {error.message}
                 </AlertContent>
               )}
             </MessageModal.Content>
@@ -218,7 +212,7 @@ export function useTextMessageModal(
                 <Button
                   variant="outlined"
                   size="small"
-                  {...actions.cancel((close) => {
+                  {...action('cancel', (close) => {
                     config.cancelHandler?.();
                     close();
                   })}
@@ -230,7 +224,7 @@ export function useTextMessageModal(
                 <Button
                   variant="contained"
                   size="small"
-                  {...actions.confirm(async (close) => {
+                  {...action('confirm', async (close) => {
                     await config.confirmHandler?.();
                     close();
                   })}

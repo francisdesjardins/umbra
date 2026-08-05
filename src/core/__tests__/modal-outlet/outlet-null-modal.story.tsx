@@ -5,7 +5,7 @@ import { dialogStyle } from '../story-styles.js';
 // ── Harness: modal.Modal is null when outlet is present ────────────────────
 
 function ModalNullChecker() {
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'done'>({
     id: 'outlet-null-check',
     render: ({ handle }) => {
       return (

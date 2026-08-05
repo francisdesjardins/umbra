@@ -4,7 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { Alert, Box, Paper, Stack, TextField, Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'reactive-demo';
 
@@ -214,18 +214,12 @@ export function ReactiveDepsExample() {
   const { result } = useStore(resultStore);
   const { count, message, severity } = useStore(reactiveStore);
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
   const { LiveControls } = useLiveControls();
 
-  const reactiveModal = useMessageModal({
+  const reactiveModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
     dismissOnBackdropClick: false,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout slotProps={{ container: { sx: { width: 600 } } }}>
           <MessageModal.Header>
@@ -263,10 +257,10 @@ export function ReactiveDepsExample() {
             >
               Reset
             </Shared.Button>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel')}>
               Cancel
             </Shared.Button>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               Confirm
             </Shared.Button>
           </MessageModal.Footer>

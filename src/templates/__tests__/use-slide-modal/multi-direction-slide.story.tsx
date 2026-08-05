@@ -24,7 +24,7 @@ const slideBarStyle: CSSProperties = {
 export function MultiDirectionSlideHarness() {
   const [lastDirection, setLastDirection] = useState('');
 
-  const left = useSlideModal({
+  const left = useSlideModal<void, 'close'>({
     id: 'slide-left',
     direction: 'left',
     render: ({ handle, direction }) => {
@@ -46,7 +46,7 @@ export function MultiDirectionSlideHarness() {
     },
   });
 
-  const right = useSlideModal({
+  const right = useSlideModal<void, 'close'>({
     id: 'slide-right',
     direction: 'right',
     render: ({ handle, direction }) => {
@@ -68,7 +68,7 @@ export function MultiDirectionSlideHarness() {
     },
   });
 
-  const top = useSlideModal({
+  const top = useSlideModal<void, 'close'>({
     id: 'slide-top',
     direction: 'top',
     render: ({ handle, direction }) => {
@@ -90,7 +90,7 @@ export function MultiDirectionSlideHarness() {
     },
   });
 
-  const bottom = useSlideModal({
+  const bottom = useSlideModal<void, 'close'>({
     id: 'slide-bottom',
     direction: 'bottom',
     render: ({ handle, direction }) => {

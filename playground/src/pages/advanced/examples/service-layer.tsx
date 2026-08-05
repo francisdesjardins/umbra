@@ -7,7 +7,7 @@ import {
   deploymentService,
 } from '@/pages/advanced/examples/deployment-service';
 import { Box, Stack, Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
 import { useSyncExternalStore } from 'react';
 
 export const MODAL_ID = CONFIRM_MODAL_ID;
@@ -26,15 +26,9 @@ export function ServiceLayerExample() {
     deploymentService.getLastError
   );
 
-  const confirmActions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
-  const confirmModal = useMessageModal({
+  const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: CONFIRM_MODAL_ID,
-    actions: confirmActions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -52,10 +46,10 @@ export function ServiceLayerExample() {
             </Shared.Hint>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...confirmActions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel')}>
               Cancel
             </Shared.Button>
-            <Shared.Button variant="contained" {...confirmActions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               Deploy
             </Shared.Button>
           </MessageModal.Footer>
@@ -64,14 +58,9 @@ export function ServiceLayerExample() {
     },
   });
 
-  const failureActions = useModalActions({
-    dismiss: defineAction(),
-  });
-
   const failureModal = useMessageModal({
     id: FAILURE_MODAL_ID,
-    actions: failureActions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -87,7 +76,7 @@ export function ServiceLayerExample() {
             </Shared.Hint>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...failureActions.dismiss()}>
+            <Shared.Button variant="outlined" {...action('dismiss')}>
               Dismiss
             </Shared.Button>
             <Shared.Button

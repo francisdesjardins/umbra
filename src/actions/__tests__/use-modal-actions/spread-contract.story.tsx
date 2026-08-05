@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 /**
  * What actually happens when the props an action hands out are spread onto a real `<button>`.
@@ -19,16 +18,9 @@ export function SpreadContractHarness() {
   const [clicks, setClicks] = useState(0);
   const [vetoedRuns, setVetoedRuns] = useState(0);
 
-  const actions = useModalActions({
-    slow: defineAction(),
-    guarded: defineAction(),
-    veto: defineAction(),
-  });
-
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'guarded' | 'slow' | 'veto'>({
     id: 'spread-contract',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <form
@@ -41,7 +33,7 @@ export function SpreadContractHarness() {
           >
             <button
               data-testid="slow-btn"
-              {...actions.slow(() => {
+              {...action('slow', () => {
                 setEntries((n) => {
                   return n + 1;
                 });
@@ -64,7 +56,7 @@ export function SpreadContractHarness() {
           </button>
 
           {/* An extra disabled reason, added without taking the spread apart. */}
-          <button data-testid="guarded-btn" {...actions.guarded({ disabled: !valid })}>
+          <button data-testid="guarded-btn" {...action('guarded', { disabled: !valid })}>
             Guarded
           </button>
           <button
@@ -78,7 +70,7 @@ export function SpreadContractHarness() {
           {/* A composed click that vetoes the action. */}
           <button
             data-testid="veto-btn"
-            {...actions.veto({
+            {...action('veto', {
               onClick: (event) => {
                 setClicks((n) => {
                   return n + 1;

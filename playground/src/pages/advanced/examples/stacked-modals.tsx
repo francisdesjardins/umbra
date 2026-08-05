@@ -4,24 +4,16 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Box, Typography } from '@mui/material';
-import {
-  defineAction,
-  useMessageModal,
-  useModalActions,
-  useSlideModal,
-  useStore,
-} from 'umbra/react';
+import { useMessageModal, useSlideModal, useStore } from 'umbra/react';
 
 const resultStore = createResultStore();
 
 export function StackedModalsExample() {
   const { result } = useStore(resultStore);
 
-  const innerCtrl = useModalActions({ close: defineAction() });
-  const innerModal = useMessageModal({
+  const innerModal = useMessageModal<void, 'close'>({
     id: 'inner-modal',
-    actions: innerCtrl,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -34,7 +26,7 @@ export function StackedModalsExample() {
             <Shared.Hint>Notice how each modal stacks on top of the previous one.</Shared.Hint>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...innerCtrl.close()}>
+            <Shared.Button variant="contained" {...action('close')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -43,11 +35,9 @@ export function StackedModalsExample() {
     },
   });
 
-  const middleCtrl = useModalActions({ close: defineAction() });
-  const middleModal = useMessageModal({
+  const middleModal = useMessageModal<void, 'close'>({
     id: 'middle-modal',
-    actions: middleCtrl,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -68,7 +58,7 @@ export function StackedModalsExample() {
             </Shared.Button>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...middleCtrl.close()}>
+            <Shared.Button variant="contained" {...action('close')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -77,12 +67,10 @@ export function StackedModalsExample() {
     },
   });
 
-  const outerCtrl = useModalActions({ close: defineAction() });
-  const outerSlideModal = useSlideModal({
+  const outerSlideModal = useSlideModal<void, 'close'>({
     id: 'outer-slide',
     direction: 'right',
-    actions: outerCtrl,
-    render: ({ direction }) => {
+    render: ({ direction, action }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
@@ -104,7 +92,7 @@ export function StackedModalsExample() {
             </Box>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...outerCtrl.close()}>
+            <Shared.Button variant="outlined" {...action('close')}>
               Close Panel
             </Shared.Button>
           </SlideModal.Footer>

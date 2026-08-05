@@ -19,10 +19,10 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 
 ## ◐ Entry points
 
-| Specifier     | Contents                                                                                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | The manager (`dialogManager`), the store engine (`createStore`, `watch`), `normalizeError`, `Key`. **No React.**                                           |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `useModalActions`, `ModalOutlet`, `useStore` — **plus everything above**, so a React app imports one path. |
+| Specifier     | Contents                                                                                                                                |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`       | The manager (`dialogManager`), the store engine (`createStore`, `watch`), `normalizeError`, `Key`. **No React.**                        |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `useStore` — **plus everything above**, so a React app imports one path. |
 
 The root resolves and runs with React not installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. That is
@@ -33,11 +33,11 @@ enforced by a test that walks the root's import graph, not by convention.
 - **Headless** — No UI opinions; use any component library or plain HTML/CSS
 - **Framework-agnostic core** — React is a binding, not the library; a second binding is a sibling file
 - **Primitive + template layers** — Core `useModal` powers `useMessageModal`, `useSlideModal`
-- **Modal actions** — `useModalActions` turns action configs into `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` button props
+- **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ onClick, loading, disabled, 'aria-keyshortcuts'? }` to spread. No config, nothing to pass in
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
 - **Go-style `waitForClose()`** — `const [err, result] = await modal.waitForClose()`
-- **Scoped hotkeys** — Declare via `defineAction({ hotkey: Key.X })`; the hook auto-generates the `onKeyDown` handler scoped to the dialog, respects loading/disabled state, and dispatches via `aria-keyshortcuts`
+- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, loading state and veto included
 - **Zero runtime dependencies** — `react` and `react-dom` are _optional_ peers, needed only by `./react`
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
@@ -61,25 +61,23 @@ yarn dev
 
 ## ● Quick Start
 
+An action is declared by being rendered. `action('confirm', handler)` names the reason, binds
+the handler and returns the props to spread — one expression, at the one place it matters.
+There is no action config and nothing to pass in.
+
 ```tsx
-import { defineAction, useModalActions, useMessageModal } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
 
 function ConfirmDelete() {
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
   const modal = useMessageModal({
     id: 'confirm-delete',
-    actions,
-    render: () => (
+    render: ({ action }) => (
       <div>
         <h2>Delete Item</h2>
         <p>Are you sure?</p>
-        <button {...actions.cancel()}>Cancel</button>
+        <button {...action('cancel')}>Cancel</button>
         <button
-          {...actions.confirm(async (close) => {
+          {...action('confirm', async (close) => {
             await api.deleteItem();
             close();
           })}
@@ -99,39 +97,42 @@ function ConfirmDelete() {
 }
 ```
 
-### Typed close payloads
+The reason **is** the action's identity: it names the action and it is what the modal closes
+with, so there is nothing to keep in sync.
 
-A modal can close with data, and the type of that data is declared **once** — on the action that
-produces it. It reaches the modal from there, so the hook takes no type argument:
+### Typed close payloads and closed reasons
+
+A modal declares what it closes with, and optionally _which reasons it may close with_:
 
 ```tsx
 type User = { id: string; name: string };
 
-const actions = useModalActions({
-  cancel: defineAction(),
-  submit: defineAction<User>(), // the payload's one declaration
-});
-
-// No `useModal<User>` — `User` arrives through `actions`.
-const modal = useModal({
+const modal = useModal<User, 'submit' | 'cancel'>({
   id: 'create-user',
-  actions,
-  render: () => {
-    return <button {...actions.submit((close) => close(draft))}>Save</button>;
-  },
+  render: ({ action, handle, isRunning }) => (
+    <>
+      <button {...action('cancel')}>Cancel</button>
+      <button {...action('submit', (close) => close(draft))} disabled={isRunning}>
+        Save
+      </button>
+    </>
+  ),
   onClose: (result) => {
-    result.data; // User | undefined
+    switch (result.reason) {
+      case 'submit':
+        return save(result.data); // User | undefined
+      case 'cancel':
+      case 'dismiss':
+        return;
+    }
   },
 });
-
-const [error, result] = await modal.waitForClose();
-if (error === null) {
-  result.data; // User | undefined — narrowed by the tuple, no null check needed
-}
 ```
 
-Annotate the modal yourself only when nothing else carries the payload: a modal with no
-`actions`, or one whose actions all close bare and whose payload goes through `handle.close`.
+Declaring the reasons is optional — leave them out and any string is accepted. Declare them and
+you get three things: a mistyped `action('submmit')` is a compile error, the reason
+autocompletes, and the `switch` above is **exhaustive**. `'dismiss'` is always in the union
+because the library produces it itself, on Escape, on a backdrop click and on teardown.
 
 ## ◑ Without React
 
@@ -171,7 +172,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 - `useModal` — Base primitive
 - `useMessageModal` / `useSlideModal` — Template hooks
-- `useModalActions` / `defineAction` — Action button management
+- `action(reason, handler?)` — actions, declared where they are rendered
 - `createStore` / `useStore` / `createStoreContext` / `watch` — State management (zero-dependency reactive cell)
 - `dialogManager` — Imperative open/close
 - `waitForClose()` — Go-style async result

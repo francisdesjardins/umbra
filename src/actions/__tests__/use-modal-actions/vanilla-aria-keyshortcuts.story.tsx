@@ -1,6 +1,5 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
@@ -44,27 +43,27 @@ function CustomButton({
 export function VanillaAriaKeyshortcutsHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-    confirm: defineAction({ hotkey: Key.Enter }),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'vanilla-aria',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <CustomButton
-            {...actions.confirm((close) => {
-              close();
+            {...action('confirm', {
+              hotkey: Key.Enter,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Confirm
           </CustomButton>
           <CustomButton
-            {...actions.cancel((close) => {
-              close();
+            {...action('cancel', {
+              hotkey: Key.Escape,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Cancel
@@ -115,27 +114,27 @@ function BrokenButton({ children, onClick, disabled = false, loading = false }: 
 export function BrokenAriaKeyshortcutsHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-    confirm: defineAction({ hotkey: Key.Enter }),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'broken-aria',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <BrokenButton
-            {...actions.confirm((close) => {
-              close();
+            {...action('confirm', {
+              hotkey: Key.Enter,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Confirm
           </BrokenButton>
           <BrokenButton
-            {...actions.cancel((close) => {
-              close();
+            {...action('cancel', {
+              hotkey: Key.Escape,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Cancel

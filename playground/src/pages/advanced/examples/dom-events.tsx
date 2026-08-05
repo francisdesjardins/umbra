@@ -6,9 +6,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import {
   MODAL_CLOSE_EVENT,
   MODAL_OPEN_EVENT,
-  defineAction,
   useMessageModal,
-  useModalActions,
   useSlideModal,
   useStore,
 } from 'umbra/react';
@@ -28,11 +26,9 @@ const store = createImmerStore({ eventLog: [] as string[] }, ({ update }) => {
 export function DomEventsExample() {
   const { eventLog } = useStore(store);
 
-  const alertCtrl = useModalActions({ ok: defineAction() });
-  const alert = useMessageModal({
+  const alert = useMessageModal<void, 'ok'>({
     id: 'dom-events-alert',
-    actions: alertCtrl,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -42,7 +38,7 @@ export function DomEventsExample() {
             <Typography>A regular modal — type will be &quot;modal&quot;.</Typography>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...alertCtrl.ok()}>
+            <Shared.Button variant="contained" {...action('ok')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>
@@ -51,12 +47,10 @@ export function DomEventsExample() {
     },
   });
 
-  const panelCtrl = useModalActions({ ok: defineAction() });
-  const panel = useSlideModal({
+  const panel = useSlideModal<void, 'ok'>({
     id: 'dom-events-panel',
     direction: 'right',
-    actions: panelCtrl,
-    render: () => {
+    render: ({ action }) => {
       return (
         <SlideModal.DefaultLayout direction="right">
           <SlideModal.Header>
@@ -66,7 +60,7 @@ export function DomEventsExample() {
             <Typography>A slide modal — type will be &quot;slide&quot;.</Typography>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...panelCtrl.ok()}>
+            <Shared.Button variant="contained" {...action('ok')}>
               Close
             </Shared.Button>
           </SlideModal.Footer>

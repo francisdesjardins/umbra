@@ -11,7 +11,6 @@
  * alongside this file and share everything under it.
  */
 
-export { defineAction, useModalActions } from './actions/use-modal-actions.js';
 export { ModalOutlet } from './core/modal-outlet.js';
 export { useModal } from './core/use-modal.js';
 
@@ -61,18 +60,17 @@ export type {
   WaitForCloseResult,
 } from './core/types.js';
 
+// Actions are declared by being rendered — `render` is handed an `ActionFactory`, and there is
+// no controller to build or pass in. What ships is the vocabulary a caller needs to name what
+// it is given: the factory, its options, and the props it returns.
 export type {
   ActionButtonProps,
-  ActionCallable,
   ActionClickEvent,
   ActionCloseFn,
-  ActionDefinition,
-  ActionKeys,
+  ActionFactory,
   ActionOptions,
-  ActionPayload,
   HotkeyDef,
-  UseModalActionsReturn,
-} from './actions/use-modal-actions.js';
+} from './actions/types.js';
 
 export type {
   MessageModalRenderContext,

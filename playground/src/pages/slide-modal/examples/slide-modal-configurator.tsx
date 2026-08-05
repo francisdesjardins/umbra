@@ -23,13 +23,12 @@ import {
 } from '@mui/material';
 import {
   Key,
-  defineAction,
   dialogManager,
-  useModalActions,
   useSlideModal,
   useStore,
   type SlideAlign,
   type SlideDirection,
+  type ActionFactory,
 } from 'umbra/react';
 
 const MODAL_ID = 'slide-modal-configurator';
@@ -153,7 +152,6 @@ export function SlideModalConfiguratorExample() {
   const { modal, size, result } = useStore(store);
 
   // DISMISS_KEY_OPTIONS is used in JSX below
-  const actions = useModalActions({ close: defineAction() });
 
   const dismissKey =
     modal.dismissKeyMode === 'escape'
@@ -203,7 +201,9 @@ export function SlideModalConfiguratorExample() {
     };
   };
 
-  const renderSlide = (dir: SlideDirection) => {
+  // `action` is threaded rather than closed over: actions are declared by being rendered, so
+  // a helper that draws one needs the factory the render callback was handed.
+  const renderSlide = (dir: SlideDirection, action: ActionFactory) => {
     return (
       <SlideModal.DefaultLayout direction={dir} sx={getConfiguratorSx(dir)}>
         <SlideModal.Header>
@@ -230,7 +230,7 @@ export function SlideModalConfiguratorExample() {
           </Stack>
         </SlideModal.Content>
         <SlideModal.Footer>
-          <Shared.Button variant="outlined" {...actions.close()}>
+          <Shared.Button variant="outlined" {...action('close')}>
             Close
           </Shared.Button>
         </SlideModal.Footer>
@@ -241,9 +241,9 @@ export function SlideModalConfiguratorExample() {
   // Only crossfade a loading state when there is an actual async delay to wait on.
   // With openDelay = 0 the panel should just slide in — no spurious "Loading…" flash
   // fading in over the slide.
-  const renderPanel = (dir: SlideDirection, isPreparing: boolean) => {
+  const renderPanel = (dir: SlideDirection, isPreparing: boolean, action: ActionFactory) => {
     if (modal.openDelay <= 0) {
-      return renderSlide(dir);
+      return renderSlide(dir, action);
     }
     return (
       <ContentTransition
@@ -262,7 +262,7 @@ export function SlideModalConfiguratorExample() {
           </SlideModal.DefaultLayout>
         }
       >
-        {renderSlide(dir)}
+        {renderSlide(dir, action)}
       </ContentTransition>
     );
   };
@@ -277,7 +277,6 @@ export function SlideModalConfiguratorExample() {
           portal: modal.portal,
           dismissKey,
           dismissOnClickOutside: modal.allowClickOutside,
-          actions,
           onOpen: async () => {
             if (modal.openDelay > 0) {
               await new Promise((resolve) => {
@@ -285,8 +284,8 @@ export function SlideModalConfiguratorExample() {
               });
             }
           },
-          render: ({ direction: dir, isPreparing }) => {
-            return renderPanel(dir, isPreparing);
+          render: ({ direction: dir, isPreparing, action }) => {
+            return renderPanel(dir, isPreparing, action);
           },
           onClose: (closeResult) => {
             store.setResult(`Closed: ${closeResult.reason}`);
@@ -299,7 +298,6 @@ export function SlideModalConfiguratorExample() {
           portal: modal.portal,
           dismissKey,
           dismissOnBackdropClick: modal.allowBackdropClick,
-          actions,
           onOpen: async () => {
             if (modal.openDelay > 0) {
               await new Promise((resolve) => {
@@ -307,8 +305,8 @@ export function SlideModalConfiguratorExample() {
               });
             }
           },
-          render: ({ direction: dir, isPreparing }) => {
-            return renderPanel(dir, isPreparing);
+          render: ({ direction: dir, isPreparing, action }) => {
+            return renderPanel(dir, isPreparing, action);
           },
           onClose: (closeResult) => {
             store.setResult(`Closed: ${closeResult.reason}`);

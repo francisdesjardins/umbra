@@ -13,7 +13,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
  * itself).
  */
 export function ScrollLockHarness() {
-  const { Modal, dialogManager } = useModal({
+  const { Modal, dialogManager } = useModal<void, 'done'>({
     id: 'scroll-lock-modal',
     render: ({ handle }) => {
       return (
@@ -42,7 +42,7 @@ export function ScrollLockHarness() {
 
   // Second blocking modal, stacked on the first: both lock, but the compensation must be
   // applied exactly once.
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
       return (
@@ -60,7 +60,7 @@ export function ScrollLockHarness() {
     },
   });
 
-  const { Modal: NonModal } = useModal({
+  const { Modal: NonModal } = useModal<void, 'done'>({
     id: 'scroll-lock-non-modal',
     nonModal: true,
     // Viewport-anchored: this harness tests scroll locking, not contained positioning.

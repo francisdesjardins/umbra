@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 /** What the `save` action closes with. Declared on the marker, checked at the modal. */
 type SaveResult = { readonly id: number };
@@ -14,25 +13,19 @@ export function ReasonSourceHarness() {
   const [lastReason, setLastReason] = useState('');
   const [lastId, setLastId] = useState('');
 
-  const actions = useModalActions({
-    save: defineAction<SaveResult>(),
-    dismiss: defineAction(),
-  });
-
-  const { open, Modal } = useModal<SaveResult>({
+  const { open, Modal } = useModal<SaveResult, 'save'>({
     id: 'ctrl-reason-source',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <button
-            {...actions.save((close) => {
+            {...action('save', (close) => {
               close({ id: 42 });
             })}
           >
             Save
           </button>
-          <button {...actions.dismiss()}>Dismiss</button>
+          <button {...action('dismiss')}>Dismiss</button>
         </div>
       );
     },

@@ -25,18 +25,19 @@ const log = createLogger('modal');
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
  * `waitForClose()` — agree on one payload type without a single assertion.
  */
-export function createModalStore<TData = unknown>(id: string) {
-  const initial: ModalStoreSnapshot<TData> = {
+export function createModalStore<TData = unknown, TReason extends string = string>(id: string) {
+  const initial: ModalStoreSnapshot<TData, TReason> = {
     phase: 'closed',
     isPreparing: false,
     closeResult: null,
   };
 
   return createStore(initial, ({ get, set }) => {
-    const closeResolvers: CloseResolver<TData>[] = [];
+    const closeResolvers: CloseResolver<TData, TReason>[] = [];
     const openResolvers: (() => void)[] = [];
     let rafId = 0;
-    let onCloseCallback: ((result: CloseResult<TData>) => void | Promise<void>) | undefined;
+    let onCloseCallback:
+      ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 
     /** Resolve and drop every pending `open()` promise. */
     const flushOpenResolvers = (): void => {
@@ -46,7 +47,9 @@ export function createModalStore<TData = unknown>(id: string) {
     };
 
     return {
-      setOnClose(fn: ((result: CloseResult<TData>) => void | Promise<void>) | undefined): void {
+      setOnClose(
+        fn: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined
+      ): void {
         onCloseCallback = fn;
       },
 
@@ -61,7 +64,7 @@ export function createModalStore<TData = unknown>(id: string) {
        * context, `finalizeModalClose`) declares. Keeping the callback inside is what lets
        * `TData` be a real type parameter instead of an erased one.
        */
-      runOnClose(result: CloseResult<TData>): void | Promise<void> {
+      runOnClose(result: CloseResult<TData, TReason>): void | Promise<void> {
         return onCloseCallback?.(result);
       },
 
@@ -126,7 +129,7 @@ export function createModalStore<TData = unknown>(id: string) {
        * modal is already `'closing'` or `'closed'`, which is what makes every
        * dismissal path safe to call blindly.
        */
-      close(reason: string, data?: TData): boolean {
+      close(reason: TReason | 'dismiss', data?: TData): boolean {
         const { phase } = get();
         if (phase === 'closing' || phase === 'closed') {
           return false;
@@ -196,7 +199,7 @@ export function createModalStore<TData = unknown>(id: string) {
         }
       },
 
-      addCloseResolver(resolver: CloseResolver<TData>): void {
+      addCloseResolver(resolver: CloseResolver<TData, TReason>): void {
         closeResolvers.push(resolver);
       },
     };
@@ -211,4 +214,6 @@ export function createModalStore<TData = unknown>(id: string) {
  * Every member is either a method (bivariant) or covariant in `TData`, which is what makes a
  * `ModalStore<Specific>` assignable to a plain `ModalStore` at those boundaries.
  */
-export type ModalStore<TData = unknown> = ReturnType<typeof createModalStore<TData>>;
+export type ModalStore<TData = unknown, TReason extends string = string> = ReturnType<
+  typeof createModalStore<TData, TReason>
+>;

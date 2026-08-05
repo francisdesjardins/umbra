@@ -1,0 +1,194 @@
+import { createStore } from '../store/create-store.js';
+import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
+import { createLogger } from '../utils/logger.js';
+import { normalizeError } from '../utils/normalize-error.js';
+import type { ActionCloseFn, ActionState, HotkeyDef } from './types.js';
+
+const log = createLogger('action');
+
+/**
+ * Execution and state for a modal's actions.
+ *
+ * React-free on purpose: it is a store plus a handler runner, and a second binding needs it
+ * unchanged. `useModal` owns one of these and hands out the `action()` factory that writes to
+ * it, which is why there is no bridge — nothing has to be handed *in*.
+ *
+ * Actions are declared by being rendered. Each render pass re-declares the ones it draws, so
+ * the hotkey table always describes the buttons currently on screen rather than every button
+ * ever drawn — which matters because a stale hotkey would keep suppressing the dismiss key.
+ */
+
+type EngineSnapshot = {
+  readonly states: Readonly<Record<string, ActionState>>;
+  /** Pre-computed: true when any action is running. */
+  readonly isRunning: boolean;
+  /** Pre-computed: first non-null error across all actions. */
+  readonly error: Error | null;
+};
+
+const IDLE: ActionState = { isRunning: false, error: null };
+
+export function createActionEngine<TData, TReason extends string = string>(modalId: string) {
+  const initial: EngineSnapshot = { states: {}, isRunning: false, error: null };
+
+  /** Every action the last completed render drew, against its hotkey if it declared one. */
+  let declared = new Map<string, HotkeyDef | undefined>();
+  /** Filled while a render pass is in flight, then swapped in wholesale. */
+  let pending: Map<string, HotkeyDef | undefined> | null = null;
+
+  // `'dismiss'` is a reason an action may legitimately carry, not only one the library
+  // produces, so every entry point here accepts it alongside the declared union.
+  let closeFn: ((reason: TReason | 'dismiss', data?: TData) => void) | null = null;
+
+  const store = createStore(initial, ({ get, set }) => {
+    /** Write one action's state and recompute the aggregates in the same pass. */
+    const setState = (reason: string, next: ActionState) => {
+      const states = { ...get().states, [reason]: next };
+      let isRunning = false;
+      let error: Error | null = null;
+      for (const state of Object.values(states)) {
+        if (state.isRunning) {
+          isRunning = true;
+        }
+        if (error === null && state.error !== null) {
+          error = state.error;
+        }
+      }
+      set({ states, isRunning, error });
+    };
+
+    return {
+      /** State for one action; idle until it has run. */
+      stateOf(reason: string): ActionState {
+        return get().states[reason] ?? IDLE;
+      },
+
+      aggregated(): { isRunning: boolean; error: Error | null } {
+        const { isRunning, error } = get();
+        return { isRunning, error };
+      },
+
+      async run(
+        reason: TReason | 'dismiss',
+        handler: (close: ActionCloseFn<TData>) => void | Promise<void>
+      ): Promise<void> {
+        if (get().isRunning) {
+          log.warn('Action overlap', { id: modalId, incoming: reason });
+        }
+        setState(reason, { isRunning: true, error: null });
+        log('Action started', { id: modalId, reason });
+        const startedAt = Date.now();
+        try {
+          await handler((data?: TData) => {
+            // Log that close was called and whether a payload came with it — never the payload
+            // itself, which may carry user data.
+            log('Action close', { id: modalId, reason, withData: data !== undefined });
+            closeFn?.(reason, data);
+          });
+          log('Action completed', { id: modalId, reason, ms: Date.now() - startedAt });
+          setState(reason, { isRunning: false, error: null });
+        } catch (err: unknown) {
+          const error = normalizeError(err);
+          log.error('Action failed', {
+            id: modalId,
+            reason,
+            error: error.message,
+            ms: Date.now() - startedAt,
+          });
+          setState(reason, { isRunning: false, error });
+        }
+      },
+    };
+  });
+
+  return {
+    subscribe: store.subscribe,
+    getSnapshot: store.getSnapshot,
+    // Wrapped rather than handed over directly: detaching a method from the store loses its
+    // receiver, and the lint rule that says so is right to.
+    stateOf: (reason: string) => {
+      return store.stateOf(reason);
+    },
+    aggregated: () => {
+      return store.aggregated();
+    },
+    run: (
+      reason: TReason | 'dismiss',
+      handler: (close: ActionCloseFn<TData>) => void | Promise<void>
+    ) => {
+      return store.run(reason, handler);
+    },
+
+    /** The modal's own close function, bound once by `useModal`. */
+    bindClose(fn: (reason: TReason | 'dismiss', data?: TData) => void): void {
+      closeFn = fn;
+    },
+
+    // ── Render-pass declaration ───────────────────────────────────────────────
+
+    beginRender(): void {
+      pending = new Map();
+    },
+
+    /** Called by the `action()` factory as each button is drawn. */
+    declare(reason: TReason | 'dismiss', hotkey: HotkeyDef | undefined): void {
+      (pending ?? declared).set(reason, hotkey);
+    },
+
+    endRender(): void {
+      if (pending) {
+        declared = pending;
+        pending = null;
+      }
+    },
+
+    // ── Hotkeys ───────────────────────────────────────────────────────────────
+
+    /** The action whose hotkey matches this event, if any. */
+    matchHotkey(event: KeyboardEvent): { reason: string; hotkey: HotkeyDef } | null {
+      for (const [reason, hotkey] of declared) {
+        if (hotkey !== undefined && matchesHotkey(event, hotkey)) {
+          return { reason, hotkey };
+        }
+      }
+      return null;
+    },
+
+    /**
+     * Whether an action already owns the modal's dismiss key. Read at keydown rather than
+     * captured during render, because the actions are only known once render has run.
+     */
+    ownsHotkey(candidate: HotkeyDef): boolean {
+      const label = formatHotkeyLabel(candidate);
+      for (const hotkey of declared.values()) {
+        if (hotkey !== undefined && formatHotkeyLabel(hotkey) === label) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    /**
+     * Whether this modal drew any actions at all. Backdrop dismissal is opt-out without them
+     * and opt-in with them, on the reasoning that a modal offering buttons wants to be
+     * dismissed through one.
+     */
+    hasActions(): boolean {
+      return declared.size > 0;
+    },
+  };
+}
+
+/** The engine as its consumers see it. */
+export type ActionEngine<TData = never, TReason extends string = string> = ReturnType<
+  typeof createActionEngine<TData, TReason>
+>;
+
+/**
+ * The payload-free half of the engine: what the dismissal and keydown hooks read.
+ *
+ * They gate ESC / click-outside / backdrop on `isRunning` and dispatch hotkeys; none of them
+ * ever closes *with data*, so none of them has to become generic. An `ActionEngine<Result>` is
+ * an `ActionGate` whatever `Result` is.
+ */
+export type ActionGate = Omit<ActionEngine, 'run' | 'bindClose'>;

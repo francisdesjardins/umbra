@@ -23,7 +23,7 @@ non-React code. React consumers may read every `umbra` import below as
 
 1. **`useModal`** — Base primitive. Renders a native `<dialog>` inline (or via `createPortal` when `portal: true`).
 2. **Template hooks** — `useMessageModal`, `useSlideModal` provide headless modal logic (animation, positioning). No UI wrapper — users provide their own components in the `render` callback.
-3. **`useModalActions`** — Action button management. Action keys become callable functions returning `{ onClick, loading, disabled }`. For custom state, use `createStore`/`useStore` alongside.
+3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns `{ onClick, loading, disabled }` to spread. For custom state, use `createStore`/`useStore` alongside.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`ModalOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Modal}` in JSX.
 
@@ -31,234 +31,119 @@ non-React code. React consumers may read every `umbra` import below as
 
 ---
 
-## useModalActions
+## Actions
 
-```typescript
-import { defineAction, useModalActions } from 'umbra/react';
-
-const actions = useModalActions({
-  cancel: defineAction(),
-  confirm: defineAction(),
-});
-
-// Action keys → callable (handleSubmit pattern):
-<button {...actions.confirm(async (close) => {
-  await api.confirm();
-  close();
-})}>Confirm</button>
-// Returns: { onClick, loading, disabled }
-
-// Omit the handler to auto-close with the action's reason:
-<button {...actions.cancel()}>Cancel</button>
-
-// Combined action state:
-actions.isRunning  // boolean (any action running)
-actions.error      // Error | null
-```
-
-For custom state alongside the actions, use `createStore`/`useStore`:
-
-```typescript
-import { createStore, useStore, defineAction, useModalActions } from 'umbra/react';
-
-const itemStore = createStore({ itemName: '', deleted: false }, ({ set, update }) => ({
-  prepare(name: string) {
-    set({ itemName: name, deleted: false });
-  },
-  markDeleted() {
-    update((draft) => {
-      draft.deleted = true;
-    });
-  },
-}));
-
-// In component:
-const { itemName } = useStore(itemStore);
-const actions = useModalActions({
-  cancel: defineAction(),
-  confirm: defineAction(),
-});
-```
-
-**The config key is the action's reason.** `confirm: defineAction()` closes the modal
-with `reason: 'confirm'` — the key names the callable, is the close reason, and is what
-`ActionKeys<TConfig>` reports. There is no second place to keep in sync.
-
-**Declare a close payload on the action that produces it:**
-
-```typescript
-type Result = { id: string };
-
-const actions = useModalActions({
-  cancel: defineAction(),
-  confirm: defineAction<Result>(),
-});
-
-const modal = useMessageModal<Result>({
-  id: 'pick',
-  actions,
-  // actions.confirm's `close` now takes a Result — and only a Result
-  render: () => <button {...actions.confirm((close) => close({ id: 'a' }))}>Pick</button>,
-  onClose: (result) => console.log(result.reason, result.data?.id),
-});
-```
-
-`ActionPayload<TConfig>` unions the declared payloads (dropping `void`), so an action set whose
-actions all close bare binds to any modal, and one that declares a payload only binds to a modal
-that accepts it.
-
-### State
-
-| Property    | Type            | Description                     |
-| ----------- | --------------- | ------------------------------- |
-| `isRunning` | `boolean`       | Whether any action is executing |
-| `error`     | `Error \| null` | Error from last failed action   |
-
-### Methods
-
-| Method                    | Description                                                                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `actions.<key>(handler?)` | Callable — returns `{ onClick, loading, disabled }` to spread onto a button. Omit the handler to auto-close with the action's reason. |
-
-Spread the callable's result onto your own button — that is the single binding pattern:
+An action is declared by being rendered. The `action` factory handed to `render` names a reason,
+binds a handler and returns the props to spread onto a button — one expression, at the one place
+the action is used. There is no action config, no second hook, and nothing to pass into
+`useModal`.
 
 ```tsx
-// Custom handler:
-<Button {...actions.confirm(async (close) => { await api.confirm(); close(data); })}>Confirm</Button>
+import { useMessageModal } from 'umbra/react';
 
-// No handler → auto-close with reason 'cancel':
-<Button {...actions.cancel()}>Cancel</Button>
+const modal = useMessageModal({
+  id: 'confirm',
+  render: ({ action }) => (
+    <>
+      <button {...action('cancel')}>Cancel</button>
+      <button
+        {...action('confirm', async (close) => {
+          await api.confirm();
+          close();
+        })}
+      >
+        Confirm
+      </button>
+    </>
+  ),
+  onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
+});
 ```
 
-A custom button wrapper **must forward `aria-keyshortcuts`** or declared hotkeys silently fail.
+**The reason is the action's identity.** It names the action and it is what the modal closes
+with; nothing restates it. Omit the handler (`action('cancel')`) and the action auto-closes with
+its own reason.
+
+### `action(reason, handlerOrOptions?)`
+
+| Argument           | Type                                                  | Description                              |
+| ------------------ | ----------------------------------------------------- | ---------------------------------------- |
+| `reason`           | `TReason`                                             | Names the action and is the close reason |
+| `handlerOrOptions` | `(close) => void \| Promise<void>` or `ActionOptions` | A bare handler, or the options bag below |
+
+`ActionOptions`:
+
+| Option     | Type                         | Description                                                                |
+| ---------- | ---------------------------- | -------------------------------------------------------------------------- |
+| `onAction` | `(close) => void \| Promise` | What the action does. Omit to auto-close with the reason                   |
+| `onClick`  | `(event) => void`            | Runs **first**; call `preventDefault()` to veto the action                 |
+| `disabled` | `boolean`                    | **Or**-ed with the action's own reasons — it can add one, never remove one |
+| `type`     | `'button' \| 'submit'`       | Default `'button'`, so a spread is safe inside a `<form>`                  |
+| `hotkey`   | `HotkeyDef`                  | Keyboard shortcut, dispatched by clicking the button                       |
+
+Returned props: `{ type, onClick, loading, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'? }`.
+`loading` is this action alone; `disabled` is true while **any** action runs, which is what stops
+a double click submitting twice.
+
+### Aggregated state
+
+`render` also receives `isRunning` and `error` — the combined state of every action on the
+modal — and the hook returns them too, for a trigger button outside the dialog:
+
+```tsx
+const modal = useModal({
+  id: 'save',
+  render: ({ action, isRunning, error }) => (
+    <>
+      <button {...action('save', save)} />
+      {error ? <p role="alert">{error.message}</p> : null}
+    </>
+  ),
+});
+
+modal.isRunning; // same value, outside render
+```
 
 ### Hotkeys
 
-Declare hotkeys directly on `defineAction` — the hook generates the `onKeyDown` handler and wires it in automatically:
-
-```typescript
-import { Key, defineAction, useModalActions, useMessageModal } from 'umbra/react';
-
-const state = useModalActions({
-  cancel: defineAction({ hotkey: Key.Escape }),
-  confirm: defineAction({ hotkey: Key.Enter }),
-});
-
-const modal = useMessageModal({
-  id: 'hotkey-confirm',
-  actions: state,
-  // Escape is claimed by the 'cancel' action — dismiss-key collision detection
-  // routes it to the action instead of dismiss. No extra config needed.
-  // onKeyDown generated automatically — no manual handler needed
-  render: () => (
-    <div>
-      <p>Press Enter to confirm, Escape to cancel</p>
-      <button {...state.cancel((close) => { close(); })}>Cancel</button>
-      <button {...state.confirm(async (close) => {
-        await api.confirm();
-        close();
-      })}>Confirm</button>
-    </div>
-  ),
-});
+```tsx
+render: ({ action }) => (
+  <>
+    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+  </>
+);
 ```
 
-The generated handler guards against running actions and focuses + clicks the corresponding `[aria-keyshortcuts]` button for visual feedback.
+The modal dispatches a hotkey by finding the button whose `aria-keyshortcuts` matches and
+clicking it, so the key path and the click path are the same path — loading state, `disabled`
+and any `onClick` veto all apply. If a hotkey collides with the modal's `dismissKey`, the action
+wins and dismissal defers.
 
-> **Custom button wrappers must forward `aria-keyshortcuts`.**
-> When you wrap a `<button>` in a Vanilla or other component, the spread from `actions.action(handler)` includes `aria-keyshortcuts`. You must pass it through to the underlying DOM element — otherwise the hotkey dispatch cannot find the button and `Enter`/`Escape` silently do nothing.
->
-> ```tsx
-> // ✅ Correct
-> <button aria-keyshortcuts={props['aria-keyshortcuts']} {...props} />
->
-> // ❌ Wrong — prop is swallowed; hotkeys break
-> <button onClick={props.onClick} disabled={props.disabled} />
-> ```
->
-> Prefer a standalone `useHotkey(key, fn)` only for global, app-level shortcuts outside any modal (e.g. a `Ctrl+K` command palette).
+> **Custom button wrappers must forward `aria-keyshortcuts`** onto the real `<button>`, or the
+> hotkey has nothing to find.
 
-**`onKeyDown` escape hatch:** For scenarios the hotkey option can't express (conditional logic, key sequences, keys with no associated action button), pass `onKeyDown` directly to the hook. It takes priority over the hook-generated handler:
+### Declaring the reasons
 
-```typescript
-import { Key, matchesHotkey, useMessageModal } from 'umbra/react';
+`useModal<TData, TReason>` optionally closes the set of reasons:
 
-const modal = useMessageModal({
-  id: 'custom-keys',
-  onKeyDown: (event) => {
-    if (matchesHotkey(event, 'Ctrl+Enter')) {
-      event.preventDefault();
-      // custom logic
-    }
-  },
-  render: () => (...),
-});
+```tsx
+const modal = useModal<User, 'submit' | 'cancel'>({ … });
 ```
 
-### Key Constants
-
-```typescript
-import { Key } from 'umbra';
-
-// Navigation / action
-Key.Enter; // 'Enter'
-Key.Escape; // 'Escape'
-Key.Delete; // 'Delete'
-Key.Tab; // 'Tab'
-Key.Space; // ' '
-Key.F1; // 'F1' ... Key.F12
-
-// Letters (Key.A–Key.Z are lowercase values — KeyboardEvent.key without Shift)
-Key.A; // 'a'
-Key.S; // 's'
-
-// Digits (Key.Digit0–Key.Digit9 — KeyboardEvent.key produces the character)
-Key.Digit3; // '3'
-Key.Digit0; // '0'
-```
-
-### HotkeyDef Type
-
-Template literal type with IDE autocomplete for all combinations of `Key` values with up to three modifiers:
-
-```typescript
-type HotkeyDef =
-  | KeyValue // 'Enter', 'Escape', 'Delete', 'a', '3', ...
-  | `Ctrl+${KeyValue}` // 'Ctrl+Enter', 'Ctrl+Delete', ...
-  | `Alt+${KeyValue}` // 'Alt+F4', ...
-  | `Shift+${KeyValue}` // 'Shift+Tab', ...
-  | `Meta+${KeyValue}` // 'Meta+Enter', ...
-  | `Ctrl+Shift+${KeyValue}` // 'Ctrl+Shift+S', ...
-  | `Ctrl+Alt+${KeyValue}` // ...
-  | `Alt+Shift+${KeyValue}`
-  | `Ctrl+Alt+Shift+${KeyValue}` // triple modifier
-  // ... and remaining double/triple combos
-  | KeyExtensions[keyof KeyExtensions]; // user-defined keys (see below)
-```
-
-**Extending for exotic keys** — for keys not in `Key` (media keys, numpad variants, etc.), augment the exported `KeyExtensions` interface:
-
-```typescript
-// src/types/keys.d.ts
-declare module 'umbra' {
-  interface KeyExtensions {
-    MediaPlayPause: 'MediaPlayPause';
-    NumpadEnter: 'Enter';
-  }
-}
-```
-
-After augmentation `'MediaPlayPause'` and `'Ctrl+MediaPlayPause'` become valid `HotkeyDef` values with full IDE autocomplete.
+With them declared, `action('submmit')` is a compile error, the reason autocompletes, and a
+`switch` on `result.reason` in `onClose` is exhaustive. Left undeclared, any string is accepted.
+`'dismiss'` is always available — the library produces it on Escape, backdrop click and teardown.
 
 ---
 
 ## useModal (Base Primitive)
 
 ```typescript
-import { useModal, defineAction, useModalActions } from 'umbra/react';
+import { useModal } from 'umbra/react';
 
-const state = useModalActions({
-  confirm: defineAction(),
+const modal = useModal({
+  id: 'example',
 });
 
 const modal = useModal({
@@ -293,8 +178,7 @@ const { open, isOpen, isPreparing, Modal, waitForClose, handle } = modal;
 | ------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                      | `string`                                      | Unique modal identifier                                                                                                                                                                                                                                  |
 | `render`                  | `(args: ModalRenderArgs<TData>) => ReactNode` | Render function                                                                                                                                                                                                                                          |
-| `actions?`                | `ActionsBinding<TData>`                       | Action set from `useModalActions` — enables backdrop/ESC prevention while an action runs and wires declared action hotkeys. An action that declares a close payload only binds to a modal that accepts it.                                               |
-| `onKeyDown?`              | `(event: KeyboardEvent) => void`              | Escape hatch; takes priority over the hotkeys `useModalActions` generates                                                                                                                                                                                |
+| `onKeyDown?`              | `(event: KeyboardEvent) => void`              | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                        |
 | `animation?`              | `ModalAnimation`                              | CSS transition config                                                                                                                                                                                                                                    |
 | `onOpen?`                 | `() => void \| Promise<void>`                 | Called on open                                                                                                                                                                                                                                           |
 | `onClose?`                | `(result) => void \| Promise<void>`           | Called on close                                                                                                                                                                                                                                          |
@@ -444,13 +328,8 @@ const panel = useSlideModal({ id: 'fast-panel', direction: 'left', animation: NO
 These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
-import { useMessageModal, defineAction, useModalActions } from 'umbra/react';
+import { useMessageModal } from 'umbra/react';
 import { Button, Typography, Stack } from '@mui/material';
-
-const state = useModalActions({
-  cancel: defineAction(),
-  confirm: defineAction(),
-});
 
 const modal = useMessageModal({
   id: 'confirm-delete',
@@ -488,13 +367,8 @@ if (result?.reason === 'confirm') {
 > **Reference implementations:** For ready-made MUI components (`SlideModal.DefaultLayout`, `SlideModal.Title`, `SlideModal.Content`), see `playground/src/entities/modal-template/ui/mui/slide-modal/`. These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
-import { useSlideModal, defineAction, useModalActions } from 'umbra/react';
+import { useSlideModal } from 'umbra/react';
 import { Box, Typography, Button } from '@mui/material';
-
-const state = useModalActions({
-  cancel: defineAction(),
-  save: defineAction(),
-});
 
 const panel = useSlideModal({
   id: 'settings',

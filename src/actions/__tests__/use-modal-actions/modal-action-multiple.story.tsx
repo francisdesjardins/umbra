@@ -1,5 +1,4 @@
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
 const delay = (ms: number) => {
@@ -13,19 +12,13 @@ const delay = (ms: number) => {
  * the sibling receives disabled: true.
  */
 export function ModalActionMultipleHarness() {
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-multi',
-    actions,
-    render: () => {
+    render: ({ action, isRunning }) => {
       return (
         <div style={dialogStyle}>
           <button
-            {...actions.confirm(async (close) => {
+            {...action('confirm', async (close) => {
               await delay(500);
               close();
             })}
@@ -33,10 +26,10 @@ export function ModalActionMultipleHarness() {
           >
             Confirm
           </button>
-          <button {...actions.cancel()} data-testid="cancel-btn">
+          <button {...action('cancel')} data-testid="cancel-btn">
             Cancel
           </button>
-          <span data-testid="is-running">{String(actions.isRunning)}</span>
+          <span data-testid="is-running">{String(isRunning)}</span>
         </div>
       );
     },

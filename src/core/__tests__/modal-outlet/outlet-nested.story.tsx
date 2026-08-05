@@ -5,7 +5,7 @@ import { dialogStyle } from '../story-styles.js';
 // ── Harness: nested outlets — inner wins ───────────────────────────────────
 
 function InnerScopeModal() {
-  const { open, isOpen, dialogManager } = useModal({
+  const { open, isOpen, dialogManager } = useModal<void, 'inner-done'>({
     id: 'outlet-nested-inner',
     render: ({ handle }) => {
       return (
@@ -45,7 +45,7 @@ function InnerScopeModal() {
 }
 
 function OuterScopeModal() {
-  const { open, isOpen, dialogManager } = useModal({
+  const { open, isOpen, dialogManager } = useModal<void, 'outer-done'>({
     id: 'outlet-nested-outer',
     render: ({ handle }) => {
       return (

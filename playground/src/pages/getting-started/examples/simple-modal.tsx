@@ -3,7 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Stack, Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'simple';
 
@@ -12,14 +12,9 @@ const resultStore = createResultStore();
 export function SimpleModalExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-  });
-
-  const simpleModal = useMessageModal({
+  const simpleModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -53,7 +48,7 @@ export function SimpleModalExample() {
             </Shared.OverflowContainer>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>

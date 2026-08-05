@@ -9,7 +9,7 @@ import { dialogStyle } from '../story-styles.js';
 export function CustomDismissKeyHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'close'>({
     id: 'custom-dismiss',
     dismissKey: Key.Delete,
     render: ({ handle }) => {

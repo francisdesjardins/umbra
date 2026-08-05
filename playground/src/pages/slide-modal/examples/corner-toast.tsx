@@ -3,7 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Box, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { defineAction, useModalActions, useSlideModal, useStore } from 'umbra/react';
+import { useSlideModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'slide-corner-toast';
 
@@ -39,10 +39,6 @@ const resultStore = createResultStore();
 export function SlideCornerToastExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    dismiss: defineAction(),
-  });
-
   const toast = useSlideModal({
     id: MODAL_ID,
     direction: 'right',
@@ -50,8 +46,7 @@ export function SlideCornerToastExample() {
     nonModal: true,
     portal: true,
     dismissKey: false,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <Box
           // The announcement, and the only thing here assistive technology reacts to.
@@ -81,7 +76,7 @@ export function SlideCornerToastExample() {
                 The page stays fully interactive — scroll and click while this is open.
               </Typography>
             </Stack>
-            <Shared.Button size="small" variant="text" {...actions.dismiss()}>
+            <Shared.Button size="small" variant="text" {...action('dismiss')}>
               Dismiss
             </Shared.Button>
           </Stack>

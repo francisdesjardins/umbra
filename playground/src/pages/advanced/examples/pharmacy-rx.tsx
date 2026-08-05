@@ -27,15 +27,7 @@ import {
 import { createMutex } from '@/shared/lib/mutex';
 import { safeAwait } from '@/shared/lib/safe-await';
 import { createSingleFlight } from '@/shared/lib/single-flight';
-import {
-  defineAction,
-  createStoreContext,
-  useMessageModal,
-  useModalActions,
-  useSlideModal,
-  useStore,
-  watch,
-} from 'umbra/react';
+import { createStoreContext, useMessageModal, useSlideModal, useStore, watch } from 'umbra/react';
 import { useEffect } from 'react';
 
 type Patient = {
@@ -397,11 +389,9 @@ function PharmacyRxContent() {
     }).length,
   };
 
-  const patientCtrl = useModalActions({ close: defineAction() });
-  const patientModal = useMessageModal({
+  const patientModal = useMessageModal<void, 'close'>({
     id: 'pharmacy-patient-detail',
-    actions: patientCtrl,
-    render: () => {
+    render: ({ action }) => {
       if (pat.patient.status !== 'fulfilled') {
         return null;
       }
@@ -443,7 +433,7 @@ function PharmacyRxContent() {
             </Stack>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...patientCtrl.close()}>
+            <Shared.Button variant="outlined" {...action('close')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -452,15 +442,9 @@ function PharmacyRxContent() {
     },
   });
 
-  const serviceCtrl = useModalActions({
-    close: defineAction(),
-    advance: defineAction(),
-  });
-
-  const serviceModal = useMessageModal({
+  const serviceModal = useMessageModal<void, 'advance' | 'close'>({
     id: 'pharmacy-service-detail',
-    actions: serviceCtrl,
-    render: () => {
+    render: ({ action }) => {
       if (selectedService === null) {
         return null;
       }
@@ -502,7 +486,7 @@ function PharmacyRxContent() {
             {actionLabel !== null && (
               <Shared.Button
                 variant="contained"
-                {...serviceCtrl.advance((close) => {
+                {...action('advance', (close) => {
                   rxStore.services.advanceById(selectedService.id);
                   close();
                 })}
@@ -510,7 +494,7 @@ function PharmacyRxContent() {
                 {actionLabel}
               </Shared.Button>
             )}
-            <Shared.Button variant="outlined" {...serviceCtrl.close()}>
+            <Shared.Button variant="outlined" {...action('close')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -519,21 +503,15 @@ function PharmacyRxContent() {
     },
   });
 
-  const rxCtrl = useModalActions({
-    close: defineAction(),
-    closeRx: defineAction(),
-  });
-
-  const rxSlide = useSlideModal({
+  const rxSlide = useSlideModal<void, 'close' | 'closeRx'>({
     id: MODAL_ID,
     direction: 'right',
-    actions: rxCtrl,
     onOpen: async () => {
       uiStore.clearSession();
       await rxStore.load('RX-2024-4781');
     },
-    render: ({ isPreparing, direction }) => {
-      const rxCloseRxProps = rxCtrl.closeRx((close) => {
+    render: ({ isPreparing, direction, action }) => {
+      const rxCloseRxProps = action('closeRx', (close) => {
         rxStore.closeRx();
         close();
       });
@@ -662,7 +640,7 @@ function PharmacyRxContent() {
             )}
           </SlideModal.Content>
           <SlideModal.Footer justify="space-between">
-            <Shared.Button variant="outlined" {...rxCtrl.close()}>
+            <Shared.Button variant="outlined" {...action('close')}>
               Close Panel
             </Shared.Button>
             <Shared.Button
@@ -699,7 +677,7 @@ function PharmacyRxContent() {
         onClick={async () => {
           await rxSlide.open();
           const [, closeResult] = await rxSlide.waitForClose();
-          if (closeResult?.reason === 'close-rx') {
+          if (closeResult?.reason === 'closeRx') {
             uiStore.setResult('Prescription closed — all services completed');
           } else {
             uiStore.setResult(`Panel dismissed: ${closeResult?.reason ?? 'unknown'}`);

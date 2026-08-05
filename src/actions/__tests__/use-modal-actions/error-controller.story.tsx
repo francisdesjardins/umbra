@@ -1,32 +1,25 @@
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
 /**
  * Tests that an action handler throwing populates actions.error.
  */
 export function ErrorActionsHarness() {
-  const actions = useModalActions({
-    bad: defineAction(),
-    ok: defineAction(),
-  });
-
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'bad' | 'ok'>({
     id: 'ctrl-error',
-    actions,
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <div style={dialogStyle}>
-          <span data-testid="error-msg">{actions.error?.message ?? ''}</span>
+          <span data-testid="error-msg">{error?.message ?? ''}</span>
           <button
-            {...actions.bad(() => {
+            {...action('bad', () => {
               throw new Error('boom');
             })}
           >
             Bad Action
           </button>
           <button
-            {...actions.ok((close) => {
+            {...action('ok', (close) => {
               close();
             })}
           >

@@ -4,7 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { defineAction, useModal, useModalActions, useStore } from 'umbra/react';
+import { useModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'vanilla-form-example';
 
@@ -52,28 +52,22 @@ const store = createImmerStore(INITIAL_STATE, (api) => {
 export function VanillaFormExample() {
   const { result, values, errors } = useStore(store);
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    submit: defineAction<FormValues>(),
-  });
-
   // No type argument: `defineAction<FormValues>()` already said what this modal closes with,
   // and it reaches the hook through `actions`.
-  const formModal = useModal({
+  const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
-    actions,
     onOpen: () => {
       store.resetForm();
     },
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <VanillaFormModal.DefaultLayout style={{ minWidth: 475, maxWidth: 800, maxHeight: '70vh' }}>
           <VanillaFormModal.Header>
             <Shared.Heading>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
-            {actions.error && (
+            {error && (
               <Shared.Alert title="Error" severity="error">
-                {actions.error.message}
+                {error.message}
               </Shared.Alert>
             )}
           </VanillaFormModal.Header>
@@ -111,10 +105,10 @@ export function VanillaFormExample() {
             </VanillaFormModal.FieldGroup>
           </VanillaFormModal.Content>
           <VanillaFormModal.Footer>
-            <Shared.Button {...actions.cancel()}>Cancel</Shared.Button>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
-              {...actions.submit(async (close) => {
+              {...action('submit', async (close) => {
                 const snap = store.getSnapshot();
                 const newErrors: Partial<FormValues> = {};
                 if (!snap.values.name) {

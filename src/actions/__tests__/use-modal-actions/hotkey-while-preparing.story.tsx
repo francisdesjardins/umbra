@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
 import { Key } from '../../../utils/keys.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 /**
  * An action button that is live while `onOpen` is still running, reachable both ways.
@@ -15,15 +14,8 @@ export function HotkeyWhilePreparingHarness() {
   const [lastReason, setLastReason] = useState('');
   const [release, setRelease] = useState<(() => void) | null>(null);
 
-  const actions = useModalActions({
-    // F2, not Enter: a focused <button> is natively activated by Enter, which would make the
-    // test pass without the hotkey system ever being consulted.
-    confirm: defineAction({ hotkey: Key.F2 }),
-  });
-
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'confirm'>({
     id: 'hotkey-while-preparing',
-    actions,
     onOpen: () => {
       return new Promise<void>((resolve) => {
         setRelease(() => {
@@ -33,11 +25,11 @@ export function HotkeyWhilePreparingHarness() {
     },
     // `isPreparing` comes from the render args, not the hook return — inside `render` the latter
     // is the value this very call is still producing.
-    render: ({ isPreparing }) => {
+    render: ({ isPreparing, action }) => {
       return (
         <div style={dialogStyle}>
           <span data-testid="preparing-flag">{isPreparing ? 'opening' : 'ready'}</span>
-          <button {...actions.confirm()}>Confirm</button>
+          <button {...action('confirm', { hotkey: Key.F2 })}>Confirm</button>
           <button
             onClick={() => {
               release?.();

@@ -10,7 +10,7 @@ import { dialogStyle } from '../story-styles.js';
 export function ReopenSettlesHarness() {
   const [settleCount, setSettleCount] = useState(0);
 
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'done'>({
     id: 'reopen-modal',
     render: ({ handle }) => {
       return (

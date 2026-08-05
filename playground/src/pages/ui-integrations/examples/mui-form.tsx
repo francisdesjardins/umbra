@@ -10,7 +10,7 @@ import {
   asyncRejected,
   type AsyncState,
 } from '@/shared/lib/async-state';
-import { defineAction, useModal, useModalActions, useStore } from 'umbra/react';
+import { useModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'mui-form-example';
 
@@ -58,27 +58,21 @@ const store = createImmerStore(formInitial, (api) => {
 export function MuiFormExample() {
   const { submitResult, values, errors } = useStore(store);
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    submit: defineAction<FormValues>(),
-  });
-
   // The payload is inferred from `actions` — `defineAction<FormValues>()` is its one declaration.
-  const formModal = useModal({
+  const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
-    actions,
     onOpen: () => {
       store.resetForm();
     },
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <FormModal.DefaultLayout sx={{ minWidth: 475, maxWidth: 800, maxHeight: '70vh' }}>
           <FormModal.Header>
             <Shared.Heading>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
-            {actions.error && (
+            {error && (
               <Shared.AlertContent severity="error" sx={{ mt: 2 }}>
-                {actions.error.message}
+                {error.message}
               </Shared.AlertContent>
             )}
           </FormModal.Header>
@@ -109,12 +103,12 @@ export function MuiFormExample() {
           </FormModal.Content>
 
           <FormModal.Footer>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel')}>
               Cancel
             </Shared.Button>
             <Shared.Button
               variant="contained"
-              {...actions.submit(async (close) => {
+              {...action('submit', async (close) => {
                 const snap = store.getSnapshot();
                 const newErrors: Partial<FormValues> = {};
                 if (!snap.values.name) {

@@ -3,7 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Checkbox, FormControlLabel, Stack } from '@mui/material';
-import { defineAction, useModalActions, useSlideModal, useStore } from 'umbra/react';
+import { useSlideModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'mui-slide-example';
 
@@ -12,16 +12,10 @@ const resultStore = createResultStore();
 export function MuiSlideExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    save: defineAction(),
-  });
-
-  const panel = useSlideModal({
+  const panel = useSlideModal<void, 'cancel' | 'save'>({
     id: MODAL_ID,
     direction: 'right',
-    actions,
-    render: ({ direction }) => {
+    render: ({ direction, action }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
@@ -65,10 +59,10 @@ export function MuiSlideExample() {
             </Stack>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel')}>
               Cancel
             </Shared.Button>
-            <Shared.Button variant="contained" {...actions.save()}>
+            <Shared.Button variant="contained" {...action('save')}>
               Save Changes
             </Shared.Button>
           </SlideModal.Footer>

@@ -3,7 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Stack } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'helpers';
 
@@ -12,14 +12,9 @@ const resultStore = createResultStore();
 export function ContentHelpersExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-  });
-
-  const helpersModal = useMessageModal({
+  const helpersModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -37,7 +32,7 @@ export function ContentHelpersExample() {
             </Stack>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               Got it
             </Shared.Button>
           </MessageModal.Footer>

@@ -4,7 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Stack, Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
 export const MODAL_ID = 'delete-item-modal';
@@ -36,15 +36,9 @@ const resultStore = createResultStore();
 function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<void> }) {
   const { itemName } = useStore(deleteItemStore);
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: 'Escape' }),
-    delete: defineAction({ hotkey: 'Enter' }),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action, isRunning, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -59,33 +53,34 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
               <Shared.AlertContent severity="warning">
                 This action cannot be undone.
               </Shared.AlertContent>
-              {actions.error && (
-                <Shared.AlertContent severity="error">{actions.error.message}</Shared.AlertContent>
-              )}
+              {error && <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>}
               <Typography
                 variant="caption"
                 sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
               >
-                Status: {actions.isRunning ? 'Running...' : 'Idle'}
-                {actions.error && ` | Error: ${actions.error.message}`}
+                Status: {isRunning ? 'Running...' : 'Idle'}
+                {error && ` | Error: ${error.message}`}
               </Typography>
             </Stack>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel', { hotkey: 'Escape' })}>
               Cancel
             </Shared.Button>
             <Shared.Button
               variant="contained"
               color="error"
-              {...actions.delete(async (close) => {
-                const { itemId } = deleteItemStore.getSnapshot();
-                if (!itemId) {
-                  return;
-                }
-                await options.onDelete(itemId);
-                deleteItemStore.markDeleted();
-                close();
+              {...action('delete', {
+                hotkey: 'Enter',
+                onAction: async (close) => {
+                  const { itemId } = deleteItemStore.getSnapshot();
+                  if (!itemId) {
+                    return;
+                  }
+                  await options.onDelete(itemId);
+                  deleteItemStore.markDeleted();
+                  close();
+                },
               })}
             >
               Delete

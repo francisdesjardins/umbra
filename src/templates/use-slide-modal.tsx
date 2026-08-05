@@ -26,7 +26,10 @@ export type SlideAlign = 'stretch' | 'start' | 'center' | 'end';
  *
  * @typeParam TData - The modal's close payload type.
  */
-export type SlideModalRenderContext<TData = void> = BaseRenderContext<TData> & {
+export type SlideModalRenderContext<
+  TData = void,
+  TReason extends string = string,
+> = BaseRenderContext<TData, TReason> & {
   /** The slide direction for direction-aware layout */
   readonly direction: SlideDirection;
 };
@@ -37,10 +40,10 @@ export type SlideModalRenderContext<TData = void> = BaseRenderContext<TData> & {
  * @typeParam TData - Typed data payload from close. Defaults to `void`, and is inferred from
  * `actions` when the action set declares one — see `defineAction`.
  */
-export type UseSlideModalOptions<TData = void> = TemplateBaseOptions<
-  TData,
-  SlideModalRenderContext<TData>
-> & {
+export type UseSlideModalOptions<
+  TData = void,
+  TReason extends string = string,
+> = TemplateBaseOptions<TData, SlideModalRenderContext<TData, TReason>, TReason> & {
   /** Slide direction */
   readonly direction: SlideDirection;
   /**
@@ -53,7 +56,10 @@ export type UseSlideModalOptions<TData = void> = TemplateBaseOptions<
 };
 
 /** Return type of `useSlideModal`. */
-export type UseSlideModalReturn<TData = void> = UseModalReturn<TData>;
+export type UseSlideModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+  TData,
+  TReason
+>;
 
 const SLIDE_TRANSFORMS: Record<SlideDirection, { entrance: string; exit: string }> = {
   left: { entrance: 'translateX(0)', exit: 'translateX(-100%)' },
@@ -168,32 +174,27 @@ function getDialogStyle(
  * With a non-stretch `align` you must size the panel yourself in `render`.
  *
  * @example
- * const actions = useModalActions({
- *   close: defineAction(),
- * });
- *
- * const panel = useSlideModal({
+ * const panel = useSlideModal<void, 'close'>({
  *   id: 'settings-panel',
  *   direction: 'right',
- *   actions,
- *   render: ({ handle, direction }) => (
+ *   render: ({ direction, action }) => (
  *     <div style={{ height: '100%', background: '#fff' }}>
  *       <h2>Settings</h2>
  *       <p>Panel content</p>
- *       <button {...actions.close()}>Close</button>
+ *       <button {...action('close')}>Close</button>
  *     </div>
  *   ),
  * });
  */
-export function useSlideModal<TData = void>(
-  options: UseSlideModalOptions<TData>
-): UseSlideModalReturn<TData> {
+export function useSlideModal<TData = void, TReason extends string = string>(
+  options: UseSlideModalOptions<TData, TReason>
+): UseSlideModalReturn<TData, TReason> {
   // Inline non-modal panels anchor to their container, not the viewport — see `useModal`.
   const contained = options.nonModal === true && options.portal !== true;
   const align = options.align ?? 'stretch';
   const dialogStyle = getDialogStyle(options.direction, contained, align);
 
-  return useModal<TData>({
+  return useModal<TData, TReason>({
     ...buildModalOptions(options, {
       animation: getSlideAnimation(options.direction, align),
       style: dialogStyle,
@@ -202,8 +203,8 @@ export function useSlideModal<TData = void>(
     // A slide enters/exits by translating past its container edge; clip the contained
     // wrapper so an off-screen (positive-translate) panel doesn't expand document overflow.
     clipContainer: true,
-    render: ({ isPreparing, handle }) => {
-      return options.render({ isPreparing, handle, direction: options.direction });
+    render: (args) => {
+      return options.render({ ...args, direction: options.direction });
     },
   });
 }

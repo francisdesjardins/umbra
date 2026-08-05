@@ -12,7 +12,7 @@ export function PortalNonModalDefaultHarness() {
   const [dialogParent, setDialogParent] = useState('');
   const [openCount, setOpenCount] = useState(0);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'portal-non-modal-default',
     nonModal: true,
     animation: {

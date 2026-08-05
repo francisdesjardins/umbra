@@ -18,7 +18,7 @@ const log = createLogger('modal:click-outside');
  */
 export function useClickOutside(ctx: ModalHookContext, options: ClickOutsideOptions): void {
   const { store, getDialog, modalId, phase, dm } = ctx;
-  const { dismissOnClickOutside, dismissWhilePreparing, bridge } = options;
+  const { dismissOnClickOutside, dismissWhilePreparing, engine } = options;
 
   useEffect(() => {
     if (!dismissOnClickOutside || phase === 'closed') {
@@ -32,7 +32,7 @@ export function useClickOutside(ctx: ModalHookContext, options: ClickOutsideOpti
           phase: snap.phase,
           isPreparing: snap.isPreparing,
           dismissWhilePreparing,
-          isActionRunning: bridge?.getState().isRunning ?? false,
+          isActionRunning: engine.aggregated().isRunning,
         })
       ) {
         return;
@@ -60,5 +60,5 @@ export function useClickOutside(ctx: ModalHookContext, options: ClickOutsideOpti
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
     };
-  }, [phase, dismissOnClickOutside, dismissWhilePreparing, bridge, modalId, store, getDialog, dm]);
+  }, [phase, dismissOnClickOutside, dismissWhilePreparing, engine, modalId, store, getDialog, dm]);
 }

@@ -16,7 +16,7 @@ const slidePanelStyle: CSSProperties = {
 export function WaitForCloseSlideHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { open, waitForClose, Modal } = useSlideModal({
+  const { open, waitForClose, Modal } = useSlideModal<void, 'close'>({
     id: 'slide-wait',
     direction: 'left',
     render: ({ handle }) => {

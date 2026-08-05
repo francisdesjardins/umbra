@@ -8,7 +8,7 @@ import { dialogStyle } from '../story-styles.js';
 export function WaitForCloseHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { open, waitForClose, Modal } = useModal({
+  const { open, waitForClose, Modal } = useModal<void, 'done'>({
     id: 'wait-modal',
     render: ({ handle }) => {
       return (

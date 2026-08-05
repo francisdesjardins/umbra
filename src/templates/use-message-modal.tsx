@@ -13,7 +13,10 @@ import {
  *
  * @typeParam TData - The modal's close payload type.
  */
-export type MessageModalRenderContext<TData = void> = BaseRenderContext<TData>;
+export type MessageModalRenderContext<
+  TData = void,
+  TReason extends string = string,
+> = BaseRenderContext<TData, TReason>;
 
 /** Semantic intent of a message modal, used to drive icon and color selection in UI templates. */
 export type MessageModalType = 'info' | 'warning' | 'error' | 'success';
@@ -24,40 +27,37 @@ export type MessageModalType = 'info' | 'warning' | 'error' | 'success';
  * @typeParam TData - Typed data payload from close. Defaults to `void`, and is inferred from
  * `actions` when the action set declares one — see `defineAction`.
  */
-export type UseMessageModalOptions<TData = void> = TemplateBaseOptions<
-  TData,
-  MessageModalRenderContext<TData>
->;
+export type UseMessageModalOptions<
+  TData = void,
+  TReason extends string = string,
+> = TemplateBaseOptions<TData, MessageModalRenderContext<TData, TReason>, TReason>;
 
 /** Return type of `useMessageModal`. */
-export type UseMessageModalReturn<TData = void> = UseModalReturn<TData>;
+export type UseMessageModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+  TData,
+  TReason
+>;
 
 /**
  * Headless template hook for a standard message/confirmation modal.
  *
  * Users provide their own UI components in the render callback and use
- * `useModalActions`'s callable pattern for async actions with per-button loading.
+ * the `action` factory for async actions with per-button loading.
  *
- * @typeParam TData - Typed data payload from close. Defaults to `void`, and is inferred from
- * `actions` when the action set declares one — see `defineAction`. Pass it explicitly only for a
- * modal that has no actions, or whose payload travels through `handle.close`.
+ * @typeParam TData - Typed data payload from close. Defaults to `void`.
+ * @typeParam TReason - The reasons this modal closes with; declaring them rejects a mistyped
+ * reason and makes a `switch` in `onClose` exhaustive.
  *
  * @example
- * const actions = useModalActions({
- *   cancel: defineAction(),
- *   confirm: defineAction(),
- * });
- *
- * const modal = useMessageModal({
+ * const modal = useMessageModal<void, 'cancel' | 'confirm'>({
  *   id: 'delete-confirm',
- *   actions,
- *   render: ({ handle }) => (
+ *   render: ({ action }) => (
  *     <div className="modal-container">
  *       <h2>Delete Item</h2>
  *       <p>Are you sure?</p>
- *       <button {...actions.cancel((close) => close())}>Cancel</button>
+ *       <button {...action('cancel', (close) => close())}>Cancel</button>
  *       <button
- *         {...actions.confirm(async (close) => {
+ *         {...action('confirm', async (close) => {
  *           await api.delete();
  *           close();
  *         })}
@@ -68,10 +68,10 @@ export type UseMessageModalReturn<TData = void> = UseModalReturn<TData>;
  *   ),
  * });
  */
-export function useMessageModal<TData = void>(
-  options: UseMessageModalOptions<TData>
-): UseMessageModalReturn<TData> {
-  return useModal<TData>({
+export function useMessageModal<TData = void, TReason extends string = string>(
+  options: UseMessageModalOptions<TData, TReason>
+): UseMessageModalReturn<TData, TReason> {
+  return useModal<TData, TReason>({
     ...buildModalOptions(options, {
       animation: DEFAULT_FADE_ANIMATION,
       // Names itself, the way `useSlideModal` reports `'slide'`: `modalType` exists so a
@@ -79,8 +79,8 @@ export function useMessageModal<TData = void>(
       // inherits the generic default tells it nothing.
       modalType: 'message',
     }),
-    render: ({ isPreparing, handle }) => {
-      return options.render({ isPreparing, handle });
+    render: (args) => {
+      return options.render(args);
     },
   });
 }

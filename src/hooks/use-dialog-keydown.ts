@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { canDismiss } from '../utils/dismiss-gate.js';
-import { dismissKeyIsOwnedByAction } from '../utils/dismiss-key-gate.js';
 import { clickHotkeyButton, matchesHotkey } from '../utils/hotkey-utils.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
+import type { ActionGate } from '../actions/action-engine.js';
+import type { HotkeyDef } from '../actions/types.js';
 import type { DialogKeydownOptions, ModalHookContext } from './hook-types.js';
 
 const log = createLogger('modal:keydown');
@@ -20,21 +21,45 @@ const log = createLogger('modal:keydown');
  *
  * Receives a `getDialog` getter to access the DOM element without passing refs.
  */
+/**
+ * Whether an action has claimed the dismiss key, in which case dismissal defers to it.
+ *
+ * Asked at keydown rather than captured during render: actions are declared *by* rendering, so
+ * on the first pass this hook runs before any of them exist.
+ */
+const actionOwnsDismissKey = (engine: ActionGate, dismissKey: HotkeyDef | false) => {
+  return dismissKey !== false && engine.ownsHotkey(dismissKey);
+};
+
+/**
+ * Fire the action whose hotkey this is by clicking its button, so a hotkey runs exactly the
+ * path a real click does — loading state, `disabled` and any `onClick` veto all included.
+ */
+const dispatchActionHotkey = (engine: ActionGate, event: KeyboardEvent, dialog: HTMLElement) => {
+  if (engine.aggregated().isRunning) {
+    return false;
+  }
+  const match = engine.matchHotkey(event);
+  if (!match) {
+    return false;
+  }
+  event.preventDefault();
+  clickHotkeyButton(dialog, match.hotkey);
+  return true;
+};
+
 export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOptions): void {
   const { store, getDialog, modalId, phase, dm } = ctx;
   const {
     isPreparing,
     onKeyDown: onKeyDownProp,
     dismissKey,
-    bridge,
+    engine,
     nonModal,
     dismissWhilePreparing,
   } = options;
 
-  const onKeyDown = onKeyDownProp ?? bridge?.onKeyDown;
-
-  // An action declared the same key as the dismiss key — redirect to the button instead.
-  const actionOwnsDismissKey = dismissKeyIsOwnedByAction(dismissKey, bridge?.actionHotkeys);
+  const onKeyDown = onKeyDownProp;
 
   useEffect(() => {
     const dialog = getDialog();
@@ -53,6 +78,12 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
         }
       }
 
+      // An action's hotkey beats dismissal, and runs through the button so the click path and
+      // the key path stay the same path.
+      if (dispatchActionHotkey(engine, event, dialog)) {
+        return;
+      }
+
       // Always suppress native Escape cancel to prevent cascade on stacked dialogs,
       // regardless of the configured dismissKey.
       if (event.key === 'Escape') {
@@ -61,12 +92,12 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
 
       if (dismissKey !== false && matchesHotkey(event, dismissKey)) {
         if (
-          actionOwnsDismissKey ||
+          actionOwnsDismissKey(engine, dismissKey) ||
           !canDismiss({
             phase,
             isPreparing,
             dismissWhilePreparing,
-            isActionRunning: bridge?.getState().isRunning ?? false,
+            isActionRunning: engine.aggregated().isRunning,
           })
         ) {
           return;
@@ -86,9 +117,8 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
     isPreparing,
     onKeyDown,
     dismissKey,
-    actionOwnsDismissKey,
     dismissWhilePreparing,
-    bridge,
+    engine,
     modalId,
     store,
     getDialog,
@@ -116,7 +146,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
         return;
       }
 
-      if (actionOwnsDismissKey) {
+      if (actionOwnsDismissKey(engine, dismissKey)) {
         clickHotkeyButton(dialog, dismissKey);
         return;
       }
@@ -126,7 +156,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
           phase,
           isPreparing,
           dismissWhilePreparing,
-          isActionRunning: bridge?.getState().isRunning ?? false,
+          isActionRunning: engine.aggregated().isRunning,
         })
       ) {
         return;
@@ -140,17 +170,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
     return () => {
       dialog.removeEventListener('cancel', handleCancel);
     };
-  }, [
-    phase,
-    isPreparing,
-    dismissKey,
-    actionOwnsDismissKey,
-    dismissWhilePreparing,
-    bridge,
-    modalId,
-    store,
-    getDialog,
-  ]);
+  }, [phase, isPreparing, dismissKey, dismissWhilePreparing, engine, modalId, store, getDialog]);
 
   // Non-modal: a window-level capture listener so the dismiss key works wherever focus is. It
   // claims the key only once it has decided to act — a panel sits over a live page, and taking
@@ -174,7 +194,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
           phase,
           isPreparing,
           dismissWhilePreparing,
-          isActionRunning: bridge?.getState().isRunning ?? false,
+          isActionRunning: engine.aggregated().isRunning,
         })
       ) {
         // No claim on a press it declines: swallowing it here is a dead keyboard for whatever
@@ -187,7 +207,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
       event.preventDefault();
       event.stopPropagation();
 
-      if (actionOwnsDismissKey) {
+      if (actionOwnsDismissKey(engine, dismissKey)) {
         // An action declared this key as its hotkey.
         // The window listener's stopPropagation() prevents the dialog-level keydown
         // from firing, so we must dispatch the action by clicking the button directly.
@@ -211,9 +231,8 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
     phase,
     isPreparing,
     dismissKey,
-    actionOwnsDismissKey,
     dismissWhilePreparing,
-    bridge,
+    engine,
     modalId,
     store,
     getDialog,

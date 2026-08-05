@@ -4,7 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { Key, defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { Key, useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'vanilla-message-example';
 
@@ -13,15 +13,9 @@ const resultStore = createResultStore();
 export function VanillaMessageExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-    delete: defineAction({ hotkey: Key.Enter }),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <VanillaMessageModal.DefaultLayout>
           <VanillaMessageModal.Header>
@@ -33,19 +27,22 @@ export function VanillaMessageExample() {
               Are you sure you want to delete this item? This action cannot be undone.
             </Shared.Message>
             <Shared.Hint>This is a vanilla HTML + CSS modal example.</Shared.Hint>
-            {actions.error && (
+            {error && (
               <Shared.Alert title="Error" severity="error">
-                {actions.error.message}
+                {error.message}
               </Shared.Alert>
             )}
           </VanillaMessageModal.Content>
           <VanillaMessageModal.Footer>
-            <Shared.Button {...actions.cancel()}>Cancel</Shared.Button>
+            <Shared.Button {...action('cancel', { hotkey: Key.Escape })}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
-              {...actions.delete(async (close) => {
-                await simulateApiCall('delete item', 1000);
-                close();
+              {...action('delete', {
+                hotkey: Key.Enter,
+                onAction: async (close) => {
+                  await simulateApiCall('delete item', 1000);
+                  close();
+                },
               })}
             >
               Delete

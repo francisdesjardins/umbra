@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
@@ -10,19 +9,13 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function ModalActionHotkeyHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-    confirm: defineAction({ hotkey: Key.Enter }),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-hotkey',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
-          <button {...actions.confirm()}>Confirm</button>
-          <button {...actions.cancel()}>Cancel</button>
+          <button {...action('confirm', { hotkey: Key.Enter })}>Confirm</button>
+          <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
         </div>
       );
     },

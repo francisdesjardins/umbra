@@ -25,7 +25,7 @@ export function NonModalCustomDismissKeyHarness() {
     };
   }, []);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'close'>({
     id: 'non-modal-custom-dismiss',
     nonModal: true,
     dismissKey: Key.Delete,

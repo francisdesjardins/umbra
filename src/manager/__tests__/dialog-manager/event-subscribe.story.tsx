@@ -9,7 +9,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function EventSubscribeHarness() {
   const [events, setEvents] = useState<string[]>([]);
 
-  const { Modal, dialogManager } = useModal({
+  const { Modal, dialogManager } = useModal<void, 'close'>({
     id: 'dm-events',
     render: ({ handle }) => {
       return (

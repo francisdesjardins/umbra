@@ -54,7 +54,7 @@ Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
-- **Controller**: `useModalActions()` with inline action config — action keys become `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` button props. Custom state via `createStore`/`useStore` alongside.
+- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore`/`useStore` alongside.
 - **Public API**: All exports from [src/index.ts](../src/index.ts). Internal hooks in `src/hooks/` are NOT exported.
 - **Hotkeys**: declared on `defineAction(reason, { hotkey: Key.X })`, not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
 

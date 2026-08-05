@@ -23,7 +23,7 @@ export function TransitionToggleHarness() {
     };
   }, []);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'done'>({
     id: 'transition-toggle',
     render: ({ handle }) => {
       return (

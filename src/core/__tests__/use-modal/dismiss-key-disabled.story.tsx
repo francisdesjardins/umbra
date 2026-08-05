@@ -8,7 +8,7 @@ import { dialogStyle } from '../story-styles.js';
 export function DismissKeyDisabledHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'close'>({
     id: 'dismiss-disabled',
     dismissKey: false,
     render: ({ handle }) => {

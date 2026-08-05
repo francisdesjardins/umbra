@@ -28,7 +28,7 @@ function BystanderModal() {
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);
 
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'done'>({
     id: 'two-managers-blocking',
     render: ({ handle }) => {
       return (

@@ -3,7 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as VanillaSlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Button } from '@mui/material';
-import { defineAction, useModalActions, useSlideModal, useStore } from 'umbra/react';
+import { useSlideModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'vanilla-slide-example';
 
@@ -12,15 +12,10 @@ const resultStore = createResultStore();
 export function VanillaSlideExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    close: defineAction(),
-  });
-
-  const panel = useSlideModal({
+  const panel = useSlideModal<void, 'close'>({
     id: MODAL_ID,
     direction: 'right',
-    actions,
-    render: ({ direction }) => {
+    render: ({ direction, action }) => {
       return (
         <VanillaSlideModal.DefaultLayout direction={direction}>
           <VanillaSlideModal.Header>
@@ -48,7 +43,7 @@ export function VanillaSlideExample() {
             </VanillaSlideModal.SectionGroup>
           </VanillaSlideModal.Content>
           <VanillaSlideModal.Footer>
-            <Shared.Button variant="primary" {...actions.close()}>
+            <Shared.Button variant="primary" {...action('close')}>
               Close
             </Shared.Button>
           </VanillaSlideModal.Footer>

@@ -12,7 +12,7 @@ function ScopedModal({ id, label }: { readonly id: string; readonly label: strin
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'confirm'>({
     id,
     render: ({ handle }) => {
       return (
@@ -76,7 +76,7 @@ export function NoProviderHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'done'>({
     id: 'no-provider-modal',
     render: ({ handle }) => {
       return (

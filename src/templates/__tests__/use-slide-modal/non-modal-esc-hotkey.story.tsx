@@ -1,5 +1,4 @@
 import { type CSSProperties, useState } from 'react';
-import { defineAction, useModalActions } from '../../../actions/use-modal-actions.js';
 import { Key } from '../../../utils/keys.js';
 import { useSlideModal } from '../../use-slide-modal.js';
 
@@ -24,22 +23,20 @@ const slidePanelStyle: CSSProperties = {
 export function NonModalEscHotkeySlideHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-  });
-
-  const { open, isOpen, Modal } = useSlideModal({
+  const { open, isOpen, Modal } = useSlideModal<void, 'cancel'>({
     id: 'non-modal-esc-hotkey-slide',
     direction: 'right',
     nonModal: true,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={slidePanelStyle}>
           <p>Non-modal panel with ESC hotkey</p>
           <button
-            {...actions.cancel((close) => {
-              close();
+            {...action('cancel', {
+              hotkey: Key.Escape,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Cancel

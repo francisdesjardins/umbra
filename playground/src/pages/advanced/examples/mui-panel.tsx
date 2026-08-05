@@ -24,7 +24,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { Key, defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { Key, useMessageModal, useStore } from 'umbra/react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -148,19 +148,11 @@ export function MuiPanelExample() {
   const { result } = useStore(resultStore);
   const wizard = useStore(wizardStore);
 
-  const actions = useModalActions({
-    close: defineAction(),
-    back: defineAction(),
-    next: defineAction(),
-    submit: defineAction<WizardData>({ hotkey: Key.Enter }),
-  });
-
   // Template hooks infer the payload from `actions` too — `submit` is the only action that
   // carries one, so `WizardData` is what this modal closes with.
-  const modal = useMessageModal({
+  const modal = useMessageModal<WizardData, 'back' | 'close' | 'next' | 'submit'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action, error }) => {
       const title = STEP_TITLES[wizard.step] ?? STEP_TITLES[0];
 
       return (
@@ -222,7 +214,7 @@ export function MuiPanelExample() {
                     </Select>
                   </FormControl>
 
-                  <IconButton size="small" aria-label="Close" {...actions.close()}>
+                  <IconButton size="small" aria-label="Close" {...action('close')}>
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </>
@@ -368,10 +360,8 @@ export function MuiPanelExample() {
               {wizard.step === 2 && (
                 <Stack spacing={2}>
                   <Shared.Heading>Confirm changes</Shared.Heading>
-                  {actions.error && (
-                    <Shared.AlertContent severity="error">
-                      {actions.error.message}
-                    </Shared.AlertContent>
+                  {error && (
+                    <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>
                   )}
                   <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Stack spacing={1}>
@@ -405,7 +395,7 @@ export function MuiPanelExample() {
             {wizard.step > 0 && (
               <Shared.Button
                 variant="outlined"
-                {...actions.back(() => {
+                {...action('back', () => {
                   wizardStore.setStep(Math.max(wizard.step - 1, 0));
                 })}
               >
@@ -415,17 +405,20 @@ export function MuiPanelExample() {
             {wizard.step === STEP_COUNT - 1 ? (
               <Shared.Button
                 variant="contained"
-                {...actions.submit(async (close) => {
-                  await simulateApiCall('Create pipeline');
-                  const snap = wizardStore.getSnapshot();
-                  close({
-                    name: snap.name,
-                    environment: snap.environment,
-                    region: snap.region,
-                    accessLevel: snap.accessLevel,
-                    notifications: snap.notifications,
-                    schedule: snap.schedule,
-                  });
+                {...action('submit', {
+                  hotkey: Key.Enter,
+                  onAction: async (close) => {
+                    await simulateApiCall('Create pipeline');
+                    const snap = wizardStore.getSnapshot();
+                    close({
+                      name: snap.name,
+                      environment: snap.environment,
+                      region: snap.region,
+                      accessLevel: snap.accessLevel,
+                      notifications: snap.notifications,
+                      schedule: snap.schedule,
+                    });
+                  },
                 })}
               >
                 Submit
@@ -433,7 +426,7 @@ export function MuiPanelExample() {
             ) : (
               <Shared.Button
                 variant="contained"
-                {...actions.next(() => {
+                {...action('next', () => {
                   wizardStore.setStep(Math.min(wizard.step + 1, STEP_COUNT - 1));
                 })}
               >

@@ -10,7 +10,7 @@ export function PortalDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
   const [dialogParent, setDialogParent] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'done'>({
     id: 'portal-default',
     animation: {
       entrance: { opacity: 1 },

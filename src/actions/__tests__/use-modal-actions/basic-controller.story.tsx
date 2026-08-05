@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
 import { createStore, useStore } from '../../../store/index.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 const countStore = createStore({ count: 0 }, ({ set, reset }) => {
   return {
@@ -30,15 +29,9 @@ export function BasicActionsHarness() {
     return s.count;
   });
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'ctrl-basic',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <span data-testid="count">{String(count)}</span>
@@ -50,14 +43,14 @@ export function BasicActionsHarness() {
             Increment
           </button>
           <button
-            {...actions.confirm((close) => {
+            {...action('confirm', (close) => {
               close();
             })}
           >
             Confirm
           </button>
           <button
-            {...actions.cancel((close) => {
+            {...action('cancel', (close) => {
               close();
             })}
           >

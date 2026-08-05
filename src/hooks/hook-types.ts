@@ -1,4 +1,4 @@
-import type { ActionsGate } from '../actions/bridge.js';
+import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { GetDialog, ModalAnimation, ModalPhase } from '../core/types.js';
 import type { ModalStore } from '../core/modal-store.js';
@@ -32,7 +32,7 @@ export type DialogKeydownOptions = {
   readonly isPreparing: boolean;
   readonly onKeyDown: ((event: KeyboardEvent) => void) | undefined;
   readonly dismissKey: HotkeyDef | false;
-  readonly bridge: ActionsGate | undefined;
+  readonly engine: ActionGate;
   readonly nonModal: boolean;
   readonly dismissWhilePreparing: boolean;
 };
@@ -41,10 +41,10 @@ export type DialogKeydownOptions = {
 export type ClickOutsideOptions = {
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
-  readonly bridge: ActionsGate | undefined;
+  readonly engine: ActionGate;
 };
 
 /** Options for `useFocusManagement`. */
 export type FocusManagementOptions = {
-  readonly bridge: ActionsGate | undefined;
+  readonly engine: ActionGate;
 };

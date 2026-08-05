@@ -1,5 +1,4 @@
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
 /**
@@ -8,20 +7,14 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
  * should be restored to the first focused element (Ok button, autofocused).
  */
 export function FocusRestorationHarness() {
-  const actions = useModalActions({
-    bad: defineAction(),
-    ok: defineAction(),
-  });
-
-  const { open, Modal } = useModal({
+  const { open, Modal } = useModal<void, 'bad' | 'ok'>({
     id: 'ctrl-focus',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <button
             data-testid="ok-btn"
-            {...actions.ok((close) => {
+            {...action('ok', (close) => {
               close();
             })}
           >
@@ -29,7 +22,7 @@ export function FocusRestorationHarness() {
           </button>
           <button
             data-testid="bad-btn"
-            {...actions.bad(() => {
+            {...action('bad', () => {
               throw new Error('boom');
             })}
           >

@@ -3,7 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { Stack, Typography } from '@mui/material';
-import { ModalOutlet, defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { ModalOutlet, useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'outlet-demo';
 
@@ -14,15 +14,9 @@ const resultStore = createResultStore();
 // ── Inner component — no {Modal} in JSX ────────────────────────────────────
 
 function ConfirmDialog() {
-  const actions = useModalActions({
-    confirm: defineAction(),
-    cancel: defineAction(),
-  });
-
-  const confirmModal = useMessageModal({
+  const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -38,10 +32,10 @@ function ConfirmDialog() {
             </Typography>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel')}>
               Cancel
             </Shared.Button>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               Confirm
             </Shared.Button>
           </MessageModal.Footer>

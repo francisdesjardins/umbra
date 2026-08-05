@@ -5,7 +5,7 @@ import { dialogStyle } from '../story-styles.js';
 // ── Harness: multiple modals in one outlet ─────────────────────────────────
 
 function ModalA() {
-  const { open, isOpen, dialogManager } = useModal({
+  const { open, isOpen, dialogManager } = useModal<void, 'done-a'>({
     id: 'outlet-multi-a',
     render: ({ handle }) => {
       return (
@@ -45,7 +45,7 @@ function ModalA() {
 }
 
 function ModalB() {
-  const { open, isOpen, dialogManager } = useModal({
+  const { open, isOpen, dialogManager } = useModal<void, 'done-b'>({
     id: 'outlet-multi-b',
     render: ({ handle }) => {
       return (

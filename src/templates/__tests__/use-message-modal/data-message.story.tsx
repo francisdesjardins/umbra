@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function DataMessageHarness() {
   const [lastData, setLastData] = useState('');
 
-  const { open, Modal } = useMessageModal<{ name: string }>({
+  const { open, Modal } = useMessageModal<{ name: string }, 'submit'>({
     id: 'msg-data',
     render: ({ handle }) => {
       return (

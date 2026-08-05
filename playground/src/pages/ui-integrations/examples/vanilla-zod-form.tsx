@@ -6,7 +6,7 @@ import { createImmerStore } from '@/shared/lib/immer-store';
 import { isNullish } from '@/shared/lib/is-nullish';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
-import { defineAction, useModal, useModalActions, useStore } from 'umbra/react';
+import { useModal, useStore } from 'umbra/react';
 import { z } from 'zod';
 
 export const MODAL_ID = 'vanilla-zod-form-example';
@@ -208,19 +208,13 @@ export function VanillaZodFormExample() {
     return s.errors.map;
   });
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    submit: defineAction<UserForm>(),
-  });
-
   // `UserForm` is inferred from zod, then from `actions` — declared once, restated nowhere.
-  const formModal = useModal({
+  const formModal = useModal<UserForm, 'cancel' | 'submit'>({
     id: MODAL_ID,
-    actions,
     onOpen: () => {
       formFlowStore.resetForm();
     },
-    render: () => {
+    render: ({ action, error }) => {
       return (
         <VanillaFormModal.DefaultLayout
           style={{
@@ -237,9 +231,9 @@ export function VanillaZodFormExample() {
               <code>createStore</code> + immer <code>update</code>, Zod on submit, CSS{' '}
               <code>:user-invalid</code> + <code>:has()</code> for field feedback.
             </Shared.Detail>
-            {actions.error && (
+            {error && (
               <Shared.Alert title="Validation Error" severity="error">
-                {actions.error.message}
+                {error.message}
               </Shared.Alert>
             )}
           </VanillaFormModal.Header>
@@ -454,10 +448,10 @@ export function VanillaZodFormExample() {
           </VanillaFormModal.Content>
 
           <VanillaFormModal.Footer>
-            <Shared.Button {...actions.cancel()}>Cancel</Shared.Button>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
-              {...actions.submit(async (close) => {
+              {...action('submit', async (close) => {
                 const validation = formFlowStore.validate();
                 if (!validation.success) {
                   return;

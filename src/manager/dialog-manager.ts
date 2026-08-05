@@ -30,7 +30,8 @@ import type {
  */
 type RegisteredStore = {
   readonly requestOpen: () => void;
-  readonly close: (reason: string) => boolean;
+  // A method, not a property: a modal that narrows its reasons still satisfies the port.
+  close(reason: string): boolean;
   readonly subscribe: (listener: () => void) => () => void;
   readonly getSnapshot: () => ModalStoreSnapshot;
 };

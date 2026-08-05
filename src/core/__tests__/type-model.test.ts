@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { defineAction, useModalActions } from '../../actions/use-modal-actions.js';
-import type { ActionsBinding } from '../../actions/bridge.js';
-import type { ActionDefinition, ActionKeys, ActionPayload } from '../../actions/types.js';
+import type { ActionFactory } from '../../actions/types.js';
 import type { BaseRenderContext, TemplateCommonOptions } from '../../templates/shared.js';
 import type { useMessageModal } from '../../templates/use-message-modal.js';
 import type { SlideModalRenderContext, useSlideModal } from '../../templates/use-slide-modal.js';
@@ -50,13 +48,19 @@ export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, ModalRenderArgs
 // `ModalRenderArgs` reaches every template.
 export type _SlideContextExtendsBase = Extends<SlideModalRenderContext, BaseRenderContext>;
 
+// The action factory is part of that slice — which is what makes actions declarable from
+// inside `render` without anything being passed in.
+export type _RenderArgsCarryTheFactory = Equals<
+  ModalRenderArgs<Payload>['action'],
+  ActionFactory<Payload>
+>;
+
 // ── The payload travels ──────────────────────────────────────────────────────
 
 type Payload = { readonly id: number };
 
 // The one thing a payload-typed modal must guarantee: the close handle its render callback is
-// handed accepts that payload and nothing else. It reaches there through three derivations
-// (`UseModalOptions` → `ModalRenderArgs` → `ModalHandle`), so it is worth asserting directly.
+// handed accepts that payload and nothing else.
 export type _RenderHandleTakesPayload = Equals<
   Parameters<ModalRenderArgs<Payload>['handle']['close']>,
   [reason?: string | undefined, data?: Payload | undefined]
@@ -75,35 +79,120 @@ const voidHandle: ModalHandle = { close: () => {} };
 // @ts-expect-error a modal with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 
-// ── The controller's payload meets the modal's ───────────────────────────────
+// ── Reasons are closed when you close them ───────────────────────────────────
 
-// The key is the reason: the callable names and the close reasons are one declaration.
-export type _ActionKeysAreReasons = Equals<
-  ActionKeys<{ save: ActionDefinition; cancel: ActionDefinition; nope: string }>,
-  'save' | 'cancel'
+// Declaring the reasons on the hook buys three things the old config-object design could not:
+// a mistyped reason is rejected, `handle.close` is constrained rather than taking any string,
+// and `switch (result.reason)` is exhaustive. `'dismiss'` is always in the union because the
+// library itself produces it — on Escape, on a backdrop click, and on teardown.
+type Reasons = 'save' | 'cancel';
+
+export type _DismissIsAlwaysAvailable = Equals<
+  CloseResult<Payload, Reasons>['reason'],
+  'save' | 'cancel' | 'dismiss'
 >;
 
-// A mixed controller (one action carries a payload, one closes bare) reports just the payload.
-// If `void` survived here, the union would fit no modal at all — see `ActionPayload`.
-export type _MixedControllerPayload = Equals<
-  ActionPayload<{ save: ActionDefinition<Payload>; cancel: ActionDefinition }>,
-  Payload
+declare const useModalT: typeof useModal;
+declare const useMessageModalT: typeof useMessageModal;
+declare const useSlideModalT: typeof useSlideModal;
+
+/**
+ * Never called, and never rendered: its body is a set of *real* call sites, so the assertions
+ * are call-site inference against the real signatures. The hooks are imported type-only, since
+ * this is a unit test and nothing here may pull React in at runtime.
+ */
+function useDeclaredReasons() {
+  return useModalT<Payload, Reasons>({
+    id: 'i',
+    render: ({ action, handle }) => {
+      action('save', (close) => {
+        close({ id: 1 });
+      });
+      action('cancel');
+      // @ts-expect-error 'savee' is not one of the declared reasons
+      action('savee');
+      // @ts-expect-error the payload is `Payload`, not a number
+      action('save', (close: (d: number) => void) => {
+        close(42);
+      });
+
+      handle.close('cancel');
+      handle.close('dismiss');
+      // @ts-expect-error the handle is constrained to the declared reasons too
+      handle.close('nonsense');
+      return null;
+    },
+    onClose: (result) => {
+      switch (result.reason) {
+        case 'save':
+        case 'cancel':
+        case 'dismiss':
+          return;
+        default: {
+          // If `reason` widened to `string`, this assignment stops compiling — which is the
+          // whole assertion. Dropping any case above must break it too.
+          const exhaustive: never = result.reason;
+          return exhaustive;
+        }
+      }
+    },
+  });
+}
+
+export type _DeclaredReasonsReachTheReturn = Equals<
+  ReturnType<typeof useDeclaredReasons>,
+  UseModalReturn<Payload, Reasons>
 >;
 
-// All-bare controllers impose nothing, which is what lets them bind to any modal.
-export type _BareControllerPayload = Equals<ActionPayload<{ cancel: ActionDefinition }>, never>;
+/** Templates inherit the same guarantee rather than re-deriving it. */
+function useTemplateReasons() {
+  return {
+    message: useMessageModalT<Payload, Reasons>({
+      id: 'i',
+      render: ({ action }) => {
+        action('save');
+        // @ts-expect-error the template narrows reasons exactly as the core hook does
+        action('nope');
+        return null;
+      },
+    }),
+    slide: useSlideModalT<Payload, Reasons>({
+      id: 'i',
+      direction: 'right',
+      render: ({ action, direction }) => {
+        void direction;
+        action('cancel');
+        return null;
+      },
+    }),
+  };
+}
+type TemplateReasons = ReturnType<typeof useTemplateReasons>;
+export type _MessageKeepsReasons = Equals<
+  TemplateReasons['message'],
+  UseModalReturn<Payload, Reasons>
+>;
+export type _SlideKeepsReasons = Equals<TemplateReasons['slide'], UseModalReturn<Payload, Reasons>>;
 
-// Covariance in the payload, the property that makes the two previous facts useful: a bare
-// controller fits a payload-typed modal, and a payload-typed controller fits a modal that
-// accepts it.
-/** What a controller whose actions all close bare produces — `ActionsBinding<never>`. */
-type BareBinding = ActionsBinding;
-
-export type _BareBindingFitsTypedModal = Extends<BareBinding, ActionsBinding<Payload>>;
-export type _TypedBindingFitsItsModal = Extends<ActionsBinding<Payload>, ActionsBinding<Payload>>;
-
-// @ts-expect-error a controller that closes with a payload does not fit a modal that takes none
-export type _TypedBindingRejectedByBareModal = Extends<ActionsBinding<Payload>, BareBinding>;
+// Left undeclared, a modal accepts any reason — the permissive default, so a modal that closes
+// only through `handle.close` needs no ceremony.
+function useLooseReasons() {
+  return useModalT<Payload>({
+    id: 'i',
+    render: ({ action }) => {
+      action('anything-at-all');
+      return null;
+    },
+    onClose: (result) => {
+      const reason: string = result.reason;
+      void reason;
+    },
+  });
+}
+export type _LooseReasonIsString = Equals<
+  Awaited<ReturnType<ReturnType<typeof useLooseReasons>['waitForClose']>>[1],
+  CloseResult<Payload> | null
+>;
 
 // ── The template surface is a complement, not a list ─────────────────────────
 
@@ -119,97 +208,11 @@ export type _TemplateOptionsAreTheComplement = Equals<
 
 // `Equals` compares assignability, and property modifiers do not affect it — so the assertion
 // above would still hold if the derivation had dropped `readonly` along the way. It does not
-// (`Omit` is homomorphic and preserves modifiers), and this is what says so: the options a
-// template forwards are as immutable as the core ones they come from.
+// (`Omit` is homomorphic and preserves modifiers), and this is what says so.
 // A real value, not a `declare const`: this statement runs when the suite imports the file.
 const templateOptions: TemplateCommonOptions = {};
 // @ts-expect-error the forwarded options keep the `readonly` they are derived from
-templateOptions.actions = undefined;
-
-// ── The payload is inferred, not restated ────────────────────────────────────
-//
-// `TData` reaches the hook from the action set, so `useModal<Result>({ actions })` is a
-// restatement of what `defineAction<Result>()` already said. These pin that it stays that way:
-// the hooks are imported *type-only* and re-declared, so the assertions are call-site
-// inference against the real signatures with no runtime import (this file is a unit test, and
-// the root must stay React-free).
-
-declare const useModalT: typeof useModal;
-declare const useMessageModalT: typeof useMessageModal;
-declare const useSlideModalT: typeof useSlideModal;
-declare const useModalActionsT: typeof useModalActions;
-declare const defineActionT: typeof defineAction;
-
-/**
- * Never called, and never rendered: it exists so that its body is a set of *real* call sites,
- * from which the assertions below read the payload each one inferred. Named as a hook because
- * it composes hooks — which is also what keeps `rules-of-hooks` satisfied.
- */
-function useInferredPayloads() {
-  const typedActions = useModalActionsT({
-    save: defineActionT<Payload>(),
-    cancel: defineActionT(),
-  });
-
-  return {
-    // No explicit type argument on any of the three — the payload arrives from `actions` alone.
-    modal: useModalT({
-      id: 'i',
-      actions: typedActions,
-      render: () => {
-        return null;
-      },
-    }),
-    message: useMessageModalT({
-      id: 'i',
-      actions: typedActions,
-      render: () => {
-        return null;
-      },
-    }),
-    slide: useSlideModalT({
-      id: 'i',
-      direction: 'right',
-      actions: typedActions,
-      render: () => {
-        return null;
-      },
-    }),
-    // The caveat that keeps the above from being over-applied: an all-bare set carries no
-    // payload, so a modal that gets its payload from `handle.close` rather than from an action
-    // must still declare it. Dropping the type argument there narrows `TData` to `never`.
-    bare: useModalT({
-      id: 'i',
-      actions: useModalActionsT({ cancel: defineActionT() }),
-      render: () => {
-        return null;
-      },
-    }),
-  };
-}
-
-type Inferred = ReturnType<typeof useInferredPayloads>;
-
-export type _ModalInfersPayload = Equals<Inferred['modal'], UseModalReturn<Payload>>;
-export type _MessageInfersPayload = Equals<Inferred['message'], UseModalReturn<Payload>>;
-export type _SlideInfersPayload = Equals<Inferred['slide'], UseModalReturn<Payload>>;
-export type _BareInfersNever = Equals<Inferred['bare'], UseModalReturn<never>>;
-
-// ── The close tuple discriminates ────────────────────────────────────────────
-
-// What makes `const [error, result] = await waitForClose()` usable without a null check on the
-// happy path: the two branches are told apart by the *first* element, so narrowing `error`
-// narrows `result` with it.
-type CloseTuple = Awaited<ReturnType<UseModalReturn<Payload>['waitForClose']>>;
-
-export type _OkBranchCarriesResult = Equals<
-  Extract<CloseTuple, readonly [null, unknown]>[1],
-  CloseResult<Payload>
->;
-export type _ErrorBranchCarriesNull = Equals<
-  Extract<CloseTuple, readonly [Error, unknown]>[1],
-  null
->;
+templateOptions.animation = undefined;
 
 // ── Variant exclusivity ──────────────────────────────────────────────────────
 
@@ -234,17 +237,22 @@ test.describe('type model', () => {
   });
 
   test('the payload cannot be widened at either end of the close path', () => {
-    // Again the assertions are the `@ts-expect-error` directives — one on a call, one on a
-    // type alias; an unused directive fails the build, so this passing means both mismatches
-    // are still rejected.
+    // Again the assertions are the `@ts-expect-error` directives — an unused one fails the
+    // build, so this passing means every mismatch above is still rejected.
     expect(typeof voidHandle.close).toBe('function');
   });
 
-  test('render args carry exactly the two render-time fields', () => {
+  test('render args carry exactly the render-time fields', () => {
     // Guards against the slice quietly growing: anything added to `ModalRenderArgs` lands in
     // every template render context and in the hook return, so it deserves a deliberate edit
     // here rather than arriving unnoticed.
-    const keys: readonly (keyof ModalRenderArgs)[] = ['isPreparing', 'handle'];
-    expect([...keys].sort()).toEqual(['handle', 'isPreparing']);
+    const keys: readonly (keyof ModalRenderArgs)[] = [
+      'isPreparing',
+      'handle',
+      'action',
+      'isRunning',
+      'error',
+    ];
+    expect([...keys].sort()).toEqual(['action', 'error', 'handle', 'isPreparing', 'isRunning']);
   });
 });

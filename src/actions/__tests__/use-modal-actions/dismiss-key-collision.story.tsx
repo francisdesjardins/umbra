@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
@@ -11,20 +10,18 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function DismissKeyActionCollisionHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    remove: defineAction({ hotkey: Key.Delete }),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'remove'>({
     id: 'ctrl-dismiss-collision',
     dismissKey: Key.Delete,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <button
-            {...actions.remove((close) => {
-              close();
+            {...action('remove', {
+              hotkey: Key.Delete,
+              onAction: (close) => {
+                close();
+              },
             })}
           >
             Remove

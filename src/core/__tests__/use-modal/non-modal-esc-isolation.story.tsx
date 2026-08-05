@@ -25,7 +25,7 @@ export function NonModalEscIsolationHarness() {
     };
   }, []);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'close'>({
     id: 'esc-isolation-panel',
     nonModal: true,
     animation: {

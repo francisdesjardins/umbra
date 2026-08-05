@@ -8,10 +8,10 @@ components exported; users bring their own.
 The package root is plain TypeScript and **must resolve with React absent**. Bindings are the
 optional layer.
 
-| Specifier     | Contents                                                                                                                                                                                                                                                               |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | `dialogManager`, `createDialogManager`, the store engine (`createStore`, `watch`, `shallowEqual`), `normalizeError`, `Key`, `setLogLevel`. No React.                                                                                                                   |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `useModalActions`, `ModalOutlet`, `useStore`, `createStoreContext`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
+| Specifier     | Contents                                                                                                                                                                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`       | `dialogManager`, `createDialogManager`, the store engine (`createStore`, `watch`, `shallowEqual`), `normalizeError`, `Key`, `setLogLevel`. No React.                                                                                                |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `useStore`, `createStoreContext`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
 
 Adding a binding (Solid, Vue, a web component) means adding a sibling of `src/react.ts` and a
 new `exports` entry. Nothing under the root changes.
@@ -88,8 +88,9 @@ helper is a helper wherever it ships.
 
 - **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): No `useMemo`/`useCallback`/`React.memo`. No ref writes during render. No property assignment on `useState` values. See [src/CLAUDE.md](src/CLAUDE.md#react-compiler) for full rules.
 - **TypeScript strict**: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature`
-- **Hotkeys**: Declare via `defineAction({ hotkey })` — no standalone `useHotkey`. Custom button wrappers **must forward `aria-keyshortcuts`**. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
-- **Action identity**: the `useModalActions` config **key** is the action's close reason — `confirm: defineAction()` closes with `reason: 'confirm'`. Nothing restates it.
+- **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward `aria-keyshortcuts`**. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
+- **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
+- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
 - **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
 - **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
 - **Yarn workspaces**: the repo is two packages — `umbra` (root, published) and `umbra-playground` (`playground/`, `private: true`). One `yarn install` at the root installs both. **The published package's dependency list is the root manifest**, so anything the demo needs — MUI, Emotion, TanStack Router, zod, immer, react-syntax-highlighter — belongs in `playground/package.json` and must never be added to the root. The root's own `dependencies` stay empty: the library ships zero runtime dependencies. Root `dev`/`playground:*` scripts delegate via `yarn workspace umbra-playground <script>`.

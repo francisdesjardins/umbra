@@ -14,7 +14,7 @@ import { dialogStyle } from '../story-styles.js';
 export function StableIdentityHarness() {
   const [tick, setTick] = useState(0);
 
-  const modal = useModal({
+  const modal = useModal<void, 'confirm'>({
     id: 'stable-identity',
     render: ({ handle }) => {
       return (

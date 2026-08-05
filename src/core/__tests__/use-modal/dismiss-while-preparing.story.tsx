@@ -11,7 +11,7 @@ export function DismissWhilePreparingDisabledHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'dismiss-while-preparing-modal',
     dismissWhilePreparing: false,
     onOpen: () => {
@@ -70,7 +70,7 @@ export function DismissWhilePreparingDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
     id: 'dismiss-while-preparing-default',
     onOpen: () => {
       return new Promise<void>((resolve) => {

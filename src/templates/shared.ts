@@ -25,8 +25,8 @@ import type {
  *
  * @internal Not exported from index.ts.
  */
-export type TemplateCommonOptions<TData = void> = Omit<
-  UseModalBaseOptions<TData>,
+export type TemplateCommonOptions<TData = void, TReason extends string = string> = Omit<
+  UseModalBaseOptions<TData, TReason>,
   'id' | 'render' | 'onClose' | 'modalType' | 'clipContainer'
 > &
   ModalVariant;
@@ -43,13 +43,17 @@ export type TemplateCommonOptions<TData = void> = Omit<
  *
  * @internal Not exported from index.ts.
  */
-export type TemplateBaseOptions<TData, TRenderContext> = TemplateCommonOptions<TData> & {
+export type TemplateBaseOptions<
+  TData,
+  TRenderContext,
+  TReason extends string = string,
+> = TemplateCommonOptions<TData, TReason> & {
   /** Unique modal identifier */
   readonly id: string;
   /** Render function receiving template-specific context */
   readonly render: (ctx: TRenderContext) => ReactNode;
   /** Called when the modal closes with the close result */
-  readonly onClose?: ((result: CloseResult<TData>) => void | Promise<void>) | undefined;
+  readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 };
 
 /**
@@ -66,7 +70,10 @@ export type TemplateBaseOptions<TData, TRenderContext> = TemplateCommonOptions<T
  *
  * @internal Not exported from index.ts.
  */
-export type BaseRenderContext<TData = void> = ModalRenderArgs<TData>;
+export type BaseRenderContext<TData = void, TReason extends string = string> = ModalRenderArgs<
+  TData,
+  TReason
+>;
 
 /**
  * Default fade animation used by useMessageModal.
@@ -92,8 +99,12 @@ export const DEFAULT_FADE_ANIMATION = {
  *
  * @internal Not exported from index.ts.
  */
-export function buildModalOptions<TData = void, TRenderContext = unknown>(
-  options: TemplateBaseOptions<TData, TRenderContext>,
+export function buildModalOptions<
+  TData = void,
+  TRenderContext = unknown,
+  TReason extends string = string,
+>(
+  options: TemplateBaseOptions<TData, TRenderContext, TReason>,
   defaults: {
     readonly animation: ModalAnimation;
     readonly style?: CSSProperties | undefined;

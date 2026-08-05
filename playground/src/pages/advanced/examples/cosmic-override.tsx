@@ -2,7 +2,7 @@ import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { Box, Stack, Typography } from '@mui/material';
 import { dialogPlacement } from 'umbra';
-import { Key, defineAction, useModal, useModalActions } from 'umbra/react';
+import { Key, useModal } from 'umbra/react';
 import { useState } from 'react';
 
 export const GATE_ID = 'cosmic-gate';
@@ -116,11 +116,7 @@ export function CosmicOverrideExample() {
   // hand — outside React, in a web component, in a canvas overlay — applies exactly this.
   const placement = dialogPlacement({ nonModal: true, portal: false });
 
-  const warpActions = useModalActions({
-    engage: defineAction<string>({ hotkey: Key.Enter }),
-  });
-
-  const warp = useModal({
+  const warp = useModal<string, 'abort' | 'engage'>({
     id: WARP_ID,
     // A real dialog, so it says what it is. The gate below stays unnamed on purpose: it is
     // non-modal, never takes focus, and is announced by nothing.
@@ -128,18 +124,20 @@ export function CosmicOverrideExample() {
     // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
     modalType: 'cosmic',
     animation: WARP_ANIMATION,
-    actions: warpActions,
     dismissKey: Key.Escape,
     dismissOnBackdropClick: true,
-    render: ({ handle }) => {
+    render: ({ handle, action, error }) => {
       // Every field of an action's props is a real DOM prop except `loading`, which a raw
       // `<button>` would warn about — and `aria-keyshortcuts` rides along in the spread, which
       // is what makes the Enter hotkey find this button.
-      const { loading, ...engage } = warpActions.engage(async (close) => {
-        // Throws now and then — which is the point: a failed action keeps the modal open and
-        // leaves the reason on `actions.error` for you to render however you like.
-        await simulateApiCall('Warp charge', 900);
-        close(pickSector());
+      const { loading, ...engage } = action('engage', {
+        hotkey: Key.Enter,
+        onAction: async (close) => {
+          // Throws now and then — which is the point: a failed action keeps the modal open and
+          // leaves the reason on `error` for you to render however you like.
+          await simulateApiCall('Warp charge', 900);
+          close(pickSector());
+        },
       });
 
       return (
@@ -167,9 +165,9 @@ export function CosmicOverrideExample() {
               Abort
             </Box>
           </Stack>
-          {warpActions.error && (
+          {error && (
             <Typography variant="caption" role="alert" sx={{ color: '#fca5a5' }}>
-              ⚠ {warpActions.error.message} — core held, try again.
+              ⚠ {error.message} — core held, try again.
             </Typography>
           )}
         </Box>
@@ -184,7 +182,7 @@ export function CosmicOverrideExample() {
     },
   });
 
-  const gate = useModal({
+  const gate = useModal<void, 'closed'>({
     id: GATE_ID,
     modalType: 'cosmic',
     nonModal: true,

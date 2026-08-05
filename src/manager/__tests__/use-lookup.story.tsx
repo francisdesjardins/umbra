@@ -9,7 +9,7 @@ import { useLookup } from '../use-lookup.js';
 export function UseLookupHarness() {
   const info = useLookup('reactive-modal');
 
-  const { Modal, dialogManager } = useModal({
+  const { Modal, dialogManager } = useModal<void, 'done'>({
     id: 'reactive-modal',
     render: ({ handle }) => {
       return (
@@ -69,7 +69,7 @@ export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'fg-lookup-a',
     render: ({ handle }) => {
       return (
@@ -94,7 +94,7 @@ export function UseLookupForegroundHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'fg-lookup-b',
     render: ({ handle }) => {
       return (

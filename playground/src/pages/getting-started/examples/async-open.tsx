@@ -5,7 +5,7 @@ import { ContentTransition } from '@/entities/modal-template/ui/mui/shared/conte
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
 import { Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'async-open';
 
@@ -30,20 +30,15 @@ export function AsyncOpenExample() {
   // The shape a real `useQuery` gives you — swap the import, keep everything below.
   const { data, isFetching, isSuccess, refetch, invalidate } = useQuery(profileQuery);
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-  });
-
-  const asyncModal = useMessageModal({
+  const asyncModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
-    actions,
     // Awaiting here is what makes `open()` resolve with the data already in.
     onOpen: async () => {
       if (!profileQuery.isCached()) {
         await refetch();
       }
     },
-    render: ({ isPreparing }) => {
+    render: ({ isPreparing, action }) => {
       // In both branches: the loaded one is by definition where preparing is over, so
       // `isPreparing: true` would never be visible.
       const axes = (
@@ -102,7 +97,7 @@ export function AsyncOpenExample() {
               </Stack>
             </MessageModal.Content>
             <MessageModal.Footer>
-              <Shared.Button variant="contained" {...actions.confirm()}>
+              <Shared.Button variant="contained" {...action('confirm')}>
                 OK
               </Shared.Button>
             </MessageModal.Footer>

@@ -11,6 +11,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-04
 
+### Changed — breaking (actions are declared by being rendered)
+
+- **`useModalActions` and `defineAction` are gone.** An action now comes into existence at the
+  point it is used: the `action` factory handed to `render` names the reason, binds the handler
+  and returns the button props in one expression. There is no config object, no second hook, and
+  nothing to pass into `useModal`.
+
+  ```tsx
+  useModal<User, 'submit' | 'cancel'>({
+    id: 'create-user',
+    render: ({ action }) => <button {...action('submit', save)}>Save</button>,
+    onClose: (result) => result.reason, // 'submit' | 'cancel' | 'dismiss'
+  });
+  ```
+
+- **Declare the reasons at every call site.** `TReason` defaults to `string` for the modal that
+  wants no ceremony, but every call in this repo declares its union, because that is what buys
+  the guarantees: `action('savee')` is rejected, the reason autocompletes, `handle.close` is
+  constrained rather than taking any string, and a `switch` on `result.reason` in `onClose` is
+  **exhaustive**. The last two the previous design could not do at all.
+- **`'dismiss'` is accepted wherever a reason is.** The library produces it on Escape, backdrop
+  click and teardown, and an action may legitimately be named it.
+- **Deleted:** `actions/bridge.ts` in full — `ACTIONS_BRIDGE`, `ActionsBridge`, `ActionsGate`,
+  `ActionsBinding` — plus `ActionDefinition`, the `ACTION_PAYLOAD` symbol, `ActionPayload`,
+  `ActionKeys`, `UseModalActionsReturn`, and the registration effect in `useModal`. All of it
+  existed to carry a controller built outside into the modal; built inside, there is nothing to
+  carry. The engine (`actions/action-engine.ts`) is React-free and owns execution, state and the
+  hotkey table.
+- Actions are re-declared each render pass rather than accumulated, so the hotkey table describes
+  the buttons on screen — a stale entry would go on suppressing the dismiss key.
+- The close payload moves back onto the hook (`useModal<Result>`), there being no marker left to
+  infer it from. Still declared once, in a different place.
+
+### Fixed
+
+- **A branch that could never run.** The pharmacy example compared
+  `closeResult.reason === 'close-rx'` against an action named `closeRx`. A bare `string` reason
+  hid the mismatch completely; declaring the union surfaced it immediately.
+
 ### Changed (the project has a name)
 
 - **`@yourorg/dialog` is now `umbra`** — the total-shadow core of an eclipse, which is exactly

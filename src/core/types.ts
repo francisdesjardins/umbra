@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { ActionsBinding } from '../actions/bridge.js';
-import type { HotkeyDef } from '../actions/types.js';
+import type { ActionFactory, HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 
 // ── Close Results ─────────────────────────────────────────────────────────────
@@ -18,9 +17,14 @@ import type { DialogManager } from '../manager/dialog-manager.js';
  * get past it. A shape the compiler can see through is what lets `TData` flow from
  * `useModal<TData>()` to `handle.close()` and back out of `waitForClose()` with no casts.
  */
-export type CloseResult<TData = void> = {
-  /** Why it closed — an action's key, `'dismiss'`, or whatever `handle.close` was given. */
-  readonly reason: string;
+export type CloseResult<TData = void, TReason extends string = string> = {
+  /**
+   * Why it closed: an action's reason, or `'dismiss'` — which the library itself produces on
+   * Escape, backdrop click and teardown, so it is always possible regardless of `TReason`.
+   *
+   * Declare a union on `useModal` and this narrows to it, making a `switch` here exhaustive.
+   */
+  readonly reason: TReason | 'dismiss';
   /** The payload, when the modal declares one. */
   readonly data?: TData | undefined;
 };
@@ -31,8 +35,9 @@ export type CloseResult<TData = void> = {
  * - `[null, result]` — successful close with reason and optional data
  * - `[Error, null]` — error during close lifecycle
  */
-export type WaitForCloseResult<TData = void> =
-  readonly [error: null, result: CloseResult<TData>] | readonly [error: Error, result: null];
+export type WaitForCloseResult<TData = void, TReason extends string = string> =
+  | readonly [error: null, result: CloseResult<TData, TReason>]
+  | readonly [error: Error, result: null];
 
 // ── Animation ────────────────────────────────────────────────────────────────
 
@@ -72,9 +77,9 @@ export type ModalAnimation = {
  * modal declared `useModal<{ id: string }>` rejects `close('ok', 42)`, and the default
  * (`void`) rejects a payload altogether.
  */
-export type ModalHandle<TData = void> = {
+export type ModalHandle<TData = void, TReason extends string = string> = {
   /** Close the modal with a reason and, if the modal declares one, a payload. */
-  readonly close: (reason?: string, data?: TData) => void;
+  readonly close: (reason?: TReason | 'dismiss', data?: TData) => void;
 };
 
 /**
@@ -89,7 +94,7 @@ export type ModalHandle<TData = void> = {
  *
  * @typeParam TData - The modal's close payload type, carried through to `handle.close`.
  */
-export type ModalRenderArgs<TData = void> = {
+export type ModalRenderArgs<TData = void, TReason extends string = string> = {
   /**
    * Whether the `onOpen` callback is still running — the dialog is on screen, its content is
    * not ready yet. Render a loading state on it; use `isOpen` (or `phase`) for presence.
@@ -101,7 +106,19 @@ export type ModalRenderArgs<TData = void> = {
    */
   readonly isPreparing: boolean;
   /** Imperative close handle, typed with the modal's close payload. */
-  readonly handle: ModalHandle<TData>;
+  readonly handle: ModalHandle<TData, TReason>;
+  /**
+   * Declare an action and get the props for its button, in one expression.
+   *
+   * There is no config to write and nothing to pass into `useModal`: an action exists because
+   * it is rendered, and the reason it is given is its identity — the name and the close reason
+   * in one. See {@link ActionFactory}.
+   */
+  readonly action: ActionFactory<TData, TReason>;
+  /** True while any action on this modal is running. */
+  readonly isRunning: boolean;
+  /** The last error thrown by any action on this modal, or `null`. */
+  readonly error: Error | null;
 };
 
 // ── useModal Options & Return ────────────────────────────────────────────────
@@ -171,11 +188,11 @@ export type ModalVariant =
  * `UseModalOptions` is `UseModalBaseOptions & ModalVariant`; template hooks
  * also `Pick` from this flat type without intersecting with `ModalVariant`.
  */
-export type UseModalBaseOptions<TData = void> = {
+export type UseModalBaseOptions<TData = void, TReason extends string = string> = {
   /** Unique modal identifier */
   readonly id: string;
   /** Render function for modal content. Receives modal state as arguments. */
-  readonly render: (args: ModalRenderArgs<TData>) => ReactNode;
+  readonly render: (args: ModalRenderArgs<TData, TReason>) => ReactNode;
   /** CSS transition animation configuration */
   readonly animation?: ModalAnimation | undefined;
   /**
@@ -203,15 +220,6 @@ export type UseModalBaseOptions<TData = void> = {
    */
   readonly dismissWhilePreparing?: boolean | undefined;
   /**
-   * Optional action set from `useModalActions`. When provided, the modal reads
-   * `isRunning` to prevent backdrop/ESC close while an action runs, and wires up any
-   * declared action hotkeys.
-   *
-   * Typed with this modal's `TData`: an action that declares a close payload only fits a
-   * modal that accepts it. Actions that all close bare fit any modal.
-   */
-  readonly actions?: ActionsBinding<TData> | undefined;
-  /**
    * Optional keydown handler called on the dialog element.
    * Fires before built-in ESC handling. Call `event.preventDefault()`
    * to suppress the default ESC dismiss behavior.
@@ -225,7 +233,7 @@ export type UseModalBaseOptions<TData = void> = {
    */
   readonly onOpen?: (() => void | Promise<void>) | undefined;
   /** Called when the modal closes with the close result */
-  readonly onClose?: ((result: CloseResult<TData>) => void | Promise<void>) | undefined;
+  readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
   /**
    * The dialog's accessible name, for the common case where the name is a string you already
    * have. A dialog without one is announced as just "dialog", which is the single most common
@@ -298,7 +306,11 @@ export type UseModalBaseOptions<TData = void> = {
  *
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
  */
-export type UseModalOptions<TData = void> = UseModalBaseOptions<TData> & ModalVariant;
+export type UseModalOptions<TData = void, TReason extends string = string> = UseModalBaseOptions<
+  TData,
+  TReason
+> &
+  ModalVariant;
 
 /**
  * Return type of `useModal`.
@@ -309,7 +321,7 @@ export type UseModalOptions<TData = void> = UseModalBaseOptions<TData> & ModalVa
  * function DeleteButton() {
  *   const { open, Modal, waitForClose } = useModal<boolean>({
  *     id: 'confirm-delete',
- *     render: ({ handle }) => {
+ *     render: ({ handle, action }) => {
  *       return <button onClick={() => handle.close('confirm', true)}>Yes, delete</button>;
  *     },
  *   });
@@ -328,7 +340,10 @@ export type UseModalOptions<TData = void> = UseModalBaseOptions<TData> & ModalVa
  *   );
  * }
  */
-export type UseModalReturn<TData = void> = ModalRenderArgs<TData> & {
+export type UseModalReturn<TData = void, TReason extends string = string> = ModalRenderArgs<
+  TData,
+  TReason
+> & {
   /**
    * Open the modal. Resolves after `onOpen` completes.
    * Always settles: joins an in-flight open, or resolves immediately when
@@ -344,7 +359,7 @@ export type UseModalReturn<TData = void> = ModalRenderArgs<TData> & {
    * - `[null, result]` on success
    * - `[Error, null]` on error, e.g. the modal was destroyed before it closed
    */
-  readonly waitForClose: () => Promise<WaitForCloseResult<TData>>;
+  readonly waitForClose: () => Promise<WaitForCloseResult<TData, TReason>>;
   /** The dialog manager instance this modal is registered with. */
   readonly dialogManager: DialogManager;
 };
@@ -365,7 +380,9 @@ export type UseModalReturn<TData = void> = ModalRenderArgs<TData> & {
  */
 export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
 
-export type CloseResolver<TData = unknown> = (result: WaitForCloseResult<TData>) => void;
+export type CloseResolver<TData = unknown, TReason extends string = string> = (
+  result: WaitForCloseResult<TData, TReason>
+) => void;
 
 /**
  * Immutable snapshot of a modal's internal state, consumed via `useSyncExternalStore`.
@@ -375,7 +392,7 @@ export type CloseResolver<TData = unknown> = (result: WaitForCloseResult<TData>)
  * *reader* of the snapshot (the dialog manager, a devtool) is generic over every modal;
  * `useModal<TData>` instantiates it with the payload its own store carries.
  */
-export type ModalStoreSnapshot<TData = unknown> = {
+export type ModalStoreSnapshot<TData = unknown, TReason extends string = string> = {
   /** Where the `<dialog>` is in its lifecycle. */
   readonly phase: ModalPhase;
   /** Whether `onOpen` is still running — see `ModalRenderArgs`. */
@@ -385,7 +402,7 @@ export type ModalStoreSnapshot<TData = unknown> = {
    * hand out, not an internal restatement of it. Retained through `'closed'`; reset on
    * the next open.
    */
-  readonly closeResult: CloseResult<TData> | null;
+  readonly closeResult: CloseResult<TData, TReason> | null;
 };
 
 /** Getter function for the dialog DOM element, used by extracted hooks. */

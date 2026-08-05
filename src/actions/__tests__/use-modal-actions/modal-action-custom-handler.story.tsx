@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
 const delay = (ms: number) => {
@@ -15,20 +14,14 @@ const delay = (ms: number) => {
 export function ModalActionCustomHandlerHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-custom',
-    actions,
-    render: () => {
-      const confirmProps = actions.confirm(async (close) => {
+    render: ({ action }) => {
+      const confirmProps = action('confirm', async (close) => {
         await delay(200);
         close();
       });
-      const cancelProps = actions.cancel();
+      const cancelProps = action('cancel');
       return (
         <div style={dialogStyle}>
           <button

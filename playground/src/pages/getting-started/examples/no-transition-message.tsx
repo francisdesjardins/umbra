@@ -3,7 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { Typography } from '@mui/material';
-import { defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { useMessageModal, useStore } from 'umbra/react';
 
 export const MODAL_ID = 'no-transition-message';
 
@@ -20,15 +20,10 @@ const resultStore = createResultStore();
 export function NoTransitionMessageExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
     animation: NO_ANIMATION,
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -41,7 +36,7 @@ export function NoTransitionMessageExample() {
             </Typography>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>

@@ -18,13 +18,10 @@
     "StoreBase",
     "LowercaseLetter",
     "ModalInfoBase",
-    "AnyActionMarker",
-    "PayloadOf",
     "BaseRenderContext",
     "TemplateBaseOptions",
     "SnapshotOf",
-    "RegisteredStore",
-    "ActionsBinding"
+    "RegisteredStore"
   ],
   "disableSources": false,
   "treatWarningsAsErrors": true

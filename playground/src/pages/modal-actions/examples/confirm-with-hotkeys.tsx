@@ -4,7 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Stack, Typography } from '@mui/material';
-import { Key, defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+import { Key, useMessageModal, useStore } from 'umbra/react';
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -15,15 +15,9 @@ const resultStore = createResultStore();
 export function ConfirmWithHotkeysExample() {
   const { result } = useStore(resultStore);
 
-  const actions = useModalActions({
-    cancel: defineAction({ hotkey: Key.Escape }),
-    confirm: defineAction({ hotkey: Key.Enter }),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
-    actions,
-    render: () => {
+    render: ({ action, isRunning, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -43,23 +37,24 @@ export function ConfirmWithHotkeysExample() {
                 variant="caption"
                 sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
               >
-                Status: {actions.isRunning ? 'Running...' : 'Idle'}
-                {actions.error ? ` | Error: ${actions.error.message}` : ''}
+                Status: {isRunning ? 'Running...' : 'Idle'}
+                {error ? ` | Error: ${error.message}` : ''}
               </Typography>
-              {actions.error && (
-                <Shared.AlertContent severity="error">{actions.error.message}</Shared.AlertContent>
-              )}
+              {error && <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>}
             </Stack>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...actions.cancel()}>
+            <Shared.Button variant="outlined" {...action('cancel', { hotkey: Key.Escape })}>
               Cancel
             </Shared.Button>
             <Shared.Button
               variant="contained"
-              {...actions.confirm(async (close) => {
-                await simulateApiCall('Confirm action');
-                close();
+              {...action('confirm', {
+                hotkey: Key.Enter,
+                onAction: async (close) => {
+                  await simulateApiCall('Confirm action');
+                  close();
+                },
               })}
             >
               Confirm
@@ -78,7 +73,7 @@ export function ConfirmWithHotkeysExample() {
       <Shared.Button
         variant="contained"
         size="small"
-        disabled={actions.isRunning}
+        disabled={modal.isRunning}
         onClick={async () => {
           await modal.open();
           const [, closeResult] = await modal.waitForClose();

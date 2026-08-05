@@ -10,7 +10,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function LookupFindHarness() {
   const [result, setResult] = useState('');
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'lookup-a',
     render: ({ handle }) => {
       return (
@@ -105,7 +105,7 @@ export function LookupFindHarness() {
 export function LookupCollectionHarness() {
   const [stats, setStats] = useState('');
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'col-a',
     render: ({ handle }) => {
       return (
@@ -152,7 +152,7 @@ export function LookupCollectionHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'col-b',
     render: ({ handle }) => {
       return (
@@ -206,7 +206,7 @@ export function LookupForegroundHarness() {
   const [isFgA, setIsFgA] = useState('');
   const [isFgB, setIsFgB] = useState('');
 
-  const { Modal: Modal1, dialogManager } = useModal({
+  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
     id: 'fg-a',
     render: ({ handle }) => {
       return (
@@ -241,7 +241,7 @@ export function LookupForegroundHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal({
+  const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'fg-b',
     render: ({ handle }) => {
       return (

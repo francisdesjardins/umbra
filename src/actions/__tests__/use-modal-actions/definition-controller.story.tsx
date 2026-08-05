@@ -2,7 +2,6 @@ import { createStore, useStore } from '../../../store/index.js';
 import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';
-import { defineAction, useModalActions } from '../../use-modal-actions.js';
 
 const countStore = createStore({ count: 0 }, ({ set }) => {
   return {
@@ -29,15 +28,9 @@ export function DefinitionActionsHarness() {
     return s.count;
   });
 
-  const actions = useModalActions({
-    cancel: defineAction(),
-    confirm: defineAction(),
-  });
-
-  const { open, isOpen, Modal } = useModal({
+  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'ctrl-definition',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <div style={dialogStyle}>
           <span data-testid="def-count">{String(count)}</span>
@@ -49,14 +42,14 @@ export function DefinitionActionsHarness() {
             Increment
           </button>
           <button
-            {...actions.confirm((close) => {
+            {...action('confirm', (close) => {
               close();
             })}
           >
             Confirm
           </button>
           <button
-            {...actions.cancel((close) => {
+            {...action('cancel', (close) => {
               close();
             })}
           >

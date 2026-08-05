@@ -2,13 +2,7 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { Stack, Typography } from '@mui/material';
-import {
-  defineAction,
-  dialogManager,
-  useMessageModal,
-  useModalActions,
-  useStore,
-} from 'umbra/react';
+import { dialogManager, useMessageModal, useStore } from 'umbra/react';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
 // ── Module-level store ────────────────────────────────────────────────────
@@ -36,14 +30,9 @@ const openCountStore = createImmerStore(
 export function ImperativeExample() {
   const { openCount, result } = useStore(openCountStore);
 
-  const actions = useModalActions({
-    confirm: defineAction(),
-  });
-
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'confirm' | 'imperative-demo'>({
     id: 'imperative-demo',
-    actions,
-    render: () => {
+    render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -77,7 +66,7 @@ export function ImperativeExample() {
             >
               Close via dialogManager
             </Shared.Button>
-            <Shared.Button variant="contained" {...actions.confirm()}>
+            <Shared.Button variant="contained" {...action('confirm')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>

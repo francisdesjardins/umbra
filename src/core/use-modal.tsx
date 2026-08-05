@@ -13,7 +13,9 @@ import { finalizeModalClose } from './finalize-close.js';
 import { createModalStore } from './modal-store.js';
 import { dialogPlacement } from './placement.js';
 import { useModalOutletContext } from './modal-outlet.js';
-import { ACTIONS_BRIDGE } from '../actions/bridge.js';
+import { createActionEngine } from '../actions/action-engine.js';
+import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
+import type { ActionCloseFn, ActionFactory } from '../actions/types.js';
 import type {
   GetDialog,
   ModalAnimation,
@@ -22,6 +24,16 @@ import type {
   UseModalReturn,
   WaitForCloseResult,
 } from './types.js';
+
+/**
+ * What an action does when it is given no handler: close with its own reason.
+ *
+ * Typed at `never` rather than at the modal's payload, which is what makes it usable as the
+ * default for every action — a handler that ignores its `close` argument fits any payload.
+ */
+const autoClose: (close: ActionCloseFn) => void = (close) => {
+  close();
+};
 
 const log = createLogger('modal');
 
@@ -38,22 +50,28 @@ const defaultAnimation: ModalAnimation = {
 /**
  * Core modal hook that renders a native `<dialog>` element with animation,
  * backdrop handling, and typed close results.
- * Action state is managed externally via `useModalActions`.
  *
- * @typeParam TData - Type of the close data payload. Defaults to `void`, and is **inferred from
- * `actions`** when the action set declares one — `defineAction<Result>()` is the payload's one
- * declaration, so `useModal<Result>({ actions })` merely repeats it. Pass it explicitly only
- * when nothing else carries it: a modal with no `actions`, or one whose actions all close bare
- * and whose payload travels through `handle.close`.
+ * Actions are declared by being rendered: the `action` given to `render` names a reason, binds
+ * a handler and returns the props for its button, all in one expression. There is no action
+ * config and nothing to pass in.
+ *
+ * @typeParam TData - Type of the close data payload. Defaults to `void`.
+ * @typeParam TReason - The reasons this modal closes with. Left at `string` any reason is
+ * accepted; declaring a union (`useModal<Result, 'save' | 'cancel'>`) rejects a mistyped
+ * reason, autocompletes it, and makes a `switch` on `result.reason` in `onClose` exhaustive.
+ * `'dismiss'` is always allowed — the library produces it on Escape, backdrop click and
+ * teardown.
  *
  * @example
- * const { open, Modal, waitForClose } = useModal({
+ * const { open, Modal, waitForClose } = useModal<void, 'ok'>({
  *   id: 'my-modal',
- *   render: ({ isPreparing, handle }) => <div>Content</div>,
+ *   render: ({ action }) => <button {...action('ok')}>OK</button>,
  *   onClose: (result) => console.log(result.reason),
  * });
  */
-export function useModal<TData = void>(options: UseModalOptions<TData>): UseModalReturn<TData> {
+export function useModal<TData = void, TReason extends string = string>(
+  options: UseModalOptions<TData, TReason>
+): UseModalReturn<TData, TReason> {
   const {
     id: modalId,
     render,
@@ -61,7 +79,6 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
     style: styleProp,
     dismissKey: dismissKeyProp,
     dismissWhilePreparing: dismissWhilePreparingProp,
-    actions,
     onKeyDown,
     onOpen,
     onClose,
@@ -74,8 +91,6 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
     ariaDescribedBy,
     role,
   } = options;
-  // Private bridge the action set exposes to the modal, off its public surface.
-  const bridge = actions?.[ACTIONS_BRIDGE];
   // dismissOnBackdropClick only exists in the modal variant (nonModal !== true)
   const dismissOnBackdropClick =
     options.nonModal !== true ? options.dismissOnBackdropClick : undefined;
@@ -104,7 +119,13 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
   // `handle`). React Compiler cannot memoize them for us — they capture a value it
   // treats as opaque — so we hoist them into the initializer instead.
   const [init] = useState(() => {
-    const store = createModalStore<TData>(modalId);
+    const store = createModalStore<TData, TReason>(modalId);
+    // Built here rather than handed in, so it can be wired straight to this modal's `close`.
+    // Nothing has to bridge the two because nothing built it anywhere else.
+    const engine = createActionEngine<TData, TReason>(modalId);
+    engine.bindClose((reason, data) => {
+      store.close(reason, data);
+    });
 
     // Stable getter that reads dialogRef.current — safe to pass to hooks
     // because the closure captures the ref but doesn't access .current during render.
@@ -120,22 +141,58 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
       });
     };
 
-    const waitForClose = (): Promise<WaitForCloseResult<TData>> => {
+    const waitForClose = (): Promise<WaitForCloseResult<TData, TReason>> => {
       return new Promise((resolve) => {
         store.addCloseResolver(resolve);
       });
     };
 
-    const handle: ModalHandle<TData> = {
+    const handle: ModalHandle<TData, TReason> = {
       close: (reason = 'dismiss', data?: TData) => {
         store.close(reason, data);
       },
     };
 
-    return { store, getDialog, open, waitForClose, handle };
+    return { store, engine, getDialog, open, waitForClose, handle };
   });
-  const { store, getDialog, open, waitForClose, handle } = init;
+  const { store, engine, getDialog, open, waitForClose, handle } = init;
   const snap = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
+
+  /**
+   * The factory handed to `render`. Calling it declares the action — that is the only place an
+   * action is ever declared — and returns the props for its button.
+   */
+  const action: ActionFactory<TData, TReason> = (reason, handlerOrOptions) => {
+    const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
+    const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : opts?.onAction;
+    const effective = handler ?? autoClose;
+    const onClickBefore = opts?.onClick;
+    const hotkey = opts?.hotkey;
+
+    engine.declare(reason, hotkey);
+    const state = engine.stateOf(reason);
+
+    return {
+      type: opts?.type ?? 'button',
+      onClick: async (event) => {
+        // The caller's handler goes first and owns the veto, so composing a click never has to
+        // mean replacing the action's. Same protocol as `onKeyDown`.
+        onClickBefore?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        await engine.run(reason, effective);
+      },
+      loading: state.isRunning,
+      'data-loading': state.isRunning,
+      // Includes *this* action: a running button that stays clickable re-enters its own handler
+      // on a double click, which for a submit means submitting twice.
+      disabled: actionSnap.isRunning || (opts?.disabled ?? false),
+      'aria-busy': state.isRunning,
+      ...(hotkey !== undefined && { 'aria-keyshortcuts': formatHotkeyLabel(hotkey) }),
+    };
+  };
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const animation = animationProp ?? defaultAnimation;
@@ -159,33 +216,18 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
     isPreparing: snap.isPreparing,
     onKeyDown,
     dismissKey,
-    bridge,
+    engine,
     nonModal: isNonModal,
     dismissWhilePreparing,
   });
 
-  useFocusManagement(hookCtx, { bridge });
+  useFocusManagement(hookCtx, { engine });
 
   useClickOutside(hookCtx, {
     dismissOnClickOutside,
     dismissWhilePreparing,
-    bridge,
+    engine,
   });
-
-  // ── Action registration ─────────────────────────────────────────────────
-  // The bridge is stable per action-set identity, so this effect registers the
-  // close function once instead of re-running every render.
-  useEffect(() => {
-    if (!bridge) {
-      return;
-    }
-    bridge.registerClose((reason, data) => {
-      return store.close(reason, data);
-    }, modalId);
-    return () => {
-      bridge.unregisterClose();
-    };
-  }, [bridge, modalId, store]);
 
   // ── Registry registration + teardown ────────────────────────────────────
   // Re-runs when the reported flags (`modalType` / `nonModal`) change, because those
@@ -240,7 +282,7 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
     }
 
     // Backdrop dismissal is opt-out without actions, opt-in with them.
-    if (!(dismissOnBackdropClick ?? bridge === undefined)) {
+    if (!(dismissOnBackdropClick ?? !engine.hasActions())) {
       return;
     }
 
@@ -249,7 +291,7 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
         phase: snap.phase,
         isPreparing: snap.isPreparing,
         dismissWhilePreparing,
-        isActionRunning: bridge?.getState().isRunning ?? false,
+        isActionRunning: actionSnap.isRunning,
       })
     ) {
       return;
@@ -287,6 +329,26 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
 
   const outlet = useModalOutletContext();
 
+  /**
+   * Runs the caller's `render` inside a declaration window, so the engine learns exactly which
+   * actions this pass drew. Re-declaring per pass (rather than accumulating) is what keeps a
+   * hotkey from outliving the button that owned it and going on suppressing the dismiss key.
+   */
+  const renderContent = () => {
+    engine.beginRender();
+    try {
+      return render({
+        isPreparing: snap.isPreparing,
+        handle,
+        action,
+        isRunning: actionSnap.isRunning,
+        error: actionSnap.error,
+      });
+    } finally {
+      engine.endRender();
+    }
+  };
+
   const dialogElement = (
     <dialog
       ref={dialogRef}
@@ -312,7 +374,7 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
         content clicks here would only rob user-land ancestors of events they should see.
       */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {snap.phase !== 'closed' && render({ isPreparing: snap.isPreparing, handle })}
+        {snap.phase !== 'closed' && renderContent()}
       </div>
     </dialog>
   );
@@ -373,6 +435,9 @@ export function useModal<TData = void>(options: UseModalOptions<TData>): UseModa
     Modal,
     waitForClose,
     handle,
+    action,
+    isRunning: actionSnap.isRunning,
+    error: actionSnap.error,
     dialogManager: dm,
   };
 }
