@@ -283,17 +283,26 @@ const flows = {
     await gotoRoute(page, '/modal-actions');
 
     const dialog = page.getByTestId('modal-confirm-hotkeys');
-    await page.getByRole('button', { name: /open confirm/i }).first().click();
+    await page
+      .getByRole('button', { name: /open confirm/i })
+      .first()
+      .click();
     await dialog.waitFor({ state: 'visible' });
 
     // The button must advertise the shortcut, which is how the key path finds it at all.
     const confirm = dialog.locator('button', { hasText: /confirm/i }).last();
     const shortcut = await confirm.getAttribute('aria-keyshortcuts');
-    checks.push([shortcut !== null, 'the action button advertises aria-keyshortcuts', `${shortcut}`]);
+    checks.push([
+      shortcut !== null,
+      'the action button advertises aria-keyshortcuts',
+      `${shortcut}`,
+    ]);
 
-    // Enter is declared on `confirm`, so pressing it must close with that reason — the same
-    // outcome a click produces.
-    await page.keyboard.press('Enter');
+    // Let the entrance settle, then send the key *to the dialog* rather than to the page. The
+    // hotkey listener is bound to the dialog, and a page-level press depends on whatever held
+    // focus when the previous flow finished — which made this flow flaky in a full run.
+    await page.waitForTimeout(400);
+    await dialog.press('Enter');
     const closed = await waitFor(async () => {
       return !(await dialog.evaluate((n) => {
         return n.hasAttribute('open');

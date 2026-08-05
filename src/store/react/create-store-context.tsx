@@ -1,5 +1,5 @@
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
-import type { StoreContract } from './create-store.js';
+import type { StoreContract } from '../create-store.js';
 import { useStore } from './use-store.js';
 
 // ── createStoreContext ────────────────────────────────────────────────────────

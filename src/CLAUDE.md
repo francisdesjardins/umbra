@@ -307,10 +307,11 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 
 State management lives in [store/](store/) — a hand-rolled reactive cell (a `Set` of listeners + `get`/`set`) with **zero runtime dependencies**. It is the single swap point for the engine: reimplement these files to change it. Import store primitives from `../store` internally, or from `umbra/react` in the playground.
 
-**One documented exception to the barrel rule:** [manager/dialog-manager.ts](manager/dialog-manager.ts) imports `createStore` from `../store/create-store` directly. The `../store` barrel re-exports `useStore` and `createStoreContext`, which import React — and `dialog-manager.ts` is the root of the React-free package root. Going through the barrel would leave that property standing on Rollup tree-shaking the React re-exports back out. Any other module in the core reached from `index.ts` must follow the same rule; the guard test enforces it.
+**The barrel is safe for every core module to import.** `src/store/` is framework-free; its React bindings (`useStore`, `createStoreContext`) live in [store/react/](store/react/) behind their own barrel. That split is the point: while the bindings sat beside the engine, `../store` re-exported them, so any core module importing the barrel pulled React into the root's import graph — and the React-free property survived only on Rollup tree-shaking those re-exports back out. Import `../store` for the engine and `../store/react` for the bindings; there is no exception to remember.
 
 ```ts
-import { createStore, watch, useStore, createStoreContext } from '../store';
+import { createStore, watch } from '../store';
+import { useStore, createStoreContext } from '../store/react';
 
 const counter = createStore({ count: 0 }, ({ set }) => ({
   increment() {

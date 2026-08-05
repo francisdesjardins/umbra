@@ -6,7 +6,7 @@
 // back out — true of the built artifact, but a build-time accident rather than a guarantee.
 // `store/create-store` has no imports at all, so this edge keeps it structural.
 // Pinned by __tests__/root-react-free.test.ts.
-import { createStore } from '../store/create-store.js';
+import { createStore } from '../store/index.js';
 import type { ModalStoreSnapshot } from '../core/types.js';
 import { createLogger } from '../utils/logger.js';
 import { BODY_LOCK_ATTR, lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';

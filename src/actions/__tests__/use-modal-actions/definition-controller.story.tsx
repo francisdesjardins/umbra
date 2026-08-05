@@ -1,4 +1,5 @@
-import { createStore, useStore } from '../../../store/index.js';
+import { createStore } from '../../../store/index.js';
+import { useStore } from '../../../store/react/index.js';
 import { useState } from 'react';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 import { useModal } from '../../../core/use-modal.js';

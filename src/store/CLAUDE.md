@@ -8,7 +8,7 @@ This folder is the **single swap point** for the state manager. Nothing outside 
 
 **The module is split across two package entry points.** The engine — `createStore`, `watch`, `shallowEqual` — is framework-agnostic and ships from the package root. Its React bindings — `useStore`, `createStoreContext` — ship from `umbra/react`. A store's public shape is a subscribe + getter pair, which is what `useSyncExternalStore` consumes directly, so a non-React caller uses the engine with no adapter and a future binding needs nothing new here.
 
-One consequence: any core module reachable from `src/index.ts` must import the concrete file (`../store/create-store`) rather than the `../store` barrel, since the barrel pulls the React bindings. See [manager/dialog-manager.ts](../manager/dialog-manager.ts).
+The split is physical, not just conceptual: the engine is `src/store/`, the bindings are [`src/store/react/`](react/) behind their own barrel. That is what lets any core module import `../store` freely — with the bindings beside the engine, the barrel dragged React into the framework-free root's import graph and the guarantee rested on tree-shaking.
 
 ## Why a store module at all
 

@@ -87,8 +87,8 @@ import storyDmUnregisteredSrc from '../../../../../src/manager/__tests__/dialog-
 import storyUseLookupSrc from '../../../../../src/manager/__tests__/use-lookup.story.tsx?raw';
 
 // ── Store stories ────────────────────────────────────────────────────────────
-import storyStoreContextSrc from '../../../../../src/store/__tests__/create-store-context.story.tsx?raw';
-import storyUseStoreSrc from '../../../../../src/store/__tests__/use-store.story.tsx?raw';
+import storyStoreContextSrc from '../../../../../src/store/react/__tests__/create-store-context.story.tsx?raw';
+import storyUseStoreSrc from '../../../../../src/store/react/__tests__/use-store.story.tsx?raw';
 
 // ── ModalOutlet stories ──────────────────────────────────────────────────────
 import storyOutletNoOutletSrc from '../../../../../src/core/__tests__/modal-outlet/no-outlet.story.tsx?raw';

@@ -1,4 +1,4 @@
-import { createStore } from '../store/create-store.js';
+import { createStore } from '../store/index.js';
 import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
 import { createLogger } from '../utils/logger.js';
 import { normalizeError } from '../utils/normalize-error.js';

@@ -5,7 +5,9 @@
 // store primitives from, and the single swap point if the engine is replaced.
 // See `src/store/CLAUDE.md`.
 //
-// Scope: the reactive cell and its React bindings only. Async coordination is
+// Scope: the reactive cell only. Its React bindings live in `./react`, so that
+// this barrel stays importable from the framework-agnostic package root — see
+// `./react/index.ts` for why that separation exists. Async coordination is
 // user-land and lives in the playground as reference code to copy.
 
 export { createStore } from './create-store.js';
@@ -16,12 +18,6 @@ export type {
   StoreApi,
   StoreContract,
 } from './create-store.js';
-
-export { useStore } from './use-store.js';
-export type { UseStoreOptions } from './use-store.js';
-
-export { createStoreContext } from './create-store-context.js';
-export type { CreateStoreContextOptions, StoreContextResult } from './create-store-context.js';
 
 export { watch } from './watch.js';
 export type { WatchOptions } from './watch.js';

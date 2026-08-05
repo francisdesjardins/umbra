@@ -11,6 +11,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-04
 
+### Changed (the store's React half moved out of its framework-free half)
+
+- **`useStore` and `createStoreContext` now live in `src/store/react/`**, behind their own
+  barrel. They import React; everything else under `src/store/` does not, and the package root
+  must resolve with React absent.
+- **This deletes a rule.** While the bindings sat beside the engine, the `../store` barrel
+  re-exported them, so any core module importing that barrel pulled React into the root's import
+  graph — the React-free property held only because Rollup tree-shook the re-exports back out.
+  The workaround was a documented exception: import `../store/create-store` directly. That
+  exception was already spreading (the docs said "one"; there were two), which is what a rule
+  with no compile-time enforcement does. Now `../store` is safe for anyone to import and
+  `dialog-manager.ts` and `action-engine.ts` use it like everything else.
+
 ### Changed — breaking (actions are declared by being rendered)
 
 - **`useModalActions` and `defineAction` are gone.** An action now comes into existence at the

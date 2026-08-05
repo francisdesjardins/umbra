@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { createStore, shallowEqual, useStore } from '../index.js';
+import { createStore, shallowEqual } from '../../index.js';
+import { useStore } from '../index.js';
 
 // ── Store ───────────────────────────────────────────────────────────────────
 // Factory (not module scope) so every mounted harness gets a fresh store —
