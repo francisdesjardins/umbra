@@ -1,0 +1,31 @@
+{
+  "$schema": "https://typedoc.app/schema.json",
+  "entryPoints": ["src/index.ts", "src/react.ts"],
+  "out": "docs/api",
+  "name": "Dialog Manager",
+  "includeVersion": true,
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "searchInComments": true,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "intentionallyNotExported": [
+    "StoreBase",
+    "LowercaseLetter",
+    "ModalInfoBase",
+    "AnyActionMarker",
+    "PayloadOf",
+    "BaseRenderContext",
+    "TemplateBaseOptions",
+    "SnapshotOf",
+    "RegisteredStore",
+    "ActionsBinding"
+  ],
+  "disableSources": false,
+  "treatWarningsAsErrors": true
+}

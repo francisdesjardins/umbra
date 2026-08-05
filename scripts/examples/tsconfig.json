@@ -1,0 +1,40 @@
+{
+  // The compiler contract a doc example is held to.
+  //
+  // Deliberately its own config rather than the library's: an `@example` is a snippet, not a
+  // module. It shows a call and stops, so it leaves bindings unread and leans on `declare`d
+  // stand-ins for whatever the surrounding app would provide (`store`, `fetchUser`, `api`).
+  // Holding it to `noUnusedLocals` or `noImplicitAny` would report the shape of a snippet, not
+  // a mistake in it. Everything that decides whether the example *would compile in a user's
+  // app* — strict null checks, exact optional properties, the DOM lib, `jsx: react-jsx` — is
+  // kept exactly as the library has it.
+  //
+  // Generated inputs come from `scripts/check-examples.mjs`; `generated/` is not committed.
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "noEmit": true,
+
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true,
+
+    // Snippet allowances — see above.
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
+    "allowUnreachableCode": true,
+
+    "paths": {
+      "umbra": ["../../src/index.ts"],
+      "umbra/react": ["../../src/react.ts"]
+    }
+  },
+  "include": ["generated/**/*.tsx"]
+}

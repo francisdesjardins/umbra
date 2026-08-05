@@ -1,0 +1,173 @@
+import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
+import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import { createImmerStore } from '@/shared/lib/immer-store';
+import { simulateApiCall } from '@/shared/lib/simulate-api-call';
+import { TextField } from '@mui/material';
+import {
+  asyncFulfilled,
+  asyncIdle,
+  asyncRejected,
+  type AsyncState,
+} from '@/shared/lib/async-state';
+import { defineAction, useModal, useModalActions, useStore } from 'umbra/react';
+
+export const MODAL_ID = 'mui-form-example';
+
+type FormValues = { name: string; email: string };
+
+type FormState = {
+  submitResult: AsyncState<FormValues>;
+  values: FormValues;
+  errors: Partial<FormValues>;
+};
+
+const formInitial: FormState = {
+  submitResult: asyncIdle,
+  values: { name: '', email: '' },
+  errors: {},
+};
+
+const store = createImmerStore(formInitial, (api) => {
+  return {
+    setValue(key: keyof FormValues, value: string) {
+      api.update((d) => {
+        d.values = { ...d.values, [key]: value };
+        if (d.errors[key] !== undefined) {
+          const { [key]: _removed, ...rest } = d.errors;
+          d.errors = rest;
+        }
+      });
+    },
+    setErrors(errors: Partial<FormValues>) {
+      api.update((d) => {
+        d.errors = errors;
+      });
+    },
+    resetForm() {
+      api.reset();
+    },
+    setSubmitResult(result: AsyncState<FormValues>) {
+      api.update((d) => {
+        d.submitResult = result;
+      });
+    },
+  };
+});
+
+export function MuiFormExample() {
+  const { submitResult, values, errors } = useStore(store);
+
+  const actions = useModalActions({
+    cancel: defineAction(),
+    submit: defineAction<FormValues>(),
+  });
+
+  // The payload is inferred from `actions` — `defineAction<FormValues>()` is its one declaration.
+  const formModal = useModal({
+    id: MODAL_ID,
+    actions,
+    onOpen: () => {
+      store.resetForm();
+    },
+    render: () => {
+      return (
+        <FormModal.DefaultLayout sx={{ minWidth: 475, maxWidth: 800, maxHeight: '70vh' }}>
+          <FormModal.Header>
+            <Shared.Heading>Create User</Shared.Heading>
+            <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
+            {actions.error && (
+              <Shared.AlertContent severity="error" sx={{ mt: 2 }}>
+                {actions.error.message}
+              </Shared.AlertContent>
+            )}
+          </FormModal.Header>
+
+          <FormModal.Content>
+            <TextField
+              fullWidth
+              label="Name"
+              value={values.name}
+              onChange={(e) => {
+                store.setValue('name', e.target.value);
+              }}
+              error={!!errors.name}
+              helperText={errors.name}
+            />
+
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={values.email}
+              onChange={(e) => {
+                store.setValue('email', e.target.value);
+              }}
+              error={!!errors.email}
+              helperText={errors.email}
+            />
+          </FormModal.Content>
+
+          <FormModal.Footer>
+            <Shared.Button variant="outlined" {...actions.cancel()}>
+              Cancel
+            </Shared.Button>
+            <Shared.Button
+              variant="contained"
+              {...actions.submit(async (close) => {
+                const snap = store.getSnapshot();
+                const newErrors: Partial<FormValues> = {};
+                if (!snap.values.name) {
+                  newErrors.name = 'Name is required';
+                }
+                if (!snap.values.email) {
+                  newErrors.email = 'Email is required';
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(snap.values.email)) {
+                  newErrors.email = 'Invalid email format';
+                }
+
+                if (Object.keys(newErrors).length > 0) {
+                  store.setErrors(newErrors);
+                  return;
+                }
+
+                await simulateApiCall('submit form', 1000);
+                close(snap.values);
+              })}
+            >
+              Create User
+            </Shared.Button>
+          </FormModal.Footer>
+        </FormModal.DefaultLayout>
+      );
+    },
+    onClose: (closeResult) => {
+      if (closeResult.reason === 'submit' && closeResult.data) {
+        store.setSubmitResult(asyncFulfilled(closeResult.data));
+      } else {
+        store.setSubmitResult(asyncRejected(new Error(closeResult.reason)));
+      }
+    },
+  });
+
+  const resultMessage =
+    submitResult.status === 'fulfilled'
+      ? `User created: ${submitResult.data.name} (${submitResult.data.email})`
+      : submitResult.status === 'rejected'
+        ? `Form closed with reason: ${submitResult.error.message}`
+        : null;
+
+  return (
+    <ExampleLayout result={resultMessage} modals={formModal.Modal}>
+      <Shared.Button
+        variant="contained"
+        size="small"
+        onClick={() => {
+          void formModal.open();
+        }}
+      >
+        Open MUI Form
+      </Shared.Button>
+    </ExampleLayout>
+  );
+}

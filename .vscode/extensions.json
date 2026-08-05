@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-playwright.playwright",
+    "editorconfig.editorconfig",
+    "usernamehw.errorlens"
+  ]
+}

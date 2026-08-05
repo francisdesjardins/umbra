@@ -1,0 +1,135 @@
+/* ========== CSS Variables ========== */
+:root {
+  /* Light mode */
+  --content-text-primary: #1a1a1a;
+  --content-text-secondary: #666666;
+  --content-text-disabled: #999999;
+  --content-alert-bg: rgba(2, 136, 209, 0.1);
+  --content-alert-text: #0277bd;
+  --content-spacing: 16px;
+  --content-spacing-sm: 8px;
+
+  /* Typography */
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.75rem;
+  --font-size-h3: 0.9375rem;
+}
+
+/* Dark mode */
+:root[data-mui-color-scheme='dark'] {
+  --content-text-primary: rgba(255, 255, 255, 0.87);
+  --content-text-secondary: rgba(255, 255, 255, 0.6);
+  --content-text-disabled: rgba(255, 255, 255, 0.38);
+}
+
+/* ========== Message ========== */
+.message {
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--content-text-primary);
+  margin: 0;
+}
+
+/* ========== Heading ========== */
+.heading {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--content-text-primary);
+  margin: 0;
+}
+
+/* ========== Detail ========== */
+.detail {
+  font-size: var(--font-size-sm);
+  line-height: 1.43;
+  color: var(--content-text-secondary);
+  margin: 0;
+}
+
+/* ========== Hint ========== */
+.hint {
+  font-size: var(--font-size-xs);
+  line-height: 1.66;
+  color: var(--content-text-disabled);
+  margin: 0;
+}
+
+/* ========== Section ========== */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--content-spacing-sm);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  line-height: 1.57;
+  color: var(--content-text-secondary);
+  margin: 0;
+}
+
+/* ========== Alert ========== */
+.alert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--content-alert-bg);
+  color: var(--content-alert-text);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+/* internal content wrapper - prefer gap over child margins */
+.alertContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* icon placeholder */
+.alertIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alertIcon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+}
+
+.alertTitle {
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.alertBody {
+  margin: 0;
+  color: inherit;
+}
+
+/* ========== Error variant (styled to match MUI error look) ========== */
+:root {
+  --content-alert-error-bg: rgba(211, 47, 47, 0.08); /* light red */
+  --content-alert-error-text: #b00020; /* MUI-like error text */
+}
+
+.alertError {
+  background: var(--content-alert-error-bg);
+  color: var(--content-alert-error-text);
+  border: 1px solid rgba(176, 0, 32, 0.08);
+}

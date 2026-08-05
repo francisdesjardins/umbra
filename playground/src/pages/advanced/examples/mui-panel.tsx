@@ -1,0 +1,490 @@
+import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import * as PanelModal from '@/entities/modal-template/ui/mui/panel-modal';
+import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import { createResultStore } from '@/shared/lib/createResultStore';
+import { createImmerStore } from '@/shared/lib/immer-store';
+import { simulateApiCall } from '@/shared/lib/simulate-api-call';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CloseIcon from '@mui/icons-material/Close';
+import {
+  Box,
+  Checkbox,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { Key, defineAction, useMessageModal, useModalActions, useStore } from 'umbra/react';
+
+// ── Types ──────────────────────────────────────────────────────────────────
+
+type WizardData = {
+  name: string;
+  environment: string;
+  region: string;
+  accessLevel: string;
+  notifications: boolean;
+  schedule: string;
+};
+
+const RECOMMENDED: WizardData = {
+  name: 'Production Export v2',
+  environment: 'production',
+  region: 'us-east-1',
+  accessLevel: 'admin',
+  notifications: true,
+  schedule: 'daily',
+};
+
+// ── Module-level store ────────────────────────────────────────────────────
+
+type WizardState = WizardData & { step: number };
+
+const wizardStore = createImmerStore<WizardState, WizardStoreMethods>(
+  { step: 0, ...RECOMMENDED },
+  (api) => {
+    return {
+      resetToRecommended() {
+        api.update((draft) => {
+          Object.assign(draft, RECOMMENDED);
+        });
+      },
+      resetAll() {
+        api.reset();
+      },
+      setStep(step: number) {
+        api.update((draft) => {
+          draft.step = step;
+        });
+      },
+      setName(name: string) {
+        api.update((draft) => {
+          draft.name = name;
+        });
+      },
+      setEnvironment(environment: string) {
+        api.update((draft) => {
+          draft.environment = environment;
+        });
+      },
+      setRegion(region: string) {
+        api.update((draft) => {
+          draft.region = region;
+        });
+      },
+      setAccessLevel(accessLevel: string) {
+        api.update((draft) => {
+          draft.accessLevel = accessLevel;
+        });
+      },
+      setNotifications(notifications: boolean) {
+        api.update((draft) => {
+          draft.notifications = notifications;
+        });
+      },
+      setSchedule(schedule: string) {
+        api.update((draft) => {
+          draft.schedule = schedule;
+        });
+      },
+    };
+  }
+);
+
+type WizardStoreMethods = {
+  resetToRecommended: () => void;
+  resetAll: () => void;
+  setStep: (step: number) => void;
+  setName: (name: string) => void;
+  setEnvironment: (environment: string) => void;
+  setRegion: (region: string) => void;
+  setAccessLevel: (accessLevel: string) => void;
+  setNotifications: (notifications: boolean) => void;
+  setSchedule: (schedule: string) => void;
+};
+
+// ── Result store ──────────────────────────────────────────────────────────
+
+const resultStore = createResultStore();
+
+// ── Step titles ────────────────────────────────────────────────────────────
+
+const STEP_TITLES = [
+  'Project Details & Infrastructure Configuration',
+  'Team Permissions & Access Control Policies',
+  'Review & Confirm Changes',
+] as const;
+
+const STEP_COUNT = STEP_TITLES.length;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function isRecommended(state: WizardData): boolean {
+  return (
+    state.name === RECOMMENDED.name &&
+    state.environment === RECOMMENDED.environment &&
+    state.region === RECOMMENDED.region &&
+    state.accessLevel === RECOMMENDED.accessLevel &&
+    state.notifications === RECOMMENDED.notifications &&
+    state.schedule === RECOMMENDED.schedule
+  );
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+export const MODAL_ID = 'panel-modal-wizard';
+
+export function MuiPanelExample() {
+  const { result } = useStore(resultStore);
+  const wizard = useStore(wizardStore);
+
+  const actions = useModalActions({
+    close: defineAction(),
+    back: defineAction(),
+    next: defineAction(),
+    submit: defineAction<WizardData>({ hotkey: Key.Enter }),
+  });
+
+  // Template hooks infer the payload from `actions` too — `submit` is the only action that
+  // carries one, so `WizardData` is what this modal closes with.
+  const modal = useMessageModal({
+    id: MODAL_ID,
+    actions,
+    render: () => {
+      const title = STEP_TITLES[wizard.step] ?? STEP_TITLES[0];
+
+      return (
+        <PanelModal.PanelContainer sx={{ width: 600 }}>
+          <PanelModal.PanelHeader>
+            <PanelModal.HeaderActionLayout
+              content={
+                <Box>
+                  <Shared.OverflownTypography variant="h6" sx={{ fontWeight: 600 }}>
+                    {title}
+                  </Shared.OverflownTypography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                    Step {wizard.step + 1} of {STEP_COUNT}
+                  </Typography>
+                </Box>
+              }
+              actions={
+                <>
+                  {/* ── "Use recommended" icon button ─────────── */}
+                  <Tooltip
+                    title={
+                      isRecommended(wizard)
+                        ? 'Using recommended settings'
+                        : 'Apply recommended settings'
+                    }
+                    arrow
+                    slotProps={{ popper: { disablePortal: true } }}
+                  >
+                    <IconButton
+                      size="small"
+                      aria-label="Apply recommended settings"
+                      color={isRecommended(wizard) ? 'primary' : 'default'}
+                      onClick={() => {
+                        wizardStore.resetToRecommended();
+                      }}
+                    >
+                      <AutoAwesomeIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* ── "Jump to" dropdown ────────────────────── */}
+                  <FormControl size="small" sx={{ minWidth: 100 }}>
+                    <Select
+                      value={wizard.step}
+                      variant="outlined"
+                      sx={{ fontSize: '0.8125rem', height: 32 }}
+                      MenuProps={{ disablePortal: true }}
+                      onChange={(e) => {
+                        wizardStore.setStep(e.target.value);
+                      }}
+                    >
+                      {STEP_TITLES.map((label, i) => {
+                        return (
+                          <MenuItem key={label} value={i} sx={{ fontSize: '0.8125rem' }}>
+                            Step {i + 1}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+
+                  <IconButton size="small" aria-label="Close" {...actions.close()}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </>
+              }
+            />
+          </PanelModal.PanelHeader>
+          <Divider />
+          <Shared.OverflowContainer
+            sx={{
+              height: 350,
+            }}
+            overflowSx={{
+              '& > div': {
+                pr: 'calc(24px - var(--scrollbar-width))',
+              },
+            }}
+          >
+            <PanelModal.PanelContent>
+              {/* ── Step 1: Project Details ────────────────────── */}
+              {wizard.step === 0 && (
+                <Stack spacing={2.5}>
+                  <Shared.Heading>Core settings</Shared.Heading>
+                  <TextField
+                    label="Pipeline name"
+                    size="small"
+                    fullWidth
+                    value={wizard.name}
+                    onChange={(e) => {
+                      wizardStore.setName(e.target.value);
+                    }}
+                  />
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Environment</InputLabel>
+                    <Select
+                      label="Environment"
+                      value={wizard.environment}
+                      MenuProps={{ disablePortal: true }}
+                      onChange={(e) => {
+                        wizardStore.setEnvironment(e.target.value);
+                      }}
+                    >
+                      <MenuItem value="development">Development</MenuItem>
+                      <MenuItem value="staging">Staging</MenuItem>
+                      <MenuItem value="production">Production</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Region</FormLabel>
+                    <RadioGroup
+                      row
+                      value={wizard.region}
+                      onChange={(e) => {
+                        wizardStore.setRegion(e.target.value);
+                      }}
+                    >
+                      <FormControlLabel
+                        value="us-east-1"
+                        control={<Radio size="small" />}
+                        label="US East"
+                      />
+                      <FormControlLabel
+                        value="eu-west-1"
+                        control={<Radio size="small" />}
+                        label="EU West"
+                      />
+                      <FormControlLabel
+                        value="ap-southeast-1"
+                        control={<Radio size="small" />}
+                        label="AP Southeast"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Stack>
+              )}
+
+              {/* ── Step 2: Permissions ────────────────────────── */}
+              {wizard.step === 1 && (
+                <Stack spacing={2.5}>
+                  <Shared.Heading>Access control</Shared.Heading>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Access level</InputLabel>
+                    <Select
+                      label="Access level"
+                      value={wizard.accessLevel}
+                      MenuProps={{ disablePortal: true }}
+                      onChange={(e) => {
+                        wizardStore.setAccessLevel(e.target.value);
+                      }}
+                    >
+                      <MenuItem value="viewer">Viewer</MenuItem>
+                      <MenuItem value="editor">Editor</MenuItem>
+                      <MenuItem value="admin">Admin</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={wizard.notifications}
+                        onChange={(e) => {
+                          wizardStore.setNotifications(e.target.checked);
+                        }}
+                      />
+                    }
+                    label="Send email notifications on pipeline runs"
+                  />
+                  <FormControl>
+                    <FormLabel>Run schedule</FormLabel>
+                    <RadioGroup
+                      value={wizard.schedule}
+                      onChange={(e) => {
+                        wizardStore.setSchedule(e.target.value);
+                      }}
+                    >
+                      <FormControlLabel
+                        value="hourly"
+                        control={<Radio size="small" />}
+                        label="Hourly"
+                      />
+                      <FormControlLabel
+                        value="daily"
+                        control={<Radio size="small" />}
+                        label="Daily"
+                      />
+                      <FormControlLabel
+                        value="weekly"
+                        control={<Radio size="small" />}
+                        label="Weekly"
+                      />
+                      <FormControlLabel
+                        value="manual"
+                        control={<Radio size="small" />}
+                        label="Manual only"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                  <Shared.Hint>
+                    Only admins can delete resources. Editors can manage settings.
+                  </Shared.Hint>
+                </Stack>
+              )}
+
+              {/* ── Step 3: Review ─────────────────────────────── */}
+              {wizard.step === 2 && (
+                <Stack spacing={2}>
+                  <Shared.Heading>Confirm changes</Shared.Heading>
+                  {actions.error && (
+                    <Shared.AlertContent severity="error">
+                      {actions.error.message}
+                    </Shared.AlertContent>
+                  )}
+                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+                    <Stack spacing={1}>
+                      <Typography variant="body2">
+                        <strong>Name:</strong> {wizard.name}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Environment:</strong> {wizard.environment}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Region:</strong> {wizard.region}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Access level:</strong> {wizard.accessLevel}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Notifications:</strong> {wizard.notifications ? 'Yes' : 'No'}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Schedule:</strong> {wizard.schedule}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                  <Shared.Message>Press Submit or Enter to apply these settings.</Shared.Message>
+                </Stack>
+              )}
+            </PanelModal.PanelContent>
+          </Shared.OverflowContainer>
+          <Divider />
+          <PanelModal.PanelFooter justify={wizard.step === 0 ? 'end' : 'space-between'}>
+            {wizard.step > 0 && (
+              <Shared.Button
+                variant="outlined"
+                {...actions.back(() => {
+                  wizardStore.setStep(Math.max(wizard.step - 1, 0));
+                })}
+              >
+                Back
+              </Shared.Button>
+            )}
+            {wizard.step === STEP_COUNT - 1 ? (
+              <Shared.Button
+                variant="contained"
+                {...actions.submit(async (close) => {
+                  await simulateApiCall('Create pipeline');
+                  const snap = wizardStore.getSnapshot();
+                  close({
+                    name: snap.name,
+                    environment: snap.environment,
+                    region: snap.region,
+                    accessLevel: snap.accessLevel,
+                    notifications: snap.notifications,
+                    schedule: snap.schedule,
+                  });
+                })}
+              >
+                Submit
+              </Shared.Button>
+            ) : (
+              <Shared.Button
+                variant="contained"
+                {...actions.next(() => {
+                  wizardStore.setStep(Math.min(wizard.step + 1, STEP_COUNT - 1));
+                })}
+              >
+                Next
+              </Shared.Button>
+            )}
+          </PanelModal.PanelFooter>
+        </PanelModal.PanelContainer>
+      );
+    },
+    onClose: (r) => {
+      wizardStore.resetAll();
+      if (r.data !== undefined) {
+        resultStore.setResult(
+          `Submitted: ${r.data.name} (${r.data.environment}, ${r.data.region}, ${r.data.accessLevel})`
+        );
+      } else {
+        resultStore.setResult(`Closed: ${r.reason}`);
+      }
+    },
+  });
+
+  // ── Open modal and use waitForClose ──────────────────────────────────────
+
+  const handleOpen = () => {
+    void (async () => {
+      try {
+        await modal.open();
+        const [err, closeResult] = await modal.waitForClose();
+        if (err !== null) {
+          resultStore.setResult(`Error: ${err.message}`);
+          return;
+        }
+        if (closeResult.data !== undefined) {
+          resultStore.setResult(
+            `waitForClose → submitted: ${closeResult.data.name} (${closeResult.data.environment})`
+          );
+        } else {
+          resultStore.setResult(`waitForClose → dismissed: ${closeResult.reason}`);
+        }
+      } catch {
+        // fire-and-forget safety net
+      }
+    })();
+  };
+
+  return (
+    <ExampleLayout result={result} modals={modal.Modal}>
+      <Shared.Button variant="contained" size="small" onClick={handleOpen}>
+        Open Panel Modal
+      </Shared.Button>
+    </ExampleLayout>
+  );
+}

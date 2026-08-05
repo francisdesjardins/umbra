@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+playwright-report
+test-results
+*.min.js
+*.min.css
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Vendored Yarn release (third-party bundled output)
+.yarn

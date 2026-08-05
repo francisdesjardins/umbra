@@ -1,0 +1,317 @@
+/* ========== CSS Variables ========== */
+:root {
+  /* Light mode */
+  --form-bg: #ffffff;
+  --form-text: #1a1a1a;
+  --form-text-secondary: #666666;
+  --form-border: #dee2e6;
+  --form-input-bg: #ffffff;
+  --form-input-text: #1a1a1a;
+  --form-error: #d32f2f;
+  --form-success: #2e7d32;
+  --form-spacing: 16px;
+  --form-spacing-lg: 24px;
+  --form-input-focus: #d946ef;
+  /* Room reserved inside scroll containers so 1px focus rings are never clipped. */
+  --form-focus-ring-space: 2px;
+
+  /* Typography */
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.75rem;
+}
+
+/* Dark mode */
+:root[data-mui-color-scheme='dark'] {
+  --form-bg: #121212;
+  --form-text: rgba(255, 255, 255, 0.87);
+  --form-text-secondary: rgba(255, 255, 255, 0.6);
+  --form-border: #424242;
+  --form-input-bg: rgba(255, 255, 255, 0.05);
+  --form-input-text: rgba(255, 255, 255, 0.87);
+  --form-success: #66bb6a;
+  /* Was missing: the light-mode #d32f2f is too dark on #121212, so invalid-field borders and
+     error hints were the least readable thing in the form. Pairs with --form-success above. */
+  --form-error: #f44336;
+}
+
+/* ========== Form Layout ========== */
+.formLayout {
+  background: var(--form-bg);
+  color: var(--form-text);
+  border-radius: 8px;
+  padding: var(--form-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-spacing);
+  font-family: var(--font-family);
+  max-width: 500px;
+  width: 100%;
+  border: 1px solid var(--form-border);
+}
+
+/* ========== Form Field Group ========== */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ========== Label ========== */
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--form-text);
+  line-height: 1.6;
+}
+
+/* ========== Input ========== */
+.input {
+  padding: 8px 12px;
+  border: 1px solid var(--form-border);
+  border-radius: 4px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  background: var(--form-input-bg);
+  color: var(--form-input-text);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--form-input-focus);
+  box-shadow: 0 0 0 1px var(--form-input-focus);
+}
+
+.input.error {
+  border-color: var(--form-error);
+}
+
+.input.error:focus {
+  box-shadow: 0 0 0 1px var(--form-error);
+}
+
+/* ========== CSS-First Validation ========== */
+/* Native :user-invalid/:user-valid — no JS error state needed.
+   These fire only after the user interacts with a field,
+   avoiding the "eager validation" problem. */
+.input:user-valid {
+  border-color: var(--form-success);
+}
+
+.input:user-valid:focus {
+  box-shadow: 0 0 0 1px var(--form-success);
+}
+
+.input:user-invalid {
+  border-color: var(--form-error);
+}
+
+.input:user-invalid:focus {
+  box-shadow: 0 0 0 1px var(--form-error);
+}
+
+/* Validation hint: hidden by default, revealed by :has() when
+   the sibling input is :user-invalid. Always render the element
+   in the DOM — CSS controls visibility, not React. */
+.validationHint {
+  display: none;
+  color: var(--form-error);
+  font-size: var(--font-size-xs);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.fieldGroup:has(> .input:user-invalid) > .validationHint {
+  display: block;
+  animation: hintReveal 150ms ease-out;
+}
+
+@keyframes hintReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Field Error ========== */
+.fieldError {
+  color: var(--form-error);
+  font-size: var(--font-size-xs);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ========== Field Hint (zero-shift) ========== */
+/* Always rendered, always occupies space — text doubles as guidance
+   (muted secondary color) and error feedback (red).
+   No layout shift: the element is never hidden or inserted. */
+.fieldHint {
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  min-height: 1lh;
+  color: var(--form-text-secondary);
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0;
+}
+
+/* Turn red when the sibling input is invalid after user interaction */
+.fieldGroup:has(> input:user-invalid) > .fieldHint,
+.fieldGroup:has(> select:user-invalid) > .fieldHint {
+  color: var(--form-error);
+}
+
+/* Zod error present — always red regardless of :user-valid state */
+.fieldHint[data-error] {
+  color: var(--form-error);
+}
+
+/* ========== Button Container ========== */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ========== Header / Content / Footer helpers ========== */
+.formHeader {
+  flex-shrink: 0;
+  margin-bottom: var(--form-spacing);
+}
+
+.formContent {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-spacing);
+  /* Breathing room for focus rings. A scroll container clips at its padding box, and the
+     inputs' focus ring is a `box-shadow` drawn 1px OUTSIDE their border box — so without
+     this the last row's ring and bottom border are cut off (the row looked a few pixels
+     short). Note `overflow-y: auto` also forces `overflow-x` to compute to `auto`, so the
+     rings need room on every side, not just the bottom. */
+  padding: var(--form-focus-ring-space);
+  /* Cancel the padding's visual offset so the form keeps its original alignment. */
+  margin: calc(-1 * var(--form-focus-ring-space));
+}
+
+.formFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--form-spacing);
+  margin-top: var(--form-spacing);
+}
+
+/* ========== Multi-Column Grid ========== */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--form-spacing);
+}
+
+.formGridFull {
+  grid-column: 1 / -1;
+}
+
+/* ========== Required Mark ========== */
+.requiredMark {
+  color: var(--form-error);
+  margin-left: 2px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  vertical-align: super;
+  line-height: 1;
+}
+
+/* ========== Select ========== */
+.select {
+  padding: 8px 12px;
+  border: 1px solid var(--form-border);
+  border-radius: 4px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  background: var(--form-input-bg);
+  color: var(--form-input-text);
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--form-input-focus);
+  box-shadow: 0 0 0 1px var(--form-input-focus);
+}
+
+.select:user-invalid {
+  border-color: var(--form-error);
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 599px) {
+  .formLayout {
+    max-width: 92vw;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== Array Item Row ========== */
+.arrayRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Stretch the first child (the FieldGroup with input) to fill remaining space */
+.arrayRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ========== Array Action Buttons ========== */
+.removeBtn {
+  padding: 8px 10px;
+  border: 1px solid var(--form-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--form-error);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.removeBtn:hover {
+  background: rgba(211, 47, 47, 0.08);
+  border-color: var(--form-error);
+}
+
+.addBtn {
+  padding: 6px 12px;
+  border: 1px dashed var(--form-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--form-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  align-self: flex-start;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.addBtn:hover {
+  border-color: var(--form-input-focus);
+  color: var(--form-input-focus);
+}

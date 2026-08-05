@@ -1,0 +1,16 @@
+{
+  "all": true,
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "src/**/*.d.ts",
+    "src/**/__tests__/**",
+    "src/**/*.story.tsx",
+    "src/ts-reset.ts",
+    "src/store/create-store-context.tsx",
+    "src/store/react.ts",
+    "src/store/use-store.ts"
+  ],
+  "reporter": ["text-summary", "html", "lcov"],
+  "reportsDir": "coverage",
+  "checkCoverage": false
+}

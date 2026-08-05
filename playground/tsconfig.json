@@ -1,0 +1,25 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    // The playground emits no declarations, and requiring them makes any component built from
+    // a third-party generic (a styled TanStack `Link`) unnameable: TS2883.
+    "declaration": false,
+    "declarationMap": false,
+    "rootDir": "..",
+    "paths": {
+      "*": ["./*"],
+      "umbra": ["../src"],
+      "umbra/*": ["../src/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.ts",
+    "vite-plugins/**/*",
+    "../src/__tests__/*.story.tsx",
+    "../src/templates/__tests__/*.story.tsx"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=JSON.parse(d).tool_input.file_path;require('child_process').execSync('npx prettier --write --ignore-unknown '+JSON.stringify(f),{stdio:'inherit'})})\"",
+            "timeout": 30,
+            "statusMessage": "Formatting with Prettier"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx eslint --max-warnings=0 src",
+            "timeout": 60,
+            "statusMessage": "Running ESLint check"
+          }
+        ]
+      }
+    ]
+  }
+}

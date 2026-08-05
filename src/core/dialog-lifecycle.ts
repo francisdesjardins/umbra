@@ -1,0 +1,123 @@
+/**
+ * Framework-agnostic native-`<dialog>` DOM orchestration.
+ *
+ * These functions operate directly on a `<dialog>` element and contain no React — the
+ * `useDialogLifecycle` hook wires them to store transitions via effects, but the DOM logic
+ * lives here so it is testable in isolation and reusable outside React.
+ */
+
+/**
+ * Per-element cache for transition-disabled detection, so the closing path never triggers a
+ * synchronous `getComputedStyle` reflow at close time. A `WeakMap` lets the entry be GC'd with
+ * the element.
+ *
+ * The entry is per *open*, not per element: a `<dialog>` outlives every open/close cycle, and
+ * whether transitions are live can change between them — a stylesheet toggled by a user
+ * setting, a `prefers-reduced-motion` change, a theme swap. Caching for the element's lifetime
+ * makes the close path act on the first open's answer forever.
+ */
+const transitionsDisabledCache = new WeakMap<HTMLDialogElement, boolean>();
+
+/**
+ * Measure whether CSS transitions are effectively disabled on `dialog` (e.g.
+ * `transition: none !important`) and cache the answer for {@link checkTransitionsDisabled}.
+ *
+ * Called once per open, while the dialog is already `'open'` — the reflow it costs is paid
+ * outside the closing sequence, which is the point of caching at all.
+ */
+export function refreshTransitionsDisabled(dialog: HTMLDialogElement): boolean {
+  const duration = getComputedStyle(dialog).transitionDuration;
+  const disabled = duration === '0s' || duration === '0ms';
+  transitionsDisabledCache.set(dialog, disabled);
+  return disabled;
+}
+
+/**
+ * Returns `true` when CSS transitions are effectively disabled on `dialog`, as measured by the
+ * most recent {@link refreshTransitionsDisabled}. Measures on the spot if the element has never
+ * been refreshed, so a caller reaching here first is still correct — only slower.
+ */
+export function checkTransitionsDisabled(dialog: HTMLDialogElement): boolean {
+  return transitionsDisabledCache.get(dialog) ?? refreshTransitionsDisabled(dialog);
+}
+
+/**
+ * Open the dialog in the requested mode and stamp its stacking z-index.
+ *
+ * @param nonModal - `dialog.show()` (normal flow, no top layer) vs `dialog.showModal()` (top layer).
+ * @param zIndex - resolved z-index; also mirrored onto `data-modal-z` for debugging.
+ */
+export function showDialog(
+  dialog: HTMLDialogElement,
+  { nonModal, zIndex }: { nonModal: boolean; zIndex: number }
+): void {
+  if (nonModal) {
+    dialog.show();
+  } else {
+    dialog.showModal();
+  }
+  dialog.style.zIndex = String(zIndex);
+  dialog.dataset['modalZ'] = String(zIndex);
+}
+
+/**
+ * Drive the exit animation of an open, transitioning dialog and invoke `onFinish` exactly
+ * once when it completes — via `transitionend` on the primary property, or a safety timeout
+ * if that never fires. Also animates the `::backdrop` opacity out in sync (modal only, since
+ * a non-modal dialog has no backdrop). Returns a teardown that removes the listener, clears
+ * the timer, and cancels the backdrop animation.
+ *
+ * Idempotency of `onFinish` is the caller's responsibility (both the `transitionend` and the
+ * timeout call it) — the hook guards it with a `finalized` flag.
+ */
+export function runDialogExit(
+  dialog: HTMLDialogElement,
+  {
+    nonModal,
+    primaryProp,
+    exitDuration,
+    onFinish,
+    onFallbackTimeout,
+  }: {
+    nonModal: boolean;
+    primaryProp: string;
+    exitDuration: number;
+    onFinish: () => void;
+    onFallbackTimeout?: () => void;
+  }
+): () => void {
+  // Animate backdrop exit in sync with dialog content (non-modal has no backdrop).
+  let backdropAnimation: Animation | undefined;
+  if (!nonModal) {
+    try {
+      backdropAnimation = dialog.animate([{ opacity: 0 }], {
+        duration: exitDuration,
+        fill: 'none',
+        pseudoElement: '::backdrop',
+      });
+    } catch {
+      // Dialog may have been closed between the open check and this animate call.
+    }
+  }
+
+  // Safety timeout: finalize if `transitionend` never fires.
+  const fallbackTimer = setTimeout(() => {
+    onFallbackTimeout?.();
+    onFinish();
+  }, exitDuration + 50);
+
+  const handleTransitionEnd = (e: TransitionEvent) => {
+    if (e.target !== dialog || e.propertyName !== primaryProp) {
+      return;
+    }
+    clearTimeout(fallbackTimer);
+    onFinish();
+  };
+
+  dialog.addEventListener('transitionend', handleTransitionEnd);
+  return () => {
+    dialog.removeEventListener('transitionend', handleTransitionEnd);
+    clearTimeout(fallbackTimer);
+    backdropAnimation?.cancel();
+  };
+}

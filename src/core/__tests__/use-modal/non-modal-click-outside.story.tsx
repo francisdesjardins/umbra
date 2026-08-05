@@ -1,0 +1,57 @@
+import { useState } from 'react';
+import { useModal } from '../../use-modal.js';
+import { dialogStyle } from '../story-styles.js';
+
+/**
+ * Tests dismissOnClickOutside: clicking outside the non-modal dialog closes it,
+ * clicking inside does not.
+ */
+export function NonModalClickOutsideHarness() {
+  const [lastReason, setLastReason] = useState('');
+
+  const { open, isOpen, Modal } = useModal({
+    id: 'click-outside-dialog',
+    nonModal: true,
+    dismissOnClickOutside: true,
+    animation: {
+      entrance: { opacity: 1 },
+      exit: { opacity: 0 },
+      duration: 0,
+      exitDuration: 0,
+      transitionProperty: 'opacity',
+    },
+    render: ({ handle }) => {
+      return (
+        <div style={dialogStyle}>
+          <p>Click outside to dismiss</p>
+          <button
+            onClick={() => {
+              handle.close('confirm');
+            }}
+          >
+            Confirm
+          </button>
+        </div>
+      );
+    },
+    onClose: (result) => {
+      setLastReason(result.reason);
+    },
+  });
+
+  return (
+    <div>
+      <button
+        onClick={async () => {
+          await open();
+        }}
+      >
+        Open Non-Modal
+      </button>
+      <button data-testid="outside-button">Outside Button</button>
+      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="last-reason">{lastReason}</span>
+      {Modal}
+    </div>
+  );
+}

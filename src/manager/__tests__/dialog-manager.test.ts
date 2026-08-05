@@ -1,0 +1,275 @@
+import { expect, test } from '@playwright/test';
+import type { ModalPhase } from '../../core/types.js';
+import {
+  type MODAL_CLOSE_EVENT,
+  type MODAL_OPEN_EVENT,
+  createDialogManager,
+  type DialogManagerEvent,
+  type ModalCloseEventDetail,
+  type ModalOpenEventDetail,
+} from '../dialog-manager.js';
+
+/**
+ * The `DocumentEventMap` augmentation is written with string literals, because an interface
+ * key cannot be a computed `typeof MODAL_OPEN_EVENT`. Indexing the map *through* the constants
+ * is what ties the two together: rename an event and one of these stops resolving, which is a
+ * type error rather than a listener that silently falls back to a bare `Event`.
+ */
+type Equals<A extends B, B extends C, C = A> = A;
+
+export type _OpenEventIsMapped = Equals<
+  DocumentEventMap[typeof MODAL_OPEN_EVENT],
+  CustomEvent<ModalOpenEventDetail>
+>;
+export type _CloseEventIsMapped = Equals<
+  DocumentEventMap[typeof MODAL_CLOSE_EVENT],
+  CustomEvent<ModalCloseEventDetail>
+>;
+
+/**
+ * Minimal stand-in for the modal store, satisfying the manager's
+ * `RegisteredStore` contract. `transition()` drives the phase machine the way
+ * the real store does (including retaining the close reason through 'closed').
+ */
+function createFakeStore() {
+  const listeners = new Set<() => void>();
+  let phase: ModalPhase = 'closed';
+  let isPreparing = false;
+  let closeReason: string | undefined;
+
+  const notify = () => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
+
+  return {
+    requestOpen(): void {
+      if (phase !== 'closed') {
+        return;
+      }
+      closeReason = undefined;
+      phase = 'opening';
+      isPreparing = true;
+      notify();
+    },
+    close(reason: string): boolean {
+      if (phase === 'closing' || phase === 'closed') {
+        return false;
+      }
+      closeReason = reason;
+      phase = 'closing';
+      notify();
+      return true;
+    },
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot: () => {
+      // Mirrors the real store: closeResult is retained through 'closed' so the
+      // manager can still read the reason when it emits its close event.
+      return {
+        phase,
+        isPreparing,
+        closeResult: closeReason === undefined ? null : { reason: closeReason },
+      };
+    },
+    /** Test control: drive a phase transition like the real modal store does. */
+    transition(next: ModalPhase, opening = false): void {
+      phase = next;
+      isPreparing = opening;
+      notify();
+    },
+  };
+}
+
+type FakeStore = ReturnType<typeof createFakeStore>;
+
+/** Drive a registered store through the full opening sequence. */
+function openFully(store: FakeStore): void {
+  store.requestOpen();
+  store.transition('open', true);
+  store.transition('open', false);
+}
+
+const realNow = Date.now;
+
+test.describe('createDialogManager', () => {
+  test.beforeEach(() => {
+    // Deterministic, strictly increasing openedAt timestamps — registrations
+    // in the same real millisecond would otherwise tie in stack ordering.
+    let t = 1_000;
+    Date.now = () => {
+      return ++t;
+    };
+  });
+
+  test.afterEach(() => {
+    Date.now = realNow;
+  });
+
+  test('register/unregister drive registration queries and the snapshot', () => {
+    const dm = createDialogManager();
+    const a = createFakeStore();
+    const b = createFakeStore();
+
+    dm.register('a', a);
+    dm.register('b', b);
+
+    expect(dm.lookup().exists('a')).toBe(true);
+    expect(dm.lookup().getRegisteredCount()).toBe(2);
+    expect(dm.lookup().getClosed()).toHaveLength(2);
+    expect(dm.getSnapshot().openDialogs).toHaveLength(0);
+
+    dm.unregister('a');
+    expect(dm.lookup().exists('a')).toBe(false);
+    expect(dm.lookup().getRegisteredCount()).toBe(1);
+  });
+
+  test('snapshot tracks every phase transition, including closing', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    dm.register('m', store);
+
+    dm.open('m');
+    expect(dm.getSnapshot().openDialogs).toHaveLength(1);
+    expect(dm.lookup('m').phase).toBe('opening');
+
+    store.transition('open', true);
+    expect(dm.lookup('m').phase).toBe('open');
+
+    store.transition('open', false);
+    dm.close('m', 'custom-reason');
+    // The snapshot must not lag the registry during the closing animation.
+    expect(dm.lookup('m').phase).toBe('closing');
+    expect(dm.lookup('m').isOpen).toBe(true);
+    expect(dm.getSnapshot().openDialogs).toHaveLength(1);
+
+    store.transition('closed');
+    expect(dm.getSnapshot().openDialogs).toHaveLength(0);
+    expect(dm.lookup('m').isOpen).toBe(false);
+    expect(dm.lookup('m').exists).toBe(true);
+  });
+
+  test('open and close events fire once, with the reason read from the store', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const events: DialogManagerEvent[] = [];
+    dm.register('m', store);
+    dm.subscribe((event) => {
+      events.push(event);
+    });
+
+    openFully(store);
+    dm.close('m', 'saved');
+    store.transition('closed');
+
+    expect(events).toEqual([
+      { type: 'open', id: 'm' },
+      { type: 'close', id: 'm', reason: 'saved' },
+    ]);
+  });
+
+  test('foreground, openDialogs order and z-index follow open order', () => {
+    const dm = createDialogManager();
+    const a = createFakeStore();
+    const b = createFakeStore();
+    dm.register('a', a);
+    dm.register('b', b);
+
+    openFully(a);
+    openFully(b);
+
+    expect(dm.getSnapshot().foreground?.id).toBe('b');
+    expect(dm.lookup().isForeground('b')).toBe(true);
+    expect(dm.lookup().isForeground('a')).toBe(false);
+    // openDialogs is sorted by openedAt — index doubles as stack position.
+    expect(
+      dm.getSnapshot().openDialogs.map((d) => {
+        return d.id;
+      })
+    ).toEqual(['a', 'b']);
+    expect(dm.getZIndex('a')).toBe(dm.Z_INDEX_BASE);
+    expect(dm.getZIndex('b')).toBe(dm.Z_INDEX_BASE + 1);
+
+    dm.close('b');
+    b.transition('closed');
+    expect(dm.getSnapshot().foreground?.id).toBe('a');
+    expect(dm.lookup().isForeground('a')).toBe(true);
+  });
+
+  test('blocking and non-blocking dialogs are counted separately', () => {
+    const dm = createDialogManager();
+    const blocking = createFakeStore();
+    const nonBlocking = createFakeStore();
+    dm.register('blocking', blocking, 'modal', false);
+    dm.register('non-blocking', nonBlocking, 'modal', true);
+
+    openFully(blocking);
+    openFully(nonBlocking);
+
+    const lookup = dm.lookup();
+    expect(lookup.getOpen()).toHaveLength(2);
+    expect(
+      lookup.getOpen('blocking').map((d) => {
+        return d.id;
+      })
+    ).toEqual(['blocking']);
+    expect(
+      lookup.getOpen('non-blocking').map((d) => {
+        return d.id;
+      })
+    ).toEqual(['non-blocking']);
+    expect(
+      dm.getSnapshot().openDialogs.filter((d) => {
+        return !d.nonModal;
+      })
+    ).toHaveLength(1);
+    expect(
+      dm.getSnapshot().openDialogs.filter((d) => {
+        return d.nonModal;
+      })
+    ).toHaveLength(1);
+  });
+
+  test('lookup(id) returns a null-object default for unregistered ids', () => {
+    const dm = createDialogManager();
+    const info = dm.lookup('nope');
+
+    expect(info.exists).toBe(false);
+    expect(info.phase).toBe('closed');
+    expect(info.isOpen).toBe(false);
+    expect(info.isForeground).toBe(false);
+    expect(info.openedAt).toBe(0);
+  });
+
+  test('lookup(id) on a registered-but-closed modal reports closed state', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    dm.register('idle', store);
+
+    const info = dm.lookup('idle');
+    expect(info.exists).toBe(true);
+    expect(info.isOpen).toBe(false);
+    expect(info.isForeground).toBe(false);
+    expect(
+      dm
+        .lookup()
+        .getClosed()
+        .map((d) => {
+          return d.id;
+        })
+    ).toEqual(['idle']);
+  });
+
+  test('open/close on unregistered ids are safe no-ops', () => {
+    const dm = createDialogManager();
+    expect(() => {
+      dm.open('nope');
+      dm.close('nope');
+    }).not.toThrow();
+  });
+});

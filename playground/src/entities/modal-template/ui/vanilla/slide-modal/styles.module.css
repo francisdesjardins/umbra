@@ -1,0 +1,120 @@
+/* ========== CSS Variables ========== */
+:root {
+  /* Light mode */
+  --slide-bg: #ffffff;
+  --slide-text: #1a1a1a;
+  --slide-border: #dee2e6;
+  --slide-spacing: 16px;
+  --slide-spacing-lg: 24px;
+
+  /* Typography */
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-h2: 1.25rem;
+}
+
+/* Dark mode */
+:root[data-mui-color-scheme='dark'] {
+  --slide-bg: #121212;
+  --slide-text: rgba(255, 255, 255, 0.87);
+  --slide-border: #424242;
+}
+
+/* ========== Slide Panel Layout ========== */
+.slideLayout {
+  background: var(--slide-bg);
+  color: var(--slide-text);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-family);
+}
+
+/* one-sided borders + default sizing for slide panels */
+.slideLeft {
+  border-right: 1px solid var(--slide-border);
+  width: 400px;
+  min-width: 320px;
+  max-width: 640px;
+}
+.slideRight {
+  border-left: 1px solid var(--slide-border);
+  width: 400px;
+  min-width: 320px;
+  max-width: 640px;
+}
+.slideTop {
+  border-bottom: 1px solid var(--slide-border);
+  height: 300px;
+  max-height: 80dvh;
+}
+.slideBottom {
+  border-top: 1px solid var(--slide-border);
+  height: 300px;
+  max-height: 80dvh;
+}
+
+/* ========== Header ========== */
+.slideHeader {
+  flex-shrink: 0;
+  padding: var(--slide-spacing-lg) var(--slide-spacing-lg) var(--slide-spacing);
+  padding-top: calc(var(--slide-spacing-lg) + env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--slide-border);
+}
+
+/* ========== Content ========== */
+.slideContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--slide-spacing-lg);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--slide-spacing-lg);
+}
+
+/* ========== Footer ========== */
+.slideFooter {
+  flex-shrink: 0;
+  padding: var(--slide-spacing-lg);
+  padding-bottom: calc(var(--slide-spacing-lg) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--slide-border);
+}
+
+/* ========== Title ========== */
+.slideTitle {
+  margin: 0;
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--slide-text);
+}
+
+/* ========== Section Group ========== */
+.sectionGroup {
+  /* spacing now provided by parent .slideContent gap */
+}
+
+/* ========== Checkbox Label ========== */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* ========== Button Container ========== */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ========== Mobile ========== */
+@media (max-width: 599px) {
+  .slideLeft,
+  .slideRight {
+    width: 100dvw;
+    min-width: auto;
+    max-width: 100dvw;
+  }
+}

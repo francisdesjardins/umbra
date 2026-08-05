@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "unicorn"],
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "rules": {
+    "no-console": "warn",
+    "eqeqeq": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-unused-vars": "off",
+    "typescript/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.ct.tsx", "**/*.story.tsx"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": [".claude/**/*.{mjs,js}", "scripts/**/*.{mjs,js}"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/playwright-report/**",
+    "**/playwright/.cache/**",
+    "**/test-results/**",
+    "**/coverage/**",
+    "playground/dist/**",
+    "**/.vite/**",
+    "**/*.d.ts",
+    ".yarn/**"
+  ]
+}

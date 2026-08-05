@@ -1,0 +1,202 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+jobs:
+  # ── Install ──────────────────────────────────────────────────────────────────
+  # Installs once and caches node_modules. Downstream jobs restore from the same
+  # key and skip installation entirely on a cache hit.
+  #
+  # Yarn 4 is resolved through Corepack from the `packageManager` field, so the
+  # version is pinned by the repo rather than by the runner image.
+  install:
+    name: Install
+    runs-on: ubuntu-latest
+    # Published so `test-component` can pin its container to the very version of Playwright
+    # this repo depends on. A hand-written tag drifts silently the moment the dependency is
+    # bumped, and the mismatch surfaces as a confusing driver/browser error.
+    outputs:
+      playwright-version: ${{ steps.playwright-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - name: Restore node_modules
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        # --immutable is the `npm ci` equivalent: fails if yarn.lock would change.
+        run: yarn install --immutable
+      - name: Resolve the Playwright version
+        id: playwright-version
+        # Strips any range prefix, so a `^1.62.1` still yields a usable image tag.
+        run: |
+          version=$(node -p "require('./package.json').devDependencies['@playwright/test'].replace(/^[^0-9]*/, '')")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Playwright $version"
+
+  # ── Lint & Format ────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Format
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn lint
+      - run: yarn format:check
+
+  # ── Type Check ───────────────────────────────────────────────────────────────
+  type-check:
+    name: Type Check
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn type-check
+
+  # ── Unit Tests ───────────────────────────────────────────────────────────────
+  # Pure Node — no browser launched. PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD keeps the
+  # install from fetching browser binaries here.
+  test-unit:
+    name: Unit Tests
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn test:unit
+
+  # ── Component Tests ──────────────────────────────────────────────────────────
+  # Runs inside the official Playwright image — browsers are pre-installed. The tag is derived
+  # from `@playwright/test` in package.json by the install job, so bumping the dependency moves
+  # the container with it.
+  test-component:
+    name: Component Tests
+    needs: install
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.install.outputs.playwright-version }}-noble
+      options: --user 1001
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      # No corepack here. The container runs as an unprivileged user (`--user 1001`) and
+      # `corepack enable` symlinks into /usr/bin, which fails with EACCES. Nothing is lost by
+      # skipping it: the repo commits its own Yarn release (`.yarn/releases` is excluded from
+      # .gitignore on purpose) and `.yarnrc.yml` points at it, so invoking that file directly
+      # pins the version by the repo exactly as corepack would — the same order of preference
+      # `deploy-playground.mjs` uses. Read from `.yarnrc.yml` rather than hard-coded, so a
+      # `yarn set version` bump moves CI with it.
+      - name: Resolve the vendored Yarn
+        id: yarn
+        run: |
+          bin=$(node -e "console.log(require('fs').readFileSync('.yarnrc.yml','utf8').match(/yarnPath:\s*(\S+)/)[1])")
+          echo "bin=$bin" >> "$GITHUB_OUTPUT"
+          echo "Yarn at $bin"
+      - run: node ${{ steps.yarn.outputs.bin }} install --immutable
+      - run: node ${{ steps.yarn.outputs.bin }} test:component
+      - name: Upload component test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: component-test-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ── Build ────────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn build
+      # The build only proves tsc exited 0. These prove the *artifact*: that both entry points
+      # resolve for an outside consumer, that the root pulls no React, and that every relative
+      # specifier in the emitted .d.ts carries an extension.
+      - run: yarn verify:package
+      # Builds the playground, which runs typedoc through its own plugin — the gate that fails
+      # when a new public export has no category in the API reference.
+      - run: yarn playground:build
+
+  # ── Docs ─────────────────────────────────────────────────────────────────────
+  # `docs:check` runs typedoc with treatWarningsAsErrors — a broken {@link} or a public
+  # signature naming an unexported type fails here. `docs:examples` extracts every JSDoc
+  # @example to a real module and runs prettier, tsc and eslint over it.
+  docs:
+    name: Docs
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'yarn'
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn docs:check
+      - run: yarn docs:examples
