@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!--
+    The mascot at 16px: the eclipse reduced to what survives that size.
+
+    `UmbraMoon` draws eight flames, an engraved face and two rims. None of that reads in a browser
+    tab, so this keeps only the two things that make the silhouette legible — a dark disc and the
+    corona escaping around it — in the same ambers, so the tab and the page are recognisably one
+    product.
+  -->
+  <circle cx="100" cy="100" r="88" fill="#f59e0b" />
+  <circle cx="100" cy="100" r="66" fill="#0f172a" />
+  <path d="M100 34a66 66 0 0 1 0 132a66 66 0 0 0 0-132z" fill="#b45309" opacity="0.55" />
+</svg>
