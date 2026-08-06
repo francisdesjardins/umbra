@@ -307,12 +307,13 @@ export function createDialogManager(): DialogManager {
     entry: RegistryEntry,
     topId: string | undefined
   ): RegisteredModalInfo {
-    const phase = entry.store.getSnapshot().phase;
+    const { phase, isPreparing } = entry.store.getSnapshot();
     return {
       id,
       exists: true,
       phase,
       isOpen: phase !== 'closed',
+      isPreparing,
       isForeground: id === topId,
       openedAt: entry.openedAt,
       modalType: entry.modalType,
@@ -327,6 +328,7 @@ export function createDialogManager(): DialogManager {
       exists: false,
       phase: 'closed',
       isOpen: false,
+      isPreparing: false,
       isForeground: false,
       openedAt: 0,
     };

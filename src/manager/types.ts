@@ -8,6 +8,18 @@ type ModalInfoBase = {
   readonly phase: ModalPhase;
   /** Whether the modal is currently open (`phase !== 'closed'`). */
   readonly isOpen: boolean;
+  /**
+   * Whether the modal's `onOpen` is still running — it is on screen, its content is not ready.
+   * `false` for unregistered modals.
+   *
+   * The second axis, and the one an observer usually wants. `phase` describes the `<dialog>`
+   * element and reaches `'open'` on the animation frame after it is shown, so `'opening'` lasts
+   * a single frame no matter how long the modal takes to prepare — asking `phase` "is it ready
+   * yet" always answers yes. A dialog that loads something sits at `phase: 'open'` with
+   * `isPreparing: true` for as long as the load takes, and that is the state a watcher elsewhere
+   * in the app is really asking about.
+   */
+  readonly isPreparing: boolean;
   /** Whether this is the topmost open modal. */
   readonly isForeground: boolean;
   /** Timestamp when the modal entered the opening phase. `0` for unregistered or never-opened. */

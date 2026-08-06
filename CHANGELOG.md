@@ -11,6 +11,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-05
 
+### Added
+
+- **`ModalInfo.isPreparing`** — `lookup(id)` and `useLookup(id)` now report whether a dialog's
+  `onOpen` is still running, alongside `phase` and `isOpen`. The information already existed on the
+  modal's own store and the manager already subscribed to it; it simply stopped at the boundary, so
+  the only code that could see it was the code rendering the dialog.
+
+  What made that a gap rather than an omission: **`phase` cannot answer "is it ready".** It
+  describes the `<dialog>` element, and reaches `'open'` on the animation frame after the dialog is
+  shown — so `'opening'` is one frame wide however long the modal actually takes to prepare, and a
+  watcher polling `phase` gets `'open'` immediately every time. That asymmetry is easy to read as a
+  bug (`'closing'` is held for the whole exit animation, so it looks like the only transient state
+  there is) and it is not one: preparation is a second axis, not a phase.
+
+  It matters most exactly where the manager is supposed to earn its keep — something elsewhere in
+  the app deciding whether to let an action through while a dialog it does not own is up. That
+  watcher could see "open" and not "not ready yet". Now it can see both.
+
+  Additive for anyone reading a `ModalInfo`; only code that _constructs_ one (the library itself)
+  had to change. Pinned by two cases in `use-lookup.ct.tsx`, including a modal closed while still
+  preparing, which must not come back reporting itself ready.
+
 ### Fixed
 
 - **A hotkey went dead once its action failed.** An action's button is `disabled` for as long as

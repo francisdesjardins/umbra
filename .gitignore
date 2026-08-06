@@ -48,3 +48,6 @@ scripts/examples/generated/
 # anyone who did not write it.
 RATING.md
 .claude/plans/
+
+# The dom-probe skill's screenshots — evidence for one question, not a fixture to keep.
+probe-shots/
