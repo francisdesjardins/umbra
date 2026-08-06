@@ -68,7 +68,7 @@ export function showDialog(
  * the timer, and cancels the backdrop animation.
  *
  * Idempotency of `onFinish` is the caller's responsibility (both the `transitionend` and the
- * timeout call it) — the hook guards it with a `finalized` flag.
+ * timeout call it) — {@link runCloseSequence} is what guards it.
  */
 export function runDialogExit(
   dialog: HTMLDialogElement,
@@ -121,3 +121,75 @@ export function runDialogExit(
     backdropAnimation?.cancel();
   };
 }
+
+/**
+ * The whole exit, decided and driven: which of three ways this dialog ends, and finishing exactly
+ * once whichever it was.
+ *
+ * Framework-free because none of the decision is React's. A binding knows *when* a modal entered
+ * `'closing'`; what happens next is a property of `<dialog>` and of the animation the caller
+ * declared, and a second binding should inherit it rather than re-derive three branches and a
+ * double-fire guard from scratch.
+ *
+ * The three ways, in the order they are checked:
+ *
+ * 1. **The browser already closed it** — the ESC cancel race. There is no animation left to wait
+ *    for, so finalizing immediately is the only correct answer; waiting would hang the close.
+ * 2. **Transitions are off** (`transition: none`, a test harness, `prefers-reduced-motion`
+ *    handled in user land). `transitionend` will never fire, so waiting for it would hang too.
+ * 3. **Otherwise**, run the exit and finalize when it reports done — or when the safety timeout
+ *    does, whichever comes first, which is why the guard exists.
+ *
+ * @returns A teardown for case 3, and `undefined` when the close already finished.
+ */
+export function runCloseSequence(
+  dialog: HTMLDialogElement,
+  {
+    nonModal,
+    primaryProp,
+    exitDuration,
+    finalize,
+    log,
+  }: {
+    nonModal: boolean;
+    primaryProp: string;
+    exitDuration: number;
+    /** Close the dialog and settle the store. Called exactly once. */
+    finalize: () => void;
+    /** Told which way it went, for the debug log. */
+    log?: (event: 'native' | 'no-transition' | 'animated' | 'fallback-timeout') => void;
+  }
+): (() => void) | undefined {
+  let finished = false;
+  const finishOnce = (how: 'native' | 'no-transition' | 'animated') => {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    log?.(how);
+    finalize();
+  };
+
+  if (!dialog.open) {
+    finishOnce('native');
+    return undefined;
+  }
+
+  if (checkTransitionsDisabled(dialog)) {
+    finishOnce('no-transition');
+    return undefined;
+  }
+
+  return runDialogExit(dialog, {
+    nonModal,
+    primaryProp,
+    exitDuration,
+    onFinish: () => {
+      finishOnce('animated');
+    },
+    onFallbackTimeout: () => {
+      log?.('fallback-timeout');
+    },
+  });
+}
+

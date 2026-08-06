@@ -6,6 +6,7 @@ import {
   KeyPassthroughHarness,
   TransitionToggleHarness,
   BasicHarness,
+  OnOpenAbortHarness,
   CustomDismissKeyHarness,
   DismissKeyDisabledHarness,
   NonModalClickOutsideDefaultHarness,
@@ -837,5 +838,38 @@ test.describe('the accessible name', () => {
     // Absent, not empty: `aria-label=""` would hide the omission from an audit.
     await expect(dialog).not.toHaveAttribute('aria-label', /.*/);
     await expect(dialog).not.toHaveAttribute('role', /.*/);
+  });
+});
+
+test.describe('onOpen is told when the modal goes away', () => {
+  test('closing aborts the work it started', async ({ mount, page }) => {
+    const component = await mount(<OnOpenAbortHarness />);
+    await component.getByRole('button', { name: 'Open' }).click();
+    await expect(component.getByTestId('outcome')).toHaveText('loading');
+
+    await page.keyboard.press('Escape');
+
+    // The promise only ever settles through the signal, so this text is the abort firing and
+    // nothing else. Without it the request would outlive the dialog that asked for it.
+    await expect(component.getByTestId('outcome')).toHaveText('aborted');
+  });
+
+  test('a reopen gets its own signal, and the first abort does not carry over', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<OnOpenAbortHarness />);
+
+    await component.getByRole('button', { name: 'Open' }).click();
+    await page.keyboard.press('Escape');
+    await expect(component.getByTestId('aborts')).toHaveText('1');
+
+    await component.getByRole('button', { name: 'Open' }).click();
+    // Loading again rather than still 'aborted': the second open is not holding the first
+    // controller, which is what would make a reopened dialog abort itself instantly.
+    await expect(component.getByTestId('outcome')).toHaveText('loading');
+
+    await page.keyboard.press('Escape');
+    await expect(component.getByTestId('aborts')).toHaveText('2');
   });
 });

@@ -311,3 +311,52 @@ test.describe('createModalStore — closing', () => {
     expect(settled).toBe(true);
   });
 });
+
+test.describe('openSignal', () => {
+  test('the close is the abort, and it fires as the exit begins', () => {
+    const store = createModalStore('signal');
+    store.requestOpen();
+    const signal = store.openSignal();
+    expect(signal.aborted).toBe(false);
+
+    store.close('dismiss');
+
+    // Not at `finalize()`: nobody is waiting for that request the moment the dialog starts
+    // leaving, so holding the abort until the exit animation ends would keep it in flight for
+    // the whole 200ms for no one.
+    expect(signal.aborted).toBe(true);
+  });
+
+  test('a reopen gets a fresh signal rather than the previous aborted one', () => {
+    const store = createModalStore('signal-reopen');
+    store.requestOpen();
+    const first = store.openSignal();
+    store.close('dismiss');
+    store.finalize();
+
+    store.requestOpen();
+    const second = store.openSignal();
+
+    // Inheriting the old controller would cancel the new load before it began — the failure this
+    // separation exists to make impossible.
+    expect(first.aborted).toBe(true);
+    expect(second.aborted).toBe(false);
+    expect(second).not.toBe(first);
+  });
+
+  test('a teardown while open aborts too — a close nobody reported is still a close', () => {
+    const store = createModalStore('signal-abandon');
+    store.requestOpen();
+    const signal = store.openSignal();
+
+    store.abandon();
+
+    expect(signal.aborted).toBe(true);
+  });
+
+  test('reading it before the first open gives a live signal, not null', () => {
+    const store = createModalStore('signal-early');
+    expect(store.openSignal().aborted).toBe(false);
+  });
+});
+

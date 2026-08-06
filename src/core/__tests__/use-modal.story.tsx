@@ -1,4 +1,5 @@
 export { BasicHarness } from './use-modal/basic.story';
+export { OnOpenAbortHarness } from './use-modal/on-open-abort.story';
 export { AccessibleNameHarness } from './use-modal/accessible-name.story';
 export { StylingSurfaceHarness } from './use-modal/styling-surface.story';
 export { WaitForCloseHarness } from './use-modal/wait-for-close.story';

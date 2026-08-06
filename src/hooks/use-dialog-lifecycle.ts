@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import {
-  checkTransitionsDisabled,
   refreshTransitionsDisabled,
-  runDialogExit,
+  runCloseSequence,
   showDialog,
 } from '../core/dialog-lifecycle.js';
 import { finalizeModalClose } from '../core/finalize-close.js';
@@ -57,9 +56,12 @@ export function useDialogLifecycle(ctx: ModalHookContext, options: DialogLifecyc
     store.scheduleOpenTransition();
 
     if (onOpen) {
+      // The signal is the store's — it aborts on `close()`, which is a transition this hook does
+      // not own and should not be re-deriving from `phase`.
+      const signal = store.openSignal();
       fireAndForget(
         async () => {
-          await onOpen();
+          await onOpen(signal);
           log('onOpen completed', { id: modalId });
         },
         (error) => {
@@ -101,42 +103,21 @@ export function useDialogLifecycle(ctx: ModalHookContext, options: DialogLifecyc
       return;
     }
 
-    // Flag to prevent double-execution of finalization (transitionend + timeout race).
-    let finalized = false;
-    const finalizeClose = () => {
-      if (finalized) {
-        return;
-      }
-      finalized = true;
-      log('Close animation complete', { id: modalId });
-      finalizeModalClose(store, dialog, (error) => {
-        log.error('onClose callback failed', { id: modalId, error: error.message });
-      });
-    };
-
-    // If the browser already closed the dialog natively (e.g. ESC cancel race),
-    // finalize immediately without waiting for the animation.
-    if (!dialog.open) {
-      log('Dialog closed natively, skipping animation', { id: modalId });
-      finalizeClose();
-      return;
-    }
-
-    // Disabled transitions (e.g. `transition: none !important` in tests) never fire
-    // `transitionend`, so finalize immediately.
-    if (checkTransitionsDisabled(dialog)) {
-      log('Transitions disabled, finalizing immediately', { id: modalId });
-      finalizeClose();
-      return;
-    }
-
-    return runDialogExit(dialog, {
+    return runCloseSequence(dialog, {
       nonModal,
       primaryProp: primaryProperty,
       exitDuration,
-      onFinish: finalizeClose,
-      onFallbackTimeout: () => {
-        log.warn('Animation fallback timeout', { id: modalId, exitDuration });
+      finalize: () => {
+        finalizeModalClose(store, dialog, (error) => {
+          log.error('onClose callback failed', { id: modalId, error: error.message });
+        });
+      },
+      log: (how) => {
+        if (how === 'fallback-timeout') {
+          log.warn('Animation fallback timeout', { id: modalId, exitDuration });
+          return;
+        }
+        log('Close finished', { id: modalId, how });
       },
     });
   }, [phase, primaryProperty, exitDuration, modalId, store, getDialog, nonModal]);

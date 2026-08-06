@@ -230,8 +230,27 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * scheduled, not before it. An async one runs *alongside* the entrance animation, and
    * `isPreparing` stays `true` until it settles; that is the loading window the render
    * callback is given.
+   *
+   * Handed an `AbortSignal` that fires when the modal closes, so work started here can be
+   * dropped when nobody is waiting for it any more. A dialog dismissed while it is still loading
+   * is the ordinary case, not an edge one, and without this the request outlives the thing that
+   * asked for it — it lands on a closed modal, and a slow one can still be in flight when the
+   * next open starts its own.
+   *
+   * Ignoring the parameter is fine and stays the common case: a `() => …` callback is assignable
+   * unchanged, so this costs nothing until a call site wants it.
+   *
+   * ```ts
+   * onOpen: async (signal) => {
+   *   const response = await fetch(url, { signal });
+   *   setRows(await response.json());
+   * };
+   * ```
+   *
+   * Work the *caller* started elsewhere — a query fired from the click that opened the modal —
+   * is not this signal's to cancel: the dialog never knew about it. Cancel that where it began.
    */
-  readonly onOpen?: (() => void | Promise<void>) | undefined;
+  readonly onOpen?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
   /** Called when the modal closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
   /**

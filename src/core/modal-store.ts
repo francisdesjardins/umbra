@@ -36,6 +36,16 @@ export function createModalStore<TData = unknown, TReason extends string = strin
     const closeResolvers: CloseResolver<TData, TReason>[] = [];
     const openResolvers: (() => void)[] = [];
     let rafId = 0;
+
+    /**
+     * Aborted when the modal closes, so work `onOpen` started can be dropped.
+     *
+     * Here rather than in the React binding because the three moments it turns on — an open
+     * starting, a close starting, a teardown — are this store's transitions and nothing else's.
+     * A second binding inherits the behaviour instead of re-deriving it, and it can be tested
+     * without a browser.
+     */
+    let openController: AbortController | null = null;
     let onCloseCallback:
       ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 
@@ -98,6 +108,10 @@ export function createModalStore<TData = unknown, TReason extends string = strin
           openResolvers.push(onOpened);
         }
         log('Open requested', { id });
+        // A fresh one per open: a reopen must not inherit the previous open's aborted signal,
+        // which would cancel the new load before it began.
+        openController?.abort();
+        openController = new AbortController();
         set({ phase: 'opening', isPreparing: true, closeResult: null });
       },
 
@@ -138,6 +152,9 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         // A close can interrupt the opening sequence before its frame runs.
         cancelAnimationFrame(rafId);
         rafId = 0;
+        // The close is the abort, and it happens here rather than at the end of the exit
+        // animation: nobody is waiting for that request the moment the dialog starts leaving.
+        openController?.abort();
 
         log('Close requested', { id, reason });
 
@@ -186,6 +203,8 @@ export function createModalStore<TData = unknown, TReason extends string = strin
        * so teardown can invoke it unconditionally.
        */
       abandon(): void {
+        // Torn down while open is a close nobody reported; the work has to stop for it too.
+        openController?.abort();
         flushOpenResolvers();
 
         const pending = closeResolvers.splice(0);
@@ -197,6 +216,17 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         for (const resolve of pending) {
           resolve([error, null]);
         }
+      },
+
+      /**
+       * The signal handed to `onOpen`, aborted when the modal closes.
+       *
+       * Created on demand as well as on open, so a caller reading it before the first open gets a
+       * live signal rather than having to handle `null`.
+       */
+      openSignal(): AbortSignal {
+        openController ??= new AbortController();
+        return openController.signal;
       },
 
       addCloseResolver(resolver: CloseResolver<TData, TReason>): void {
