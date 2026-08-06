@@ -139,6 +139,34 @@ With them declared, `action('submmit')` is a compile error, the reason autocompl
 `switch` on `result.reason` in `onClose` is exhaustive. Left undeclared, any string is accepted.
 `'dismiss'` is always available — the library produces it on Escape, backdrop click and teardown.
 
+### Presets: say it once, in a wrapper
+
+A confirm dialog has the same two reasons every time, and restating
+`useMessageModal<void, 'confirm' | 'cancel'>` at each call site is the kind of repetition that
+eventually disagrees with itself. Close them once in your own hook — the library is designed to be
+wrapped, and this is the seam:
+
+```tsx
+type ConfirmReason = 'confirm' | 'cancel';
+
+export const useConfirmModal = <TData = void,>(
+  options: UseMessageModalOptions<TData, ConfirmReason>
+): UseMessageModalReturn<TData, ConfirmReason> => {
+  return useMessageModal<TData, ConfirmReason>(options);
+};
+```
+
+Call sites keep everything the declaration buys and spend no type argument on the common case:
+
+```tsx
+const modal = useConfirmModal({ id: 'delete', render, onClose }); // no payload, no `<void, …>`
+const user = useConfirmModal<User>({ id: 'create-user', render, onClose }); // the one argument is the payload
+```
+
+`action('confrim')` is still rejected through the wrapper, and the `switch` in `onClose` is still
+exhaustive over `'confirm' | 'cancel' | 'dismiss'`. The same shape gives a template its own preset
+— pin `direction` and `align` on a `useDrawer` over `useSlideModal`, for instance.
+
 ---
 
 ## useModal (Base Primitive)
