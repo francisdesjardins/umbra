@@ -31,7 +31,40 @@ declare module '@mui/material/styles' {
   }
 }
 
+/**
+ * The palette is the mascot's, not a decoration chosen beside it.
+ *
+ * `UmbraMoon` draws an eclipse: a dark slate body with the corona escaping around its rim in
+ * ambers. Every value below is one of the five it already uses — flame, flame edge, body, body
+ * edge, ink — so the page and the thing in its corner cannot drift into two different products.
+ *
+ * The fuchsia this replaces was a personal mark rather than the library's, and it fought the
+ * mascot: a magenta accent beside an amber corona reads as two brands sharing a page.
+ *
+ * The corona shifts intensity between modes rather than hue, the way the mascot does — a bright
+ * page needs less glow to register, so light mode takes the deeper amber and dark mode the
+ * brighter one.
+ */
+const MASCOT = {
+  light: {
+    flame: '#d97706',
+    flameEdge: '#92400e',
+    body: '#1e293b',
+    bodyEdge: '#475569',
+    ink: '#fcd34d',
+  },
+  dark: {
+    flame: '#f59e0b',
+    flameEdge: '#b45309',
+    body: '#0f172a',
+    bodyEdge: '#334155',
+    ink: '#fbbf24',
+  },
+} as const;
+
 export const createAppTheme = (mode: 'light' | 'dark') => {
+  const mascot = MASCOT[mode];
+
   return createTheme({
     // Scrollbar tokens (used by global styles to theme scrollbars)
     scrollbar: {
@@ -42,21 +75,25 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
     palette: {
       mode,
       primary: {
-        main: '#d946ef', // Fuchsia 500
-        light: '#e879f9', // Fuchsia 400
-        dark: '#a21caf', // Fuchsia 700
+        main: mascot.flame,
+        light: mascot.ink,
+        dark: mascot.flameEdge,
         contrastText: '#ffffff',
       },
+      // The body, not a second accent. An eclipse is one fire against one shadow, and a palette
+      // with two warm accents has nowhere left to put emphasis.
       secondary: {
-        main: '#f0abfc', // Fuchsia 300
-        light: '#f5d0fe', // Fuchsia 200
-        dark: '#c026d3', // Fuchsia 600
-        contrastText: '#000000',
+        main: mascot.body,
+        light: mascot.bodyEdge,
+        dark: mode === 'dark' ? '#020617' : '#0f172a',
+        contrastText: '#ffffff',
       },
       ...(mode === 'dark' && {
         background: {
-          default: '#000000',
-          paper: '#121212',
+          // The mascot's own body rather than pure black: amber on `#000` is a warning label,
+          // amber on slate is dusk. It is also what the moon is already drawn on.
+          default: mascot.body,
+          paper: mascot.bodyEdge === '#334155' ? '#111c30' : '#121212',
         },
         text: {
           primary: '#ffffff',
@@ -68,12 +105,12 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
       MuiTooltip: {
         styleOverrides: {
           tooltip: {
-            backgroundColor: '#d946ef', // Fuchsia 500 (primary)
+            backgroundColor: MASCOT[mode].body,
             color: '#ffffff',
             fontSize: '0.875rem', // normalized — body2 size, readable regardless of source variant
           },
           arrow: {
-            color: '#d946ef', // Fuchsia 500 (primary)
+            color: MASCOT[mode].body,
           },
         },
       },
@@ -81,7 +118,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         styleOverrides: {
           contained: {
             '&:hover': {
-              backgroundColor: '#c026d3', // Fuchsia 600
+              backgroundColor: MASCOT[mode].flameEdge,
             },
           },
         },

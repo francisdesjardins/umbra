@@ -9,6 +9,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-06
+
+### Changed (playground)
+
+- **The theme is the mascot's.** `UmbraMoon` draws an eclipse — a dark slate body with the corona
+  escaping around its rim in ambers — and the page around it was fuchsia, which read as two brands
+  sharing a screen. Every palette value now comes from one of the five the mascot already uses
+  (flame, flame edge, body, body edge, ink), so the two cannot drift. Dark mode sits on the
+  mascot's own body colour rather than pure black: amber on `#000` is a warning label, amber on
+  slate is dusk. `secondary` is the body rather than a second accent — an eclipse is one fire
+  against one shadow, and a palette with two warm accents has nowhere left to put emphasis. The
+  two vanilla templates that hard-coded the old accent follow.
+
+### Added
+
+- **The `dom-probe` skill** (`.claude/skills/dom-probe/`) — one script that drives installed Chrome
+  through ordered steps and answers ordered questions about what the browser actually produced:
+  what is under a point, what a click really hit, whether a dialog is in the top layer, what a box
+  measures once transitions settle. It exists because "let me check in the browser" kept meaning
+  writing, debugging and discarding a throwaway script, and because two of this project's worst
+  diagnoses came from reasoning about rendering instead of measuring it.
+
 ## 2026-08-05
 
 ### Added
