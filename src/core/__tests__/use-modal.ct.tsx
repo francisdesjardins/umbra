@@ -720,13 +720,17 @@ test.describe('focus survives a failed action', () => {
     await expect(page.getByTestId('retry-error')).toHaveText('Save failed');
     await expect(page.getByTestId('retry-attempts')).toHaveText('1');
 
-    expect(
-      await page.evaluate(() => {
-        const dialog = document.querySelector('[data-testid="modal-action-error-retry"]');
-        return dialog?.contains(document.activeElement) ?? false;
-      }),
-      'focus was left outside the dialog after the action failed'
-    ).toBe(true);
+    // Polled, not read once: the restore is deliberately deferred to the next animation frame —
+    // that delay *is* the fix — while the assertion above settles as soon as React commits the
+    // attempt count. Reading synchronously here raced that frame and failed about one run in ten.
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          const dialog = document.querySelector('[data-testid="modal-action-error-retry"]');
+          return dialog?.contains(document.activeElement) ?? false;
+        });
+      }, 'focus was left outside the dialog after the action failed')
+      .toBe(true);
 
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('retry-attempts')).toHaveText('2');
