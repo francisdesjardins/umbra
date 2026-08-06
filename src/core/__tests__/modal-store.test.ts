@@ -359,4 +359,3 @@ test.describe('openSignal', () => {
     expect(store.openSignal().aborted).toBe(false);
   });
 });
-

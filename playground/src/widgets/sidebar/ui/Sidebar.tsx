@@ -150,10 +150,12 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
                       <ListItemText
                         primary={item.label}
                         slotProps={{
-                          primary: {
-                            variant: 'body2',
-                            sx: { fontWeight: isActive ? 600 : 400 },
-                          },
+                          // One weight for every entry, on purpose. Switching the selected one from
+                          // 400 to 600 re-measures every glyph in its label, so the text re-spaces
+                          // at the moment the entry becomes current — the release of the click that
+                          // selected it, which reads as the menu twitching under the pointer. The
+                          // filled background already says which one you are on.
+                          primary: { variant: 'body2' },
                         }}
                       />
                     </ListItemButton>

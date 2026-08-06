@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   The controller lives on the **store**, not on the React binding. The three moments it turns on —
   an open starting, a close starting, a teardown — are the store's own transitions, so a second
   binding inherits the behaviour instead of re-deriving it, and it is unit-testable without a
-  browser (four cases in `modal-store.test.ts`). The abort fires as the exit *begins* rather than
+  browser (four cases in `modal-store.test.ts`). The abort fires as the exit _begins_ rather than
   when it finishes: nobody is waiting for that request for the 200ms the animation takes.
 
 ### Changed
@@ -31,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The close sequence moved out of the React effect** into `runCloseSequence` in
   `core/dialog-lifecycle.ts`. Which of three ways a dialog ends — already closed natively by the
   ESC cancel race, transitions disabled so `transitionend` will never fire, or animated — is a
-  property of `<dialog>` and of the declared animation, not of React. A binding knows *when* a
+  property of `<dialog>` and of the declared animation, not of React. A binding knows _when_ a
   modal entered `'closing'`; what happens next is now inherited rather than re-derived, guard
   against double-finishing included. `useDialogLifecycle` is 124 lines from 146.
 
