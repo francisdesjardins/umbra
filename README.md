@@ -69,11 +69,12 @@ There is no action config and nothing to pass in.
 import { useMessageModal } from 'umbra/react';
 
 function ConfirmDelete() {
-  const modal = useMessageModal({
+  const modal = useMessageModal<void, 'confirm' | 'cancel'>({
     id: 'confirm-delete',
+    ariaLabelledBy: 'confirm-delete-title',
     render: ({ action }) => (
       <div>
-        <h2>Delete Item</h2>
+        <h2 id="confirm-delete-title">Delete Item</h2>
         <p>Are you sure?</p>
         <button {...action('cancel')}>Cancel</button>
         <button
@@ -109,7 +110,7 @@ type User = { id: string; name: string };
 
 const modal = useModal<User, 'submit' | 'cancel'>({
   id: 'create-user',
-  render: ({ action, handle, isRunning }) => (
+  render: ({ action, isRunning }) => (
     <>
       <button {...action('cancel')}>Cancel</button>
       <button {...action('submit', (close) => close(draft))} disabled={isRunning}>

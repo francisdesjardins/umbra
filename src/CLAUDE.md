@@ -37,8 +37,8 @@ Three layers: framework-agnostic core, React binding, headless template hooks.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Eight methods, each a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isOpen, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
-  - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — apply to your content wrapper. The `style` prop is `@internal` (template hooks only).
+- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `onOpen`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isOpen, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
+  - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — the `style` prop is the public lever for the box itself (the same one the template hooks pull), and styles for what is inside belong in `render`.
 - **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
 - **`DialogManagerProvider`** ([manager/dialog-manager-context.tsx](manager/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
 - **`useDialogManager`** ([manager/use-dialog-manager.ts](manager/use-dialog-manager.ts)) — Reactive hook via `useSyncExternalStore`. Returns `DialogManagerSnapshot` from nearest context or singleton.
@@ -97,8 +97,8 @@ front of. `getDialogAnimationStyles` takes the phase for exactly this reason.
 
 Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`).
 
-- `useMessageModal<TData>` ([templates/use-message-modal.tsx](templates/use-message-modal.tsx)) — Context: `{ isPreparing, handle }`
-- `useSlideModal` ([templates/use-slide-modal.tsx](templates/use-slide-modal.tsx)) — Direction-based animation. Context: `{ isPreparing, handle, direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
+- `useMessageModal<TData>` ([templates/use-message-modal.tsx](templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, isRunning, error }`); reports `modalType: 'message'`
+- `useSlideModal` ([templates/use-slide-modal.tsx](templates/use-slide-modal.tsx)) — Direction-based animation, reports `modalType: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
 
@@ -163,8 +163,10 @@ Utilities: `matchesHotkey()` + `formatHotkeyLabel()` ([utils/hotkey-utils.ts](ut
 the concept, not editing three that describe it. The chain, rooted in [core/types.ts](core/types.ts):
 
 ```
-ModalRenderArgs<TData>                ← the render-time slice: { isPreparing, handle }
-├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, isOpen, Modal, waitForClose, … }
+ModalRenderArgs<TData>                ← the render-time slice:
+│                                       { isPreparing, handle, action, isRunning, error }
+├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, isOpen, Modal, waitForClose,
+│                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
     ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
     └── SlideModalRenderContext<TData>   = BaseRenderContext<TData> & { direction }
@@ -301,17 +303,16 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 5. Types → `core/types.ts` (modal + close result types), `manager/types.ts` (lookup), `actions/types.ts` (modal actions)
 6. Template shared → `templates/shared.ts`
 7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` an action reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land and lives in `playground/src/shared/lib/`, demonstrated and copied like the modal templates; a dialog manager is not where anyone looks for a mutex. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**: it exists for the lifecycle's own detached callbacks and is deliberately not exported
-8. Non-React store observation → `watch` from `store/` — fires `callback(next, prev)` when the selected slice changes, returns unsubscribe; zero React imports
+8. Non-React store observation → `store.subscribe(listener)` and read `getSnapshot()`; that pair is the whole contract, and the selector conveniences that used to wrap it are playground reference code now
 
 ### State (store module)
 
-State management lives in [store/](store/) — a hand-rolled reactive cell (a `Set` of listeners + `get`/`set`) with **zero runtime dependencies**. It is the single swap point for the engine: reimplement these files to change it. Import store primitives from `../store` internally, or from `umbra/react` in the playground.
+State management lives in [store/](store/) — a hand-rolled reactive cell (a `Set` of listeners + `get`/`set`) with **zero runtime dependencies**. It is the single swap point for the engine: reimplement these files to change it. Import store primitives from `../store` internally, or from the package root (`umbra`) in the playground.
 
-**The barrel is safe for every core module to import.** `src/store/` is framework-free; its React bindings (`useStore`, `createStoreContext`) live in [store/react/](store/react/) behind their own barrel. That split is the point: while the bindings sat beside the engine, `../store` re-exported them, so any core module importing the barrel pulled React into the root's import graph — and the React-free property survived only on Rollup tree-shaking those re-exports back out. Import `../store` for the engine and `../store/react` for the bindings; there is no exception to remember.
+**The barrel is safe for every core module to import**, and there is no exception to remember: `src/store/` is the engine and nothing over it, so it imports no React at all. That is what the root's React-freedom rests on — not on tree-shaking a re-export back out.
 
 ```ts
-import { createStore, watch } from '../store';
-import { useStore, createStoreContext } from '../store/react';
+import { createStore } from '../store';
 
 const counter = createStore({ count: 0 }, ({ set }) => ({
   increment() {
@@ -321,7 +322,7 @@ const counter = createStore({ count: 0 }, ({ set }) => ({
 counter.increment(); // methods merge at the root, zustand-style — no `actions` wrapper
 ```
 
-**Two modes:** generic (`createStore(initial)` → `set`/`reset` on the instance) vs domain (with a builder → only your methods; built-ins live on `api`). No reserved keys. **Mutation** is `set(next | (prev) => next)` and `reset()` — there is no draft engine; for nested updates compose immer at the call site (`set(s => produce(s, recipe))`). **Derived state** is a selector (`useStore(store, s => …)`) or inline compute — there is no `createDerivedStore`. See [store/CLAUDE.md](store/CLAUDE.md).
+**Two modes:** generic (`createStore(initial)` → `set`/`reset` on the instance) vs domain (with a builder → only your methods; built-ins live on `api`). No reserved keys. **Mutation** is `set(next | (prev) => next)` and `reset()` — there is no draft engine; for nested updates compose immer at the call site (`set(s => produce(s, recipe))`). **Derived state** is computed at the read — `useSyncExternalStore(store.subscribe, () => derive(store.getSnapshot()))` — there is no `createDerivedStore`. See [store/CLAUDE.md](store/CLAUDE.md).
 
 ## Debug Logging
 

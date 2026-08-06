@@ -12,8 +12,8 @@
 // call site (`set((s) => produce(s, recipe))`) — the store stays dependency-free.
 
 /**
- * Minimal read-only contract satisfied by every store — the surface
- * `useSyncExternalStore`, `useStore`, and `watch` depend on.
+ * Minimal read-only contract satisfied by every store — and precisely the surface
+ * `useSyncExternalStore` consumes, so reading a store needs no adapter from us.
  */
 export type StoreContract<TSnapshot> = {
   /** Register a listener; returns its unsubscribe. */

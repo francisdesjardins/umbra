@@ -1,6 +1,10 @@
 # umbra - API Reference
 
-> **Maintenance**: This file is handwritten and must be kept in sync with the library source manually. It is not auto-generated.
+> **Maintenance**: This file is handwritten and must be kept in sync with the library source
+> manually — nothing type-checks the snippets below. The playground's `/api` route is the
+> _generated_ reference (typedoc over the real entry points, rebuilt whenever `src/` changes); it
+> cannot drift, so when the two disagree it wins. This page is the narrative one: entry points,
+> the shape of the design, and the parts that need prose rather than a signature.
 
 ## Architecture Overview
 
@@ -23,7 +27,7 @@ non-React code. React consumers may read every `umbra` import below as
 
 1. **`useModal`** — Base primitive. Renders a native `<dialog>` inline (or via `createPortal` when `portal: true`).
 2. **Template hooks** — `useMessageModal`, `useSlideModal` provide headless modal logic (animation, positioning). No UI wrapper — users provide their own components in the `render` callback.
-3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns `{ onClick, loading, disabled }` to spread. For custom state, use `createStore`/`useStore` alongside.
+3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns `{ onClick, loading, disabled }` to spread. For custom state, use `createStore` alongside.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`ModalOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Modal}` in JSX.
 
@@ -139,55 +143,87 @@ With them declared, `action('submmit')` is a compile error, the reason autocompl
 
 ## useModal (Base Primitive)
 
-```typescript
+```tsx
 import { useModal } from 'umbra/react';
 
-const modal = useModal({
-  id: 'example',
-});
-
-const modal = useModal({
+const modal = useModal<void, 'confirm' | 'cancel'>({
   id: 'my-modal',
-  actions: state,
-  render: ({ isPreparing, handle }) => (
+  ariaLabel: 'Confirm removal',
+  render: ({ isPreparing, handle, action, error }) => (
     <div>
-      <p>Content</p>
-      <button {...state.confirm(async () => {
-        await doSomething();
-        handle.close('confirm');
-      })}>Confirm</button>
+      {isPreparing ? <p>Loading…</p> : <p>Content</p>}
+      <button {...action('cancel')}>Cancel</button>
+      <button
+        {...action('confirm', async (close) => {
+          await doSomething();
+          close();
+        })}
+      >
+        Confirm
+      </button>
+      {error ? <p role="alert">{error.message}</p> : null}
     </div>
   ),
-  onClose: (result) => console.log(result.reason),
+  onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
 });
 
-// Returns
-const { open, isOpen, isPreparing, Modal, waitForClose, handle } = modal;
+// Returns — the render args, plus the hook's own surface
+const { open, isOpen, Modal, waitForClose, dialogManager } = modal;
+const { isPreparing, handle, action, isRunning, error } = modal;
 ```
 
 ### Render Args
 
-| Property      | Type                 | Description                            |
-| ------------- | -------------------- | -------------------------------------- |
-| `isPreparing` | `boolean`            | Whether `onOpen` callback is executing |
-| `handle`      | `ModalHandle<TData>` | `{ close(reason?, data?: TData) }`     |
+`ModalRenderArgs` — what `render` is handed. The hook's return **intersects** it, so every field
+below is also readable outside `render` (`modal.isRunning` on a trigger button, for instance).
+
+| Property      | Type                          | Description                                                               |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `isPreparing` | `boolean`                     | Whether the `onOpen` callback is still running — a second axis to `phase` |
+| `handle`      | `ModalHandle<TData, TReason>` | `{ close(reason?, data?: TData) }`                                        |
+| `action`      | `ActionFactory<TData>`        | Declare an action and get its button props — see [Actions](#actions)      |
+| `isRunning`   | `boolean`                     | True while **any** action on this modal is running                        |
+| `error`       | `Error \| null`               | The last error thrown by any action on this modal                         |
+
+### Return
+
+Everything above, plus:
+
+| Property        | Type                                | Description                                                                |
+| --------------- | ----------------------------------- | -------------------------------------------------------------------------- |
+| `open`          | `() => Promise<void>`               | Resolves after `onOpen` completes; joins an in-flight open, never hangs    |
+| `isOpen`        | `boolean`                           | Whether the modal is open (`phase !== 'closed'`)                           |
+| `Modal`         | `ReactNode`                         | Place in JSX as `{Modal}`; `null` when closed, and inside a `ModalOutlet`  |
+| `waitForClose`  | `() => Promise<WaitForCloseResult>` | Go-style `[error, result]` tuple — see [waitForClose](#waitforclose)       |
+| `dialogManager` | `DialogManager`                     | The instance this modal registered with — use it over the static singleton |
 
 ### Options
 
-| Option                    | Type                                          | Description                                                                                                                                                                                                                                              |
-| ------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                      | `string`                                      | Unique modal identifier                                                                                                                                                                                                                                  |
-| `render`                  | `(args: ModalRenderArgs<TData>) => ReactNode` | Render function                                                                                                                                                                                                                                          |
-| `onKeyDown?`              | `(event: KeyboardEvent) => void`              | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                        |
-| `animation?`              | `ModalAnimation`                              | CSS transition config                                                                                                                                                                                                                                    |
-| `onOpen?`                 | `() => void \| Promise<void>`                 | Called on open                                                                                                                                                                                                                                           |
-| `onClose?`                | `(result) => void \| Promise<void>`           | Called on close                                                                                                                                                                                                                                          |
-| `dismissKey?`             | `HotkeyDef \| false`                          | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                         |
-| `dismissOnBackdropClick?` | `boolean`                                     | Whether backdrop click dismisses the modal. Not applicable when `nonModal: true`. Default: `false` when `actions` are provided, `true` otherwise.                                                                                                        |
-| `dismissOnClickOutside?`  | `boolean`                                     | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Respects `dismissWhilePreparing` and `actions.isRunning` guards. Default: `false`.                                                                              |
-| `dismissWhilePreparing?`  | `boolean`                                     | Whether the dismiss key, backdrop click, and click-outside can close the modal while `onOpen` is executing. Default: `true`.                                                                                                                             |
-| `nonModal?`               | `boolean`                                     | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                 |
-| `portal?`                 | `boolean`                                     | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way. |
+| Option                    | Type                                                             | Description                                                                                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                      | `string`                                                         | Unique modal identifier                                                                                                                                                                                                                                  |
+| `render`                  | `(args: ModalRenderArgs<TData, TReason>) => ReactNode`           | Render function                                                                                                                                                                                                                                          |
+| `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                        |
+| `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                    |
+| `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                        |
+| `onOpen?`                 | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                   |
+| `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                          |
+| `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                     |
+| `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                          |
+| `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                         |
+| `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on. Default: `'dialog'`.                                                                                                                                              |
+| `modalType?`              | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [modalType](#modaltype). Default: `'modal'`.                                                                                                                                         |
+| `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                         |
+| `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.             |
+| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `onOpen` is preparing. Only the topmost non-modal responds. Default: `false`.        |
+| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `onOpen` is executing. Default: `true`.                                                                                                                             |
+| `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                 |
+| `portal?`                 | `boolean`                                                        | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way. |
+
+`nonModal` / `dismissOnBackdropClick` / `dismissOnClickOutside` form the `ModalVariant` union, not
+three independent flags: a non-modal dialog has no backdrop to click, so passing
+`dismissOnBackdropClick` alongside `nonModal: true` is a **type error** rather than a silently
+ignored prop, and the reverse holds for `dismissOnClickOutside`.
 
 ### Non-Modal Dialogs
 
@@ -253,6 +289,32 @@ A non-modal dialog never enters the top layer, so where it anchors depends on `p
 
 - **`portal: true`** — portaled to `document.body` and anchored to the viewport (`position: fixed`). Use this for viewport-edge or centered non-modal panels.
 - **`portal: false` (default) — "contained"** — the dialog renders inside a library-owned `position: relative` wrapper and is positioned `absolute` against it. This is **immune to a transformed / `will-change` ancestor** hijacking the containing block (a `fixed` inline dialog would otherwise jump to that ancestor and flicker as the transform toggles). In return, it fills — and slides from — its nearest **sized** ancestor, so give it a sized, positioned host region; otherwise the panel collapses. It is an _inline contained panel_, not a viewport overlay. Slide templates size to `100%` (not `100dvw`/`100dvh`) in this mode.
+
+---
+
+## dialogPlacement
+
+That whole table, as data. `useModal` renders the `host` styles on its wrapper and merges the
+`dialog` half into the `<dialog>`, so a second binding — or a host you write by hand, outside
+React — positions a dialog identically instead of re-deriving the rules.
+
+```typescript
+import { dialogPlacement } from 'umbra';
+
+const { host, dialog } = dialogPlacement({ nonModal: true, portal: false });
+// host   → CSSProperties for the wrapper the dialog is positioned against, or `null`
+// dialog → CSSProperties for the <dialog> itself (here: `position: 'absolute'`)
+```
+
+| Option      | Type      | Description                                                                                      |
+| ----------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `nonModal?` | `boolean` | `dialog.show()` rather than `showModal()` — no backdrop, no top layer                            |
+| `portal?`   | `boolean` | Rendered into `document.body` rather than inline                                                 |
+| `clip?`     | `boolean` | Clip the host, for an animation that slides the dialog past its edge (what `useSlideModal` sets) |
+
+`host` is `null` when there is nothing to host — a top-layer dialog and a viewport-anchored one
+both answer to the viewport. When it is **not** null the dialog must be rendered inside an element
+carrying those styles, and that element must have a size: the dialog fills it.
 
 ---
 
@@ -331,19 +393,19 @@ These are **not** library exports — copy them into your project or write your 
 import { useMessageModal } from 'umbra/react';
 import { Button, Typography, Stack } from '@mui/material';
 
-const modal = useMessageModal({
+const modal = useMessageModal<void, 'confirm' | 'cancel'>({
   id: 'confirm-delete',
-  actions: state,
-  render: ({ handle }) => (
+  ariaLabelledBy: 'confirm-delete-title',
+  render: ({ action }) => (
     // Users provide their own layout — no library UI components
     <Stack spacing={2} sx={{ p: 3 }}>
-      <Typography variant="h6">Delete Item</Typography>
+      <Typography id="confirm-delete-title" variant="h6">Delete Item</Typography>
       <Typography>Are you sure?</Typography>
       <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <button {...state.cancel(() => handle.close('cancel'))}>Cancel</button>
-        <button {...state.confirm(async () => {
+        <button {...action('cancel')}>Cancel</button>
+        <button {...action('confirm', async (close) => {
           await api.deleteItem();
-          handle.close('confirm');
+          close();
         })}>Delete</button>
       </Stack>
     </Stack>
@@ -370,18 +432,18 @@ if (result?.reason === 'confirm') {
 import { useSlideModal } from 'umbra/react';
 import { Box, Typography, Button } from '@mui/material';
 
-const panel = useSlideModal({
+const panel = useSlideModal<void, 'save'>({
   id: 'settings',
   direction: 'right',
-  actions: state,
-  render: ({ handle, direction }) => (
+  ariaLabel: 'Settings',
+  render: ({ action, direction }) => (
     // Users provide their own layout — no library UI components
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Settings</Typography>
+      <Typography variant="h6" sx={{ mb: 2 }}>Settings ({direction})</Typography>
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Typography>Panel content</Typography>
       </Box>
-      <button {...state.save(() => handle.close('save'))}>Save</button>
+      <button {...action('save', { hotkey: Key.Enter, onAction: save })}>Save</button>
     </Box>
   ),
 });
@@ -394,7 +456,11 @@ const panel = useSlideModal({
 | `direction` | `'left' \| 'right' \| 'top' \| 'bottom'`    | Edge the panel slides in from. Required.                |
 | `align?`    | `'stretch' \| 'start' \| 'center' \| 'end'` | Cross-axis alignment (see below). Default: `'stretch'`. |
 
-Plus the shared template options (`id`, `render`, `actions`, `animation`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `onOpen`, `onClose`, …).
+Plus the shared template options — every `useModal` option except the two a template owns
+(`modalType`, since a template names itself, and the internal `clipContainer`): `id`, `render`,
+`animation`, `style`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `onOpen`,
+`onClose`, `onKeyDown`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`, `role`. The exclusion is
+stated that way round in the source, so a new core option reaches every template by default.
 
 ### Cross-axis alignment (`align`)
 
@@ -489,14 +555,16 @@ function App() {
   );
 }
 
-// Inside the subtree — no {Modal} needed
+// Inside the subtree — no {Modal} needed.
+// `render` returns the dialog's *content*: the library owns the <dialog> element itself.
 function Dashboard() {
-  const { open } = useModal({
+  const { open } = useModal<void, 'done'>({
     id: 'info',
+    ariaLabel: 'Details',
     render: ({ handle }) => (
-      <dialog>
+      <div>
         <button onClick={() => handle.close('done')}>Close</button>
-      </dialog>
+      </div>
     ),
   });
   return <button onClick={() => { open(); }}>Open</button>;
@@ -521,11 +589,34 @@ dialogManager.close('my-modal-id', 'confirm');
 
 // Subscribe to lifecycle events
 dialogManager.subscribe((event) => {
-  // { type: 'open', id: string }           — fires after onOpen completes
-  // { type: 'close', id: string, reason?: string } — reason from close() call
+  // { type: 'open', id: string }           — fires once open and `onOpen` has settled
+  // { type: 'close', id: string, reason?: string } — after the closing sequence completes
   console.log(event.type, event.id, event.type === 'close' ? event.reason : '');
 });
 ```
+
+### createDialogManager / DialogManagerProvider
+
+`dialogManager` is a module-level singleton built by `createDialogManager()`, which is exported
+too: call it for an **isolated** instance — a test, a second app on the page, a shell that must
+not share a stack with what it embeds.
+
+```tsx
+import { createDialogManager } from 'umbra';
+import { DialogManagerProvider, useDialogManager } from 'umbra/react';
+
+const dm = createDialogManager(); // its own registry, stack and scroll-lock claim
+
+// In React, the provider builds its own instance for the subtree — it takes only `children`.
+// Every hook inside resolves to it instead of the singleton; without a provider they fall back
+// to the singleton, which is the ordinary case.
+<DialogManagerProvider>
+  <App />
+</DialogManagerProvider>;
+```
+
+A modal already knows which instance it belongs to: `useModal` returns it as `dialogManager`, and
+that is what cross-modal calls inside a provider should use rather than the imported singleton.
 
 ### lookup — Query API
 
@@ -538,6 +629,7 @@ info.exists; // true if registered, false otherwise
 info.isOpen; // true if phase !== 'closed'
 info.isForeground; // true if topmost open modal
 info.phase; // 'closed' | 'opening' | 'open' | 'closing'
+info.isPreparing; // true while its onOpen is still running
 info.openedAt; // timestamp (0 for unregistered)
 info.modalType; // the label its creator gave it (only on the registered branch)
 info.nonModal; // boolean (absent for unregistered)
@@ -571,8 +663,15 @@ A union discriminated by `exists`: `RegisteredModalInfo | UnregisteredModalInfo`
 | `exists`       | `boolean`    | Whether the modal is registered — the discriminant   |
 | `phase`        | `ModalPhase` | `'closed'` \| `'opening'` \| `'open'` \| `'closing'` |
 | `isOpen`       | `boolean`    | Whether `phase !== 'closed'`                         |
+| `isPreparing`  | `boolean`    | Whether its `onOpen` is still running (see below)    |
 | `isForeground` | `boolean`    | Whether this is the topmost open modal               |
 | `openedAt`     | `number`     | `Date.now()` at open start (0 if unregistered)       |
+
+`isPreparing` is the field an observer usually wants. `phase` describes the `<dialog>` element and
+reaches `'open'` on the animation frame after it is shown, so `'opening'` lasts a single frame no
+matter how long the modal takes to prepare — asking `phase` "is it ready yet" always answers yes. A
+modal that loads something sits at `phase: 'open'` with `isPreparing: true` for as long as the load
+takes.
 
 Registration-time facts live only on the `exists: true` branch, so reading one means narrowing
 first — an unregistered modal has none:
@@ -663,7 +762,8 @@ A label the creator attaches, carried into `lookup()` and both DOM events. Any s
 purely informational — nothing in the library reads it. It saves a cross-cutting listener
 (analytics, a handler that only cares about drawers) from keeping its own id-to-kind table.
 
-`useModal` and `useMessageModal` default to `'modal'`; `useSlideModal` reports `'slide'`. A
+`useModal` defaults to `'modal'`; the built-in templates name themselves — `useMessageModal`
+reports `'message'` and `useSlideModal` `'slide'`. A
 template you write should name itself rather than inherit the default — the core deliberately
 does not enumerate the templates built on it.
 
@@ -765,17 +865,30 @@ Logging is **opt-in, debug-only, and console-only** — nothing is persisted or 
 
 ---
 
-## formatHotkeyLabel
+## Key, formatHotkeyLabel, matchesHotkey
 
-Convert a `HotkeyDef` to a human-readable label suitable for UI display (e.g. tooltip or `aria-keyshortcuts`).
+A `HotkeyDef` is a string: a key, optionally prefixed with modifiers (`'Enter'`, `'Ctrl+Enter'`,
+`'Ctrl+Shift+Delete'`). `Key` is the const object of key names — `Key.Enter`, `Key.Escape`,
+`Key.S` — and `KeyValue` is the union of its values.
 
 ```typescript
-import { formatHotkeyLabel } from 'umbra';
+import { Key, formatHotkeyLabel, matchesHotkey } from 'umbra';
 
 formatHotkeyLabel('Ctrl+Enter'); // → 'Ctrl+Enter'
-formatHotkeyLabel('Escape'); // → 'Escape'
-formatHotkeyLabel('Ctrl+Shift+Delete'); // → 'Ctrl+Shift+Delete'
+formatHotkeyLabel('Shift+s'); // → 'Shift+S' — the canonical form, and what reaches the DOM
+
+// The same matcher the modal uses, for a keydown of your own.
+element.addEventListener('keydown', (event) => {
+  if (matchesHotkey(event, Key.Escape)) {
+    dismiss();
+  }
+});
 ```
+
+**Letter case is not significant.** `Key.S` is `'s'` — what `KeyboardEvent.key` reports without
+Shift — but the browser reports `'S'` while Shift is held, so single-character keys are compared
+case-insensitively and the modifier list does the discriminating. `'Shift+s'` and `'Shift+S'` are
+one hotkey, and CapsLock cannot change which one fires.
 
 ---
 
@@ -884,28 +997,29 @@ A **generic** store (no builder) additionally exposes `set` and `reset` directly
 Inject stable dependencies (API clients, refs, callbacks) into store methods without making them part of the snapshot.
 
 ```typescript
+type Form = { name: string; saving: boolean };
 type Ctx = { apiClient: ApiClient };
 
-const formStore = createStore(
-  { name: '', saving: false },
-  ({ get, update, getContext }: StoreApi<{ name: string; saving: boolean }, Ctx>) => ({
-    async save() {
-      const { apiClient } = getContext();
-      update((d) => {
-        d.saving = true;
-      });
-      await apiClient.save(get());
-      update((d) => {
-        d.saving = false;
-      });
-    },
-  })
-);
+const initial: Form = { name: '', saving: false };
 
 // Bound where the store is built — the only place it is bound, and pure.
-const boundStore = createStore(initial, builder, { context: { apiClient } });
+const boundStore = createStore(
+  initial,
+  ({ get, set, getContext }: StoreApi<Form, Ctx>) => ({
+    async save() {
+      const { apiClient } = getContext();
+      set((s) => ({ ...s, saving: true }));
+      await apiClient.save(get());
+      set((s) => ({ ...s, saving: false }));
+    },
+  }),
+  { context: { apiClient } }
+);
 await boundStore.save();
 ```
+
+There is no draft engine: `set` replaces the snapshot, so a nested update spreads by hand or
+composes immer at the call site (`set((s) => produce(s, recipe))`).
 
 `useStore` cannot inject context: it only reads. Writing to a shared store during render is a
 mutation React may run twice, discard, or interleave, and two components injecting different

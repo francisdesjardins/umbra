@@ -37,8 +37,10 @@ export type SlideModalRenderContext<
 /**
  * Options for `useSlideModal`.
  *
- * @typeParam TData - Typed data payload from close. Defaults to `void`, and is inferred from
- * `actions` when the action set declares one — see `defineAction`.
+ * @typeParam TData - Typed data payload from close. Defaults to `void`; declare it on the hook,
+ * which is the one place it is stated.
+ * @typeParam TReason - The reasons this panel closes with. Declare them: it is what rejects a
+ * mistyped `action('savee')` and makes a `switch` in `onClose` exhaustive.
  */
 export type UseSlideModalOptions<
   TData = void,

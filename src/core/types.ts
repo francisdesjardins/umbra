@@ -70,8 +70,8 @@ export type ModalAnimation = {
 
 /**
  * Imperative handle for closing a modal, returned from `useModal` and passed to
- * the `render` callback. Distinct from the modal's *actions* (`useModalActions`), which
- * are its buttons: `handle` closes the modal, `actions` are what the user presses.
+ * the `render` callback. Distinct from the modal's *actions*, which are its buttons: `handle`
+ * closes the modal, an action is what the user presses to get there.
  *
  * @typeParam TData - The modal's close payload type. `close` accepts exactly this, so a
  * modal declared `useModal<{ id: string }>` rejects `close('ok', 42)`, and the default
@@ -155,9 +155,9 @@ export type ModalVariant =
       readonly nonModal?: false | undefined;
       /**
        * Whether a backdrop click dismisses the modal.
-       * Defaults to `false` when `actions` are provided (a modal with action buttons
-       * requires explicit dismissal through them). Pass `true` to opt back in.
-       * Defaults to `true` otherwise.
+       * Defaults to `false` once the render pass has drawn any action (a modal offering
+       * buttons wants to be dismissed through one) — pass `true` to opt back in — and to
+       * `true` for a modal that draws none.
        */
       readonly dismissOnBackdropClick?: boolean | undefined;
       /** Not applicable — modal dialogs use `dismissOnBackdropClick` instead. */
@@ -174,7 +174,8 @@ export type ModalVariant =
       readonly dismissOnBackdropClick?: never;
       /**
        * Whether clicking outside the dialog dismisses it.
-       * Respects `dismissWhilePreparing` and `actions.isRunning` guards.
+       * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
+       * `onOpen` is still preparing.
        * Only the topmost non-modal in a stack responds to click-outside.
        * @default false
        */

@@ -74,6 +74,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   writing, debugging and discarding a throwaway script, and because two of this project's worst
   diagnoses came from reasoning about rendering instead of measuring it.
 
+## 2026-08-06
+
+### Documentation (a full pass over what a reader is told)
+
+- **`API.md` documented an API that no longer exists.** Three of its examples still passed
+  `actions: state` into a hook and spread `state.confirm(…)` — the `useModalActions` design that
+  went away when actions became declared by use. Anyone copying them got code that does not
+  compile. They are now the `action` factory, with the reasons declared on the hook.
+- **What the page never gained when the library did.** The render-args table listed two of the
+  five fields (`action`, `isRunning` and `error` were missing, though a later section described
+  them); the options table was missing `style`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`,
+  `role` and `modalType`, and still typed `onOpen` as `() => …` after it started receiving an
+  `AbortSignal`; `ModalInfo` was missing `isPreparing`; the return was missing `dialogManager`.
+  `dialogPlacement`, `createDialogManager`, `DialogManagerProvider` and `matchesHotkey` were
+  exported and documented nowhere.
+- **Wrong in a way a reader would trust**: `useMessageModal` was said to report
+  `modalType: 'modal'` (it reports `'message'`), backdrop dismissal was said to default off "when
+  `actions` are provided" (it keys off whether the render pass _drew_ any action), the
+  `ModalOutlet` example rendered a nested `<dialog>` inside `render` — the library owns that
+  element — and the `createStore` context example used `update((d) => { d.x = 1 })`, a draft API
+  this store has never had.
+- **The snippets were compiled before being believed.** Every example rewritten here was put
+  through `tsc` in a scratch module against the real entry points, with a deliberate error added
+  at the end to prove the file was actually being checked. Nothing type-checks a `.md`, so the
+  check has to be staged.
+- **Source JSDoc, which ships in the `.d.ts` and generates the playground's `/api` page**: the
+  root entry point still advertised `useModalActions` twice, `ModalHandle` contrasted itself with
+  it, and two dismissal docs cited an `actions.isRunning` that no longer exists. The template
+  `@typeParam` docs still claimed `TData` is inferred "from `actions` … see `defineAction`".
+- **The store docs described a folder that is not there.** `src/store/CLAUDE.md` and
+  `src/CLAUDE.md` documented `useStore` / `createStoreContext` living in `src/store/react/`, with
+  a runnable-looking import from it, and listed `watch` / `shallowEqual` as module exports. The
+  module is `create-store.ts` and a barrel; those four are playground reference code. The root
+  `CLAUDE.md` entry-point table advertised two of them on `umbra/react`.
+- **Agent-facing docs too**: `.github/copilot-instructions.md` pointed at `src/store/watch.ts`,
+  `src/store/mutex.ts` and `src/store/single-flight.ts` (all user-land now), described hotkeys as
+  declared on `defineAction`, and claimed `CloseResult<void>` drops `data` "via conditional type"
+  — the opposite of the decision the type model rests on. `.claude/commands/` and the playground's
+  own instructions listed routes (`/modal-controller`, `/lab`) that no longer exist.
+- `API.md` now says where it stands relative to the generated reference: `/api` is typedoc over
+  the real entry points and cannot drift, so it wins on any disagreement; this file is the
+  narrative one.
+
 ## 2026-08-05
 
 ### Added

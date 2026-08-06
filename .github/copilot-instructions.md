@@ -54,9 +54,9 @@ Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
-- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore`/`useStore` alongside.
-- **Public API**: All exports from [src/index.ts](../src/index.ts). Internal hooks in `src/hooks/` are NOT exported.
-- **Hotkeys**: declared on `defineAction(reason, { hotkey: Key.X })`, not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
+- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
+- **Public API**: the root is [src/index.ts](../src/index.ts), the React binding [src/react.ts](../src/react.ts). Internal hooks in `src/hooks/` are NOT exported.
+- **Hotkeys**: declared on the action — `action('save', { hotkey: Key.Enter, onAction })` — not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
 
 ## Design Philosophy
 
@@ -79,14 +79,14 @@ These are hard constraints — never violate them when generating code:
 - **Never use** `useMemo`, `useCallback`, or `React.memo` — compiler handles memoization
 - **No ref writes during render** — use `useEffect` for ref updates; use `GetDialog` getter pattern instead of passing refs directly
 - **Store creation**: `const [init] = useState(() => createStore())` — not `useRef` (avoids ref-tainting)
-- **`createModalStore` must stay in same file as `useModal`** — compiler needs visibility into store shape
+- **`createModalStore` lives in its own module** ([src/core/modal-store.ts](../src/core/modal-store.ts)) — verified compiler-neutral: `useModal` compiles to the same memo slots imported or colocated
 - **`Map` writes are safe** — handler registries use `Map<string, handler>` (not treated as ref writes)
 - **Stable identities**: `open()`, `waitForClose()` and `handle` keep the same reference for the life of the hook — use them directly in dependency arrays, no ref indirection
 
 ### TypeScript Strict Mode
 
 - `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature` all enabled
-- Generics default to `void`: `<TData = void>` — `CloseResult<void>` omits the `data` field via conditional type
+- Generics default to `void`: `<TData = void>` — `CloseResult<TData>` stays a **plain** object (a conditional there would force a cast at every boundary the result crosses); with `TData = void`, `data` is an unusable `void | undefined`
 - Go-style error tuples: `const [err, result] = await waitForClose()` — never throws
 - Catch clauses: `catch (err: unknown)` → `normalizeError(err)` immediately
 - No `any` without `eslint-disable` comment explaining why
@@ -96,10 +96,9 @@ These are hard constraints — never violate them when generating code:
 - Always `normalizeError()` from [src/utils/normalize-error.ts](../src/utils/normalize-error.ts) in catch blocks
 - Fire-and-forget async: `void (async () => { try { ... } catch { ... } })()` (required by `no-floating-promises`)
 - Log `.message` not full error: `log.error('desc', { id, error: error.message })`
-- Concurrent-call deduplication (N callers → 1 execution): `createSingleFlight()` from [src/store/single-flight.ts](../src/store/single-flight.ts) — only thunk form accepted; `{ mode: 'last' }` aborts and supersedes
-- Concurrent-call serialization (N calls run N times, no interleaving): `createMutex()` from [src/store/mutex.ts](../src/store/mutex.ts) — prefer thunk form for deferred execution
+- Async **coordination** is user-land, not library code: `createSingleFlight()`, `createMutex()`, `safeAwait` and the async-state helpers live in `playground/src/shared/lib/` as reference patterns to copy — a dialog manager is not where anyone looks for a mutex
 - Store reset: generic stores expose `reset()` on the instance; domain stores reach it via the builder `api` (`reset() { api.reset(); }`). `reset(newSnapshot)` or `reset((initial) => next)` also updates the stored baseline
-- Non-React store observation: `watch(store, selector, callback, options?)` from [src/store/watch.ts](../src/store/watch.ts) — fires `callback(next, prev)` only when the selected slice changes; returns unsubscribe; zero React imports
+- Non-React store observation: `store.subscribe(listener)` plus `getSnapshot()` — that pair is the whole `StoreContract`, and it is exactly what `useSyncExternalStore` consumes
 - Cross-store coordination: pass the other store (or a method reference) through context — no dispatch wrapper
 
 ### Playground Examples

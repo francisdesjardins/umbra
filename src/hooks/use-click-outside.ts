@@ -9,8 +9,8 @@ const log = createLogger('modal:click-outside');
  * Dismisses a non-modal dialog when the user clicks outside its bounds.
  *
  * Attaches a document-level `pointerdown` listener (covers mouse and touch)
- * when `dismissOnClickOutside` is `true` and the dialog is open. Respects
- * `dismissWhilePreparing` and `actions.isRunning` guards. Only the
+ * when `dismissOnClickOutside` is `true` and the dialog is open. Suppressed while an action is
+ * running, and — unless `dismissWhilePreparing` — while `onOpen` is still preparing. Only the
  * topmost non-modal in a stack responds to click-outside.
  *
  * Only meaningful for non-modal dialogs — modal dialogs use backdrop click

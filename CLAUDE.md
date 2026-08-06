@@ -8,10 +8,10 @@ components exported; users bring their own.
 The package root is plain TypeScript and **must resolve with React absent**. Bindings are the
 optional layer.
 
-| Specifier     | Contents                                                                                                                                                                                                                                            |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | `dialogManager`, `createDialogManager`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `setLogLevel`. No React.                                                                                                        |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `useStore`, `createStoreContext`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
+| Specifier     | Contents                                                                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`       | `dialogManager`, `createDialogManager`, `dialogPlacement`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No React.             |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
 
 Adding a binding (Solid, Vue, a web component) means adding a sibling of `src/react.ts` and a
 new `exports` entry. Nothing under the root changes.

@@ -14,6 +14,6 @@ While writing the example:
 - Give the modal an `id` no other example uses — ids are global to the manager.
 - **Anything clickable while a modal is open must be rendered inside the `render` callback.** `showModal()` puts the dialog in the browser's top layer, so the native backdrop swallows every click outside it. To open a second modal, call `dialogManager.open(id)` from inside the first one's `render`.
 - Give the dialog an accessible name (`ariaLabel`, or `ariaLabelledBy` pointing at its own heading). A dialog without one is announced as just "dialog".
-- Do not pass a payload type argument to the modal hook when an action already declares it — `defineAction<Result>()` is the one declaration, and `useModal({ actions })` infers `Result` from it.
+- Declare the payload **and** the reasons on the hook — `useModal<Result, 'save' | 'cancel'>` — since actions are declared by being rendered and there is no marker left to infer either from. It is what rejects a mistyped `action('savee')` and makes the `switch` in `onClose` exhaustive.
 
 Afterwards, verify it actually renders: `node .claude/skills/playground-smoke/smoke.mjs` against a running server (the dev server on port 3000), which walks every route and fails on console errors.

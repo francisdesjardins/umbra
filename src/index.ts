@@ -8,9 +8,9 @@
  *
  * Framework bindings live on their own entry points and are the optional layer:
  *
- * - `umbra/react` — `useModal`, the template hooks, `useModalActions`,
- *   `ModalOutlet`. It re-exports everything here, so a React app imports from that one path
- *   and never needs this one.
+ * - `umbra/react` — `useModal`, the template hooks, `ModalOutlet`, the manager hooks. It
+ *   re-exports everything here, so a React app imports from that one path and never needs this
+ *   one.
  *
  * Any other binding (Solid, Vue, a web component) is the same shape: subscribe to a store,
  * render a `<dialog>`, register it with the manager. Nothing in this module needs to change
@@ -93,8 +93,8 @@ export type {
 // ── Errors ───────────────────────────────────────────────────────────────────
 //
 // The one general-purpose helper the library itself needs: it turns whatever an action handler
-// throws into the `Error` that `useModalActions` reports. It ships because a caller composing
-// its own handler wants that same normalisation.
+// throws into the `Error` the modal reports on `error`. It ships because a caller composing its
+// own handler wants that same normalisation.
 //
 // Async coordination — a mutex, single-flight, a fetch-state machine — is user-land, and lives
 // in the playground as reference code to copy, on the same terms as the modal templates. A
