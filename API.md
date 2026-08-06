@@ -60,7 +60,9 @@ const modal = useMessageModal({
       </button>
     </>
   ),
-  onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
+  onClose: (result) => {
+    report(result.reason); // 'confirm' | 'cancel' | 'dismiss'
+  },
 });
 ```
 
@@ -192,7 +194,9 @@ const modal = useModal<void, 'confirm' | 'cancel'>({
       {error ? <p role="alert">{error.message}</p> : null}
     </div>
   ),
-  onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
+  onClose: (result) => {
+    report(result.reason); // 'confirm' | 'cancel' | 'dismiss'
+  },
 });
 
 // Returns — the render args, plus the hook's own surface

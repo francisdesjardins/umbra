@@ -113,7 +113,12 @@ const modal = useModal<User, 'submit' | 'cancel'>({
   render: ({ action, isRunning }) => (
     <>
       <button {...action('cancel')}>Cancel</button>
-      <button {...action('submit', (close) => close(draft))} disabled={isRunning}>
+      <button
+        {...action('submit', (close) => {
+          close(draft);
+        })}
+        disabled={isRunning}
+      >
         Save
       </button>
     </>
@@ -121,7 +126,8 @@ const modal = useModal<User, 'submit' | 'cancel'>({
   onClose: (result) => {
     switch (result.reason) {
       case 'submit':
-        return save(result.data); // User | undefined
+        save(result.data); // User | undefined
+        return;
       case 'cancel':
       case 'dismiss':
         return;
