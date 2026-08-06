@@ -173,6 +173,54 @@ test.describe('createDialogManager', () => {
     ]);
   });
 
+  test('unregistering an open dialog reports the close, so nothing outside leaks', () => {
+    // A dialog torn down while open is a close that no observer would otherwise hear: `close()`
+    // is never called, so the phase never reaches `'closed'` and neither the subscription nor the
+    // document event fires. Anything counting opens from outside — a coexistence bridge pushing
+    // onto a shared stack, a shell disabling its shortcuts while a modal is up — is then stuck
+    // one open ahead, permanently, with nothing on screen to explain it.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const events: DialogManagerEvent[] = [];
+
+    dm.register('m', store);
+    dm.subscribe((event) => {
+      events.push(event);
+    });
+    openFully(store);
+
+    dm.unregister('m');
+
+    expect(events).toEqual([
+      { type: 'open', id: 'm' },
+      { type: 'close', id: 'm', reason: 'dismiss' },
+    ]);
+    // The `modal:close` document event goes out on the same branch; there is no DOM in this
+    // project, so it is checked where its absence actually hurt — `complib-bridge.ct.tsx`, whose
+    // shared stack is what leaks when it does not fire.
+  });
+
+  test('unregistering a closed dialog reports nothing', () => {
+    // The ordinary path: a modal that closed and then unmounted has already been reported, and a
+    // second close would put the same observers one *behind*.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const events: DialogManagerEvent[] = [];
+
+    dm.register('m', store);
+    dm.subscribe((event) => {
+      events.push(event);
+    });
+    openFully(store);
+    dm.close('m', 'saved');
+    store.transition('closed');
+    const before = events.length;
+
+    dm.unregister('m');
+
+    expect(events).toHaveLength(before);
+  });
+
   test('foreground, openDialogs order and z-index follow open order', () => {
     const dm = createDialogManager();
     const a = createFakeStore();

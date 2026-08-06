@@ -511,9 +511,30 @@ export function createDialogManager(): DialogManager {
       return;
     }
 
+    // A dialog torn down while open is a close nobody else would hear about: `close()` is never
+    // called, so the phase never reaches `'closed'` and the subscription that emits on that
+    // transition is about to be removed. Anything counting opens from outside — a bridge pushing
+    // onto a shared stack, a shell disabling its shortcuts while a modal is up — would be left one
+    // open ahead for the life of the page, with nothing on screen to explain it.
+    //
+    // Reported as `'dismiss'`, which is what the store tells a `waitForClose` caller in the same
+    // situation: nobody answered.
+    const wasOpen = entry.store.getSnapshot().phase !== 'closed';
+
     entry.unsubscribe();
     registry.delete(id);
     log('Unregistered', { id, registeredCount: registry.size });
+
+    if (wasOpen) {
+      emit({ type: 'close', id, reason: 'dismiss' });
+      dispatchModalEvent(MODAL_CLOSE_EVENT, {
+        id,
+        modalType: entry.modalType,
+        reason: 'dismiss',
+        openedAt: entry.openedAt,
+      });
+    }
+
     notifyChange();
     updateBodyOverflow();
   }

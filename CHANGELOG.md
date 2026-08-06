@@ -11,6 +11,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-06
 
+### Fixed
+
+- **Unregistering an open dialog now reports the close.** A modal whose component unmounts under it
+  never calls `close()`, so the phase never reaches `'closed'` — and the subscription that emits on
+  that transition is torn down in the same breath. Anything counting opens from the outside was
+  left one open ahead for the life of the page: a coexistence bridge pushing onto a shared stack, a
+  shell disabling its shortcuts while a modal is up, an overlay guard. Nothing on screen explained
+  it, and nothing ever brought the count back down.
+
+  `unregister` now emits `{ type: 'close' }` and dispatches `modal:close` when the store's phase is
+  not `'closed'`, with `reason: 'dismiss'` — the same word the store gives a `waitForClose` caller
+  torn down while open, because in both cases nobody answered. A dialog that closed before
+  unmounting is unaffected: it was already reported, and a second close would put the same
+  observers one _behind_.
+
+  Found by a component suite going flaky rather than by reading: Playwright reuses the page between
+  tests in a worker, so one test's leftover entry broke the next one's. That is the same page a
+  user has.
+
 ### Added
 
 - **`onOpen` is handed an `AbortSignal`** that fires when the modal closes, so work it started can
