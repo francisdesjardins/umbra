@@ -11,6 +11,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-07
 
+### Added — `requestOpen`: an open a dialog is allowed to refuse
+
+`dialogManager.open(id)` is an instruction, and there was no other door. That is the right shape
+for code that owns the dialog, and the wrong one for everything else — a shell, a deep link,
+another microfrontend. It is worst against a **controlled** dialog, the shape most of a component
+library's call sites take: `open` belongs to the component that renders it, so an instruction from
+outside opens it for a moment and its own reconciliation puts it back. Measured in the single-spa
+harness, that is a flash on screen, an open/close pair through `subscribe`, and a stack entry that
+appears and vanishes for anything watching.
+
+So there is a second door, and it asks:
+
+- **`dialogManager.requestOpen(id, request)`** hands the request to the dialog and moves nothing
+  itself. `request` is `{ data?: unknown, context?: { source?: string, … } }` — both halves crossed
+  an ownership boundary, so both are untrusted and the receiver validates. That is the answer to
+  the objection `close(id, reason)` raises against payloads: this one is not pretending to be
+  typed.
+- **`useModal({ onOpenRequest })`** is what makes a dialog reachable that way. Nothing opens by
+  itself: accept by calling the modal's own `open()`, decline by returning.
+- **A dialog that declares no handler declines**, and says so in the log. Not "opens anyway" — the
+  request reached a dialog that never agreed to be opened from outside.
+- **`open(id)` is untouched.** The two doors are separate on purpose, so this adds a capability
+  without changing what a single existing call does — including a dialog's own `open()`, which
+  never routes through its handler and therefore cannot ask itself in a loop.
+
+`register(id, store, options?)` replaces the two trailing positional arguments with
+`{ modalType?, nonModal?, onOpenRequest? }`. Internal — the binding calls it, not an application —
+and a shape a third argument can grow into, which two more positionals could not.
+
 ### Fixed — the playground was measured, and it disagreed with itself
 
 The playground is the public shop window (`francisdesjardins.ca/playground/dialog/`), and a pass

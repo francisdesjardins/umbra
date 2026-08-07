@@ -16,6 +16,7 @@ import { useModalOutletContext } from './modal-outlet.js';
 import { createActionEngine } from '../actions/action-engine.js';
 import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
 import type { ActionCloseFn, ActionFactory } from '../actions/types.js';
+import type { OpenRequest } from '../manager/dialog-manager.js';
 import type {
   GetDialog,
   ModalAnimation,
@@ -81,6 +82,7 @@ export function useModal<TData = void, TReason extends string = string>(
     dismissWhilePreparing: dismissWhilePreparingProp,
     onKeyDown,
     onOpen,
+    onOpenRequest,
     onClose,
     modalType,
     nonModal,
@@ -237,8 +239,28 @@ export function useModal<TData = void, TReason extends string = string>(
   // cleanup therefore both unregisters AND finalizes an open modal: on a structural prop
   // change this closes it cleanly (rather than leaving a stuck, orphaned dialog), and on a
   // true unmount it settles `onClose`/`waitForClose` with a 'dismiss' reason.
+  // The handler the registry holds is stable for the life of the registration, and reads the
+  // latest one through a ref — a new closure every render would make this effect re-register on
+  // every render, and re-registering is not free: it tears the subscription down and back up.
+  const openRequestHandler = useRef(onOpenRequest);
   useEffect(() => {
-    dm.register(modalId, store, modalType ?? 'modal', isNonModal);
+    openRequestHandler.current = onOpenRequest;
+  }, [onOpenRequest]);
+
+  // Whether the dialog answers bridged opens at all is a registration-time fact, so it is a
+  // dependency below: a dialog that starts declaring one has to re-register to become reachable.
+  const acceptsOpenRequests = onOpenRequest !== undefined;
+
+  useEffect(() => {
+    dm.register(modalId, store, {
+      modalType: modalType ?? 'modal',
+      nonModal: isNonModal,
+      ...(acceptsOpenRequests && {
+        onOpenRequest: (request: OpenRequest) => {
+          openRequestHandler.current?.(request);
+        },
+      }),
+    });
 
     return () => {
       const wasOpen = store.getSnapshot().phase !== 'closed';
@@ -271,7 +293,7 @@ export function useModal<TData = void, TReason extends string = string>(
     // `shouldPortal` is a dep (though unused in the body) because it, like `nonModal`,
     // changes the rendered structure — so toggling it while open must tear the modal down
     // too, otherwise the remounted-into-a-new-structure <dialog> is left stuck open.
-  }, [dm, getDialog, isNonModal, modalId, modalType, shouldPortal, store]);
+  }, [acceptsOpenRequests, dm, getDialog, isNonModal, modalId, modalType, shouldPortal, store]);
 
   // ── Backdrop click ──────────────────────────────────────────────────────
 

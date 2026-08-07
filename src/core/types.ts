@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
-import type { DialogManager } from '../manager/dialog-manager.js';
+import type { DialogManager, OpenRequest } from '../manager/dialog-manager.js';
 
 // ── Close Results ─────────────────────────────────────────────────────────────
 
@@ -220,6 +220,40 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * @default true
    */
   readonly dismissWhilePreparing?: boolean | undefined;
+  /**
+   * Answer an open asked for by code that does not own this dialog — another microfrontend, a
+   * shell, a deep link — and decide for yourself.
+   *
+   * Declaring one is what makes the dialog reachable by `dialogManager.requestOpen(id, request)`;
+   * without it, every such request is declined. `dialogManager.open(id)` is a different door and
+   * is unaffected either way.
+   *
+   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`, decline by
+   * returning — a request nobody agreed to is a request that changes nothing, which is what makes
+   * asking safe to expose across a boundary in the first place.
+   *
+   * The payload is `unknown` because it crossed that boundary: validate it before believing it.
+   * The context is what the caller *says* about itself, not what anyone verified.
+   *
+   * @example
+   * const { open, Modal } = useModal<void, 'confirm'>({
+   *   id: 'patient:merge',
+   *   onOpenRequest: ({ data, context }) => {
+   *     const parsed = mergeRequestSchema.safeParse(data);
+   *     if (!parsed.success) {
+   *       console.warn('Ignored a merge request', { from: context?.source });
+   *       return;
+   *     }
+   *     setPatientId(parsed.data.patientId);
+   *     void open();
+   *   },
+   *   render: () => {
+   *     return <p>Fusionner ce dossier?</p>;
+   *   },
+   * });
+   */
+  readonly onOpenRequest?: ((request: OpenRequest) => void) | undefined;
+
   /**
    * Optional keydown handler called on the dialog element.
    * Fires before built-in ESC handling. Call `event.preventDefault()`

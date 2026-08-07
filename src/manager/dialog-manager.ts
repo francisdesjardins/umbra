@@ -33,6 +33,57 @@ type RegisteredStore = {
 };
 
 /**
+ * What a caller says about itself when asking a dialog it does not own to open.
+ *
+ * Every field is a **claim**, in the sense an HTTP `Referer` is a claim: it travels with the
+ * request, it is useful, and nothing anywhere verified it. A dialog deciding on this is deciding
+ * on what the caller chose to say — which is fine for routing and for logs, and is not a security
+ * boundary. Treat it the way you would treat the body of a `postMessage`.
+ */
+export type OpenRequestContext = {
+  /** Who says it is asking — a microfrontend name, a feature, a route. */
+  readonly source?: string | undefined;
+  /** Whatever else the two sides agreed to send. Unverified, like the rest. */
+  readonly [key: string]: unknown;
+};
+
+/**
+ * An open, asked for rather than performed.
+ *
+ * `data` is `unknown` on purpose and it is the whole point of the shape. `close(id, reason)` takes
+ * no payload because the registry is keyed by string and cannot check one against a modal's
+ * `TData` — the same objection applies here, and the answer is different: this payload is not
+ * pretending to be typed. It crossed an ownership boundary, so the dialog that receives it
+ * validates it before believing it, exactly as it would a message off the wire.
+ */
+export type OpenRequest = {
+  /** The payload, unvalidated. Parse it against your own schema before acting on it. */
+  readonly data?: unknown;
+  /** What the caller says about itself. See {@link OpenRequestContext}. */
+  readonly context?: OpenRequestContext | undefined;
+};
+
+/**
+ * Answers a bridged open on the dialog's behalf. Declared through the binding — `useModal({
+ * onOpenRequest })` in React.
+ *
+ * Declaring one is what makes a dialog reachable by {@link DialogManager.requestOpen}; a dialog
+ * that declares none declines every such request. Nothing is opened for you: accept by calling the
+ * dialog's own `open()`, decline by returning.
+ */
+export type OpenRequestHandler = (request: OpenRequest) => void;
+
+/** What a binding may tell the registry about a dialog beyond its store. */
+export type RegisterOptions = {
+  /** Free-form kind, carried on the DOM events. Defaults to `'modal'`. */
+  readonly modalType?: string | undefined;
+  /** Non-blocking dialogs never lock body scroll and never take the top layer. */
+  readonly nonModal?: boolean | undefined;
+  /** Makes this dialog reachable by {@link DialogManager.requestOpen}. */
+  readonly onOpenRequest?: OpenRequestHandler | undefined;
+};
+
+/**
  * Events emitted by the dialog manager.
  */
 export type DialogManagerEvent =
@@ -148,13 +199,46 @@ const emptySnapshot: DialogManagerSnapshot = {
  */
 export type DialogManager = {
   /** Register a modal store. Called internally by useModal. */
-  register(id: string, store: RegisteredStore, modalType?: string, nonModal?: boolean): void;
+  register(id: string, store: RegisteredStore, options?: RegisterOptions): void;
 
   /** Unregister a modal store. Called internally by useModal. */
   unregister(id: string): void;
 
-  /** Open a modal imperatively by id. */
+  /** Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}. */
   open(id: string): void;
+
+  /**
+   * **Ask** a modal to open, and let it say no.
+   *
+   * The door for code that does not own the dialog: another microfrontend, a shell, a deep link.
+   * `open(id)` is an instruction and this is a request, and the difference matters most for a
+   * *controlled* dialog — one whose `open` prop belongs to the component that renders it. Instruct
+   * one of those and it opens for a moment and is put back by its own reconciliation, which is a
+   * flash on screen, a spurious open/close through {@link DialogManager.subscribe}, and a stack
+   * entry that appears and vanishes for anything watching. Ask instead and none of that happens:
+   * the dialog's own code decides, and if it says no, nothing moved.
+   *
+   * **A dialog that declares no handler declines.** Not "opens anyway" — the request reaches a
+   * dialog that never agreed to be opened from outside, and the honest answer to that is no. It is
+   * logged, so a caller wondering why nothing happened can find out. `open(id)` is unaffected and
+   * still opens anything registered; the two doors are separate on purpose, so adding this one
+   * changes the behaviour of no existing call.
+   *
+   * Returns nothing, and deliberately: the handler runs synchronously but what it decides may not
+   * be — an owner may validate, fetch, or wait for its own state. Watch the outcome through
+   * `lookup(id)` the way any other observer would.
+   *
+   * @param id The dialog to ask.
+   * @param request What to hand its handler. Both halves are untrusted — see {@link OpenRequest}.
+   *
+   * @example
+   * // The shell asks; the dialog's owner decides.
+   * dialogManager.requestOpen('patient:merge', {
+   *   data: { patientId: '42' },
+   *   context: { source: 'portal:nav' },
+   * });
+   */
+  requestOpen(id: string, request?: OpenRequest): void;
 
   /**
    * Close a modal imperatively by id, with a reason.
@@ -239,6 +323,11 @@ type RegistryEntry = {
   readonly unsubscribe: () => void;
   readonly modalType: string;
   readonly nonModal: boolean;
+  /**
+   * Set when the dialog agreed to answer bridged opens. Absent means it declines them — the
+   * registry does not open a dialog on behalf of a caller it never heard of.
+   */
+  readonly onOpenRequest?: OpenRequestHandler | undefined;
   /** Wall-clock open time. Public (`ModalInfo.openedAt`, DOM event details) — not an order. */
   readonly openedAt: number;
   /**
@@ -418,12 +507,8 @@ export function createDialogManager(): DialogManager {
    * Subscribes to the store's snapshot changes to track open/close transitions
    * and emit events to external listeners.
    */
-  function register(
-    id: string,
-    store: RegisteredStore,
-    modalType: string = 'modal',
-    nonModal: boolean = false
-  ) {
+  function register(id: string, store: RegisteredStore, options: RegisterOptions = {}) {
+    const { modalType = 'modal', nonModal = false, onOpenRequest } = options;
     const initial = store.getSnapshot();
     let prevPhase = initial.phase;
     let prevIsPreparing = initial.isPreparing;
@@ -495,6 +580,9 @@ export function createDialogManager(): DialogManager {
       unsubscribe,
       modalType,
       nonModal,
+      // Spread rather than always-present: `exactOptionalPropertyTypes` distinguishes "absent"
+      // from "explicitly undefined", and absent is what "this dialog declines" is spelled as.
+      ...(onOpenRequest !== undefined && { onOpenRequest }),
       openedAt: 0,
       openSeq: 0,
     });
@@ -634,6 +722,25 @@ export function createDialogManager(): DialogManager {
         return;
       }
       entry.store.requestOpen();
+    },
+
+    requestOpen(id: string, request: OpenRequest = {}): void {
+      const entry = registry.get(id);
+      if (!entry) {
+        log.warn('Open request declined (not registered)', { id, source: request.context?.source });
+        return;
+      }
+      if (!entry.onOpenRequest) {
+        // Declined, and said out loud. A caller that asked a dialog which never opted in has a
+        // wrong assumption, and silence is what makes that assumption survive to production.
+        log.warn('Open request declined (dialog accepts none)', {
+          id,
+          source: request.context?.source,
+        });
+        return;
+      }
+      log('Open requested from outside', { id, source: request.context?.source });
+      entry.onOpenRequest(request);
     },
 
     close(id: string, reason: string = 'dismiss'): void {

@@ -38,6 +38,10 @@ export type {
   DialogManagerSubscriber,
   ModalCloseEventDetail,
   ModalOpenEventDetail,
+  OpenRequest,
+  OpenRequestContext,
+  OpenRequestHandler,
+  RegisterOptions,
 } from './manager/dialog-manager.js';
 
 export type {

@@ -253,8 +253,8 @@ test.describe('createDialogManager', () => {
     const dm = createDialogManager();
     const blocking = createFakeStore();
     const nonBlocking = createFakeStore();
-    dm.register('blocking', blocking, 'modal', false);
-    dm.register('non-blocking', nonBlocking, 'modal', true);
+    dm.register('blocking', blocking, { modalType: 'modal', nonModal: false });
+    dm.register('non-blocking', nonBlocking, { modalType: 'modal', nonModal: true });
 
     openFully(blocking);
     openFully(nonBlocking);
