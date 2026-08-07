@@ -108,8 +108,12 @@ render: ({ action }) => (
 );
 ```
 
-It is also where focus returns when an action fails, since that is where the retry lives. Two
-buttons declaring it is a contradiction the DOM cannot express — the first one rendered wins.
+Two buttons declaring it is a contradiction the DOM cannot express — the first one rendered wins.
+
+It decides where the modal **opens**. Where focus returns after a failed action is a separate
+question: the modal puts it back on the button that ran the action, because that is where the
+retry is — tab to a second action, run it, and you stay there rather than being sent back. This
+option is the fallback for when nothing inside the dialog held focus at all.
 
 The prop is `data-focus-on-open`, not React's `autoFocus`: React does not put the native
 `autofocus` attribute in the DOM, and `showModal()`'s focusing steps read exactly that attribute,

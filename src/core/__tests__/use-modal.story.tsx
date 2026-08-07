@@ -30,3 +30,4 @@ export { ActionErrorHotkeyRetryHarness } from './use-modal/action-error-hotkey-r
 export { StackedModalsHarness } from './use-modal/stacked-modals.story.js';
 export { NestedHotkeyScopeHarness } from './use-modal/nested-hotkey-scope.story.js';
 export { FocusUnderAnotherModalHarness } from './use-modal/focus-under-another-modal.story.js';
+export { ContainedOverlayHarness } from './use-modal/contained-overlay.story.js';

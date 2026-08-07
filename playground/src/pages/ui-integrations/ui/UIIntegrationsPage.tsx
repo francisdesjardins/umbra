@@ -20,10 +20,6 @@ import {
   MODAL_ID as VANILLA_SLIDE_ID,
   VanillaSlideExample,
 } from '@/pages/ui-integrations/examples/vanilla-slide';
-import {
-  MODAL_ID as VANILLA_ZOD_FORM_ID,
-  VanillaZodFormExample,
-} from '@/pages/ui-integrations/examples/vanilla-zod-form';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
 export const UIIntegrationsPage = () => {
@@ -78,7 +74,7 @@ export const UIIntegrationsPage = () => {
 
       <ExampleSection
         title="Form"
-        description="Submit-and-validate flows, where the controller's isRunning and error carry the async state."
+        description="Submit-and-validate flows, where the action's own isRunning and error carry the async state."
       >
         <ExampleGrid>
           <ExampleCard
@@ -94,13 +90,6 @@ export const UIIntegrationsPage = () => {
             codeKey="vanilla-form"
             modalId={VANILLA_FORM_ID}
             example={<VanillaFormExample />}
-          />
-          <ExampleCard
-            title="Vanilla Form + Zod"
-            description="A Zod schema as the single source of truth: nested objects, arrays of phone numbers, and per-field errors mapped straight from the parse result onto the vanilla field components."
-            codeKey="vanilla-zod-form"
-            modalId={VANILLA_ZOD_FORM_ID}
-            example={<VanillaZodFormExample />}
           />
         </ExampleGrid>
       </ExampleSection>

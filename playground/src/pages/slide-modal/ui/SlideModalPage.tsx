@@ -1,52 +1,44 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
 import {
-  MODAL_ID as SLIDE_ASYNC_OPEN_ID,
-  SlideAsyncOpenExample,
-} from '@/pages/slide-modal/examples/async-open';
-import {
   MODAL_ID as SLIDE_CORNER_TOAST_ID,
   SlideCornerToastExample,
 } from '@/pages/slide-modal/examples/corner-toast';
-import { SlideModalConfiguratorExample } from '@/pages/slide-modal/examples/slide-modal-configurator';
+import { DRAWER_ID, SlidePresetsExample } from '@/pages/slide-modal/examples/slide-presets';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
 export const SlideModalPage = () => {
   return (
     <PageLayout
       title="Slide Modals"
-      description="Panels that slide in from any edge. Direction, alignment, modality, portalling and dismiss policy are all independent options."
+      description="A panel that slides in from an edge. Two options decide the shape — the edge it comes from, and whether it fills the axis across that edge — and everything else is the same modal you already know."
     >
       <ExampleSection
-        title="Configurator"
-        description="Every slide option in one panel — change a control and reopen to see the effect."
+        title="The four shapes"
+        description="Each one is its own hook with its own options, printed on the panel it opens. Copy the block, change the edge, and you have the next shape."
       >
         <ExampleGrid columns={1}>
           <ExampleCard
-            title="Slide Modal Configurator"
-            description="Toggle direction, align, modal/non-modal, portal, dismiss key, click-outside policy, size units and async open delay — live."
-            codeKey="slide-modal-configurator"
-            example={<SlideModalConfiguratorExample />}
+            title="Drawer, sheet, palette, contained panel"
+            description="A right drawer is the default. A bottom sheet is the same options with one word changed. A command palette adds align: 'center', which makes the panel content-sized across the slide instead of full-bleed. The contained one is non-modal with no portal, so it answers to the dashed box rather than the viewport — and the page stays clickable while it is open."
+            codeKey="slide-presets"
+            modalId={DRAWER_ID}
+            tryLabel="Open the drawer"
+            example={<SlidePresetsExample />}
           />
         </ExampleGrid>
       </ExampleSection>
 
       <ExampleSection
-        title="Patterns"
-        description="Recipes the configurator can't express as a single toggle."
+        title="A toast is not a dialog"
+        description="The one case where the element and the intent disagree — and what to do about it."
       >
-        <ExampleGrid>
+        <ExampleGrid columns={1}>
           <ExampleCard
-            title="Async Open"
-            description="Simulate data fetching via onOpen — panel slides in immediately, content fades in once loading completes."
-            codeKey="slide-async-open"
-            modalId={SLIDE_ASYNC_OPEN_ID}
-            example={<SlideAsyncOpenExample />}
-          />
-          <ExampleCard
-            title="Corner Toast (align: start)"
-            description="align: 'start' pins a content-sized panel to the top of the cross axis instead of stretching full-height. Non-modal + portal keeps the page interactive while it is open."
+            title="Corner toast"
+            description="align: 'start' pins a content-sized panel to the top of the cross axis; non-modal + portal keeps the page interactive. The countdown pauses while the pointer is over it — which is both a courtesy and the proof that the panel really does receive the pointer. Nothing here names the dialog: a toast is a status message, and role='status' with aria-live announces it without moving anyone."
             codeKey="slide-corner-toast"
             modalId={SLIDE_CORNER_TOAST_ID}
+            tryLabel="Show the toast"
             example={<SlideCornerToastExample />}
           />
         </ExampleGrid>

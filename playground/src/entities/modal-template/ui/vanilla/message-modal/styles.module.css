@@ -16,7 +16,7 @@
   /* Colors */
   --color-primary: #d97706;
   --color-primary-hover: #92400e;
-  --color-primary-disabled: rgba(217, 70, 239, 0.5);
+  --color-primary-disabled: color-mix(in srgb, var(--color-primary) 50%, transparent);
   --color-success: #2e7d32;
   --color-error: #d32f2f;
   --color-warning: #ed6c02;
@@ -44,7 +44,7 @@
   --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --button-hover-bg: rgba(255, 255, 255, 0.08);
   --button-hover-border: rgba(255, 255, 255, 0.23);
-  --color-primary-disabled: rgba(217, 70, 239, 0.5);
+  --color-primary-disabled: color-mix(in srgb, var(--color-primary) 50%, transparent);
 
   /* Semantic colors need lighter variants on a dark surface — the light-mode values are
      mid-dark tones (e.g. #d32f2f on #121212) that fall short of readable contrast. These

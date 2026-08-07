@@ -152,7 +152,7 @@ function useLiveControls() {
             size="small"
             multiline
             rows={2}
-            sx={{ flexGrow: 1, minWidth: 220, maxWidth: 400 }}
+            sx={{ flexGrow: 1, minWidth: 'min(220px, 100%)', maxWidth: 400 }}
           />
         </Stack>
 
@@ -222,7 +222,9 @@ export function ReactiveDepsExample() {
     dismissOnBackdropClick: false,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout slotProps={{ container: { sx: { width: 600 } } }}>
+        <MessageModal.DefaultLayout
+          slotProps={{ container: { sx: { width: 'min(600px, 92vw)' } } }}
+        >
           <MessageModal.Header>
             <MessageModal.Icon type={severity} sx={{ mb: 0 }} />
             <Typography variant="h6">Reactive Dependencies Demo</Typography>

@@ -1,14 +1,13 @@
 // ── Playground examples ──────────────────────────────────────────────────────
 import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw';
+import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
 import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
 import modalOutletSrc from '@/pages/advanced/examples/modal-outlet.tsx?raw';
 import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.ts?raw';
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
-import pharmacyRxSrc from '@/pages/advanced/examples/pharmacy-rx.tsx?raw';
 import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
 import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
-import textMessageModalSrc from '@/pages/advanced/examples/text-message-modal.tsx?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
@@ -16,23 +15,20 @@ import sharedLibSafeAwaitSrc from '@/shared/lib/safe-await.ts?raw';
 import sharedLibMutexSrc from '@/shared/lib/mutex.ts?raw';
 import sharedLibSingleFlightSrc from '@/shared/lib/single-flight.ts?raw';
 import sharedLibImmerStoreSrc from '@/shared/lib/immer-store.ts?raw';
-import contentHelpersSrc from '@/pages/getting-started/examples/content-helpers.tsx?raw';
 import noTransitionMessageSrc from '@/pages/getting-started/examples/no-transition-message.tsx?raw';
-import noTransitionSlideSrc from '@/pages/getting-started/examples/no-transition-slide.tsx?raw';
 import simpleModalSrc from '@/pages/getting-started/examples/simple-modal.tsx?raw';
+import focusOnOpenSrc from '@/pages/modal-actions/examples/focus-on-open.tsx?raw';
 import confirmWithHotkeysSrc from '@/pages/modal-actions/examples/confirm-with-hotkeys.tsx?raw';
 import deleteItemModalSrc from '@/pages/modal-actions/examples/delete-item-modal.tsx?raw';
 import reactivDepsSrc from '@/pages/modal-actions/examples/reactive-deps.tsx?raw';
-import slideAsyncOpenSrc from '@/pages/slide-modal/examples/async-open.tsx?raw';
 import slideCornerToastSrc from '@/pages/slide-modal/examples/corner-toast.tsx?raw';
-import slideModalConfiguratorSrc from '@/pages/slide-modal/examples/slide-modal-configurator.tsx?raw';
+import slidePresetsSrc from '@/pages/slide-modal/examples/slide-presets.tsx?raw';
 import muiFormSrc from '@/pages/ui-integrations/examples/mui-form.tsx?raw';
 import muiMessageSrc from '@/pages/ui-integrations/examples/mui-message.tsx?raw';
 import muiSlideSrc from '@/pages/ui-integrations/examples/mui-slide.tsx?raw';
 import vanillaFormSrc from '@/pages/ui-integrations/examples/vanilla-form.tsx?raw';
 import vanillaMessageSrc from '@/pages/ui-integrations/examples/vanilla-message.tsx?raw';
 import vanillaSlideSrc from '@/pages/ui-integrations/examples/vanilla-slide.tsx?raw';
-import vanillaZodFormSrc from '@/pages/ui-integrations/examples/vanilla-zod-form.tsx?raw';
 
 // ── useModal stories ─────────────────────────────────────────────────────────
 import storyUseModalBasicSrc from '../../../../../src/core/__tests__/use-modal/basic.story.tsx?raw';
@@ -104,7 +100,6 @@ import storyMsgDataSrc from '../../../../../src/templates/__tests__/use-message-
 import storyMsgWaitForCloseSrc from '../../../../../src/templates/__tests__/use-message-modal/wait-for-close-message.story.tsx?raw';
 
 // ── MUI template components ─────────────────────────────────────────────────
-import templateMsgCreateTextSrc from '@/entities/modal-template/ui/mui/create-text-message-modal.tsx?raw';
 import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
 import templateFormFieldErrorSrc from '@/entities/modal-template/ui/mui/form-modal/components/FieldError.tsx?raw';
 import templateFormFooterSrc from '@/entities/modal-template/ui/mui/form-modal/components/Footer.tsx?raw';
@@ -112,6 +107,7 @@ import templateFormFormLayoutSrc from '@/entities/modal-template/ui/mui/form-mod
 import templateFormHeaderSrc from '@/entities/modal-template/ui/mui/form-modal/components/Header.tsx?raw';
 import templateMsgContentSrc from '@/entities/modal-template/ui/mui/message-modal/components/Content.tsx?raw';
 import templateMsgDefaultContainerSrc from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer.tsx?raw';
+import templateMsgCreateTextSrc from '@/entities/modal-template/ui/mui/create-text-message-modal.tsx?raw';
 import templateMsgDefaultLayoutSrc from '@/entities/modal-template/ui/mui/message-modal/components/DefaultLayout.tsx?raw';
 import templateMsgFooterSrc from '@/entities/modal-template/ui/mui/message-modal/components/Footer.tsx?raw';
 import templateMsgHeaderSrc from '@/entities/modal-template/ui/mui/message-modal/components/Header.tsx?raw';
@@ -192,27 +188,33 @@ import storySlideMultiDirectionSrc from '../../../../../src/templates/__tests__/
 import storySlideNonModalEscHotkeySrc from '../../../../../src/templates/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
 import storySlideWaitForCloseSrc from '../../../../../src/templates/__tests__/use-slide-modal/wait-for-close-slide.story.tsx?raw';
 
+import storyFocusOnOpenSrc from '../../../../../src/actions/__tests__/use-modal-actions/focus-on-open.story.tsx?raw';
+import storyStackedModalsSrc from '../../../../../src/core/__tests__/use-modal/stacked-modals.story.tsx?raw';
+import storyNestedHotkeyScopeSrc from '../../../../../src/core/__tests__/use-modal/nested-hotkey-scope.story.tsx?raw';
+import storyFocusUnderAnotherModalSrc from '../../../../../src/core/__tests__/use-modal/focus-under-another-modal.story.tsx?raw';
+import storyEscWithoutFocusSrc from '../../../../../src/core/__tests__/use-modal/esc-without-focus.story.tsx?raw';
+import storyAccessibleNameSrc from '../../../../../src/core/__tests__/use-modal/accessible-name.story.tsx?raw';
+import storyStylingSurfaceSrc from '../../../../../src/core/__tests__/use-modal/styling-surface.story.tsx?raw';
+
 export const codeSamples: Record<string, string> = {
   // Playground examples
   'simple-modal': simpleModalSrc,
-  'content-helpers': contentHelpersSrc,
   'async-open': asyncOpenSrc,
   'no-transition-message': noTransitionMessageSrc,
-  'no-transition-slide': noTransitionSlideSrc,
   'confirm-with-hotkeys': confirmWithHotkeysSrc,
+  'focus-on-open': focusOnOpenSrc,
   'delete-item-modal': deleteItemModalSrc,
   'reactive-deps': reactivDepsSrc,
-  'slide-modal-configurator': slideModalConfiguratorSrc,
-  'slide-async-open': slideAsyncOpenSrc,
+  'slide-presets': slidePresetsSrc,
   'slide-corner-toast': slideCornerToastSrc,
   'stacked-modals': stackedModalsSrc,
   'imperative-service-layer': serviceLayerSrc,
   'imperative-deployment-service': deploymentServiceSrc,
   'cosmic-override': cosmicOverrideSrc,
   'dom-events': domEventsSrc,
+  'grocery-list': groceryListSrc,
   'mui-panel': muiPanelSrc,
   imperative: imperativeSrc,
-  'text-message-modal': textMessageModalSrc,
   'modal-outlet': modalOutletSrc,
   'mui-message': muiMessageSrc,
   'mui-slide': muiSlideSrc,
@@ -220,8 +222,6 @@ export const codeSamples: Record<string, string> = {
   'vanilla-message': vanillaMessageSrc,
   'vanilla-slide': vanillaSlideSrc,
   'vanilla-form': vanillaFormSrc,
-  'vanilla-zod-form': vanillaZodFormSrc,
-  'pharmacy-rx': pharmacyRxSrc,
 
   // useModal stories
   'story-use-modal-basic': storyUseModalBasicSrc,
@@ -246,18 +246,25 @@ export const codeSamples: Record<string, string> = {
   'story-outlet-paint-timing': storyOutletPaintTimingSrc,
 
   // useModalActions stories
-  'story-controller-basic': storyActionsBasicSrc,
-  'story-controller-error': storyActionsErrorSrc,
-  'story-controller-hotkey': storyActionsHotkeySrc,
-  'story-controller-definition': storyActionsDefinitionSrc,
-  'story-controller-focus': storyActionsFocusSrc,
-  'story-controller-dismiss-collision': storyActionsDismissCollisionSrc,
-  'story-controller-action-basic': storyActionsActionBasicSrc,
-  'story-controller-action-custom-handler': storyActionsCustomHandlerSrc,
-  'story-controller-action-hotkey': storyActionsActionHotkeySrc,
-  'story-controller-action-multiple': storyActionsActionMultipleSrc,
-  'story-controller-reason-source': storyActionsReasonSourceSrc,
-  'story-controller-hotkey-while-preparing': storyActionsHotkeyWhilePreparingSrc,
+  'story-action-basic': storyActionsBasicSrc,
+  'story-action-error': storyActionsErrorSrc,
+  'story-action-hotkey': storyActionsHotkeySrc,
+  'story-action-definition': storyActionsDefinitionSrc,
+  'story-focus-on-open': storyFocusOnOpenSrc,
+  'story-stacked-modals': storyStackedModalsSrc,
+  'story-nested-hotkey-scope': storyNestedHotkeyScopeSrc,
+  'story-focus-under-another-modal': storyFocusUnderAnotherModalSrc,
+  'story-esc-without-focus': storyEscWithoutFocusSrc,
+  'story-accessible-name': storyAccessibleNameSrc,
+  'story-styling-surface': storyStylingSurfaceSrc,
+  'story-action-focus': storyActionsFocusSrc,
+  'story-action-dismiss-collision': storyActionsDismissCollisionSrc,
+  'story-action-action-basic': storyActionsActionBasicSrc,
+  'story-action-action-custom-handler': storyActionsCustomHandlerSrc,
+  'story-action-action-hotkey': storyActionsActionHotkeySrc,
+  'story-action-action-multiple': storyActionsActionMultipleSrc,
+  'story-action-reason-source': storyActionsReasonSourceSrc,
+  'story-action-hotkey-while-preparing': storyActionsHotkeyWhilePreparingSrc,
   'story-use-modal-transition-toggle': storyUseModalTransitionToggleSrc,
   'story-use-modal-key-passthrough': storyUseModalKeyPassthroughSrc,
   'story-dm-scroll-lock-two-managers': storyDmScrollLockTwoManagersSrc,
@@ -266,8 +273,8 @@ export const codeSamples: Record<string, string> = {
   'story-dm-provider-isolation': storyDmProviderIsolationSrc,
   'story-dm-no-provider': storyDmProviderIsolationSrc,
   'story-use-modal-structural-toggle': storyUseModalStructuralToggleSrc,
-  'story-controller-vanilla-aria': storyActionsVanillaAriaSrc,
-  'story-controller-broken-aria': storyActionsVanillaAriaSrc,
+  'story-action-vanilla-aria': storyActionsVanillaAriaSrc,
+  'story-action-broken-aria': storyActionsVanillaAriaSrc,
 
   // dialogManager stories
   'story-dm-imperative': storyDmImperativeSrc,

@@ -1,11 +1,11 @@
 ---
 name: dialog-debug
-description: Debug dialog/slide-modal animation, positioning, sizing, and lifecycle state by driving the Slide Modal Configurator in a real browser and measuring what actually renders. Use when a modal visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
+description: Debug dialog/slide-modal animation, positioning and lifecycle state by driving a real browser against any modal in the playground and measuring what actually renders. Use when a modal visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
 ---
 
 # Dialog Debug
 
-A reusable Playwright probe (`probe.mjs`) that drives the playground **Slide Modal Configurator**
+A reusable Playwright probe (`probe.mjs`) that drives **any modal in the playground** by its id
 and measures what the browser actually paints — transform trajectories, per-frame rendered
 positions, box sizes, teardown behavior, and the library's own debug logs. Use it instead of
 writing (and throwing away) one-off scripts.
@@ -35,24 +35,22 @@ positions** — the reliable signal for "did it actually slide?".
 node .claude/skills/dialog-debug/probe.mjs --mode slide                 # modal, all 4 dirs
 node .claude/skills/dialog-debug/probe.mjs --mode slide --non-modal     # contained
 node .claude/skills/dialog-debug/probe.mjs --mode slide --portal        # portal
-node .claude/skills/dialog-debug/probe.mjs --mode slide --dir Right --non-modal
+node .claude/skills/dialog-debug/probe.mjs --mode slide --id slide-preset-drawer
 
 # Frame-by-frame transform(px) + rect for one direction.
-node .claude/skills/dialog-debug/probe.mjs --mode trajectory --dir Right --non-modal
+node .claude/skills/dialog-debug/probe.mjs --mode trajectory --id slide-preset-drawer
 
 # Which (direction × mode) combos respond to the SIZE pane? (slow: 16 page loads)
-node .claude/skills/dialog-debug/probe.mjs --mode size --unit px --width 260 --height 180
-node .claude/skills/dialog-debug/probe.mjs --mode size --unit vw --width 40
 
 # Does toggling a structural prop while open tear down cleanly (not stuck)?
 node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Portal --non-modal
 node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Non-modal
 
 # The library's own lifecycle/manager logs during open/close.
-node .claude/skills/dialog-debug/probe.mjs --mode logs --dir Right --non-modal
+node .claude/skills/dialog-debug/probe.mjs --mode logs --id slide-preset-drawer
 
 # Watch it happen (visible browser, slowed):
-node .claude/skills/dialog-debug/probe.mjs --mode slide --dir Right --non-modal --headed --slow
+node .claude/skills/dialog-debug/probe.mjs --mode slide --id slide-preset-drawer --headed --slow
 ```
 
 ### Flags

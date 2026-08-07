@@ -2,128 +2,214 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
-import { createResultStore } from '@/shared/lib/createResultStore';
-import { Box, Typography } from '@mui/material';
-import { useMessageModal, useSlideModal } from 'umbra/react';
-import { useStore } from '@/shared/lib/use-store';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Key, useMessageModal, useSlideModal } from 'umbra/react';
 
-const resultStore = createResultStore();
+export const PANEL_ID = 'stack-panel';
 
+/**
+ * Three modals of different kinds, stacked — and the keyboard is the point.
+ *
+ * Each one is rendered **inside** the one below it, which is not a contrivance: a dialog in the
+ * top layer swallows every click outside itself, so anything that opens a second modal has to
+ * live in the first one's `render`. Every event raised in the inner dialog therefore bubbles
+ * through the outer ones, and the library scopes them back.
+ *
+ * All three declare `Enter` with a different meaning. Only the one in front may hear it.
+ */
 export function StackedModalsExample() {
-  const { result } = useStore(resultStore);
+  const [log, setLog] = useState<string[]>([]);
+  const [counts, setCounts] = useState({ panel: 0, middle: 0, inner: 0 });
 
-  const innerModal = useMessageModal<void, 'close'>({
-    id: 'inner-modal',
+  const record = (entry: string) => {
+    setLog((previous) => {
+      return [...previous.slice(-4), entry];
+    });
+  };
+
+  const bump = (level: 'panel' | 'middle' | 'inner') => {
+    setCounts((previous) => {
+      return { ...previous, [level]: previous[level] + 1 };
+    });
+  };
+
+  const inner = useMessageModal<void, 'ack'>({
+    id: 'stack-inner',
+    ariaLabel: 'Level 3',
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="success" sx={{ mb: 0 }} />
-            <Typography variant="h6">Inner Modal (Level 3)</Typography>
+            <Typography variant="h6">Level 3 — message modal</Typography>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.Heading>Deepest Level</Shared.Heading>
-            <Shared.Message>This is the innermost modal at z-index level 3.</Shared.Message>
-            <Shared.Hint>Notice how each modal stacks on top of the previous one.</Shared.Hint>
+            <Shared.Message>
+              Press <kbd>Enter</kbd>: only this level counts it. Press <kbd>Escape</kbd>: only this
+              level closes.
+            </Shared.Message>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
-              Close
-            </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
-      );
-    },
-  });
-
-  const middleModal = useMessageModal<void, 'close'>({
-    id: 'middle-modal',
-    render: ({ action }) => {
-      return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon type="info" sx={{ mb: 0 }} />
-            <Typography variant="h6">Middle Modal (Level 2)</Typography>
-          </MessageModal.Header>
-          <MessageModal.Content>
-            <Shared.Heading>Middle Level</Shared.Heading>
-            <Shared.Message>This modal is at z-index level 2.</Shared.Message>
             <Shared.Button
               variant="contained"
-              color="success"
-              onClick={async () => {
-                await innerModal.open();
-              }}
+              {...action('ack', {
+                focusOnOpen: true,
+                hotkey: Key.Enter,
+                onAction: (close) => {
+                  bump('inner');
+                  close();
+                },
+              })}
             >
-              Open Inner Modal
-            </Shared.Button>
-          </MessageModal.Content>
-          <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
-              Close
+              Acknowledge ⏎
             </Shared.Button>
           </MessageModal.Footer>
         </MessageModal.DefaultLayout>
       );
     },
+    onClose: (result) => {
+      record(`level 3 closed: ${result.reason}`);
+    },
   });
 
-  const outerSlideModal = useSlideModal<void, 'close'>({
-    id: 'outer-slide',
+  const middle = useMessageModal<void, 'save'>({
+    id: 'stack-middle',
+    ariaLabel: 'Level 2',
+    render: ({ action }) => {
+      return (
+        <MessageModal.DefaultLayout>
+          <MessageModal.Header>
+            <Typography variant="h6">Level 2 — modal</Typography>
+          </MessageModal.Header>
+          <MessageModal.Content>
+            <Shared.Message>
+              <kbd>Enter</kbd> here means <em>save</em>. While level 3 is open it means something
+              else, and this one must not hear it.
+            </Shared.Message>
+          </MessageModal.Content>
+          <MessageModal.Footer>
+            <Shared.Button
+              variant="outlined"
+              onClick={async () => {
+                await inner.open();
+              }}
+            >
+              Open level 3
+            </Shared.Button>
+            <Shared.Button
+              variant="contained"
+              {...action('save', {
+                hotkey: Key.Enter,
+                onAction: (close) => {
+                  bump('middle');
+                  close();
+                },
+              })}
+            >
+              Save ⏎
+            </Shared.Button>
+          </MessageModal.Footer>
+          {/* Rendered here, inside level 2 — which is what makes the nesting real. */}
+          {inner.Modal}
+        </MessageModal.DefaultLayout>
+      );
+    },
+    onClose: (result) => {
+      record(`level 2 closed: ${result.reason}`);
+    },
+  });
+
+  const panel = useSlideModal<void, 'close'>({
+    id: PANEL_ID,
     direction: 'right',
+    ariaLabel: 'Level 1',
     render: ({ direction, action }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
-            <SlideModal.Title>Outer Panel (Level 1)</SlideModal.Title>
+            <SlideModal.Title>Level 1 — slide panel</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Shared.Heading>Outer Level</Shared.Heading>
-              <Shared.Message>This is the outermost slide panel at z-index level 1.</Shared.Message>
+            <Stack sx={{ gap: 2 }}>
+              <Shared.Message>
+                Open the levels above, then press <kbd>Escape</kbd> three times. One press closes
+                one modal, front to back — the counters below say which level heard what.
+              </Shared.Message>
               <Shared.Button
                 variant="contained"
-                color="info"
                 onClick={async () => {
-                  await middleModal.open();
+                  await middle.open();
                 }}
               >
-                Open Middle Modal
+                Open level 2
               </Shared.Button>
-            </Box>
+            </Stack>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...action('close')}>
-              Close Panel
+            <Shared.Button
+              variant="outlined"
+              {...action('close', {
+                hotkey: Key.Enter,
+                onAction: (close) => {
+                  bump('panel');
+                  close();
+                },
+              })}
+            >
+              Close panel ⏎
             </Shared.Button>
           </SlideModal.Footer>
+          {middle.Modal}
         </SlideModal.DefaultLayout>
       );
+    },
+    onClose: (result) => {
+      record(`level 1 closed: ${result.reason}`);
     },
   });
 
   return (
-    <ExampleLayout
-      result={result}
-      modals={
-        <>
-          {innerModal.Modal}
-          {middleModal.Modal}
-          {outerSlideModal.Modal}
-        </>
-      }
-    >
-      <Shared.Button
-        variant="contained"
-        size="small"
-        onClick={async () => {
-          await outerSlideModal.open();
-          const [, closeResult] = await outerSlideModal.waitForClose();
-          resultStore.setResult(`Outer panel closed: ${closeResult?.reason ?? 'unknown'}`);
-        }}
-      >
-        Start Stack Demo
-      </Shared.Button>
+    <ExampleLayout result={log.at(-1) ?? null} modals={panel.Modal}>
+      <Stack sx={{ gap: 2, width: '100%' }}>
+        <Shared.Button
+          variant="contained"
+          size="small"
+          onClick={async () => {
+            setLog([]);
+            setCounts({ panel: 0, middle: 0, inner: 0 });
+            await panel.open();
+          }}
+        >
+          Start the stack
+        </Shared.Button>
+
+        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+          <Chip size="small" label={`Enter heard by level 1: ${String(counts.panel)}`} />
+          <Chip size="small" label={`level 2: ${String(counts.middle)}`} />
+          <Chip size="small" label={`level 3: ${String(counts.inner)}`} />
+        </Stack>
+
+        <Box
+          sx={{
+            minHeight: 96,
+            p: 1.5,
+            borderRadius: 1,
+            border: 1,
+            borderColor: 'divider',
+            fontFamily: 'monospace',
+            fontSize: '0.78rem',
+            color: 'text.secondary',
+          }}
+        >
+          {log.length === 0 ? (
+            <em>Nothing closed yet.</em>
+          ) : (
+            log.map((entry, index) => {
+              return <div key={`${entry}-${String(index)}`}>{entry}</div>;
+            })
+          )}
+        </Box>
+      </Stack>
     </ExampleLayout>
   );
 }

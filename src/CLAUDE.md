@@ -165,8 +165,9 @@ declare fires at every level it passes.
 ### Opening focus
 
 `action(reason, { focusOnOpen: true })` emits `data-focus-on-open`, and `useFocusManagement`
-focuses that button once the phase reaches `'open'`, then remembers it as the restore target for a
-failed action. It is not React's `autoFocus`: React does not put the native `autofocus` attribute
+focuses that button once the phase reaches `'open'`. The restore target after a failed action is
+_not_ that button by default: the hook captures whoever held focus when the action started — the
+retry belongs to the button that was pressed — and falls back to the claimed one. It is not React's `autoFocus`: React does not put the native `autofocus` attribute
 in the DOM (probed, not assumed), and `showModal()`'s focusing steps read exactly that attribute —
 so the library applies the focus itself, after the dialog is actually open.
 

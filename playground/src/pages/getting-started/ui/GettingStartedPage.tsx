@@ -4,17 +4,9 @@ import {
   AsyncOpenExample,
 } from '@/pages/getting-started/examples/async-open';
 import {
-  MODAL_ID as CONTENT_HELPERS_ID,
-  ContentHelpersExample,
-} from '@/pages/getting-started/examples/content-helpers';
-import {
   MODAL_ID as NO_TRANSITION_MESSAGE_ID,
   NoTransitionMessageExample,
 } from '@/pages/getting-started/examples/no-transition-message';
-import {
-  MODAL_ID as NO_TRANSITION_SLIDE_ID,
-  NoTransitionSlideExample,
-} from '@/pages/getting-started/examples/no-transition-slide';
 import {
   MODAL_ID as SIMPLE_ID,
   SimpleModalExample,
@@ -41,15 +33,7 @@ export const GettingStartedPage = () => {
             example={<SimpleModalExample />}
           />
           <ExampleCard
-            title="Content Helpers"
-            description="Composable content components for consistent modal layouts."
-            codeKey="content-helpers"
-            modalId={CONTENT_HELPERS_ID}
-            tryLabel="Open"
-            example={<ContentHelpersExample />}
-          />
-          <ExampleCard
-            title="Async Open (à la useQuery)"
+            title="Async Open"
             description="onOpen awaits a query, so open() resolves when the data is there. A warm cache opens instantly; refetching while open shows isFetching without isPreparing."
             codeKey="async-open"
             modalId={ASYNC_OPEN_ID}
@@ -71,14 +55,6 @@ export const GettingStartedPage = () => {
             modalId={NO_TRANSITION_MESSAGE_ID}
             tryLabel="Open"
             example={<NoTransitionMessageExample />}
-          />
-          <ExampleCard
-            title="Slide Panel — No Transition"
-            description="Instant open/close slide panel with animation duration set to 0."
-            codeKey="no-transition-slide"
-            modalId={NO_TRANSITION_SLIDE_ID}
-            tryLabel="Open Panel"
-            example={<NoTransitionSlideExample />}
           />
         </ExampleGrid>
       </ExampleSection>

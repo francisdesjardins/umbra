@@ -5,7 +5,6 @@ import {
   createRoute,
   createRouter,
   lazyRouteComponent,
-  redirect,
 } from '@tanstack/react-router';
 
 const rootRoute = createRootRoute({
@@ -17,11 +16,9 @@ const indexRoute = createRoute({
     return rootRoute;
   },
   path: '/',
-  beforeLoad: () => {
-    // react-router's redirect uses a special object — silence ESLint rule for it
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
-    throw redirect({ to: '/getting-started' });
-  },
+  component: lazyRouteComponent(() => {
+    return import('@/pages/home');
+  }, 'HomePage'),
 });
 
 const gettingStartedRoute = createRoute({

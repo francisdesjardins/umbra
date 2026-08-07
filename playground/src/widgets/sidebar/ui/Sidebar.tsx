@@ -61,7 +61,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
   },
   {
     label: 'Testing',
-    items: [{ path: '/stories', label: 'Test Stories', icon: ScienceIcon }],
+    items: [{ path: '/stories', label: 'Test Harnesses', icon: ScienceIcon }],
   },
 ];
 

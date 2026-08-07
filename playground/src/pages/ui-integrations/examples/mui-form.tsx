@@ -2,7 +2,6 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createImmerStore } from '@/shared/lib/immer-store';
-import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { TextField } from '@mui/material';
 import {
   asyncFulfilled,
@@ -59,7 +58,8 @@ const store = createImmerStore(formInitial, (api) => {
 export function MuiFormExample() {
   const { submitResult, values, errors } = useStore(store);
 
-  // The payload is inferred from `actions` — `defineAction<FormValues>()` is its one declaration.
+  // The payload and the reasons are declared here, once: `action('submmit')` would not compile,
+  // and the `switch` in `onClose` is exhaustive.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
     onOpen: () => {
@@ -67,7 +67,9 @@ export function MuiFormExample() {
     },
     render: ({ action, error }) => {
       return (
-        <FormModal.DefaultLayout sx={{ minWidth: 475, maxWidth: 800, maxHeight: '70vh' }}>
+        <FormModal.DefaultLayout
+          sx={{ minWidth: 'min(475px, 90vw)', maxWidth: 'min(800px, 92vw)', maxHeight: '70vh' }}
+        >
           <FormModal.Header>
             <Shared.Heading>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
@@ -126,7 +128,12 @@ export function MuiFormExample() {
                   return;
                 }
 
-                await simulateApiCall('submit form', 1000);
+                // Deterministic: this page's subject is the same hooks wearing two different
+                // UIs, and a submit that fails a third of the time makes that comparison a
+                // coin toss. The error states are demonstrated on the Modal Actions page.
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 700);
+                });
                 close(snap.values);
               })}
             >

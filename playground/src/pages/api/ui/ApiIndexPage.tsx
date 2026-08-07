@@ -16,7 +16,7 @@ import { KindBadge } from './KindBadge';
 import { RouterLink } from './RouterLink';
 
 /** Four entry points into the library, for a reader who has not decided what they need yet. */
-const START_HERE = ['useModal', 'useModalActions', 'dialogManager', 'createStore'];
+const START_HERE = ['useModal', 'useSlideModal', 'dialogManager', 'createStore'];
 
 const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
   return (

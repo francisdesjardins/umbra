@@ -18,11 +18,14 @@ const store = createImmerStore({ eventLog: [] as string[] }, ({ update }) => {
   };
 });
 
+const ALERT_ID = 'dom-events-alert';
+const PANEL_ID = 'dom-events-panel';
+
 export function DomEventsExample() {
   const { eventLog } = useStore(store);
 
   const alert = useMessageModal<void, 'ok'>({
-    id: 'dom-events-alert',
+    id: ALERT_ID,
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
@@ -43,7 +46,7 @@ export function DomEventsExample() {
   });
 
   const panel = useSlideModal<void, 'ok'>({
-    id: 'dom-events-panel',
+    id: PANEL_ID,
     direction: 'right',
     render: ({ action }) => {
       return (
@@ -65,15 +68,27 @@ export function DomEventsExample() {
   });
 
   useEffect(() => {
+    // These events fire on `document` for *every* modal on the page, whichever manager instance
+    // raised it — that is the point of them, and why an analytics listener needs no import from
+    // this library at all. The filter below is a demo concession: without it this log fills up
+    // with the modals of the cards around it. An app would not filter.
+    const OWN = new Set([ALERT_ID, PANEL_ID]);
+
     // No cast: the library augments `DocumentEventMap`, so `e.detail` is already typed.
     const onOpen = (e: DocumentEventMap['modal:open']) => {
       const { id, modalType, openedAt } = e.detail;
+      if (!OWN.has(id)) {
+        return;
+      }
       const ts = new Date(openedAt).toLocaleTimeString();
       store.addEvent(`[${ts}] modal:open  id=${id}  type=${modalType}`);
     };
 
     const onClose = (e: DocumentEventMap['modal:close']) => {
       const { id, modalType, reason, openedAt } = e.detail;
+      if (!OWN.has(id)) {
+        return;
+      }
       const duration = Date.now() - openedAt;
       const ts = new Date().toLocaleTimeString();
       store.addEvent(

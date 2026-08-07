@@ -157,8 +157,10 @@ export type ActionOptions<TData = never> = {
    * acknowledgement) and the modal opens with focus there, so `Enter` acts on the choice you
    * meant to offer.
    *
-   * It is also the button the modal returns focus to when an action fails, since that is where
-   * the retry lives.
+   * This decides where the modal *opens*. Where focus returns after a failed action is a
+   * separate question, answered by whoever ran it: the retry is under the hand of the button
+   * that was pressed, which is not necessarily this one. This is the fallback for when nothing
+   * inside the dialog held focus — an action run from the pointer, for instance.
    *
    * Two buttons declaring it is a contradiction the DOM cannot express — the first one rendered
    * wins. React does not emit the native `autofocus` attribute, so this is carried as

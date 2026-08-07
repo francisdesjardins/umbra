@@ -41,7 +41,7 @@ Grouped in the sidebar; the order is the intended reading order.
 | --------- | ------------------ | ---------------------------------------------------------- |
 | Learn     | `/getting-started` | The core open → render → close loop                        |
 | Learn     | `/modal-actions`   | Action state: `isRunning`, `error`, hotkeys                |
-| Patterns  | `/slide-modal`     | Configurator + slide-specific recipes                      |
+| Patterns  | `/slide-modal`     | The four slide shapes as presets, and the toast            |
 | Patterns  | `/advanced`        | Stacking, imperative control, outlet, events, showcases    |
 | Reference | `/ui-integrations` | MUI vs vanilla, paired by use case                         |
 | Reference | `/ui-templates`    | Copy-paste template index, MUI/Vanilla flavour toggle      |
@@ -101,7 +101,7 @@ Every page is built from the same three pieces — do not hand-roll headings or 
 
 - `ExampleSection` stamps an anchor id (`sectionSlug(title)`, override with `id`) so sections
   are deep-linkable and reachable from `SectionNav`.
-- `ExampleGrid` is the only card grid. Pass `columns={1}` for configurators and showcases.
+- `ExampleGrid` is the only card grid. Pass `columns={1}` for wide demos and showcases.
 - `PageLayout` owns the single `<h1>` on the page — the top bar deliberately does not.
 
 **`position: sticky` caveat:** no ancestor of the page content may declare `overflow` (auto or

@@ -83,6 +83,14 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
             padding: '24px !important',
             paddingTop: '24px !important',
             borderRadius: '0 !important',
+            // The highlighter theme paints its own background on the <code>, a different grey
+            // from this box's — and a background on a scroll container stays put while the
+            // content moves, so scrolling a long line sideways slid the code off its own colour
+            // onto ours. One surface, painted once, by the box that is actually scrolled.
+            background: 'transparent !important',
+            // Without this the block is only as wide as the viewport, so the background stops
+            // where the visible area does and the scrolled-in region has none at all.
+            minWidth: 'max-content',
           },
           // Wrapping has to be declared here — the highlighter puts `white-space: pre` inline
           // on the <pre> and wins otherwise. Only on `pre`/`code`: the same rule on the token

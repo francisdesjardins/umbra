@@ -61,10 +61,7 @@ export function clickHotkeyButton(root: HTMLElement, def: HotkeyDef): void {
   // Scoped to `root`'s own content: a modal opened from inside this one lives in this subtree,
   // and its buttons answer to its own hotkeys — clicking one from here would fire the action of
   // a modal that is not even in front.
-  const button = queryOwn(
-    root,
-    `[aria-keyshortcuts="${CSS.escape(formatHotkeyLabel(def))}"]`
-  );
+  const button = queryOwn(root, `[aria-keyshortcuts="${CSS.escape(formatHotkeyLabel(def))}"]`);
   button?.focus();
   button?.click();
 }

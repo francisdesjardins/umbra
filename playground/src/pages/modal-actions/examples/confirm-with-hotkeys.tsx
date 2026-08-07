@@ -2,7 +2,6 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Stack, Typography } from '@mui/material';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
@@ -32,7 +31,7 @@ export function ConfirmWithHotkeysExample() {
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Press <kbd>Enter</kbd> to confirm or <kbd>Escape</kbd> to cancel. Hotkeys are
-                configured via <code>defineAction</code> options.
+                declared on the action itself.
               </Typography>
               <Typography
                 variant="caption"
@@ -53,7 +52,12 @@ export function ConfirmWithHotkeysExample() {
               {...action('confirm', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
-                  await simulateApiCall('Confirm action');
+                  // Deterministic on purpose: this card's subject is the keyboard, and a demo
+                  // that fails a third of the time teaches the wrong thing about the key.
+                  // The random failures live on the Delete card next to it.
+                  await new Promise((resolve) => {
+                    setTimeout(resolve, 400);
+                  });
                   close();
                 },
               })}

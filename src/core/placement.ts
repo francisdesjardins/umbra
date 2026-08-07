@@ -38,9 +38,13 @@ export type DialogPlacementOptions = {
 };
 
 const CONTAINED_HOST: CSSProperties = {
-  position: 'relative',
-  width: '100%',
-  height: '100%',
+  // Absolute, not a block in the flow: the ordinary use of a contained dialog is to cover
+  // something already in its region — a detail pane over the list it belongs to — and a
+  // `height: 100%` block is laid out *after* that content, pushing it out of a clipped region
+  // the moment the dialog mounts. Overlaying is what "contained" means; displacing is not.
+  // It resolves against the sized, positioned host the placement contract already requires.
+  position: 'absolute',
+  inset: 0,
   minHeight: 0,
   // The host exists to be a containing block and nothing else. Without this it is also an
   // invisible hit target the size of its region, so everything behind it — the trigger that

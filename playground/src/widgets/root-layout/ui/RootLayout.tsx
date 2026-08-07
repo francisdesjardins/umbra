@@ -36,6 +36,11 @@ const MainContent = () => {
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
+        // A flex item defaults to `min-width: auto`, which is the *content's* minimum — so one
+        // unwrappable thing inside (a code block's longest line) stretches this box past the
+        // viewport and the whole page scrolls sideways on a phone. Every page's content must be
+        // free to shrink; what cannot shrink scrolls inside its own container instead.
+        minWidth: 0,
       }}
     >
       <Toolbar sx={{ height: 64 }} />

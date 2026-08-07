@@ -30,6 +30,7 @@ import {
   StructuralToggleHarness,
   StackedModalsHarness,
   NestedHotkeyScopeHarness,
+  ContainedOverlayHarness,
   FocusUnderAnotherModalHarness,
 } from './use-modal.story';
 
@@ -1040,5 +1041,28 @@ test.describe('focus while another modal is in front', () => {
     // user is in the modal in front, and that is not its focus to move.
     await expect(page.getByTestId('under-done')).toHaveText('1');
     await expect(page.getByTestId('over-field')).toBeFocused();
+  });
+});
+
+test.describe('a contained dialog covers its host rather than displacing it', () => {
+  test('content already in the host stays where it was when the dialog opens', async ({
+    mount,
+    page,
+  }) => {
+    // The failure this guards: the host the library renders is a `height: 100%` block, so in
+    // normal flow it is laid out *after* the content it was meant to cover — pushing that
+    // content out of a fixed-height, clipped region the moment the dialog opens. A detail pane
+    // sliding over a list is the ordinary use of contained placement, and it must not require
+    // the caller to discover that their list has to leave the flow.
+    await mount(<ContainedOverlayHarness />);
+    const rowBefore = await page.getByTestId('overlay-row').boundingBox();
+
+    await page.getByRole('button', { name: 'Open Contained' }).click();
+    await expect(page.getByTestId('overlay-is-open')).toHaveText('open');
+    await page.waitForTimeout(300);
+
+    const rowAfter = await page.getByTestId('overlay-row').boundingBox();
+    expect(rowAfter?.y, 'the row moved when the dialog opened').toBeCloseTo(rowBefore?.y ?? -1, 0);
+    await expect(page.getByTestId('overlay-row')).toBeVisible();
   });
 });

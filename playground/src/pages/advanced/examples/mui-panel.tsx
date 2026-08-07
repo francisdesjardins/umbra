@@ -29,7 +29,7 @@ import { useStore } from '@/shared/lib/use-store';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type WizardData = {
+type SetupValues = {
   name: string;
   environment: string;
   region: string;
@@ -38,7 +38,7 @@ type WizardData = {
   schedule: string;
 };
 
-const RECOMMENDED: WizardData = {
+const RECOMMENDED: SetupValues = {
   name: 'Production Export v2',
   environment: 'production',
   region: 'us-east-1',
@@ -49,9 +49,9 @@ const RECOMMENDED: WizardData = {
 
 // ── Module-level store ────────────────────────────────────────────────────
 
-type WizardState = WizardData & { step: number };
+type SetupState = SetupValues & { step: number };
 
-const wizardStore = createImmerStore<WizardState, WizardStoreMethods>(
+const setupStore = createImmerStore<SetupState, SetupStoreMethods>(
   { step: 0, ...RECOMMENDED },
   (api) => {
     return {
@@ -102,7 +102,7 @@ const wizardStore = createImmerStore<WizardState, WizardStoreMethods>(
   }
 );
 
-type WizardStoreMethods = {
+type SetupStoreMethods = {
   resetToRecommended: () => void;
   resetAll: () => void;
   setStep: (step: number) => void;
@@ -130,7 +130,7 @@ const STEP_COUNT = STEP_TITLES.length;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function isRecommended(state: WizardData): boolean {
+function isRecommended(state: SetupValues): boolean {
   return (
     state.name === RECOMMENDED.name &&
     state.environment === RECOMMENDED.environment &&
@@ -143,21 +143,21 @@ function isRecommended(state: WizardData): boolean {
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export const MODAL_ID = 'panel-modal-wizard';
+export const MODAL_ID = 'panel-modal-steps';
 
 export function MuiPanelExample() {
   const { result } = useStore(resultStore);
-  const wizard = useStore(wizardStore);
+  const setup = useStore(setupStore);
 
   // Template hooks infer the payload from `actions` too — `submit` is the only action that
-  // carries one, so `WizardData` is what this modal closes with.
-  const modal = useMessageModal<WizardData, 'back' | 'close' | 'next' | 'submit'>({
+  // carries one, so `SetupValues` is what this modal closes with.
+  const modal = useMessageModal<SetupValues, 'back' | 'close' | 'next' | 'submit'>({
     id: MODAL_ID,
     render: ({ action, error }) => {
-      const title = STEP_TITLES[wizard.step] ?? STEP_TITLES[0];
+      const title = STEP_TITLES[setup.step] ?? STEP_TITLES[0];
 
       return (
-        <PanelModal.PanelContainer sx={{ width: 600 }}>
+        <PanelModal.PanelContainer sx={{ width: 'min(600px, 92vw)' }}>
           <PanelModal.PanelHeader>
             <PanelModal.HeaderActionLayout
               content={
@@ -166,7 +166,7 @@ export function MuiPanelExample() {
                     {title}
                   </Shared.OverflownTypography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-                    Step {wizard.step + 1} of {STEP_COUNT}
+                    Step {setup.step + 1} of {STEP_COUNT}
                   </Typography>
                 </Box>
               }
@@ -175,7 +175,7 @@ export function MuiPanelExample() {
                   {/* ── "Use recommended" icon button ─────────── */}
                   <Tooltip
                     title={
-                      isRecommended(wizard)
+                      isRecommended(setup)
                         ? 'Using recommended settings'
                         : 'Apply recommended settings'
                     }
@@ -185,9 +185,9 @@ export function MuiPanelExample() {
                     <IconButton
                       size="small"
                       aria-label="Apply recommended settings"
-                      color={isRecommended(wizard) ? 'primary' : 'default'}
+                      color={isRecommended(setup) ? 'primary' : 'default'}
                       onClick={() => {
-                        wizardStore.resetToRecommended();
+                        setupStore.resetToRecommended();
                       }}
                     >
                       <AutoAwesomeIcon fontSize="small" />
@@ -197,12 +197,12 @@ export function MuiPanelExample() {
                   {/* ── "Jump to" dropdown ────────────────────── */}
                   <FormControl size="small" sx={{ minWidth: 100 }}>
                     <Select
-                      value={wizard.step}
+                      value={setup.step}
                       variant="outlined"
                       sx={{ fontSize: '0.8125rem', height: 32 }}
                       MenuProps={{ disablePortal: true }}
                       onChange={(e) => {
-                        wizardStore.setStep(e.target.value);
+                        setupStore.setStep(e.target.value);
                       }}
                     >
                       {STEP_TITLES.map((label, i) => {
@@ -235,26 +235,26 @@ export function MuiPanelExample() {
           >
             <PanelModal.PanelContent>
               {/* ── Step 1: Project Details ────────────────────── */}
-              {wizard.step === 0 && (
+              {setup.step === 0 && (
                 <Stack spacing={2.5}>
                   <Shared.Heading>Core settings</Shared.Heading>
                   <TextField
                     label="Pipeline name"
                     size="small"
                     fullWidth
-                    value={wizard.name}
+                    value={setup.name}
                     onChange={(e) => {
-                      wizardStore.setName(e.target.value);
+                      setupStore.setName(e.target.value);
                     }}
                   />
                   <FormControl size="small" fullWidth>
                     <InputLabel>Environment</InputLabel>
                     <Select
                       label="Environment"
-                      value={wizard.environment}
+                      value={setup.environment}
                       MenuProps={{ disablePortal: true }}
                       onChange={(e) => {
-                        wizardStore.setEnvironment(e.target.value);
+                        setupStore.setEnvironment(e.target.value);
                       }}
                     >
                       <MenuItem value="development">Development</MenuItem>
@@ -266,9 +266,9 @@ export function MuiPanelExample() {
                     <FormLabel>Region</FormLabel>
                     <RadioGroup
                       row
-                      value={wizard.region}
+                      value={setup.region}
                       onChange={(e) => {
-                        wizardStore.setRegion(e.target.value);
+                        setupStore.setRegion(e.target.value);
                       }}
                     >
                       <FormControlLabel
@@ -292,17 +292,17 @@ export function MuiPanelExample() {
               )}
 
               {/* ── Step 2: Permissions ────────────────────────── */}
-              {wizard.step === 1 && (
+              {setup.step === 1 && (
                 <Stack spacing={2.5}>
                   <Shared.Heading>Access control</Shared.Heading>
                   <FormControl size="small" fullWidth>
                     <InputLabel>Access level</InputLabel>
                     <Select
                       label="Access level"
-                      value={wizard.accessLevel}
+                      value={setup.accessLevel}
                       MenuProps={{ disablePortal: true }}
                       onChange={(e) => {
-                        wizardStore.setAccessLevel(e.target.value);
+                        setupStore.setAccessLevel(e.target.value);
                       }}
                     >
                       <MenuItem value="viewer">Viewer</MenuItem>
@@ -313,9 +313,9 @@ export function MuiPanelExample() {
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={wizard.notifications}
+                        checked={setup.notifications}
                         onChange={(e) => {
-                          wizardStore.setNotifications(e.target.checked);
+                          setupStore.setNotifications(e.target.checked);
                         }}
                       />
                     }
@@ -324,9 +324,9 @@ export function MuiPanelExample() {
                   <FormControl>
                     <FormLabel>Run schedule</FormLabel>
                     <RadioGroup
-                      value={wizard.schedule}
+                      value={setup.schedule}
                       onChange={(e) => {
-                        wizardStore.setSchedule(e.target.value);
+                        setupStore.setSchedule(e.target.value);
                       }}
                     >
                       <FormControlLabel
@@ -358,7 +358,7 @@ export function MuiPanelExample() {
               )}
 
               {/* ── Step 3: Review ─────────────────────────────── */}
-              {wizard.step === 2 && (
+              {setup.step === 2 && (
                 <Stack spacing={2}>
                   <Shared.Heading>Confirm changes</Shared.Heading>
                   {error && (
@@ -367,22 +367,22 @@ export function MuiPanelExample() {
                   <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Stack spacing={1}>
                       <Typography variant="body2">
-                        <strong>Name:</strong> {wizard.name}
+                        <strong>Name:</strong> {setup.name}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Environment:</strong> {wizard.environment}
+                        <strong>Environment:</strong> {setup.environment}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Region:</strong> {wizard.region}
+                        <strong>Region:</strong> {setup.region}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Access level:</strong> {wizard.accessLevel}
+                        <strong>Access level:</strong> {setup.accessLevel}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Notifications:</strong> {wizard.notifications ? 'Yes' : 'No'}
+                        <strong>Notifications:</strong> {setup.notifications ? 'Yes' : 'No'}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Schedule:</strong> {wizard.schedule}
+                        <strong>Schedule:</strong> {setup.schedule}
                       </Typography>
                     </Stack>
                   </Box>
@@ -392,25 +392,25 @@ export function MuiPanelExample() {
             </PanelModal.PanelContent>
           </Shared.OverflowContainer>
           <Divider />
-          <PanelModal.PanelFooter justify={wizard.step === 0 ? 'end' : 'space-between'}>
-            {wizard.step > 0 && (
+          <PanelModal.PanelFooter justify={setup.step === 0 ? 'end' : 'space-between'}>
+            {setup.step > 0 && (
               <Shared.Button
                 variant="outlined"
                 {...action('back', () => {
-                  wizardStore.setStep(Math.max(wizard.step - 1, 0));
+                  setupStore.setStep(Math.max(setup.step - 1, 0));
                 })}
               >
                 Back
               </Shared.Button>
             )}
-            {wizard.step === STEP_COUNT - 1 ? (
+            {setup.step === STEP_COUNT - 1 ? (
               <Shared.Button
                 variant="contained"
                 {...action('submit', {
                   hotkey: Key.Enter,
                   onAction: async (close) => {
                     await simulateApiCall('Create pipeline');
-                    const snap = wizardStore.getSnapshot();
+                    const snap = setupStore.getSnapshot();
                     close({
                       name: snap.name,
                       environment: snap.environment,
@@ -428,7 +428,7 @@ export function MuiPanelExample() {
               <Shared.Button
                 variant="contained"
                 {...action('next', () => {
-                  wizardStore.setStep(Math.min(wizard.step + 1, STEP_COUNT - 1));
+                  setupStore.setStep(Math.min(setup.step + 1, STEP_COUNT - 1));
                 })}
               >
                 Next
@@ -439,7 +439,7 @@ export function MuiPanelExample() {
       );
     },
     onClose: (r) => {
-      wizardStore.resetAll();
+      setupStore.resetAll();
       if (r.data !== undefined) {
         resultStore.setResult(
           `Submitted: ${r.data.name} (${r.data.environment}, ${r.data.region}, ${r.data.accessLevel})`

@@ -99,7 +99,7 @@
     }
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
+    "@babel/core": "^8.0.1",
     "@eslint/js": "^10.0.1",
     "@playwright/experimental-ct-react": "1.62.1",
     "@playwright/test": "1.62.1",

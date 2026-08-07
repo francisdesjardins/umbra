@@ -36,8 +36,14 @@ const ANIM_MS = 125_000;
 const SHY_MS = 420;
 const ECLIPSE_MS = 950;
 
-/** How close the pointer may get, in px, before the moon ducks out. */
-const SHY_RADIUS = 140;
+/**
+ * How close the pointer may get, in px, before the moon ducks out.
+ *
+ * Small on purpose: it should flee when you reach *for it*, not when you pass nearby. A wide
+ * radius makes it look like it is running from the whole corner of the page, and you never get
+ * to see it — the joke only lands if you almost had it.
+ */
+const SHY_RADIUS = 45;
 
 /** Grace period after arriving, so it never flees before it has finished appearing. */
 const SETTLE_MS = 2200;
@@ -215,7 +221,11 @@ export const PeekingMoon = () => {
       : `translateY(${px.toString()}px)${tilt}`;
   };
 
-  const tHide = off(size);
+  // Generous on purpose. The artwork is painted well past its own box — the glow is a circle of
+  // r=112 in a 200 viewBox, breathing to 1.035 — and the exit rotates, which widens the swept
+  // area again. Translating by exactly `size` hides the disc and leaves its halo glowing over
+  // the edge, which reads worse than not hiding at all.
+  const tHide = off(size * 1.6);
   const tPeek = off(hidden);
 
   const position = side === 'right' ? { right: 0, top: offset } : { bottom: 0, left: offset };

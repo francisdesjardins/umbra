@@ -23,7 +23,7 @@ import {
 /** Distinctive close payload — must never appear in a captured log line. */
 const SENTINEL_PAYLOAD = 'SENTINEL_PAYLOAD_9271';
 
-test.describe('useModalActions', () => {
+test.describe('actions declared by use', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
     await expect(page.getByTestId('is-open')).toHaveText('closed');
@@ -136,16 +136,22 @@ test.describe('useModalActions', () => {
     );
   });
 
-  test('focus is restored to autofocus target after a failed action', async ({ mount, page }) => {
+  test('focus returns inside the dialog after a failed action', async ({ mount, page }) => {
     await mount(<FocusRestorationHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-ctrl-focus')).toBeVisible();
     // Ok is the first button — native autofocus lands here
     await expect(page.getByTestId('ok-btn')).toBeFocused();
-    // Trigger the failing action — button becomes disabled, focus escapes the dialog
+    // The failing action disables its own button while it runs, so focus falls to the body.
     await page.getByTestId('bad-btn').click();
-    // After the action fails, focus must be restored to the autofocus target
-    await expect(page.getByTestId('ok-btn')).toBeFocused();
+    // It must come back inside the dialog — otherwise the modal has no keyboard at all. Which
+    // button it lands on is decided by who ran the action; that is pinned separately.
+    expect(
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[data-testid="modal-ctrl-focus"]');
+        return dialog?.contains(document.activeElement) ?? false;
+      })
+    ).toBe(true);
   });
 
   test('controller action hotkey matching dismissKey suppresses dismiss', async ({
@@ -529,19 +535,67 @@ test.describe('focusOnOpen', () => {
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
     await expect(page.getByTestId('foo-is-open')).toHaveText('open');
 
-    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
+    await expect
+      .poll(() => {
+        return activeTestId(page);
+      })
+      .toBe('foo-cancel');
   });
 
-  test('it is also where focus returns after an action fails', async ({ mount, page }) => {
+  test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
+    // The claimed button decides where the modal *opens*. Where it returns after a failure is
+    // a different question, answered by whoever ran the action — the retry is under their hand.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
-    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
+    await expect
+      .poll(() => {
+        return activeTestId(page);
+      })
+      .toBe('foo-cancel');
 
     await page.getByTestId('foo-confirm').click();
     await expect(page.getByTestId('foo-error')).toHaveText('Deletion failed');
     await expect(page.getByTestId('foo-attempts')).toHaveText('1');
 
-    // The claimed button, not merely "somewhere inside the dialog" — the retry lives here.
-    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
+    await expect
+      .poll(() => {
+        return activeTestId(page);
+      })
+      .toBe('foo-confirm');
+  });
+});
+
+test.describe('focus after a failed action follows the button that ran it', () => {
+  test('a different button than the opening one keeps the focus on itself', async ({
+    mount,
+    page,
+  }) => {
+    // Open (focus starts on Cancel because it claimed it), Tab to Delete, press Enter, and the
+    // action fails. The retry is on Delete — the button the user is standing on — so sending
+    // focus back to Cancel would be the modal arguing with them.
+    await mount(<FocusOnOpenHarness />);
+    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          return document.activeElement?.getAttribute('data-testid');
+        });
+      })
+      .toBe('foo-cancel');
+
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('foo-confirm')).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('foo-error')).toHaveText('Deletion failed');
+    await expect(page.getByTestId('foo-attempts')).toHaveText('1');
+
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          return document.activeElement?.getAttribute('data-testid');
+        });
+      })
+      .toBe('foo-confirm');
   });
 });

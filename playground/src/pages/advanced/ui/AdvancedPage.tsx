@@ -4,27 +4,26 @@ import {
   CosmicOverrideExample,
 } from '@/pages/advanced/examples/cosmic-override';
 import { DomEventsExample } from '@/pages/advanced/examples/dom-events';
+import {
+  LIST_ID as GROCERY_LIST_ID,
+  GroceryListExample,
+} from '@/pages/advanced/examples/grocery-list';
 import { ImperativeExample } from '@/pages/advanced/examples/imperative';
 import {
   MODAL_ID as OUTLET_DEMO_ID,
   ModalOutletExample,
 } from '@/pages/advanced/examples/modal-outlet';
 import { MODAL_ID as PANEL_MODAL_ID, MuiPanelExample } from '@/pages/advanced/examples/mui-panel';
-import {
-  MODAL_ID as PHARMACY_RX_ID,
-  PharmacyRxExample,
-} from '@/pages/advanced/examples/pharmacy-rx';
 import { ServiceLayerExample } from '@/pages/advanced/examples/service-layer';
-import { StackedModalsExample } from '@/pages/advanced/examples/stacked-modals';
 import {
-  MODAL_ID as TEXT_MODAL_ID,
-  TextMessageModalExample,
-} from '@/pages/advanced/examples/text-message-modal';
+  PANEL_ID as STACK_PANEL_ID,
+  StackedModalsExample,
+} from '@/pages/advanced/examples/stacked-modals';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SectionNav } from '@/shared/ui/SectionNav';
 
 const SECTIONS = [
-  { id: 'stacking', label: 'Stacking' },
+  { id: 'stacking', label: 'Stacking, keyboard and focus' },
   { id: 'imperative-control', label: 'Imperative control' },
   { id: 'rendering-events', label: 'Rendering & events' },
   { id: 'showcases', label: 'Showcases' },
@@ -34,20 +33,22 @@ export const AdvancedPage = () => {
   return (
     <PageLayout
       title="Advanced Patterns"
-      description="Stacking, imperative control from outside React, outlet rendering, DOM events — and two end-to-end showcases that combine them."
+      description="What a modal does once there is more than one of them: stacking and the keyboard that goes with it, control from outside React, outlet rendering, DOM events — and two showcases that combine them."
     >
       <SectionNav sections={SECTIONS} />
 
       <ExampleSection
         id="stacking"
-        title="Stacking"
-        description="Nested modals manage their own z-index. Any button that must stay clickable while a modal is open has to live inside that modal's render callback."
+        title="Stacking, keyboard and focus"
+        description="Stacked modals manage their own z-index — and their own keyboard. A modal opened from inside another renders its <dialog> in that one's subtree, so every event bubbles through the modal underneath; the library scopes them back, which is what makes one Escape close one modal and a shared hotkey fire at one level only."
       >
         <ExampleGrid columns={1}>
           <ExampleCard
-            title="Three-Level Stack"
-            description="SlideModal → MessageModal → MessageModal — automatic z-index management across nested modals."
+            title="One Escape, one modal"
+            description="Three modals of different kinds, each rendered inside the one below it — which is how stacking actually happens, since a dialog in the top layer swallows every click outside itself. All three declare Enter with a different meaning, and only the level in front hears it. Press Escape three times and watch the stack unwind one modal per press."
             codeKey="stacked-modals"
+            modalId={STACK_PANEL_ID}
+            tryLabel="Start the stack"
             example={<StackedModalsExample />}
           />
         </ExampleGrid>
@@ -64,14 +65,6 @@ export const AdvancedPage = () => {
             description="Open and close modals via dialogManager.open() / .close() — no React ref needed. Module-level createStore tracks open count across renders."
             codeKey="imperative"
             example={<ImperativeExample />}
-          />
-          <ExampleCard
-            title="Text Message Modal Builder"
-            description="createTextMessageModal — builder pattern for a constrained confirm/cancel modal. Chain setTitle, setMessage, confirm, and cancel, then open it via dialogManager.open()."
-            codeKey="text-message-modal"
-            modalId={TEXT_MODAL_ID}
-            tryLabel="Open via dialogManager"
-            example={<TextMessageModalExample />}
           />
           <ExampleCard
             title="Service Layer — the React half"
@@ -117,8 +110,16 @@ export const AdvancedPage = () => {
       >
         <ExampleGrid columns={1}>
           <ExampleCard
-            title="Wizard Panel Modal"
-            description="PanelModal template for large, content-heavy dialogs. Composable header with HeaderActionLayout — title on the left uses OverflownTypography (truncates when actions are wide), actions on the right. Wizard step navigation with a space-between footer."
+            title="One flow, end to end"
+            description="A panel that edits something, a confirm raised from inside it, an async action that fails about a third of the time, and a typed payload coming back out. The confirm is opened from inside the panel's render — not a style choice: a blocking dialog swallows every click outside itself, so a trigger that must work while a modal is open has to live in that modal's tree. Both dialogs keep their own Escape and their own Enter."
+            codeKey="grocery-list"
+            modalId={GROCERY_LIST_ID}
+            tryLabel="Open the list"
+            example={<GroceryListExample />}
+          />
+          <ExampleCard
+            title="Panel modal with steps"
+            description="A large, content-heavy dialog: a composable header whose title truncates when the actions beside it grow, step navigation in a space-between footer, and — the part worth reading — two actions that do not close the modal at all. An action is a named intent, not necessarily a dismissal."
             codeKey="mui-panel"
             modalId={PANEL_MODAL_ID}
             example={<MuiPanelExample />}
@@ -130,14 +131,6 @@ export const AdvancedPage = () => {
             modalId={COSMIC_GATE_ID}
             tryLabel="Open the gate"
             example={<CosmicOverrideExample />}
-          />
-          <ExampleCard
-            title="Pharmacy Prescription Review"
-            description="A slide panel driving nested message modals over a scoped store: async state via runAsync/safeAwait, a mutex and single-flight guard around the submit action, and createStoreContext for per-prescription isolation."
-            codeKey="pharmacy-rx"
-            modalId={PHARMACY_RX_ID}
-            tryLabel="Open Review"
-            example={<PharmacyRxExample />}
           />
         </ExampleGrid>
       </ExampleSection>

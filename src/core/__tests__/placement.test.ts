@@ -20,10 +20,12 @@ test.describe('dialogPlacement', () => {
     // `absolute` against a host the library owns is the point: the closest positioned ancestor
     // wins, so a transformed ancestor higher up cannot hijack the containing block.
     expect(dialog).toMatchObject({ position: 'absolute', inset: 0 });
+    // The host is absolute too, and that is not a detail: a block in the flow is laid out after
+    // whatever it was meant to cover, so opening the dialog would push the region's own content
+    // out of it. `inset: 0` fills the same box without taking a place in the layout.
     expect(host).toMatchObject({
-      position: 'relative',
-      width: '100%',
-      height: '100%',
+      position: 'absolute',
+      inset: 0,
       minHeight: 0,
     });
   });

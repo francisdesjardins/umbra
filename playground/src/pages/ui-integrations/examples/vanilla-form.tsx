@@ -2,7 +2,6 @@ import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as VanillaFormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createImmerStore } from '@/shared/lib/immer-store';
-import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { Button } from '@mui/material';
 import { useModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
@@ -53,8 +52,8 @@ const store = createImmerStore(INITIAL_STATE, (api) => {
 export function VanillaFormExample() {
   const { result, values, errors } = useStore(store);
 
-  // No type argument: `defineAction<FormValues>()` already said what this modal closes with,
-  // and it reaches the hook through `actions`.
+  // Same two type arguments as the MUI version above — the hooks are identical, only the markup
+  // below differs. That is the whole point of this page.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
     onOpen: () => {
@@ -62,7 +61,9 @@ export function VanillaFormExample() {
     },
     render: ({ action, error }) => {
       return (
-        <VanillaFormModal.DefaultLayout style={{ minWidth: 475, maxWidth: 800, maxHeight: '70vh' }}>
+        <VanillaFormModal.DefaultLayout
+          style={{ minWidth: 'min(475px, 90vw)', maxWidth: 'min(800px, 92vw)', maxHeight: '70vh' }}
+        >
           <VanillaFormModal.Header>
             <Shared.Heading>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
@@ -126,7 +127,12 @@ export function VanillaFormExample() {
                   return;
                 }
 
-                await simulateApiCall('submit form', 1000);
+                // Deterministic: this page's subject is the same hooks wearing two different
+                // UIs, and a submit that fails a third of the time makes that comparison a
+                // coin toss. The error states are demonstrated on the Modal Actions page.
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 700);
+                });
                 close(snap.values);
               })}
             >

@@ -1,6 +1,7 @@
 import { ThemeToggleButton } from '@/shared/ui/ThemeToggleButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
+import { Link } from '@tanstack/react-router';
 
 type TopBarProps = {
   readonly isMobile: boolean;
@@ -33,7 +34,22 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
             <MenuIcon />
           </IconButton>
         )}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        {/* The brand is the way home. Every other route is in the sidebar; the landing page is
+            not, so without this there is no way back to it. */}
+        <Box
+          component={Link}
+          to="/"
+          aria-label="Umbra — home"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            textDecoration: 'none',
+            color: 'inherit',
+            borderRadius: 1,
+            '&:hover .umbra-wordmark': { color: 'primary.main' },
+          }}
+        >
           <Box
             sx={{
               width: 32,
@@ -54,7 +70,12 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
           </Box>
           {/* Not an <h1>: the page's own title owns that, and two h1s per page leaves
               screen-reader users without a unique document heading. */}
-          <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
+          <Typography
+            className="umbra-wordmark"
+            variant="h6"
+            component="span"
+            sx={{ fontWeight: 600, transition: 'color 120ms' }}
+          >
             Umbra
           </Typography>
           <Typography

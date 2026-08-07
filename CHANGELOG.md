@@ -9,6 +9,83 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-07
+
+### Fixed — the playground was measured, and it disagreed with itself
+
+The playground is the public shop window (`francisdesjardins.ca/playground/dialog/`), and a pass
+over it with a browser rather than a type-checker turned up defects no gate could see.
+
+- **A contained dialog displaced its host's content instead of covering it.** The host the
+  library renders was a `height: 100%` block _in the flow_, so it was laid out after whatever it
+  was meant to slide over and pushed it out of a clipped region — measured at exactly the host's
+  height. It is `position: absolute; inset: 0` now: same box, no place in the layout. Pinned by
+  `contained-overlay.story.tsx`, whose first version passed and proved nothing until the harness
+  was matched to the real condition (a sibling sized `height: 100%`).
+- **Focus after a failed action went to the wrong button.** It returned to whichever button
+  claimed the opening focus, even when the user had tabbed to a different action and run _that_
+  one. The retry is under the hand of the button that was pressed, so that is where focus goes;
+  the opening button is the fallback for an action run from the pointer. Two older tests encoded
+  the previous rule and were rewritten rather than worked around.
+- **A toast that took the focus it promised not to take.** The dialog focusing steps run on
+  `show()`, not only on `showModal()` — measured: focus landed on the toast's Dismiss button
+  within 50ms, while the example's own prose claimed a non-modal dialog never receives focus.
+  The example now remembers where focus was and puts it back in `onOpen`, and says so.
+- **The mascot did not hide all the way.** Its glow is painted well past its own box (`r=112` in
+  a 200 viewBox, breathing to 1.035) and the exit rotates, so translating by exactly its size
+  left the halo burning on the edge. It also fled from 140px away — reduced to 45px, because the
+  joke only lands if you almost had it.
+- **Four dialogs overflowed a 390px screen**, and the shell let them: `main` is a flex item, so
+  its default `min-width: auto` let one unwrappable line stretch the whole page. `minWidth: 0`
+  there means no future page can reproduce it.
+- **The code block's background stopped where its scroll started** — the highlighter painted its
+  own colour on the `<code>` while the container painted another, so scrolling a long line slid
+  the code off its own surface.
+- **Two demos failed a third of the time by design.** The hotkey card and both form cards ran
+  through the 30%-failure mock; on cards whose subject is the keyboard and the markup, that
+  teaches the wrong thing and made the smoke gate cry wolf. The random failures stay where they
+  are the subject: the Delete card on Modal Actions.
+
+### Changed — the playground as a shop window
+
+- **A landing page at `/`**, which used to redirect straight into a card grid. It says what this
+  is, how to get it (clone and read — the library is not published), links the repository, and
+  opens one live modal whose focus starts on the button the action asked for. The brand in the
+  top bar is the way back to it.
+- **The Slide Modal Configurator is gone**, replaced by four preset shapes — drawer, sheet,
+  palette, contained panel — each its own hook, each printing its own options on the panel it
+  opens. One hook whose `direction` mutates between opens is a panel that leaves by one edge and
+  returns by another; that was a demo artefact, and the shapes are what a reader came for. Each
+  is a tile showing the edge it arrives from, because a row of buttons over a line of monospace
+  reads as a status bar.
+- **~2,000 lines cut** across five examples that taught nothing the rest did not (a 702-line
+  pharmacy showcase, a 495-line Zod form, three smaller duplicates), and `zod` left the
+  playground's dependencies with them. The end-to-end flow returns as a 170-line grocery list:
+  panel → nested confirm → async action that fails → typed payload back.
+- **The dead API vocabulary is gone from what a visitor reads.** `defineAction` was rendered
+  _inside a live modal_; `useModalActions` and "controller" named a hook and a concept the
+  library has not had since actions became declared by use — in page copy, in card descriptions,
+  and in fourteen code-viewer keys.
+- **`/stories` stays raw and says so.** The harnesses are test fixtures, deliberately unstyled,
+  and dressing them up would be a promise the content does not keep; they are grouped by symptom
+  now (focus, keyboard, dismissal, layering) rather than by symbol name, and seven that had never
+  been reachable — including both of this week's features — are registered. Curated, styled demos
+  live in the sections instead.
+- **The corner toast pauses on focus as well as hover**, which is what WCAG 2.2.1 asks for once a
+  toast carries anything actionable, and its doc says what changes when it does.
+- **The result panel and the vanilla disabled button stopped being fuchsia** — both were literals
+  left over from the palette before the mascot's, sitting inside amber borders. They derive from
+  the palette now, so they cannot drift again.
+
+### Changed — hooks give their DOM policy back to the core
+
+`use-focus-management` had accumulated decisions that are not React's: which button claimed the
+opening focus, who ran the action that just settled, where focus goes back, and what to do when
+the answer refuses focus. They are `core/focus-policy.ts` now — four plain functions over a
+`<dialog>` — and the hook is left with scheduling. A second binding (Solid is coming) calls the
+same functions at its own moments instead of re-deriving them, which is the only way the two can
+stay in agreement.
+
 ## 2026-08-06
 
 ### Fixed
