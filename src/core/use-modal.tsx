@@ -191,6 +191,7 @@ export function useModal<TData = void, TReason extends string = string>(
       disabled: actionSnap.isRunning || (opts?.disabled ?? false),
       'aria-busy': state.isRunning,
       ...(hotkey !== undefined && { 'aria-keyshortcuts': formatHotkeyLabel(hotkey) }),
+      ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };
 

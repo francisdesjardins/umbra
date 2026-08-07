@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react';
+import { queryOwn } from '../utils/dialog-scope.js';
 import type { FocusManagementOptions, ModalHookContext } from './hook-types.js';
 
+/** The marker an action sets with `focusOnOpen` — see `ActionButtonProps`. */
+const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
+
 /**
- * Tracks the native autofocus target and restores focus after a failed action.
+ * Decides where a modal's focus starts, and puts it back after a failed action.
  *
- * - Captures the focused element once the dialog is fully open (the native autofocus target).
+ * - Hands the opening focus to an action that asked for it (`focusOnOpen`), or captures
+ *   whatever the browser focused once the dialog is fully open.
  * - Clears the captured element when the modal closes so the next open starts fresh.
  * - Subscribes directly to the action state changes to detect the isRunning → false
  *   transition, then restores focus unconditionally (covers both async focus-escape and
@@ -37,11 +42,19 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
       return;
     }
 
-    // Capture the native-autofocus target once the dialog is fully open.
-    // Reading document.activeElement is reliable here — showModal() fires
-    // autofocus synchronously before effects run.
+    // Settle the opening focus once the dialog is fully open, and remember where it landed —
+    // that is also where a failed action sends it back to.
     if (phase === 'open' && defaultFocusRef.current === null) {
       const dialog = getDialog();
+      // An action that asked for the opening focus takes it from whatever `showModal()` picked.
+      // Scoped to this dialog's own content: a modal opened from inside this one renders its
+      // `<dialog>` in this subtree, and its buttons are not ours to focus.
+      const claimed = dialog ? queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR) : null;
+      if (claimed) {
+        claimed.focus();
+      }
+      // Reading document.activeElement is reliable here — showModal() fires
+      // autofocus synchronously before effects run.
       const active = document.activeElement;
       if (dialog && active instanceof HTMLElement && active !== dialog && dialog.contains(active)) {
         defaultFocusRef.current = active;

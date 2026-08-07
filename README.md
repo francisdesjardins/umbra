@@ -37,7 +37,8 @@ enforced by a test that walks the root's import graph, not by convention.
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
 - **Go-style `waitForClose()`** — `const [err, result] = await modal.waitForClose()`
-- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, loading state and veto included
+- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, loading state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
+- **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
 - **Zero runtime dependencies** — `react` and `react-dom` are _optional_ peers, needed only by `./react`
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
@@ -191,7 +192,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 The library ships no UI components. Reference implementations for **MUI** and **vanilla HTML/CSS** are available in `playground/src/entities/modal-template/ui/`. Copy them into your project or write your own.
 
-> **If you write a custom button wrapper**, you must forward `aria-keyshortcuts` onto the underlying `<button>` element. Action hotkeys dispatch by querying `[aria-keyshortcuts]` in the DOM — dropping the prop causes `Enter`/`Escape` shortcuts to silently break.
+> **If you write a custom button wrapper**, you must forward `aria-keyshortcuts` and `data-focus-on-open` onto the underlying `<button>` element. Action hotkeys dispatch by querying `[aria-keyshortcuts]` in the DOM, and `focusOnOpen` finds its button by `[data-focus-on-open]` — dropping either prop makes the feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards both.
 
 ## ◐ Debug Logging
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { isOwnEventTarget } from '../utils/dialog-scope.js';
 import { canDismiss } from '../utils/dismiss-gate.js';
 import { clickHotkeyButton, matchesHotkey } from '../utils/hotkey-utils.js';
 import { Key } from '../utils/keys.js';
@@ -68,6 +69,13 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // A modal opened from inside this one renders its `<dialog>` in this subtree, so its
+      // keydowns bubble through here. They are not ours: without this, one Escape unwinds the
+      // whole stack at once and a key both modals declare fires at every level it passes.
+      if (!isOwnEventTarget(dialog, event.target)) {
+        return;
+      }
+
       // Not gated on `isPreparing`: action buttons render from the moment the phase leaves
       // `'closed'` and stay clickable, and a hotkey is the same trigger as its button.
       // `dismissWhilePreparing` governs dismissal, below — a separate question.

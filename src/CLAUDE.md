@@ -155,6 +155,21 @@ render: ({ action }) => (
 
 Utilities: `matchesHotkey()` + `formatHotkeyLabel()` ([utils/hotkey-utils.ts](utils/hotkey-utils.ts)), `Key` constants ([utils/keys.ts](utils/keys.ts)).
 
+**Scoped to the declaring dialog** ([utils/dialog-scope.ts](utils/dialog-scope.ts)). A modal opened
+from inside another renders its `<dialog>` in that one's subtree — the documented way to stack,
+since the top layer swallows outside clicks — so its events bubble through every modal underneath.
+`isOwnEventTarget` drops those at the keydown listener and `queryOwn` keeps dispatch off a nested
+dialog's buttons. Without them one Escape unwinds the whole stack and a key two modals both
+declare fires at every level it passes.
+
+### Opening focus
+
+`action(reason, { focusOnOpen: true })` emits `data-focus-on-open`, and `useFocusManagement`
+focuses that button once the phase reaches `'open'`, then remembers it as the restore target for a
+failed action. It is not React's `autoFocus`: React does not put the native `autofocus` attribute
+in the DOM (probed, not assumed), and `showModal()`'s focusing steps read exactly that attribute —
+so the library applies the focus itself, after the dialog is actually open.
+
 **Letter case is not significant.** `Key.S` is `'s'` (what `KeyboardEvent.key` reports without Shift), but the browser reports `'S'` while Shift is held — so `matchesHotkey` compares single-character keys case-insensitively and the modifier list does the discriminating. `'Shift+s'` and `'Shift+S'` are one hotkey, and CapsLock cannot change which one fires. `formatHotkeyLabel()` is the canonical form: it is what reaches the DOM as `aria-keyshortcuts`, and `dismissKeyIsOwnedByAction` compares labels rather than raw strings so the three agree by construction.
 
 ## Type System

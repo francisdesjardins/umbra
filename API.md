@@ -79,17 +79,44 @@ its own reason.
 
 `ActionOptions`:
 
-| Option     | Type                         | Description                                                                |
-| ---------- | ---------------------------- | -------------------------------------------------------------------------- |
-| `onAction` | `(close) => void \| Promise` | What the action does. Omit to auto-close with the reason                   |
-| `onClick`  | `(event) => void`            | Runs **first**; call `preventDefault()` to veto the action                 |
-| `disabled` | `boolean`                    | **Or**-ed with the action's own reasons — it can add one, never remove one |
-| `type`     | `'button' \| 'submit'`       | Default `'button'`, so a spread is safe inside a `<form>`                  |
-| `hotkey`   | `HotkeyDef`                  | Keyboard shortcut, dispatched by clicking the button                       |
+| Option        | Type                         | Description                                                                |
+| ------------- | ---------------------------- | -------------------------------------------------------------------------- |
+| `onAction`    | `(close) => void \| Promise` | What the action does. Omit to auto-close with the reason                   |
+| `onClick`     | `(event) => void`            | Runs **first**; call `preventDefault()` to veto the action                 |
+| `disabled`    | `boolean`                    | **Or**-ed with the action's own reasons — it can add one, never remove one |
+| `type`        | `'button' \| 'submit'`       | Default `'button'`, so a spread is safe inside a `<form>`                  |
+| `hotkey`      | `HotkeyDef`                  | Keyboard shortcut, dispatched by clicking the button                       |
+| `focusOnOpen` | `boolean`                    | Take the modal's opening focus instead of the first focusable element      |
 
-Returned props: `{ type, onClick, loading, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'? }`.
+Returned props: `{ type, onClick, loading, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'?, 'data-focus-on-open'? }`.
 `loading` is this action alone; `disabled` is true while **any** action runs, which is what stops
 a double click submitting twice.
+
+### Opening focus
+
+`showModal()` focuses the first thing it can find, which for a form is its first input — rarely
+what a confirmation dialog wants, and never what a destructive one wants. `focusOnOpen` moves the
+starting point to the button you meant to offer:
+
+```tsx
+render: ({ action }) => (
+  <>
+    <input name="reason" />
+    <button {...action('cancel', { focusOnOpen: true })}>Cancel</button>
+    <button {...action('delete', { hotkey: Key.Enter, onAction: remove })}>Delete</button>
+  </>
+);
+```
+
+It is also where focus returns when an action fails, since that is where the retry lives. Two
+buttons declaring it is a contradiction the DOM cannot express — the first one rendered wins.
+
+The prop is `data-focus-on-open`, not React's `autoFocus`: React does not put the native
+`autofocus` attribute in the DOM, and `showModal()`'s focusing steps read exactly that attribute,
+so the modal applies the focus itself once the dialog is open.
+
+> **Custom button wrappers must forward it**, the same way they must forward
+> `aria-keyshortcuts` — a wrapper that spreads `...rest` onto its `<button>` already does.
 
 ### Aggregated state
 

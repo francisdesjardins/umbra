@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/experimental-ct-react';
-import type { ConsoleMessage } from '@playwright/test';
+import type { ConsoleMessage, Page } from '@playwright/test';
 import {
   ActionLoggingHarness,
   ReasonSourceHarness,
@@ -17,6 +17,7 @@ import {
   ModalActionMultipleHarness,
   VanillaAriaKeyshortcutsHarness,
   BrokenAriaKeyshortcutsHarness,
+  FocusOnOpenHarness,
 } from './use-modal-actions.story';
 
 /** Distinctive close payload — must never appear in a captured log line. */
@@ -508,5 +509,39 @@ test.describe('the props an action spreads onto a button', () => {
     await page.getByTestId('veto-btn').click();
     await expect(page.getByTestId('clicks')).toHaveText('1');
     await expect(page.getByTestId('vetoed-runs')).toHaveText('0');
+  });
+});
+
+test.describe('focusOnOpen', () => {
+  const activeTestId = async (page: Page) => {
+    return page.evaluate(() => {
+      return document.activeElement?.getAttribute('data-testid') ?? document.activeElement?.tagName;
+    });
+  };
+
+  test('the marked action takes the opening focus from the first focusable', async ({
+    mount,
+    page,
+  }) => {
+    // The input is first in the DOM, so it is what showModal() picks unaided: focus landing on
+    // Cancel is the option working, not the browser agreeing by accident.
+    await mount(<FocusOnOpenHarness />);
+    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await expect(page.getByTestId('foo-is-open')).toHaveText('open');
+
+    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
+  });
+
+  test('it is also where focus returns after an action fails', async ({ mount, page }) => {
+    await mount(<FocusOnOpenHarness />);
+    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
+
+    await page.getByTestId('foo-confirm').click();
+    await expect(page.getByTestId('foo-error')).toHaveText('Deletion failed');
+    await expect(page.getByTestId('foo-attempts')).toHaveText('1');
+
+    // The claimed button, not merely "somewhere inside the dialog" — the retry lives here.
+    await expect.poll(() => {return activeTestId(page)}).toBe('foo-cancel');
   });
 });

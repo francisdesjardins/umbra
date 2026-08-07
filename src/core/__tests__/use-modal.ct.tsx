@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/experimental-ct-react';
+import type { Page } from '@playwright/test';
 import {
   ActionErrorHotkeyRetryHarness,
   BackdropHitTestHarness,
@@ -27,6 +28,8 @@ import {
   AccessibleNameHarness,
   StylingSurfaceHarness,
   StructuralToggleHarness,
+  StackedModalsHarness,
+  NestedHotkeyScopeHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -871,5 +874,123 @@ test.describe('onOpen is told when the modal goes away', () => {
 
     await page.keyboard.press('Escape');
     await expect(component.getByTestId('aborts')).toHaveText('2');
+  });
+});
+
+test.describe('modals working together', () => {
+  const openAllThree = async (page: Page) => {
+    await page.getByRole('button', { name: 'Open Panel' }).click();
+    await page.getByTestId('panel-open-middle').click();
+    await page.getByTestId('mid-open-message').click();
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+  };
+
+  test('the dismiss key unwinds the stack one modal per press, front to back', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<StackedModalsHarness />);
+    await openAllThree(page);
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('stack-open')).toHaveText('');
+
+    await expect(page.getByTestId('stack-log')).toHaveText(
+      'message:dismiss | middle:dismiss | panel:dismiss'
+    );
+  });
+
+  test('a hotkey fires on the modal in front, and only there', async ({ mount, page }) => {
+    // All three declare Enter. The message modal is in front, so its action is the only one
+    // that may run — the modals underneath hold the same key for their own meaning.
+    await mount(<StackedModalsHarness />);
+    await openAllThree(page);
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('stack-acks')).toHaveText('1');
+    await expect(page.getByTestId('stack-saves')).toHaveText('0');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+  });
+
+  test('the modal underneath keeps its own hotkey once it is back in front', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<StackedModalsHarness />);
+    await openAllThree(page);
+
+    await page.keyboard.press('Enter'); // acknowledges the message modal
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+
+    await page.keyboard.press('Enter'); // now the middle modal is in front
+    await expect(page.getByTestId('stack-saves')).toHaveText('1');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+  });
+});
+
+test.describe('a hotkey belongs to the dialog that declared it', () => {
+  test('an outer modal never dispatches through a nested dialog\u2019s button', async ({
+    mount,
+    page,
+  }) => {
+    // The nested panel's button carries the same `aria-keyshortcuts` and comes first in
+    // document order, so an unscoped lookup finds it and runs the wrong action.
+    await mount(<NestedHotkeyScopeHarness />);
+    await page.getByRole('button', { name: 'Open Outer' }).click();
+    await page.getByTestId('nested-open-inner').click();
+    await expect(page.getByTestId('nested-inner-btn')).toBeVisible();
+
+    // Focus back in the outer modal — legitimate here, a non-modal panel blocks nothing.
+    await page.getByTestId('nested-outer-btn').focus();
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByTestId('nested-fired')).toHaveText('outer');
+  });
+});
+
+test.describe('the mouse across a stack', () => {
+  test('a non-modal stands down while a modal is above it, and takes over once it is not', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<StackedModalsHarness />);
+    await page.getByRole('button', { name: 'Open Panel' }).click();
+    await page.getByTestId('panel-open-middle').click();
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+
+    // A click in the corner lands on the modal's backdrop. The panel dismisses on click-outside
+    // and nothing blocks the pointer for it — it has to stand down because it is not in front.
+    await page.mouse.click(20, 20);
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+
+    // Now it is in front, so the same click is its to act on.
+    await page.mouse.click(20, 20);
+    await expect(page.getByTestId('stack-open')).toHaveText('');
+    await expect(page.getByTestId('stack-log')).toHaveText('middle:dismiss | panel:dismiss');
+  });
+
+  test('a click on an action button reaches only the modal it belongs to', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<StackedModalsHarness />);
+    await page.getByRole('button', { name: 'Open Panel' }).click();
+    await page.getByTestId('panel-open-middle').click();
+    await page.getByTestId('mid-open-message').click();
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+
+    await page.getByTestId('msg-ack').click();
+    await expect(page.getByTestId('stack-acks')).toHaveText('1');
+    await expect(page.getByTestId('stack-saves')).toHaveText('0');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
   });
 });

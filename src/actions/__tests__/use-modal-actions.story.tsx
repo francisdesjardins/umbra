@@ -16,3 +16,4 @@ export { ActionLoggingHarness } from './use-modal-actions/action-logging.story';
 export { ReasonSourceHarness } from './use-modal-actions/reason-source.story';
 export { HotkeyWhilePreparingHarness } from './use-modal-actions/hotkey-while-preparing.story';
 export { SpreadContractHarness } from './use-modal-actions/spread-contract.story';
+export { FocusOnOpenHarness } from './use-modal-actions/focus-on-open.story';

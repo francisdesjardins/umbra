@@ -76,6 +76,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-06
 
+### Fixed — a modal answered for the modals above it
+
+Stacking is nested, not sibling: a dialog in the top layer swallows every click outside itself,
+so the documented way to open a second modal is from inside the first one's `render` — and a
+component used there brings its own `useModal` with it. The second `<dialog>` therefore renders
+in the first one's subtree, and **every event raised in it bubbles through every modal
+underneath**. Three defects followed from that, all found by building the stack the docs
+describe (non-modal slide → modal → message modal) and driving it:
+
+- **One Escape unwound the entire stack.** Each dialog's keydown listener saw the press as its
+  own, so all three dismissed on a single key. A stack now unwinds one modal per press, front to
+  back.
+- **A hotkey fired at every level it passed.** With `Enter` declared on all three, acknowledging
+  the message modal also ran the middle modal's save. A hotkey now only reaches the dialog it was
+  raised in.
+- **Hotkey dispatch could click a nested dialog's button.** `clickHotkeyButton` took the first
+  `[aria-keyshortcuts]` match in document order, which is the inner dialog's when that one is
+  rendered before the outer modal's own button — so pressing the outer modal's hotkey ran the
+  inner panel's action. Reachable because a non-modal child blocks nothing: focus can be in the
+  modal underneath it.
+
+`utils/dialog-scope.ts` is the shared answer: `isOwnEventTarget` drops an event raised in a
+nested dialog, `queryOwn` keeps a lookup inside the dialog's own content. Both are pinned by
+red-first tests — `stacked-modals.story.tsx` and `nested-hotkey-scope.story.tsx`, with the
+scoping removed to watch each one fail first.
+
+The related race was already handled: the stack sorts by `openSeq`, a monotonic counter, because
+two modals opened in one synchronous block land on the same `openedAt` millisecond. Verified,
+not changed.
+
+### Added — `focusOnOpen` on an action
+
+`action('cancel', { focusOnOpen: true })` gives that button the modal's opening focus instead of
+the first focusable element. `showModal()` focuses the first thing it finds, which for a form is
+its first input — rarely what a confirmation dialog wants, and never what a destructive one
+wants. It is also where focus returns after an action fails, since that is where the retry lives.
+
+Carried as `data-focus-on-open` rather than React's `autoFocus`, because a probe settled what the
+mechanism actually is: React 19 does **not** put the native `autofocus` attribute in the DOM, and
+`showModal()`'s focusing steps read exactly that attribute — a `<button autoFocus>` inside a
+dialog loses the focus to the first input. Emitting a lowercase `autofocus` prop instead is a
+type error the moment the props are spread onto a `<button>`. So the library applies the focus
+itself, once the dialog is open. Custom button wrappers must forward the attribute, exactly as
+they must forward `aria-keyshortcuts`.
+
 ### Documentation (a full pass over what a reader is told)
 
 - **`API.md` documented an API that no longer exists.** Three of its examples still passed

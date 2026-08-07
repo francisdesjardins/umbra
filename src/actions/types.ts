@@ -111,6 +111,13 @@ export type ActionButtonProps = {
   'aria-busy': boolean;
   /** ARIA keyboard shortcut label, set when the action declared a `hotkey`. */
   'aria-keyshortcuts'?: string | undefined;
+  /**
+   * Marks this button as the modal's opening focus, set when the action declared
+   * `focusOnOpen`. A data attribute rather than `autoFocus` because React does not put the
+   * native `autofocus` attribute in the DOM, and `showModal()`'s focusing steps read exactly
+   * that attribute — so the modal applies it itself once the dialog is open.
+   */
+  'data-focus-on-open'?: true | undefined;
 };
 
 /**
@@ -141,6 +148,24 @@ export type ActionOptions<TData = never> = {
    * path a real click does. If it collides with the modal's `dismissKey`, dismissal defers.
    */
   readonly hotkey?: HotkeyDef | undefined;
+  /**
+   * Take the modal's opening focus, instead of the first focusable element in it.
+   *
+   * `showModal()` focuses the first thing it can find, which for a form is its first input —
+   * rarely what a confirmation dialog wants, and never what a destructive one wants. Mark the
+   * button that should be the starting point (`Cancel` on a delete, `Confirm` on an
+   * acknowledgement) and the modal opens with focus there, so `Enter` acts on the choice you
+   * meant to offer.
+   *
+   * It is also the button the modal returns focus to when an action fails, since that is where
+   * the retry lives.
+   *
+   * Two buttons declaring it is a contradiction the DOM cannot express — the first one rendered
+   * wins. React does not emit the native `autofocus` attribute, so this is carried as
+   * `data-focus-on-open` and applied once the dialog is actually open; a custom button wrapper
+   * has to forward it, exactly like `aria-keyshortcuts`.
+   */
+  readonly focusOnOpen?: boolean | undefined;
 };
 
 /**
