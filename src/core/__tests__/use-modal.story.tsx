@@ -29,3 +29,4 @@ export { TransitionToggleHarness } from './use-modal/transition-toggle.story';
 export { ActionErrorHotkeyRetryHarness } from './use-modal/action-error-hotkey-retry.story.js';
 export { StackedModalsHarness } from './use-modal/stacked-modals.story.js';
 export { NestedHotkeyScopeHarness } from './use-modal/nested-hotkey-scope.story.js';
+export { FocusUnderAnotherModalHarness } from './use-modal/focus-under-another-modal.story.js';

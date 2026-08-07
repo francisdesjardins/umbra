@@ -30,6 +30,7 @@ import {
   StructuralToggleHarness,
   StackedModalsHarness,
   NestedHotkeyScopeHarness,
+  FocusUnderAnotherModalHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -992,5 +993,52 @@ test.describe('the mouse across a stack', () => {
     await expect(page.getByTestId('stack-acks')).toHaveText('1');
     await expect(page.getByTestId('stack-saves')).toHaveText('0');
     await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+  });
+});
+
+test.describe('the stack and the no-focus Escape path', () => {
+  test('one press still unwinds one modal when focus is outside the dialogs', async ({
+    mount,
+    page,
+  }) => {
+    // Focus outside an open modal is ordinary — `showModal()` has nowhere to put it when nothing
+    // in the content is focusable, and content that swaps after opening drops whatever held it.
+    // The keydown listener never hears that press; the browser's own `cancel` does, and it fires
+    // on the dialog. Nothing above suppresses it, so this is the one path where a nested stack
+    // could still collapse in a single press.
+    await mount(<StackedModalsHarness />);
+    await page.getByRole('button', { name: 'Open Panel' }).click();
+    await page.getByTestId('panel-open-middle').click();
+    await page.getByTestId('mid-open-message').click();
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+
+    await page.evaluate(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    });
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+  });
+});
+
+test.describe('focus while another modal is in front', () => {
+  test('a settling action does not pull focus out of the modal above it', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<FocusUnderAnotherModalHarness />);
+    await page.getByRole('button', { name: 'Open Underneath' }).click();
+
+    // Start the slow save, then open the second modal over it while it is still in flight.
+    await page.getByTestId('under-save').click();
+    await page.getByTestId('under-open-child').click();
+    await page.getByTestId('over-field').focus();
+    await expect(page.getByTestId('over-field')).toBeFocused();
+
+    // The save lands. The modal underneath restores focus when its action settles — but the
+    // user is in the modal in front, and that is not its focus to move.
+    await expect(page.getByTestId('under-done')).toHaveText('1');
+    await expect(page.getByTestId('over-field')).toBeFocused();
   });
 });

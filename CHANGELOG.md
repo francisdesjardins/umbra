@@ -106,6 +106,16 @@ The related race was already handled: the stack sorts by `openSeq`, a monotonic 
 two modals opened in one synchronous block land on the same `openedAt` millisecond. Verified,
 not changed.
 
+Two further hypotheses were **not** confirmed, and the tests written to chase them are kept
+because a stack scenario nobody had covered is worth pinning either way:
+
+- The browser's own `cancel` (the Escape path taken when focus is outside the dialog, which is
+  ordinary) does not bubble, so it cannot unwind a nested stack the way `keydown` did.
+- A modal restoring focus when its action settles cannot steal it from a modal opened over it:
+  focusing an element outside the topmost top-layer dialog is a silent no-op, so the browser
+  already refuses. A foreground guard written for this was reverted — it passed with and without,
+  which makes it a change with no failing case behind it.
+
 ### Added — `focusOnOpen` on an action
 
 `action('cancel', { focusOnOpen: true })` gives that button the modal's opening focus instead of
