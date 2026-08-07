@@ -3,6 +3,7 @@ import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw
 import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
 import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
+import openRequestSrc from '@/pages/advanced/examples/open-request.tsx?raw';
 import modalOutletSrc from '@/pages/advanced/examples/modal-outlet.tsx?raw';
 import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.ts?raw';
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
@@ -75,6 +76,7 @@ import storyUseModalStructuralToggleSrc from '../../../../../src/core/__tests__/
 // ── dialogManager stories ────────────────────────────────────────────────────
 import storyDmDomEventsSrc from '../../../../../src/manager/__tests__/dialog-manager/dom-events.story.tsx?raw';
 import storyDmEventSubscribeSrc from '../../../../../src/manager/__tests__/dialog-manager/event-subscribe.story.tsx?raw';
+import storyOpenRequestSrc from '../../../../../src/core/__tests__/open-request.story.tsx?raw';
 import storyDmImperativeSrc from '../../../../../src/manager/__tests__/dialog-manager/imperative.story.tsx?raw';
 import storyDmLookupSrc from '../../../../../src/manager/__tests__/dialog-manager/lookup.story.tsx?raw';
 import storyDmMultiModalSrc from '../../../../../src/manager/__tests__/dialog-manager/multi-modal.story.tsx?raw';
@@ -215,6 +217,7 @@ export const codeSamples: Record<string, string> = {
   'grocery-list': groceryListSrc,
   'mui-panel': muiPanelSrc,
   imperative: imperativeSrc,
+  'open-request': openRequestSrc,
   'modal-outlet': modalOutletSrc,
   'mui-message': muiMessageSrc,
   'mui-slide': muiSlideSrc,
@@ -277,6 +280,7 @@ export const codeSamples: Record<string, string> = {
   'story-action-broken-aria': storyActionsVanillaAriaSrc,
 
   // dialogManager stories
+  'story-open-request': storyOpenRequestSrc,
   'story-dm-imperative': storyDmImperativeSrc,
   'story-dm-event-subscribe': storyDmEventSubscribeSrc,
   'story-dm-multi-modal': storyDmMultiModalSrc,

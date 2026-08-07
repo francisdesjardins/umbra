@@ -21,6 +21,10 @@ import {
   FocusOnOpenHarness,
 } from '../../../../../src/actions/__tests__/use-modal-actions.story';
 import {
+  DeclinesEverythingHarness,
+  OpenRequestHarness,
+} from '../../../../../src/core/__tests__/open-request.story';
+import {
   NoOutletHarness,
   OutletBasicHarness,
   OutletMultiHarness,
@@ -539,6 +543,20 @@ const STORY_GROUPS: readonly StoryGroup[] = [
   {
     label: 'The manager: stacking, scroll lock, events',
     stories: [
+      {
+        title: 'An open the dialog may refuse',
+        description:
+          'requestOpen() asks instead of instructing: the request reaches the dialog’s own code, which validates the payload and the caller’s claimed source before agreeing. A refusal moves nothing — no flash, no open/close pair for anything watching. The other button uses open(), which does not ask.',
+        component: OpenRequestHarness,
+        codeKey: 'story-open-request',
+      },
+      {
+        title: 'A dialog that accepts no requests',
+        description:
+          'The same two buttons against a dialog that declared no onOpenRequest. Asking is declined and logged; instructing still opens it, because the two doors are separate.',
+        component: DeclinesEverythingHarness,
+        codeKey: 'story-open-request',
+      },
       {
         title: 'Imperative Open / Close',
         description:

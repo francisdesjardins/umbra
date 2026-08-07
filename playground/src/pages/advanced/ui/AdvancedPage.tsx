@@ -9,6 +9,7 @@ import {
   GroceryListExample,
 } from '@/pages/advanced/examples/grocery-list';
 import { ImperativeExample } from '@/pages/advanced/examples/imperative';
+import { OpenRequestExample } from '@/pages/advanced/examples/open-request';
 import {
   MODAL_ID as OUTLET_DEMO_ID,
   ModalOutletExample,
@@ -65,6 +66,12 @@ export const AdvancedPage = () => {
             description="Open and close modals via dialogManager.open() / .close() — no React ref needed. Module-level createStore tracks open count across renders."
             codeKey="imperative"
             example={<ImperativeExample />}
+          />
+          <ExampleCard
+            title="An open the dialog may refuse"
+            description="requestOpen() asks instead of instructing. The request carries an unknown payload and a caller-declared source — both crossed an ownership boundary, so the dialog validates them and decides. A refusal moves nothing: no flash, no open/close pair for anything watching. That matters for a controlled dialog, whose open prop belongs to the component that renders it and would put an instruction straight back. The second button uses open(), which does not ask."
+            codeKey="open-request"
+            example={<OpenRequestExample />}
           />
           <ExampleCard
             title="Service Layer — the React half"
