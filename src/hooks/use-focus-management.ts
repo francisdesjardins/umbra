@@ -41,7 +41,7 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
     }
 
     // Subscribe directly to the action state changes so focus restoration fires on every
-    // isRunning transition regardless of whether `useModal` re-renders. `wasRunning` and
+    // hasRunningAction transition regardless of whether `useModal` re-renders. `wasRunning` and
     // `runner` are closure-local: they only need to survive between successive check() calls
     // within one effect lifetime, not across re-runs.
     let wasRunning = false;
@@ -68,8 +68,8 @@ export function useFocusManagement(ctx: ModalHookContext, options: FocusManageme
         wasRunning = false;
         return;
       }
-      const { isRunning } = engine.aggregated();
-      if (isRunning) {
+      const { hasRunningAction } = engine.aggregated();
+      if (hasRunningAction) {
         if (!wasRunning) {
           runner = captureActionRunner(getDialog());
         }

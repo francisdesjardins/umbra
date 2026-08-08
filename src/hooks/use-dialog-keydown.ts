@@ -37,7 +37,7 @@ const actionOwnsDismissKey = (engine: ActionGate, dismissKey: HotkeyDef | false)
  * path a real click does — loading state, `disabled` and any `onClick` veto all included.
  */
 const dispatchActionHotkey = (engine: ActionGate, event: KeyboardEvent, dialog: HTMLElement) => {
-  if (engine.aggregated().isRunning) {
+  if (engine.aggregated().hasRunningAction) {
     return false;
   }
   const match = engine.matchHotkey(event);
@@ -105,7 +105,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
             phase,
             isPreparing,
             dismissWhilePreparing,
-            isActionRunning: engine.aggregated().isRunning,
+            hasRunningAction: engine.aggregated().hasRunningAction,
           })
         ) {
           return;
@@ -164,7 +164,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
           phase,
           isPreparing,
           dismissWhilePreparing,
-          isActionRunning: engine.aggregated().isRunning,
+          hasRunningAction: engine.aggregated().hasRunningAction,
         })
       ) {
         return;
@@ -202,7 +202,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
           phase,
           isPreparing,
           dismissWhilePreparing,
-          isActionRunning: engine.aggregated().isRunning,
+          hasRunningAction: engine.aggregated().hasRunningAction,
         })
       ) {
         // No claim on a press it refuses: swallowing it here is a dead keyboard for whatever

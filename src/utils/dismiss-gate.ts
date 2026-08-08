@@ -2,7 +2,7 @@ import type { ModalPhase } from '../core/types.js';
 
 /**
  * Inputs to {@link canDismiss} — everything the guard needs, with no React,
- * DOM, or action coupling. `isActionRunning` is read from the actions bridge
+ * DOM, or action coupling. `hasRunningAction` is read from the actions bridge
  * at the call site and passed in as a plain boolean.
  */
 export type DismissGate = {
@@ -13,7 +13,7 @@ export type DismissGate = {
   /** Whether dismissal is allowed while `prepare` is still executing. */
   readonly dismissWhilePreparing: boolean;
   /** Whether a modal action is currently in flight. */
-  readonly isActionRunning: boolean;
+  readonly hasRunningAction: boolean;
 };
 
 /**
@@ -34,13 +34,13 @@ export function canDismiss({
   phase,
   isPreparing,
   dismissWhilePreparing,
-  isActionRunning,
+  hasRunningAction,
 }: DismissGate): boolean {
   if (phase === 'closed' || phase === 'closing') {
     return false;
   }
   // An in-flight action owns the modal until it settles.
-  if (isActionRunning) {
+  if (hasRunningAction) {
     return false;
   }
   return dismissWhilePreparing || !isPreparing;

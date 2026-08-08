@@ -214,5 +214,11 @@ export type ActionFactory<TData = never, TReason extends string = string> = (
 
 // ── Internal ────────────────────────────────────────────────────────────────
 
-/** Per-action state, tracked by the engine. */
+/**
+ * Per-action state, tracked by the engine.
+ *
+ * `isRunning` is **this** action's, and the object it hangs on is what says so. The aggregate —
+ * true while any action on the modal runs — is `hasRunningAction` everywhere, engine included,
+ * because a bare flag has to name its own scope.
+ */
 export type ActionState = { isRunning: boolean; error: Error | null };

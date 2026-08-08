@@ -197,7 +197,7 @@ export function useModal<TData = void, TReason extends string = string>(
       'data-loading': state.isRunning,
       // Includes *this* action: a running button that stays clickable re-enters its own handler
       // on a double click, which for a submit means submitting twice.
-      disabled: actionSnap.isRunning || (opts?.disabled ?? false),
+      disabled: actionSnap.hasRunningAction || (opts?.disabled ?? false),
       'aria-busy': state.isRunning,
       ...(hotkey !== undefined && { 'aria-keyshortcuts': formatHotkeyLabel(hotkey) }),
       ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
@@ -323,7 +323,7 @@ export function useModal<TData = void, TReason extends string = string>(
         phase: snap.phase,
         isPreparing: snap.isPreparing,
         dismissWhilePreparing,
-        isActionRunning: actionSnap.isRunning,
+        hasRunningAction: actionSnap.hasRunningAction,
       })
     ) {
       return;
@@ -373,7 +373,7 @@ export function useModal<TData = void, TReason extends string = string>(
         isPreparing: snap.isPreparing,
         handle,
         action,
-        hasRunningAction: actionSnap.isRunning,
+        hasRunningAction: actionSnap.hasRunningAction,
         error: actionSnap.error,
       });
     } finally {
@@ -468,7 +468,7 @@ export function useModal<TData = void, TReason extends string = string>(
     openAndWait,
     handle,
     action,
-    hasRunningAction: actionSnap.isRunning,
+    hasRunningAction: actionSnap.hasRunningAction,
     error: actionSnap.error,
     dialogManager: dm,
   };

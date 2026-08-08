@@ -96,6 +96,13 @@ already had.
   refusing to open, and collapsing the two would hide the difference the demo exists to show.
 - **`open-await*` → `open-and-wait*`** across four story files and their harnesses, sample keys
   and page entries. Two naming schemes had grown for one method.
+- **The aggregate is `hasRunningAction` internally too.** It had three names for one concept —
+  `isRunning` in the engine, `isActionRunning` in the dismiss gate, `hasRunningAction` on the
+  public surface — and the collision was worst where it mattered: in the action factory,
+  `state.isRunning` (this action) and `actionSnap.isRunning` (any action) sat on adjacent lines,
+  spelled identically, meaning opposite things. `ActionState.isRunning` keeps its name, and the
+  type now says why: the object it hangs on states the scope, while a bare flag has to state its
+  own.
 
 Also audited and clean: no unreferenced code samples, no unmounted harnesses, no uncategorised
 public exports, no docs pointing at files that moved.

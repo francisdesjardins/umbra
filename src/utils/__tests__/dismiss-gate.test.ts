@@ -7,7 +7,7 @@ const dismissable: DismissGate = {
   phase: 'open',
   isPreparing: false,
   dismissWhilePreparing: true,
-  isActionRunning: false,
+  hasRunningAction: false,
 };
 
 test.describe('canDismiss', () => {
@@ -33,13 +33,13 @@ test.describe('canDismiss', () => {
   // ── Action controller gating ──────────────────────────────────────────────
 
   test('blocks dismissal while a controller action is in flight', () => {
-    expect(canDismiss({ ...dismissable, isActionRunning: true })).toBe(false);
+    expect(canDismiss({ ...dismissable, hasRunningAction: true })).toBe(false);
   });
 
   test('a running action outranks dismissWhilePreparing', () => {
-    expect(canDismiss({ ...dismissable, isActionRunning: true, dismissWhilePreparing: true })).toBe(
-      false
-    );
+    expect(
+      canDismiss({ ...dismissable, hasRunningAction: true, dismissWhilePreparing: true })
+    ).toBe(false);
   });
 
   // ── dismissWhilePreparing gating ────────────────────────────────────────────
@@ -70,7 +70,7 @@ test.describe('canDismiss', () => {
         phase: 'open',
         isPreparing: true,
         dismissWhilePreparing: false,
-        isActionRunning: false,
+        hasRunningAction: false,
       })
     ).toBe(false);
   });

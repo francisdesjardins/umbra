@@ -20,8 +20,12 @@ const log = createLogger('action');
 
 type EngineSnapshot = {
   readonly states: Readonly<Record<string, ActionState>>;
-  /** Pre-computed: true when any action is running. */
-  readonly isRunning: boolean;
+  /**
+   * Pre-computed: true when **any** action is running — the same flag the hook publishes as
+   * `hasRunningAction`, under the same name. Contrast `ActionState.isRunning`, which is one
+   * action's own: the object it hangs on says whose it is, this one has to say it itself.
+   */
+  readonly hasRunningAction: boolean;
   /** Pre-computed: first non-null error across all actions. */
   readonly error: Error | null;
 };
@@ -29,7 +33,7 @@ type EngineSnapshot = {
 const IDLE: ActionState = { isRunning: false, error: null };
 
 export function createActionEngine<TData, TReason extends string = string>(modalId: string) {
-  const initial: EngineSnapshot = { states: {}, isRunning: false, error: null };
+  const initial: EngineSnapshot = { states: {}, hasRunningAction: false, error: null };
 
   /** Every action the last completed render drew, against its hotkey if it declared one. */
   let declared = new Map<string, HotkeyDef | undefined>();
@@ -44,17 +48,17 @@ export function createActionEngine<TData, TReason extends string = string>(modal
     /** Write one action's state and recompute the aggregates in the same pass. */
     const setState = (reason: string, next: ActionState) => {
       const states = { ...get().states, [reason]: next };
-      let isRunning = false;
+      let hasRunningAction = false;
       let error: Error | null = null;
       for (const state of Object.values(states)) {
         if (state.isRunning) {
-          isRunning = true;
+          hasRunningAction = true;
         }
         if (error === null && state.error !== null) {
           error = state.error;
         }
       }
-      set({ states, isRunning, error });
+      set({ states, hasRunningAction, error });
     };
 
     return {
@@ -63,16 +67,16 @@ export function createActionEngine<TData, TReason extends string = string>(modal
         return get().states[reason] ?? IDLE;
       },
 
-      aggregated(): { isRunning: boolean; error: Error | null } {
-        const { isRunning, error } = get();
-        return { isRunning, error };
+      aggregated(): { hasRunningAction: boolean; error: Error | null } {
+        const { hasRunningAction, error } = get();
+        return { hasRunningAction, error };
       },
 
       async run(
         reason: TReason | 'dismiss',
         handler: (close: ActionCloseFn<TData>) => void | Promise<void>
       ): Promise<void> {
-        if (get().isRunning) {
+        if (get().hasRunningAction) {
           log.warn('Action overlap', { id: modalId, incoming: reason });
         }
         setState(reason, { isRunning: true, error: null });

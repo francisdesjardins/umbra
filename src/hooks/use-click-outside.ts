@@ -32,7 +32,7 @@ export function useClickOutside(ctx: ModalHookContext, options: ClickOutsideOpti
           phase: snap.phase,
           isPreparing: snap.isPreparing,
           dismissWhilePreparing,
-          isActionRunning: engine.aggregated().isRunning,
+          hasRunningAction: engine.aggregated().hasRunningAction,
         })
       ) {
         return;
