@@ -732,7 +732,7 @@ const outcome = await dialogManager.requestOpenAndWait(
 
 if (!outcome.accepted) {
   // 'not-registered' · 'accepts-none' · or whatever the handler passed to `refuse`
-  report(`declined: ${outcome.reason}`);
+  report(`refused: ${outcome.reason}`);
 } else {
   const [err, result] = await outcome.closed; // opt-in second half
 }
@@ -804,8 +804,8 @@ info.nonModal; // boolean (absent for unregistered)
 // Collection-level queries
 const all = dialogManager.lookup();
 all.getOpen(); // ModalInfo[] — all open, sorted by open time (bottom first)
-all.getOpen('blocking'); // ModalInfo[] — only showModal() dialogs
-all.getOpen('non-blocking'); // ModalInfo[] — only dialog.show() dialogs
+all.getOpen('modal'); // ModalInfo[] — only showModal() dialogs
+all.getOpen('non-modal'); // ModalInfo[] — only dialog.show() dialogs
 all.getClosed(); // ModalInfo[] — registered but closed
 all.getForeground(); // ModalInfo | undefined
 all.getRegisteredCount(); // total registered modals
@@ -816,7 +816,7 @@ all.isForeground('my-modal'); // true if topmost
 
 // Counts and existence checks derive from the arrays:
 all.getOpen().length; // open count
-all.getOpen('blocking').length > 0; // any blocking dialog open?
+all.getOpen('modal').length > 0; // any blocking dialog open?
 all.getClosed().length; // closed count
 ```
 
@@ -860,16 +860,16 @@ modals, so they are typed `RegisteredModalInfo` and need no narrowing at all.
 
 ### ModalLookup
 
-| Method                 | Returns                  | Description                                                           |
-| ---------------------- | ------------------------ | --------------------------------------------------------------------- |
-| `get(id)`              | `ModalInfo`              | Same as `lookup(id)` — null-object default for unregistered           |
-| `exists(id)`           | `boolean`                | Whether the modal is registered                                       |
-| `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                                      |
-| `getOpen(filter?)`     | `ModalInfo[]`            | Open modals sorted by open time; filter `'blocking'`/`'non-blocking'` |
-| `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                                |
-| `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                                   |
-| `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                                      |
-| `getRegisteredCount()` | `number`                 | Total registered modals                                               |
+| Method                 | Returns                  | Description                                                     |
+| ---------------------- | ------------------------ | --------------------------------------------------------------- |
+| `get(id)`              | `ModalInfo`              | Same as `lookup(id)` — null-object default for unregistered     |
+| `exists(id)`           | `boolean`                | Whether the modal is registered                                 |
+| `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                                |
+| `getOpen(filter?)`     | `ModalInfo[]`            | Open modals sorted by open time; filter `'modal'`/`'non-modal'` |
+| `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                          |
+| `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                             |
+| `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                                |
+| `getRegisteredCount()` | `number`                 | Total registered modals                                         |
 
 ---
 

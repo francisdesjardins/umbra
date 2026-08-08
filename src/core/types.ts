@@ -231,12 +231,12 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * shell, a deep link — and decide for yourself.
    *
    * Declaring one is what makes the dialog reachable by `dialogManager.requestOpen(id, request)`;
-   * without it, every such request is declined. `dialogManager.open(id)` is a different door and
+   * without it, every such request is refused. `dialogManager.open(id)` is a different door and
    * is unaffected either way.
    *
-   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`; decline with
+   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`; refuse with
    * `request.refuse(reason)`, so a caller using `requestOpenAndWait` learns why instead of
-   * watching nothing happen. Returning without either also declines — silently, which is the
+   * watching nothing happen. Returning without either also refuses — silently, which is the
    * right default for a request nobody agreed to and the wrong one across a boundary.
    *
    * The payload is `unknown` because it crossed that boundary: validate it before believing it.

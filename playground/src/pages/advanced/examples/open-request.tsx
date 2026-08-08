@@ -27,7 +27,7 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
  * is a dead end, which is what `request.refuse(reason)` exists to prevent.
  */
 
-/** What this dialog agrees to be opened with. Anything else is declined. */
+/** What this dialog agrees to be opened with. Anything else is refused. */
 type ArchiveRequest = { readonly room: string };
 
 function parseArchiveRequest(data: unknown): ArchiveRequest | null {
@@ -67,13 +67,13 @@ export function OpenRequestExample() {
   const modal = useMessageModal<ArchiveReceipt, 'confirm' | 'cancel'>({
     id: 'open-request-demo',
 
-    // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is declined and
+    // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is refused and
     // logged, and this dialog is reachable only by the code that renders it.
     onOpenRequest: (payload, request) => {
       const from = request.context?.source ?? 'inconnu';
       const parsed = parseArchiveRequest(payload);
 
-      // Refusal is explicit: returning would decline too, but silently, and the asker below
+      // Refusal is explicit: returning would refuse too, but silently, and the asker below
       // would have nothing to show. Acceptance needs no word — opening is the yes.
       if (!TRUSTED_SOURCES.has(from)) {
         request.refuse(`source-non-fiable:${from}`);

@@ -75,6 +75,31 @@ avoid, and the registry is keyed by string so `unknown` is the honest type anywa
 binding in the microfrontend demo implements it in six lines, which is the whole cost of the port
 growing.
 
+### Changed — breaking: one act, one word
+
+A terminology pass, mechanical rather than by eye. Four names were doing a job another name
+already had.
+
+- **`store.requestOpen` → `beginOpen`.** The deepest one, and it made a documented claim read as
+  a contradiction: `dialogManager.open(id)` is _unconditional_, and its body called a method
+  named `requestOpen` on its own store. Two different acts wore one verb — the store's is a state
+  transition nothing can refuse, the manager's asks an owner who may. The manager keeps
+  `requestOpen`, because that one really is a request. `RegisteredStore.beginOpen` is a breaking
+  change for a binding author; the vanilla binding in the microfrontend demo is the one-line
+  proof of what it costs.
+- **`lookup().getOpen('blocking' | 'non-blocking')` → `('modal' | 'non-modal')`.** A third
+  vocabulary for a distinction that already had two agreeing ones — the `nonModal` option and the
+  `data-modal-type` attribute — hiding in a single filter argument.
+- **`decline` → `refuse`** throughout the prose. The method is `refuse`; `decline` was a synonym
+  describing the same act in twelve places. The exception is deliberate and now says so in the
+  code: Billing's **Decline** button is a _user_ turning down a charge, which is not a dialog
+  refusing to open, and collapsing the two would hide the difference the demo exists to show.
+- **`open-await*` → `open-and-wait*`** across four story files and their harnesses, sample keys
+  and page entries. Two naming schemes had grown for one method.
+
+Also audited and clean: no unreferenced code samples, no unmounted harnesses, no uncategorised
+public exports, no docs pointing at files that moved.
+
 ### Removed — breaking: `loading` on an action's props
 
 `action.dom()` shipped earlier today as the door for bare `<button>` markup, and was gone by the

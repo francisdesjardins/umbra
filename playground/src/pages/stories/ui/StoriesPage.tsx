@@ -21,7 +21,7 @@ import {
   FocusOnOpenHarness,
 } from '../../../../../src/actions/__tests__/use-modal-actions.story';
 import {
-  DeclinesEverythingHarness,
+  RefusesEverythingHarness,
   OpenRequestHarness,
 } from '../../../../../src/core/__tests__/open-request.story';
 import {
@@ -54,7 +54,7 @@ import {
   StableIdentityHarness,
   StructuralToggleHarness,
   TransitionToggleHarness,
-  OpenAwaitHarness,
+  OpenAndWaitHarness,
   StackedModalsHarness,
   NestedHotkeyScopeHarness,
   FocusUnderAnotherModalHarness,
@@ -90,14 +90,14 @@ import {
   AsyncOpenMessageHarness,
   BasicMessageHarness,
   DataMessageHarness,
-  OpenAwaitMessageHarness,
+  OpenAndWaitMessageHarness,
 } from '../../../../../src/templates/__tests__/use-message-modal.story';
 import {
   BasicSlideHarness,
   DirectionSlideHarness,
   MultiDirectionSlideHarness,
   NonModalEscHotkeySlideHarness,
-  OpenAwaitSlideHarness,
+  OpenAndWaitSlideHarness,
 } from '../../../../../src/templates/__tests__/use-slide-modal.story';
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Dismiss Key Passthrough',
         description:
-          'A non-modal panel that refuses to dismiss while prepare is pending. The key it declines still reaches the page’s own Escape handler; the key it acts on does not.',
+          'A non-modal panel that refuses to dismiss while prepare is pending. The key it refuses still reaches the page’s own Escape handler; the key it acts on does not.',
         component: KeyPassthroughHarness,
         codeKey: 'story-use-modal-key-passthrough',
       },
@@ -214,8 +214,8 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Wait For Close',
         description: 'Awaits openAndWait(). Status reflects the resolved reason.',
-        component: OpenAwaitHarness,
-        codeKey: 'story-use-modal-open-await',
+        component: OpenAndWaitHarness,
+        codeKey: 'story-use-modal-open-and-wait',
       },
       {
         title: 'Non-Modal Dialog',
@@ -348,8 +348,8 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Wait For Close',
         description: 'Awaits openAndWait(). Status reflects the resolved reason.',
-        component: OpenAwaitMessageHarness,
-        codeKey: 'story-msg-open-await',
+        component: OpenAndWaitMessageHarness,
+        codeKey: 'story-msg-open-and-wait',
       },
       {
         title: 'Async Open',
@@ -383,8 +383,8 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Wait For Close',
         description: 'Slides in from the left. Awaits openAndWait() and shows resolved reason.',
-        component: OpenAwaitSlideHarness,
-        codeKey: 'story-slide-open-await',
+        component: OpenAndWaitSlideHarness,
+        codeKey: 'story-slide-open-and-wait',
       },
       {
         title: 'All Four Directions',
@@ -553,8 +553,8 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A dialog that accepts no requests',
         description:
-          'The same two buttons against a dialog that declared no onOpenRequest. Asking is declined and logged; instructing still opens it, because the two doors are separate.',
-        component: DeclinesEverythingHarness,
+          'The same two buttons against a dialog that declared no onOpenRequest. Asking is refused and logged; instructing still opens it, because the two doors are separate.',
+        component: RefusesEverythingHarness,
         codeKey: 'story-open-request',
       },
       {
@@ -581,7 +581,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Blocking Lookup Queries',
         description:
-          "lookup().getOpen('blocking') / ('non-blocking') read live state at call time, split by how the dialog was shown.",
+          "lookup().getOpen('modal') / ('non-modal') read live state at call time, split by how the dialog was shown.",
         component: BlockingLookupHarness,
         codeKey: 'story-dm-blocking-lookup',
       },

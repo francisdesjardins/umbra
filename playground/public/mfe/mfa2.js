@@ -33,7 +33,7 @@ const billing = bindDialog({
       `${from} asked to charge ${amount === null ? 'nothing usable' : `${amount}$`}`
     );
 
-    // `refuse` is the answer channel: returning would also decline, but silently — and a caller
+    // `refuse` is the answer channel: returning would refuse too, but silently — and a caller
     // across an ownership boundary that never hears why cannot tell its user anything.
     if (amount === null) {
       logTo(LOG, 'no', 'refused — the payload carries no amount');
@@ -89,6 +89,9 @@ document.getElementById('mfa2-approve').addEventListener('click', () => {
     amount: pending?.amount ?? 0,
   });
 });
+// "Decline" here is the *user* turning down a charge, and it is deliberately not the same word
+// as `request.refuse` above — that one is this dialog refusing to open at all. Two acts, two
+// verbs, and collapsing them would hide the difference the demo exists to show.
 document.getElementById('mfa2-decline').addEventListener('click', () => {
   billing.close('declined');
 });

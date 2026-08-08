@@ -205,7 +205,7 @@ export function useDialogKeydown(ctx: ModalHookContext, options: DialogKeydownOp
           isActionRunning: engine.aggregated().isRunning,
         })
       ) {
-        // No claim on a press it declines: swallowing it here is a dead keyboard for whatever
+        // No claim on a press it refuses: swallowing it here is a dead keyboard for whatever
         // else the page listens with.
         return;
       }

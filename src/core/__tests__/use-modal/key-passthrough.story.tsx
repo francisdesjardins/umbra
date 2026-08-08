@@ -7,7 +7,7 @@ import { dialogStyle } from '../story-styles.js';
  *
  * The panel's window-level listener claims the dismiss key so an underlying element cannot
  * also react to a keypress that closed the panel. The question this harness asks is what
- * happens when the panel *does not* close: the key was claimed by a dialog that then declined
+ * happens when the panel *does not* close: the key was claimed by a dialog that then refused
  * to act on it, and the app's own handler never runs.
  */
 export function KeyPassthroughHarness() {

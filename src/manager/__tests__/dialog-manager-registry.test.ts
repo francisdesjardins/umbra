@@ -36,7 +36,7 @@ function createFakeStore() {
     subscriberCount(): number {
       return listeners.size;
     },
-    requestOpen(): void {
+    beginOpen(): void {
       if (phase !== 'closed') {
         return;
       }
@@ -110,12 +110,12 @@ test.describe('registering the same id twice', () => {
     });
 
     // The displaced store is no longer anybody's modal; its transitions must be invisible.
-    first.requestOpen();
+    first.beginOpen();
     expect(events).toEqual([]);
     expect(dm.lookup().getOpen()).toEqual([]);
 
     // The store that actually holds the id still works.
-    second.requestOpen();
+    second.beginOpen();
     expect(events).toEqual([{ type: 'open', id: 'dupe' }]);
   });
 
@@ -151,7 +151,7 @@ test.describe('event emission', () => {
       });
     });
 
-    store.requestOpen();
+    store.beginOpen();
 
     // Iterating the live Set would call the just-added listener with the very event that
     // caused it to be added, which reads as a duplicate to anything counting opens.
@@ -173,7 +173,7 @@ test.describe('event emission', () => {
       unsubscribe();
     });
 
-    store.requestOpen();
+    store.beginOpen();
     store.close('confirm');
 
     expect(seen).toEqual([{ type: 'open', id: 'm' }]);
@@ -195,8 +195,8 @@ test.describe('stack ordering', () => {
     dm.register('top', top);
     dm.register('bottom', bottom);
 
-    bottom.requestOpen();
-    top.requestOpen();
+    bottom.beginOpen();
+    top.beginOpen();
 
     expect(dm.lookup().getForeground()?.id).toBe('top');
     expect(
@@ -218,12 +218,12 @@ test.describe('stack ordering', () => {
     dm.register('a', a);
     dm.register('b', b);
 
-    a.requestOpen();
-    b.requestOpen();
+    a.beginOpen();
+    b.beginOpen();
     expect(dm.lookup().getForeground()?.id).toBe('b');
 
     a.close('dismiss');
-    a.requestOpen();
+    a.beginOpen();
     expect(dm.lookup().getForeground()?.id).toBe('a');
   });
 });

@@ -50,7 +50,7 @@ function createFakeStore() {
     addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
       closeResolvers.push(resolve);
     },
-    requestOpen(): void {
+    beginOpen(): void {
       if (phase !== 'closed') {
         return;
       }
@@ -96,7 +96,7 @@ type FakeStore = ReturnType<typeof createFakeStore>;
 
 /** Drive a registered store through the full opening sequence. */
 function openFully(store: FakeStore): void {
-  store.requestOpen();
+  store.beginOpen();
   store.transition('open', true);
   store.transition('open', false);
 }
@@ -268,12 +268,12 @@ test.describe('createDialogManager', () => {
     const lookup = dm.lookup();
     expect(lookup.getOpen()).toHaveLength(2);
     expect(
-      lookup.getOpen('blocking').map((d) => {
+      lookup.getOpen('modal').map((d) => {
         return d.id;
       })
     ).toEqual(['blocking']);
     expect(
-      lookup.getOpen('non-blocking').map((d) => {
+      lookup.getOpen('non-modal').map((d) => {
         return d.id;
       })
     ).toEqual(['non-blocking']);

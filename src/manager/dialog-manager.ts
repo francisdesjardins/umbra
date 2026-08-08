@@ -25,7 +25,12 @@ import type {
  * manager reads `closeResult.reason` off it to emit close events.
  */
 type RegisteredStore = {
-  readonly requestOpen: () => void;
+  /**
+   * Start opening, unconditionally — a state transition, not a request. Named apart from
+   * {@link DialogManager.requestOpen} on purpose: that one asks an owner who may refuse, this
+   * one cannot be refused, and `open(id)` calls it precisely because it cannot.
+   */
+  readonly beginOpen: () => void;
   // A method, not a property: a modal that narrows its reasons still satisfies the port.
   close(reason: string): boolean;
   readonly subscribe: (listener: () => void) => () => void;
@@ -115,8 +120,8 @@ export function createOpenRequest(payload?: unknown, context?: OpenRequestContex
  * onOpenRequest })` in React.
  *
  * Declaring one is what makes a dialog reachable by {@link DialogManager.requestOpen}; a dialog
- * that declares none declines every such request. Nothing is opened for you: accept by calling the
- * dialog's own `open()`, decline by returning.
+ * that declares none refuses every such request. Nothing is opened for you: accept by calling the
+ * dialog's own `open()`, refuse by returning.
  *
  * The payload comes first because it is what a handler almost always wants; the whole envelope
  * follows for the ones that also care who is asking.
@@ -135,7 +140,7 @@ export type OpenRequestHandler = (
  */
 export type OpenRequestDispatch = OpenRequest & {
   /**
-   * Decline the request, with a reason the asker can act on.
+   * Refuse the request, with a reason the asker can act on.
    *
    * Refusal is explicit and acceptance is the default: a handler that opens the dialog says yes
    * by doing so, and the manager never has to observe the dialog to find out. It cannot — the
@@ -327,7 +332,7 @@ export type DialogManager = {
    * entry that appears and vanishes for anything watching. Ask instead and none of that happens:
    * the dialog's own code decides, and if it says no, nothing moved.
    *
-   * **A dialog that declares no handler declines.** Not "opens anyway" — the request reaches a
+   * **A dialog that declares no handler refuses.** Not "opens anyway" — the request reaches a
    * dialog that never agreed to be opened from outside, and the honest answer to that is no. It is
    * logged, so a caller wondering why nothing happened can find out. `open(id)` is unaffected and
    * still opens anything registered; the two doors are separate on purpose, so adding this one
@@ -355,7 +360,7 @@ export type DialogManager = {
    * {@link DialogManager.requestOpen} tells the owner and walks away. This waits for the owner's
    * decision, which is what a caller across a boundary needs: a microfrontend that asks for a
    * dialog it does not own and never learns it was refused cannot tell the user why nothing
-   * happened. The three declines the manager produces itself — no such dialog, a dialog that
+   * happened. The three refuses the manager produces itself — no such dialog, a dialog that
    * accepts no requests, an explicit `refuse` — all arrive here as a reason instead of only in
    * the console.
    *
@@ -368,7 +373,7 @@ export type DialogManager = {
    *   createOpenRequest({ amount: 240 }, { source: 'checkout' })
    * );
    * if (!outcome.accepted) {
-   *   report(`billing declined: ${outcome.reason}`);
+   *   report(`billing refused: ${outcome.reason}`);
    * } else {
    *   const [error, result] = await outcome.closed;
    * }
@@ -459,7 +464,7 @@ type RegistryEntry = {
   readonly modalType: string;
   readonly nonModal: boolean;
   /**
-   * Set when the dialog agreed to answer bridged opens. Absent means it declines them — the
+   * Set when the dialog agreed to answer bridged opens. Absent means it refuses them — the
    * registry does not open a dialog on behalf of a caller it never heard of.
    */
   readonly onOpenRequest?: OpenRequestHandler | undefined;
@@ -716,7 +721,7 @@ export function createDialogManager(): DialogManager {
       modalType,
       nonModal,
       // Spread rather than always-present: `exactOptionalPropertyTypes` distinguishes "absent"
-      // from "explicitly undefined", and absent is what "this dialog declines" is spelled as.
+      // from "explicitly undefined", and absent is what "this dialog refuses" is spelled as.
       ...(onOpenRequest !== undefined && { onOpenRequest }),
       openedAt: 0,
       openSeq: 0,
@@ -789,14 +794,14 @@ export function createDialogManager(): DialogManager {
       return snapshotStore.getSnapshot().foreground;
     },
 
-    getOpen(filter?: 'blocking' | 'non-blocking'): RegisteredModalInfo[] {
+    getOpen(filter?: 'modal' | 'non-modal'): RegisteredModalInfo[] {
       const open = snapshotStore.getSnapshot().openDialogs;
-      if (filter === 'blocking') {
+      if (filter === 'modal') {
         return open.filter((d) => {
           return !d.nonModal;
         });
       }
-      if (filter === 'non-blocking') {
+      if (filter === 'non-modal') {
         return open.filter((d) => {
           return d.nonModal;
         });
@@ -859,13 +864,13 @@ export function createDialogManager(): DialogManager {
     const source = request.context?.source;
     const entry = registry.get(id);
     if (!entry) {
-      log.warn('Open request declined (not registered)', { id, source });
+      log.warn('Open request refused (not registered)', { id, source });
       return { accepted: false, reason: 'not-registered' };
     }
     if (!entry.onOpenRequest) {
-      // Declined, and said out loud. A caller that asked a dialog which never opted in has a
+      // Refused, and said out loud. A caller that asked a dialog which never opted in has a
       // wrong assumption, and silence is what makes that assumption survive to production.
-      log.warn('Open request declined (dialog accepts none)', { id, source });
+      log.warn('Open request refused (dialog accepts none)', { id, source });
       return { accepted: false, reason: 'accepts-none' };
     }
 
@@ -911,7 +916,7 @@ export function createDialogManager(): DialogManager {
         log.warn('Open skipped (not registered)', { id });
         return;
       }
-      entry.store.requestOpen();
+      entry.store.beginOpen();
     },
 
     requestOpen(id: string, request: OpenRequest = {}): void {

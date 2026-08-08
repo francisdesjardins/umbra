@@ -13,7 +13,7 @@ const slidePanelStyle: CSSProperties = {
 /**
  * Tests slide in from left. openAndWait() resolves with the close reason.
  */
-export function OpenAwaitSlideHarness() {
+export function OpenAndWaitSlideHarness() {
   const [status, setStatus] = useState('idle');
 
   const { openAndWait, Modal } = useSlideModal<void, 'close'>({

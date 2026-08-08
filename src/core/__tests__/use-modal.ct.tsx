@@ -20,8 +20,8 @@ import {
   PortalNonModalDefaultHarness,
   PortalNonModalOptInHarness,
   PortalOptInHarness,
-  OpenAwaitHarness,
   OpenAndWaitHarness,
+  OpenAndWaitOrderingHarness,
   DismissWhilePreparingDefaultHarness,
   DismissWhilePreparingDisabledHarness,
   ReopenSettlesHarness,
@@ -93,7 +93,7 @@ test.describe('useModal', () => {
   });
 
   test('openAndWait resolves with the close reason', async ({ mount, page }) => {
-    await mount(<OpenAwaitHarness />);
+    await mount(<OpenAndWaitHarness />);
     await page.getByRole('button', { name: 'Open and Wait' }).click();
     await expect(page.getByTestId('status')).toHaveText('waiting');
     await page.getByRole('button', { name: 'Done' }).click();
@@ -101,7 +101,7 @@ test.describe('useModal', () => {
   });
 
   test('openAndWait settles even when the close lands during prepare', async ({ mount, page }) => {
-    await mount(<OpenAndWaitHarness />);
+    await mount(<OpenAndWaitOrderingHarness />);
     await page.getByTestId('open-and-wait').click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
     // Dismissed before `prepare` ever settles — the window a close resolver registered on the
@@ -642,7 +642,7 @@ test.describe('useModal — backdrop click hit testing', () => {
 });
 
 test.describe('a non-modal panel and the page keyboard', () => {
-  test('a dismiss key the panel declines to act on still reaches the app', async ({
+  test('a dismiss key the panel refuses to act on still reaches the app', async ({
     mount,
     page,
   }) => {

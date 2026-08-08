@@ -20,7 +20,7 @@ function createFakeStore() {
   const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 
   return {
-    requestOpen(): void {
+    beginOpen(): void {
       if (phase !== 'closed') {
         return;
       }
@@ -95,7 +95,7 @@ test.describe('requestOpen', () => {
     expect(events).toEqual([]);
   });
 
-  test('a dialog that declares no handler declines, and stays shut', () => {
+  test('a dialog that declares no handler refuses, and stays shut', () => {
     // Not "opens anyway". The request reached a dialog that never agreed to be opened from
     // outside, and the honest answer to that is no.
     const dm = createDialogManager();
@@ -108,7 +108,7 @@ test.describe('requestOpen', () => {
     expect(dm.lookup('never-asked').isVisible).toBe(false);
   });
 
-  test('an unregistered id is declined rather than thrown at', () => {
+  test('an unregistered id is refused rather than thrown at', () => {
     const dm = createDialogManager();
     expect(() => {
       dm.requestOpen('nobody', { context: { source: 'test' } });
@@ -200,7 +200,7 @@ test.describe('requestOpenAndWait', () => {
     expect(store.phase).toBe('closed');
   });
 
-  test('the declines the manager makes itself are reasons too, not just warnings', async () => {
+  test('the refuses the manager makes itself are reasons too, not just warnings', async () => {
     const dm = createDialogManager();
     dm.register('deaf', createFakeStore());
 
@@ -236,13 +236,13 @@ test.describe('requestOpenAndWait', () => {
     dm.register('slow', createFakeStore(), {
       onOpenRequest: async (_payload, request) => {
         await Promise.resolve();
-        request.refuse('checked-and-declined');
+        request.refuse('checked-and-refused');
       },
     });
 
     expect(await dm.requestOpenAndWait('slow')).toEqual({
       accepted: false,
-      reason: 'checked-and-declined',
+      reason: 'checked-and-refused',
     });
   });
 

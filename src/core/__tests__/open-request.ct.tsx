@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/experimental-ct-react';
-import { DeclinesEverythingHarness, OpenRequestHarness } from './open-request.story';
+import { RefusesEverythingHarness, OpenRequestHarness } from './open-request.story';
 
 /**
  * `onOpenRequest` through the React binding.
@@ -28,7 +28,7 @@ test.describe('a dialog asked to open by someone else', () => {
     await expect(component.getByTestId('accepted')).toHaveText('42');
   });
 
-  test('declines a payload it does not recognise, and nothing moves', async ({ mount, page }) => {
+  test('refuses a payload it does not recognise, and nothing moves', async ({ mount, page }) => {
     // The owner's schema is the boundary. A request that fails it is logged and dropped — this is
     // the case that makes exposing the door safe at all.
     const component = await mount(<OpenRequestHarness />);
@@ -65,8 +65,8 @@ test.describe('a dialog asked to open by someone else', () => {
 });
 
 test.describe('a dialog that declared no handler', () => {
-  test('declines every request', async ({ mount }) => {
-    const component = await mount(<DeclinesEverythingHarness />);
+  test('refuses every request', async ({ mount }) => {
+    const component = await mount(<RefusesEverythingHarness />);
 
     await component.getByTestId('ask').click();
     await component.page().waitForTimeout(SETTLED_MS);
@@ -75,7 +75,7 @@ test.describe('a dialog that declared no handler', () => {
   });
 
   test('and still opens when instructed', async ({ mount, page }) => {
-    const component = await mount(<DeclinesEverythingHarness />);
+    const component = await mount(<RefusesEverythingHarness />);
 
     await component.getByTestId('instruct').click();
 

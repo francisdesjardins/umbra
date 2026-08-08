@@ -139,7 +139,7 @@ export function useModal<TData = void, TReason extends string = string>(
     // open / resolve immediately) — it owns the state machine, so it owns the rule.
     const open = (): Promise<void> => {
       return new Promise((resolve) => {
-        store.requestOpen(resolve);
+        store.beginOpen(resolve);
       });
     };
 
@@ -153,7 +153,7 @@ export function useModal<TData = void, TReason extends string = string>(
       const closed = new Promise<AwaitedClose<TData, TReason>>((resolve) => {
         store.addCloseResolver(resolve);
       });
-      store.requestOpen();
+      store.beginOpen();
       return closed;
     };
 

@@ -87,8 +87,14 @@ export function createModalStore<TData = unknown, TReason extends string = strin
        * - `'closed'` → start opening, resolve when `prepare` completes
        * - opening in flight → join it
        * - already open, or closing → resolve now; no reopen is queued
+       *
+       * **`beginOpen`, not `requestOpen`.** This is unconditional — it starts the transition and
+       * nothing here can say no. `dialogManager.requestOpen` is a different verb for a different
+       * act: it *asks* a dialog's owner, who may refuse. One word for both would make
+       * `dialogManager.open()`, documented as unconditional, appear to request permission from
+       * its own store.
        */
-      requestOpen(onOpened?: () => void): void {
+      beginOpen(onOpened?: () => void): void {
         const { phase, isPreparing } = get();
 
         if (phase !== 'closed') {
@@ -179,7 +185,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
 
         // closeResult is retained through 'closed' so consumers (e.g. the
         // dialog manager's close event) can still read the reason after the
-        // transition; requestOpen resets it on the next open.
+        // transition; beginOpen resets it on the next open.
         set((s) => {
           return { ...s, phase: 'closed', isPreparing: false };
         });

@@ -30,7 +30,7 @@ export function bindDialog({ id, dialog, onOpenRequest, onClose }) {
     ({ get, set }) => {
       return {
         // The port the manager registers: it touches the DOM only inside these methods.
-        requestOpen() {
+        beginOpen() {
           if (get().phase !== 'closed') {
             return;
           }

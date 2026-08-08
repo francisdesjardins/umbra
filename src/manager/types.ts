@@ -75,7 +75,7 @@ export type ModalInfo = RegisteredModalInfo | UnregisteredModalInfo;
  *
  * All methods read live state at call time (imperative, not reactive).
  * Counts and existence checks are derivable from the returned arrays:
- * `getOpen().length`, `getOpen('blocking').length > 0`, `getClosed().length`.
+ * `getOpen().length`, `getOpen('modal').length > 0`, `getClosed().length`.
  */
 export type ModalLookup = {
   /** Get modal info by id. Returns null-object default for unregistered ids. */
@@ -86,10 +86,11 @@ export type ModalLookup = {
   getForeground(): RegisteredModalInfo | undefined;
   /**
    * Get currently open modals in open order, bottom of the stack first — so the index is the
-   * stack position. Optionally filter to `'blocking'` (`showModal()`) or `'non-blocking'`
-   * (`dialog.show()`) dialogs.
+   * stack position. Optionally filter to `'modal'` (`showModal()`) or `'non-modal'`
+   * (`dialog.show()`) dialogs — the same two words as the `nonModal` option and the
+   * `data-modal-type` attribute, so one distinction has one vocabulary.
    */
-  getOpen(filter?: 'blocking' | 'non-blocking'): RegisteredModalInfo[];
+  getOpen(filter?: 'modal' | 'non-modal'): RegisteredModalInfo[];
 
   // ── Per-modal queries ───────────────────────────────────────────────────
 

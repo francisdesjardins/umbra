@@ -96,8 +96,8 @@ export function BlockingLookupHarness() {
           <button
             onClick={() => {
               const q = dialogManager.lookup();
-              const blockingOpen = q.getOpen('blocking');
-              const nonBlockingOpen = q.getOpen('non-blocking');
+              const blockingOpen = q.getOpen('modal');
+              const nonBlockingOpen = q.getOpen('non-modal');
               const el = document.getElementById('lookup-result');
               if (el) {
                 el.textContent = [

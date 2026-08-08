@@ -185,7 +185,7 @@ export function CosmicOverrideExample() {
           <Typography variant="body2" sx={{ maxWidth: 460, opacity: 0.85 }}>
             The corona burning behind this panel is the browser&apos;s own <code>::backdrop</code>,
             restyled by one selector in this file — clicking it does nothing, because this modal
-            declines that dismissal. Escape still works, and Enter engages, because the action
+            refuses that dismissal. Escape still works, and Enter engages, because the action
             declared the hotkey and nothing else had to.
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>
@@ -249,7 +249,7 @@ export function CosmicOverrideExample() {
           <Typography variant="caption" sx={{ opacity: 0.8, maxWidth: 420 }}>
             Positioned <code>{String(placement.dialog.position)}</code> against a host the library
             owns, so it answers to this sector rather than the viewport and no transformed ancestor
-            can drag it away. Sized by its own content. Click-outside is declined, so it closes on
+            can drag it away. Sized by its own content. Click-outside is refused, so it closes on
             the button.
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>

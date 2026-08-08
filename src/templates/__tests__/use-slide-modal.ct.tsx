@@ -6,7 +6,7 @@ import {
   DirectionSlideHarness,
   MultiDirectionSlideHarness,
   NonModalEscHotkeySlideHarness,
-  OpenAwaitSlideHarness,
+  OpenAndWaitSlideHarness,
 } from './use-slide-modal.story';
 
 test.describe('useSlideModal', () => {
@@ -49,7 +49,7 @@ test.describe('useSlideModal', () => {
   });
 
   test('openAndWait resolves with close reason', async ({ mount, page }) => {
-    await mount(<OpenAwaitSlideHarness />);
+    await mount(<OpenAndWaitSlideHarness />);
     await page.getByRole('button', { name: 'Open and Wait' }).click();
     await expect(page.getByTestId('status')).toHaveText('waiting');
     await page.getByRole('button', { name: 'Close' }).click();

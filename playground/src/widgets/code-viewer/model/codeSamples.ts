@@ -59,7 +59,7 @@ import storyUseModalReopenSettlesSrc from '../../../../../src/core/__tests__/use
 import storyUseModalStableIdentitySrc from '../../../../../src/core/__tests__/use-modal/stable-identity.story.tsx?raw';
 import storyUseModalBackdropHitTestSrc from '../../../../../src/core/__tests__/use-modal/backdrop-hit-test.story.tsx?raw';
 import storyOutletPaintTimingSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
-import storyUseModalOpenAwaitSrc from '../../../../../src/core/__tests__/use-modal/open-await.story.tsx?raw';
+import storyUseModalOpenAndWaitSrc from '../../../../../src/core/__tests__/use-modal/open-and-wait.story.tsx?raw';
 
 // ── useModalActions stories ───────────────────────────────────────────────
 import storyActionsBasicSrc from '../../../../../src/actions/__tests__/use-modal-actions/basic-controller.story.tsx?raw';
@@ -108,7 +108,7 @@ import storyOutletNullModalSrc from '../../../../../src/core/__tests__/modal-out
 import storyMsgAsyncOpenSrc from '../../../../../src/templates/__tests__/use-message-modal/async-open-message.story.tsx?raw';
 import storyMsgBasicSrc from '../../../../../src/templates/__tests__/use-message-modal/basic-message.story.tsx?raw';
 import storyMsgDataSrc from '../../../../../src/templates/__tests__/use-message-modal/data-message.story.tsx?raw';
-import storyMsgOpenAwaitSrc from '../../../../../src/templates/__tests__/use-message-modal/open-await-message.story.tsx?raw';
+import storyMsgOpenAndWaitSrc from '../../../../../src/templates/__tests__/use-message-modal/open-and-wait-message.story.tsx?raw';
 
 // ── MUI template components ─────────────────────────────────────────────────
 import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
@@ -197,7 +197,7 @@ import storySlideBasicSrc from '../../../../../src/templates/__tests__/use-slide
 import storySlideDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/direction-slide.story.tsx?raw';
 import storySlideMultiDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
 import storySlideNonModalEscHotkeySrc from '../../../../../src/templates/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
-import storySlideOpenAwaitSrc from '../../../../../src/templates/__tests__/use-slide-modal/open-await-slide.story.tsx?raw';
+import storySlideOpenAndWaitSrc from '../../../../../src/templates/__tests__/use-slide-modal/open-and-wait-slide.story.tsx?raw';
 
 import storyFocusOnOpenSrc from '../../../../../src/actions/__tests__/use-modal-actions/focus-on-open.story.tsx?raw';
 import storyStackedModalsSrc from '../../../../../src/core/__tests__/use-modal/stacked-modals.story.tsx?raw';
@@ -243,7 +243,7 @@ export const codeSamples: Record<string, string> = {
 
   // useModal stories
   'story-use-modal-basic': storyUseModalBasicSrc,
-  'story-use-modal-open-await': storyUseModalOpenAwaitSrc,
+  'story-use-modal-open-and-wait': storyUseModalOpenAndWaitSrc,
   'story-use-modal-non-modal': storyUseModalNonModalSrc,
   'story-use-modal-non-modal-stack': storyUseModalNonModalStackSrc,
   'story-use-modal-non-modal-esc-isolation': storyUseModalNonModalEscIsolationSrc,
@@ -321,14 +321,14 @@ export const codeSamples: Record<string, string> = {
 
   // useMessageModal stories
   'story-msg-basic': storyMsgBasicSrc,
-  'story-msg-open-await': storyMsgOpenAwaitSrc,
+  'story-msg-open-and-wait': storyMsgOpenAndWaitSrc,
   'story-msg-async-open': storyMsgAsyncOpenSrc,
   'story-msg-data': storyMsgDataSrc,
 
   // useSlideModal stories
   'story-slide-basic': storySlideBasicSrc,
   'story-slide-direction': storySlideDirectionSrc,
-  'story-slide-open-await': storySlideOpenAwaitSrc,
+  'story-slide-open-and-wait': storySlideOpenAndWaitSrc,
   'story-slide-multi-direction': storySlideMultiDirectionSrc,
   'story-slide-non-modal-esc-hotkey': storySlideNonModalEscHotkeySrc,
 

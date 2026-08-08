@@ -115,8 +115,8 @@ function Caller() {
   );
 }
 
-/** The same dialog with no handler declared — every request is declined. */
-export function DeclinesEverythingHarness() {
+/** The same dialog with no handler declared — every request is refused. */
+export function RefusesEverythingHarness() {
   const info = useLookup('unasked');
   const dialogManager = useDialogManagerContext();
   const modal = useModal<void, 'ok'>({
