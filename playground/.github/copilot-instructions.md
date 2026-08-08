@@ -31,12 +31,12 @@ Reference UI in `src/entities/modal-template/ui/` — not exported from the libr
 
 ## Routing
 
-TanStack Router — routes: `/getting-started`, `/modal-actions`, `/slide-modal`, `/advanced`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Root redirects `/` → `/getting-started`. Defined in [router.tsx](../src/app/router.tsx).
+TanStack Router — routes: `/` (the landing page), `/getting-started`, `/modal-actions`, `/slide-modal`, `/advanced`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Defined in [router.tsx](../src/app/router.tsx).
 
 ## Conventions
 
 - Spacing: Use `gap`/`Stack` — vertical margin props (`mt`, `mb`, `marginTop`, `marginBottom`, `gutterBottom`) are **banned by lint**
-- `open()` / `waitForClose()` / `handle` are reference-stable — pass them straight to effects and memoized children
+- `open()` / `openAndWait()` / `handle` are reference-stable — pass them straight to effects and memoized children. Use `openAndWait()` to open and await the close in one call; there is no `waitForClose`
 - `ExampleLayout` props: `children` = action buttons, `modals` = modal portals, `result` = result string
 
 ## Testing

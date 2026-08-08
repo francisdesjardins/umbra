@@ -7,7 +7,7 @@ type FinalizableStore = Pick<ModalStore, 'getSnapshot' | 'runOnClose' | 'finaliz
 /**
  * Shared tail of every close path: close the native dialog if still open,
  * fire the user's `onClose` callback with the close result, then finalize the
- * store (resolve `waitForClose` promises, transition to `'closed'`).
+ * store (settle the close resolvers, transition to `'closed'`).
  *
  * Used by both the closing-animation path (`useDialogLifecycle`) and the
  * unmount-cleanup path (`useModal`) so the two cannot drift.

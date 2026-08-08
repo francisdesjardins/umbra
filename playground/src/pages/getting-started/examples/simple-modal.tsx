@@ -67,8 +67,7 @@ export function SimpleModalExample() {
         variant="contained"
         size="small"
         onClick={async () => {
-          await simpleModal.open();
-          const [, closeResult] = await simpleModal.waitForClose();
+          const [, closeResult] = await simpleModal.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

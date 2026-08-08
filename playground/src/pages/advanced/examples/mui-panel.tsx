@@ -450,23 +450,22 @@ export function MuiPanelExample() {
     },
   });
 
-  // ── Open modal and use waitForClose ──────────────────────────────────────
+  // ── Open the modal and await how it closed ───────────────────────────────
 
   const handleOpen = () => {
     void (async () => {
       try {
-        await modal.open();
-        const [err, closeResult] = await modal.waitForClose();
+        const [err, closeResult] = await modal.openAndWait();
         if (err !== null) {
           resultStore.setResult(`Error: ${err.message}`);
           return;
         }
         if (closeResult.data !== undefined) {
           resultStore.setResult(
-            `waitForClose → submitted: ${closeResult.data.name} (${closeResult.data.environment})`
+            `openAndWait → submitted: ${closeResult.data.name} (${closeResult.data.environment})`
           );
         } else {
-          resultStore.setResult(`waitForClose → dismissed: ${closeResult.reason}`);
+          resultStore.setResult(`openAndWait → dismissed: ${closeResult.reason}`);
         }
       } catch {
         // fire-and-forget safety net

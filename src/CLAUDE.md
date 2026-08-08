@@ -37,9 +37,9 @@ Three layers: framework-agnostic core, React binding, headless template hooks.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isVisible, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
+- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, openAndWait, isVisible, Modal, handle, dialogManager }` — `handle` = `{ close }` (the modal itself; its buttons come from the `action` factory in the render args). `openAndWait` registers the close resolver _before_ requesting the open, and that is why `addCloseResolver` is **not** public: a resolver answers the _next_ close, so one added after a close has landed waits forever, and the surface never lets a caller choose the order. The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
   - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — the `style` prop is the public lever for the box itself (the same one the template hooks pull), and styles for what is inside belong in `render`.
-- **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
+- **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`, plus the asking door: `requestOpen(id, request)` fires and forgets, `requestOpenAndWait(id, request)` returns an `OpenRequestOutcome` — refusal is explicit through `request.refuse(reason)`, acceptance is the default (the manager cannot infer it: the React binding's open is asynchronous), and the accepted branch carries the close. `RegisteredStore` gained `addCloseResolver` for that, erased at `unknown` because a callback in a parameter position is contravariant. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
 - **`DialogManagerProvider`** ([manager/dialog-manager-context.tsx](manager/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
 - **`useDialogManager`** ([manager/use-dialog-manager.ts](manager/use-dialog-manager.ts)) — Reactive hook via `useSyncExternalStore`. Returns `DialogManagerSnapshot` from nearest context or singleton.
 - **Types**: [core/types.ts](core/types.ts) — `ModalAnimation`, `ModalHandle`, `ModalRenderArgs`, `UseModalOptions`, `UseModalReturn`, `ModalPhase`, `ModalStoreSnapshot`, `GetDialog`. Also [manager/types.ts](manager/types.ts) — `LookupSnapshot`, `UseLookupOptions`. And [actions/types.ts](actions/types.ts) — `HotkeyDef`, `ActionDefinition`, `ActionButtonProps`, etc.
@@ -137,8 +137,8 @@ Declared at the action level, automatically wired — no `useHotkey` needed.
 ```typescript
 render: ({ action }) => (
   <>
-    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
-    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+    <button {...action.dom('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action.dom('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
   </>
 );
 
@@ -181,7 +181,7 @@ the concept, not editing three that describe it. The chain, rooted in [core/type
 ```
 ModalRenderArgs<TData>                ← the render-time slice:
 │                                       { isPreparing, handle, action, hasRunningAction, error }
-├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, isVisible, Modal, waitForClose,
+├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
     ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
@@ -216,7 +216,7 @@ useModal<TData, TReason>
 ├── ActionFactory<TData, TReason>      ← the `action` in the render args
 ├── createModalStore<TData, TReason>   → ModalStoreSnapshot.closeResult: CloseResult<TData, TReason>
 │                                      → setOnClose / runOnClose / addCloseResolver
-└── onClose(result: CloseResult<TData, TReason>)  ·  waitForClose(): [Error, null] | [null, CloseResult]
+└── onClose(result: CloseResult<TData, TReason>)  ·  openAndWait(): [Error, null] | [null, CloseResult]
 ```
 
 `TReason` defaults to `string`, but **declare it at every call site**
@@ -263,7 +263,7 @@ Two deliberate non-derivations:
   summarise and link to it.
 
 - `CloseResult<TData>` — `{ reason, data?: TData }`; `TData = void` makes `data` unassignable
-- `waitForClose()` — Go-style `[error, result]` tuple (`WaitForCloseResult<TData>`); the
+- `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`); the
   `[Error, null]` branch is produced by `store.abandon()`
 - `TReason` — the action names **and** the close reasons, since the reason is the identity
 - No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening
@@ -308,7 +308,7 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 - **No `useMemo`/`useCallback`/`React.memo`** — compiler handles memoization
 - **No ref writes during render** — use `useEffect`. Store objects with DOM methods taint as ref-like → use `GetDialog` getter pattern. (`createModalStore` lives in its own module — verified compiler-neutral: `useModal` compiles to the same 88 memo slots imported or colocated.)
 - **No property assignment on `useState` values** — `st.x = value` forbidden everywhere. Use closure mutations or `Map.set()` (method calls exempt).
-- `open()`, `waitForClose()` and `handle` close over the store alone, so they are built once in `useModal`'s `useState` initializer and are reference-stable — the compiler cannot memoize them for us (it treats the store as opaque), so hoisting is what makes them usable as effect deps. Everything else the hook returns is derived per render.
+- `open()`, `openAndWait()` and `handle` close over the store alone, so they are built once in `useModal`'s `useState` initializer and are reference-stable — the compiler cannot memoize them for us (it treats the store as opaque), so hoisting is what makes them usable as effect deps. Everything else the hook returns is derived per render.
 
 ## Code Organization
 

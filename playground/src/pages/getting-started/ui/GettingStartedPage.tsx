@@ -26,7 +26,7 @@ export const GettingStartedPage = () => {
         <ExampleGrid>
           <ExampleCard
             title="Simple Modal"
-            description="Basic modal with open, close, and waitForClose."
+            description="Basic modal with open, close, and openAndWait."
             codeKey="simple-modal"
             modalId={SIMPLE_ID}
             tryLabel="Open"

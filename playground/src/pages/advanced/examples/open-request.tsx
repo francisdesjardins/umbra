@@ -21,6 +21,10 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
  * what the caller *says* about itself and nothing anyone verified — an HTTP `Referer`, not a
  * credential. The owner below validates both, which is the point of the whole arrangement: what
  * it will not accept, it does not open for.
+ *
+ * And it says so. Every line in the result panel is written by the **caller**, from what
+ * `requestOpenAndWait` came back with — the owner only decides. A refusal the asker never hears
+ * is a dead end, which is what `request.refuse(reason)` exists to prevent.
  */
 
 /** What this dialog agrees to be opened with. Anything else is declined. */
@@ -34,6 +38,25 @@ function parseArchiveRequest(data: unknown): ArchiveRequest | null {
   return typeof room === 'string' && room.trim() !== '' ? { room } : null;
 }
 
+/** And what it closes *with* — the answer, travelling back the way the request came. */
+type ArchiveReceipt = { readonly room: string; readonly archivedAt: string };
+
+/**
+ * A type predicate rather than a parse-or-null, because the caller's question is a yes/no about
+ * a value it already holds: `outcome.closed` resolves with `data?: unknown`, symmetrically with
+ * the payload on the way in, and one `if` narrows it for the rest of the block.
+ *
+ * The point the pair makes together: **both directions cross the boundary unvalidated.** The
+ * dialog does not trust what the shell sent, and the shell does not trust what came back.
+ */
+function isArchiveReceipt(data: unknown): data is ArchiveReceipt {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+  const { room, archivedAt } = data as { room?: unknown; archivedAt?: unknown };
+  return typeof room === 'string' && typeof archivedAt === 'string';
+}
+
 /** Who is allowed to ask at all — a claim, checked against a list the owner keeps. */
 const TRUSTED_SOURCES = new Set(['shell:nav', 'deep-link']);
 
@@ -41,33 +64,30 @@ export function OpenRequestExample() {
   const [room, setRoom] = useState<string | null>(null);
   const [log, setLog] = useState<string | null>(null);
 
-  const modal = useMessageModal<void, 'confirm' | 'cancel'>({
+  const modal = useMessageModal<ArchiveReceipt, 'confirm' | 'cancel'>({
     id: 'open-request-demo',
 
     // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is declined and
     // logged, and this dialog is reachable only by the code that renders it.
-    onOpenRequest: (payload, { context }) => {
-      const from = context?.source ?? 'inconnu';
+    onOpenRequest: (payload, request) => {
+      const from = request.context?.source ?? 'inconnu';
       const parsed = parseArchiveRequest(payload);
 
+      // Refusal is explicit: returning would decline too, but silently, and the asker below
+      // would have nothing to show. Acceptance needs no word — opening is the yes.
       if (!TRUSTED_SOURCES.has(from)) {
-        setLog(`Refusée — « ${from} » n'est pas dans la liste`);
+        request.refuse(`source-non-fiable:${from}`);
         return;
       }
       if (parsed === null) {
-        setLog(`Refusée — charge utile invalide, venue de « ${from} »`);
+        request.refuse('charge-utile-invalide');
         return;
       }
 
       // Accepted: the state is set first, so the dialog renders once with its data rather than
       // opening empty and filling in.
       setRoom(parsed.room);
-      setLog(`Acceptée — demandée par « ${from} »`);
       void modal.open();
-    },
-
-    onClose: (result) => {
-      setLog(`Fermée : ${result.reason}`);
     },
 
     render: ({ action }) => {
@@ -86,7 +106,14 @@ export function OpenRequestExample() {
             <Shared.Button size="small" variant="outlined" {...action('cancel')}>
               Annuler
             </Shared.Button>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button
+              variant="contained"
+              {...action('confirm', (close) => {
+                // The typed door: `TData` is declared on the hook, so this payload is checked
+                // here and arrives at the caller as `unknown` only because it crossed a boundary.
+                close({ room: room ?? '—', archivedAt: new Date().toISOString() });
+              })}
+            >
               Archiver
             </Shared.Button>
           </MessageModal.Footer>
@@ -98,7 +125,7 @@ export function OpenRequestExample() {
   const [source, setSource] = useState('shell:nav');
   const [rawPayload, setRawPayload] = useState('{ "room": "204" }');
 
-  const ask = () => {
+  const ask = async () => {
     setLog(null);
     let payload: unknown;
     try {
@@ -108,7 +135,29 @@ export function OpenRequestExample() {
       // validation exists for, so it is worth being able to try it here.
       payload = rawPayload;
     }
-    dialogManager.requestOpen('open-request-demo', { payload, context: { source } });
+
+    const outcome = await dialogManager.requestOpenAndWait('open-request-demo', {
+      payload,
+      context: { source },
+    });
+    if (!outcome.accepted) {
+      setLog(`Refusée — ${outcome.reason}`);
+      return;
+    }
+    setLog('Acceptée — en attente de la fermeture…');
+    // The second half is opt-in: the decision settles now, the close settles when the user is done.
+    const [, result] = await outcome.closed;
+    if (result === null) {
+      setLog('Le dialogue a disparu avant de répondre');
+      return;
+    }
+    if (!isArchiveReceipt(result.data)) {
+      // Not an error — 'cancel' and 'dismiss' close with no payload at all.
+      setLog(`Fermée sans reçu : ${result.reason}`);
+      return;
+    }
+    // Narrowed: `result.data` is an `ArchiveReceipt` for the rest of this block.
+    setLog(`Salle ${result.data.room} archivée à ${result.data.archivedAt}`);
   };
 
   return (
@@ -135,7 +184,13 @@ export function OpenRequestExample() {
           <code>deep-link</code> et que <code>data</code> porte une <code>room</code> non vide.
         </Alert>
         <Stack direction="row" spacing={1}>
-          <Shared.Button onClick={ask} size="small" variant="contained">
+          <Shared.Button
+            onClick={() => {
+              void ask();
+            }}
+            size="small"
+            variant="contained"
+          >
             Demander l’ouverture
           </Shared.Button>
           <Shared.Button

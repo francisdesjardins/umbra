@@ -6,11 +6,17 @@ import type { ReactNode } from 'react';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 
 /**
- * Highlighter language for a sample. Registered CSS-module samples are the only non-TSX
- * entries, and they all use the `-styles` key suffix — everything else is TypeScript JSX.
+ * Highlighter language for a sample, keyed off the entry's name.
+ *
+ * Two suffixes carry it — `-styles` for the CSS modules, `-html` for the microfrontend host —
+ * and everything else, plain `.js` included, highlights correctly as TypeScript JSX. Renaming a
+ * key past its suffix silently downgrades the sample to the wrong grammar.
  */
 const languageForCodeKey = (codeKey: string) => {
-  return codeKey.endsWith('-styles') ? 'css' : 'tsx';
+  if (codeKey.endsWith('-styles')) {
+    return 'css';
+  }
+  return codeKey.endsWith('-html') ? 'markup' : 'tsx';
 };
 
 // Shared content renderer for code modal

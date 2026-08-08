@@ -41,7 +41,9 @@ export type {
   ModalOpenEventDetail,
   OpenRequest,
   OpenRequestContext,
+  OpenRequestDispatch,
   OpenRequestHandler,
+  OpenRequestOutcome,
   RegisterOptions,
 } from './manager/dialog-manager.js';
 

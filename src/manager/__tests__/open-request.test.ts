@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { ModalPhase } from '../../core/types.js';
+import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, createOpenRequest, type OpenRequest } from '../dialog-manager.js';
 
 /**
@@ -17,6 +17,7 @@ function createFakeStore() {
   const listeners = new Set<() => void>();
   let phase: ModalPhase = 'closed';
   let isPreparing = false;
+  const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 
   return {
     requestOpen(): void {
@@ -31,6 +32,12 @@ function createFakeStore() {
     },
     close(): boolean {
       return false;
+    },
+    // Part of the port since `requestOpenAndWait` hands back the close of a dialog it does not
+    // own. This fake never closes, so nothing here ever resolves — which is the point for the
+    // refusal paths: they must not leave a caller waiting on a dialog that never opened.
+    addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
+      closeResolvers.push(resolve);
     },
     subscribe(listener: () => void) {
       listeners.add(listener);
@@ -172,6 +179,98 @@ test.describe('requestOpen', () => {
     dm.requestOpen('asked');
 
     expect(asked).toBe(0);
+  });
+});
+
+test.describe('requestOpenAndWait', () => {
+  test('a refusal comes back with its reason, and nothing opened', async () => {
+    // The gap this closes: `requestOpen` tells the owner and walks away, so a microfrontend that
+    // is refused has no way to tell the user why nothing happened.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    dm.register('billing', store, {
+      onOpenRequest: (_payload, request) => {
+        request.refuse('over-limit');
+      },
+    });
+
+    const outcome = await dm.requestOpenAndWait('billing', createOpenRequest({ amount: 900 }));
+
+    expect(outcome).toEqual({ accepted: false, reason: 'over-limit' });
+    expect(store.phase).toBe('closed');
+  });
+
+  test('the declines the manager makes itself are reasons too, not just warnings', async () => {
+    const dm = createDialogManager();
+    dm.register('deaf', createFakeStore());
+
+    expect(await dm.requestOpenAndWait('absent')).toEqual({
+      accepted: false,
+      reason: 'not-registered',
+    });
+    expect(await dm.requestOpenAndWait('deaf')).toEqual({
+      accepted: false,
+      reason: 'accepts-none',
+    });
+  });
+
+  test('acceptance is the default — a handler that just opens says yes', async () => {
+    // The manager cannot infer it: the React binding's open is asynchronous, so a phase read when
+    // the handler returns would report a successful accept as a refusal.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    dm.register('asked', store, {
+      onOpenRequest: () => {
+        dm.open('asked');
+      },
+    });
+
+    const outcome = await dm.requestOpenAndWait('asked');
+
+    expect(outcome.accepted).toBe(true);
+    expect(store.phase).toBe('opening');
+  });
+
+  test('an async handler is awaited, so a validator that fetches can still refuse', async () => {
+    const dm = createDialogManager();
+    dm.register('slow', createFakeStore(), {
+      onOpenRequest: async (_payload, request) => {
+        await Promise.resolve();
+        request.refuse('checked-and-declined');
+      },
+    });
+
+    expect(await dm.requestOpenAndWait('slow')).toEqual({
+      accepted: false,
+      reason: 'checked-and-declined',
+    });
+  });
+
+  test('the first answer stands — refusing twice does not rewrite it', async () => {
+    const dm = createDialogManager();
+    dm.register('asked', createFakeStore(), {
+      onOpenRequest: (_payload, request) => {
+        request.refuse('first');
+        request.refuse('second');
+      },
+    });
+
+    expect(await dm.requestOpenAndWait('asked')).toEqual({ accepted: false, reason: 'first' });
+  });
+
+  test('requestOpen still returns nothing and still reaches the handler', () => {
+    // The fire-and-forget door is unchanged: adding the reporting one must cost no existing call.
+    const dm = createDialogManager();
+    let asked = 0;
+    dm.register('asked', createFakeStore(), {
+      onOpenRequest: () => {
+        asked += 1;
+      },
+    });
+
+    // Its `void` return is pinned by type-check; what matters at runtime is that the ask lands.
+    dm.requestOpen('asked');
+    expect(asked).toBe(1);
   });
 });
 

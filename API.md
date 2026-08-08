@@ -49,9 +49,9 @@ const modal = useMessageModal({
   id: 'confirm',
   render: ({ action }) => (
     <>
-      <button {...action('cancel')}>Cancel</button>
+      <button {...action.dom('cancel')}>Cancel</button>
       <button
-        {...action('confirm', async (close) => {
+        {...action.dom('confirm', async (close) => {
           await api.confirm();
           close();
         })}
@@ -92,6 +92,22 @@ Returned props: `{ type, onClick, loading, 'data-loading', disabled, 'aria-busy'
 `loading` is this action alone; `disabled` is true while **any** action runs, which is what stops
 a double click submitting twice.
 
+#### action.dom — the same action, minus `loading`
+
+`loading` is for a button _component_ that declares it (MUI, Mantine). React will not put it on a
+real `<button>` and warns when you try. Both directions matter and only one is loud, so the
+default spread keeps it — losing a spinner silently is worse than a console warning — and
+`action.dom()` is the door for markup you write yourself:
+
+```tsx
+// A bare button, with the hotkey and the opening focus still wired.
+<button {...action.dom('ok', { hotkey: Key.Enter, focusOnOpen: true })}>OK</button>
+```
+
+It drops `loading` and nothing else: `aria-keyshortcuts` and `data-focus-on-open` are what make
+those two work with no wrapper, and `data-loading` carries the running state either way, so a
+plain button styles on `[data-loading='true']`.
+
 ### Opening focus
 
 `showModal()` focuses the first thing it can find, which for a form is its first input — rarely
@@ -102,8 +118,8 @@ starting point to the button you meant to offer:
 render: ({ action }) => (
   <>
     <input name="reason" />
-    <button {...action('cancel', { focusOnOpen: true })}>Cancel</button>
-    <button {...action('delete', { hotkey: Key.Enter, onAction: remove })}>Delete</button>
+    <button {...action.dom('cancel', { focusOnOpen: true })}>Cancel</button>
+    <button {...action.dom('delete', { hotkey: Key.Enter, onAction: remove })}>Delete</button>
   </>
 );
 ```
@@ -136,7 +152,7 @@ const modal = useModal({
   id: 'save',
   render: ({ action, hasRunningAction, error }) => (
     <>
-      <button {...action('save', save)} />
+      <button {...action.dom('save', save)} />
       {error ? <p role="alert">{error.message}</p> : null}
     </>
   ),
@@ -150,8 +166,8 @@ modal.hasRunningAction; // same value, outside render
 ```tsx
 render: ({ action }) => (
   <>
-    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
-    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+    <button {...action.dom('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action.dom('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
   </>
 );
 ```
@@ -217,9 +233,9 @@ const modal = useModal<void, 'confirm' | 'cancel'>({
   render: ({ isPreparing, handle, action, error }) => (
     <div>
       {isPreparing ? <p>Loading…</p> : <p>Content</p>}
-      <button {...action('cancel')}>Cancel</button>
+      <button {...action.dom('cancel')}>Cancel</button>
       <button
-        {...action('confirm', async (close) => {
+        {...action.dom('confirm', async (close) => {
           await doSomething();
           close();
         })}
@@ -235,7 +251,7 @@ const modal = useModal<void, 'confirm' | 'cancel'>({
 });
 
 // Returns — the render args, plus the hook's own surface
-const { open, isVisible, Modal, waitForClose, dialogManager } = modal;
+const { open, openAndWait, isVisible, Modal, dialogManager } = modal;
 const { isPreparing, handle, action, hasRunningAction, error } = modal;
 ```
 
@@ -256,13 +272,13 @@ below is also readable outside `render` (`modal.hasRunningAction` on a trigger b
 
 Everything above, plus:
 
-| Property        | Type                                | Description                                                                |
-| --------------- | ----------------------------------- | -------------------------------------------------------------------------- |
-| `open`          | `() => Promise<void>`               | Resolves after `prepare` completes; joins an in-flight open, never hangs   |
-| `isVisible`     | `boolean`                           | On screen — `phase !== 'closed'`, so still true through the exit animation |
-| `Modal`         | `ReactNode`                         | Place in JSX as `{Modal}`; `null` when closed, and inside a `ModalOutlet`  |
-| `waitForClose`  | `() => Promise<WaitForCloseResult>` | Go-style `[error, result]` tuple — see [waitForClose](#waitforclose)       |
-| `dialogManager` | `DialogManager`                     | The instance this modal registered with — use it over the static singleton |
+| Property        | Type                          | Description                                                                                |
+| --------------- | ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `open`          | `() => Promise<void>`         | Resolves after `prepare` completes; joins an in-flight open, never hangs                   |
+| `openAndWait`   | `() => Promise<AwaitedClose>` | Open **and** await the close — Go-style `[error, result]`, see [openAndWait](#openandwait) |
+| `isVisible`     | `boolean`                     | On screen — `phase !== 'closed'`, so still true through the exit animation                 |
+| `Modal`         | `ReactNode`                   | Place in JSX as `{Modal}`; `null` when closed, and inside a `ModalOutlet`                  |
+| `dialogManager` | `DialogManager`               | The instance this modal registered with — use it over the static singleton                 |
 
 ### Options
 
@@ -469,8 +485,8 @@ const modal = useMessageModal<void, 'confirm' | 'cancel'>({
       <Typography id="confirm-delete-title" variant="h6">Delete Item</Typography>
       <Typography>Are you sure?</Typography>
       <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <button {...action('cancel')}>Cancel</button>
-        <button {...action('confirm', async (close) => {
+        <button {...action.dom('cancel')}>Cancel</button>
+        <button {...action.dom('confirm', async (close) => {
           await api.deleteItem();
           close();
         })}>Delete</button>
@@ -480,8 +496,7 @@ const modal = useMessageModal<void, 'confirm' | 'cancel'>({
 });
 
 // Open and wait
-await modal.open();
-const [err, result] = await modal.waitForClose();
+const [err, result] = await modal.openAndWait();
 if (result?.reason === 'confirm') {
     /* confirmed */
 }
@@ -510,7 +525,7 @@ const panel = useSlideModal<void, 'save'>({
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Typography>Panel content</Typography>
       </Box>
-      <button {...action('save', { hotkey: Key.Enter, onAction: save })}>Save</button>
+      <button {...action.dom('save', { hotkey: Key.Enter, onAction: save })}>Save</button>
     </Box>
   ),
 });
@@ -560,12 +575,12 @@ Alignment is orthogonal to the slide, so it composes with every mode (modal, `no
 
 ---
 
-## waitForClose
+## openAndWait
 
 Go-style 2-element tuple return:
 
 ```typescript
-const [err, result] = await modal.waitForClose();
+const [err, result] = await modal.openAndWait();
 // err: Error | null
 // result: { reason: string; data?: TData } | null
 
@@ -577,6 +592,17 @@ if (result.reason === 'confirm') {
   console.log('Confirmed!', result.data);
 }
 ```
+
+**One call, and no order to get wrong.** A close resolver answers the **next** close — a previous
+one is not replayed, because a stale reason is a wrong answer rather than a late one — so it has
+to be registered before anything can close. `prepare` is what opens that window: a modal dismissed
+while it runs closes _inside_ the open, and a resolver added afterwards waits forever, silently.
+`openAndWait` registers first, which is why the store's `addCloseResolver` is internal: there is
+no second call for a caller to sequence by hand, and so no order to get wrong.
+
+To observe a close you are **not** causing, use `onClose` — a callback, with no ordering question.
+To await a dialog you do not own, `dialogManager.requestOpenAndWait` carries the close on its
+accepted branch.
 
 ---
 
@@ -684,6 +710,49 @@ call site is a **boundary**: the keys have to be remembered exactly (this payloa
 this is the single place a protocol would grow — a version, a correlation id — without every
 caller being edited. It validates nothing and cannot: the payload is `unknown` on the way out, and
 the dialog receiving it is the only side that knows what a good one looks like.
+
+### requestOpen vs requestOpenAndWait
+
+`requestOpen` tells the owner and walks away. Across an ownership boundary that is usually not
+enough: a caller refused and never told why cannot say anything to its user.
+
+```typescript
+const outcome = await dialogManager.requestOpenAndWait(
+  'billing:confirm',
+  createOpenRequest({ amount: 900 }, { source: 'checkout' })
+);
+
+if (!outcome.accepted) {
+  // 'not-registered' · 'accepts-none' · or whatever the handler passed to `refuse`
+  report(`declined: ${outcome.reason}`);
+} else {
+  const [err, result] = await outcome.closed; // opt-in second half
+}
+```
+
+The owner answers through the envelope:
+
+```typescript
+useModal({
+  id: 'billing:confirm',
+  onOpenRequest: (payload, request) => {
+    // The payload crossed a boundary, so it is `unknown` until this side says otherwise.
+    const amount = typeof payload === 'object' && payload !== null ? payload.amount : null;
+    if (typeof amount !== 'number' || amount > LIMIT) {
+      return request.refuse('over-limit');
+    }
+    void open();
+  },
+});
+```
+
+**Refusal is explicit, acceptance is the default.** A handler that opens the dialog says yes by
+doing so, and the manager never observes the dialog to find out — it cannot, because the React
+binding's open is asynchronous, so a phase read when the handler returns would report a
+successful accept as a refusal. The handler may be `async`, and `requestOpenAndWait` awaits it.
+
+Two lifetimes, deliberately separate: the decision settles in milliseconds and the close settles
+when the user is done, so the decision _carries_ the close instead of being folded into it.
 
 ### createDialogManager / DialogManagerProvider
 

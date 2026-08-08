@@ -131,8 +131,7 @@ export function GroceryListExample() {
               variant="contained"
               disabled={checked.length === 0}
               onClick={async () => {
-                await confirm.open();
-                const [, result] = await confirm.waitForClose();
+                const [, result] = await confirm.openAndWait();
                 if (result?.reason === 'send') {
                   handle.close('sent', result.data);
                 }

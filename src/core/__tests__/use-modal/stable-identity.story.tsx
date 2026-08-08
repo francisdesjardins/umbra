@@ -3,7 +3,7 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../story-styles.js';
 
 /**
- * Pins the identity of `open` / `waitForClose` / `handle` across arbitrary
+ * Pins the identity of `open` / `openAndWait` / `handle` across arbitrary
  * re-renders and across a full open → close lifecycle.
  *
  * All three close over the modal store alone, so they are built once in the
@@ -36,14 +36,14 @@ export function StableIdentityHarness() {
   const [first] = useState(() => {
     return {
       open: modal.open,
-      waitForClose: modal.waitForClose,
+      openAndWait: modal.openAndWait,
       handle: modal.handle,
     };
   });
 
   const stable =
     first.open === modal.open &&
-    first.waitForClose === modal.waitForClose &&
+    first.openAndWait === modal.openAndWait &&
     first.handle === modal.handle;
 
   return (

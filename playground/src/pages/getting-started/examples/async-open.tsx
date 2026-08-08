@@ -118,8 +118,7 @@ export function AsyncOpenExample() {
           variant="contained"
           size="small"
           onClick={async () => {
-            await asyncModal.open();
-            const [, closeResult] = await asyncModal.waitForClose();
+            const [, closeResult] = await asyncModal.openAndWait();
             resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
           }}
         >

@@ -55,8 +55,7 @@ export function NoTransitionMessageExample() {
         variant="contained"
         size="small"
         onClick={async () => {
-          await modal.open();
-          const [, closeResult] = await modal.waitForClose();
+          const [, closeResult] = await modal.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

@@ -92,15 +92,17 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
     },
   });
 
+  // The wrapper composes the safe primitive once, so no call site has to remember the ordering:
+  // `openAndWait` registers the close resolver before the open, so a close landing during
+  // `prepare` cannot be missed — and no call site has to know that.
   const openForItem = (id: string, name: string) => {
     deleteItemStore.prepareForItem(id, name);
-    return modal.open();
+    return modal.openAndWait();
   };
 
   return {
     openForItem,
     Modal: modal.Modal,
-    waitForClose: modal.waitForClose,
   };
 }
 
@@ -119,8 +121,10 @@ export function DeleteItemModalExample() {
         variant="contained"
         color="error"
         onClick={async () => {
-          await deleteModal.openForItem('item-123', 'Important Document.pdf');
-          const [, closeResult] = await deleteModal.waitForClose();
+          const [, closeResult] = await deleteModal.openForItem(
+            'item-123',
+            'Important Document.pdf'
+          );
           resultStore.setResult(
             `Closed: ${closeResult?.reason ?? 'unknown'}, deleted: ${String(deleteItemStore.getSnapshot().deleted)}`
           );
@@ -132,8 +136,7 @@ export function DeleteItemModalExample() {
         variant="contained"
         color="error"
         onClick={async () => {
-          await deleteModal.openForItem('item-456', 'Project Files.zip');
-          const [, closeResult] = await deleteModal.waitForClose();
+          const [, closeResult] = await deleteModal.openForItem('item-456', 'Project Files.zip');
           resultStore.setResult(
             `Closed: ${closeResult?.reason ?? 'unknown'}, deleted: ${String(deleteItemStore.getSnapshot().deleted)}`
           );

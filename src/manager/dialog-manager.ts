@@ -2,8 +2,8 @@
 // `../store/react`. This module is the root of an entry point that must resolve without React,
 // and that separation is what makes the import structural rather than dependent on Rollup
 // tree-shaking unused re-exports back out. Pinned by __tests__/root-react-free.test.ts.
+import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
-import type { ModalStoreSnapshot } from '../core/types.js';
 import { createLogger } from '../utils/logger.js';
 import { BODY_LOCK_ATTR, lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
 import type {
@@ -30,6 +30,18 @@ type RegisteredStore = {
   close(reason: string): boolean;
   readonly subscribe: (listener: () => void) => () => void;
   readonly getSnapshot: () => ModalStoreSnapshot;
+  /**
+   * Register a one-shot resolver for the next close, so `requestOpenAndWait` can hand back the
+   * close of a dialog it does not own. The port grows because the manager genuinely needs it:
+   * `subscribe` reports *that* a close happened, and an awaiting caller needs the result.
+   *
+   * Erased at `unknown`, not at the modal's `TData`, and for two reasons that agree. A callback
+   * in a parameter position is checked contravariantly — the same trap `runOnClose` exists to
+   * avoid — so a resolver typed at `TData` would make `ModalStore<TData>` unassignable to this
+   * port. And the honest type is `unknown` anyway: the registry is keyed by string, so nothing
+   * here knows what a given modal closes with, exactly as with {@link OpenRequest.payload}.
+   */
+  readonly addCloseResolver: (resolve: (result: AwaitedClose<unknown>) => void) => void;
 };
 
 /**
@@ -109,7 +121,56 @@ export function createOpenRequest(payload?: unknown, context?: OpenRequestContex
  * The payload comes first because it is what a handler almost always wants; the whole envelope
  * follows for the ones that also care who is asking.
  */
-export type OpenRequestHandler = (payload: unknown, request: OpenRequest) => void;
+export type OpenRequestHandler = (
+  payload: unknown,
+  request: OpenRequestDispatch
+) => void | Promise<void>;
+
+/**
+ * The envelope as the *handler* sees it: what the caller sent, plus the way to say no.
+ *
+ * Derived rather than restated — {@link OpenRequest} is what a caller builds, and `refuse` is
+ * supplied by the manager at dispatch, so the two shapes are genuinely different and neither is
+ * a copy of the other.
+ */
+export type OpenRequestDispatch = OpenRequest & {
+  /**
+   * Decline the request, with a reason the asker can act on.
+   *
+   * Refusal is explicit and acceptance is the default: a handler that opens the dialog says yes
+   * by doing so, and the manager never has to observe the dialog to find out. It cannot — the
+   * React binding's open is asynchronous (state, then effect, then `showDialog`), so a phase
+   * checked when the handler returns would report a successful accept as a refusal.
+   *
+   * Calling it twice, or calling it after opening, changes nothing: the first answer stands.
+   */
+  readonly refuse: (reason: string) => void;
+};
+
+/**
+ * What {@link DialogManager.requestOpenAndWait} resolves to — the answer to the ask, and on the
+ * accepted branch the close that follows it.
+ *
+ * Two questions with two lifetimes: the decision settles in milliseconds, the close settles when
+ * the user is done. Folding them into one promise would need three branches (refused, closed,
+ * abandoned) in a two-branch tuple, so the decision *carries* the close instead. Awaiting the
+ * second half is opt-in and costs nothing when skipped.
+ */
+export type OpenRequestOutcome =
+  | {
+      readonly accepted: true;
+      /** Resolves the way `openAndWait()` does, once the dialog closes. */
+      readonly closed: Promise<AwaitedClose<unknown>>;
+    }
+  | {
+      readonly accepted: false;
+      /**
+       * Why. Either whatever the handler passed to `refuse`, or one of the manager's own:
+       * `'not-registered'` (no such dialog) or `'accepts-none'` (registered, but it declared no
+       * `onOpenRequest`, so it never agreed to be opened from outside).
+       */
+      readonly reason: string;
+    };
 
 /** What a binding may tell the registry about a dialog beyond its store. */
 export type RegisterOptions = {
@@ -272,9 +333,9 @@ export type DialogManager = {
    * still opens anything registered; the two doors are separate on purpose, so adding this one
    * changes the behaviour of no existing call.
    *
-   * Returns nothing, and deliberately: the handler runs synchronously but what it decides may not
-   * be — an owner may validate, fetch, or wait for its own state. Watch the outcome through
-   * `lookup(id)` the way any other observer would.
+   * Returns nothing: this is the fire-and-forget door. When the answer matters — and across an
+   * ownership boundary it usually does, since a refusal the asker never hears is a dead end —
+   * use {@link DialogManager.requestOpenAndWait}.
    *
    * @param id The dialog to ask.
    * @param request What to hand its handler. Both halves are untrusted — see {@link OpenRequest}.
@@ -287,6 +348,32 @@ export type DialogManager = {
    * });
    */
   requestOpen(id: string, request?: OpenRequest): void;
+
+  /**
+   * The same ask, with the answer — and, if it was a yes, the close that follows.
+   *
+   * {@link DialogManager.requestOpen} tells the owner and walks away. This waits for the owner's
+   * decision, which is what a caller across a boundary needs: a microfrontend that asks for a
+   * dialog it does not own and never learns it was refused cannot tell the user why nothing
+   * happened. The three declines the manager produces itself — no such dialog, a dialog that
+   * accepts no requests, an explicit `refuse` — all arrive here as a reason instead of only in
+   * the console.
+   *
+   * Acceptance is the default and refusal is explicit — see {@link OpenRequestDispatch}, whose
+   * `refuse` says why the manager cannot infer it. The handler may be `async`, and this waits.
+   *
+   * @example
+   * const outcome = await dialogManager.requestOpenAndWait(
+   *   'billing:confirm',
+   *   createOpenRequest({ amount: 240 }, { source: 'checkout' })
+   * );
+   * if (!outcome.accepted) {
+   *   report(`billing declined: ${outcome.reason}`);
+   * } else {
+   *   const [error, result] = await outcome.closed;
+   * }
+   */
+  requestOpenAndWait(id: string, request?: OpenRequest): Promise<OpenRequestOutcome>;
 
   /**
    * Close a modal imperatively by id, with a reason.
@@ -653,7 +740,7 @@ export function createDialogManager(): DialogManager {
     // onto a shared stack, a shell disabling its shortcuts while a modal is up — would be left one
     // open ahead for the life of the page, with nothing on screen to explain it.
     //
-    // Reported as `'dismiss'`, which is what the store tells a `waitForClose` caller in the same
+    // Reported as `'dismiss'`, which is what the store tells an awaiting caller in the same
     // situation: nobody answered.
     const wasOpen = entry.store.getSnapshot().phase !== 'closed';
 
@@ -755,6 +842,61 @@ export function createDialogManager(): DialogManager {
     return lookupObj;
   }
 
+  /**
+   * One ask, one answer — shared by both doors so the fire-and-forget one cannot drift from the
+   * one that reports.
+   *
+   * The close resolver is registered **before** the handler runs, for the same reason
+   * `openAndWait` registers before opening: a resolver added afterwards waits for the *next*
+   * close, and a dialog that opens and closes inside an `async` handler would already have had
+   * its only one. A refusal simply never returns that promise; the resolver drains at the
+   * dialog's next close or at its teardown, which is where every unclaimed one goes anyway.
+   */
+  async function dispatchOpenRequest(
+    id: string,
+    request: OpenRequest
+  ): Promise<OpenRequestOutcome> {
+    const source = request.context?.source;
+    const entry = registry.get(id);
+    if (!entry) {
+      log.warn('Open request declined (not registered)', { id, source });
+      return { accepted: false, reason: 'not-registered' };
+    }
+    if (!entry.onOpenRequest) {
+      // Declined, and said out loud. A caller that asked a dialog which never opted in has a
+      // wrong assumption, and silence is what makes that assumption survive to production.
+      log.warn('Open request declined (dialog accepts none)', { id, source });
+      return { accepted: false, reason: 'accepts-none' };
+    }
+
+    const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
+      entry.store.addCloseResolver(resolve);
+    });
+
+    // Held on an object rather than in a `let`: the assignment happens inside `refuse`, which the
+    // checker cannot see into, so a `let` stays narrowed to `null` at the test below and the
+    // whole branch reads as dead code. Property narrowing resets across the call, which is
+    // exactly the truth here.
+    const answer: { reason: string | null } = { reason: null };
+    const dispatch: OpenRequestDispatch = {
+      ...request,
+      refuse: (reason: string) => {
+        // First answer wins: a handler that refuses twice, or refuses after opening, has already
+        // told us what it decided and a later word should not overwrite it.
+        answer.reason ??= reason;
+      },
+    };
+
+    log('Open requested from outside', { id, source });
+    await entry.onOpenRequest(request.payload, dispatch);
+
+    if (answer.reason !== null) {
+      log('Open request refused by the dialog', { id, source, reason: answer.reason });
+      return { accepted: false, reason: answer.reason };
+    }
+    return { accepted: true, closed };
+  }
+
   // ── Public API (facade) ───────────────────────────────────────────────────
 
   const Z_INDEX_BASE = 1300;
@@ -773,22 +915,13 @@ export function createDialogManager(): DialogManager {
     },
 
     requestOpen(id: string, request: OpenRequest = {}): void {
-      const entry = registry.get(id);
-      if (!entry) {
-        log.warn('Open request declined (not registered)', { id, source: request.context?.source });
-        return;
-      }
-      if (!entry.onOpenRequest) {
-        // Declined, and said out loud. A caller that asked a dialog which never opted in has a
-        // wrong assumption, and silence is what makes that assumption survive to production.
-        log.warn('Open request declined (dialog accepts none)', {
-          id,
-          source: request.context?.source,
-        });
-        return;
-      }
-      log('Open requested from outside', { id, source: request.context?.source });
-      entry.onOpenRequest(request.payload, request);
+      // The fire-and-forget door. Deliberately not `void dispatchOpenRequest(...)` at the call
+      // site of every caller: this one exists so ignoring the answer stays a one-word call.
+      void dispatchOpenRequest(id, request);
+    },
+
+    requestOpenAndWait(id: string, request: OpenRequest = {}): Promise<OpenRequestOutcome> {
+      return dispatchOpenRequest(id, request);
     },
 
     close(id: string, reason: string = 'dismiss'): void {

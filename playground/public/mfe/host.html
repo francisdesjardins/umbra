@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Umbra — microfrontend host</title>
+    <!-- The playground's own icon. Named explicitly because this page is loaded in a frame and a
+         guessed `/favicon.ico` would 404 into the parent's console — where the smoke test reads. -->
+    <link rel="icon" href="../favicon.svg" />
+
+    <!--
+      The host's entire job: name the shared modules and hand the same ones to everybody.
+
+      Three specifiers, one file, on purpose. `dialogManager` is a module-level singleton, so
+      this map is what decides whether two microfrontends share a registry or each get their
+      own — and React has the same problem one layer down, since two copies mean two hook
+      dispatchers. Nothing here is re-exported by the library: `umbra` is the library, `react`
+      is React, and the host simply serves both out of one bundle so there is one of each.
+
+      No bundler runs on this page. The map is resolved by the browser.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "umbra": "./umbra.mjs",
+          "react": "./umbra.mjs",
+          "react-dom/client": "./umbra.mjs"
+        }
+      }
+    </script>
+
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #d97706;
+        /* One colour per microfrontend, and the dialog each one renders wears its owner's.
+           The point the demo has to make visually: a dialog belongs to whoever registered it,
+           not to whoever asked for it. */
+        --checkout: #d97706;
+        --billing: #7c3aed;
+        --ok: #15803d;
+        --no: #b91c1c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #24314a;
+          --accent: #f59e0b;
+          --checkout: #f59e0b;
+          --billing: #a78bfa;
+          --ok: #4ade80;
+          --no: #f87171;
+        }
+      }
+      /* `--own` is this microfrontend's colour and `--peer` is the other's, so a log line can
+         say who it is about by colour alone without either side naming the other. */
+      .checkout {
+        --own: var(--checkout);
+        --peer: var(--billing);
+      }
+      .billing {
+        --own: var(--billing);
+        --peer: var(--checkout);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      /* Two equal columns, and every row inside them lines up across the pair: the panels are
+         siblings in one grid, so `1fr 1fr` and a shared internal skeleton is all it takes.
+         Under 560px they stack, which is the phone case. */
+      .host {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr 1fr;
+        align-items: stretch;
+      }
+      @media (max-width: 560px) {
+        .host {
+          grid-template-columns: 1fr;
+        }
+      }
+      .mfa {
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-top: 3px solid var(--own);
+        border-radius: 10px;
+        padding: 14px;
+        min-width: 0;
+      }
+      .mfa h2 {
+        margin: 0 0 2px;
+        font-size: 15px;
+        color: var(--own);
+      }
+      .mfa .kind {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+      /* One field and one button row per panel, in that order — which is what makes the two
+         logs start at the same height without a magic number holding them there. */
+      .controls {
+        display: grid;
+        gap: 10px;
+      }
+      .field {
+        display: grid;
+        gap: 4px;
+      }
+      .field > span {
+        color: var(--muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .field input,
+      .field output {
+        font: inherit;
+        display: block;
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: inherit;
+      }
+      .field output {
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      /* Equal shares of the row, so a panel with one button and a panel with two still agree
+         on where the row ends. */
+      .row button {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      button {
+        font: inherit;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--own, var(--accent));
+      }
+      .log {
+        flex: 1;
+        margin-top: 12px;
+        min-height: 132px;
+        overflow: auto;
+        background: color-mix(in srgb, var(--ink) 6%, transparent);
+        border-radius: 6px;
+        padding: 8px;
+        font-family: ui-monospace, monospace;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+      /* Six kinds of line, and the glyph carries the meaning: what I asked for, what I was
+         asked for, what I allowed, what I refused, and what merely happened nearby. */
+      .log .out {
+        color: var(--own);
+      }
+      .log .in {
+        color: var(--peer);
+      }
+      .log .yes {
+        color: var(--ok);
+      }
+      .log .no {
+        color: var(--no);
+      }
+      /* The surface goes on `.panel`, not on `dialog` — and that is the library's contract,
+         not a workaround. It writes `background: transparent; border: none; padding: 0` inline
+         on the element it owns, so the dialog is a box you fill: a stylesheet rule on `dialog`
+         loses to those inline styles and the modal comes out invisible. Billing's hand-written
+         <dialog> would escape that, since nothing styles it; keeping both panels on the same
+         rule is what stops the two microfrontends from looking like different products. */
+      dialog {
+        /* The same reset the library writes inline on the dialogs it owns. Spelled out here so
+           Billing's hand-written <dialog> — which the library never styles — does not keep the
+           UA's white box and end up framed twice. */
+        border: none;
+        background: transparent;
+        padding: 0;
+        color: var(--ink);
+        max-width: min(380px, 88vw);
+      }
+      dialog::backdrop {
+        background: rgba(2, 6, 23, 0.62);
+      }
+      /* The dialog wears its owner's colour — the one thing a screenshot of this demo has to
+         say on its own is which microfrontend a modal came from. */
+      .panel {
+        border: 1px solid color-mix(in srgb, var(--own) 40%, var(--line));
+        border-top: 3px solid var(--own);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--own) 7%, var(--panel));
+        padding: 18px;
+      }
+      .panel .owner {
+        color: var(--muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+      }
+      .panel h3 {
+        margin: 0 0 8px;
+        color: var(--own);
+      }
+      .note {
+        grid-column: 1 / -1;
+        color: var(--muted);
+        font-size: 12px;
+        margin: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="host">
+      <p class="note">
+        Two microfrontends, one shared <code>umbra</code> from the import map. Neither imports the
+        other. In the logs: <b>&rarr;</b> I asked · <b>&larr;</b> I was asked · <b>&check;</b> I
+        opened · <b>&cross;</b> I refused · <b>~</b> happened next door.
+      </p>
+
+      <section class="mfa checkout">
+        <h2>Checkout</h2>
+        <div class="kind">React microfrontend · owns <code>checkout:receipt</code></div>
+        <div id="mfa1-root"></div>
+        <div class="log" id="mfa1-log"></div>
+      </section>
+
+      <section class="mfa billing">
+        <h2>Billing</h2>
+        <div class="kind">Plain-JS microfrontend · owns <code>billing:confirm</code></div>
+        <div class="controls">
+          <label class="field">
+            <span>Approval limit</span>
+            <!-- Written by mfa2.js from the same constant its refusal reads, so the number
+                 shown and the rule enforced cannot drift apart. -->
+            <output id="mfa2-limit">—</output>
+          </label>
+          <div class="row">
+            <button id="mfa2-ask">Ask Checkout for a receipt</button>
+          </div>
+        </div>
+        <div class="log" id="mfa2-log"></div>
+
+        <dialog id="mfa2-dialog" aria-labelledby="mfa2-title">
+          <div class="panel billing">
+            <div class="owner">Billing's dialog</div>
+            <h3 id="mfa2-title">Confirm payment</h3>
+            <p>
+              <span id="mfa2-from">—</span> is asking to charge <strong id="mfa2-amount">—</strong>.
+            </p>
+            <div class="row">
+              <button id="mfa2-decline">Decline</button>
+              <button id="mfa2-approve">Approve</button>
+            </div>
+          </div>
+        </dialog>
+      </section>
+    </div>
+
+    <script type="module" src="./mfa1.js"></script>
+    <script type="module" src="./mfa2.js"></script>
+  </body>
+</html>

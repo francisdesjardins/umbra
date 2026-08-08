@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { useMessageModal } from '../../use-message-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { useModal } from '../../use-modal.js';
+import { dialogStyle } from '../story-styles.js';
 
 /**
- * Tests open() then waitForClose(). Status reflects the resolved reason.
+ * Tests openAndWait(). Status reflects the resolved reason.
  */
-export function WaitForCloseMessageHarness() {
+export function OpenAwaitHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { open, waitForClose, Modal } = useMessageModal<void, 'done'>({
-    id: 'msg-wait',
+  const { openAndWait, Modal } = useModal<void, 'done'>({
+    id: 'wait-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -27,16 +27,15 @@ export function WaitForCloseMessageHarness() {
 
   const handleOpen = async () => {
     setStatus('waiting');
-    await open();
-    const [, result] = await waitForClose();
+    const [, result] = await openAndWait();
     setStatus(`resolved:${String(result?.reason)}`);
   };
 
   return (
     <>
       <button
-        onClick={() => {
-          void handleOpen();
+        onClick={async () => {
+          await handleOpen();
         }}
       >
         Open and Wait

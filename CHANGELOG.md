@@ -9,6 +9,139 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-08
+
+### Added — `openAndWait()`, because the call order was load-bearing and undocumented
+
+`waitForClose()` waits for the **next** close, by design: replaying a previous one would be a
+wrong answer rather than a late one. The consequence nobody had written down is that
+`await open()` followed by `waitForClose()` can lose the only close there is — `prepare` opens
+the window, a dismissal lands inside it, and `finalize` flushes the open resolvers defensively so
+`open()` returns as though nothing happened. The next line then waits forever. No error, no
+timeout, no log.
+
+Both halves are pinned by tests written before the fix, in a real browser: one asserts
+`openAndWait` settles when the close lands during `prepare`, and one asserts that the old pair
+does **not** — a guard that only checked the good case would pass over the very bug it exists
+for. Every playground example moved across, and `types.ts`'s own `@example` was teaching the
+losing order.
+
+### Removed — breaking: `waitForClose()`
+
+It went with the migration, and the count is the argument: every one of its call sites used the
+losing order, and after the sweep it had none left. An API whose correct use is a rule the docs
+have to state, and which nothing in the repo used correctly, is a trap with a happy path rather
+than a primitive.
+
+Nothing it did is gone. `openAndWait()` covers opening and awaiting; `onClose` covers observing a
+close you are not causing, as a callback, with no ordering question at all; and
+`requestOpenAndWait().closed` covers awaiting a dialog you do not own. `addCloseResolver` stays on
+the store, internal — which is the point: the surface no longer lets a caller choose the order.
+
+**`WaitForCloseResult` is renamed `AwaitedClose`.** It named a method that no longer exists, and
+it is now returned by two different things (`openAndWait`, and `OpenRequestOutcome.closed`), so it
+is named for what it is rather than for who hands it back.
+
+### Added — `requestOpenAndWait`: the ask, and the answer
+
+`requestOpen` told the owner and walked away. Across an ownership boundary that is a dead end:
+the microfrontend demo below refuses a payment over its limit, and until now the microfrontend
+that asked had no way to tell its user why nothing happened.
+
+- **`request.refuse(reason)`** on the handler's envelope. Refusal is explicit; acceptance is the
+  default. The manager cannot infer acceptance — the React binding's open is asynchronous, so a
+  phase read when the handler returns would report a successful accept as a refusal.
+- **`requestOpenAndWait(id, request)`** returns an `OpenRequestOutcome`: `{ accepted: false,
+reason }`, or `{ accepted: true, closed }` where `closed` resolves like `waitForClose()`. Two
+  questions with two lifetimes — the decision settles in milliseconds, the close when the user is
+  done — so the decision _carries_ the close rather than being folded into it. Awaiting the second
+  half is opt-in.
+- The two declines the manager makes itself are reasons now (`'not-registered'`,
+  `'accepts-none'`) instead of console warnings only, which was the original complaint the warns
+  were a half-answer to.
+- **`onOpenRequest` may be `async`**, and the manager awaits it, so an owner that validates
+  against a server can still refuse before the caller is told anything.
+- `requestOpen` is unchanged and still returns nothing: adding the reporting door cost no
+  existing call site a `void`.
+
+`OpenRequestDispatch` is `OpenRequest & { refuse }` — what a caller builds and what a handler
+receives are genuinely different shapes, so one derives from the other rather than copying it.
+`useModal`'s `onOpenRequest` option now _is_ `OpenRequestHandler` instead of restating its
+signature, which is how it silently kept the old one through this change.
+
+`RegisteredStore` — the manager's port — gained `addCloseResolver`, erased at `unknown`: a
+callback in a parameter position is checked contravariantly, the same trap `runOnClose` exists to
+avoid, and the registry is keyed by string so `unknown` is the honest type anyway. The vanilla
+binding in the microfrontend demo implements it in six lines, which is the whole cost of the port
+growing.
+
+### Added — `action.dom()`, the spread for markup you write yourself
+
+`loading` is for a button _component_ that declares it (MUI, Mantine); React will not put it on a
+real `<button>` and warns when you try. The default spread keeps it, because losing a spinner
+silently is worse than a console warning — and `action.dom()` returns the same props without it.
+It drops `loading` and nothing else, which the test asserts explicitly: `aria-keyshortcuts` and
+`data-focus-on-open` are what make the hotkey and the opening focus work with no wrapper, so a
+`dom` that over-trimmed would disable both without a sound.
+
+Composed with `Object.assign` onto a function created in the same expression — assigning the
+property onto the factory afterwards is a render-time mutation the React Compiler rules forbid.
+
+Every documented snippet that spread an action onto a bare `<button>` moved across, the landing
+page's included: it was the first code anyone sees, and it was teaching the trap.
+
+### Changed — the payload crosses in both directions, and neither side trusts it
+
+`requestOpen`'s payload was always `unknown` on arrival. The answer coming back is too, and the
+examples now say so: Billing closes with `{ transactionId, amount }` rather than a bare reason,
+and Checkout runs it through its own guard before believing a word of it — the same check the
+owner ran on the way in. The playground's `open-request` example pairs a parse-or-null for the
+request with a `data is ArchiveReceipt` predicate for the response, so one `if` narrows it for the
+rest of the block.
+
+A binding's own `close(reason, data)` is the door that can carry one. `dialogManager.close(id,
+reason)` still cannot, and still should not: the registry is keyed by string and knows no modal's
+`TData`.
+
+### Added — a microfrontend demo that is not staged
+
+`/advanced` gains a **Microfrontends** section: an iframe over `public/mfe/host.html`, a page
+this app does not build. Plain HTML, an import map, two `<script type="module">`, no bundler.
+That constraint is the demonstration — a build step that resolved `umbra` for both sides would
+have proved nothing about the import map.
+
+- **Checkout** is React (`createRoot`, `useState`, `useModal`) and owns `checkout:receipt`.
+  **Billing** is plain JavaScript, owns `billing:confirm`, and binds its own `<dialog>` to the
+  store engine in about forty lines — `public/mfe/binding.js`, a second binding written to show
+  what one costs when nothing about the job is React's.
+- Neither imports the other. Each asks the other with `requestOpen`, and the owner decides:
+  above Billing's stated limit the request is refused and nothing moves — no flash, no
+  open/close pair for anything watching.
+- `dialogManager` is a module-level singleton, so the import map naming `umbra` once is the
+  whole mechanism. Two bundles would be two registries and the requests would find nothing.
+  `vite-plugins/mfe-umbra.ts` bundles `mfe-src/shared.ts` with rolldown into that one module —
+  minified, but still React's development build, because its warnings are part of what the demo
+  teaches.
+- Each microfrontend has a colour, and the dialog it renders wears it: Billing can ask for
+  Checkout's receipt, and the modal that appears still looks like Checkout's. A dialog belongs
+  to whoever registered it, not to whoever asked.
+
+Two things the demo settles that a screenshot would not. The `<dialog>` a caller styles from a
+stylesheet comes out **invisible**, because the library writes `background: transparent;
+border: none; padding: 0` inline on the element it owns — headless-first means the box is
+yours to fill, and the surface belongs on the content inside `render`. And an action's props
+spread onto a bare `<button>` need `loading` destructured off first: it is the one field React
+will not forward to a DOM element.
+
+### Added — `chrome-cdp`, a skill that answers "which rule won"
+
+`.claude/skills/chrome-cdp/` drives a real Chrome over the DevTools protocol with no
+dependencies. `dom-probe` reports **computed** values, and a computed value looks the same
+whether your rule produced it or something outranked you — so `--probe css:<selector>` prints
+every matching rule in cascade order with each property's winner marked and every loser
+labelled with what beat it. It named the transparent-dialog cause above in one command, after
+three sessions had rediscovered it by guessing.
+
 ## 2026-08-07
 
 ### Changed — breaking: the state vocabulary says what it means

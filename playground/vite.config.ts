@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 // `.ts` and not extensionless: Vite's native config loader (the coming default) resolves the
 // specifier as written, and `allowImportingTsExtensions` is what makes the compiler agree.
 import { apiModelPlugin } from './vite-plugins/api-model.ts';
+import { mfeUmbraPlugin } from './vite-plugins/mfe-umbra.ts';
 
 // Set VITE_HASH_ROUTER=true to build for file:// (no server needed)
 const hashRouter = process.env['VITE_HASH_ROUTER'] === 'true';
@@ -21,6 +22,7 @@ export default defineConfig({
       presets: [reactCompilerPreset({ target: '19' })],
     }),
     apiModelPlugin(),
+    mfeUmbraPlugin(),
   ],
   resolve: {
     dedupe: ['react', 'react-dom'],

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { ModalPhase } from '../../core/types.js';
+import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, type DialogManagerEvent } from '../dialog-manager.js';
 
 /**
@@ -16,6 +16,7 @@ function createFakeStore() {
   let phase: ModalPhase = 'closed';
   let isPreparing = false;
   let closeReason: string | undefined;
+  const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 
   const notify = () => {
     // Mirrors the real store: dispatch over a snapshot so a listener may unsubscribe itself.
@@ -26,6 +27,11 @@ function createFakeStore() {
   };
 
   return {
+    // The manager's port includes a one-shot close resolver, so `requestOpenAndWait` can hand
+    // back a close it does not own. The fake drains its queue from `close`, like the real store.
+    addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
+      closeResolvers.push(resolve);
+    },
     /** Number of live subscriptions — the leak detector. */
     subscriberCount(): number {
       return listeners.size;

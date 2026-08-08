@@ -57,9 +57,9 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
  *     <div className="modal-container">
  *       <h2>Delete Item</h2>
  *       <p>Are you sure?</p>
- *       <button {...action('cancel', (close) => close())}>Cancel</button>
+ *       <button {...action.dom('cancel', (close) => close())}>Cancel</button>
  *       <button
- *         {...action('confirm', async (close) => {
+ *         {...action.dom('confirm', async (close) => {
  *           await api.delete();
  *           close();
  *         })}

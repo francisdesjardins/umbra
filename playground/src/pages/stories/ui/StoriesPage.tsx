@@ -54,7 +54,7 @@ import {
   StableIdentityHarness,
   StructuralToggleHarness,
   TransitionToggleHarness,
-  WaitForCloseHarness,
+  OpenAwaitHarness,
   StackedModalsHarness,
   NestedHotkeyScopeHarness,
   FocusUnderAnotherModalHarness,
@@ -90,14 +90,14 @@ import {
   AsyncOpenMessageHarness,
   BasicMessageHarness,
   DataMessageHarness,
-  WaitForCloseMessageHarness,
+  OpenAwaitMessageHarness,
 } from '../../../../../src/templates/__tests__/use-message-modal.story';
 import {
   BasicSlideHarness,
   DirectionSlideHarness,
   MultiDirectionSlideHarness,
   NonModalEscHotkeySlideHarness,
-  WaitForCloseSlideHarness,
+  OpenAwaitSlideHarness,
 } from '../../../../../src/templates/__tests__/use-slide-modal.story';
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -213,9 +213,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Wait For Close',
-        description: 'Opens then awaits waitForClose(). Status reflects the resolved reason.',
-        component: WaitForCloseHarness,
-        codeKey: 'story-use-modal-wait-for-close',
+        description: 'Awaits openAndWait(). Status reflects the resolved reason.',
+        component: OpenAwaitHarness,
+        codeKey: 'story-use-modal-open-await',
       },
       {
         title: 'Non-Modal Dialog',
@@ -323,7 +323,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Stable Identity',
         description:
-          'open/waitForClose/handle keep the same reference across re-renders and a full open/close cycle — no ref dance needed to use them in effects.',
+          'open/openAndWait/handle keep the same reference across re-renders and a full open/close cycle — no ref dance needed to use them in effects.',
         component: StableIdentityHarness,
         codeKey: 'story-use-modal-stable-identity',
       },
@@ -347,9 +347,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Wait For Close',
-        description: 'Opens then awaits waitForClose(). Status reflects the resolved reason.',
-        component: WaitForCloseMessageHarness,
-        codeKey: 'story-msg-wait-for-close',
+        description: 'Awaits openAndWait(). Status reflects the resolved reason.',
+        component: OpenAwaitMessageHarness,
+        codeKey: 'story-msg-open-await',
       },
       {
         title: 'Async Open',
@@ -382,9 +382,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Wait For Close',
-        description: 'Slides in from the left. Awaits waitForClose() and shows resolved reason.',
-        component: WaitForCloseSlideHarness,
-        codeKey: 'story-slide-wait-for-close',
+        description: 'Slides in from the left. Awaits openAndWait() and shows resolved reason.',
+        component: OpenAwaitSlideHarness,
+        codeKey: 'story-slide-open-await',
       },
       {
         title: 'All Four Directions',

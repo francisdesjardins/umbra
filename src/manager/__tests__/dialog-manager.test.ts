@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { ModalPhase } from '../../core/types.js';
+import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import {
   type MODAL_CLOSE_EVENT,
   type MODAL_OPEN_EVENT,
@@ -36,6 +36,7 @@ function createFakeStore() {
   let phase: ModalPhase = 'closed';
   let isPreparing = false;
   let closeReason: string | undefined;
+  const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 
   const notify = () => {
     for (const listener of listeners) {
@@ -44,6 +45,11 @@ function createFakeStore() {
   };
 
   return {
+    // The manager's port includes a one-shot close resolver, so `requestOpenAndWait` can hand
+    // back a close it does not own. The fake drains its queue from `close`, like the real store.
+    addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
+      closeResolvers.push(resolve);
+    },
     requestOpen(): void {
       if (phase !== 'closed') {
         return;

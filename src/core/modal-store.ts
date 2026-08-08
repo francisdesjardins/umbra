@@ -23,7 +23,7 @@ const log = createLogger('modal');
  *
  * @typeParam TData - The close payload this modal carries. `useModal<TData>` instantiates
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
- * `waitForClose()` — agree on one payload type without a single assertion.
+ * `openAndWait()` — agree on one payload type without a single assertion.
  */
 export function createModalStore<TData = unknown, TReason extends string = string>(id: string) {
   const initial: ModalStoreSnapshot<TData, TReason> = {
@@ -188,14 +188,14 @@ export function createModalStore<TData = unknown, TReason extends string = strin
       /**
        * Settle every waiter that is never going to get an answer.
        *
-       * A `waitForClose()` promise resolves from {@link finalize}, which only runs on a real
+       * A close-resolver promise settles from {@link finalize}, which only runs on a real
        * close. A modal can be destroyed without one — unmounted while closed, or unmounted
        * having never opened — and any promise still waiting would then stay pending for the
        * life of the process, holding its continuation (and everything that closure captures)
        * alive while the awaiting code silently never resumes.
        *
-       * The waiters get the `[Error, null]` branch of `WaitForCloseResult` rather than the
-       * retained `closeResult`: a `waitForClose()` issued after an earlier close is waiting
+       * The waiters get the `[Error, null]` branch of `AwaitedClose` rather than the
+       * retained `closeResult`: a resolver registered after an earlier close is waiting
        * for the *next* one, so replaying the previous reason would be a wrong answer, not a
        * late one.
        *

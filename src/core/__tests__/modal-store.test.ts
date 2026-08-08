@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createModalStore } from '../modal-store.js';
-import type { WaitForCloseResult } from '../types.js';
+import type { AwaitedClose } from '../types.js';
 
 /**
  * Unit coverage for the modal state machine.
@@ -221,9 +221,9 @@ test.describe('createModalStore — closing', () => {
     expect(store.getSnapshot().phase).toBe('closing');
   });
 
-  test('finalize resolves waitForClose with the close result', () => {
+  test('finalize settles the close resolvers with the close result', () => {
     const store = createModalStore('t');
-    const settled: WaitForCloseResult<unknown>[] = [];
+    const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
     });
@@ -246,15 +246,15 @@ test.describe('createModalStore — closing', () => {
     expect(store.getSnapshot().closeResult).toEqual({ reason: 'confirm' });
   });
 
-  test('abandon settles a waitForClose that will never happen', () => {
+  test('abandon settles a close that will never happen', () => {
     const store = createModalStore('t');
-    const settled: WaitForCloseResult<unknown>[] = [];
+    const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
     });
 
     // The modal is torn down having never opened. Without this, the promise returned by
-    // `waitForClose()` stays pending for the life of the process: the awaiting code never
+    // the resolver stays pending for the life of the process: the awaiting code never
     // resumes and the resolver keeps its closure alive.
     store.abandon();
 
@@ -270,9 +270,9 @@ test.describe('createModalStore — closing', () => {
     store.close('confirm');
     store.finalize();
 
-    // `waitForClose()` called after a close waits for the *next* one. When that never comes,
+    // a resolver registered after a close waits for the *next* one. When that never comes,
     // it must report abandonment rather than replay the retained 'confirm' result.
-    const settled: WaitForCloseResult<unknown>[] = [];
+    const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
     });
@@ -284,7 +284,7 @@ test.describe('createModalStore — closing', () => {
 
   test('abandon is harmless after a normal close settled the waiters', () => {
     const store = createModalStore('t');
-    const settled: WaitForCloseResult<unknown>[] = [];
+    const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
     });
@@ -357,5 +357,48 @@ test.describe('openSignal', () => {
   test('reading it before the first open gives a live signal, not null', () => {
     const store = createModalStore('signal-early');
     expect(store.openSignal().aborted).toBe(false);
+  });
+});
+
+/**
+ * The invariant `openAndWait` exists to satisfy — and the reason `addCloseResolver` is internal.
+ *
+ * A resolver answers the *next* close. Registered after one has already landed it waits for a
+ * close that will never come: no error, no timeout, nothing in the console. The public surface
+ * therefore never lets a caller choose the order — `openAndWait` registers first, always.
+ */
+test.describe('close resolvers and the order they must be registered in', () => {
+  test('a resolver registered after the close never settles', async () => {
+    const store = createModalStore<void, 'ok'>('resolver-late');
+
+    store.requestOpen();
+    frames.flush();
+    store.close('ok');
+    store.finalize();
+
+    let settled = false;
+    store.addCloseResolver(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+
+    expect(settled, 'a stale close was replayed — a wrong answer, not a late one').toBe(false);
+  });
+
+  test('a resolver registered before it does', async () => {
+    const store = createModalStore<void, 'ok'>('resolver-early');
+
+    const seen: AwaitedClose<void, 'ok'>[] = [];
+    store.addCloseResolver((result) => {
+      seen.push(result);
+    });
+
+    store.requestOpen();
+    frames.flush();
+    store.close('ok');
+    store.finalize();
+    await Promise.resolve();
+
+    expect(seen).toEqual([[null, { reason: 'ok' }]]);
   });
 });

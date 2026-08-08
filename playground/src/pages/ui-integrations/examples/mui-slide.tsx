@@ -81,8 +81,7 @@ export function MuiSlideExample() {
         variant="contained"
         size="small"
         onClick={async () => {
-          void panel.open();
-          const [, closeResult] = await panel.waitForClose();
+          const [, closeResult] = await panel.openAndWait();
           resultStore.setResult(`Panel closed with reason: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

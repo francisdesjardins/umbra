@@ -3,7 +3,7 @@ import {
   AsyncOpenMessageHarness,
   BasicMessageHarness,
   DataMessageHarness,
-  WaitForCloseMessageHarness,
+  OpenAwaitMessageHarness,
 } from './use-message-modal.story';
 
 test.describe('useMessageModal', () => {
@@ -54,8 +54,8 @@ test.describe('useMessageModal', () => {
     await expect(page.getByTestId('is-opening')).toHaveText('false', { timeout: 2000 });
   });
 
-  test('waitForClose resolves with close reason', async ({ mount, page }) => {
-    await mount(<WaitForCloseMessageHarness />);
+  test('openAndWait resolves with close reason', async ({ mount, page }) => {
+    await mount(<OpenAwaitMessageHarness />);
     await page.getByRole('button', { name: 'Open and Wait' }).click();
     await expect(page.getByTestId('status')).toHaveText('waiting');
     await page.getByRole('button', { name: 'Done' }).click();

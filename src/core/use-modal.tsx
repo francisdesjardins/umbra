@@ -15,15 +15,21 @@ import { dialogPlacement } from './placement.js';
 import { useModalOutletContext } from './modal-outlet.js';
 import { createActionEngine } from '../actions/action-engine.js';
 import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
-import type { ActionCloseFn, ActionFactory } from '../actions/types.js';
-import type { OpenRequest } from '../manager/dialog-manager.js';
+import type {
+  ActionButtonProps,
+  ActionCloseFn,
+  ActionFactory,
+  ActionOptions,
+  DomActionButtonProps,
+} from '../actions/types.js';
+import type { OpenRequestDispatch } from '../manager/dialog-manager.js';
 import type {
   GetDialog,
   ModalAnimation,
   ModalHandle,
   UseModalOptions,
   UseModalReturn,
-  WaitForCloseResult,
+  AwaitedClose,
 } from './types.js';
 
 /**
@@ -64,9 +70,9 @@ const defaultAnimation: ModalAnimation = {
  * teardown.
  *
  * @example
- * const { open, Modal, waitForClose } = useModal<void, 'ok'>({
+ * const { openAndWait, Modal } = useModal<void, 'ok'>({
  *   id: 'my-modal',
- *   render: ({ action }) => <button {...action('ok')}>OK</button>,
+ *   render: ({ action }) => <button {...action.dom('ok')}>OK</button>,
  *   onClose: (result) => console.log(result.reason),
  * });
  */
@@ -115,7 +121,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   // Everything here closes over `store` alone, so it is all built once and keeps a
   // stable identity for the lifetime of the hook. That matters for the returned
-  // `open` / `waitForClose` / `handle`: a fresh function each render would force
+  // `open` / `openAndWait` / `handle`: a fresh function each render would force
   // consumers to shuttle them through refs to use them in effects or pass them to
   // memoized children (and would defeat memoization inside `render`, which receives
   // `handle`). React Compiler cannot memoize them for us — they capture a value it
@@ -143,10 +149,18 @@ export function useModal<TData = void, TReason extends string = string>(
       });
     };
 
-    const waitForClose = (): Promise<WaitForCloseResult<TData, TReason>> => {
-      return new Promise((resolve) => {
+    // The resolver goes on **before** the open is requested, and that ordering is the whole
+    // method — it is why the store's `addCloseResolver` is not public. A close resolver waits
+    // for the *next* close by design, so one registered afterwards waits for a close that will
+    // never come; `prepare` is what makes that window wide enough to fall into, since
+    // `finalize` flushes the open resolvers defensively and an `open()` would return as if
+    // nothing had happened. Pinned by `modal-store.test.ts` and by `open-and-wait.story.tsx`.
+    const openAndWait = (): Promise<AwaitedClose<TData, TReason>> => {
+      const closed = new Promise<AwaitedClose<TData, TReason>>((resolve) => {
         store.addCloseResolver(resolve);
       });
+      store.requestOpen();
+      return closed;
     };
 
     const handle: ModalHandle<TData, TReason> = {
@@ -155,9 +169,9 @@ export function useModal<TData = void, TReason extends string = string>(
       },
     };
 
-    return { store, engine, getDialog, open, waitForClose, handle };
+    return { store, engine, getDialog, open, openAndWait, handle };
   });
-  const { store, engine, getDialog, open, waitForClose, handle } = init;
+  const { store, engine, getDialog, open, openAndWait, handle } = init;
   const snap = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
 
@@ -165,7 +179,11 @@ export function useModal<TData = void, TReason extends string = string>(
    * The factory handed to `render`. Calling it declares the action — that is the only place an
    * action is ever declared — and returns the props for its button.
    */
-  const action: ActionFactory<TData, TReason> = (reason, handlerOrOptions) => {
+  const declareAction = (
+    reason: TReason | 'dismiss',
+    handlerOrOptions?:
+      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+  ): ActionButtonProps => {
     const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : opts?.onAction;
     const effective = handler ?? autoClose;
@@ -196,6 +214,35 @@ export function useModal<TData = void, TReason extends string = string>(
       ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };
+
+  /**
+   * `action.dom(…)` — the same declaration, minus `loading`.
+   *
+   * A property on the function rather than a second argument or a return-shape option: the two
+   * differ only in what comes back, so the alternative is a conditional return type, and this
+   * codebase pays for those in casts at every boundary the value crosses. Composed with
+   * `Object.assign` onto a function created in the same expression — assigning onto
+   * `declareAction` afterwards is a render-time mutation the React Compiler rules forbid.
+   */
+  const action: ActionFactory<TData, TReason> = Object.assign(
+    (
+      reason: TReason | 'dismiss',
+      handlerOrOptions?:
+        ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+    ): ActionButtonProps => {
+      return declareAction(reason, handlerOrOptions);
+    },
+    {
+      dom: (
+        reason: TReason | 'dismiss',
+        handlerOrOptions?:
+          ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+      ): DomActionButtonProps => {
+        const { loading: _loading, ...domProps } = declareAction(reason, handlerOrOptions);
+        return domProps;
+      },
+    }
+  );
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const animation = animationProp ?? defaultAnimation;
@@ -238,7 +285,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // <dialog> cannot survive being remounted into a different structure while open. The
   // cleanup therefore both unregisters AND finalizes an open modal: on a structural prop
   // change this closes it cleanly (rather than leaving a stuck, orphaned dialog), and on a
-  // true unmount it settles `onClose`/`waitForClose` with a 'dismiss' reason.
+  // true unmount it settles `onClose` and any pending close resolver with a 'dismiss' reason.
   // The handler the registry holds is stable for the life of the registration, and reads the
   // latest one through a ref — a new closure every render would make this effect re-register on
   // every render, and re-registering is not free: it tears the subscription down and back up.
@@ -256,8 +303,10 @@ export function useModal<TData = void, TReason extends string = string>(
       modalType: modalType ?? 'modal',
       nonModal: isNonModal,
       ...(acceptsOpenRequests && {
-        onOpenRequest: (payload: unknown, request: OpenRequest) => {
-          openRequestHandler.current?.(payload, request);
+        // Returned, not swallowed: the manager awaits the handler, so an owner that validates
+        // asynchronously still gets to refuse before `requestOpenAndWait` answers.
+        onOpenRequest: (payload: unknown, request: OpenRequestDispatch) => {
+          return openRequestHandler.current?.(payload, request);
         },
       }),
     });
@@ -271,7 +320,7 @@ export function useModal<TData = void, TReason extends string = string>(
         log('Tearing down open modal', { id: modalId });
 
         // If not already closing, initiate close with 'dismiss' reason so closeResult is
-        // set for both onClose and waitForClose (this also cancels any pending open frame).
+        // set for both onClose and the close resolvers (this also cancels any pending open frame).
         // If already closing, this is a no-op and closeResult retains the original reason.
         store.close('dismiss');
 
@@ -284,7 +333,7 @@ export function useModal<TData = void, TReason extends string = string>(
       }
 
       // Unconditional: a modal can be destroyed while closed and still have waiters, because
-      // `waitForClose()` may be called before the first `open()` — or after a close, awaiting
+      // A close resolver may be registered before the first open — or after a close, awaiting
       // the next one that now never comes. `finalizeModalClose` above already settled the
       // open-modal case, so this drains an empty queue there and only bites in the case it
       // exists for. Without it those promises never settle.
@@ -456,7 +505,7 @@ export function useModal<TData = void, TReason extends string = string>(
     isVisible: snap.phase !== 'closed',
     isPreparing: snap.isPreparing,
     Modal,
-    waitForClose,
+    openAndWait,
     handle,
     action,
     hasRunningAction: actionSnap.isRunning,

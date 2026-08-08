@@ -197,6 +197,32 @@ export default defineConfig(
   },
 
   // -------------------------------------------------------------------------
+  // Scope 3d — The microfrontend demo, served verbatim from `public/`
+  //
+  // Plain browser JavaScript with no build step, which is the demonstration: the import map is
+  // what resolves `umbra`, so nothing may compile these files. That puts them outside every
+  // TS scope above — and shipped code the code viewer prints is exactly the code worth linting.
+  // Untyped, so the type-aware rules cannot apply; `no-undef` does the work instead.
+  // -------------------------------------------------------------------------
+  {
+    extends: [js.configs.recommended],
+    files: ['playground/public/mfe/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: { ...globals.browser },
+    },
+    rules: {
+      eqeqeq: 'error',
+      curly: ['error', 'all'],
+      'arrow-parens': ['error', 'always'],
+      'arrow-body-style': ['error', 'always'],
+      // The two logs on the page are the demo's output; `console` is not.
+      'no-console': 'error',
+    },
+  },
+
+  // -------------------------------------------------------------------------
   // Scope 3c — JSDoc examples, extracted by `scripts/check-examples.mjs`
   //
   // A doc example is code a reader copies, so it is linted — but as a snippet, not as library

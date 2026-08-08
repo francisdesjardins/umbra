@@ -190,7 +190,7 @@ function useLooseReasons() {
   });
 }
 export type _LooseReasonIsString = Equals<
-  Awaited<ReturnType<ReturnType<typeof useLooseReasons>['waitForClose']>>[1],
+  Awaited<ReturnType<ReturnType<typeof useLooseReasons>['openAndWait']>>[1],
   CloseResult<Payload> | null
 >;
 

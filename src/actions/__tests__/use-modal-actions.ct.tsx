@@ -4,6 +4,7 @@ import {
   ActionLoggingHarness,
   ReasonSourceHarness,
   SpreadContractHarness,
+  DomSpreadHarness,
   HotkeyWhilePreparingHarness,
   BasicActionsHarness,
   DefinitionActionsHarness,
@@ -465,6 +466,40 @@ test.describe('the props an action spreads onto a button', () => {
       return node.matches('[data-loading="true"]');
     });
     expect(matches).toBe(true);
+  });
+
+  test('action.dom drops loading and keeps everything a bare button needs', async ({
+    mount,
+    page,
+  }) => {
+    const warnings: string[] = [];
+    page.on('console', (m) => {
+      if (m.type() === 'error' || m.type() === 'warning') warnings.push(m.text());
+    });
+    await mount(<DomSpreadHarness />);
+    await page.getByRole('button', { name: 'Open Dom Spread' }).click();
+
+    const dom = page.getByTestId('dom-btn');
+    // The half that is easy to get right.
+    const attrs = await dom.evaluate((node) => {
+      return [...node.attributes].map((a) => {
+        return a.name;
+      });
+    });
+    expect(attrs, 'a non-DOM prop reached the element').not.toContain('loading');
+
+    // The half a happy-path test would miss: `dom` must trim `loading` and nothing else, or it
+    // silently disables the hotkey and the opening focus it was supposed to preserve.
+    await expect(dom).toHaveAttribute('aria-keyshortcuts', 'Enter');
+    await expect(dom).toHaveAttribute('data-focus-on-open', 'true');
+    await expect(dom).toHaveAttribute('data-loading', 'false');
+    await expect(dom).toHaveAttribute('type', 'button');
+    await expect(dom).toBeFocused();
+
+    // And it still runs: the action closes the modal with its own reason.
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('modal-dom-spread')).not.toBeVisible();
+    expect(warnings.join(' '), 'React complained about the dom spread').not.toMatch(/loading/i);
   });
 
   test('do not submit a surrounding form', async ({ mount, page }) => {

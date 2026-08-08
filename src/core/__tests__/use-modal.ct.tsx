@@ -20,7 +20,8 @@ import {
   PortalNonModalDefaultHarness,
   PortalNonModalOptInHarness,
   PortalOptInHarness,
-  WaitForCloseHarness,
+  OpenAwaitHarness,
+  OpenAndWaitHarness,
   DismissWhilePreparingDefaultHarness,
   DismissWhilePreparingDisabledHarness,
   ReopenSettlesHarness,
@@ -91,12 +92,23 @@ test.describe('useModal', () => {
     await expect(page.getByTestId('modal-reopen-modal')).not.toBeVisible();
   });
 
-  test('waitForClose resolves with the close reason', async ({ mount, page }) => {
-    await mount(<WaitForCloseHarness />);
+  test('openAndWait resolves with the close reason', async ({ mount, page }) => {
+    await mount(<OpenAwaitHarness />);
     await page.getByRole('button', { name: 'Open and Wait' }).click();
     await expect(page.getByTestId('status')).toHaveText('waiting');
     await page.getByRole('button', { name: 'Done' }).click();
     await expect(page.getByTestId('status')).toHaveText('resolved:done');
+  });
+
+  test('openAndWait settles even when the close lands during prepare', async ({ mount, page }) => {
+    await mount(<OpenAndWaitHarness />);
+    await page.getByTestId('open-and-wait').click();
+    await expect(page.getByTestId('loading-state')).toHaveText('loading');
+    // Dismissed before `prepare` ever settles — the window a close resolver registered on the
+    // line *after* the open would fall into, waiting for a close that already happened. The
+    // store-side invariant that makes that a real hazard is in `modal-store.test.ts`.
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('outcome')).toHaveText('settled:dismiss');
   });
 
   test('can be opened and closed multiple times', async ({ mount, page }) => {
@@ -520,7 +532,7 @@ test.describe('useModal — dismissOnClickOutside', () => {
 });
 
 test.describe('useModal — returned identities', () => {
-  test('open/waitForClose/handle keep a stable identity across re-renders and a full lifecycle', async ({
+  test('open/openAndWait/handle keep a stable identity across re-renders and a full lifecycle', async ({
     mount,
     page,
   }) => {

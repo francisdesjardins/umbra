@@ -11,12 +11,12 @@ const slidePanelStyle: CSSProperties = {
 };
 
 /**
- * Tests slide in from left. waitForClose() resolves with the close reason.
+ * Tests slide in from left. openAndWait() resolves with the close reason.
  */
-export function WaitForCloseSlideHarness() {
+export function OpenAwaitSlideHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { open, waitForClose, Modal } = useSlideModal<void, 'close'>({
+  const { openAndWait, Modal } = useSlideModal<void, 'close'>({
     id: 'slide-wait',
     direction: 'left',
     render: ({ handle }) => {
@@ -36,8 +36,7 @@ export function WaitForCloseSlideHarness() {
 
   const handleOpen = async () => {
     setStatus('waiting');
-    await open();
-    const [, result] = await waitForClose();
+    const [, result] = await openAndWait();
     setStatus(`resolved:${String(result?.reason)}`);
   };
 

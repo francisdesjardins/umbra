@@ -54,7 +54,7 @@ Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
-- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
+- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread onto a button **component**. On a bare `<button>` use `action.dom(...)`, which drops `loading` — the one prop React will not put on a DOM element — and nothing else. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
 - **Public API**: the root is [src/index.ts](../src/index.ts), the React binding [src/react.ts](../src/react.ts). Internal hooks in `src/hooks/` are NOT exported.
 - **Hotkeys**: declared on the action — `action('save', { hotkey: Key.Enter, onAction })` — not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
 
@@ -64,6 +64,7 @@ These are hard constraints — never violate them when generating code:
 
 - **Headless-first**: never add UI components to the library (`src/`). Zero shipped UI — users own all rendering.
 - **Minimal surface**: prefer extending `useModal` over adding new template hooks.
+- **Asking vs instructing**: `dialogManager.open(id)` instructs; `requestOpen(id, request)` asks and forgets; `requestOpenAndWait(id, request)` asks and returns an `OpenRequestOutcome` — the owner refuses with `request.refuse(reason)`, and acceptance is the default. Payloads crossing an ownership boundary are `unknown` **in both directions**: validate the request in `onOpenRequest`, and validate `outcome.closed`'s `data` before believing it.
 - **No abstraction leakage**: template hooks must not expose core internals (store, lifecycle refs, `ModalStoreSnapshot`).
 - **Bring your own everything**: animations, styling, and layout are user-land concerns — do not bake them in.
 
@@ -81,13 +82,13 @@ These are hard constraints — never violate them when generating code:
 - **Store creation**: `const [init] = useState(() => createStore())` — not `useRef` (avoids ref-tainting)
 - **`createModalStore` lives in its own module** ([src/core/modal-store.ts](../src/core/modal-store.ts)) — verified compiler-neutral: `useModal` compiles to the same memo slots imported or colocated
 - **`Map` writes are safe** — handler registries use `Map<string, handler>` (not treated as ref writes)
-- **Stable identities**: `open()`, `waitForClose()` and `handle` keep the same reference for the life of the hook — use them directly in dependency arrays, no ref indirection
+- **Stable identities**: `open()`, `openAndWait()` and `handle` keep the same reference for the life of the hook — use them directly in dependency arrays, no ref indirection
 
 ### TypeScript Strict Mode
 
 - `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature` all enabled
 - Generics default to `void`: `<TData = void>` — `CloseResult<TData>` stays a **plain** object (a conditional there would force a cast at every boundary the result crosses); with `TData = void`, `data` is an unusable `void | undefined`
-- Go-style error tuples: `const [err, result] = await waitForClose()` — never throws
+- Go-style error tuples: `const [err, result] = await openAndWait()` (`AwaitedClose`) — never throws. There is no `waitForClose`: a close resolver answers the _next_ close, so registering one after the open can miss a close that landed during `prepare`, and `openAndWait` registers first. To observe a close you are not causing, use `onClose`
 - Catch clauses: `catch (err: unknown)` → `normalizeError(err)` immediately
 - No `any` without `eslint-disable` comment explaining why
 

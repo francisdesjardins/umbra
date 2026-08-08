@@ -187,9 +187,9 @@ export type ActionOptions<TData = never> = {
  * render: ({ action }) => {
  *   return (
  *     <>
- *       <button {...action('cancel')}>Cancel</button>
+ *       <button {...action.dom('cancel')}>Cancel</button>
  *       <button
- *         {...action('confirm', async (close) => {
+ *         {...action.dom('confirm', async (close) => {
  *           await api.confirm();
  *           close();
  *         })}
@@ -200,10 +200,39 @@ export type ActionOptions<TData = never> = {
  *   );
  * };
  */
-export type ActionFactory<TData = never, TReason extends string = string> = (
-  reason: TReason | 'dismiss',
-  handlerOrOptions?: ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-) => ActionButtonProps;
+export type ActionFactory<TData = never, TReason extends string = string> = {
+  (
+    reason: TReason | 'dismiss',
+    handlerOrOptions?:
+      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+  ): ActionButtonProps;
+  /**
+   * The same action, minus the one prop a DOM element cannot take.
+   *
+   * `loading` is for a button *component* that declares it — MUI, Mantine — and React drops it
+   * on a real `<button>` with a warning. Both directions matter and only one is loud: leaving it
+   * in the default spread costs a console warning on a bare button, taking it out would silently
+   * cost the spinner on every component one. So the default keeps it and this is the door for
+   * markup you write yourself. `data-loading` carries the same state either way.
+   *
+   * @example
+   * // A bare button, with the hotkey and the opening focus still wired.
+   * <button {...action.dom('ok', { hotkey: Key.Enter, focusOnOpen: true })}>OK</button>;
+   */
+  dom(
+    reason: TReason | 'dismiss',
+    handlerOrOptions?:
+      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+  ): DomActionButtonProps;
+};
+
+/**
+ * {@link ActionButtonProps} narrowed to what a DOM element accepts — every field but `loading`.
+ *
+ * Derived, so a prop added to the action's props reaches this one too and there is no second
+ * list to keep in step.
+ */
+export type DomActionButtonProps = Omit<ActionButtonProps, 'loading'>;
 
 // ── Internal ────────────────────────────────────────────────────────────────
 

@@ -10,19 +10,19 @@ const REPO = 'https://github.com/francisdesjardins/umbra';
 const GETTING_IT = `git clone https://github.com/francisdesjardins/umbra.git
 cd umbra && yarn install && yarn dev
 
-# Or lift what you need straight out of src/ — plain TypeScript,
-# no build magic, no runtime dependencies. MIT, no ceremony.
-
-import { dialogManager } from 'umbra';        // the root: no React needed
-import { useModal } from 'umbra/react';       // the React binding`;
+# Or lift what you need out of src/ — plain TypeScript, MIT, no ceremony.
+import { dialogManager } from 'umbra';   // the root: no React needed
+import { useModal } from 'umbra/react';  // the React binding`;
 
 const HELLO = `const modal = useModal<void, 'confirm' | 'cancel'>({
   id: 'hello',
   ariaLabel: 'Hello',
+  // action.dom() drops \`loading\`, the one prop React will not put on a DOM
+  // element. Spread action() onto your own button component — it wants it.
   render: ({ action }) => (
     <>
-      <button {...action('cancel', { focusOnOpen: true })}>Not now</button>
-      <button {...action('confirm', { hotkey: Key.Enter })}>Confirm</button>
+      <button {...action.dom('cancel', { focusOnOpen: true })}>Not now</button>
+      <button {...action.dom('confirm', { hotkey: Key.Enter })}>Confirm</button>
     </>
   ),
   onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
@@ -177,15 +177,17 @@ export const HomePage = () => {
         </Box>
       </Stack>
 
-      {/* How you get it, and the shape of the API, side by side on a wide screen */}
-      <Stack direction={{ xs: 'column', md: 'row' }} sx={{ gap: 3, mb: 5, minWidth: 0 }}>
-        <Box sx={{ flex: 1, minWidth: 0, overflowX: 'auto' }}>
+      {/* Stacked, not side by side. Two panes at half the page width put both snippets into
+          their own horizontal scrollbar, which is the one thing a landing page's code must not
+          ask for — full width, each of these fits. */}
+      <Stack sx={{ gap: 3, mb: 5, minWidth: 0 }}>
+        <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" color="text.secondary">
             ◐ Getting it
           </Typography>
           <CodeBlock code={GETTING_IT} language="bash" />
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0, overflowX: 'auto' }}>
+        <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" color="text.secondary">
             ◑ The whole API of a confirm dialog
           </Typography>

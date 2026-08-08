@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
-import type { DialogManager, OpenRequest } from '../manager/dialog-manager.js';
+import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 
 // ── Close Results ─────────────────────────────────────────────────────────────
 
@@ -15,7 +15,7 @@ import type { DialogManager, OpenRequest } from '../manager/dialog-manager.js';
  * to `CloseResult<TData>` while `TData` is still a type parameter, so every generic boundary
  * the result crosses — the store, the resolver queue, `onClose` — would need an assertion to
  * get past it. A shape the compiler can see through is what lets `TData` flow from
- * `useModal<TData>()` to `handle.close()` and back out of `waitForClose()` with no casts.
+ * `useModal<TData>()` to `handle.close()` and back out of `openAndWait()` with no casts.
  */
 export type CloseResult<TData = void, TReason extends string = string> = {
   /**
@@ -30,12 +30,12 @@ export type CloseResult<TData = void, TReason extends string = string> = {
 };
 
 /**
- * Go-style `[error, result]` safe-await tuple returned by `waitForClose()`.
+ * Go-style `[error, result]` safe-await tuple returned by `openAndWait()`.
  *
  * - `[null, result]` — successful close with reason and optional data
  * - `[Error, null]` — error during close lifecycle
  */
-export type WaitForCloseResult<TData = void, TReason extends string = string> =
+export type AwaitedClose<TData = void, TReason extends string = string> =
   | readonly [error: null, result: CloseResult<TData, TReason>]
   | readonly [error: Error, result: null];
 
@@ -234,9 +234,10 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * without it, every such request is declined. `dialogManager.open(id)` is a different door and
    * is unaffected either way.
    *
-   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`, decline by
-   * returning — a request nobody agreed to is a request that changes nothing, which is what makes
-   * asking safe to expose across a boundary in the first place.
+   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`; decline with
+   * `request.refuse(reason)`, so a caller using `requestOpenAndWait` learns why instead of
+   * watching nothing happen. Returning without either also declines — silently, which is the
+   * right default for a request nobody agreed to and the wrong one across a boundary.
    *
    * The payload is `unknown` because it crossed that boundary: validate it before believing it.
    * It arrives first because it is what a handler almost always wants; the envelope follows, for
@@ -246,11 +247,10 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * @example
    * const { open, Modal } = useModal<void, 'confirm'>({
    *   id: 'patient:merge',
-   *   onOpenRequest: (payload, { context }) => {
+   *   onOpenRequest: (payload, request) => {
    *     const parsed = mergeRequestSchema.safeParse(payload);
    *     if (!parsed.success) {
-   *       console.warn('Ignored a merge request', { from: context?.source });
-   *       return;
+   *       return request.refuse('invalid-payload');
    *     }
    *     setPatientId(parsed.data.patientId);
    *     void open();
@@ -260,7 +260,9 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    *   },
    * });
    */
-  readonly onOpenRequest?: ((payload: unknown, request: OpenRequest) => void) | undefined;
+  // The manager's own handler type, not a restatement of it: the shape gained `refuse` and an
+  // async return, and a copy here is a copy that would have silently kept the old one.
+  readonly onOpenRequest?: OpenRequestHandler | undefined;
 
   /**
    * Optional keydown handler called on the dialog element.
@@ -388,7 +390,7 @@ export type UseModalOptions<TData = void, TReason extends string = string> = Use
  *
  * @example
  * function DeleteButton() {
- *   const { open, Modal, waitForClose } = useModal<boolean>({
+ *   const { openAndWait, Modal } = useModal<boolean>({
  *     id: 'confirm-delete',
  *     render: ({ handle, action }) => {
  *       return <button onClick={() => handle.close('confirm', true)}>Yes, delete</button>;
@@ -396,8 +398,7 @@ export type UseModalOptions<TData = void, TReason extends string = string> = Use
  *   });
  *
  *   const ask = async () => {
- *     await open();
- *     const [error, result] = await waitForClose();
+ *     const [error, result] = await openAndWait();
  *     return error === null && result.data === true;
  *   };
  *
@@ -432,11 +433,28 @@ export type UseModalReturn<TData = void, TReason extends string = string> = Moda
   /** React element to render. Place in JSX as {Modal}. Renders null when closed. */
   readonly Modal: ReactNode;
   /**
-   * Wait for the modal to close. Returns a 2-element tuple:
-   * - `[null, result]` on success
-   * - `[Error, null]` on error, e.g. the modal was destroyed before it closed
+   * Open the modal and resolve with how it closed — the two halves in one call, in the only
+   * order that is safe.
+   *
+   * **The only door that awaits a close, and deliberately.** A close resolver answers the
+   * *next* close — replaying a previous one would be a wrong answer rather than a late one — so
+   * it has to be registered before anything can close. `prepare` opens exactly that window: a
+   * modal dismissed while it runs closes *inside* an open that resolves after `prepare` has
+   * returned, and a resolver added on the line afterwards would wait forever, with no error and
+   * no timeout. This registers first, which is why the store's `addCloseResolver` is internal
+   * and the surface never lets a caller choose the order.
+   *
+   * To observe a close you are not the one causing, use `onClose` — it is a callback rather than
+   * a promise and carries no ordering question at all. To await a dialog you do not own, see
+   * `dialogManager.requestOpenAndWait`, whose accepted branch carries the close.
+   *
+   * @example
+   * const [error, result] = await openAndWait();
+   * if (error === null && result.reason === 'confirm') {
+   *   await api.delete();
+   * }
    */
-  readonly waitForClose: () => Promise<WaitForCloseResult<TData, TReason>>;
+  readonly openAndWait: () => Promise<AwaitedClose<TData, TReason>>;
   /** The dialog manager instance this modal is registered with. */
   readonly dialogManager: DialogManager;
 };
@@ -458,7 +476,7 @@ export type UseModalReturn<TData = void, TReason extends string = string> = Moda
 export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
 
 export type CloseResolver<TData = unknown, TReason extends string = string> = (
-  result: WaitForCloseResult<TData, TReason>
+  result: AwaitedClose<TData, TReason>
 ) => void;
 
 /**
@@ -475,7 +493,7 @@ export type ModalStoreSnapshot<TData = unknown, TReason extends string = string>
   /** Whether `prepare` is still running — see `ModalRenderArgs`. */
   readonly isPreparing: boolean;
   /**
-   * Last close result — the same `CloseResult` the public `onClose` and `waitForClose`
+   * Last close result — the same `CloseResult` the public `onClose` and `openAndWait`
    * hand out, not an internal restatement of it. Retained through `'closed'`; reset on
    * the next open.
    */

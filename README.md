@@ -36,7 +36,7 @@ enforced by a test that walks the root's import graph, not by convention.
 - **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ onClick, loading, disabled, 'aria-keyshortcuts'? }` to spread. No config, nothing to pass in
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
-- **Go-style `waitForClose()`** — `const [err, result] = await modal.waitForClose()`
+- **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
 - **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, loading state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
 - **Zero runtime dependencies** — `react` and `react-dom` are _optional_ peers, needed only by `./react`
@@ -77,9 +77,9 @@ function ConfirmDelete() {
       <div>
         <h2 id="confirm-delete-title">Delete Item</h2>
         <p>Are you sure?</p>
-        <button {...action('cancel')}>Cancel</button>
+        <button {...action.dom('cancel')}>Cancel</button>
         <button
-          {...action('confirm', async (close) => {
+          {...action.dom('confirm', async (close) => {
             await api.deleteItem();
             close();
           })}
@@ -113,9 +113,9 @@ const modal = useModal<User, 'submit' | 'cancel'>({
   id: 'create-user',
   render: ({ action, hasRunningAction }) => (
     <>
-      <button {...action('cancel')}>Cancel</button>
+      <button {...action.dom('cancel')}>Cancel</button>
       <button
-        {...action('submit', (close) => {
+        {...action.dom('submit', (close) => {
           close(draft);
         })}
         disabled={hasRunningAction}
@@ -172,7 +172,9 @@ export const deleteAccount = async () => {
 ```
 
 Your UI layer only has to _register_ a modal with that id; the service decides when it appears.
-`open()` plus a one-shot `subscribe()` is the imperative equivalent of `waitForClose()`.
+For a dialog the service does not own, `requestOpenAndWait(id, request)` asks instead of
+instructing and comes back with the owner's answer — a reason if it refused, the close if it did
+not.
 
 ## ◐ API Reference
 
@@ -183,7 +185,8 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `action(reason, handler?)` — actions, declared where they are rendered
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close
-- `waitForClose()` — Go-style async result
+- `openAndWait()` — Go-style async result: open, and resolve with how it closed
+- `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `matchesHotkey`, `HotkeyDef`)
 - Debug logging

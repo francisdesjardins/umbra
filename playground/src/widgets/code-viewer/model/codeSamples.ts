@@ -9,6 +9,15 @@ import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.t
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
 import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
 import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
+import microfrontendsSrc from '@/pages/advanced/examples/microfrontends.tsx?raw';
+// The microfrontend demo's own files. Not under `src/`, and that is the point: they are served
+// verbatim from `public/`, so what the viewer shows is byte-for-byte what the browser runs — no
+// alias, no JSX, no build step between the two.
+import mfeHostSrc from '../../../../public/mfe/host.html?raw';
+import mfeCheckoutSrc from '../../../../public/mfe/mfa1.js?raw';
+import mfeBillingSrc from '../../../../public/mfe/mfa2.js?raw';
+import mfeBindingSrc from '../../../../public/mfe/binding.js?raw';
+import mfeSharedEntrySrc from '../../../../mfe-src/shared.ts?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
@@ -50,7 +59,7 @@ import storyUseModalReopenSettlesSrc from '../../../../../src/core/__tests__/use
 import storyUseModalStableIdentitySrc from '../../../../../src/core/__tests__/use-modal/stable-identity.story.tsx?raw';
 import storyUseModalBackdropHitTestSrc from '../../../../../src/core/__tests__/use-modal/backdrop-hit-test.story.tsx?raw';
 import storyOutletPaintTimingSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
-import storyUseModalWaitForCloseSrc from '../../../../../src/core/__tests__/use-modal/wait-for-close.story.tsx?raw';
+import storyUseModalOpenAwaitSrc from '../../../../../src/core/__tests__/use-modal/open-await.story.tsx?raw';
 
 // ── useModalActions stories ───────────────────────────────────────────────
 import storyActionsBasicSrc from '../../../../../src/actions/__tests__/use-modal-actions/basic-controller.story.tsx?raw';
@@ -99,7 +108,7 @@ import storyOutletNullModalSrc from '../../../../../src/core/__tests__/modal-out
 import storyMsgAsyncOpenSrc from '../../../../../src/templates/__tests__/use-message-modal/async-open-message.story.tsx?raw';
 import storyMsgBasicSrc from '../../../../../src/templates/__tests__/use-message-modal/basic-message.story.tsx?raw';
 import storyMsgDataSrc from '../../../../../src/templates/__tests__/use-message-modal/data-message.story.tsx?raw';
-import storyMsgWaitForCloseSrc from '../../../../../src/templates/__tests__/use-message-modal/wait-for-close-message.story.tsx?raw';
+import storyMsgOpenAwaitSrc from '../../../../../src/templates/__tests__/use-message-modal/open-await-message.story.tsx?raw';
 
 // ── MUI template components ─────────────────────────────────────────────────
 import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
@@ -188,7 +197,7 @@ import storySlideBasicSrc from '../../../../../src/templates/__tests__/use-slide
 import storySlideDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/direction-slide.story.tsx?raw';
 import storySlideMultiDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
 import storySlideNonModalEscHotkeySrc from '../../../../../src/templates/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
-import storySlideWaitForCloseSrc from '../../../../../src/templates/__tests__/use-slide-modal/wait-for-close-slide.story.tsx?raw';
+import storySlideOpenAwaitSrc from '../../../../../src/templates/__tests__/use-slide-modal/open-await-slide.story.tsx?raw';
 
 import storyFocusOnOpenSrc from '../../../../../src/actions/__tests__/use-modal-actions/focus-on-open.story.tsx?raw';
 import storyStackedModalsSrc from '../../../../../src/core/__tests__/use-modal/stacked-modals.story.tsx?raw';
@@ -219,6 +228,12 @@ export const codeSamples: Record<string, string> = {
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
   'modal-outlet': modalOutletSrc,
+  microfrontends: microfrontendsSrc,
+  'mfe-host-html': mfeHostSrc,
+  'mfe-checkout': mfeCheckoutSrc,
+  'mfe-billing': mfeBillingSrc,
+  'mfe-binding': mfeBindingSrc,
+  'mfe-shared-entry': mfeSharedEntrySrc,
   'mui-message': muiMessageSrc,
   'mui-slide': muiSlideSrc,
   'mui-form': muiFormSrc,
@@ -228,7 +243,7 @@ export const codeSamples: Record<string, string> = {
 
   // useModal stories
   'story-use-modal-basic': storyUseModalBasicSrc,
-  'story-use-modal-wait-for-close': storyUseModalWaitForCloseSrc,
+  'story-use-modal-open-await': storyUseModalOpenAwaitSrc,
   'story-use-modal-non-modal': storyUseModalNonModalSrc,
   'story-use-modal-non-modal-stack': storyUseModalNonModalStackSrc,
   'story-use-modal-non-modal-esc-isolation': storyUseModalNonModalEscIsolationSrc,
@@ -306,14 +321,14 @@ export const codeSamples: Record<string, string> = {
 
   // useMessageModal stories
   'story-msg-basic': storyMsgBasicSrc,
-  'story-msg-wait-for-close': storyMsgWaitForCloseSrc,
+  'story-msg-open-await': storyMsgOpenAwaitSrc,
   'story-msg-async-open': storyMsgAsyncOpenSrc,
   'story-msg-data': storyMsgDataSrc,
 
   // useSlideModal stories
   'story-slide-basic': storySlideBasicSrc,
   'story-slide-direction': storySlideDirectionSrc,
-  'story-slide-wait-for-close': storySlideWaitForCloseSrc,
+  'story-slide-open-await': storySlideOpenAwaitSrc,
   'story-slide-multi-direction': storySlideMultiDirectionSrc,
   'story-slide-non-modal-esc-hotkey': storySlideNonModalEscHotkeySrc,
 

@@ -21,7 +21,7 @@ type Activity = { readonly at: string; readonly text: string };
  * Open a dialog and resolve with the reason it closed.
  *
  * This is the piece that makes dialogs usable from a service: React callers get
- * `modal.waitForClose()`, and the imperative equivalent is `open()` plus a one-shot
+ * `modal.openAndWait()`, and the imperative equivalent is `open()` plus a one-shot
  * `subscribe()`. The listener unsubscribes itself, so a caller that never awaits does not
  * leak a subscription.
  */

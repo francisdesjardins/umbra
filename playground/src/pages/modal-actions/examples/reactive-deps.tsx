@@ -278,8 +278,7 @@ export function ReactiveDepsExample() {
         variant="contained"
         size="small"
         onClick={async () => {
-          await reactiveModal.open();
-          const [, closeResult] = await reactiveModal.waitForClose();
+          const [, closeResult] = await reactiveModal.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

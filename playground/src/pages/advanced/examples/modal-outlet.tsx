@@ -55,8 +55,7 @@ function ConfirmDialog() {
         variant="contained"
         size="small"
         onClick={async () => {
-          await confirmModal.open();
-          const [, closeResult] = await confirmModal.waitForClose();
+          const [, closeResult] = await confirmModal.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
