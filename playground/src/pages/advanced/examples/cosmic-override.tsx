@@ -303,7 +303,7 @@ export function CosmicOverrideExample() {
             'radial-gradient(ellipse at 30% 110%, #422006 0%, #020617 65%)',
         }}
       >
-        {!gate.isOpen && (
+        {!gate.isVisible && (
           <Box
             sx={{
               position: 'absolute',

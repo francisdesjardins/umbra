@@ -14,7 +14,7 @@ import { dialogStyle } from '../story-styles.js';
 export function ActionErrorHotkeyRetryHarness() {
   const [attempts, setAttempts] = useState(0);
 
-  const { open, isOpen, Modal } = useModal<void, 'save'>({
+  const { open, isVisible, Modal } = useModal<void, 'save'>({
     id: 'action-error-retry',
     render: ({ action, error }) => {
       // `loading` is not a DOM prop; a raw button takes the rest.
@@ -50,7 +50,7 @@ export function ActionErrorHotkeyRetryHarness() {
       >
         Open Retry
       </button>
-      <span data-testid="retry-is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="retry-is-visible">{isVisible ? 'open' : 'closed'}</span>
       {Modal}
     </div>
   );

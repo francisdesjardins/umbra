@@ -111,14 +111,14 @@ type User = { id: string; name: string };
 
 const modal = useModal<User, 'submit' | 'cancel'>({
   id: 'create-user',
-  render: ({ action, isRunning }) => (
+  render: ({ action, hasRunningAction }) => (
     <>
       <button {...action('cancel')}>Cancel</button>
       <button
         {...action('submit', (close) => {
           close(draft);
         })}
-        disabled={isRunning}
+        disabled={hasRunningAction}
       >
         Save
       </button>
@@ -212,7 +212,7 @@ setLogLevel('*');
 | --------------------- | ----------------------------------- |
 | `manager`             | Registration, stack state           |
 | `modal`               | Open/close/unmount lifecycle        |
-| `modal:lifecycle`     | onOpen callback, dialog.showModal   |
+| `modal:lifecycle`     | prepare callback, dialog.showModal  |
 | `modal:keydown`       | ESC dismiss, user onKeyDown         |
 | `modal:click-outside` | Click-outside for non-modal dialogs |
 | `outlet`              | ModalOutlet registration            |
@@ -232,6 +232,21 @@ yarn test            # Unit + component tests
 yarn lint            # oxlint + ESLint
 yarn format          # Prettier
 ```
+
+## ◑ How this repo is run
+
+Friendly warning, so nothing here surprises you: **I commit to `main`.** No release branches, no
+deprecation cycles, and **no semver** — a name can change between two commits if a better one
+turns up, and it does. This week `isOpen` became `isVisible` and `onOpen` became `prepare`,
+because both were describing themselves inaccurately.
+
+That is a deliberate trade, not neglect. The library is not published, so nobody's build breaks
+when a name improves; what you get instead is a surface that says what it means. The day I decide
+to publish it, that freedom ends and the usual ceremony starts — versions, a migration note per
+break, the lot. Until then the CHANGELOG is the migration guide, organised by date, and it
+explains _why_ each name moved rather than only that it did.
+
+If you have lifted code out of `src/`, pin the commit you took it from.
 
 ## ◐ License
 

@@ -13,7 +13,7 @@ import { dialogStyle } from '../story-styles.js';
 export function EscWithoutFocusHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isVisible, Modal } = useModal({
     id: 'esc-no-focus',
     render: () => {
       // Deliberately nothing focusable.
@@ -37,7 +37,7 @@ export function EscWithoutFocusHarness() {
       >
         Open Unfocusable
       </button>
-      <span data-testid="unfocusable-is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="unfocusable-is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="unfocusable-reason">{lastReason}</span>
       {Modal}
     </div>

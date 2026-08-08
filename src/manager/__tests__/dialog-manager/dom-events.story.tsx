@@ -64,7 +64,7 @@ export function DomEventHarness() {
   });
 
   useEffect(() => {
-    const onOpen = (e: Event) => {
+    const prepare = (e: Event) => {
       const { id, modalType } = (e as CustomEvent<{ id: string; modalType: string }>).detail;
       setLog((prev) => {
         return [...prev, `open:${id}:${modalType}`];
@@ -78,10 +78,10 @@ export function DomEventHarness() {
         return [...prev, `close:${id}:${modalType}:${reason}`];
       });
     };
-    document.addEventListener('modal:open', onOpen);
+    document.addEventListener('modal:open', prepare);
     document.addEventListener('modal:close', onClose);
     return () => {
-      document.removeEventListener('modal:open', onOpen);
+      document.removeEventListener('modal:open', prepare);
       document.removeEventListener('modal:close', onClose);
     };
   }, []);

@@ -26,7 +26,7 @@ const SENTINEL_PAYLOAD = 'SENTINEL_PAYLOAD_9271';
 test.describe('actions declared by use', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('modal-ctrl-basic')).not.toBeVisible();
   });
 
@@ -42,7 +42,7 @@ test.describe('actions declared by use', () => {
     await mount(<BasicActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -50,7 +50,7 @@ test.describe('actions declared by use', () => {
     await mount(<BasicActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -80,7 +80,7 @@ test.describe('actions declared by use', () => {
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Enter');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -89,7 +89,7 @@ test.describe('actions declared by use', () => {
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -97,7 +97,7 @@ test.describe('actions declared by use', () => {
     await mount(<DefinitionActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('def-is-open')).toHaveText('closed');
+    await expect(page.getByTestId('def-is-visible')).toHaveText('closed');
     await expect(page.getByTestId('def-last-reason')).toHaveText('confirm');
   });
 
@@ -107,7 +107,7 @@ test.describe('actions declared by use', () => {
     await page.getByRole('button', { name: 'Increment' }).click();
     await expect(page.getByTestId('def-count')).toHaveText('1');
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByTestId('def-is-open')).toHaveText('closed');
+    await expect(page.getByTestId('def-is-visible')).toHaveText('closed');
   });
 
   test('can be opened and closed multiple times', async ({ mount, page }) => {
@@ -164,7 +164,7 @@ test.describe('actions declared by use', () => {
 
     // Delete is both the dismissKey and the action hotkey — action should win
     await page.keyboard.press('Delete');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('remove');
   });
 });
@@ -175,7 +175,7 @@ test.describe('callable actions', () => {
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-action-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -183,7 +183,7 @@ test.describe('callable actions', () => {
     await mount(<ModalActionBasicHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -196,7 +196,7 @@ test.describe('callable actions', () => {
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('confirm-btn')).toHaveAttribute('data-loading', 'true');
     await expect(page.getByTestId('cancel-btn')).toHaveAttribute('data-disabled', 'true');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -227,7 +227,7 @@ test.describe('callable actions', () => {
     await mount(<ModalActionHotkeyHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Enter');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 });
@@ -257,7 +257,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     await mount(<VanillaAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Enter');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -286,7 +286,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     // Enter hotkey should NOT trigger confirm because aria-keyshortcuts is missing
     await page.keyboard.press('Enter');
     // Modal should still be open — hotkey had no effect
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     // Escape is claimed by the cancel action but without aria-keyshortcuts
     // the action dispatch fails — dismiss-key collision detection still routes
     // to the action path (not native dismiss), so the modal stays open
@@ -334,7 +334,7 @@ test.describe('action lifecycle logging', () => {
     await mount(<ActionLoggingHarness payload={SENTINEL_PAYLOAD} />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     const values = await loggedValues(messages);
 
@@ -365,7 +365,7 @@ test.describe('action lifecycle logging', () => {
     await page.getByRole('button', { name: 'Fail' }).click();
 
     // A thrown handler leaves the modal open and logs the failure.
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     const values = await loggedValues(messages);
     expect(logged(values, 'Action started')).toBe(true);
@@ -397,7 +397,7 @@ test.describe('action identity and payload', () => {
     await expect(page.getByTestId('reason-source-id')).toHaveText('none');
   });
 
-  test('an action hotkey fires while onOpen is still running, like a click does', async ({
+  test('an action hotkey fires while prepare is still running, like a click does', async ({
     mount,
     page,
   }) => {
@@ -411,7 +411,7 @@ test.describe('action identity and payload', () => {
     await expect(page.getByTestId('hwo-last-reason')).toHaveText('confirm');
   });
 
-  test('clicking the same action while onOpen is running works', async ({ mount, page }) => {
+  test('clicking the same action while prepare is running works', async ({ mount, page }) => {
     await mount(<HotkeyWhilePreparingHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('preparing-flag')).toHaveText('opening');
@@ -533,7 +533,7 @@ test.describe('focusOnOpen', () => {
     // Cancel is the option working, not the browser agreeing by accident.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
-    await expect(page.getByTestId('foo-is-open')).toHaveText('open');
+    await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
 
     await expect
       .poll(() => {

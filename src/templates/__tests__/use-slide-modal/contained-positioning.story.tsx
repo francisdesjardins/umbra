@@ -37,7 +37,7 @@ export function ContainedPositioningSlideHarness({
 }) {
   const [behindClicks, setBehindClicks] = useState(0);
 
-  const { open, isOpen, Modal } = useSlideModal({
+  const { open, isVisible, Modal } = useSlideModal({
     id: 'contained-positioning-slide',
     direction,
     nonModal: true,
@@ -62,7 +62,7 @@ export function ContainedPositioningSlideHarness({
       >
         Open Panel
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="behind-clicks">{behindClicks}</span>
       <div data-testid="stage" style={stageStyle}>
         {/* Fills the stage, underneath the library's host. The host covers this region for

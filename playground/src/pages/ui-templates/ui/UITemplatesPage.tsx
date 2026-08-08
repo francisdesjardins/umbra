@@ -7,7 +7,7 @@ import { useState, type ReactNode } from 'react';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-type Flavor = 'mui' | 'vanilla';
+type Flavor = 'mui' | 'vanilla' | 'shared';
 
 type TemplateItem = {
   readonly name: string;
@@ -163,9 +163,9 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
 ];
 
 /**
- * Flavour-agnostic because none of it renders anything: these are the patterns the library
- * deliberately does not ship, so that a dialog manager stays a dialog manager. Copy them the
- * way you would copy a modal template.
+ * The third flavour, and the honest one: none of it renders anything, so it works under either
+ * of the other two. These are the patterns the library deliberately does not ship, so that a
+ * dialog manager stays a dialog manager.
  */
 const PATTERNS_GROUP: TemplateGroup = {
   title: 'Patterns the library does not ship',
@@ -184,7 +184,7 @@ const PATTERNS_GROUP: TemplateGroup = {
 const PLAYGROUND_GROUP: TemplateGroup = {
   title: 'Playground components',
   description:
-    'Not templates — the wrappers this site itself is built from. Listed so the "View code" links resolve.',
+    'Not templates — the wrappers this site itself is built from, listed so the "View code" links resolve. They sit here because they belong to no flavour: the site renders both sets with the same shell.',
   items: [
     { name: 'CodeBlock', codeKey: 'shared-component-code-block' },
     { name: 'ViewCodeButton', codeKey: 'shared-component-view-code-button' },
@@ -205,6 +205,20 @@ const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
   ),
   vanilla:
     'Zero-dependency implementations: semantic elements, CSS modules, dark mode via prefers-color-scheme. Same component names as the MUI set, so examples port across by changing one import.',
+  shared: (
+    <>
+      Works under either flavour, because none of it renders anything. What the two sets have in
+      common is larger than this list, though: the hooks are the same call in both, an action
+      spreads the same props onto a Material UI button and a bare{' '}
+      <Box component="code" sx={{ fontFamily: 'monospace' }}>
+        &lt;button&gt;
+      </Box>
+      , and both must forward <code>aria-keyshortcuts</code> and <code>data-focus-on-open</code> or
+      the hotkey and the opening focus quietly stop working. Only the markup differs — which is the
+      whole argument for a headless library, and the reason this page has three tabs rather than
+      two.
+    </>
+  ),
 };
 
 // ── Internal components ───────────────────────────────────────────────────────
@@ -249,7 +263,12 @@ const TemplateGroupSection = ({ title, description, items }: TemplateGroup) => {
 
 export const UITemplatesPage = () => {
   const [flavor, setFlavor] = useState<Flavor>('mui');
-  const groups = flavor === 'mui' ? MUI_GROUPS : VANILLA_GROUPS;
+  const groups =
+    flavor === 'mui'
+      ? MUI_GROUPS
+      : flavor === 'vanilla'
+        ? VANILLA_GROUPS
+        : [PATTERNS_GROUP, PLAYGROUND_GROUP];
 
   const handleFlavorChange = (_: React.MouseEvent<HTMLElement>, next: Flavor | null) => {
     if (next === null) {
@@ -261,11 +280,12 @@ export const UITemplatesPage = () => {
   return (
     <PageLayout
       title="UI Templates"
-      description="Reference implementations you copy into your own project — the library ships no UI. Both flavours expose the same component names."
+      description="Reference implementations you copy into your own project — the library ships no UI. The two rendering flavours expose the same component names; the third tab is what works under both."
       actions={
         <ToggleButtonGroup value={flavor} exclusive onChange={handleFlavorChange} size="small">
           <ToggleButton value="mui">Material UI</ToggleButton>
           <ToggleButton value="vanilla">Vanilla</ToggleButton>
+          <ToggleButton value="shared">Shared</ToggleButton>
         </ToggleButtonGroup>
       }
     >
@@ -285,18 +305,6 @@ export const UITemplatesPage = () => {
           />
         );
       })}
-
-      <TemplateGroupSection
-        title={PATTERNS_GROUP.title}
-        description={PATTERNS_GROUP.description}
-        items={PATTERNS_GROUP.items}
-      />
-
-      <TemplateGroupSection
-        title={PLAYGROUND_GROUP.title}
-        description={PLAYGROUND_GROUP.description}
-        items={PLAYGROUND_GROUP.items}
-      />
     </PageLayout>
   );
 };

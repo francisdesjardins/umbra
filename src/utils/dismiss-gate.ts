@@ -8,9 +8,9 @@ import type { ModalPhase } from '../core/types.js';
 export type DismissGate = {
   /** Current lifecycle phase of the modal. */
   readonly phase: ModalPhase;
-  /** Whether the `onOpen` callback is still executing (see `ModalStoreSnapshot.isPreparing`). */
+  /** Whether the `prepare` callback is still executing (see `ModalStoreSnapshot.isPreparing`). */
   readonly isPreparing: boolean;
-  /** Whether dismissal is allowed while `onOpen` is still executing. */
+  /** Whether dismissal is allowed while `prepare` is still executing. */
   readonly dismissWhilePreparing: boolean;
   /** Whether a modal action is currently in flight. */
   readonly isActionRunning: boolean;

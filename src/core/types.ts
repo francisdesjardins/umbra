@@ -96,11 +96,11 @@ export type ModalHandle<TData = void, TReason extends string = string> = {
  */
 export type ModalRenderArgs<TData = void, TReason extends string = string> = {
   /**
-   * Whether the `onOpen` callback is still running — the dialog is on screen, its content is
-   * not ready yet. Render a loading state on it; use `isOpen` (or `phase`) for presence.
+   * Whether the `prepare` callback is still running — the dialog is on screen, its content is
+   * not ready yet. Render a loading state on it; use `isVisible` (or `phase`) for presence.
    *
    * A second axis, not a phase. `phase` describes the `<dialog>` itself and reaches `'open'`
-   * on the animation frame after it is shown, which is usually well before an async `onOpen`
+   * on the animation frame after it is shown, which is usually well before an async `prepare`
    * settles — so `phase: 'open'` with `isPreparing: true` is the normal state of a modal
    * that loads something.
    */
@@ -115,8 +115,14 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
    * in one. See {@link ActionFactory}.
    */
   readonly action: ActionFactory<TData, TReason>;
-  /** True while any action on this modal is running. */
-  readonly isRunning: boolean;
+  /**
+   * True while **any** action on this modal is running.
+   *
+   * Named for its scope, because there are three of these and the word alone never said which:
+   * an action's own `loading` is that button, `hasRunningAction` is the whole modal, and
+   * `isPreparing` is the `prepare` that has nothing to do with actions at all.
+   */
+  readonly hasRunningAction: boolean;
   /** The last error thrown by any action on this modal, or `null`. */
   readonly error: Error | null;
 };
@@ -175,7 +181,7 @@ export type ModalVariant =
       /**
        * Whether clicking outside the dialog dismisses it.
        * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
-       * `onOpen` is still preparing.
+       * `prepare` is still preparing.
        * Only the topmost non-modal in a stack responds to click-outside.
        * @default false
        */
@@ -216,7 +222,7 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    */
   readonly dismissKey?: HotkeyDef | false | undefined;
   /**
-   * Whether the dismiss key and backdrop click can close the modal while `onOpen` is executing.
+   * Whether the dismiss key and backdrop click can close the modal while `prepare` is executing.
    * @default true
    */
   readonly dismissWhilePreparing?: boolean | undefined;
@@ -233,13 +239,15 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * asking safe to expose across a boundary in the first place.
    *
    * The payload is `unknown` because it crossed that boundary: validate it before believing it.
-   * The context is what the caller *says* about itself, not what anyone verified.
+   * It arrives first because it is what a handler almost always wants; the envelope follows, for
+   * the ones that also care who is asking — and what it says about itself is a claim, not
+   * something anyone verified.
    *
    * @example
    * const { open, Modal } = useModal<void, 'confirm'>({
    *   id: 'patient:merge',
-   *   onOpenRequest: ({ data, context }) => {
-   *     const parsed = mergeRequestSchema.safeParse(data);
+   *   onOpenRequest: (payload, { context }) => {
+   *     const parsed = mergeRequestSchema.safeParse(payload);
    *     if (!parsed.success) {
    *       console.warn('Ignored a merge request', { from: context?.source });
    *       return;
@@ -252,7 +260,7 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    *   },
    * });
    */
-  readonly onOpenRequest?: ((request: OpenRequest) => void) | undefined;
+  readonly onOpenRequest?: ((payload: unknown, request: OpenRequest) => void) | undefined;
 
   /**
    * Optional keydown handler called on the dialog element.
@@ -261,10 +269,17 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    */
   readonly onKeyDown?: ((event: KeyboardEvent) => void) | undefined;
   /**
-   * Called as the modal opens — after the `<dialog>` is shown and the entrance transition is
+   * Make the content usable — the work that has to happen before the dialog is worth reading.
+   *
+   * Called as the modal opens, after the `<dialog>` is shown and the entrance transition is
    * scheduled, not before it. An async one runs *alongside* the entrance animation, and
-   * `isPreparing` stays `true` until it settles; that is the loading window the render
-   * callback is given.
+   * `isPreparing` stays `true` until it settles; that is the loading window the render callback
+   * is given, and `open()` resolves only once this has.
+   *
+   * **A gate, not a notification**, which is why it is not called `onOpen`: it holds the modal's
+   * `isPreparing` and the promise `open()` returns. To be *told* a dialog opened — without
+   * gating anything — use `dialogManager.subscribe` or the `modal:open` DOM event, which fires
+   * at the start of the sequence and is the one that genuinely means "on open".
    *
    * Handed an `AbortSignal` that fires when the modal closes, so work started here can be
    * dropped when nobody is waiting for it any more. A dialog dismissed while it is still loading
@@ -276,7 +291,7 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * unchanged, so this costs nothing until a call site wants it.
    *
    * ```ts
-   * onOpen: async (signal) => {
+   * prepare: async (signal) => {
    *   const response = await fetch(url, { signal });
    *   setRows(await response.json());
    * };
@@ -285,7 +300,7 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * Work the *caller* started elsewhere — a query fired from the click that opened the modal —
    * is not this signal's to cancel: the dialog never knew about it. Cancel that where it began.
    */
-  readonly onOpen?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
+  readonly prepare?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
   /** Called when the modal closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
   /**
@@ -399,13 +414,21 @@ export type UseModalReturn<TData = void, TReason extends string = string> = Moda
   TReason
 > & {
   /**
-   * Open the modal. Resolves after `onOpen` completes.
+   * Open the modal. Resolves after `prepare` completes.
    * Always settles: joins an in-flight open, or resolves immediately when
    * the modal is already open (or closing — no reopen is queued).
    */
   readonly open: () => Promise<void>;
-  /** Whether the modal is currently open */
-  readonly isOpen: boolean;
+  /**
+   * Whether the dialog is on screen — `phase !== 'closed'`, so it stays true through the exit
+   * animation.
+   *
+   * That is what a trigger wants (`{!isVisible && <button/>}` must not flash back while the
+   * panel is still sliding away) and it is why this is not called `isOpen`: a modal in
+   * `'closing'` is visible and is no longer open, and one name cannot honestly be both. When the
+   * distinction matters — measuring, focusing, deciding a dialog has settled — read `phase`.
+   */
+  readonly isVisible: boolean;
   /** React element to render. Place in JSX as {Modal}. Renders null when closed. */
   readonly Modal: ReactNode;
   /**
@@ -449,7 +472,7 @@ export type CloseResolver<TData = unknown, TReason extends string = string> = (
 export type ModalStoreSnapshot<TData = unknown, TReason extends string = string> = {
   /** Where the `<dialog>` is in its lifecycle. */
   readonly phase: ModalPhase;
-  /** Whether `onOpen` is still running — see `ModalRenderArgs`. */
+  /** Whether `prepare` is still running — see `ModalRenderArgs`. */
   readonly isPreparing: boolean;
   /**
    * Last close result — the same `CloseResult` the public `onClose` and `waitForClose`

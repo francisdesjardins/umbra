@@ -141,8 +141,8 @@ export function StackedModalsHarness() {
         Open Panel
       </button>
       <span data-testid="stack-log">{log.join(' | ')}</span>
-      <span data-testid="stack-open">
-        {[panel.isOpen && 'panel', middle.isOpen && 'middle', message.isOpen && 'message']
+      <span data-testid="stack-visible">
+        {[panel.isVisible && 'panel', middle.isVisible && 'middle', message.isVisible && 'message']
           .filter(Boolean)
           .join(',')}
       </span>

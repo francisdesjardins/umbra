@@ -22,7 +22,7 @@ export function ActionLoggingHarness({ payload }: { readonly payload: string }) 
   }, []);
 
   // The payload is `confirm`'s, inferred through `actions` — not restated here.
-  const { open, isOpen, Modal } = useModal<{ secret: string }, 'boom' | 'confirm'>({
+  const { open, isVisible, Modal } = useModal<{ secret: string }, 'boom' | 'confirm'>({
     id: 'ctrl-logging',
     render: ({ action }) => {
       return (
@@ -58,7 +58,7 @@ export function ActionLoggingHarness({ payload }: { readonly payload: string }) 
       >
         Open
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

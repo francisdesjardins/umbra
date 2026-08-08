@@ -250,9 +250,15 @@ test.describe('type model', () => {
       'isPreparing',
       'handle',
       'action',
-      'isRunning',
+      'hasRunningAction',
       'error',
     ];
-    expect([...keys].sort()).toEqual(['action', 'error', 'handle', 'isPreparing', 'isRunning']);
+    expect([...keys].sort()).toEqual([
+      'action',
+      'error',
+      'handle',
+      'hasRunningAction',
+      'isPreparing',
+    ]);
   });
 });

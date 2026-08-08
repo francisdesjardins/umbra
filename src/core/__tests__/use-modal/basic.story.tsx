@@ -8,7 +8,7 @@ import { dialogStyle } from '../story-styles.js';
 export function BasicHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'basic-modal',
     render: ({ handle }) => {
       return (
@@ -45,7 +45,7 @@ export function BasicHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

@@ -37,14 +37,14 @@ import {
 test.describe('useModal', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicHarness />);
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('modal-basic-modal')).not.toBeVisible();
   });
 
   test('opens when open() is called', async ({ mount, page }) => {
     await mount(<BasicHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('modal-basic-modal')).toBeVisible();
     await expect(page.getByTestId('modal-basic-modal')).toContainText('Modal content');
   });
@@ -54,7 +54,7 @@ test.describe('useModal', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-basic-modal')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -62,7 +62,7 @@ test.describe('useModal', () => {
     await mount(<BasicHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -71,7 +71,7 @@ test.describe('useModal', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-basic-modal')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -105,12 +105,12 @@ test.describe('useModal', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-basic-modal')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-basic-modal')).toBeVisible();
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 });
@@ -136,7 +136,7 @@ test.describe('useModal — nonModal', () => {
   test('opens with dialog.show() (not in top-layer)', async ({ mount, page }) => {
     await mount(<NonModalHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('modal-non-modal-dialog')).toBeVisible();
   });
 
@@ -164,12 +164,12 @@ test.describe('useModal — nonModal', () => {
   test('clicks outside the dialog do not close it', async ({ mount, page }) => {
     await mount(<NonModalHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Click on the outside button — should work and NOT close the dialog
     await page.getByTestId('outside-button').click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 
   test('ESC key still closes when dialog has focus', async ({ mount, page }) => {
@@ -180,14 +180,14 @@ test.describe('useModal — nonModal', () => {
     // Focus the dialog content, then press Escape
     await page.getByRole('button', { name: 'Confirm' }).focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
   test('body scroll is not locked for non-modal dialogs', async ({ mount, page }) => {
     await mount(<NonModalHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('body-overflow')).toHaveText('free');
   });
 
@@ -218,7 +218,7 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('modal-non-modal-dialog')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
@@ -231,7 +231,7 @@ test.describe('useModal — nonModal', () => {
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Escape');
 
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -245,7 +245,7 @@ test.describe('useModal — nonModal', () => {
     await page.keyboard.press('Escape');
 
     // Panel should be closed
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
     // ESC must not have leaked to the document bubble listener
     await expect(page.getByTestId('leak-count')).toHaveText('0');
@@ -275,32 +275,32 @@ test.describe('useModal — dismissKey', () => {
   test('custom dismissKey closes on that key, Escape does not', async ({ mount, page }) => {
     await mount(<CustomDismissKeyHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Escape should NOT close — dismissKey is Delete
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Delete should close with 'dismiss'
     await page.keyboard.press('Delete');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
   test('dismissKey: false disables all key-based dismissal', async ({ mount, page }) => {
     await mount(<DismissKeyDisabledHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.keyboard.press('Delete');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Only the explicit Close button works
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('close');
   });
 
@@ -310,12 +310,12 @@ test.describe('useModal — dismissKey', () => {
   }) => {
     await mount(<NonModalCustomDismissKeyHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Focus outside and press Delete — should close
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Delete');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
     // Delete must not have leaked to the document bubble listener
     await expect(page.getByTestId('leak-count')).toHaveText('0');
@@ -324,10 +324,10 @@ test.describe('useModal — dismissKey', () => {
   test('custom dismissKey on non-modal ignores Escape', async ({ mount, page }) => {
     await mount(<NonModalCustomDismissKeyHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 });
 
@@ -335,28 +335,28 @@ test.describe('useModal — portal', () => {
   test('modal dialog renders inline by default (no portal)', async ({ mount, page }) => {
     await mount(<PortalDefaultHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).not.toHaveText('BODY');
   });
 
   test('modal dialog portals to body when portal: true', async ({ mount, page }) => {
     await mount(<PortalOptInHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).toHaveText('BODY');
   });
 
   test('non-modal dialog renders inline by default (no portal)', async ({ mount, page }) => {
     await mount(<PortalNonModalDefaultHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).not.toHaveText('BODY');
   });
 
   test('non-modal dialog portals to body when portal: true', async ({ mount, page }) => {
     await mount(<PortalNonModalOptInHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).toHaveText('BODY');
   });
 
@@ -365,7 +365,7 @@ test.describe('useModal — portal', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-portal-default')).toBeVisible();
     await page.getByRole('button', { name: 'Done' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('done');
   });
 
@@ -374,18 +374,18 @@ test.describe('useModal — portal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('modal-portal-non-modal-default')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
   test('non-modal without portal: click-through still works', async ({ mount, page }) => {
     await mount(<PortalNonModalDefaultHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.getByTestId('outside-button').click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 
   test('non-modal without portal: ESC still closes', async ({ mount, page }) => {
@@ -395,7 +395,7 @@ test.describe('useModal — portal', () => {
 
     await page.getByRole('button', { name: 'Confirm' }).focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -405,12 +405,12 @@ test.describe('useModal — portal', () => {
   }) => {
     await mount(<StructuralToggleHarness />);
     await page.getByRole('button', { name: 'Open', exact: true }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Flip `portal` while open — the dialog must remount into a new structure, so the
     // modal has to close rather than leave a stuck, still-open dialog blocking the page.
     await page.getByTestId('toggle-portal').click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
     // Exactly one dialog element, and it is not open.
     await expect(page.getByTestId('modal-structural-toggle')).toHaveCount(1);
@@ -418,13 +418,13 @@ test.describe('useModal — portal', () => {
 
     // And it can be reopened (state fully reset).
     await page.getByRole('button', { name: 'Open', exact: true }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('modal-structural-toggle')).toBeVisible();
   });
 });
 
 test.describe('useModal — dismissWhilePreparing', () => {
-  test('dismissWhilePreparing: false — ESC during onOpen does not close', async ({
+  test('dismissWhilePreparing: false — ESC during prepare does not close', async ({
     mount,
     page,
   }) => {
@@ -432,14 +432,14 @@ test.describe('useModal — dismissWhilePreparing', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
 
-    // Focus inside the dialog, then press ESC — must be blocked while onOpen runs
+    // Focus inside the dialog, then press ESC — must be blocked while prepare runs
     await page.getByTestId('resolve-loading').focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
   });
 
-  test('dismissWhilePreparing: false — ESC after onOpen resolves does close', async ({
+  test('dismissWhilePreparing: false — ESC after prepare resolves does close', async ({
     mount,
     page,
   }) => {
@@ -454,11 +454,11 @@ test.describe('useModal — dismissWhilePreparing', () => {
     // ESC now allowed
     await page.getByTestId('resolve-loading').focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
-  test('dismissWhilePreparing: true (default) — ESC during onOpen closes', async ({
+  test('dismissWhilePreparing: true (default) — ESC during prepare closes', async ({
     mount,
     page,
   }) => {
@@ -469,7 +469,7 @@ test.describe('useModal — dismissWhilePreparing', () => {
     // ESC during loading — default is true, so dismiss is allowed
     await page.getByRole('button', { name: 'Confirm' }).focus();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 });
@@ -478,44 +478,44 @@ test.describe('useModal — dismissOnClickOutside', () => {
   test('click outside closes non-modal with reason "dismiss"', async ({ mount, page }) => {
     await mount(<NonModalClickOutsideHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Click outside the dialog
     await page.getByTestId('outside-button').click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
   test('click inside dialog does not close it', async ({ mount, page }) => {
     await mount(<NonModalClickOutsideHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Click inside the dialog content
     await page.getByText('Click outside to dismiss').click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 
   test('default false — click outside does not close', async ({ mount, page }) => {
     await mount(<NonModalClickOutsideDefaultHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.getByTestId('outside-button').click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 
   test('can reopen after click-outside dismiss', async ({ mount, page }) => {
     await mount(<NonModalClickOutsideHarness />);
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.getByTestId('outside-button').click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     // Reopen
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
 });
 
@@ -534,11 +534,11 @@ test.describe('useModal — returned identities', () => {
 
     // Re-renders driven by the store's own phase transitions.
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('identity')).toHaveText('stable');
 
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('identity')).toHaveText('stable');
   });
 });
@@ -550,7 +550,7 @@ test.describe('useModal — backdrop click hit testing', () => {
   }) => {
     await mount(<BackdropHitTestHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Enter on a focused button dispatches a click at (0, 0) — outside the dialog's
     // rect. Only the target check keeps it from reading as a backdrop dismissal.
@@ -559,11 +559,11 @@ test.describe('useModal — backdrop click hit testing', () => {
 
     await expect(page.getByTestId('activated')).toHaveText('yes');
 
-    // `is-open` reports `phase !== 'closed'`, so it still reads 'open' for the whole
+    // `is-visible` reports `phase !== 'closed'`, so it still reads 'open' for the whole
     // exit animation — asserting it immediately would pass even on a dismissal that
     // is already under way. Settle past the exit duration first, then assert.
     await page.waitForTimeout(400);
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('last-reason')).toHaveText('');
   });
 
@@ -573,22 +573,22 @@ test.describe('useModal — backdrop click hit testing', () => {
   }) => {
     await mount(<BackdropHitTestHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.getByTestId('content-button').click();
     await expect(page.getByTestId('activated')).toHaveText('yes');
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('bubbled-clicks')).toHaveText('1');
   });
 
   test('a genuine backdrop click still dismisses', async ({ mount, page }) => {
     await mount(<BackdropHitTestHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // Top-left corner of the viewport is backdrop, outside the centred dialog.
     await page.mouse.click(5, 5);
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -611,17 +611,17 @@ test.describe('useModal — backdrop click hit testing', () => {
 
     // First cycle with transitions live — the normal path, `transitionend` fires.
     await page.getByRole('button', { name: 'Open Toggle' }).click();
-    await expect(page.getByTestId('toggle-is-open')).toHaveText('open');
+    await expect(page.getByTestId('toggle-is-visible')).toHaveText('open');
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByTestId('toggle-is-open')).toHaveText('closed');
+    await expect(page.getByTestId('toggle-is-visible')).toHaveText('closed');
     expect(warnings).toEqual([]);
 
     // Same element, transitions now disabled by a stylesheet.
     await page.getByRole('button', { name: 'Disable Transitions' }).click();
     await page.getByRole('button', { name: 'Open Toggle' }).click();
-    await expect(page.getByTestId('toggle-is-open')).toHaveText('open');
+    await expect(page.getByTestId('toggle-is-visible')).toHaveText('open');
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByTestId('toggle-is-open')).toHaveText('closed');
+    await expect(page.getByTestId('toggle-is-visible')).toHaveText('closed');
 
     // Give the safety timeout (exitDuration + 50ms) time to fire if the close path took it.
     await page.waitForTimeout(400);
@@ -663,7 +663,7 @@ test.describe('ESC does not depend on where focus is', () => {
   test('closes a modal whose content holds nothing focusable', async ({ mount, page }) => {
     await mount(<EscWithoutFocusHarness />);
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
-    await expect(page.getByTestId('unfocusable-is-open')).toHaveText('open');
+    await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
 
     // Focus outside the dialog is ordinary: `showModal()` has nowhere to put it when nothing
     // in the content is focusable, and content that swaps after opening (a loading panel
@@ -679,7 +679,7 @@ test.describe('ESC does not depend on where focus is', () => {
     ).toBe(false);
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('unfocusable-is-open')).toHaveText('closed');
+    await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('closed');
     await expect(page.getByTestId('unfocusable-reason')).toHaveText('dismiss');
   });
 
@@ -692,7 +692,7 @@ test.describe('ESC does not depend on where focus is', () => {
     // wherever it sits in the tree, backdrop gone.
     await mount(<EscWithoutFocusHarness />);
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
-    await expect(page.getByTestId('unfocusable-is-open')).toHaveText('open');
+    await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     });
@@ -703,7 +703,7 @@ test.describe('ESC does not depend on where focus is', () => {
     const desynced = await page.evaluate(() => {
       const dialog = document.querySelector('[data-testid="modal-esc-no-focus"]');
       const storeSaysOpen =
-        document.querySelector('[data-testid="unfocusable-is-open"]')?.textContent === 'open';
+        document.querySelector('[data-testid="unfocusable-is-visible"]')?.textContent === 'open';
       return storeSaysOpen && dialog?.hasAttribute('open') === false;
     });
     expect(desynced, 'the dialog was closed natively while the store still had it open').toBe(
@@ -720,7 +720,7 @@ test.describe('focus survives a failed action', () => {
     // leaves the modal with no keyboard at all.
     await mount(<ActionErrorHotkeyRetryHarness />);
     await page.getByRole('button', { name: 'Open Retry' }).click();
-    await expect(page.getByTestId('retry-is-open')).toHaveText('open');
+    await expect(page.getByTestId('retry-is-visible')).toHaveText('open');
 
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('retry-error')).toHaveText('Save failed');
@@ -846,7 +846,7 @@ test.describe('the accessible name', () => {
   });
 });
 
-test.describe('onOpen is told when the modal goes away', () => {
+test.describe('prepare is told when the modal goes away', () => {
   test('closing aborts the work it started', async ({ mount, page }) => {
     const component = await mount(<OnOpenAbortHarness />);
     await component.getByRole('button', { name: 'Open' }).click();
@@ -884,7 +884,7 @@ test.describe('modals working together', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await page.getByTestId('mid-open-message').click();
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle,message');
   };
 
   test('the dismiss key unwinds the stack one modal per press, front to back', async ({
@@ -895,13 +895,13 @@ test.describe('modals working together', () => {
     await openAllThree(page);
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel');
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('stack-open')).toHaveText('');
+    await expect(page.getByTestId('stack-visible')).toHaveText('');
 
     await expect(page.getByTestId('stack-log')).toHaveText(
       'message:dismiss | middle:dismiss | panel:dismiss'
@@ -917,7 +917,7 @@ test.describe('modals working together', () => {
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('stack-acks')).toHaveText('1');
     await expect(page.getByTestId('stack-saves')).toHaveText('0');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
   });
 
   test('the modal underneath keeps its own hotkey once it is back in front', async ({
@@ -928,11 +928,11 @@ test.describe('modals working together', () => {
     await openAllThree(page);
 
     await page.keyboard.press('Enter'); // acknowledges the message modal
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
     await page.keyboard.press('Enter'); // now the middle modal is in front
     await expect(page.getByTestId('stack-saves')).toHaveText('1');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel');
   });
 });
 
@@ -964,19 +964,19 @@ test.describe('the mouse across a stack', () => {
     await mount(<StackedModalsHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
     // A click in the corner lands on the modal's backdrop. The panel dismisses on click-outside
     // and nothing blocks the pointer for it — it has to stand down because it is not in front.
     await page.mouse.click(20, 20);
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel');
 
     // Now it is in front, so the same click is its to act on.
     await page.mouse.click(20, 20);
-    await expect(page.getByTestId('stack-open')).toHaveText('');
+    await expect(page.getByTestId('stack-visible')).toHaveText('');
     await expect(page.getByTestId('stack-log')).toHaveText('middle:dismiss | panel:dismiss');
   });
 
@@ -988,12 +988,12 @@ test.describe('the mouse across a stack', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await page.getByTestId('mid-open-message').click();
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle,message');
 
     await page.getByTestId('msg-ack').click();
     await expect(page.getByTestId('stack-acks')).toHaveText('1');
     await expect(page.getByTestId('stack-saves')).toHaveText('0');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
   });
 });
 
@@ -1011,7 +1011,7 @@ test.describe('the stack and the no-focus Escape path', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await page.getByTestId('mid-open-message').click();
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle,message');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle,message');
 
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) {
@@ -1019,7 +1019,7 @@ test.describe('the stack and the no-focus Escape path', () => {
       }
     });
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('stack-open')).toHaveText('panel,middle');
+    await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
   });
 });
 
@@ -1058,7 +1058,7 @@ test.describe('a contained dialog covers its host rather than displacing it', ()
     const rowBefore = await page.getByTestId('overlay-row').boundingBox();
 
     await page.getByRole('button', { name: 'Open Contained' }).click();
-    await expect(page.getByTestId('overlay-is-open')).toHaveText('open');
+    await expect(page.getByTestId('overlay-is-visible')).toHaveText('open');
     await page.waitForTimeout(300);
 
     const rowAfter = await page.getByTestId('overlay-row').boundingBox();

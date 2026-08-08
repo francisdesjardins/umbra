@@ -145,12 +145,12 @@ test.describe('createDialogManager', () => {
     dm.close('m', 'custom-reason');
     // The snapshot must not lag the registry during the closing animation.
     expect(dm.lookup('m').phase).toBe('closing');
-    expect(dm.lookup('m').isOpen).toBe(true);
+    expect(dm.lookup('m').isVisible).toBe(true);
     expect(dm.getSnapshot().openDialogs).toHaveLength(1);
 
     store.transition('closed');
     expect(dm.getSnapshot().openDialogs).toHaveLength(0);
-    expect(dm.lookup('m').isOpen).toBe(false);
+    expect(dm.lookup('m').isVisible).toBe(false);
     expect(dm.lookup('m').exists).toBe(true);
   });
 
@@ -289,7 +289,7 @@ test.describe('createDialogManager', () => {
 
     expect(info.exists).toBe(false);
     expect(info.phase).toBe('closed');
-    expect(info.isOpen).toBe(false);
+    expect(info.isVisible).toBe(false);
     expect(info.isForeground).toBe(false);
     expect(info.openedAt).toBe(0);
   });
@@ -301,7 +301,7 @@ test.describe('createDialogManager', () => {
 
     const info = dm.lookup('idle');
     expect(info.exists).toBe(true);
-    expect(info.isOpen).toBe(false);
+    expect(info.isVisible).toBe(false);
     expect(info.isForeground).toBe(false);
     expect(
       dm

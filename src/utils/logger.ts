@@ -42,7 +42,7 @@
  * Logging is **opt-in, debug-only, and console-only** — nothing is persisted or
  * transmitted by this library. It never logs the `data` payload passed to
  * `close(data)` (only a `withData` flag), nor the close `result`, render
- * content, or store state. It **does** log `error.message` from your `onOpen` /
+ * content, or store state. It **does** log `error.message` from your `prepare` /
  * `onClose` / action callbacks and the close `reason`, either of which can carry
  * user-supplied data if your code puts it there. Keep that in mind before
  * enabling logging in **production**, where a session-replay / RUM tool may

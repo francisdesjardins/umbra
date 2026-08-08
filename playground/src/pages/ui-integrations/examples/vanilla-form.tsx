@@ -56,7 +56,7 @@ export function VanillaFormExample() {
   // below differs. That is the whole point of this page.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
-    onOpen: () => {
+    prepare: () => {
       store.resetForm();
     },
     render: ({ action, error }) => {

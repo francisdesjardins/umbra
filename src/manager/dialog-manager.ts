@@ -57,11 +57,46 @@ export type OpenRequestContext = {
  * validates it before believing it, exactly as it would a message off the wire.
  */
 export type OpenRequest = {
-  /** The payload, unvalidated. Parse it against your own schema before acting on it. */
-  readonly data?: unknown;
+  /**
+   * The payload, unvalidated. Parse it against your own schema before acting on it.
+   *
+   * Called `payload` and not `data` on purpose: `CloseResult.data` is the payload *this* modal
+   * declared and the type system checked, and this one is whatever crossed the boundary. Two
+   * levels of trust that share a word are two levels of trust that get confused.
+   */
+  readonly payload?: unknown;
   /** What the caller says about itself. See {@link OpenRequestContext}. */
   readonly context?: OpenRequestContext | undefined;
 };
+
+/**
+ * Build an {@link OpenRequest} — the envelope handed to {@link DialogManager.requestOpen}.
+ *
+ * `requestOpen(id, { payload, context })` works and always will; this exists because the call
+ * site is a **boundary**, and a boundary is where an object literal is worst. The keys have to be
+ * remembered exactly (this one was called `data` until it collided with the payload a modal
+ * declares), the two halves mean different things, and the shape is the one place a protocol
+ * would grow — a version, a correlation id — without every caller being edited.
+ *
+ * It validates nothing and it cannot: the payload is `unknown` on the way out, and the dialog
+ * that receives it is the only side that knows what a good one looks like.
+ *
+ * @example
+ * // The two halves, named, at the boundary.
+ * dialogManager.requestOpen(
+ *   'patient:merge',
+ *   createOpenRequest({ patientId: '42' }, { source: 'portal:nav' })
+ * );
+ *
+ * // No payload — just say who is asking.
+ * dialogManager.requestOpen('help', createOpenRequest(undefined, { source: 'shell:menu' }));
+ */
+export function createOpenRequest(payload?: unknown, context?: OpenRequestContext): OpenRequest {
+  return {
+    ...(payload !== undefined && { payload }),
+    ...(context !== undefined && { context }),
+  };
+}
 
 /**
  * Answers a bridged open on the dialog's behalf. Declared through the binding — `useModal({
@@ -70,8 +105,11 @@ export type OpenRequest = {
  * Declaring one is what makes a dialog reachable by {@link DialogManager.requestOpen}; a dialog
  * that declares none declines every such request. Nothing is opened for you: accept by calling the
  * dialog's own `open()`, decline by returning.
+ *
+ * The payload comes first because it is what a handler almost always wants; the whole envelope
+ * follows for the ones that also care who is asking.
  */
-export type OpenRequestHandler = (request: OpenRequest) => void;
+export type OpenRequestHandler = (payload: unknown, request: OpenRequest) => void;
 
 /** What a binding may tell the registry about a dialog beyond its store. */
 export type RegisterOptions = {
@@ -88,7 +126,7 @@ export type RegisterOptions = {
  */
 export type DialogManagerEvent =
   | {
-      /** Fires once the modal is open and its `onOpen` has settled. */
+      /** Fires once the modal is open and its `prepare` has settled. */
       readonly type: 'open';
       /** The modal's id. */
       readonly id: string;
@@ -109,6 +147,16 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
 
 /**
  * DOM event name dispatched on document at the start of the opening sequence.
+ *
+ * **Why this exists next to {@link DialogManager.subscribe}, which reports the same moments.**
+ * `subscribe` binds to one manager instance. These events are dispatched on `document`, so a
+ * listener hears every dialog on the page — including ones raised by a *different copy of this
+ * library*, in another bundle, in another microfrontend. That is the only mechanism here that
+ * crosses that line, and it is the observation half of what {@link DialogManager.requestOpen}
+ * opens on the way in: a shell can ask a dialog it does not own to open, and watch what came of
+ * it, without either side sharing a module instance.
+ *
+ * Inside one app, `subscribe` is the better tool: same moments, no globals, no string names.
  *
  * @example
  * // `event.detail` is typed: the library augments `DocumentEventMap`, so no cast.
@@ -234,7 +282,7 @@ export type DialogManager = {
    * @example
    * // The shell asks; the dialog's owner decides.
    * dialogManager.requestOpen('patient:merge', {
-   *   data: { patientId: '42' },
+   *   payload: { patientId: '42' },
    *   context: { source: 'portal:nav' },
    * });
    */
@@ -401,7 +449,7 @@ export function createDialogManager(): DialogManager {
       id,
       exists: true,
       phase,
-      isOpen: phase !== 'closed',
+      isVisible: phase !== 'closed',
       isPreparing,
       isForeground: id === topId,
       openedAt: entry.openedAt,
@@ -416,7 +464,7 @@ export function createDialogManager(): DialogManager {
       id,
       exists: false,
       phase: 'closed',
-      isOpen: false,
+      isVisible: false,
       isPreparing: false,
       isForeground: false,
       openedAt: 0,
@@ -533,7 +581,7 @@ export function createDialogManager(): DialogManager {
         dispatchModalEvent(MODAL_OPEN_EVENT, { id, modalType, openedAt });
       }
 
-      // ── Fully opened: phase is 'open' AND onOpen has completed ──
+      // ── Fully opened: phase is 'open' AND prepare has completed ──
       if (!openEmitted && phase === 'open' && !isPreparing) {
         openEmitted = true;
         log('Opened', { id, openCount: getOpenEntries().length });
@@ -671,7 +719,7 @@ export function createDialogManager(): DialogManager {
 
     // ── Per-modal queries ─────────────────────────────────────────────────
 
-    isOpen(id: string): boolean {
+    isVisible(id: string): boolean {
       return snapshotStore.getSnapshot().openDialogs.some((d) => {
         return d.id === id;
       });
@@ -740,7 +788,7 @@ export function createDialogManager(): DialogManager {
         return;
       }
       log('Open requested from outside', { id, source: request.context?.source });
-      entry.onOpenRequest(request);
+      entry.onOpenRequest(request.payload, request);
     },
 
     close(id: string, reason: string = 'dismiss'): void {
@@ -788,7 +836,7 @@ export function createDialogManager(): DialogManager {
  * @example
  * // Imperative control from anywhere — a router guard, a service, a keyboard shortcut.
  * dialogManager.open('unsaved-changes');
- * if (dialogManager.lookup('unsaved-changes').isOpen) {
+ * if (dialogManager.lookup('unsaved-changes').isVisible) {
  *   dialogManager.close('unsaved-changes', 'navigated-away');
  * }
  */

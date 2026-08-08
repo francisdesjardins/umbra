@@ -5,7 +5,7 @@ import { dialogStyle } from '../story-styles.js';
 // ── Harness: multiple modals in one outlet ─────────────────────────────────
 
 function ModalA() {
-  const { open, isOpen, dialogManager } = useModal<void, 'done-a'>({
+  const { open, isVisible, dialogManager } = useModal<void, 'done-a'>({
     id: 'outlet-multi-a',
     render: ({ handle }) => {
       return (
@@ -39,13 +39,13 @@ function ModalA() {
       >
         Open A
       </button>
-      <span data-testid="is-open-a">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible-a">{isVisible ? 'open' : 'closed'}</span>
     </div>
   );
 }
 
 function ModalB() {
-  const { open, isOpen, dialogManager } = useModal<void, 'done-b'>({
+  const { open, isVisible, dialogManager } = useModal<void, 'done-b'>({
     id: 'outlet-multi-b',
     render: ({ handle }) => {
       return (
@@ -79,7 +79,7 @@ function ModalB() {
       >
         Open B
       </button>
-      <span data-testid="is-open-b">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible-b">{isVisible ? 'open' : 'closed'}</span>
     </div>
   );
 }

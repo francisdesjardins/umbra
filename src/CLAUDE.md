@@ -37,7 +37,7 @@ Three layers: framework-agnostic core, React binding, headless template hooks.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `onOpen`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isOpen, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
+- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, isVisible, Modal, waitForClose, handle, dialogManager }` (`handle` = `{ close }` — the modal itself; its buttons come from the `action` factory in the render args). The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
   - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — the `style` prop is the public lever for the box itself (the same one the template hooks pull), and styles for what is inside belong in `render`.
 - **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
 - **`DialogManagerProvider`** ([manager/dialog-manager-context.tsx](manager/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
@@ -46,7 +46,7 @@ Three layers: framework-agnostic core, React binding, headless template hooks.
 
 **Internal hooks** — 2-param convention: `(ctx: ModalHookContext, options)`. Context in [hooks/hook-types.ts](hooks/hook-types.ts): `{ store, getDialog, modalId, phase, dm }`.
 
-- `useDialogLifecycle` ([hooks/use-dialog-lifecycle.ts](hooks/use-dialog-lifecycle.ts)) — Wires the native `<dialog>` DOM lifecycle to store transitions in two effects: (1) opening effect (no deps, always captures latest `onOpen`): `showDialog()`, `store.scheduleOpenTransition()`, `resolveOpen`/`onOpen`; (2) closing/re-measure effect (explicit deps): calls `refreshTransitionsDisabled` on every `'open'` phase (per open, not per element — the `<dialog>` outlives every cycle and its transition config can change between them), on `'closing'`: disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). `finalized` flag guards against ESC cancel race. The DOM orchestration itself is framework-agnostic — see below.
+- `useDialogLifecycle` ([hooks/use-dialog-lifecycle.ts](hooks/use-dialog-lifecycle.ts)) — Wires the native `<dialog>` DOM lifecycle to store transitions in two effects: (1) opening effect (no deps, always captures latest `prepare`): `showDialog()`, `store.scheduleOpenTransition()`, `resolveOpen`/`prepare`; (2) closing/re-measure effect (explicit deps): calls `refreshTransitionsDisabled` on every `'open'` phase (per open, not per element — the `<dialog>` outlives every cycle and its transition config can change between them), on `'closing'`: disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). `finalized` flag guards against ESC cancel race. The DOM orchestration itself is framework-agnostic — see below.
 - **`manager/scroll-lock.ts`** ([manager/scroll-lock.ts](manager/scroll-lock.ts)) — React-free body scroll lock used when any _blocking_ dialog is open. Claimed per owner (`lockBodyScroll(owner)`) and released when the last claim goes — the lock target is one global `<body>` shared by every manager instance, and a shared boolean would make it last-writer-wins. Sets `data-dialog-open` on `<body>` (the injected stylesheet keys `overflow: hidden` off it) and compensates the width the lock **actually reclaims** — `computeScrollCompensation(before, after)`, not the current scrollbar width. That distinction is the whole point: a page with `scrollbar-gutter: stable` keeps its gutter through `overflow: hidden`, so padding by the scrollbar width would shift content inward instead of holding it still. Publishes the amount as `--dialog-scrollbar-width` on `:root` so user-land `position: fixed` elements can compensate too — the library never walks the consumer's DOM looking for them.
 
 ### The styling surface
@@ -97,7 +97,7 @@ front of. `getDialogAnimationStyles` takes the phase for exactly this reason.
 
 Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`).
 
-- `useMessageModal<TData>` ([templates/use-message-modal.tsx](templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, isRunning, error }`); reports `modalType: 'message'`
+- `useMessageModal<TData>` ([templates/use-message-modal.tsx](templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `modalType: 'message'`
 - `useSlideModal` ([templates/use-slide-modal.tsx](templates/use-slide-modal.tsx)) — Direction-based animation, reports `modalType: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
@@ -127,7 +127,7 @@ no second hook, and nothing to pass into `useModal`.
 - The four internal hooks take the engine (as the payload-free `ActionGate`) and read it lazily —
   `ownsHotkey` at keydown, not captured at render, because actions do not exist until render has
   run.
-- Aggregated `isRunning` / `error` are pre-computed at write time and reach both the render args
+- Aggregated `hasRunningAction` / `error` are pre-computed at write time and reach both the render args
   and the hook's return, so a trigger button outside the dialog can read them.
 
 ### Hotkey System
@@ -180,8 +180,8 @@ the concept, not editing three that describe it. The chain, rooted in [core/type
 
 ```
 ModalRenderArgs<TData>                ← the render-time slice:
-│                                       { isPreparing, handle, action, isRunning, error }
-├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, isOpen, Modal, waitForClose,
+│                                       { isPreparing, handle, action, hasRunningAction, error }
+├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, isVisible, Modal, waitForClose,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
     ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
@@ -202,7 +202,7 @@ round, as the enumeration of forwarded keys it replaced, a new core option reach
 and nothing failed.
 
 So a new render-time field is added to `ModalRenderArgs` **once** and reaches the hook return and
-every template context. `isPreparing` carries a subtle caveat (it tracks the `onOpen` callback, not
+every template context. `isPreparing` carries a subtle caveat (it tracks the `prepare` callback, not
 the `'opening'` phase) that would otherwise be written out three times and drift; it has one home.
 
 ### The payload flows

@@ -74,7 +74,7 @@ export function ImperativeExample() {
         </MessageModal.DefaultLayout>
       );
     },
-    onOpen: () => {
+    prepare: () => {
       openCountStore.increment();
     },
     onClose: (closeResult) => {

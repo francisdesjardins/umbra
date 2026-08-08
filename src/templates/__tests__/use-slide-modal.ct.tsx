@@ -12,14 +12,14 @@ import {
 test.describe('useSlideModal', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('modal-slide-basic')).not.toBeVisible();
   });
 
   test('opens from specified direction', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('open');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
     await expect(page.getByTestId('modal-slide-basic')).toContainText('Slide content');
   });
@@ -35,7 +35,7 @@ test.describe('useSlideModal', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Close Panel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('close');
   });
 
@@ -44,7 +44,7 @@ test.describe('useSlideModal', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -80,7 +80,7 @@ test.describe('useSlideModal', () => {
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Escape');
 
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -90,12 +90,12 @@ test.describe('useSlideModal', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Close Panel' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
@@ -104,7 +104,7 @@ test.describe('useSlideModal', () => {
     page,
   }) => {
     await mount(<ContainedPositioningSlideHarness />);
-    await expect(page.getByTestId('is-open')).toHaveText('closed');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     // Two layers had to be got out of the way for this click to land: the host, which is
     // `absolute; inset: 0` over the stage whether or not the dialog is open, and the closed

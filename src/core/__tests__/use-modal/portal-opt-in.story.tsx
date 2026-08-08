@@ -10,7 +10,7 @@ export function PortalOptInHarness() {
   const [lastReason, setLastReason] = useState('');
   const [dialogParent, setDialogParent] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'done'>({
+  const { open, isVisible, Modal } = useModal<void, 'done'>({
     id: 'portal-opt-in',
     portal: true,
     animation: {
@@ -34,7 +34,7 @@ export function PortalOptInHarness() {
         </div>
       );
     },
-    onOpen: () => {
+    prepare: () => {
       const dialog = document.querySelector('[data-testid="modal-portal-opt-in"]');
       setDialogParent(dialog?.parentElement?.tagName ?? 'unknown');
     },
@@ -52,7 +52,7 @@ export function PortalOptInHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="dialog-parent">{dialogParent}</span>
       {Modal}

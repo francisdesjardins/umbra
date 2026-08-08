@@ -6,10 +6,13 @@ type ModalInfoBase = {
   readonly id: string;
   /** Current lifecycle phase. `'closed'` for unregistered modals. */
   readonly phase: ModalPhase;
-  /** Whether the modal is currently open (`phase !== 'closed'`). */
-  readonly isOpen: boolean;
   /**
-   * Whether the modal's `onOpen` is still running — it is on screen, its content is not ready.
+   * Whether the dialog is on screen (`phase !== 'closed'`) — true through the exit animation
+   * too. `phase` is the finer answer; this is the one an observer usually wants.
+   */
+  readonly isVisible: boolean;
+  /**
+   * Whether the modal's `prepare` is still running — it is on screen, its content is not ready.
    * `false` for unregistered modals.
    *
    * The second axis, and the one an observer usually wants. `phase` describes the `<dialog>`
@@ -49,7 +52,7 @@ export type RegisteredModalInfo = ModalInfoBase & {
 
 /**
  * The null-object answer for an id nobody registered: enough to ask the usual questions
- * (`isOpen`, `phase`) without an optional-chaining dance, and nothing that would be a lie.
+ * (`isVisible`, `phase`) without an optional-chaining dance, and nothing that would be a lie.
  */
 export type UnregisteredModalInfo = ModalInfoBase & {
   /** The discriminant: no modal is registered under this id. */
@@ -90,8 +93,8 @@ export type ModalLookup = {
 
   // ── Per-modal queries ───────────────────────────────────────────────────
 
-  /** Check if a specific modal is currently open by id. */
-  isOpen(id: string): boolean;
+  /** Whether a specific dialog is on screen, exit animation included. */
+  isVisible(id: string): boolean;
   /** Check if a specific modal is the topmost open modal by id. */
   isForeground(id: string): boolean;
 

@@ -28,6 +28,7 @@ export {
   MODAL_CLOSE_EVENT,
   MODAL_OPEN_EVENT,
   createDialogManager,
+  createOpenRequest,
   dialogManager,
 } from './manager/dialog-manager.js';
 export { setLogLevel } from './utils/logger.js';

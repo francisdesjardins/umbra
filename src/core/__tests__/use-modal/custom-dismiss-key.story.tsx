@@ -9,7 +9,7 @@ import { dialogStyle } from '../story-styles.js';
 export function CustomDismissKeyHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'close'>({
+  const { open, isVisible, Modal } = useModal<void, 'close'>({
     id: 'custom-dismiss',
     dismissKey: Key.Delete,
     render: ({ handle }) => {
@@ -40,7 +40,7 @@ export function CustomDismissKeyHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

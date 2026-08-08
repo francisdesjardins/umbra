@@ -16,7 +16,7 @@ const slidePanelStyle: CSSProperties = {
 export function BasicSlideHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useSlideModal<void, 'close'>({
+  const { open, isVisible, Modal } = useSlideModal<void, 'close'>({
     id: 'slide-basic',
     direction: 'right',
     render: ({ handle }) => {
@@ -47,7 +47,7 @@ export function BasicSlideHarness() {
       >
         Open Panel
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

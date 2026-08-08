@@ -34,7 +34,7 @@ export const GettingStartedPage = () => {
           />
           <ExampleCard
             title="Async Open"
-            description="onOpen awaits a query, so open() resolves when the data is there. A warm cache opens instantly; refetching while open shows isFetching without isPreparing."
+            description="prepare awaits a query, so open() resolves when the data is there. A warm cache opens instantly; refetching while open shows isFetching without isPreparing."
             codeKey="async-open"
             modalId={ASYNC_OPEN_ID}
             tryLabel="Open"

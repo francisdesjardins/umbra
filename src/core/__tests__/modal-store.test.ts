@@ -108,7 +108,7 @@ test.describe('createModalStore — opening', () => {
 
     expect(settled).toBe(0);
     store.resolveOpen();
-    // Both callers settle together when onOpen completes — neither hangs, neither double-fires.
+    // Both callers settle together when prepare completes — neither hangs, neither double-fires.
     expect(settled).toBe(2);
   });
 

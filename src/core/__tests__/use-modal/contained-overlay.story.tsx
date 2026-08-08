@@ -12,7 +12,7 @@ import { useModal } from '../../use-modal.js';
  * caller writes before they know otherwise.
  */
 export function ContainedOverlayHarness() {
-  const { open, isOpen, Modal } = useModal<void, 'close'>({
+  const { open, isVisible, Modal } = useModal<void, 'close'>({
     id: 'contained-overlay',
     nonModal: true,
     portal: false,
@@ -43,7 +43,7 @@ export function ContainedOverlayHarness() {
       >
         Open Contained
       </button>
-      <span data-testid="overlay-is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="overlay-is-visible">{isVisible ? 'open' : 'closed'}</span>
       {/* The host region: sized and positioned, as the contract requires. */}
       <div
         data-testid="overlay-host"

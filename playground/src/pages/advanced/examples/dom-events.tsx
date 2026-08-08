@@ -75,7 +75,7 @@ export function DomEventsExample() {
     const OWN = new Set([ALERT_ID, PANEL_ID]);
 
     // No cast: the library augments `DocumentEventMap`, so `e.detail` is already typed.
-    const onOpen = (e: DocumentEventMap['modal:open']) => {
+    const prepare = (e: DocumentEventMap['modal:open']) => {
       const { id, modalType, openedAt } = e.detail;
       if (!OWN.has(id)) {
         return;
@@ -96,10 +96,10 @@ export function DomEventsExample() {
       );
     };
 
-    document.addEventListener(MODAL_OPEN_EVENT, onOpen);
+    document.addEventListener(MODAL_OPEN_EVENT, prepare);
     document.addEventListener(MODAL_CLOSE_EVENT, onClose);
     return () => {
-      document.removeEventListener(MODAL_OPEN_EVENT, onOpen);
+      document.removeEventListener(MODAL_OPEN_EVENT, prepare);
       document.removeEventListener(MODAL_CLOSE_EVENT, onClose);
     };
   }, []);

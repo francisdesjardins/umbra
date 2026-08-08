@@ -23,7 +23,7 @@ const slidePanelStyle: CSSProperties = {
 export function NonModalEscHotkeySlideHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useSlideModal<void, 'cancel'>({
+  const { open, isVisible, Modal } = useSlideModal<void, 'cancel'>({
     id: 'non-modal-esc-hotkey-slide',
     direction: 'right',
     nonModal: true,
@@ -59,7 +59,7 @@ export function NonModalEscHotkeySlideHarness() {
         Open Panel
       </button>
       <button data-testid="outside-button">Outside Button</button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {/* Non-modal + no-portal is "contained": the panel anchors to (and sizes against)
           its nearest positioned ancestor, so it needs a sized, relative host. */}

@@ -39,7 +39,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
 
   const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
-    render: ({ action, isRunning, error }) => {
+    render: ({ action, hasRunningAction, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -59,7 +59,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
                 variant="caption"
                 sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
               >
-                Status: {isRunning ? 'Running...' : 'Idle'}
+                Status: {hasRunningAction ? 'Running...' : 'Idle'}
                 {error && ` | Error: ${error.message}`}
               </Typography>
             </Stack>

@@ -21,7 +21,7 @@ export function BackdropHitTestHarness() {
   const [bubbled, setBubbled] = useState(0);
   const [activated, setActivated] = useState('no');
 
-  const { open, isOpen, Modal } = useModal({
+  const { open, isVisible, Modal } = useModal({
     id: 'backdrop-hit-test',
     render: () => {
       return (
@@ -52,7 +52,7 @@ export function BackdropHitTestHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="activated">{activated}</span>
       <span data-testid="bubbled-clicks">{bubbled}</span>

@@ -33,9 +33,9 @@ export function KeyPassthroughHarness() {
     id: 'key-passthrough',
     nonModal: true,
     portal: true,
-    // Dismissal is refused for as long as `onOpen` is pending.
+    // Dismissal is refused for as long as `prepare` is pending.
     dismissWhilePreparing: false,
-    onOpen: () => {
+    prepare: () => {
       return new Promise<void>((resolve) => {
         setRelease(() => {
           return resolve;

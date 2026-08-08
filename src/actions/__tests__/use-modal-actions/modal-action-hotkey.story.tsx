@@ -9,7 +9,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function ModalActionHotkeyHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-hotkey',
     render: ({ action }) => {
       return (
@@ -33,7 +33,7 @@ export function ModalActionHotkeyHarness() {
       >
         Open
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

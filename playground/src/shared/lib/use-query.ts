@@ -16,7 +16,7 @@ export type Query<T> = {
   /** Concurrent callers share one in-flight request. */
   readonly refetch: () => Promise<AsyncState<T>>;
   readonly invalidate: () => void;
-  /** The cheap check an `onOpen` makes before awaiting. */
+  /** The cheap check an `prepare` makes before awaiting. */
   readonly isCached: () => boolean;
 };
 

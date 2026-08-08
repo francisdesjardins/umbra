@@ -10,7 +10,7 @@ import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 export function DismissKeyActionCollisionHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'remove'>({
+  const { open, isVisible, Modal } = useModal<void, 'remove'>({
     id: 'ctrl-dismiss-collision',
     dismissKey: Key.Delete,
     render: ({ action }) => {
@@ -43,7 +43,7 @@ export function DismissKeyActionCollisionHarness() {
       >
         Open
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

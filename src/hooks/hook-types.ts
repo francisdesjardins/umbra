@@ -22,7 +22,7 @@ export type ModalHookContext = {
 
 /** Options for `useDialogLifecycle`. */
 export type DialogLifecycleOptions = {
-  readonly onOpen: ((signal: AbortSignal) => void | Promise<void>) | undefined;
+  readonly prepare: ((signal: AbortSignal) => void | Promise<void>) | undefined;
   readonly animation: ModalAnimation;
   readonly nonModal: boolean;
 };

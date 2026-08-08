@@ -2,12 +2,12 @@ import { useMessageModal } from '../../use-message-modal.js';
 import { dialogStyle } from '../../../core/__tests__/story-styles.js';
 
 /**
- * Tests onOpen with a 500 ms async delay. isPreparing state is exposed in render.
+ * Tests prepare with a 500 ms async delay. isPreparing state is exposed in render.
  */
 export function AsyncOpenMessageHarness() {
-  const { open, isOpen, Modal } = useMessageModal<void, 'close'>({
+  const { open, isVisible, Modal } = useMessageModal<void, 'close'>({
     id: 'msg-async',
-    onOpen: () => {
+    prepare: () => {
       return new Promise((resolve) => {
         return setTimeout(resolve, 500);
       });
@@ -37,7 +37,7 @@ export function AsyncOpenMessageHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       {Modal}
     </div>
   );

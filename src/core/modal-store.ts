@@ -38,7 +38,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
     let rafId = 0;
 
     /**
-     * Aborted when the modal closes, so work `onOpen` started can be dropped.
+     * Aborted when the modal closes, so work `prepare` started can be dropped.
      *
      * Here rather than in the React binding because the three moments it turns on — an open
      * starting, a close starting, a teardown — are this store's transitions and nothing else's.
@@ -81,10 +81,10 @@ export function createModalStore<TData = unknown, TReason extends string = strin
       /**
        * Request an open, optionally joining the caller to its completion.
        *
-       * `onOpened` (when given) settles once `onOpen` has finished — immediately
+       * `onOpened` (when given) settles once `prepare` has finished — immediately
        * if there is nothing to wait for. Every branch settles it exactly once, so
        * a caller's `open()` promise can never hang:
-       * - `'closed'` → start opening, resolve when `onOpen` completes
+       * - `'closed'` → start opening, resolve when `prepare` completes
        * - opening in flight → join it
        * - already open, or closing → resolve now; no reopen is queued
        */
@@ -130,7 +130,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         });
       },
 
-      /** `onOpen` has settled — release the `open()` promises waiting on it. */
+      /** `prepare` has settled — release the `open()` promises waiting on it. */
       resolveOpen(): void {
         flushOpenResolvers();
         set((s) => {
@@ -219,7 +219,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
       },
 
       /**
-       * The signal handed to `onOpen`, aborted when the modal closes.
+       * The signal handed to `prepare`, aborted when the modal closes.
        *
        * Created on demand as well as on open, so a caller reading it before the first open gets a
        * live signal rather than having to handle `null`.

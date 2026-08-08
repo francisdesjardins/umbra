@@ -40,11 +40,11 @@ Grouped in the sidebar; the order is the intended reading order.
 | Group     | Route              | Purpose                                                    |
 | --------- | ------------------ | ---------------------------------------------------------- |
 | Learn     | `/getting-started` | The core open → render → close loop                        |
-| Learn     | `/modal-actions`   | Action state: `isRunning`, `error`, hotkeys                |
+| Learn     | `/modal-actions`   | Action state: `hasRunningAction`, `error`, hotkeys         |
 | Patterns  | `/slide-modal`     | The four slide shapes as presets, and the toast            |
 | Patterns  | `/advanced`        | Stacking, imperative control, outlet, events, showcases    |
 | Reference | `/ui-integrations` | MUI vs vanilla, paired by use case                         |
-| Reference | `/ui-templates`    | Copy-paste template index, MUI/Vanilla flavour toggle      |
+| Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |
 | Testing   | `/stories`         | Live `*.story.tsx` harnesses from the component test suite |
 
@@ -150,7 +150,10 @@ Keep the **UI Templates** page (`src/pages/ui-templates/ui/UITemplatesPage.tsx`)
 
 1. Add the `?raw` import in `codeSamples.ts`. Key convention: `template-<group>-<name>` for
    MUI, `vanilla-<group>-<name>` for vanilla, `shared-component-<name>` for playground UI.
-2. Add the entry to the matching group in `MUI_GROUPS` or `VANILLA_GROUPS`.
+2. Add the entry to the matching group in `MUI_GROUPS`, `VANILLA_GROUPS`, or — if it renders
+   nothing and therefore works under either flavour — `PATTERNS_GROUP`, which the **Shared** tab
+   shows alongside `PLAYGROUND_GROUP`. Three tabs, and the third is the honest home for
+   everything that is not a rendering flavour.
 3. On removal/rename: update the import, the `codeSamples` entry, and the group entry together.
 
 CSS-module samples use the `-styles` key suffix — the viewer keys its syntax highlighting off

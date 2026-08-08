@@ -17,7 +17,7 @@ export function ConfirmWithHotkeysExample() {
 
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
-    render: ({ action, isRunning, error }) => {
+    render: ({ action, hasRunningAction, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -37,7 +37,7 @@ export function ConfirmWithHotkeysExample() {
                 variant="caption"
                 sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
               >
-                Status: {isRunning ? 'Running...' : 'Idle'}
+                Status: {hasRunningAction ? 'Running...' : 'Idle'}
                 {error ? ` | Error: ${error.message}` : ''}
               </Typography>
               {error && <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>}
@@ -78,7 +78,7 @@ export function ConfirmWithHotkeysExample() {
       <Shared.Button
         variant="contained"
         size="small"
-        disabled={modal.isRunning}
+        disabled={modal.hasRunningAction}
         onClick={async () => {
           await modal.open();
           const [, closeResult] = await modal.waitForClose();

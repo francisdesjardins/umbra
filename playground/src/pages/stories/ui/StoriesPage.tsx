@@ -200,7 +200,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Dismiss Key Passthrough',
         description:
-          'A non-modal panel that refuses to dismiss while onOpen is pending. The key it declines still reaches the page’s own Escape handler; the key it acts on does not.',
+          'A non-modal panel that refuses to dismiss while prepare is pending. The key it declines still reaches the page’s own Escape handler; the key it acts on does not.',
         component: KeyPassthroughHarness,
         codeKey: 'story-use-modal-key-passthrough',
       },
@@ -302,14 +302,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'dismissWhilePreparing: false',
         description:
-          'Modal with dismissWhilePreparing: false. ESC is blocked while onOpen is running. Click "Resolve" to finish loading, then ESC closes.',
+          'Modal with dismissWhilePreparing: false. ESC is blocked while prepare is running. Click "Resolve" to finish loading, then ESC closes.',
         component: DismissWhilePreparingDisabledHarness,
         codeKey: 'story-use-modal-dismiss-while-preparing-disabled',
       },
       {
         title: 'dismissWhilePreparing — Default (true)',
         description:
-          'Modal with default dismissWhilePreparing (true). ESC closes even while onOpen is still running.',
+          'Modal with default dismissWhilePreparing (true). ESC closes even while prepare is still running.',
         component: DismissWhilePreparingDefaultHarness,
         codeKey: 'story-use-modal-dismiss-while-preparing-default',
       },
@@ -353,7 +353,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Async Open',
-        description: 'onOpen with a 500 ms async delay. Shows isPreparing state inside the modal.',
+        description: 'prepare with a 500 ms async delay. Shows isPreparing state inside the modal.',
         component: AsyncOpenMessageHarness,
         codeKey: 'story-msg-async-open',
       },
@@ -436,7 +436,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Hotkey While Opening',
         description:
-          'onOpen stays pending until you release it. The action button is live the whole time, and its declared hotkey (F2) is the same trigger.',
+          'prepare stays pending until you release it. The action button is live the whole time, and its declared hotkey (F2) is the same trigger.',
         component: HotkeyWhilePreparingHarness,
         codeKey: 'story-action-hotkey-while-preparing',
       },

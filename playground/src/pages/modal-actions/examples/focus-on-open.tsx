@@ -43,14 +43,14 @@ function useFocusedLabel(active: boolean) {
 export function FocusOnOpenExample() {
   const [attempts, setAttempts] = useState(0);
   const [outcome, setOutcome] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const focused = useFocusedLabel(isOpen);
+  const [isVisible, setIsVisible] = useState(false);
+  const focused = useFocusedLabel(isVisible);
 
   const modal = useMessageModal<void, 'delete' | 'keep'>({
     id: MODAL_ID,
     ariaLabelledBy: 'focus-on-open-title',
-    onOpen: () => {
-      setIsOpen(true);
+    prepare: () => {
+      setIsVisible(true);
       setAttempts(0);
     },
     render: ({ action, error }) => {
@@ -123,7 +123,7 @@ export function FocusOnOpenExample() {
       );
     },
     onClose: (result) => {
-      setIsOpen(false);
+      setIsVisible(false);
       setOutcome(result.reason === 'delete' ? 'Deleted' : `Kept (${result.reason})`);
     },
   });
@@ -142,7 +142,7 @@ export function FocusOnOpenExample() {
           Delete a file
         </Shared.Button>
         <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-          <Chip size="small" label={`focus: ${isOpen ? focused : 'modal closed'}`} />
+          <Chip size="small" label={`focus: ${isVisible ? focused : 'modal closed'}`} />
           <Chip size="small" label={`delete attempts: ${String(attempts)}`} />
         </Stack>
         <Typography variant="caption" color="text.secondary">

@@ -124,13 +124,17 @@ so the modal applies the focus itself once the dialog is open.
 
 ### Aggregated state
 
-`render` also receives `isRunning` and `error` — the combined state of every action on the
-modal — and the hook returns them too, for a trigger button outside the dialog:
+`render` also receives `hasRunningAction` and `error` — the combined state of every action on the
+modal — and the hook returns them too, for a trigger button outside the dialog.
+
+Three flags describe "busy" at three scopes, and each is named for its own: an action's `loading`
+is that button, `hasRunningAction` is the whole modal, and `isPreparing` is the `prepare` callback,
+which has nothing to do with actions at all.
 
 ```tsx
 const modal = useModal({
   id: 'save',
-  render: ({ action, isRunning, error }) => (
+  render: ({ action, hasRunningAction, error }) => (
     <>
       <button {...action('save', save)} />
       {error ? <p role="alert">{error.message}</p> : null}
@@ -138,7 +142,7 @@ const modal = useModal({
   ),
 });
 
-modal.isRunning; // same value, outside render
+modal.hasRunningAction; // same value, outside render
 ```
 
 ### Hotkeys
@@ -231,22 +235,22 @@ const modal = useModal<void, 'confirm' | 'cancel'>({
 });
 
 // Returns — the render args, plus the hook's own surface
-const { open, isOpen, Modal, waitForClose, dialogManager } = modal;
-const { isPreparing, handle, action, isRunning, error } = modal;
+const { open, isVisible, Modal, waitForClose, dialogManager } = modal;
+const { isPreparing, handle, action, hasRunningAction, error } = modal;
 ```
 
 ### Render Args
 
 `ModalRenderArgs` — what `render` is handed. The hook's return **intersects** it, so every field
-below is also readable outside `render` (`modal.isRunning` on a trigger button, for instance).
+below is also readable outside `render` (`modal.hasRunningAction` on a trigger button, for instance).
 
-| Property      | Type                          | Description                                                               |
-| ------------- | ----------------------------- | ------------------------------------------------------------------------- |
-| `isPreparing` | `boolean`                     | Whether the `onOpen` callback is still running — a second axis to `phase` |
-| `handle`      | `ModalHandle<TData, TReason>` | `{ close(reason?, data?: TData) }`                                        |
-| `action`      | `ActionFactory<TData>`        | Declare an action and get its button props — see [Actions](#actions)      |
-| `isRunning`   | `boolean`                     | True while **any** action on this modal is running                        |
-| `error`       | `Error \| null`               | The last error thrown by any action on this modal                         |
+| Property           | Type                          | Description                                                                |
+| ------------------ | ----------------------------- | -------------------------------------------------------------------------- |
+| `isPreparing`      | `boolean`                     | Whether the `prepare` callback is still running — a second axis to `phase` |
+| `handle`           | `ModalHandle<TData, TReason>` | `{ close(reason?, data?: TData) }`                                         |
+| `action`           | `ActionFactory<TData>`        | Declare an action and get its button props — see [Actions](#actions)       |
+| `hasRunningAction` | `boolean`                     | True while **any** action on this modal is running                         |
+| `error`            | `Error \| null`               | The last error thrown by any action on this modal                          |
 
 ### Return
 
@@ -254,8 +258,8 @@ Everything above, plus:
 
 | Property        | Type                                | Description                                                                |
 | --------------- | ----------------------------------- | -------------------------------------------------------------------------- |
-| `open`          | `() => Promise<void>`               | Resolves after `onOpen` completes; joins an in-flight open, never hangs    |
-| `isOpen`        | `boolean`                           | Whether the modal is open (`phase !== 'closed'`)                           |
+| `open`          | `() => Promise<void>`               | Resolves after `prepare` completes; joins an in-flight open, never hangs   |
+| `isVisible`     | `boolean`                           | On screen — `phase !== 'closed'`, so still true through the exit animation |
 | `Modal`         | `ReactNode`                         | Place in JSX as `{Modal}`; `null` when closed, and inside a `ModalOutlet`  |
 | `waitForClose`  | `() => Promise<WaitForCloseResult>` | Go-style `[error, result]` tuple — see [waitForClose](#waitforclose)       |
 | `dialogManager` | `DialogManager`                     | The instance this modal registered with — use it over the static singleton |
@@ -269,7 +273,7 @@ Everything above, plus:
 | `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                        |
 | `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                    |
 | `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                        |
-| `onOpen?`                 | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                   |
+| `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                   |
 | `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                          |
 | `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                     |
 | `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                          |
@@ -278,8 +282,8 @@ Everything above, plus:
 | `modalType?`              | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [modalType](#modaltype). Default: `'modal'`.                                                                                                                                         |
 | `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                         |
 | `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.             |
-| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `onOpen` is preparing. Only the topmost non-modal responds. Default: `false`.        |
-| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `onOpen` is executing. Default: `true`.                                                                                                                             |
+| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the topmost non-modal responds. Default: `false`.       |
+| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                            |
 | `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                 |
 | `portal?`                 | `boolean`                                                        | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way. |
 
@@ -521,7 +525,7 @@ const panel = useSlideModal<void, 'save'>({
 
 Plus the shared template options — every `useModal` option except the two a template owns
 (`modalType`, since a template names itself, and the internal `clipContainer`): `id`, `render`,
-`animation`, `style`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `onOpen`,
+`animation`, `style`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `prepare`,
 `onClose`, `onKeyDown`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`, `role`. The exclusion is
 stated that way round in the source, so a new core option reaches every template by default.
 
@@ -652,11 +656,34 @@ dialogManager.close('my-modal-id', 'confirm');
 
 // Subscribe to lifecycle events
 dialogManager.subscribe((event) => {
-  // { type: 'open', id: string }           — fires once open and `onOpen` has settled
+  // { type: 'open', id: string }           — fires once open and `prepare` has settled
   // { type: 'close', id: string, reason?: string } — after the closing sequence completes
   console.log(event.type, event.id, event.type === 'close' ? event.reason : '');
 });
 ```
+
+### createOpenRequest
+
+The envelope, built rather than typed out:
+
+```typescript
+import { createOpenRequest, dialogManager } from 'umbra';
+
+dialogManager.requestOpen(
+  'patient:merge',
+  createOpenRequest({ patientId: '42' }, { source: 'portal:nav' })
+);
+
+// No payload — just say who is asking.
+dialogManager.requestOpen('help', createOpenRequest(undefined, { source: 'shell:menu' }));
+```
+
+`requestOpen(id, { payload, context })` works and always will. The builder exists because this
+call site is a **boundary**: the keys have to be remembered exactly (this payload was called
+`data` until it collided with the one a modal declares), the two halves mean different things, and
+this is the single place a protocol would grow — a version, a correlation id — without every
+caller being edited. It validates nothing and cannot: the payload is `unknown` on the way out, and
+the dialog receiving it is the only side that knows what a good one looks like.
 
 ### createDialogManager / DialogManagerProvider
 
@@ -689,10 +716,10 @@ Overloaded method for querying modal state. No optional chaining needed — `loo
 // Per-modal query — always returns ModalInfo (never undefined)
 const info = dialogManager.lookup('my-modal');
 info.exists; // true if registered, false otherwise
-info.isOpen; // true if phase !== 'closed'
+info.isVisible; // true if phase !== 'closed'
 info.isForeground; // true if topmost open modal
 info.phase; // 'closed' | 'opening' | 'open' | 'closing'
-info.isPreparing; // true while its onOpen is still running
+info.isPreparing; // true while its prepare is still running
 info.openedAt; // timestamp (0 for unregistered)
 info.modalType; // the label its creator gave it (only on the registered branch)
 info.nonModal; // boolean (absent for unregistered)
@@ -707,7 +734,7 @@ all.getForeground(); // ModalInfo | undefined
 all.getRegisteredCount(); // total registered modals
 all.get('my-modal'); // same as lookup('my-modal')
 all.exists('my-modal'); // true if registered
-all.isOpen('my-modal'); // true if open
+all.isVisible('my-modal'); // true if open
 all.isForeground('my-modal'); // true if topmost
 
 // Counts and existence checks derive from the arrays:
@@ -720,15 +747,15 @@ all.getClosed().length; // closed count
 
 A union discriminated by `exists`: `RegisteredModalInfo | UnregisteredModalInfo`.
 
-| Property       | Type         | Description                                          |
-| -------------- | ------------ | ---------------------------------------------------- |
-| `id`           | `string`     | Modal identifier                                     |
-| `exists`       | `boolean`    | Whether the modal is registered — the discriminant   |
-| `phase`        | `ModalPhase` | `'closed'` \| `'opening'` \| `'open'` \| `'closing'` |
-| `isOpen`       | `boolean`    | Whether `phase !== 'closed'`                         |
-| `isPreparing`  | `boolean`    | Whether its `onOpen` is still running (see below)    |
-| `isForeground` | `boolean`    | Whether this is the topmost open modal               |
-| `openedAt`     | `number`     | `Date.now()` at open start (0 if unregistered)       |
+| Property       | Type         | Description                                               |
+| -------------- | ------------ | --------------------------------------------------------- |
+| `id`           | `string`     | Modal identifier                                          |
+| `exists`       | `boolean`    | Whether the modal is registered — the discriminant        |
+| `phase`        | `ModalPhase` | `'closed'` \| `'opening'` \| `'open'` \| `'closing'`      |
+| `isVisible`    | `boolean`    | On screen, exit animation included (`phase !== 'closed'`) |
+| `isPreparing`  | `boolean`    | Whether its `prepare` is still running (see below)        |
+| `isForeground` | `boolean`    | Whether this is the topmost open modal                    |
+| `openedAt`     | `number`     | `Date.now()` at open start (0 if unregistered)            |
 
 `isPreparing` is the field an observer usually wants. `phase` describes the `<dialog>` element and
 reaches `'open'` on the animation frame after it is shown, so `'opening'` lasts a single frame no
@@ -762,7 +789,7 @@ modals, so they are typed `RegisteredModalInfo` and need no narrowing at all.
 | `exists(id)`           | `boolean`                | Whether the modal is registered                                       |
 | `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                                      |
 | `getOpen(filter?)`     | `ModalInfo[]`            | Open modals sorted by open time; filter `'blocking'`/`'non-blocking'` |
-| `isOpen(id)`           | `boolean`                | Whether a specific modal is open                                      |
+| `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                                |
 | `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                                   |
 | `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                                      |
 | `getRegisteredCount()` | `number`                 | Total registered modals                                               |
@@ -771,7 +798,16 @@ modals, so they are typed `RegisteredModalInfo` and need no narrowing at all.
 
 ## DOM Lifecycle Events
 
-`modal:open` and `modal:close` `CustomEvent`s are dispatched on `document` at key points in the modal lifecycle. Use these to integrate with external systems (analytics, feature flags, shell apps) without importing React or the dialog manager.
+`modal:open` and `modal:close` `CustomEvent`s are dispatched on `document` at key points in the
+modal lifecycle.
+
+**They are not a second `subscribe`.** `dialogManager.subscribe` reports the same two moments and
+is the better tool inside one app: same information, no global names, no `document`. What these
+add is reach — they are dispatched on the document, so a listener hears every dialog on the page,
+including ones raised by a **different copy of this library** in another bundle or another
+microfrontend. That is the observation half of what `requestOpen` opens on the way in: a shell can
+ask a dialog it does not own to open, and watch what came of it, without either side sharing a
+module instance. A tag manager or a plain `<script>` can listen too, having imported nothing.
 
 ```typescript
 import { MODAL_OPEN_EVENT, MODAL_CLOSE_EVENT } from 'umbra';
@@ -879,7 +915,7 @@ function ModalStatus({ id }: { id: string }) {
   if (!info.exists) return <span>Not registered</span>;
   return (
     <div>
-      <span>{info.isOpen ? 'Open' : 'Closed'}</span>
+      <span>{info.isVisible ? 'Open' : 'Closed'}</span>
       {info.isForeground && <span> (foreground)</span>}
     </div>
   );
@@ -916,7 +952,7 @@ Namespace tokens — short form and `dialog:`-prefixed form are interchangeable:
 | --------------------- | --------------------------------------------------------- |
 | `manager`             | Modal registration & open/close lifecycle                 |
 | `modal`               | `useModal` core — open/close requests                     |
-| `modal:lifecycle`     | Opening phase & `onOpen` callback                         |
+| `modal:lifecycle`     | Opening phase & `prepare` callback                        |
 | `modal:keydown`       | Dismiss-key handling (`dismissKey`, default `Key.Escape`) |
 | `modal:click-outside` | Click-outside detection for non-modal dialogs             |
 | `outlet`              | ModalOutlet registration and rendering                    |
@@ -924,7 +960,7 @@ Namespace tokens — short form and `dialog:`-prefixed form are interchangeable:
 
 ### Privacy
 
-Logging is **opt-in, debug-only, and console-only** — nothing is persisted or transmitted. It never logs the `data` payload passed to `close(data)` (only a `withData` flag), nor the close `result`, render content, or store state. It **does** log `error.message` from your `onOpen` / `onClose` / action callbacks and the close `reason`, either of which can carry user data if your code puts it there. Avoid enabling logging in **production**, where a session-replay / RUM tool may capture `console` output.
+Logging is **opt-in, debug-only, and console-only** — nothing is persisted or transmitted. It never logs the `data` payload passed to `close(data)` (only a `withData` flag), nor the close `result`, render content, or store state. It **does** log `error.message` from your `prepare` / `onClose` / action callbacks and the close `reason`, either of which can carry user data if your code puts it there. Avoid enabling logging in **production**, where a session-replay / RUM tool may capture `console` output.
 
 ---
 
@@ -1084,10 +1120,13 @@ await boundStore.save();
 There is no draft engine: `set` replaces the snapshot, so a nested update spreads by hand or
 composes immer at the call site (`set((s) => produce(s, recipe))`).
 
-`useStore` cannot inject context: it only reads. Writing to a shared store during render is a
-mutation React may run twice, discard, or interleave, and two components injecting different
-values would be last-render-wins. To scope a store _and_ its dependencies to a subtree, build it
-per provider with `createStoreContext(() => createStore(initial, builder, { context }))`.
+**Context is injected where the store is built, and nowhere else.** Reading a store never writes
+to it, and there is deliberately no way to hand it a dependency from inside a component: that
+would be a mutation of shared state during a render React may run twice, discard or interleave,
+and two components injecting different values would be last-render-wins. To scope a store _and_
+its dependencies to a subtree, build one per provider — `createStore(initial, builder, { context })`
+inside the provider's factory. The playground keeps a `createStoreContext` helper doing exactly
+that, as code to copy rather than API to import.
 
 ---
 

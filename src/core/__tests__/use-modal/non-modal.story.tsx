@@ -10,7 +10,7 @@ export function NonModalHarness() {
   const [lastReason, setLastReason] = useState('');
   const [openCount, setOpenCount] = useState(0);
 
-  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
     id: 'non-modal-dialog',
     nonModal: true,
     animation: {
@@ -58,7 +58,7 @@ export function NonModalHarness() {
       >
         Outside Button
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="open-count">{openCount}</span>
       <span data-testid="body-overflow">

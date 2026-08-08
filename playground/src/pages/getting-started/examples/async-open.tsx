@@ -34,7 +34,7 @@ export function AsyncOpenExample() {
   const asyncModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
     // Awaiting here is what makes `open()` resolve with the data already in.
-    onOpen: async () => {
+    prepare: async () => {
       if (!profileQuery.isCached()) {
         await refetch();
       }
@@ -59,7 +59,7 @@ export function AsyncOpenExample() {
 
       return (
         <ContentTransition
-          // `onOpen` runs on every open, so `isPreparing` is briefly true even on a warm
+          // `prepare` runs on every open, so `isPreparing` is briefly true even on a warm
           // cache — gating on it alone fades a fallback in and out for nothing.
           pending={isPreparing && !isSuccess}
           fallback={

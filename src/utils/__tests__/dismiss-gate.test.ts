@@ -44,27 +44,27 @@ test.describe('canDismiss', () => {
 
   // ── dismissWhilePreparing gating ────────────────────────────────────────────
 
-  test('blocks dismissal while onOpen runs when dismissWhilePreparing is false', () => {
+  test('blocks dismissal while prepare runs when dismissWhilePreparing is false', () => {
     expect(canDismiss({ ...dismissable, isPreparing: true, dismissWhilePreparing: false })).toBe(
       false
     );
   });
 
-  test('allows dismissal while onOpen runs when dismissWhilePreparing is true', () => {
+  test('allows dismissal while prepare runs when dismissWhilePreparing is true', () => {
     expect(canDismiss({ ...dismissable, isPreparing: true, dismissWhilePreparing: true })).toBe(
       true
     );
   });
 
-  test('dismissWhilePreparing: false is irrelevant once onOpen has settled', () => {
+  test('dismissWhilePreparing: false is irrelevant once prepare has settled', () => {
     expect(canDismiss({ ...dismissable, isPreparing: false, dismissWhilePreparing: false })).toBe(
       true
     );
   });
 
-  test('isPreparing can still be true in the open phase (onOpen outlives the RAF)', () => {
+  test('isPreparing can still be true in the open phase (prepare outlives the RAF)', () => {
     // phase flips to 'open' on the next animation frame, but isPreparing stays true
-    // until the onOpen promise settles — the two are independent.
+    // until the prepare promise settles — the two are independent.
     expect(
       canDismiss({
         phase: 'open',

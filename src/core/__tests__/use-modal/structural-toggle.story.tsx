@@ -15,7 +15,7 @@ export function StructuralToggleHarness() {
   const [portal, setPortal] = useState(false);
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
     id: 'structural-toggle',
     nonModal: true,
     portal,
@@ -64,7 +64,7 @@ export function StructuralToggleHarness() {
       >
         Toggle Portal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

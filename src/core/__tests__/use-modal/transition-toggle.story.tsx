@@ -23,7 +23,7 @@ export function TransitionToggleHarness() {
     };
   }, []);
 
-  const { open, isOpen, Modal } = useModal<void, 'done'>({
+  const { open, isVisible, Modal } = useModal<void, 'done'>({
     id: 'transition-toggle',
     render: ({ handle }) => {
       return (
@@ -58,7 +58,7 @@ export function TransitionToggleHarness() {
       >
         Disable Transitions
       </button>
-      <span data-testid="toggle-is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="toggle-is-visible">{isVisible ? 'open' : 'closed'}</span>
       {Modal}
     </div>
   );

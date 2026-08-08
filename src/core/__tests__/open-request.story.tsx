@@ -24,17 +24,17 @@ export function OpenRequestHarness() {
 
   const modal = useModal<void, 'ok'>({
     id: 'asked',
-    onOpenRequest: ({ data, context }: OpenRequest) => {
+    onOpenRequest: (payload: unknown, { context }: OpenRequest) => {
       const from = context?.source ?? 'anonyme';
       if (
-        typeof data !== 'object' ||
-        data === null ||
-        typeof (data as { id?: unknown }).id !== 'number'
+        typeof payload !== 'object' ||
+        payload === null ||
+        typeof (payload as { id?: unknown }).id !== 'number'
       ) {
         note(`refusée (${from})`);
         return;
       }
-      setAccepted((data as { id: number }).id);
+      setAccepted((payload as { id: number }).id);
       note(`acceptée (${from})`);
       void modal.open();
     },
@@ -87,7 +87,7 @@ function Caller() {
       <button
         data-testid="ask-valid"
         onClick={() => {
-          dialogManager.requestOpen('asked', { data: { id: 42 }, context: { source: 'mfa1' } });
+          dialogManager.requestOpen('asked', { payload: { id: 42 }, context: { source: 'mfa1' } });
         }}
         type="button"
       >
@@ -96,7 +96,7 @@ function Caller() {
       <button
         data-testid="ask-invalid"
         onClick={() => {
-          dialogManager.requestOpen('asked', { data: 'oups', context: { source: 'mfa1' } });
+          dialogManager.requestOpen('asked', { payload: 'oups', context: { source: 'mfa1' } });
         }}
         type="button"
       >
@@ -132,7 +132,7 @@ export function DeclinesEverythingHarness() {
       <button
         data-testid="ask"
         onClick={() => {
-          dialogManager.requestOpen('unasked', { data: { id: 1 } });
+          dialogManager.requestOpen('unasked', { payload: { id: 1 } });
         }}
         type="button"
       >

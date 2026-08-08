@@ -47,7 +47,7 @@ const TICK_MS = 100;
  * focusing steps run on `show()` too, not only on `showModal()` — measured here: focus lands on
  * the Dismiss button within 50ms of opening. For a modal that is the correct behaviour; for a
  * status message it is the caret being taken out of whatever the user was typing. So the trigger
- * remembers where focus was and `onOpen` puts it back, which is the whole mitigation.
+ * remembers where focus was and `prepare` puts it back, which is the whole mitigation.
  *
  * The same reasoning is why `useModal`'s `role` option is `'dialog' | 'alertdialog'` and not
  * every ARIA role: a role that contradicts its own element is not a fix.
@@ -84,7 +84,7 @@ export function SlideCornerToastExample() {
     portal: true,
     dismissKey: false,
     // Runs after the dialog is shown, so this undoes the focusing steps rather than racing them.
-    onOpen: () => {
+    prepare: () => {
       returnFocusTo.current?.focus();
     },
     render: ({ action, handle }) => {
@@ -169,13 +169,13 @@ export function SlideCornerToastExample() {
     },
   });
 
-  const { isOpen, handle } = toast;
+  const { isVisible, handle } = toast;
 
   // The countdown: one interval while the toast is open and the pointer is elsewhere. Closing
   // on the tick that reaches zero keeps the visible number and the actual lifetime the same
   // thing rather than two timers that drift apart.
   useEffect(() => {
-    if (!isOpen || isPaused) {
+    if (!isVisible || isPaused) {
       return;
     }
     const id = window.setInterval(() => {
@@ -191,7 +191,7 @@ export function SlideCornerToastExample() {
     return () => {
       window.clearInterval(id);
     };
-  }, [isOpen, isPaused, handle]);
+  }, [isVisible, isPaused, handle]);
 
   return (
     <ExampleLayout result={result} modals={toast.Modal}>

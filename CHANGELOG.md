@@ -11,6 +11,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-07
 
+### Changed — breaking: the state vocabulary says what it means
+
+Four names were carrying more than one meaning, and the cost was paid by whoever read them.
+
+- **`isOpen` → `isVisible`.** It was `phase !== 'closed'`, so a dialog reported `isOpen: true`
+  through its entire exit animation. The semantics were right — a trigger must not flash back
+  while the panel is still sliding away — and the name was the lie. `isVisible` says what the
+  flag actually answers; `phase` remains the finer question, and the doc now pairs them
+  explicitly. Renamed on `UseModalReturn`, `ModalInfo` and `ModalLookup`, and in the test ids
+  that mirrored it.
+- **`isRunning` → `hasRunningAction`** on the render args and the hook return. Three flags
+  describe "busy" at three scopes and none of them named its scope: an action's `loading` is that
+  button, this one is the whole modal, and `isPreparing` is the `prepare` callback, which has
+  nothing to do with actions. The per-action `ActionState.isRunning` keeps its name — the object
+  it hangs on already says whose it is.
+- **`OpenRequest.data` → `payload`, and the handler takes it first.**
+  `onOpenRequest: (payload, { context }) => …`. Two reasons. `data` was the word for the payload
+  _this_ modal declared and the type system checked (`CloseResult.data`); reusing it for whatever
+  crossed an ownership boundary put two levels of trust behind one noun. And the payload is what a
+  handler almost always wants, so it comes first, with the envelope behind it for the handlers
+  that also care who is asking — the shape every message bus already uses.
+- **`createOpenRequest(payload?, context?)`** builds that envelope. `requestOpen(id, { payload,
+context })` still works; the builder exists because the call site is a boundary, which is the
+  worst place to be remembering key names by hand — and because it is the one seam where a
+  protocol field (a version, a correlation id) can appear without every caller being edited. It
+  validates nothing and cannot: only the receiving dialog knows what a good payload looks like.
+
+`open()` is untouched and stays. A verb and a state can share a root without lying — `open()` is
+an instruction, `isVisible` is an observation — and the DOM vocabulary it mirrors (`show()`,
+the `open` attribute) is the one a reader already knows.
+
+### Changed — the DOM events say why they exist
+
+`modal:open` / `modal:close` were sold as "integrate with analytics without importing React",
+which `dialogManager.subscribe` also does, since the root has never needed React. Sold that way
+they read as duplication. The actual reason is reach: `subscribe` binds to one manager instance,
+while these are dispatched on `document` and are heard across a **different copy of the library**
+in another bundle. That makes them the observation half of what `requestOpen` opens on the way
+in — a shell can ask a dialog it does not own to open and watch what came of it, with neither
+side sharing a module. Inside one app, `subscribe` is still the better tool, and the docs now say
+so.
+
 ### Added — `requestOpen`: an open a dialog is allowed to refuse
 
 `dialogManager.open(id)` is an instruction, and there was no other door. That is the right shape

@@ -3,7 +3,7 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../story-styles.js';
 
 /**
- * `onOpen` is handed an `AbortSignal` that fires when the modal closes.
+ * `prepare` is handed an `AbortSignal` that fires when the modal closes.
  *
  * A dialog dismissed while it is still loading is the ordinary case, not an edge one. Without a
  * signal the request outlives the thing that asked for it: it lands on a closed modal, and a slow
@@ -19,7 +19,7 @@ export function OnOpenAbortHarness() {
 
   const { open, Modal, handle } = useModal<void, 'done'>({
     id: 'on-open-abort',
-    onOpen: (signal) => {
+    prepare: (signal) => {
       setOutcome('loading');
       return new Promise<void>((resolve) => {
         // Never resolves on its own: the only way out is the modal closing.

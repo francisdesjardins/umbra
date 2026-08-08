@@ -12,17 +12,17 @@ test.describe('useLookup', () => {
 
     // Initially registered but closed
     await expect(page.getByTestId('exists')).toHaveText('true');
-    await expect(page.getByTestId('is-open')).toHaveText('false');
+    await expect(page.getByTestId('is-visible')).toHaveText('false');
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     // Open the modal — values update reactively
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('true');
+    await expect(page.getByTestId('is-visible')).toHaveText('true');
     await expect(page.getByTestId('is-foreground')).toHaveText('true');
 
     // Close the modal — values revert
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('false');
+    await expect(page.getByTestId('is-visible')).toHaveText('false');
     await expect(page.getByTestId('phase')).toHaveText('closed');
   });
 
@@ -30,7 +30,7 @@ test.describe('useLookup', () => {
     await mount(<UseLookupUnregisteredHarness />);
 
     await expect(page.getByTestId('exists')).toHaveText('false');
-    await expect(page.getByTestId('is-open')).toHaveText('false');
+    await expect(page.getByTestId('is-visible')).toHaveText('false');
     await expect(page.getByTestId('is-preparing')).toHaveText('false');
     await expect(page.getByTestId('phase')).toHaveText('closed');
     await expect(page.getByTestId('is-foreground')).toHaveText('false');
@@ -45,14 +45,14 @@ test.describe('useLookup', () => {
     // The state `phase` cannot express: the dialog is up and blocking, and its content is not
     // ready. `phase` is already 'open' here — it describes the element, and 'opening' lasted one
     // animation frame regardless of how long this modal takes to prepare.
-    await expect(page.getByTestId('is-open')).toHaveText('true');
+    await expect(page.getByTestId('is-visible')).toHaveText('true');
     await expect(page.getByTestId('is-preparing')).toHaveText('true');
     await expect(page.getByTestId('phase')).toHaveText('open');
 
     await page.getByRole('button', { name: 'Finish preparing' }).click();
 
     await expect(page.getByTestId('is-preparing')).toHaveText('false');
-    await expect(page.getByTestId('is-open')).toHaveText('true');
+    await expect(page.getByTestId('is-visible')).toHaveText('true');
   });
 
   test('preparing state clears on close and arms again on the next open', async ({
@@ -65,7 +65,7 @@ test.describe('useLookup', () => {
     await expect(page.getByTestId('is-preparing')).toHaveText('true');
 
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect(page.getByTestId('is-open')).toHaveText('false');
+    await expect(page.getByTestId('is-visible')).toHaveText('false');
     await expect(page.getByTestId('is-preparing')).toHaveText('false');
 
     // A modal closed while still preparing must not come back reporting itself ready.

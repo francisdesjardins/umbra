@@ -25,7 +25,7 @@ export function NonModalCustomDismissKeyHarness() {
     };
   }, []);
 
-  const { open, isOpen, Modal } = useModal<void, 'close'>({
+  const { open, isVisible, Modal } = useModal<void, 'close'>({
     id: 'non-modal-custom-dismiss',
     nonModal: true,
     dismissKey: Key.Delete,
@@ -65,7 +65,7 @@ export function NonModalCustomDismissKeyHarness() {
         Open Panel
       </button>
       <button data-testid="outside-button">Outside Button</button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="leak-count">{leakCount}</span>
       {Modal}

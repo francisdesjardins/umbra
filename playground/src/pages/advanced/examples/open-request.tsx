@@ -46,9 +46,9 @@ export function OpenRequestExample() {
 
     // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is declined and
     // logged, and this dialog is reachable only by the code that renders it.
-    onOpenRequest: ({ data, context }) => {
+    onOpenRequest: (payload, { context }) => {
       const from = context?.source ?? 'inconnu';
-      const parsed = parseArchiveRequest(data);
+      const parsed = parseArchiveRequest(payload);
 
       if (!TRUSTED_SOURCES.has(from)) {
         setLog(`Refusée — « ${from} » n'est pas dans la liste`);
@@ -96,19 +96,19 @@ export function OpenRequestExample() {
   });
 
   const [source, setSource] = useState('shell:nav');
-  const [payload, setPayload] = useState('{ "room": "204" }');
+  const [rawPayload, setRawPayload] = useState('{ "room": "204" }');
 
   const ask = () => {
     setLog(null);
-    let data: unknown;
+    let payload: unknown;
     try {
-      data = JSON.parse(payload);
+      payload = JSON.parse(rawPayload);
     } catch {
       // Sent as-is. A caller that cannot even produce JSON is exactly the case the owner's
       // validation exists for, so it is worth being able to try it here.
-      data = payload;
+      payload = rawPayload;
     }
-    dialogManager.requestOpen('open-request-demo', { data, context: { source } });
+    dialogManager.requestOpen('open-request-demo', { payload, context: { source } });
   };
 
   return (
@@ -125,10 +125,10 @@ export function OpenRequestExample() {
         <TextField
           label="data (JSON)"
           onChange={(event) => {
-            setPayload(event.target.value);
+            setRawPayload(event.target.value);
           }}
           size="small"
-          value={payload}
+          value={rawPayload}
         />
         <Alert severity="info" variant="outlined">
           Acceptée seulement si <code>source</code> est <code>shell:nav</code> ou{' '}

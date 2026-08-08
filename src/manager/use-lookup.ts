@@ -18,7 +18,7 @@ import type { ModalInfo } from './types.js';
  * function ModalStatus({ id }: { id: string }) {
  *   const info = useLookup(id);
  *   if (!info.exists) return <span>Not registered</span>;
- *   return <span>{info.isOpen ? 'Open' : 'Closed'}</span>;
+ *   return <span>{info.isVisible ? 'Open' : 'Closed'}</span>;
  * }
  */
 export function useLookup(id: string): ModalInfo {

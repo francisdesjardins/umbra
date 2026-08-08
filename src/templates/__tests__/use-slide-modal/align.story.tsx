@@ -23,7 +23,7 @@ export function AlignSlideHarness({
   direction?: SlideDirection;
   align?: SlideAlign;
 }) {
-  const { open, isOpen, Modal } = useSlideModal({
+  const { open, isVisible, Modal } = useSlideModal({
     id: 'align-slide',
     direction,
     align,
@@ -41,7 +41,7 @@ export function AlignSlideHarness({
       >
         Open Panel
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       {Modal}
     </div>
   );

@@ -38,7 +38,7 @@ export function UseLookupHarness() {
         Open
       </button>
       <span data-testid="exists">{String(info.exists)}</span>
-      <span data-testid="is-open">{String(info.isOpen)}</span>
+      <span data-testid="is-visible">{String(info.isVisible)}</span>
       <span data-testid="phase">{info.phase}</span>
       <span data-testid="is-foreground">{String(info.isForeground)}</span>
       {Modal}
@@ -56,7 +56,7 @@ export function UseLookupUnregisteredHarness() {
   return (
     <div>
       <span data-testid="exists">{String(info.exists)}</span>
-      <span data-testid="is-open">{String(info.isOpen)}</span>
+      <span data-testid="is-visible">{String(info.isVisible)}</span>
       <span data-testid="is-preparing">{String(info.isPreparing)}</span>
       <span data-testid="phase">{info.phase}</span>
       <span data-testid="is-foreground">{String(info.isForeground)}</span>
@@ -72,7 +72,7 @@ export function UseLookupUnregisteredHarness() {
  * the modal actually takes to prepare. Something elsewhere in the app deciding whether to let an
  * action through wants the other axis, and `isPreparing` is it.
  *
- * `onOpen` is held on a promise this harness resolves from a button, rather than a timer, so the
+ * `prepare` is held on a promise this harness resolves from a button, rather than a timer, so the
  * preparing window is as long as the test needs and never a race. The button lives inside the
  * dialog because the top layer swallows clicks anywhere else.
  */
@@ -100,7 +100,7 @@ export function UseLookupPreparingHarness() {
 
   const { Modal, dialogManager } = useModal<void, 'done'>({
     id: 'preparing-modal',
-    onOpen: () => {
+    prepare: () => {
       return gate.arm();
     },
     render: ({ handle }) => {
@@ -135,7 +135,7 @@ export function UseLookupPreparingHarness() {
       >
         Open
       </button>
-      <span data-testid="is-open">{String(info.isOpen)}</span>
+      <span data-testid="is-visible">{String(info.isVisible)}</span>
       <span data-testid="is-preparing">{String(info.isPreparing)}</span>
       <span data-testid="phase">{info.phase}</span>
       {Modal}
@@ -202,9 +202,9 @@ export function UseLookupForegroundHarness() {
       >
         Open A
       </button>
-      <span data-testid="a-open">{String(infoA.isOpen)}</span>
+      <span data-testid="a-open">{String(infoA.isVisible)}</span>
       <span data-testid="a-fg">{String(infoA.isForeground)}</span>
-      <span data-testid="b-open">{String(infoB.isOpen)}</span>
+      <span data-testid="b-open">{String(infoB.isVisible)}</span>
       <span data-testid="b-fg">{String(infoB.isForeground)}</span>
       {Modal1}
       {Modal2}

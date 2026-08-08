@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { ModalPhase } from '../../core/types.js';
-import { createDialogManager, type OpenRequest } from '../dialog-manager.js';
+import { createDialogManager, createOpenRequest, type OpenRequest } from '../dialog-manager.js';
 
 /**
  * `requestOpen` — an open a dialog is allowed to refuse.
@@ -53,19 +53,19 @@ test.describe('requestOpen', () => {
     const store = createFakeStore();
     const seen: OpenRequest[] = [];
     dm.register('asked', store, {
-      onOpenRequest: (request) => {
+      onOpenRequest: (_payload, request) => {
         seen.push(request);
       },
     });
 
-    dm.requestOpen('asked', { data: { patientId: '42' }, context: { source: 'portal:nav' } });
+    dm.requestOpen('asked', { payload: { patientId: '42' }, context: { source: 'portal:nav' } });
 
     expect(seen).toHaveLength(1);
-    expect(seen[0]?.data).toEqual({ patientId: '42' });
+    expect(seen[0]?.payload).toEqual({ patientId: '42' });
     expect(seen[0]?.context?.source).toBe('portal:nav');
     // The whole point: asking is free until the dialog says yes.
     expect(store.phase).toBe('closed');
-    expect(dm.lookup('asked').isOpen).toBe(false);
+    expect(dm.lookup('asked').isVisible).toBe(false);
   });
 
   test('emits nothing — an unanswered request is not an open', () => {
@@ -83,7 +83,7 @@ test.describe('requestOpen', () => {
       },
     });
 
-    dm.requestOpen('asked', { data: 1 });
+    dm.requestOpen('asked', { payload: 1 });
 
     expect(events).toEqual([]);
   });
@@ -95,10 +95,10 @@ test.describe('requestOpen', () => {
     const store = createFakeStore();
     dm.register('never-asked', store);
 
-    dm.requestOpen('never-asked', { data: 'anything' });
+    dm.requestOpen('never-asked', { payload: 'anything' });
 
     expect(store.phase).toBe('closed');
-    expect(dm.lookup('never-asked').isOpen).toBe(false);
+    expect(dm.lookup('never-asked').isVisible).toBe(false);
   });
 
   test('an unregistered id is declined rather than thrown at', () => {
@@ -172,5 +172,37 @@ test.describe('requestOpen', () => {
     dm.requestOpen('asked');
 
     expect(asked).toBe(0);
+  });
+});
+
+test.describe('createOpenRequest', () => {
+  test('names the two halves at the boundary, and omits what was not given', () => {
+    // The point is not brevity — `{ payload, context }` is shorter. It is that the call site of a
+    // cross-boundary message is the worst place to be remembering key names by hand.
+    expect(createOpenRequest({ patientId: '42' }, { source: 'portal:nav' })).toEqual({
+      payload: { patientId: '42' },
+      context: { source: 'portal:nav' },
+    });
+
+    // `exactOptionalPropertyTypes` is on: an absent half must be absent, not present-and-undefined.
+    expect(Object.keys(createOpenRequest(undefined, { source: 'shell:menu' }))).toEqual([
+      'context',
+    ]);
+    expect(Object.keys(createOpenRequest({ id: 1 }))).toEqual(['payload']);
+    expect(Object.keys(createOpenRequest())).toEqual([]);
+  });
+
+  test('the dialog reads back exactly what was built', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const seen: unknown[] = [];
+    dm.register('asked', store, {
+      onOpenRequest: (payload) => {
+        seen.push(payload);
+      },
+    });
+
+    dm.requestOpen('asked', createOpenRequest({ room: '204' }, { source: 'kiosk' }));
+    expect(seen).toEqual([{ room: '204' }]);
   });
 });

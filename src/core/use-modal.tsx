@@ -81,7 +81,7 @@ export function useModal<TData = void, TReason extends string = string>(
     dismissKey: dismissKeyProp,
     dismissWhilePreparing: dismissWhilePreparingProp,
     onKeyDown,
-    onOpen,
+    prepare,
     onOpenRequest,
     onClose,
     modalType,
@@ -213,7 +213,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   const hookCtx = { store, getDialog, modalId, phase: snap.phase, dm };
 
-  useDialogLifecycle(hookCtx, { onOpen, animation, nonModal: isNonModal });
+  useDialogLifecycle(hookCtx, { prepare, animation, nonModal: isNonModal });
 
   useDialogKeydown(hookCtx, {
     isPreparing: snap.isPreparing,
@@ -256,8 +256,8 @@ export function useModal<TData = void, TReason extends string = string>(
       modalType: modalType ?? 'modal',
       nonModal: isNonModal,
       ...(acceptsOpenRequests && {
-        onOpenRequest: (request: OpenRequest) => {
-          openRequestHandler.current?.(request);
+        onOpenRequest: (payload: unknown, request: OpenRequest) => {
+          openRequestHandler.current?.(payload, request);
         },
       }),
     });
@@ -364,7 +364,7 @@ export function useModal<TData = void, TReason extends string = string>(
         isPreparing: snap.isPreparing,
         handle,
         action,
-        isRunning: actionSnap.isRunning,
+        hasRunningAction: actionSnap.isRunning,
         error: actionSnap.error,
       });
     } finally {
@@ -453,13 +453,13 @@ export function useModal<TData = void, TReason extends string = string>(
 
   return {
     open,
-    isOpen: snap.phase !== 'closed',
+    isVisible: snap.phase !== 'closed',
     isPreparing: snap.isPreparing,
     Modal,
     waitForClose,
     handle,
     action,
-    isRunning: actionSnap.isRunning,
+    hasRunningAction: actionSnap.isRunning,
     error: actionSnap.error,
     dialogManager: dm,
   };

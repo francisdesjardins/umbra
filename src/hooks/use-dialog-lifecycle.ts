@@ -15,10 +15,10 @@ const log = createLogger('modal:lifecycle');
 /**
  * Wires the native-`<dialog>` DOM lifecycle (in `core/dialog-lifecycle.ts`) to modal store
  * transitions via React effects. The DOM orchestration itself is framework-agnostic; this
- * hook only handles phase gating, RAF/`onOpen` scheduling, and close finalization.
+ * hook only handles phase gating, RAF/`prepare` scheduling, and close finalization.
  *
  * Opening path (phase === 'opening'):
- *   `showDialog()` → RAF `transitionToOpen` → `resolveOpen`/`onOpen`
+ *   `showDialog()` → RAF `transitionToOpen` → `resolveOpen`/`prepare`
  * Open path (phase === 'open'):
  *   re-measure `refreshTransitionsDisabled` so the closing path reads this open's answer
  *   from the cache, without a sync reflow.
@@ -33,10 +33,10 @@ const log = createLogger('modal:lifecycle');
  */
 export function useDialogLifecycle(ctx: ModalHookContext, options: DialogLifecycleOptions): void {
   const { store, getDialog, modalId, phase, dm } = ctx;
-  const { onOpen, animation, nonModal } = options;
+  const { prepare, animation, nonModal } = options;
 
   // ── Opening effect ──────────────────────────────────────────────────────────
-  // Intentionally no deps array — runs every render so `onOpen` always refers
+  // Intentionally no deps array — runs every render so `prepare` always refers
   // to the latest closure. The phase guard + `dialog.open` check prevent
   // duplicate work on re-renders during the opening phase.
   useEffect(() => {
@@ -55,17 +55,17 @@ export function useDialogLifecycle(ctx: ModalHookContext, options: DialogLifecyc
 
     store.scheduleOpenTransition();
 
-    if (onOpen) {
+    if (prepare) {
       // The signal is the store's — it aborts on `close()`, which is a transition this hook does
       // not own and should not be re-deriving from `phase`.
       const signal = store.openSignal();
       fireAndForget(
         async () => {
-          await onOpen(signal);
-          log('onOpen completed', { id: modalId });
+          await prepare(signal);
+          log('prepare completed', { id: modalId });
         },
         (error) => {
-          log.error('onOpen failed', { id: modalId, error: error.message });
+          log.error('prepare failed', { id: modalId, error: error.message });
         },
         () => {
           store.resolveOpen();

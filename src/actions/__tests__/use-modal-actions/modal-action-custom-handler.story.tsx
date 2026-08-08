@@ -14,7 +14,7 @@ const delay = (ms: number) => {
 export function ModalActionCustomHandlerHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-custom',
     render: ({ action }) => {
       const confirmProps = action('confirm', async (close) => {
@@ -55,7 +55,7 @@ export function ModalActionCustomHandlerHarness() {
       >
         Open
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

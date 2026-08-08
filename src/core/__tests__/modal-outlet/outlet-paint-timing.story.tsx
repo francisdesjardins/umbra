@@ -18,7 +18,7 @@ function Inner() {
   const [count, setCount] = useState(0);
   const [paintedCount, setPaintedCount] = useState('-');
 
-  const { open, isOpen } = useModal({
+  const { open, isVisible } = useModal({
     id: 'outlet-paint-timing',
     render: () => {
       return (
@@ -55,7 +55,7 @@ function Inner() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="count">{count}</span>
       <span data-testid="painted-count">{paintedCount}</span>
     </div>

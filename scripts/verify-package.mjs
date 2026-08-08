@@ -152,7 +152,7 @@ try {
       '    void [reason, id];',
       '  },',
       '});',
-      'void modal.isRunning;',
+      'void modal.hasRunningAction;',
     ].join('\n')
   );
 

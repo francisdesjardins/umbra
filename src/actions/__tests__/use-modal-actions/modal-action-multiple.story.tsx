@@ -14,7 +14,7 @@ const delay = (ms: number) => {
 export function ModalActionMultipleHarness() {
   const { open, Modal } = useModal<void, 'cancel' | 'confirm'>({
     id: 'action-multi',
-    render: ({ action, isRunning }) => {
+    render: ({ action, hasRunningAction }) => {
       return (
         <div style={dialogStyle}>
           <button
@@ -29,7 +29,7 @@ export function ModalActionMultipleHarness() {
           <button {...action('cancel')} data-testid="cancel-btn">
             Cancel
           </button>
-          <span data-testid="is-running">{String(isRunning)}</span>
+          <span data-testid="is-running">{String(hasRunningAction)}</span>
         </div>
       );
     },

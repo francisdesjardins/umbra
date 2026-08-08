@@ -102,8 +102,8 @@ export const AdvancedPage = () => {
             example={<ModalOutletExample />}
           />
           <ExampleCard
-            title="DOM Events (modal:open / modal:close)"
-            description="document.addEventListener('modal:open') and 'modal:close' fire at the start and end of each modal lifecycle. The detail includes id, modalType ('modal' | 'slide'), reason, openedAt, and duration."
+            title="Watching from outside the bundle"
+            description="modal:open and modal:close fire on document for every dialog on the page — including ones raised by a different copy of this library, in another bundle. That reach is the point: dialogManager.subscribe reports the same two moments and is the better tool inside one app, but it binds to one manager instance. These events are the observation half of what requestOpen opens on the way in, and a tag manager or a plain script can listen having imported nothing."
             codeKey="dom-events"
             example={<DomEventsExample />}
           />

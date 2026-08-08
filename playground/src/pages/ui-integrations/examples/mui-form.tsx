@@ -62,7 +62,7 @@ export function MuiFormExample() {
   // and the `switch` in `onClose` is exhaustive.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
-    onOpen: () => {
+    prepare: () => {
       store.resetForm();
     },
     render: ({ action, error }) => {

@@ -9,7 +9,7 @@ import { dialogStyle } from '../story-styles.js';
 export function NonModalClickOutsideHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
     id: 'click-outside-dialog',
     nonModal: true,
     dismissOnClickOutside: true,
@@ -49,7 +49,7 @@ export function NonModalClickOutsideHarness() {
         Open Non-Modal
       </button>
       <button data-testid="outside-button">Outside Button</button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

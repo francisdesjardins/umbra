@@ -65,7 +65,7 @@ export function StableIdentityHarness() {
         Open Modal
       </button>
       <span data-testid="tick">{tick}</span>
-      <span data-testid="is-open">{modal.isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{modal.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="identity">{stable ? 'stable' : 'changed'}</span>
       {modal.Modal}
     </div>

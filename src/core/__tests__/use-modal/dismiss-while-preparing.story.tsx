@@ -3,18 +3,18 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../story-styles.js';
 
 /**
- * Tests dismissWhilePreparing: false — ESC is blocked while onOpen is running.
- * The "Resolve" button inside the modal resolves the onOpen promise so the
+ * Tests dismissWhilePreparing: false — ESC is blocked while prepare is running.
+ * The "Resolve" button inside the modal resolves the prepare promise so the
  * test can verify that ESC works again once loading completes.
  */
 export function DismissWhilePreparingDisabledHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
     id: 'dismiss-while-preparing-modal',
     dismissWhilePreparing: false,
-    onOpen: () => {
+    prepare: () => {
       return new Promise<void>((resolve) => {
         resolveRef.current = resolve;
       });
@@ -55,7 +55,7 @@ export function DismissWhilePreparingDisabledHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>
@@ -64,15 +64,15 @@ export function DismissWhilePreparingDisabledHarness() {
 
 /**
  * Tests dismissWhilePreparing: true (default) — ESC closes the modal even while
- * onOpen is still running.
+ * prepare is still running.
  */
 export function DismissWhilePreparingDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isOpen, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
     id: 'dismiss-while-preparing-default',
-    onOpen: () => {
+    prepare: () => {
       return new Promise<void>((resolve) => {
         resolveRef.current = resolve;
       });
@@ -105,7 +105,7 @@ export function DismissWhilePreparingDefaultHarness() {
       >
         Open Modal
       </button>
-      <span data-testid="is-open">{isOpen ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Modal}
     </div>

@@ -20,7 +20,7 @@ type TextMessageModalConfig = {
   readonly showCancel: boolean;
   readonly confirmHandler?: ConfirmHandler | undefined;
   readonly cancelHandler?: CancelHandler | undefined;
-  readonly onOpen?: OnOpenCallback | undefined;
+  readonly prepare?: OnOpenCallback | undefined;
   readonly onClose?: OnCloseCallback | undefined;
 };
 
@@ -37,7 +37,7 @@ export type TextMessageModalBuilder = {
   confirm(handler?: ConfirmHandler): TextMessageModalBuilder;
   /** Adds a Cancel button. `handler` is optional — omit it to just close the modal. */
   cancel(handler?: CancelHandler): TextMessageModalBuilder;
-  onOpen(callback: OnOpenCallback): TextMessageModalBuilder;
+  prepare(callback: OnOpenCallback): TextMessageModalBuilder;
   onClose(callback: OnCloseCallback): TextMessageModalBuilder;
 };
 
@@ -84,8 +84,8 @@ function buildConfig(
       config = { ...config, cancelHandler: handler, showCancel: true };
       return builder;
     },
-    onOpen(callback) {
-      config = { ...config, onOpen: callback };
+    prepare(callback) {
+      config = { ...config, prepare: callback };
       return builder;
     },
     onClose(callback) {
@@ -186,7 +186,7 @@ export function useTextMessageModal(
 
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id,
-    onOpen: config.onOpen,
+    prepare: config.prepare,
     onClose: config.onClose,
     render: ({ action, error }) => {
       return (

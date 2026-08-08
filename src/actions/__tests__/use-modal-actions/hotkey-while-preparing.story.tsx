@@ -4,9 +4,9 @@ import { useModal } from '../../../core/use-modal.js';
 import { Key } from '../../../utils/keys.js';
 
 /**
- * An action button that is live while `onOpen` is still running, reachable both ways.
+ * An action button that is live while `prepare` is still running, reachable both ways.
  *
- * `onOpen` resolves only when the test clicks "Finish Opening", so the whole window in which
+ * `prepare` resolves only when the test clicks "Finish Opening", so the whole window in which
  * `isPreparing` is `true` is under the test's control. The action is bound to a hotkey as well as
  * a button, and the two are meant to be the same trigger.
  */
@@ -16,7 +16,7 @@ export function HotkeyWhilePreparingHarness() {
 
   const { open, Modal } = useModal<void, 'confirm'>({
     id: 'hotkey-while-preparing',
-    onOpen: () => {
+    prepare: () => {
       return new Promise<void>((resolve) => {
         setRelease(() => {
           return resolve;

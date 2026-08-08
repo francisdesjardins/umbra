@@ -49,6 +49,7 @@ const CATEGORIES: readonly CategoryDef[] = [
     symbols: [
       'dialogManager',
       'createDialogManager',
+      'createOpenRequest',
       'DialogManager',
       'OpenRequest',
       'OpenRequestContext',

@@ -24,16 +24,16 @@ export function LookupFindHarness() {
               setResult(
                 [
                   `a-exists:${String(info.exists)}`,
-                  `a-open:${String(info.isOpen)}`,
+                  `a-open:${String(info.isVisible)}`,
                   `a-phase:${info.phase}`,
                   `a-fg:${String(info.isForeground)}`,
                   // `modalType` is a registration-time fact, so it only exists on the
                   // `exists: true` branch — narrowing is what makes it readable.
                   `a-type:${info.exists ? info.modalType : ''}`,
                   `b-exists:${String(infoB.exists)}`,
-                  `b-open:${String(infoB.isOpen)}`,
+                  `b-open:${String(infoB.isVisible)}`,
                   `unknown-exists:${String(infoUnknown.exists)}`,
-                  `unknown-open:${String(infoUnknown.isOpen)}`,
+                  `unknown-open:${String(infoUnknown.isVisible)}`,
                   `unknown-phase:${infoUnknown.phase}`,
                   `unknown-fg:${String(infoUnknown.isForeground)}`,
                 ].join('|')
@@ -81,10 +81,10 @@ export function LookupFindHarness() {
           setResult(
             [
               `a-exists:${String(info.exists)}`,
-              `a-open:${String(info.isOpen)}`,
+              `a-open:${String(info.isVisible)}`,
               `a-phase:${info.phase}`,
               `b-exists:${String(infoB.exists)}`,
-              `b-open:${String(infoB.isOpen)}`,
+              `b-open:${String(infoB.isVisible)}`,
             ].join('|')
           );
         }}
@@ -313,7 +313,7 @@ export function LookupUnregisteredHarness() {
           setResult(
             [
               `exists:${String(info.exists)}`,
-              `open:${String(info.isOpen)}`,
+              `open:${String(info.isVisible)}`,
               `fg:${String(info.isForeground)}`,
               `phase:${info.phase}`,
               `id:${info.id}`,
