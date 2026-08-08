@@ -17,12 +17,12 @@ import { useModal } from 'umbra/react';  // the React binding`;
 const HELLO = `const modal = useModal<void, 'confirm' | 'cancel'>({
   id: 'hello',
   ariaLabel: 'Hello',
-  // action.dom() drops \`loading\`, the one prop React will not put on a DOM
-  // element. Spread action() onto your own button component — it wants it.
+  // Every field an action returns is a DOM prop, so this spread fits a bare
+  // <button>, MUI's, or your own. Running state rides as \`data-loading\`.
   render: ({ action }) => (
     <>
-      <button {...action.dom('cancel', { focusOnOpen: true })}>Not now</button>
-      <button {...action.dom('confirm', { hotkey: Key.Enter })}>Confirm</button>
+      <button {...action('cancel', { focusOnOpen: true })}>Not now</button>
+      <button {...action('confirm', { hotkey: Key.Enter })}>Confirm</button>
     </>
   ),
   onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'

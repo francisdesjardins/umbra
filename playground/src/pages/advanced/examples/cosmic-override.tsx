@@ -160,10 +160,10 @@ export function CosmicOverrideExample() {
     // artwork here, and a stray click on it should not end the demo. Escape and Abort remain.
     dismissOnBackdropClick: false,
     render: ({ handle, action, error }) => {
-      // Every field of an action's props is a real DOM prop except `loading`, which a raw
-      // `<button>` would warn about — and `aria-keyshortcuts` rides along in the spread, which
-      // is what makes the Enter hotkey find this button.
-      const { loading, ...engage } = action('engage', {
+      // Every field an action hands out is a real DOM prop, so the whole set spreads onto a raw
+      // `<button>` — `aria-keyshortcuts` rides along, which is what makes the Enter hotkey find
+      // this button, and the running state reads back off `data-loading`.
+      const engage = action('engage', {
         hotkey: Key.Enter,
         onAction: async (close) => {
           // Throws now and then — which is the point: a failed action keeps the modal open and
@@ -190,7 +190,7 @@ export function CosmicOverrideExample() {
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>
             <Box component="button" sx={buttonSx} {...engage}>
-              {loading ? 'Charging…' : 'Engage ⏎'}
+              {engage['data-loading'] ? 'Charging…' : 'Engage ⏎'}
             </Box>
             <Box
               component="button"

@@ -1,10 +1,12 @@
-import { Button as MuiButton, type ButtonProps as MuiButtonProps } from '@mui/material';
 import { spacing } from '@/entities/modal-template/ui/shared/tokens';
+import { Button as MuiButton, type ButtonProps as MuiButtonProps } from '@mui/material';
 
 export type ButtonProps = Omit<MuiButtonProps, 'disabled'> & {
   readonly loading?: boolean;
   readonly disabled?: boolean;
   readonly hotkeyLabel?: string | undefined;
+  /** The running state as an action hands it over — see the mapping below. */
+  readonly 'data-loading'?: boolean | undefined;
 };
 
 export function Button({
@@ -14,11 +16,13 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  // `loading` reaches MUI, which renders its own spinner. The extra `disabled` is for callers
-  // passing `loading` by hand; an action's props already carry it.
-  const isDisabled: boolean = disabled || Boolean(loading);
+  // **This line is the seam.** The library ships the running state as `data-loading`, a DOM
+  // attribute, because it has no way to know what your design system calls it — MUI says
+  // `loading`, another says `busy`, a headless one says nothing and wants you to render the
+  // spinner. Mapping it belongs here, in the wrapper that knows the answer, and nowhere else.
+  const busy: boolean = loading ?? props['data-loading'] ?? false;
   return (
-    <MuiButton disabled={isDisabled} loading={loading} {...props}>
+    <MuiButton disabled={disabled || busy} loading={busy} {...props}>
       {children}
       {hotkeyLabel && (
         <kbd

@@ -45,11 +45,10 @@ function Checkout() {
       void receipt.open();
     },
     render: ({ action }) => {
-      // `loading` is the one prop a raw <button> cannot take — React warns on it. Every other
-      // field of an action's props is a real DOM prop, `aria-keyshortcuts` and
-      // `data-focus-on-open` included, which is what makes the hotkey and the opening focus
-      // work here with no wrapper of any kind.
-      const { loading, ...ok } = action('ok', { hotkey: Key.Enter, focusOnOpen: true });
+      // Straight onto a bare <button>, whole. Every field an action hands out is a real DOM
+      // prop — `aria-keyshortcuts` and `data-focus-on-open` included, which is what makes the
+      // hotkey and the opening focus work here with no wrapper of any kind.
+      const ok = action('ok', { hotkey: Key.Enter, focusOnOpen: true });
       return h(
         'div',
         // `checkout` is what tints this dialog with its owner's colour — the modal Billing can
@@ -58,7 +57,7 @@ function Checkout() {
         h('div', { className: 'owner' }, "Checkout's dialog"),
         h('h3', null, 'Receipt'),
         h('p', null, `Order total: ${amount}$`),
-        h('div', { className: 'row' }, h('button', ok, loading ? 'Working…' : 'Done ⏎'))
+        h('div', { className: 'row' }, h('button', ok, ok['data-loading'] ? 'Working…' : 'Done ⏎'))
       );
     },
     onClose: (result) => {

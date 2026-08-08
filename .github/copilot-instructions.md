@@ -54,7 +54,7 @@ Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
-- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, loading, disabled, 'aria-keyshortcuts'?: string | undefined }` to spread onto a button **component**. On a bare `<button>` use `action.dom(...)`, which drops `loading` — the one prop React will not put on a DOM element — and nothing else. Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
+- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, disabled, 'data-loading', 'aria-keyshortcuts'?: string | undefined }` to spread. **Every field is a DOM prop** — the core never guesses what your buttons are called, so the busy flag ships as `data-loading` and a wrapper maps it to its own (`loading` for MUI/Mantine, `busy` elsewhere). Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
 - **Public API**: the root is [src/index.ts](../src/index.ts), the React binding [src/react.ts](../src/react.ts). Internal hooks in `src/hooks/` are NOT exported.
 - **Hotkeys**: declared on the action — `action('save', { hotkey: Key.Enter, onAction })` — not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
 

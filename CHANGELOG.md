@@ -75,20 +75,36 @@ avoid, and the registry is keyed by string so `unknown` is the honest type anywa
 binding in the microfrontend demo implements it in six lines, which is the whole cost of the port
 growing.
 
-### Added — `action.dom()`, the spread for markup you write yourself
+### Removed — breaking: `loading` on an action's props
 
-`loading` is for a button _component_ that declares it (MUI, Mantine); React will not put it on a
-real `<button>` and warns when you try. The default spread keeps it, because losing a spinner
-silently is worse than a console warning — and `action.dom()` returns the same props without it.
-It drops `loading` and nothing else, which the test asserts explicitly: `aria-keyshortcuts` and
-`data-focus-on-open` are what make the hotkey and the opening focus work with no wrapper, so a
-`dom` that over-trimmed would disable both without a sound.
+`action.dom()` shipped earlier today as the door for bare `<button>` markup, and was gone by the
+evening. One question settled it: **the core is agnostic of the UI put into it.** Under that,
+`loading` was never the awkward-but-necessary member of `ActionButtonProps` — it was the only
+field that broke the rule. It is a prop name borrowed from one family of component libraries. MUI
+and Mantine say `loading`; another design system says `busy` or `pending`; a headless one has no
+such prop and wants you to render the spinner yourself. The library was guessing a name it has no
+way to know.
 
-Composed with `Object.assign` onto a function created in the same expression — assigning the
-property onto the factory afterwards is a render-time mutation the React Compiler rules forbid.
+So the guess is gone. `ActionButtonProps` is now **entirely DOM props**, and with nothing left to
+distinguish, `action.dom()` went with it — one door again. The running state travels as
+`data-loading`, which was already there: CSS reaches it with `[data-loading='true']`, and a
+wrapper reads it as a boolean and maps it to whatever its own system calls that. That one line
+lives in `MuiButton` and `VanillaButton` in the playground, which is the point — the mapping
+belongs in the only place that knows the answer.
 
-Every documented snippet that spread an action onto a bare `<button>` moved across, the landing
-page's included: it was the first code anyone sees, and it was teaching the trap.
+The honest cost: someone spreading `{...action('ok')}` straight onto MUI's `<Button>` with no
+wrapper loses the spinner, and nothing says so. That silence was the argument for keeping
+`loading`, and it does not go away — it is the price of a core that ships no UI opinions, paid
+once per codebase rather than at every call site.
+
+`VanillaButton` also stopped dropping `data-focus-on-open`: it destructured a fixed prop list and
+never forwarded it, so `focusOnOpen` did nothing through that wrapper. The test asserts both
+halves now — nothing React refuses on an element may reach it, **and** nothing else may be
+missing, because a guard that only checks the first is how a trimmed set disables the hotkey and
+the opening focus in silence.
+
+Every documented snippet that spread an action onto a bare `<button>` was already correct as a
+result: there is one spread again, and it fits everywhere.
 
 ### Changed — the payload crosses in both directions, and neither side trusts it
 

@@ -15,13 +15,7 @@ import { dialogPlacement } from './placement.js';
 import { useModalOutletContext } from './modal-outlet.js';
 import { createActionEngine } from '../actions/action-engine.js';
 import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
-import type {
-  ActionButtonProps,
-  ActionCloseFn,
-  ActionFactory,
-  ActionOptions,
-  DomActionButtonProps,
-} from '../actions/types.js';
+import type { ActionCloseFn, ActionFactory } from '../actions/types.js';
 import type { OpenRequestDispatch } from '../manager/dialog-manager.js';
 import type {
   GetDialog,
@@ -72,7 +66,7 @@ const defaultAnimation: ModalAnimation = {
  * @example
  * const { openAndWait, Modal } = useModal<void, 'ok'>({
  *   id: 'my-modal',
- *   render: ({ action }) => <button {...action.dom('ok')}>OK</button>,
+ *   render: ({ action }) => <button {...action('ok')}>OK</button>,
  *   onClose: (result) => console.log(result.reason),
  * });
  */
@@ -179,11 +173,7 @@ export function useModal<TData = void, TReason extends string = string>(
    * The factory handed to `render`. Calling it declares the action — that is the only place an
    * action is ever declared — and returns the props for its button.
    */
-  const declareAction = (
-    reason: TReason | 'dismiss',
-    handlerOrOptions?:
-      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-  ): ActionButtonProps => {
+  const action: ActionFactory<TData, TReason> = (reason, handlerOrOptions) => {
     const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : opts?.onAction;
     const effective = handler ?? autoClose;
@@ -204,7 +194,6 @@ export function useModal<TData = void, TReason extends string = string>(
         }
         await engine.run(reason, effective);
       },
-      loading: state.isRunning,
       'data-loading': state.isRunning,
       // Includes *this* action: a running button that stays clickable re-enters its own handler
       // on a double click, which for a submit means submitting twice.
@@ -214,35 +203,6 @@ export function useModal<TData = void, TReason extends string = string>(
       ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };
-
-  /**
-   * `action.dom(…)` — the same declaration, minus `loading`.
-   *
-   * A property on the function rather than a second argument or a return-shape option: the two
-   * differ only in what comes back, so the alternative is a conditional return type, and this
-   * codebase pays for those in casts at every boundary the value crosses. Composed with
-   * `Object.assign` onto a function created in the same expression — assigning onto
-   * `declareAction` afterwards is a render-time mutation the React Compiler rules forbid.
-   */
-  const action: ActionFactory<TData, TReason> = Object.assign(
-    (
-      reason: TReason | 'dismiss',
-      handlerOrOptions?:
-        ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-    ): ActionButtonProps => {
-      return declareAction(reason, handlerOrOptions);
-    },
-    {
-      dom: (
-        reason: TReason | 'dismiss',
-        handlerOrOptions?:
-          ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-      ): DomActionButtonProps => {
-        const { loading: _loading, ...domProps } = declareAction(reason, handlerOrOptions);
-        return domProps;
-      },
-    }
-  );
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const animation = animationProp ?? defaultAnimation;

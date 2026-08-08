@@ -27,9 +27,9 @@ export function ModalActionCustomHandlerHarness() {
           <button
             {...confirmProps}
             data-testid="confirm-btn"
-            data-loading={String(confirmProps.loading)}
+            data-loading={String(confirmProps['data-loading'])}
           >
-            {confirmProps.loading ? 'Loading...' : 'Confirm'}
+            {confirmProps['data-loading'] ? 'Loading...' : 'Confirm'}
           </button>
           <button
             {...cancelProps}

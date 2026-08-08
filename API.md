@@ -27,7 +27,7 @@ non-React code. React consumers may read every `umbra` import below as
 
 1. **`useModal`** — Base primitive. Renders a native `<dialog>` inline (or via `createPortal` when `portal: true`).
 2. **Template hooks** — `useMessageModal`, `useSlideModal` provide headless modal logic (animation, positioning). No UI wrapper — users provide their own components in the `render` callback.
-3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns `{ onClick, loading, disabled }` to spread. For custom state, use `createStore` alongside.
+3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns DOM props (`{ onClick, disabled, 'data-loading', … }`) to spread. For custom state, use `createStore` alongside.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`ModalOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Modal}` in JSX.
 
@@ -49,9 +49,9 @@ const modal = useMessageModal({
   id: 'confirm',
   render: ({ action }) => (
     <>
-      <button {...action.dom('cancel')}>Cancel</button>
+      <button {...action('cancel')}>Cancel</button>
       <button
-        {...action.dom('confirm', async (close) => {
+        {...action('confirm', async (close) => {
           await api.confirm();
           close();
         })}
@@ -88,25 +88,33 @@ its own reason.
 | `hotkey`      | `HotkeyDef`                  | Keyboard shortcut, dispatched by clicking the button                       |
 | `focusOnOpen` | `boolean`                    | Take the modal's opening focus instead of the first focusable element      |
 
-Returned props: `{ type, onClick, loading, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'?, 'data-focus-on-open'? }`.
-`loading` is this action alone; `disabled` is true while **any** action runs, which is what stops
-a double click submitting twice.
+Returned props: `{ type, onClick, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'?, 'data-focus-on-open'? }`.
+`data-loading` is this action alone; `disabled` is true while **any** action runs, which is what
+stops a double click submitting twice.
 
-#### action.dom — the same action, minus `loading`
+#### Every field is a DOM prop, on purpose
 
-`loading` is for a button _component_ that declares it (MUI, Mantine). React will not put it on a
-real `<button>` and warns when you try. Both directions matter and only one is loud, so the
-default spread keeps it — losing a spinner silently is worse than a console warning — and
-`action.dom()` is the door for markup you write yourself:
+The set spreads onto a bare `<button>`, onto a component library's button, and onto your own —
+because it never guesses what your buttons are called or what props they take. A core that is
+agnostic of the UI put into it cannot ship a prop named for one family of component libraries:
+MUI and Mantine call the busy flag `loading`, another design system calls it `busy` or `pending`,
+and a headless one has no such prop at all and wants you to render the spinner yourself.
 
 ```tsx
-// A bare button, with the hotkey and the opening focus still wired.
-<button {...action.dom('ok', { hotkey: Key.Enter, focusOnOpen: true })}>OK</button>
+// A bare button. The hotkey and the opening focus are wired by the spread alone.
+<button {...action('ok', { hotkey: Key.Enter, focusOnOpen: true })}>OK</button>
 ```
 
-It drops `loading` and nothing else: `aria-keyshortcuts` and `data-focus-on-open` are what make
-those two work with no wrapper, and `data-loading` carries the running state either way, so a
-plain button styles on `[data-loading='true']`.
+So the running state travels as an attribute. CSS reaches it directly with
+`button[data-loading='true'] { … }`, and a wrapper reads it as a boolean and maps it to whatever
+_its_ system calls that — one line, in the only place that knows the answer:
+
+```tsx
+function Button({ loading, ...props }: ButtonProps) {
+  const busy = loading ?? props['data-loading'] ?? false;
+  return <MuiButton loading={busy} disabled={busy} {...props} />;
+}
+```
 
 ### Opening focus
 
@@ -118,8 +126,8 @@ starting point to the button you meant to offer:
 render: ({ action }) => (
   <>
     <input name="reason" />
-    <button {...action.dom('cancel', { focusOnOpen: true })}>Cancel</button>
-    <button {...action.dom('delete', { hotkey: Key.Enter, onAction: remove })}>Delete</button>
+    <button {...action('cancel', { focusOnOpen: true })}>Cancel</button>
+    <button {...action('delete', { hotkey: Key.Enter, onAction: remove })}>Delete</button>
   </>
 );
 ```
@@ -143,16 +151,16 @@ so the modal applies the focus itself once the dialog is open.
 `render` also receives `hasRunningAction` and `error` — the combined state of every action on the
 modal — and the hook returns them too, for a trigger button outside the dialog.
 
-Three flags describe "busy" at three scopes, and each is named for its own: an action's `loading`
-is that button, `hasRunningAction` is the whole modal, and `isPreparing` is the `prepare` callback,
-which has nothing to do with actions at all.
+Three flags describe "busy" at three scopes, and each is named for its own: an action's
+`data-loading` is that button, `hasRunningAction` is the whole modal, and `isPreparing` is the
+`prepare` callback, which has nothing to do with actions at all.
 
 ```tsx
 const modal = useModal({
   id: 'save',
   render: ({ action, hasRunningAction, error }) => (
     <>
-      <button {...action.dom('save', save)} />
+      <button {...action('save', save)} />
       {error ? <p role="alert">{error.message}</p> : null}
     </>
   ),
@@ -166,14 +174,14 @@ modal.hasRunningAction; // same value, outside render
 ```tsx
 render: ({ action }) => (
   <>
-    <button {...action.dom('cancel', { hotkey: Key.Escape })}>Cancel</button>
-    <button {...action.dom('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
   </>
 );
 ```
 
 The modal dispatches a hotkey by finding the button whose `aria-keyshortcuts` matches and
-clicking it, so the key path and the click path are the same path — loading state, `disabled`
+clicking it, so the key path and the click path are the same path — running state, `disabled`
 and any `onClick` veto all apply. If a hotkey collides with the modal's `dismissKey`, the action
 wins and dismissal defers.
 
@@ -233,9 +241,9 @@ const modal = useModal<void, 'confirm' | 'cancel'>({
   render: ({ isPreparing, handle, action, error }) => (
     <div>
       {isPreparing ? <p>Loading…</p> : <p>Content</p>}
-      <button {...action.dom('cancel')}>Cancel</button>
+      <button {...action('cancel')}>Cancel</button>
       <button
-        {...action.dom('confirm', async (close) => {
+        {...action('confirm', async (close) => {
           await doSomething();
           close();
         })}
@@ -485,8 +493,8 @@ const modal = useMessageModal<void, 'confirm' | 'cancel'>({
       <Typography id="confirm-delete-title" variant="h6">Delete Item</Typography>
       <Typography>Are you sure?</Typography>
       <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <button {...action.dom('cancel')}>Cancel</button>
-        <button {...action.dom('confirm', async (close) => {
+        <button {...action('cancel')}>Cancel</button>
+        <button {...action('confirm', async (close) => {
           await api.deleteItem();
           close();
         })}>Delete</button>
@@ -525,7 +533,7 @@ const panel = useSlideModal<void, 'save'>({
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Typography>Panel content</Typography>
       </Box>
-      <button {...action.dom('save', { hotkey: Key.Enter, onAction: save })}>Save</button>
+      <button {...action('save', { hotkey: Key.Enter, onAction: save })}>Save</button>
     </Box>
   ),
 });

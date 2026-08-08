@@ -33,11 +33,11 @@ enforced by a test that walks the root's import graph, not by convention.
 - **Headless** — No UI opinions; use any component library or plain HTML/CSS
 - **Framework-agnostic core** — React is a binding, not the library; a second binding is a sibling file
 - **Primitive + template layers** — Core `useModal` powers `useMessageModal`, `useSlideModal`
-- **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ onClick, loading, disabled, 'aria-keyshortcuts'? }` to spread. No config, nothing to pass in
+- **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ onClick, disabled, 'data-loading', 'aria-keyshortcuts'? }` to spread. Every field is a DOM prop, so the same set fits a bare `<button>`, MUI's, or your own — the core never guesses what your buttons are called
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
 - **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
-- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, loading state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
+- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
 - **Zero runtime dependencies** — `react` and `react-dom` are _optional_ peers, needed only by `./react`
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
@@ -77,9 +77,9 @@ function ConfirmDelete() {
       <div>
         <h2 id="confirm-delete-title">Delete Item</h2>
         <p>Are you sure?</p>
-        <button {...action.dom('cancel')}>Cancel</button>
+        <button {...action('cancel')}>Cancel</button>
         <button
-          {...action.dom('confirm', async (close) => {
+          {...action('confirm', async (close) => {
             await api.deleteItem();
             close();
           })}
@@ -113,9 +113,9 @@ const modal = useModal<User, 'submit' | 'cancel'>({
   id: 'create-user',
   render: ({ action, hasRunningAction }) => (
     <>
-      <button {...action.dom('cancel')}>Cancel</button>
+      <button {...action('cancel')}>Cancel</button>
       <button
-        {...action.dom('submit', (close) => {
+        {...action('submit', (close) => {
           close(draft);
         })}
         disabled={hasRunningAction}

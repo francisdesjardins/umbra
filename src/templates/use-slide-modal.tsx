@@ -183,7 +183,7 @@ function getDialogStyle(
  *     <div style={{ height: '100%', background: '#fff' }}>
  *       <h2>Settings</h2>
  *       <p>Panel content</p>
- *       <button {...action.dom('close')}>Close</button>
+ *       <button {...action('close')}>Close</button>
  *     </div>
  *   ),
  * });

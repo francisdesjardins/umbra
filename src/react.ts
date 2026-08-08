@@ -56,7 +56,6 @@ export type {
 // it is given: the factory, its options, and the props it returns.
 export type {
   ActionButtonProps,
-  DomActionButtonProps,
   ActionClickEvent,
   ActionCloseFn,
   ActionFactory,

@@ -160,7 +160,6 @@ const CATEGORIES: readonly CategoryDef[] = [
       'ActionFactory',
       'ActionOptions',
       'ActionButtonProps',
-      'DomActionButtonProps',
       'ActionClickEvent',
       'ActionCloseFn',
       'HotkeyDef',

@@ -71,12 +71,16 @@ export type ActionClickEvent = {
 /**
  * Props returned by an action, for spreading onto a button.
  *
- * The set is spreadable onto a bare `<button>` and onto a component library's button alike.
- * `loading` is the odd one out — React does not forward it to a DOM element, so it reaches a
- * component that declares it (MUI, Mantine and most others call it exactly that) and quietly
- * evaporates on a plain button. `data-loading` carries the same state as an attribute, which is
- * what a plain button needs: it is stylable (`button[data-loading='true'] { … }`) without
- * threading the flag through JSX by hand.
+ * **Every field is a DOM prop, and that is the whole rule.** The set spreads onto a bare
+ * `<button>`, onto a component library's button, and onto your own — because it never guesses
+ * what your buttons are called or what props they take. A core that is agnostic of the UI put
+ * into it cannot ship a prop named for one family of component libraries: MUI and Mantine call
+ * the busy flag `loading`, another design system calls it `busy` or `pending`, and a headless
+ * one has no such prop at all.
+ *
+ * So the running state travels as `data-loading`, an attribute. CSS reaches it with
+ * `[data-loading='true']`, and a wrapper reads it as a boolean and maps it to whatever *its*
+ * system calls that — one line, in the only place that knows the answer.
  */
 export type ActionButtonProps = {
   /**
@@ -98,11 +102,14 @@ export type ActionButtonProps = {
    * what it passes on.
    */
   onClick: (event: ActionClickEvent) => Promise<void>;
-  /** True only when THIS action is running. For a button component that renders a spinner. */
-  loading: boolean;
   /**
-   * The same state as `loading`, as a DOM attribute — the form a plain `<button>` can use.
-   * React writes it out as `"true"`/`"false"`, so CSS reaches it with `[data-loading='true']`.
+   * True only when THIS action is running — as a DOM attribute, which is the only form the
+   * library can honestly ship.
+   *
+   * React writes it out as `"true"`/`"false"`, so CSS reaches it with `[data-loading='true']`,
+   * and a button component reads it as a boolean and maps it to whatever *its* design system
+   * calls that: `<MuiButton loading={props['data-loading']} />`. Contrast `disabled`, which is
+   * true while *any* action on the modal runs.
    */
   'data-loading': boolean;
   /** True while any action runs — including this one, which is what stops a double click. */
@@ -187,9 +194,9 @@ export type ActionOptions<TData = never> = {
  * render: ({ action }) => {
  *   return (
  *     <>
- *       <button {...action.dom('cancel')}>Cancel</button>
+ *       <button {...action('cancel')}>Cancel</button>
  *       <button
- *         {...action.dom('confirm', async (close) => {
+ *         {...action('confirm', async (close) => {
  *           await api.confirm();
  *           close();
  *         })}
@@ -200,39 +207,10 @@ export type ActionOptions<TData = never> = {
  *   );
  * };
  */
-export type ActionFactory<TData = never, TReason extends string = string> = {
-  (
-    reason: TReason | 'dismiss',
-    handlerOrOptions?:
-      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-  ): ActionButtonProps;
-  /**
-   * The same action, minus the one prop a DOM element cannot take.
-   *
-   * `loading` is for a button *component* that declares it — MUI, Mantine — and React drops it
-   * on a real `<button>` with a warning. Both directions matter and only one is loud: leaving it
-   * in the default spread costs a console warning on a bare button, taking it out would silently
-   * cost the spinner on every component one. So the default keeps it and this is the door for
-   * markup you write yourself. `data-loading` carries the same state either way.
-   *
-   * @example
-   * // A bare button, with the hotkey and the opening focus still wired.
-   * <button {...action.dom('ok', { hotkey: Key.Enter, focusOnOpen: true })}>OK</button>;
-   */
-  dom(
-    reason: TReason | 'dismiss',
-    handlerOrOptions?:
-      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-  ): DomActionButtonProps;
-};
-
-/**
- * {@link ActionButtonProps} narrowed to what a DOM element accepts — every field but `loading`.
- *
- * Derived, so a prop added to the action's props reaches this one too and there is no second
- * list to keep in step.
- */
-export type DomActionButtonProps = Omit<ActionButtonProps, 'loading'>;
+export type ActionFactory<TData = never, TReason extends string = string> = (
+  reason: TReason | 'dismiss',
+  handlerOrOptions?: ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+) => ActionButtonProps;
 
 // ── Internal ────────────────────────────────────────────────────────────────
 

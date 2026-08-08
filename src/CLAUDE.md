@@ -65,9 +65,13 @@ is built:
   keeps the UA's `fit-content` unless told otherwise. Public, and the same lever the template
   hooks pull; a template's own structural styles are merged _under_ a caller's, so a drawer can
   be told to be 380px wide without rebuilding the hook.
-- **`data-loading`** on an action's button props — the running state as a DOM attribute, so a
-  plain `<button>` can be styled with `[data-loading='true']`. `loading` is the same flag for a
-  button _component_ that declares it (MUI, Mantine); React drops it on a DOM element.
+- **`data-loading`** on an action's button props — the running state, and **the only form the
+  library ships it in**. Every field of `ActionButtonProps` is a DOM prop: a core agnostic of the
+  UI put into it cannot name the busy flag for one family of component libraries (MUI and Mantine
+  say `loading`, another says `busy`, a headless one has none). A plain `<button>` styles on
+  `[data-loading='true']`; a wrapper reads the boolean and maps it to its own prop, one line, in
+  the only place that knows the answer. The playground's `MuiButton` and `VanillaButton` are that
+  seam.
 
 ### Naming a dialog
 
@@ -137,8 +141,8 @@ Declared at the action level, automatically wired — no `useHotkey` needed.
 ```typescript
 render: ({ action }) => (
   <>
-    <button {...action.dom('cancel', { hotkey: Key.Escape })}>Cancel</button>
-    <button {...action.dom('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
+    <button {...action('cancel', { hotkey: Key.Escape })}>Cancel</button>
+    <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
   </>
 );
 

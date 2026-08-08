@@ -17,8 +17,8 @@ export function ActionErrorHotkeyRetryHarness() {
   const { open, isVisible, Modal } = useModal<void, 'save'>({
     id: 'action-error-retry',
     render: ({ action, error }) => {
-      // `loading` is not a DOM prop; a raw button takes the rest.
-      const { loading, ...save } = action('save', {
+      // The whole set spreads onto a raw button; the running state reads off `data-loading`.
+      const save = action('save', {
         hotkey: Key.Enter,
         onAction: async () => {
           setAttempts((n) => {
@@ -33,7 +33,7 @@ export function ActionErrorHotkeyRetryHarness() {
 
       return (
         <div style={dialogStyle}>
-          <button {...save}>{loading ? 'Saving…' : 'Save'}</button>
+          <button {...save}>{save['data-loading'] ? 'Saving…' : 'Save'}</button>
           <span data-testid="retry-attempts">{attempts}</span>
           <span data-testid="retry-error">{error ? error.message : ''}</span>
         </div>
