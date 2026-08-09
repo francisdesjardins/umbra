@@ -203,6 +203,14 @@ test.describe('entry point isolation', () => {
     );
   });
 
+  test('./vanilla reaches no framework at all', () => {
+    // The third binding is a *controller* rather than a renderer, so it has no framework to reach
+    // for — it resolves in exactly the environments the root does. Worth a test rather than a
+    // sentence: one convenience import of a hook would end it, and nothing else would notice.
+    const { detail } = frameworksReachedFrom('vanilla.ts');
+    expect(detail).toEqual([]);
+  });
+
   test('the walker would catch a framework import (meta-test)', () => {
     // Guards the guard: if `isErasedImport` or the regex ever stopped matching, the tests above
     // would pass vacuously. These are the shapes that must be rejected...

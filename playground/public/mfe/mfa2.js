@@ -1,11 +1,18 @@
-// MFA 2 — "Billing". It owns a dialog and decides who may open it.
+// MFA 2 — "Billing", on the vanilla binding.
 //
 // It imports neither of the other two, and neither imports it. The only thing the three share is
 // the module the import map points all of them at, which is why `requestOpen` can cross between
-// them at all — and why it crosses a framework boundary without noticing: this file uses no
-// binding, Checkout uses React's and Support uses Solid's.
+// them at all — and why it crosses a framework boundary without noticing.
+//
+// `umbra/vanilla` is the third *kind* of binding: a controller, not a renderer. The <dialog> below
+// is written by hand in host.html and stays the page's; what the binding drives is its lifecycle —
+// phases and animation, the dismiss key, the backdrop, focus, and the registration that makes it
+// addressable by the other two. `bindAction` is the part with no counterpart in a hook binding:
+// with nothing re-rendering, it attaches the handler *and* keeps the button's disabled and
+// data-loading in step itself.
 import { createOpenRequest, dialogManager } from 'umbra';
-import { bindDialog, logTo } from './binding.js';
+import { bindDialog } from 'umbra/vanilla';
+import { logTo } from './log.js';
 
 const LOG = 'mfa2-log';
 
@@ -99,22 +106,28 @@ document.getElementById('mfa2-ask').addEventListener('click', () => {
     });
 });
 
-document.getElementById('mfa2-approve').addEventListener('click', () => {
-  logTo(LOG, 'note', `approved ${pending?.amount ?? 0}$`);
-  // The answer travels back the way the request came: a payload, not just a word. `close(id,
-  // reason)` on the manager cannot carry one — the registry is keyed by string and knows no
-  // modal's payload type — which is why a binding's own close is the door that can.
-  billing.close('approved', {
-    transactionId: `TX-${String(1000 + Math.floor(Math.random() * 9000))}`,
-    amount: pending?.amount ?? 0,
-  });
+// Approve and Decline are the dialog's *actions*, bound rather than rendered. `bindAction` gives
+// each button the close path, the hotkey and the disabled/loading sync a hook binding would get
+// from spreading `action(reason)` — on markup that was already on the page.
+billing.bindAction(document.getElementById('mfa2-approve'), 'approved', {
+  hotkey: 'Enter',
+  focusOnOpen: true,
+  onAction: (close) => {
+    logTo(LOG, 'note', `approved ${pending?.amount ?? 0}$`);
+    // The answer travels back the way the request came: a payload, not just a word. `close(id,
+    // reason)` on the manager cannot carry one — the registry is keyed by string and knows no
+    // modal's payload type — which is why a binding's own close is the door that can.
+    close({
+      transactionId: `TX-${String(1000 + Math.floor(Math.random() * 9000))}`,
+      amount: pending?.amount ?? 0,
+    });
+  },
 });
-// "Decline" here is the *user* turning down a charge, and it is deliberately not the same word
-// as `request.refuse` above — that one is this dialog refusing to open at all. Two acts, two
-// verbs, and collapsing them would hide the difference the demo exists to show.
-document.getElementById('mfa2-decline').addEventListener('click', () => {
-  billing.close('declined');
-});
+
+// "Decline" here is the *user* turning down a charge, and it is deliberately not the same word as
+// `request.refuse` above — that one is this dialog refusing to open at all. Two acts, two verbs,
+// and collapsing them would hide the difference the demo exists to show.
+billing.bindAction(document.getElementById('mfa2-decline'), 'declined');
 
 // Anything on the page can watch the manager, because there is only one of it here.
 dialogManager.subscribe((event) => {
@@ -123,4 +136,4 @@ dialogManager.subscribe((event) => {
   }
 });
 
-logTo(LOG, 'note', 'ready — plain JS, owns "billing:confirm"');
+logTo(LOG, 'note', 'ready — vanilla binding, owns "billing:confirm"');

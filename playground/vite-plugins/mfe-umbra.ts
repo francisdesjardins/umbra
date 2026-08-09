@@ -12,6 +12,7 @@ const ENTRIES = [
   'umbra',
   'umbra-react',
   'umbra-solid',
+  'umbra-vanilla',
   'react',
   'react-dom-client',
   'solid-js',

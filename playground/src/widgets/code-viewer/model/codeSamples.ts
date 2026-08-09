@@ -17,7 +17,7 @@ import mfeHostSrc from '../../../../public/mfe/host.html?raw';
 import mfeCheckoutSrc from '../../../../public/mfe/mfa1.js?raw';
 import mfeBillingSrc from '../../../../public/mfe/mfa2.js?raw';
 import mfeSupportSrc from '../../../../public/mfe/mfa3.js?raw';
-import mfeBindingSrc from '../../../../public/mfe/binding.js?raw';
+
 // The build behind the import map. Not a file a user copies — it is the answer to "how do three
 // independently-written scripts end up with one manager", which is the demo's whole subject.
 import mfeDistributionSrc from '../../../../vite-plugins/mfe-umbra.ts?raw';
@@ -236,7 +236,6 @@ export const codeSamples: Record<string, string> = {
   'mfe-checkout': mfeCheckoutSrc,
   'mfe-billing': mfeBillingSrc,
   'mfe-support': mfeSupportSrc,
-  'mfe-binding': mfeBindingSrc,
   'mfe-distribution': mfeDistributionSrc,
   'mui-message': muiMessageSrc,
   'mui-slide': muiSlideSrc,

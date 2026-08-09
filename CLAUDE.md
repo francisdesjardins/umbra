@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-Framework-agnostic dialog/modal manager, with React and Solid shipped as two bindings over it.
-No UI components exported; users bring their own.
+Framework-agnostic dialog/modal manager, with React, Solid and vanilla shipped as three bindings
+over it. No UI components exported; users bring their own.
 
 ## Entry points
 
@@ -14,20 +14,31 @@ are the optional layer.
 | `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.       |
 | `umbra/solid` | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                             |
 
-**The two bindings share a surface on purpose.** Same hook names, same options, same return
-shape, so a team running both writes the same modal twice with the same words. Two differences,
-and both are the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`,
-`error`) are getters over signals rather than re-rendered values — so **do not destructure the
-render args** — and `portal: true` mounts the dialog itself, leaving `Modal` as `null`.
+**There are two kinds of binding, and the distinction is load-bearing.**
 
-Adding a third binding (Vue, a web component) means adding a sibling of `src/react.ts` and a new
+_Hook_ bindings — `./react` and `./solid` — **render**: a `render` callback returns the content and
+the binding returns a `Modal` to place. They share a surface on purpose, down to the file names, so
+a team running both writes the same modal twice with the same words. Two differences, and both are
+the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are
+getters over signals rather than re-rendered values — so **do not destructure the render args** —
+and `portal: true` mounts the dialog itself, leaving `Modal` as `null`.
+
+The _controller_ binding — `./vanilla` — **does not render**, and could not without the library
+shipping a renderer, which is the one thing it refuses to do. The `<dialog>` and its contents are
+markup the caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`,
+no `Modal` and no outlet, and it gains `bindAction(button, reason)` — which attaches the handler
+_and_ keeps `disabled` / `data-loading` / `aria-busy` in step, the half a renderer does elsewhere.
+Asserting it mirrored the hook bindings would be asserting the wrong thing; `binding-parity.test.ts`
+knows the difference and records what it must and must not have.
+
+Adding a fourth binding (Vue, a web component) means adding a sibling of `src/react.ts` and a new
 `exports` entry. Nothing under the root changes — see [src/CLAUDE.md](src/CLAUDE.md#what-a-binding-actually-does)
 for the list of what it inherits.
 
 **Entry-point isolation is a test, not a convention:**
 [src/\_\_tests\_\_/entry-isolation.test.ts](src/__tests__/entry-isolation.test.ts) walks the real
-import graph from each entry and asserts that the root reaches no framework, and that each
-binding reaches its own and only its own (type-only imports are erased, so those are fine). The
+import graph from each entry and asserts that the root reaches no framework, that each hook
+binding reaches its own and only its own, and that `./vanilla` reaches none (type-only imports are erased, so those are fine). The
 positive halves are what stop the root's assertion from passing because the walker resolved
 nothing. `peerDependenciesMeta` marks `react`, `react-dom` and `solid-js` optional, which is the
 promise those tests defend, and `verify:package` re-checks all of it against the built artifact.
@@ -75,8 +86,8 @@ what that project can reach. Three groups, and the reason each is there:
 
 - **Type-only modules** (`core/types.ts`, `actions/types.ts`, the two bindings' `types.ts`, …) —
   no runtime at all, so they report 0% forever and drag the number with them.
-- **Both bindings** (`src/react/**`, `src/solid/**`) and the entry barrels — component-tested. A
-  glob, because a new file there is component-test territory too.
+- **Every binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`) and the entry barrels —
+  component-tested. A glob, because a new file there is component-test territory too.
 - **The DOM-only core modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`) — listed **one by
   one**, deliberately. A new module in `core/` is not silently excluded: it shows up as a gap
   until someone decides which kind it is.
@@ -129,7 +140,7 @@ helper is a helper wherever it ships.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
 - **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
-- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Solid ^1.9.14 (optional peer — required only by `./solid`) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
+- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Solid ^1.9.14 (optional peer — required only by `./solid`; `./vanilla` needs neither) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
 - **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
 - **Yarn workspaces**: the repo is two packages — `umbra` (root, published) and `umbra-playground` (`playground/`, `private: true`). One `yarn install` at the root installs both. **The published package's dependency list is the root manifest**, so anything the demo needs — MUI, Emotion, TanStack Router, immer, react-syntax-highlighter — belongs in `playground/package.json` and must never be added to the root. The root's own `dependencies` stay empty: the library ships zero runtime dependencies. Root `dev`/`playground:*` scripts delegate via `yarn workspace umbra-playground <script>`.
 - **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin — so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** (`'./types.js'`, `'../store/index.js'`) because `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext` — silently, under `skipLibCheck`. `yarn verify:package` fails on any that slip through.

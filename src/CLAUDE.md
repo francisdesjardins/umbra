@@ -9,6 +9,8 @@
   the root wholesale so React apps use one specifier.
 - **[solid.ts](solid.ts)** — the Solid binding, the same surface. Everything under
   [solid/](solid/); re-exports the root wholesale too.
+- **[vanilla.ts](vanilla.ts)** — the controller binding, for a `<dialog>` the caller wrote. No
+  framework at all; everything under [vanilla/](vanilla/), and the root re-exported wholesale.
 
 When adding an export, the default home is the root. It belongs in a binding only if it imports
 that framework as a _value_ — a type-only `import type { CSSProperties } from 'react'` is erased
@@ -28,10 +30,16 @@ core model instantiated per binding.
 The folder names are the architecture's documentation, so a React hook in `core/` is a
 contradiction rather than an inconvenience. One rule decides:
 
-| Folder                                                            | Holds                                                                                                                      |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `core/`, `manager/`, `store/`, `actions/`, `utils/`, `templates/` | Framework-free. Must survive `entry-isolation.test.ts` walking the root.                                                   |
-| `react/`, `solid/`                                                | Everything that imports its framework as a value — hooks, components, providers, and the option/return type instantiation. |
+| Folder                                                            | Holds                                                                                                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `core/`, `manager/`, `store/`, `actions/`, `utils/`, `templates/` | Framework-free. Must survive `entry-isolation.test.ts` walking the root.                                                        |
+| `react/`, `solid/`                                                | Everything that imports its framework as a value — hooks, components, providers, and the option/return type instantiation.      |
+| `vanilla/`                                                        | The controller binding. Framework-free like the core, but a _binding_ rather than a primitive: it composes, it does not decide. |
+
+**Only the two hook bindings mirror each other.** `vanilla/` is a different kind — a controller
+over markup the caller owns, with no `render`, no `Modal` and no outlet — so requiring it to match
+would be requiring the wrong thing. `binding-parity.test.ts` asserts the mirror for the hook pair
+and, separately, what the controller must and must not export.
 
 `react/` and `solid/` mirror each other **file for file** — `use-modal`, `modal-outlet`,
 `dialog-manager-context`, `use-dialog-manager`, `use-lookup`, `types.ts` and
@@ -85,7 +93,13 @@ The short list, and it is the measure of whether the core is doing its job. A bi
 
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys, the
 placement table, the slide geometry, the action factory, the default animation — is shared. The
-two shipped bindings differ in about 200 lines each, and none of it is logic.
+three shipped bindings differ in about 200 lines each, and none of it is logic.
+
+A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the
+caller's element, and drops 2 and 5 outright: there is no render pass, so actions are declared by
+`bindAction` and retired by the unbind it returns rather than by a declaration window. Its driver
+is the store itself, because there is no other clock — which is safe here precisely because there
+is no commit timing to race with.
 
 ### The two open knobs
 

@@ -11,7 +11,7 @@
     <!--
       The host's entire job: name the shared modules and hand the same ones to everybody.
 
-      Eight specifiers, one build. `dialogManager` is a module-level singleton, so this map is
+      Nine specifiers, one build. `dialogManager` is a module-level singleton, so this map is
       what decides whether three microfrontends share a registry or each get their own — and the
       frameworks have the same problem one layer down, since two copies of React mean two hook
       dispatchers and two copies of Solid mean two owner graphs.
@@ -29,6 +29,7 @@
           "umbra": "./umbra.mjs",
           "umbra/react": "./umbra-react.mjs",
           "umbra/solid": "./umbra-solid.mjs",
+          "umbra/vanilla": "./umbra-vanilla.mjs",
           "react": "./react.mjs",
           "react-dom/client": "./react-dom-client.mjs",
           "solid-js": "./solid-js.mjs",
@@ -283,7 +284,7 @@
 
       <section class="mfa billing">
         <h2>Billing</h2>
-        <div class="kind">Plain JS, no binding · owns <code>billing:confirm</code></div>
+        <div class="kind">Vanilla binding · owns <code>billing:confirm</code></div>
         <div class="controls">
           <label class="field">
             <span>Approval limit</span>

@@ -120,13 +120,13 @@ export const AdvancedPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Three microfrontends, three frameworks, one manager"
-            description="Checkout uses umbra/react and owns checkout:receipt. Support uses umbra/solid — the same call, the same options, the same return — and owns support:ticket. Billing uses no binding at all: it registers its own <dialog> with the store engine and owns billing:confirm. None of them imports another. Each asks the others with requestOpenAndWait, and the owner decides: send more than 500$ and Billing refuses through request.refuse, then hands the refusal on to Support — one request crossing React, plain JavaScript and Solid in a single trip, because what the three share is the manager and not the renderer."
+            description="Checkout uses umbra/react and owns checkout:receipt. Support uses umbra/solid — the same call, the same options, the same return — and owns support:ticket. Billing uses umbra/vanilla, the controller binding, over a <dialog> written by hand in the host page, and owns billing:confirm. None of them imports another. Each asks the others with requestOpenAndWait, and the owner decides: send more than 500$ and Billing refuses through request.refuse, then hands the refusal on to Support — one request crossing React, plain JavaScript and Solid in a single trip, because what the three share is the manager and not the renderer."
             codeKey="microfrontends"
             example={<MicrofrontendsExample />}
           />
           <ExampleCard
             title="host.html — the distribution, all of it"
-            description="No bundler runs on this page. An import map names the eight specifiers the three microfrontends write — umbra, its two bindings, React, Solid — three <script type=module> tags load them, and the browser resolves the rest. This is the file that decides whether the three share a manager."
+            description="No bundler runs on this page. An import map names the nine specifiers the three microfrontends write — umbra, its two bindings, React, Solid — three <script type=module> tags load them, and the browser resolves the rest. This is the file that decides whether the three share a manager."
             codeKey="mfe-host-html"
           />
           <ExampleCard
@@ -140,14 +140,9 @@ export const AdvancedPage = () => {
             codeKey="mfe-support"
           />
           <ExampleCard
-            title="mfa2.js — Billing, and no framework at all"
-            description="A payload that crossed an ownership boundary is unknown until this side says otherwise, so it validates before it opens and logs a refusal when it will not. Over the limit it refuses and passes the conversation to Support, which it has never heard of. Ordinary DOM listeners drive the rest."
+            title="mfa2.js — Billing, on the vanilla binding"
+            description="The third kind of binding: a controller, not a renderer. The <dialog> is written by hand in host.html and stays the page’s; umbra/vanilla drives its lifecycle and bindAction turns two existing buttons into actions — close path, hotkey, and the disabled/loading sync a hook binding gets from a spread. A payload that crossed an ownership boundary is unknown until this side says otherwise, so it validates before it opens, and over the limit it refuses and passes the conversation to Support, which it has never heard of."
             codeKey="mfe-billing"
-          />
-          <ExampleCard
-            title="binding.js — a third binding in forty lines"
-            description="What it takes to drive a native <dialog> from the framework-agnostic root: a store, dialogManager.register, and a cancel listener keeping the two in step. The shipped bindings do considerably more, but this is the floor — and it is the argument for the core owning everything that does not need a renderer."
-            codeKey="mfe-binding"
           />
           <ExampleCard
             title="The build behind the import map"

@@ -12,7 +12,7 @@ import { createOpenRequest, dialogManager, Key } from 'umbra';
 import { useModal } from 'umbra/react';
 import { createElement as h, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { logTo } from './binding.js';
+import { logTo } from './log.js';
 
 const LOG = 'mfa1-log';
 

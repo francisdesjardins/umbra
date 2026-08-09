@@ -265,7 +265,12 @@ function buildModule(example, exportsBySpecifier, stubs) {
  */
 function specifierFor(file) {
   const path = relative(SRC, file).replaceAll('\\', '/');
-  return path === 'solid.ts' || path.startsWith('solid/') ? 'umbra/solid' : 'umbra/react';
+  for (const binding of ['solid', 'vanilla']) {
+    if (path === `${binding}.ts` || path.startsWith(`${binding}/`)) {
+      return `umbra/${binding}`;
+    }
+  }
+  return 'umbra/react';
 }
 
 /** Every public export of one entry point (plus the root it re-exports), by specifier. */
@@ -396,6 +401,7 @@ const examples = collectExamples();
 const exported = new Map([
   ['umbra/react', publicExports('react.ts')],
   ['umbra/solid', publicExports('solid.ts')],
+  ['umbra/vanilla', publicExports('vanilla.ts')],
 ]);
 examples.forEach((example, index) => {
   example.module = moduleName(example, index);

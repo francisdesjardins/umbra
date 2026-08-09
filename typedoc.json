@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.app/schema.json",
-  "entryPoints": ["src/index.ts", "src/react.ts", "src/solid.ts"],
+  "entryPoints": ["src/index.ts", "src/react.ts", "src/solid.ts", "src/vanilla.ts"],
   "out": "docs/api",
   "name": "Dialog Manager",
   "includeVersion": true,

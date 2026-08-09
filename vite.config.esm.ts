@@ -35,6 +35,7 @@ export default defineConfig({
         index: resolve(import.meta.dirname, 'src/index.ts'),
         react: resolve(import.meta.dirname, 'src/react.ts'),
         solid: resolve(import.meta.dirname, 'src/solid.ts'),
+        vanilla: resolve(import.meta.dirname, 'src/vanilla.ts'),
       },
       formats: ['es'],
     },

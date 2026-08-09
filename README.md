@@ -4,7 +4,7 @@
 
 **Headless dialogs on the native top layer.**
 
-Framework-agnostic core, with React and Solid bindings over it.
+Framework-agnostic core, with React, Solid and vanilla bindings over it.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
@@ -16,7 +16,7 @@ Framework-agnostic core, with React and Solid bindings over it.
 
 ---
 
-A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React and Solid ship as two bindings over it**, with the same surface — same hook names, same options, same typed close. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
+A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React, Solid and vanilla ship as three bindings over it**. The two hook bindings share a surface — same names, same options, same typed close — and the vanilla one is a _controller_ for a `<dialog>` you wrote yourself. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
 
 ## ◐ Entry points
 
@@ -32,10 +32,18 @@ reaches its own framework and only its own, so installing one is never a conditi
 other. All of that is enforced by tests that walk the real import graphs — and re-checked against
 the built package — not by convention.
 
-**The two bindings share a surface deliberately.** Two differences, and both are the renderer's:
-Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are getters over
-signals, so read them through the object rather than destructuring it; and `portal: true` mounts
-the dialog for you, leaving `Modal` as `null`.
+**The two hook bindings share a surface deliberately.** Two differences, and both are the
+renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are
+getters over signals, so read them through the object rather than destructuring it; and
+`portal: true` mounts the dialog for you, leaving `Modal` as `null`.
+
+**`umbra/vanilla` is a different kind on purpose.** It renders nothing — a binding that did would
+mean shipping a renderer, which this library refuses to do — so the element and its contents stay
+yours and `bindDialog` drives the lifecycle over them: phases and animation, `prepare`, the
+dismiss key, click-outside, backdrop hit-testing, opening focus, the registration that makes it
+addressable by id, and the typed close. `bindAction(button, reason)` is its one addition, and it
+does the half a renderer would: attach the handler, then keep `disabled`, `data-loading` and
+`aria-busy` in step.
 
 ## ◑ Features
 
@@ -66,7 +74,9 @@ yarn dev
 
 **Both frameworks are optional peers.** The root is plain TypeScript and resolves with neither
 installed; `react` / `react-dom` (`^19.2.4`) are needed only by `umbra/react`, and `solid-js`
-(`^1.9.14`) only by `umbra/solid`.
+(`^1.9.14`) only by `umbra/solid`. `umbra/vanilla` needs neither, and resolves wherever the root
+does — a plain page, an Astro island, a web component, a server-rendered app with a sprinkle of
+JavaScript.
 
 **Requirements:** Node >= 24.0.0 | Chrome 138+ (native `<dialog>`)
 

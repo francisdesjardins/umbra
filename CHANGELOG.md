@@ -11,6 +11,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Added — `umbra/vanilla`, a third binding of a different kind
+
+`binding.js` in the microfrontend demo was forty hand-written lines driving a `<dialog>` from the
+manager, and it was the demo's way of saying a binding is cheap. Looked at squarely it was
+evidence of a gap instead: the root exports **no** part of the modal state machine, so anyone
+doing what it did had to hand-roll a store — and got a degraded dialog for it. No `opening` /
+`closing` phases and therefore no animation at all, no `prepare` or `AbortSignal`, no dismiss key
+beyond the native `cancel`, no click-outside or backdrop hit-testing, no focus handling, no
+actions and so no loading state, error capture or hotkeys. Silently, in every case.
+
+So the binding ships. `bindDialog({ id, dialog })` takes a `<dialog>` you wrote and drives its
+whole lifecycle — the same calls into `core/` that `umbra/react` and `umbra/solid` make, in the
+same order. Nothing in it is a new decision; it is ~250 lines of wiring, which is the architecture's
+claim cashed by a consumer that is not a framework at all.
+
+**It is deliberately not the hook bindings' surface**, and that is the interesting part. React and
+Solid render a dialog _and_ its contents from a `render` callback; a vanilla binding that did the
+same would have to ship a renderer, which is the one thing this library refuses to do. So it has no
+`render`, no `Modal` and no outlet, and it gains `bindAction(button, reason)` — which attaches the
+handler _and_ keeps `disabled`, `data-loading` and `aria-busy` in step, the half a renderer does
+elsewhere. Its unbind retires the action's declaration, which is the controller's answer to React's
+render pass and Solid's `onCleanup`.
+
+Two smaller consequences worth naming. There is no context to read a manager from, so an isolated
+instance is _passed_ (`manager`) rather than provided — the vanilla answer to
+`DialogManagerProvider`. And the store is its own clock: attachments rebuild when the phase or
+`isPreparing` changes, which is safe here precisely because there is no commit timing to race with.
+
+`binding-parity.test.ts` learned that there are two **kinds** of binding: the hook pair must mirror
+each other down to the file names, while the controller is asserted separately — it must export
+`bindDialog`, and must **not** export `useModal`, `ModalOutlet` or the template hooks, so "fixing
+the inconsistency" fails loudly. `entry-isolation.test.ts` and `verify:package` both assert that
+`./vanilla` reaches no framework at all, in the source graph and in the built artifact.
+
+The microfrontend demo is now one microfrontend per binding — Checkout on React, Support on Solid,
+Billing on vanilla over the `<dialog>` in `host.html`. `binding.js` is `log.js` now, holding only
+the log helper: the argument that a binding is cheap is better made by one you can install than by
+one you have to copy.
+
 ### Added — `umbra/solid`, a second binding, and the answer to what a binding actually is
 
 The claim "React is one binding, not the library" was a comment with a test behind it. It is now

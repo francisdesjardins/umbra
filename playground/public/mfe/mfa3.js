@@ -15,7 +15,7 @@ import { createOpenRequest, dialogManager } from 'umbra';
 import { createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import h from 'solid-js/h';
-import { logTo } from './binding.js';
+import { logTo } from './log.js';
 
 const LOG = 'mfa3-log';
 

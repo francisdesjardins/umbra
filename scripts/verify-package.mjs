@@ -102,6 +102,18 @@ try {
     ].join('\n')
   );
 
+  // The controller binding: no framework at all, so it must resolve for a consumer who installed
+  // neither peer — which is exactly what the leak walk below checks.
+  writeFileSync(
+    join(sandbox, 'vanilla-entry.ts'),
+    [
+      "import { bindDialog, dialogManager, Key } from 'umbra/vanilla';",
+      "import type { DialogController } from 'umbra/vanilla';",
+      'export const used = [bindDialog, dialogManager, Key];',
+      'export type Used = [DialogController];',
+    ].join('\n')
+  );
+
   // The second binding, resolved the same way — same hook names, same re-exported root. A
   // consumer must be able to import it without React installed, which is what the leak walk
   // below checks; here it is the `exports` entry and the emitted `.d.ts` that are on trial.
@@ -312,6 +324,15 @@ for (const [entry, own, other] of [
     reached.has(other) ? describe(result) : ''
   );
 }
+
+// The controller binding renders nothing, so it reaches for nothing — it must resolve wherever
+// the root does, for a consumer who installed neither optional peer.
+const vanilla = walk(join(DIST, 'esm', 'vanilla.js'));
+report(
+  vanilla.leaks.length === 0 && vanilla.seen.size > 3,
+  'the built vanilla binding imports no framework',
+  `${vanilla.seen.size} modules${vanilla.leaks.length > 0 ? ` — LEAKS: ${describe(vanilla)}` : ''}`
+);
 
 console.log(failures === 0 ? '\nPACKAGE OK' : `\n${failures} PACKAGE CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

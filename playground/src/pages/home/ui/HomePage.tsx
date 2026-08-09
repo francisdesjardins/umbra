@@ -13,7 +13,8 @@ cd umbra && yarn install && yarn dev
 # Or lift what you need out of src/ — plain TypeScript, MIT, no ceremony.
 import { dialogManager } from 'umbra';   // the root: no framework needed
 import { useModal } from 'umbra/react';  // the React binding
-import { useModal } from 'umbra/solid';  // …or the Solid one, same surface`;
+import { useModal } from 'umbra/solid';  // …or the Solid one, same surface
+import { bindDialog } from 'umbra/vanilla'; // …or none: drive your own <dialog>`;
 
 const HELLO = `const modal = useModal<void, 'confirm' | 'cancel'>({
   id: 'hello',
@@ -156,7 +157,7 @@ export const HomePage = () => {
             <Chip size="small" label="0 runtime dependencies" />
             <Chip size="small" label="native <dialog>" />
             <Chip size="small" label="typed close payloads" />
-            <Chip size="small" label="React + Solid bindings" />
+            <Chip size="small" label="React · Solid · vanilla" />
             <Chip size="small" label="React Compiler ready" />
           </Stack>
 

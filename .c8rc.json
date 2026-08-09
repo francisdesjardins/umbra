@@ -4,20 +4,19 @@
   "exclude": [
     "src/**/*.d.ts",
     "src/**/__tests__/**",
-
     "src/core/types.ts",
     "src/core/attach-types.ts",
     "src/actions/types.ts",
     "src/manager/types.ts",
     "src/react/types.ts",
     "src/solid/types.ts",
-
+    "src/vanilla/types.ts",
     "src/react.ts",
     "src/solid.ts",
-
+    "src/vanilla.ts",
     "src/react/**",
     "src/solid/**",
-
+    "src/vanilla/**",
     "src/core/attach-click-outside.ts",
     "src/core/attach-focus.ts",
     "src/core/attach-keydown.ts",

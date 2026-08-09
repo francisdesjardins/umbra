@@ -20,17 +20,20 @@ step at all — see below.
 
 `/advanced#microfrontends` loads a plain HTML page in an iframe: an import map, three
 `<script type="module">`, no bundler. Three microfrontends share one `dialogManager` and ask each
-other for dialogs — Checkout on `umbra/react`, Support on `umbra/solid`, Billing on no binding at
-all.
+other for dialogs — one per binding: Checkout on `umbra/react`, Support on `umbra/solid`, Billing
+on `umbra/vanilla` over a `<dialog>` written by hand in `host.html`.
 
 - `mfe-src/*.ts` — one tiny module per specifier the import map names (`umbra`, `umbra/react`,
-  `umbra/solid`, `react`, `react-dom/client`, `solid-js`, `solid-js/web`, `solid-js/h`).
+  `umbra/solid`, `umbra/vanilla`, `react`, `react-dom/client`, `solid-js`, `solid-js/web`,
+  `solid-js/h`).
 - `vite-plugins/mfe-umbra.ts` bundles **all of them in one rolldown build**, so code-splitting
   hoists what they share — the manager included — into a chunk each entry imports. Separate builds
   would give separate registries and the demo's central claim would be false. It serves them from
   `/mfe/*.mjs` in dev (rebuilding when `src/` or `mfe-src/` changes) and emits them at build time.
 - The scripts in `public/mfe/` are served verbatim, which is why they use `createElement` and `h`
-  rather than JSX: nothing compiles them, and that is the point being made.
+  rather than JSX: nothing compiles them, and that is the point being made. `log.js` is the only
+  shared helper left there — driving Billing's hand-written dialog used to be forty lines beside
+  it, and is now `umbra/vanilla`.
 
 Adding a fourth microfrontend means a panel in `host.html`, a script beside the others, and a
 `codeSamples` entry — no new build wiring.

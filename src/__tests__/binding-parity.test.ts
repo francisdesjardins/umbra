@@ -4,7 +4,13 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The two bindings expose the same surface, and this is what says so.
+ * The bindings that promise the same surface expose the same surface, and this is what says so.
+ *
+ * There are two **kinds**. `./react` and `./solid` are *hook* bindings: they render, so they share
+ * a surface down to the file names, and any divergence between them is a bug. `./vanilla` is a
+ * *controller*: it drives a `<dialog>` the caller wrote, so it has no `render`, no `Modal` and no
+ * outlet — and asserting it mirrored the other two would be asserting the wrong thing. Its own
+ * test below records what it must and must not have, so "fixing the inconsistency" fails loudly.
  *
  * "Same hook names, same options, same return" is the claim `umbra/solid` exists to support, and
  * it is the kind of claim that decays one export at a time: a hook added to `./react` and
@@ -14,7 +20,7 @@ import { fileURLToPath } from 'node:url';
  * Only *names* are compared. Whether they mean the same thing is the type model's job — the
  * shared core in `core/types.ts` with two instantiations, pinned by `core/__tests__/type-model.test.ts`.
  *
- * Parsed rather than imported: the unit project runs in plain Node, and importing either entry
+ * Parsed rather than imported: the unit project runs in plain Node, and importing a hook entry
  * point pulls a framework and JSX it cannot transform.
  */
 
@@ -58,7 +64,7 @@ const ALLOWED_ASYMMETRY: Readonly<Record<string, string>> = {
 };
 
 test.describe('binding parity', () => {
-  test('./react and ./solid export the same names', () => {
+  test('the two hook bindings export the same names', () => {
     const react = directExports('react.ts');
     const solid = directExports('solid.ts');
 
@@ -121,5 +127,31 @@ test.describe('binding parity', () => {
         return !reactModules.has(name) && name !== 'from-store';
       })
     ).toEqual([]);
+  });
+});
+
+test.describe('the controller binding', () => {
+  test('./vanilla carries the doors, and none of the rendering surface', () => {
+    const vanilla = directExports('vanilla.ts');
+
+    // What it is: a controller over an element the caller owns.
+    expect(vanilla.has('bindDialog')).toBe(true);
+    expect(vanilla.has('BindDialogOptions')).toBe(true);
+    expect(vanilla.has('DialogController')).toBe(true);
+
+    // What it deliberately is not. Every one of these presumes a renderer, and a vanilla binding
+    // that shipped one would be shipping the UI this library exists to not ship.
+    for (const rendering of ['useModal', 'useMessageModal', 'useSlideModal', 'ModalOutlet']) {
+      expect(vanilla.has(rendering), `./vanilla should not export ${rendering}`).toBe(false);
+    }
+  });
+
+  test('every binding re-exports the root, so an app needs one import path', () => {
+    // `export * from './index.js'` is what makes `dialogManager`, `Key` and `createStore` reachable
+    // from any of the three. It is a one-line edit to lose, and nothing else would fail.
+    for (const entry of ['react.ts', 'solid.ts', 'vanilla.ts']) {
+      const source = readFileSync(resolve(SRC_ROOT, entry), 'utf8');
+      expect(source, `${entry} must re-export the root`).toContain("export * from './index.js'");
+    }
   });
 });
