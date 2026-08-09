@@ -30,16 +30,16 @@ const log = createLogger('modal');
  * rather than `UseModalOptions<…>`: it takes four type parameters, and none of them affects a
  * single answer computed here.
  */
-export type ModalConfigOptions = ModalVariant & {
+export type UnresolvedModalOptions = ModalVariant & {
   readonly portal?: boolean | undefined;
   readonly clipContainer?: boolean | undefined;
   readonly dismissWhilePreparing?: boolean | undefined;
   readonly dismissKey?: HotkeyDef | false | undefined;
-  readonly modalType?: string | undefined;
+  readonly template?: string | undefined;
 };
 
 /** Every option a binding needs resolved before it can render or wire anything. */
-export type ResolvedModalConfig = {
+export type ResolvedModalOptions = {
   readonly isNonModal: boolean;
   readonly shouldPortal: boolean;
   /** Modal variant only; `undefined` means "decide from whether any action was drawn". */
@@ -48,7 +48,7 @@ export type ResolvedModalConfig = {
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly dismissKey: HotkeyDef | false;
-  readonly modalType: string;
+  readonly template: string;
   readonly placement: DialogPlacement;
 };
 
@@ -64,7 +64,7 @@ export type ResolvedModalConfig = {
  * generic over the binding's style type could not return it — so each binding keeps the one
  * annotated line, which is also where the comment explaining the annotation belongs.
  */
-export function resolveModalConfig(options: ModalConfigOptions): ResolvedModalConfig {
+export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedModalOptions {
   const isNonModal = options.nonModal ?? false;
   const shouldPortal = options.portal ?? false;
 
@@ -76,7 +76,7 @@ export function resolveModalConfig(options: ModalConfigOptions): ResolvedModalCo
       options.nonModal === true ? (options.dismissOnClickOutside ?? false) : false,
     dismissWhilePreparing: options.dismissWhilePreparing ?? true,
     dismissKey: options.dismissKey ?? Key.Escape,
-    modalType: options.modalType ?? 'modal',
+    template: options.template ?? 'modal',
     // Where this dialog is positioned from, and what it has to be positioned *against*. The
     // rules — and why a contained dialog needs a host at all — live in `core/placement.ts`.
     placement: dialogPlacement({
@@ -208,13 +208,13 @@ export function shouldDismissOnBackdropClick(
  */
 export function teardownModal(
   store: ModalStore,
-  dm: DialogManager,
+  manager: DialogManager,
   modalId: string,
   dialog: HTMLDialogElement | null
 ): void {
   const wasOpen = store.getSnapshot().phase !== 'closed';
 
-  dm.unregister(modalId);
+  manager.unregister(modalId);
 
   if (wasOpen) {
     log('Tearing down open modal', { id: modalId });

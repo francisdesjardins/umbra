@@ -1,7 +1,7 @@
 // The plain barrel: `../store` is framework-free, its React bindings living in
 // `../store/react`. This module is the root of an entry point that must resolve without React,
 // and that separation is what makes the import structural rather than dependent on Rollup
-// tree-shaking unused re-exports back out. Pinned by __tests__/root-react-free.test.ts.
+// tree-shaking unused re-exports back out. Pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
@@ -179,9 +179,12 @@ export type OpenRequestOutcome =
 
 /** What a binding may tell the registry about a dialog beyond its store. */
 export type RegisterOptions = {
-  /** Free-form kind, carried on the DOM events. Defaults to `'modal'`. */
-  readonly modalType?: string | undefined;
-  /** Non-blocking dialogs never lock body scroll and never take the top layer. */
+  /**
+   * Which template built this dialog — free-form, carried on the DOM events, never read here.
+   * Defaults to `'modal'`. See `ModalInfo.template`.
+   */
+  readonly template?: string | undefined;
+  /** Non-modal dialogs never lock body scroll and never take the top layer. */
   readonly nonModal?: boolean | undefined;
   /** Makes this dialog reachable by {@link DialogManager.requestOpen}. */
   readonly onOpenRequest?: OpenRequestHandler | undefined;
@@ -227,7 +230,7 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
  * @example
  * // `event.detail` is typed: the library augments `DocumentEventMap`, so no cast.
  * document.addEventListener(MODAL_OPEN_EVENT, (event) => {
- *   analytics.track('modal_shown', { id: event.detail.id, type: event.detail.modalType });
+ *   analytics.track('modal_shown', { id: event.detail.id, template: event.detail.template });
  * });
  */
 export const MODAL_OPEN_EVENT = 'modal:open' as const;
@@ -247,8 +250,8 @@ export const MODAL_CLOSE_EVENT = 'modal:close' as const;
 export type ModalOpenEventDetail = {
   /** The modal's id. */
   readonly id: string;
-  /** The label its creator gave it — see `ModalInfo.modalType`. */
-  readonly modalType: string;
+  /** The label its creator gave it — see `ModalInfo.template`. */
+  readonly template: string;
   /** `Date.now()` recorded as the opening sequence started. */
   readonly openedAt: number;
 };
@@ -257,8 +260,8 @@ export type ModalOpenEventDetail = {
 export type ModalCloseEventDetail = {
   /** The modal's id. */
   readonly id: string;
-  /** The label its creator gave it — see `ModalInfo.modalType`. */
-  readonly modalType: string;
+  /** The label its creator gave it — see `ModalInfo.template`. */
+  readonly template: string;
   /** The reason it closed with, if it had one. */
   readonly reason: string | undefined;
   /** `Date.now()` recorded when it opened — subtract for the time it stayed up. */
@@ -289,7 +292,7 @@ declare global {
  * via `useSyncExternalStore`.
  *
  * Everything else is derivable from `openDialogs`: counts via `.length`,
- * blocking vs non-blocking via `ModalInfo.nonModal`, and stack position via
+ * modal vs non-modal via `ModalInfo.nonModal`, and stack position via
  * array index (the array is ordered bottom to top by open sequence).
  */
 export type DialogManagerSnapshot = {
@@ -461,7 +464,7 @@ function ensureStyles() {
 type RegistryEntry = {
   readonly store: RegisteredStore;
   readonly unsubscribe: () => void;
-  readonly modalType: string;
+  readonly template: string;
   readonly nonModal: boolean;
   /**
    * Set when the dialog agreed to answer bridged opens. Absent means it refuses them — the
@@ -478,7 +481,7 @@ type RegistryEntry = {
    * stable sort then falls back to registry insertion order, which is mount order and has
    * nothing to do with which modal opened last. This never ties.
    */
-  readonly openSeq: number;
+  readonly openSequence: number;
 };
 
 type OpenEntry = { readonly id: string; readonly entry: RegistryEntry };
@@ -497,8 +500,8 @@ type OpenEntry = { readonly id: string; readonly entry: RegistryEntry };
  *
  * @example
  * // Its own manager, outside React — `DialogManagerProvider` builds one for a subtree itself.
- * const dm = createDialogManager();
- * const stop = dm.subscribe((event) => analytics.track(event.type, { id: event.id }));
+ * const manager = createDialogManager();
+ * const stop = manager.subscribe((event) => analytics.track(event.type, { id: event.id }));
  */
 export function createDialogManager(): DialogManager {
   const log = createLogger('manager');
@@ -508,7 +511,7 @@ export function createDialogManager(): DialogManager {
 
   const registry = new Map<string, RegistryEntry>();
   const listeners = new Set<DialogManagerSubscriber>();
-  /** Incremented on every open; see `RegistryEntry.openSeq`. */
+  /** Incremented on every open; see `RegistryEntry.openSequence`. */
   let openSequence = 0;
   // Observable snapshot cell (consumed by `useDialogManager` via useSyncExternalStore).
   const snapshotStore = createStore(emptySnapshot);
@@ -545,13 +548,13 @@ export function createDialogManager(): DialogManager {
       isPreparing,
       isForeground: id === topId,
       openedAt: entry.openedAt,
-      modalType: entry.modalType,
+      template: entry.template,
       nonModal: entry.nonModal,
     };
   }
 
   /** Create a null-object default for an unregistered modal id. */
-  function toDefaultModalInfo(id: string): UnregisteredModalInfo {
+  function toUnregisteredModalInfo(id: string): UnregisteredModalInfo {
     return {
       id,
       exists: false,
@@ -597,18 +600,18 @@ export function createDialogManager(): DialogManager {
   }
 
   /** Reads the snapshot — call only after `notifyChange()` for the same transition. */
-  function updateBodyOverflow() {
+  function syncBodyScrollLock() {
     if (typeof document === 'undefined') {
       return;
     }
 
     ensureStyles();
 
-    // Non-modal dialogs never lock scrolling — only blocking (modal) ones do.
-    const hasBlockingOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {
+    // Non-modal dialogs never lock scrolling — only modal ones do.
+    const hasModalOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {
       return !d.nonModal;
     });
-    if (hasBlockingOpen) {
+    if (hasModalOpen) {
       lockBodyScroll(lockOwner);
     } else {
       unlockBodyScroll(lockOwner);
@@ -620,13 +623,13 @@ export function createDialogManager(): DialogManager {
   /**
    * Build an immutable snapshot from the current registry state.
    *
-   * `openDialogs` is sorted by `openSeq` (bottom of the stack first), so the array index
+   * `openDialogs` is sorted by `openSequence` (bottom of the stack first), so the array index
    * doubles as the stack position and the last element is the foreground modal. Not by
-   * `openedAt` — see `RegistryEntry.openSeq` for why a wall clock cannot order this.
+   * `openedAt` — see `RegistryEntry.openSequence` for why a wall clock cannot order this.
    */
   function computeSnapshot(): DialogManagerSnapshot {
     const openEntries = getOpenEntries().toSorted((a, b) => {
-      return a.entry.openSeq - b.entry.openSeq;
+      return a.entry.openSequence - b.entry.openSequence;
     });
     const topId = openEntries.at(-1)?.id;
 
@@ -648,7 +651,7 @@ export function createDialogManager(): DialogManager {
    * and emit events to external listeners.
    */
   function register(id: string, store: RegisteredStore, options: RegisterOptions = {}) {
-    const { modalType = 'modal', nonModal = false, onOpenRequest } = options;
+    const { template = 'modal', nonModal = false, onOpenRequest } = options;
     const initial = store.getSnapshot();
     let prevPhase = initial.phase;
     let prevIsPreparing = initial.isPreparing;
@@ -668,9 +671,9 @@ export function createDialogManager(): DialogManager {
         const openedAt = Date.now();
         if (entry) {
           openSequence += 1;
-          registry.set(id, { ...entry, openedAt, openSeq: openSequence });
+          registry.set(id, { ...entry, openedAt, openSequence });
         }
-        dispatchModalEvent(MODAL_OPEN_EVENT, { id, modalType, openedAt });
+        dispatchModalEvent(MODAL_OPEN_EVENT, { id, template, openedAt });
       }
 
       // ── Fully opened: phase is 'open' AND prepare has completed ──
@@ -690,7 +693,7 @@ export function createDialogManager(): DialogManager {
         emit({ type: 'close', id, reason });
         dispatchModalEvent(MODAL_CLOSE_EVENT, {
           id,
-          modalType,
+          template,
           reason,
           openedAt: entry?.openedAt ?? 0,
         });
@@ -701,7 +704,7 @@ export function createDialogManager(): DialogManager {
       // Recompute after every observed transition (including 'closing') so
       // the snapshot — which lookup() also reads — never lags the registry.
       notifyChange();
-      updateBodyOverflow();
+      syncBodyScrollLock();
     });
 
     // Two live registrations cannot share an id: `registry` holds one entry per id, so the
@@ -718,13 +721,13 @@ export function createDialogManager(): DialogManager {
     registry.set(id, {
       store,
       unsubscribe,
-      modalType,
+      template,
       nonModal,
       // Spread rather than always-present: `exactOptionalPropertyTypes` distinguishes "absent"
       // from "explicitly undefined", and absent is what "this dialog refuses" is spelled as.
       ...(onOpenRequest !== undefined && { onOpenRequest }),
       openedAt: 0,
-      openSeq: 0,
+      openSequence: 0,
     });
     log('Registered', { id, registeredCount: registry.size });
     notifyChange();
@@ -757,14 +760,14 @@ export function createDialogManager(): DialogManager {
       emit({ type: 'close', id, reason: 'dismiss' });
       dispatchModalEvent(MODAL_CLOSE_EVENT, {
         id,
-        modalType: entry.modalType,
+        template: entry.template,
         reason: 'dismiss',
         openedAt: entry.openedAt,
       });
     }
 
     notifyChange();
-    updateBodyOverflow();
+    syncBodyScrollLock();
   }
 
   // ── Lookup API ────────────────────────────────────────────────────────────
@@ -783,7 +786,7 @@ export function createDialogManager(): DialogManager {
       }
       const entry = registry.get(id);
       // A registered-but-closed modal is never the foreground — topId undefined.
-      return entry ? toModalInfo(id, entry, undefined) : toDefaultModalInfo(id);
+      return entry ? toModalInfo(id, entry, undefined) : toUnregisteredModalInfo(id);
     },
 
     exists(id: string): boolean {

@@ -65,20 +65,20 @@ test.describe('buildModalOptions', () => {
   });
 
   test('the template names itself, and the caller has no way to rename it', () => {
-    // `modalType` is how a cross-cutting listener tells one kind of dialog from another, so it is
+    // `template` is how a cross-cutting listener tells one kind of dialog from another, so it is
     // the template's to state. `TemplateCommonOptions` is stated as a *complement* — it omits the
     // five keys a template owns — which is what makes the override below a compile error rather
     // than a runtime rule someone has to remember to enforce.
     const built = buildModalOptions<void, unknown, string, DialogStyle, null>(base, {
       animation: DEFAULT_FADE_ANIMATION,
-      modalType: 'slide',
+      template: 'slide',
     });
-    expect(built.modalType).toBe('slide');
+    expect(built.template).toBe('slide');
 
     void buildModalOptions<void, unknown, string, DialogStyle, null>(
-      // @ts-expect-error a template's options deliberately have no `modalType` to pass
-      { ...base, modalType: 'something-else' },
-      { animation: DEFAULT_FADE_ANIMATION, modalType: 'slide' }
+      // @ts-expect-error a template's options deliberately have no `template` to pass
+      { ...base, template: 'something-else' },
+      { animation: DEFAULT_FADE_ANIMATION, template: 'slide' }
     );
   });
 

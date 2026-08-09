@@ -11,6 +11,66 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Changed — a core terminology pass, and the vocabulary written down
+
+A third naming sweep over the framework-free core. Two of the four findings are the previous two
+passes finishing their own work, which is the argument for writing the rules down rather than
+re-deriving them: `src/CLAUDE.md` now opens with a **vocabulary table**, so the next pass has
+something to check against instead of a memory of what was decided.
+
+**`modalType` → `template`**, and it was a word contradicting itself. `data-modal-type` on the
+element is `'modal' | 'non-modal'` — the variant, the library's, two values. `ModalInfo.modalType`
+was a free-form label the library carries and never reads, and it defaults to `'modal'`. So a
+`nonModal: true` dialog naming no template registered `modalType: 'modal'` while carrying
+`data-modal-type="non-modal"`, and both were correct about different things. `template` is what
+the field actually holds: `useMessageModal` reports `'message'`, `useSlideModal` `'slide'`, and a
+template you write names itself. Renamed on `UseModalBaseOptions`, `RegisterOptions`,
+`RegisteredModalInfo`, and both DOM event details — public, and breaking.
+
+**`blocking` / `non-blocking` is gone.** 2026-08-08 removed it from a `getOpen()` filter argument
+as "a third vocabulary for a distinction that already had two agreeing ones", and left it standing
+in `hasBlockingOpen`, in both `ModalVariant` branch summaries, in `scroll-lock.ts`'s header, in a
+story file, its harnesses, six test ids and four doc pages. A vocabulary retired in one place and
+not the rest is a vocabulary that comes back. `blocking.story.tsx` → `modal-variant.story.tsx`;
+the word survives only where it is a verb (a modal dialog blocks the page).
+
+**`resolveOpen` → `finishPreparing`, `openSignal` → `prepareSignal`.** The `onOpen → prepare`
+rename claimed the pair "teaches itself"; these two were the counterexample, and `openSignal` read
+as a signal that fires on open when it is one that aborts on close. Named for the cause now, with
+`prepareController` behind them. Internal — neither is on the `RegisteredStore` port, so no
+binding author is affected.
+
+**`dismissKeyIsOwnedByAction` deleted.** Unreachable: nothing imported it but its own test, while
+`attach-keydown.ts` asked the same question through `engine.ownsHotkey`. Three names for one
+question, one of them dead. `action-engine.test.ts` already pins the label-comparison behaviour
+its test was covering.
+
+Also in this pass, internal only: `resolveModalConfig` → `resolveModalOptions` (with
+`UnresolvedModalOptions` / `ResolvedModalOptions` — "config" appeared in one file and "options"
+everywhere else), `openSequence` → `syncOpenSequence` so the lifecycle pair reads as siblings and
+does not shadow the manager's open counter, `ModalDomContext.dm` → `manager` (the one abbreviation
+among `store` / `getDialog` / `modalId` / `phase`), `primaryProp` → `primaryProperty`,
+`EngineSnapshot` → `ActionEngineSnapshot`, `FocusManagementOptions` → `FocusCoordinatorOptions`,
+`RegistryEntry.openSeq` → `openSequence`, `toDefaultModalInfo` → `toUnregisteredModalInfo`,
+`updateBodyOverflow` → `syncBodyScrollLock`.
+
+Two deliberate non-renames, recorded so they are not re-opened. `DialogManagerSnapshot.openDialogs`
+holds `RegisteredModalInfo` and so breaks the dialog/modal rule — applied consistently that rule
+renames `DialogManager` itself, which is the package's front door, so the rule is written down and
+the exception named rather than 59 public sites churned. And `ModalRenderArgs` / `BaseRenderContext`
+stay two words for one shape: the alias is the seam `SlideModalRenderContext` intersects, "args" is
+right for a callback parameter and "context" for what a template hands its render.
+
+Comments naming things that no longer exist went with it — `useDialogLifecycle`, `useDialogKeydown`,
+`useClickOutside`, `root-react-free.test.ts`, the action "marker" and its "config key", and a
+`requestOpen(onOpened?)` still documented on the store in `src/CLAUDE.md`, which the rename to
+`beginOpen` the day before had not reached.
+
+534 tests, `yarn check`, `yarn verify:all` (the built `.d.ts` included — it caught a `modalType`
+left in `verify-package.mjs`'s own fixture) and a playground build, which caught the other one: a
+`{@link RegisteredModalInfo.template}` typedoc cannot resolve through an intersection, and the
+`/api` plugin treats warnings as errors.
+
 ### Fixed — a `<dialog>`'s last fractional pixel, and the border that lived in it
 
 Checkout's modal in the microfrontend demo was missing its right border. Only that one, in every

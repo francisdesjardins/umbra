@@ -2,7 +2,7 @@
  * Body scroll lock with scrollbar-width compensation.
  *
  * Framework-agnostic: plain DOM, no React. Used by the dialog manager whenever at least one
- * *blocking* (modal) dialog is open.
+ * *modal* (blocking, `showModal()`) dialog is open.
  *
  * Why the compensation matters: hiding `overflow` removes a classic (space-taking) scrollbar,
  * which widens the viewport by its width and shifts every centered or right-aligned element —
@@ -35,7 +35,7 @@ export const BODY_LOCK_ATTR = 'data-dialog-open';
  *
  * Module-level because the lock target (`document.body`) is global — two manager instances
  * share one body. A shared *boolean* is not enough, though: each manager calls
- * `unlockBodyScroll()` whenever it observes a transition and finds nothing blocking open, and
+ * `unlockBodyScroll()` whenever it observes a transition and finds no modal dialog open, and
  * with last-writer-wins that releases a lock another manager is still holding. A page with a
  * provider-scoped manager next to the singleton would then scroll behind an open modal.
  *

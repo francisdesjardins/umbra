@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createActionEngine, type EngineSnapshot } from '../../actions/action-engine.js';
+import { createActionEngine, type ActionEngineSnapshot } from '../../actions/action-engine.js';
 import { createActionFactory } from '../action-factory.js';
 import type { ActionClickEvent } from '../../actions/types.js';
 
@@ -12,7 +12,7 @@ import type { ActionClickEvent } from '../../actions/types.js';
  * three live props are getters. Both halves are assertable here, with neither framework present.
  */
 
-const idle: EngineSnapshot = { states: {}, hasRunningAction: false, error: null };
+const idle: ActionEngineSnapshot = { states: {}, hasRunningAction: false, error: null };
 
 /** The structural slice an action's `onClick` reads — no cast needed, which is the point. */
 const clickEvent = (defaultPrevented = false): ActionClickEvent => {
@@ -42,7 +42,7 @@ test.describe('the props an action returns', () => {
 
   test('carry the canonical hotkey label, not the string as written', () => {
     // `aria-keyshortcuts` is what hotkey dispatch finds the button by, and what
-    // `dismissKeyIsOwnedByAction` compares against — so all three have to agree by construction.
+    // `engine.ownsHotkey` compares against — so all three have to agree by construction.
     const engine = createActionEngine<void>('label');
     const action = createActionFactory(engine, () => {
       return idle;
@@ -68,7 +68,7 @@ test.describe('the live props', () => {
     // The whole reason `readState` is a parameter. Swap what it returns and the *same* props
     // object reports the new value — which is a re-render for React and a tracked read for Solid.
     const engine = createActionEngine<void>('live');
-    let snapshot: EngineSnapshot = idle;
+    let snapshot: ActionEngineSnapshot = idle;
     const action = createActionFactory(engine, () => {
       return snapshot;
     });
@@ -92,7 +92,7 @@ test.describe('the live props', () => {
     // `data-loading` is this action's; `disabled` is the modal's. Two different scopes, which is
     // why they are two props rather than one.
     const engine = createActionEngine<void>('other');
-    const snapshot: EngineSnapshot = {
+    const snapshot: ActionEngineSnapshot = {
       states: { other: { isRunning: true, error: null } },
       hasRunningAction: true,
       error: null,

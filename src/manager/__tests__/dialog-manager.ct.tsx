@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/experimental-ct-react';
 import {
-  BlockingHarness,
-  BlockingLookupHarness,
+  ModalVariantHarness,
+  ModalVariantLookupHarness,
   DomEventHarness,
   EventSubscribeHarness,
   ImperativeHarness,
@@ -121,7 +121,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('stack-order')).toHaveText('');
   });
 
-  test('modal:open fires at start of opening sequence with correct modalType', async ({
+  test('modal:open fires at start of opening sequence with correct template', async ({
     mount,
     page,
   }) => {
@@ -130,7 +130,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-modal:modal');
   });
 
-  test('modal:close fires after closing sequence with correct modalType and reason', async ({
+  test('modal:close fires after closing sequence with correct template and reason', async ({
     mount,
     page,
   }) => {
@@ -140,7 +140,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-modal:modal:ok');
   });
 
-  test('slide modal dispatches modal:open and modal:close with modalType slide', async ({
+  test('slide modal dispatches modal:open and modal:close with template slide', async ({
     mount,
     page,
   }) => {
@@ -151,7 +151,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-slide:slide:ok');
   });
 
-  test('message modal dispatches modal:open and modal:close with modalType message', async ({
+  test('message modal dispatches modal:open and modal:close with template message', async ({
     mount,
     page,
   }) => {
@@ -241,7 +241,7 @@ test.describe('lookup', () => {
     await expect(page.getByTestId('result')).toContainText('a-exists:true');
     await expect(page.getByTestId('result')).toContainText('a-open:true');
     await expect(page.getByTestId('result')).toContainText('a-fg:true');
-    await expect(page.getByTestId('result')).toContainText('a-type:modal');
+    await expect(page.getByTestId('result')).toContainText('a-template:modal');
     await expect(page.getByTestId('result')).toContainText('b-exists:true');
     await expect(page.getByTestId('result')).toContainText('b-open:false');
     await expect(page.getByTestId('result')).toContainText('unknown-exists:false');
@@ -309,90 +309,87 @@ test.describe('lookup', () => {
   });
 });
 
-test.describe('blocking / nonBlocking', () => {
-  test('blocking snapshot fields update when a blocking modal opens and closes', async ({
-    mount,
-    page,
-  }) => {
-    await mount(<BlockingHarness />);
-    await expect(page.getByTestId('has-blocking')).toHaveText('no');
-    await expect(page.getByTestId('blocking-count')).toHaveText('0');
+test.describe('modal / non-modal', () => {
+  test('the modal fields update when a modal dialog opens and closes', async ({ mount, page }) => {
+    await mount(<ModalVariantHarness />);
+    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('modal-count')).toHaveText('0');
 
-    await page.getByRole('button', { name: 'Open Blocking' }).click();
-    await expect(page.getByTestId('has-blocking')).toHaveText('yes');
-    await expect(page.getByTestId('blocking-count')).toHaveText('1');
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('no');
-    await expect(page.getByTestId('non-blocking-count')).toHaveText('0');
+    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await expect(page.getByTestId('has-modal')).toHaveText('yes');
+    await expect(page.getByTestId('modal-count')).toHaveText('1');
+    await expect(page.getByTestId('has-non-modal')).toHaveText('no');
+    await expect(page.getByTestId('non-modal-count')).toHaveText('0');
 
-    await page.getByRole('button', { name: 'Close Blocking' }).click();
-    await expect(page.getByTestId('has-blocking')).toHaveText('no');
-    await expect(page.getByTestId('blocking-count')).toHaveText('0');
+    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('modal-count')).toHaveText('0');
   });
 
-  test('nonBlocking snapshot fields update when a nonModal opens and closes', async ({
+  test('the non-modal fields update when a non-modal dialog opens and closes', async ({
     mount,
     page,
   }) => {
-    await mount(<BlockingHarness />);
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('no');
+    await mount(<ModalVariantHarness />);
+    await expect(page.getByTestId('has-non-modal')).toHaveText('no');
 
-    await page.getByRole('button', { name: 'Open Non-Blocking' }).click();
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('yes');
-    await expect(page.getByTestId('non-blocking-count')).toHaveText('1');
-    await expect(page.getByTestId('has-blocking')).toHaveText('no');
-    await expect(page.getByTestId('blocking-count')).toHaveText('0');
+    await page.getByRole('button', { name: 'Open Non-Modal' }).click();
+    await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
+    await expect(page.getByTestId('non-modal-count')).toHaveText('1');
+    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('modal-count')).toHaveText('0');
     await expect(page.getByTestId('has-any-open')).toHaveText('yes');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    await page.getByRole('button', { name: 'Close Non-Blocking' }).click();
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('no');
-    await expect(page.getByTestId('non-blocking-count')).toHaveText('0');
+    await page.getByRole('button', { name: 'Close Non-Modal' }).click();
+    await expect(page.getByTestId('has-non-modal')).toHaveText('no');
+    await expect(page.getByTestId('non-modal-count')).toHaveText('0');
   });
 
-  test('mixed blocking + nonBlocking modals track independently', async ({ mount, page }) => {
-    await mount(<BlockingHarness />);
+  test('a modal and a non-modal dialog track independently', async ({ mount, page }) => {
+    await mount(<ModalVariantHarness />);
 
-    // Open non-blocking first (it's clickable behind blocking modal)
-    await page.getByRole('button', { name: 'Open Non-Blocking' }).click();
+    // Open the non-modal first — it is clickable behind the modal one
+    await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('has-blocking')).toHaveText('no');
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('yes');
+    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
 
-    // Open blocking modal
-    await page.getByRole('button', { name: 'Open Blocking' }).click();
+    // Open the modal dialog
+    await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('2');
-    await expect(page.getByTestId('has-blocking')).toHaveText('yes');
-    await expect(page.getByTestId('blocking-count')).toHaveText('1');
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('yes');
-    await expect(page.getByTestId('non-blocking-count')).toHaveText('1');
+    await expect(page.getByTestId('has-modal')).toHaveText('yes');
+    await expect(page.getByTestId('modal-count')).toHaveText('1');
+    await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
+    await expect(page.getByTestId('non-modal-count')).toHaveText('1');
 
-    // Close blocking modal — non-blocking still open
-    await page.getByRole('button', { name: 'Close Blocking' }).click();
+    // Close the modal dialog — the non-modal one stays open
+    await page.getByRole('button', { name: 'Close Modal' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('has-blocking')).toHaveText('no');
-    await expect(page.getByTestId('has-non-blocking')).toHaveText('yes');
+    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
 
-    // Close non-blocking
-    await page.getByRole('button', { name: 'Close Non-Blocking' }).click();
+    // Close the non-modal one
+    await page.getByRole('button', { name: 'Close Non-Modal' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('0');
     await expect(page.getByTestId('has-any-open')).toHaveText('no');
   });
 
-  test('lookup blocking/nonBlocking methods return correct results', async ({ mount, page }) => {
-    await mount(<BlockingLookupHarness />);
+  test('getOpen() filters by variant', async ({ mount, page }) => {
+    await mount(<ModalVariantLookupHarness />);
 
     // Open both
-    await page.getByRole('button', { name: 'Open Non-Blocking' }).click();
-    await page.getByRole('button', { name: 'Open Blocking' }).click();
+    await page.getByRole('button', { name: 'Open Non-Modal' }).click();
+    await page.getByRole('button', { name: 'Open Modal' }).click();
 
-    // Query from outside (non-blocking doesn't block clicks)
+    // Query from outside — a non-modal dialog does not block clicks
     await page.getByRole('button', { name: 'Query' }).click();
-    await expect(page.getByTestId('lookup-result')).toContainText('blocking:true');
-    await expect(page.getByTestId('lookup-result')).toContainText('blockingCount:1');
-    await expect(page.getByTestId('lookup-result')).toContainText('blockingIds:bl-modal');
-    await expect(page.getByTestId('lookup-result')).toContainText('nonBlocking:true');
-    await expect(page.getByTestId('lookup-result')).toContainText('nonBlockingCount:1');
-    await expect(page.getByTestId('lookup-result')).toContainText('nonBlockingIds:bl-non-modal');
+    await expect(page.getByTestId('lookup-result')).toContainText('modal:true');
+    await expect(page.getByTestId('lookup-result')).toContainText('modalCount:1');
+    await expect(page.getByTestId('lookup-result')).toContainText('modalIds:lookup-modal');
+    await expect(page.getByTestId('lookup-result')).toContainText('nonModal:true');
+    await expect(page.getByTestId('lookup-result')).toContainText('nonModalCount:1');
+    await expect(page.getByTestId('lookup-result')).toContainText('nonModalIds:lookup-non-modal');
   });
 });
 
@@ -499,7 +496,7 @@ test.describe('dialogManager — scroll lock', () => {
       return document.body.style.paddingRight;
     });
 
-    // A second blocking modal on top must not add padding again. Opened from *inside* the
+    // A second modal dialog on top must not add padding again. Opened from *inside* the
     // first modal — the top-layer backdrop blocks controls outside the dialog.
     await page.getByRole('button', { name: 'Stack Second Modal' }).click();
     await expect(page.getByTestId('modal-scroll-lock-modal-2')).toBeVisible();
@@ -522,15 +519,15 @@ test.describe('dialogManager — scroll lock', () => {
   test('a second manager does not release a lock it never took', async ({ mount, page }) => {
     await mount(<ScrollLockTwoManagersHarness />);
 
-    await page.getByRole('button', { name: 'Open Blocking' }).click();
-    await expect(page.getByTestId('modal-two-managers-blocking')).toBeVisible();
+    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await expect(page.getByTestId('modal-two-managers-modal')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 
     // Registry churn in the *nested* manager — which has nothing open and so never locked.
     await page.getByRole('button', { name: 'Unmount Bystander' }).click();
 
-    // The blocking modal is still open, so the lock must still be held.
-    await expect(page.getByTestId('modal-two-managers-blocking')).toBeVisible();
+    // The modal dialog is still open, so the lock must still be held.
+    await expect(page.getByTestId('modal-two-managers-modal')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
   });
 });

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
-import { createModalRuntime, resolveModalConfig, teardownModal } from '../modal-runtime.js';
+import { createModalRuntime, resolveModalOptions, teardownModal } from '../modal-runtime.js';
 
 /**
  * The parts of a modal both bindings share, tested where they live rather than twice through two
@@ -21,14 +21,14 @@ test.afterEach(() => {
   frames.restore();
 });
 
-test.describe('resolveModalConfig', () => {
+test.describe('resolveModalOptions', () => {
   test('applies the defaults a bare modal relies on', () => {
-    expect(resolveModalConfig({})).toMatchObject({
+    expect(resolveModalOptions({})).toMatchObject({
       isNonModal: false,
       shouldPortal: false,
       dismissWhilePreparing: true,
       dismissKey: 'Escape',
-      modalType: 'modal',
+      template: 'modal',
       // `undefined`, not `false`: it means "decide from whether any action was drawn", which is
       // a third state the backdrop rule needs and a boolean could not carry.
       dismissOnBackdropClick: undefined,
@@ -37,39 +37,39 @@ test.describe('resolveModalConfig', () => {
   });
 
   test('reads dismissOnBackdropClick only on the modal branch', () => {
-    expect(resolveModalConfig({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(true);
+    expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(true);
 
     // A non-modal dialog has no backdrop. The option cannot be passed (it is `never` there), and
     // one arriving anyway — from an untyped caller — must not be honoured.
     expect(
-      resolveModalConfig({ nonModal: true, dismissOnClickOutside: true }).dismissOnBackdropClick
+      resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnBackdropClick
     ).toBeUndefined();
   });
 
   test('reads dismissOnClickOutside only on the non-modal branch', () => {
     expect(
-      resolveModalConfig({ nonModal: true, dismissOnClickOutside: true }).dismissOnClickOutside
+      resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnClickOutside
     ).toBe(true);
     // Defaults to false even on its own branch: a panel that dismisses on any outside click is
     // an opt-in, because it sits over a live page.
-    expect(resolveModalConfig({ nonModal: true }).dismissOnClickOutside).toBe(false);
-    expect(resolveModalConfig({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(false);
+    expect(resolveModalOptions({ nonModal: true }).dismissOnClickOutside).toBe(false);
+    expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(false);
   });
 
   test('dismissKey: false survives, because it is not "unset"', () => {
     // `?? Key.Escape` and not `|| Key.Escape` — `false` disables key dismissal entirely, and a
     // truthiness check would silently turn it back on.
-    expect(resolveModalConfig({ dismissKey: false }).dismissKey).toBe(false);
-    expect(resolveModalConfig({ dismissKey: 'Ctrl+k' }).dismissKey).toBe('Ctrl+k');
+    expect(resolveModalOptions({ dismissKey: false }).dismissKey).toBe(false);
+    expect(resolveModalOptions({ dismissKey: 'Ctrl+k' }).dismissKey).toBe('Ctrl+k');
   });
 
   test('threads the variant into the placement table', () => {
-    expect(resolveModalConfig({}).placement).toEqual({ host: null, dialog: {} });
-    expect(resolveModalConfig({ nonModal: true, portal: true }).placement.host).toBeNull();
+    expect(resolveModalOptions({}).placement).toEqual({ host: null, dialog: {} });
+    expect(resolveModalOptions({ nonModal: true, portal: true }).placement.host).toBeNull();
     // Contained: the dialog needs a host to be positioned against.
-    expect(resolveModalConfig({ nonModal: true }).placement.host).not.toBeNull();
+    expect(resolveModalOptions({ nonModal: true }).placement.host).not.toBeNull();
     expect(
-      resolveModalConfig({ nonModal: true, clipContainer: true }).placement.host
+      resolveModalOptions({ nonModal: true, clipContainer: true }).placement.host
     ).toMatchObject({ overflow: 'clip' });
   });
 });
@@ -86,7 +86,7 @@ test.describe('createModalRuntime', () => {
     expect(store.getSnapshot().phase).toBe('opening');
     expect(settled).toBe(false);
 
-    store.resolveOpen();
+    store.finishPreparing();
     await opening;
     expect(settled).toBe(true);
   });
@@ -140,7 +140,7 @@ test.describe('teardownModal', () => {
   test('closes an open modal and reports it through onClose', () => {
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-open');
-    dm.register('teardown-open', store, { modalType: 'modal', nonModal: false });
+    dm.register('teardown-open', store, { template: 'modal', nonModal: false });
     store.beginOpen();
 
     const reasons: string[] = [];
@@ -158,10 +158,10 @@ test.describe('teardownModal', () => {
   test('a modal torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
     const { store, openAndWait } = createModalRuntime('teardown-waiting');
-    dm.register('teardown-waiting', store, { modalType: 'modal', nonModal: false });
+    dm.register('teardown-waiting', store, { template: 'modal', nonModal: false });
 
     const closed = openAndWait();
-    store.resolveOpen();
+    store.finishPreparing();
 
     teardownModal(store, dm, 'teardown-waiting', null);
 
@@ -179,7 +179,7 @@ test.describe('teardownModal', () => {
     // alive while the awaiting code silently never resumes.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-closed');
-    dm.register('teardown-closed', store, { modalType: 'modal', nonModal: false });
+    dm.register('teardown-closed', store, { template: 'modal', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
       store.addCloseResolver(resolve);

@@ -28,6 +28,6 @@ export type { DialogManagerSnapshot };
  * }
  */
 export function useDialogManager(): DialogManagerSnapshot {
-  const dm = useDialogManagerContext();
-  return useSyncExternalStore(dm.subscribeSnapshot, dm.getSnapshot);
+  const manager = useDialogManagerContext();
+  return useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
 }

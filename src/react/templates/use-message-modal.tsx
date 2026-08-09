@@ -92,10 +92,10 @@ export function useMessageModal<TData = void, TReason extends string = string>(
       ReactNode
     >(options, {
       animation: DEFAULT_FADE_ANIMATION,
-      // Names itself, the way `useSlideModal` reports `'slide'`: `modalType` exists so a
+      // Names itself, the way `useSlideModal` reports `'slide'`: `template` exists so a
       // cross-cutting listener can tell one kind of dialog from another, and a template that
       // inherits the generic default tells it nothing.
-      modalType: 'message',
+      template: 'message',
     }),
     render: (args) => {
       return options.render(args);

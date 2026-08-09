@@ -64,7 +64,7 @@ test.describe('createModalStore — opening', () => {
     });
 
     expect(settled).toBe(0);
-    store.resolveOpen();
+    store.finishPreparing();
     // Both callers settle together when prepare completes — neither hangs, neither double-fires.
     expect(settled).toBe(2);
   });
@@ -73,7 +73,7 @@ test.describe('createModalStore — opening', () => {
     const store = createModalStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
-    store.resolveOpen();
+    store.finishPreparing();
     frames.flush();
     expect(store.getSnapshot().phase).toBe('open');
 
@@ -88,7 +88,7 @@ test.describe('createModalStore — opening', () => {
   test('requestOpen while closing settles immediately and queues no reopen', () => {
     const store = createModalStore('t');
     store.beginOpen();
-    store.resolveOpen();
+    store.finishPreparing();
     store.close('dismiss');
 
     let settled = false;
@@ -118,10 +118,10 @@ test.describe('createModalStore — opening', () => {
     expect(frames.pending()).toBe(1);
   });
 
-  test('resolveOpen clears isPreparing without touching the phase', () => {
+  test('finishPreparing clears isPreparing without touching the phase', () => {
     const store = createModalStore('t');
     store.beginOpen();
-    store.resolveOpen();
+    store.finishPreparing();
     expect(store.getSnapshot().isPreparing).toBe(false);
     expect(store.getSnapshot().phase).toBe('opening');
   });
@@ -269,11 +269,11 @@ test.describe('createModalStore — closing', () => {
   });
 });
 
-test.describe('openSignal', () => {
+test.describe('prepareSignal', () => {
   test('the close is the abort, and it fires as the exit begins', () => {
     const store = createModalStore('signal');
     store.beginOpen();
-    const signal = store.openSignal();
+    const signal = store.prepareSignal();
     expect(signal.aborted).toBe(false);
 
     store.close('dismiss');
@@ -287,12 +287,12 @@ test.describe('openSignal', () => {
   test('a reopen gets a fresh signal rather than the previous aborted one', () => {
     const store = createModalStore('signal-reopen');
     store.beginOpen();
-    const first = store.openSignal();
+    const first = store.prepareSignal();
     store.close('dismiss');
     store.finalize();
 
     store.beginOpen();
-    const second = store.openSignal();
+    const second = store.prepareSignal();
 
     // Inheriting the old controller would cancel the new load before it began — the failure this
     // separation exists to make impossible.
@@ -304,7 +304,7 @@ test.describe('openSignal', () => {
   test('a teardown while open aborts too — a close nobody reported is still a close', () => {
     const store = createModalStore('signal-abandon');
     store.beginOpen();
-    const signal = store.openSignal();
+    const signal = store.prepareSignal();
 
     store.abandon();
 
@@ -313,7 +313,7 @@ test.describe('openSignal', () => {
 
   test('reading it before the first open gives a live signal, not null', () => {
     const store = createModalStore('signal-early');
-    expect(store.openSignal().aborted).toBe(false);
+    expect(store.prepareSignal().aborted).toBe(false);
   });
 });
 

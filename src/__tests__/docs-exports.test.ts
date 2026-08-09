@@ -161,7 +161,7 @@ test.describe('documented imports', () => {
   });
 
   test('the root exports no React bindings', () => {
-    // Complements root-react-free.test.ts: that one proves the root does not *import* React,
+    // Complements entry-isolation.test.ts: that one proves the root does not *import* React,
     // this one proves no hook leaked onto it, which would be a resolvable-but-wrong export.
     const hookLike = rootExports.filter((name) => {
       return /^use[A-Z]/.test(name);

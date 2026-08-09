@@ -64,24 +64,24 @@ export function DomEventHarness() {
   });
 
   useEffect(() => {
-    const prepare = (e: Event) => {
-      const { id, modalType } = (e as CustomEvent<{ id: string; modalType: string }>).detail;
+    const onOpen = (e: Event) => {
+      const { id, template } = (e as CustomEvent<{ id: string; template: string }>).detail;
       setLog((prev) => {
-        return [...prev, `open:${id}:${modalType}`];
+        return [...prev, `open:${id}:${template}`];
       });
     };
     const onClose = (e: Event) => {
-      const { id, modalType, reason } = (
-        e as CustomEvent<{ id: string; modalType: string; reason: string }>
+      const { id, template, reason } = (
+        e as CustomEvent<{ id: string; template: string; reason: string }>
       ).detail;
       setLog((prev) => {
-        return [...prev, `close:${id}:${modalType}:${reason}`];
+        return [...prev, `close:${id}:${template}:${reason}`];
       });
     };
-    document.addEventListener('modal:open', prepare);
+    document.addEventListener('modal:open', onOpen);
     document.addEventListener('modal:close', onClose);
     return () => {
-      document.removeEventListener('modal:open', prepare);
+      document.removeEventListener('modal:open', onOpen);
       document.removeEventListener('modal:close', onClose);
     };
   }, []);

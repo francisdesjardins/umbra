@@ -6,19 +6,20 @@
  * them. It has no opinion about how anything renders, and **React is not required to use
  * it** — the package resolves and runs with React absent entirely.
  *
- * Framework bindings live on their own entry points and are the optional layer:
+ * Bindings live on their own entry points and are the optional layer. Each re-exports
+ * everything here, so an app imports from one path and never needs this one:
  *
- * - `umbra/react` — `useModal`, the template hooks, `ModalOutlet`, the manager hooks. It
- *   re-exports everything here, so a React app imports from that one path and never needs this
- *   one.
+ * - `umbra/react` — `useModal`, the template hooks, `ModalOutlet`, the manager hooks.
+ * - `umbra/solid` — the same surface for Solid, plus `fromStore`.
+ * - `umbra/vanilla` — `bindDialog`, a controller over a `<dialog>` you wrote yourself. No
+ *   framework at all.
  *
- * Any other binding (Solid, Vue, a web component) is the same shape: subscribe to a store,
- * render a `<dialog>`, register it with the manager. Nothing in this module needs to change
- * to support one.
+ * A fourth (Vue, a web component) is the same shape: subscribe to a store, render a `<dialog>`,
+ * register it with the manager. Nothing in this module needs to change to support one.
  *
- * A non-React caller — a service, an API client, a router guard, a worker, an SSR path —
- * imports straight from here. The React-free property is enforced by
- * `src/__tests__/root-react-free.test.ts`, which walks this module's real import graph. It is
+ * A caller with no renderer at all — a service, an API client, a router guard, a worker, an SSR
+ * path — imports straight from here. That freedom is enforced by
+ * `src/__tests__/entry-isolation.test.ts`, which walks this module's real import graph. It is
  * not a comment to be trusted; it is a test.
  */
 

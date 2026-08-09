@@ -9,7 +9,7 @@
  *
  * That is the difference, and it is the whole of it. Everything a modal *is* — phases and the
  * entrance/exit animation, `prepare` with its `AbortSignal`, the dismiss key on the dialog, on
- * its native `cancel` and at the window for a non-blocking panel, click-outside, backdrop
+ * its native `cancel` and at the window for a non-modal panel, click-outside, backdrop
  * hit-testing, opening focus and restoration after a failed action, the registration that makes
  * it addressable by id from another microfrontend, the typed close and `openAndWait` — is the
  * same code the hook bindings run, called in the same order.

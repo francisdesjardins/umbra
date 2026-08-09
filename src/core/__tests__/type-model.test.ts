@@ -80,7 +80,7 @@ voidHandle.close('done', { id: 1 });
 
 // ── Reasons are closed when you close them ───────────────────────────────────
 
-// Declaring the reasons on the hook buys three things the old config-object design could not:
+// Declaring the reasons on the hook buys three things a `TReason` left at `string` cannot:
 // a mistyped reason is rejected, `handle.close` is constrained rather than taking any string,
 // and `switch (result.reason)` is exhaustive. `'dismiss'` is always in the union because the
 // library itself produces it — on Escape, on a backdrop click, and on teardown.
@@ -202,7 +202,7 @@ export type _LooseReasonIsString = Equals<
 // Extending the exclusion list is a deliberate edit here.
 export type _TemplateOptionsAreTheComplement = Equals<
   Exclude<keyof UseModalBaseOptions, keyof TemplateCommonOptions>,
-  'id' | 'render' | 'onClose' | 'modalType' | 'clipContainer'
+  'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 >;
 
 // `Equals` compares assignability, and property modifiers do not affect it — so the assertion

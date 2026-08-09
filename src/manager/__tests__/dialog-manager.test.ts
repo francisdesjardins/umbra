@@ -255,15 +255,15 @@ test.describe('createDialogManager', () => {
     expect(dm.lookup().isForeground('a')).toBe(true);
   });
 
-  test('blocking and non-blocking dialogs are counted separately', () => {
+  test('modal and non-modal dialogs are counted separately', () => {
     const dm = createDialogManager();
-    const blocking = createFakeStore();
-    const nonBlocking = createFakeStore();
-    dm.register('blocking', blocking, { modalType: 'modal', nonModal: false });
-    dm.register('non-blocking', nonBlocking, { modalType: 'modal', nonModal: true });
+    const modal = createFakeStore();
+    const nonModal = createFakeStore();
+    dm.register('modal', modal, { template: 'modal', nonModal: false });
+    dm.register('non-modal', nonModal, { template: 'modal', nonModal: true });
 
-    openFully(blocking);
-    openFully(nonBlocking);
+    openFully(modal);
+    openFully(nonModal);
 
     const lookup = dm.lookup();
     expect(lookup.getOpen()).toHaveLength(2);
@@ -271,12 +271,12 @@ test.describe('createDialogManager', () => {
       lookup.getOpen('modal').map((d) => {
         return d.id;
       })
-    ).toEqual(['blocking']);
+    ).toEqual(['modal']);
     expect(
       lookup.getOpen('non-modal').map((d) => {
         return d.id;
       })
-    ).toEqual(['non-blocking']);
+    ).toEqual(['non-modal']);
     expect(
       dm.getSnapshot().openDialogs.filter((d) => {
         return !d.nonModal;

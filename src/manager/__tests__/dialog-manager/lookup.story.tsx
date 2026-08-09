@@ -27,9 +27,9 @@ export function LookupFindHarness() {
                   `a-open:${String(info.isVisible)}`,
                   `a-phase:${info.phase}`,
                   `a-fg:${String(info.isForeground)}`,
-                  // `modalType` is a registration-time fact, so it only exists on the
+                  // `template` is a registration-time fact, so it only exists on the
                   // `exists: true` branch — narrowing is what makes it readable.
-                  `a-type:${info.exists ? info.modalType : ''}`,
+                  `a-template:${info.exists ? info.template : ''}`,
                   `b-exists:${String(infoB.exists)}`,
                   `b-open:${String(infoB.isVisible)}`,
                   `unknown-exists:${String(infoUnknown.exists)}`,

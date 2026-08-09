@@ -23,7 +23,7 @@ const log = createLogger('action');
  * factory's `disabled` and `data-loading` are computed from a snapshot the binding hands in,
  * not from the engine's own getters, so a fine-grained renderer can track them.
  */
-export type EngineSnapshot = {
+export type ActionEngineSnapshot = {
   readonly states: Readonly<Record<string, ActionState>>;
   /**
    * Pre-computed: true when **any** action is running — the same flag the hook publishes as
@@ -38,7 +38,7 @@ export type EngineSnapshot = {
 const IDLE: ActionState = { isRunning: false, error: null };
 
 export function createActionEngine<TData, TReason extends string = string>(modalId: string) {
-  const initial: EngineSnapshot = { states: {}, hasRunningAction: false, error: null };
+  const initial: ActionEngineSnapshot = { states: {}, hasRunningAction: false, error: null };
 
   /** Every action the last completed render drew, against its hotkey if it declared one. */
   let declared = new Map<string, HotkeyDef | undefined>();

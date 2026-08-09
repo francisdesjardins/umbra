@@ -166,7 +166,7 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
 export type ModalVariant =
   | {
       /**
-       * Blocking dialog (`dialog.showModal()`): backdrop, browser top layer, body scroll
+       * Modal dialog (`dialog.showModal()`): backdrop, browser top layer, body scroll
        * locked. See {@link ModalVariant} for the non-modal alternative.
        * @default false
        */
@@ -183,7 +183,7 @@ export type ModalVariant =
     }
   | {
       /**
-       * Non-blocking dialog (`dialog.show()`): no backdrop, stays out of the top layer so
+       * Non-modal dialog (`dialog.show()`): no backdrop, stays out of the top layer so
        * clicks reach elements underneath, body scroll untouched. Stacking is tracked with a
        * `data-modal-z` attribute on the `<dialog>`. See {@link ModalVariant}.
        */
@@ -364,12 +364,21 @@ export type UseModalBaseOptions<
    */
   readonly role?: 'dialog' | 'alertdialog' | undefined;
   /**
-   * A label for this modal — see `ModalInfo.modalType`. The built-in templates name themselves
-   * (`useMessageModal` reports `'message'`, `useSlideModal` `'slide'`); a template you write
-   * should do the same rather than inheriting the default.
+   * Which template built this dialog — a free-form label the library carries and never reads.
+   * See `ModalInfo.template`.
+   *
+   * The shipped templates name themselves (`useMessageModal` reports `'message'`, `useSlideModal`
+   * `'slide'`) and one you write should too, rather than inheriting the default. It exists so a
+   * cross-cutting listener — analytics, a handler that only cares about drawers — can tell one
+   * kind of dialog from another without keeping its own id-to-kind table.
+   *
+   * **Not the modal/non-modal distinction**, which is `nonModal` and reaches the DOM as
+   * `data-modal-type`. That one is the library's and has two values; this one is yours and has
+   * as many as you like.
+   *
    * @default 'modal'
    */
-  readonly modalType?: string | undefined;
+  readonly template?: string | undefined;
   /**
    * Clip the contained wrapper (`overflow: clip`) so an off-screen (translated) dialog
    * neither shows nor expands the document's scrollable overflow. Set by template hooks

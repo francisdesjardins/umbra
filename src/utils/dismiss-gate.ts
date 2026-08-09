@@ -21,10 +21,11 @@ export type DismissGate = {
  * may close the modal right now.
  *
  * The single source of truth for the guard chain shared by every dismissal path:
- * `useDialogKeydown` (both the dialog-level and non-modal window-level listeners),
- * `useClickOutside`, and the backdrop click handler in `useModal`. Each path adds
- * its own path-specific check on top (backdrop-click opt-in, action hotkey
- * suppression, foreground check, hit testing) — this covers only what they share.
+ * `attachDialogKeydown`, `attachDialogCancel` and `attachWindowDismissKey` (the dialog-level,
+ * native-`cancel` and non-modal window-level listeners), `attachClickOutside`, and
+ * `shouldDismissOnBackdropClick`. Each path adds its own path-specific check on top
+ * (backdrop-click opt-in, action hotkey suppression, foreground check, hit testing) — this
+ * covers only what they share.
  *
  * A modal that is already `'closing'` or `'closed'` cannot be dismissed again;
  * calling `store.close()` in those phases is a no-op, so gating here just avoids

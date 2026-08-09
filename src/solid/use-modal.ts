@@ -9,11 +9,11 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { openSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
+import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import {
   createModalRuntime,
-  resolveModalConfig,
+  resolveModalOptions,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -66,15 +66,15 @@ export function useModal<TData = void, TReason extends string = string>(
     dismissOnClickOutside,
     dismissWhilePreparing,
     dismissKey,
-    modalType,
+    template,
     placement,
-  } = resolveModalConfig(options);
+  } = resolveModalOptions(options);
 
   // Annotated for the reason React's binding gives: an un-annotated fallback leaves a union
   // whose branches disagree about the style parameter `getDialogAnimationStyles` infers.
   const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
 
-  const dm = useDialogManagerContext();
+  const manager = useDialogManagerContext();
 
   const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(modalId);
 
@@ -113,7 +113,7 @@ export function useModal<TData = void, TReason extends string = string>(
   dialog.append(content);
 
   // The dialog's own styles, recomputed per phase. A render effect rather than an effect, so the
-  // exit/entrance state is written before `openSequence` shows the dialog in the same flush.
+  // exit/entrance state is written before `syncOpenSequence` shows the dialog in the same flush.
   let appliedStyle: DialogStyle | undefined;
   createRenderEffect(() => {
     appliedStyle = applyStyle(
@@ -219,11 +219,11 @@ export function useModal<TData = void, TReason extends string = string>(
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 
   const domContext = (): ModalDomContext => {
-    return { store, getDialog, modalId, phase: snapshot().phase, dm };
+    return { store, getDialog, modalId, phase: snapshot().phase, manager };
   };
 
   createEffect(() => {
-    openSequence(domContext(), { prepare: options.prepare, nonModal: isNonModal });
+    syncOpenSequence(domContext(), { prepare: options.prepare, nonModal: isNonModal });
   });
 
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
@@ -240,7 +240,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   createEffect(() => {
     const snap = snapshot();
-    const dom: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, dm };
+    const dom: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
     const keydownOptions = {
       isPreparing: snap.isPreparing,
       onKeyDown: options.onKeyDown,
@@ -293,8 +293,8 @@ export function useModal<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  dm.register(modalId, store, {
-    modalType,
+  manager.register(modalId, store, {
+    template,
     nonModal: isNonModal,
     ...(options.onOpenRequest !== undefined && {
       // Returned, not swallowed: the manager awaits the handler, so an owner that validates
@@ -309,7 +309,7 @@ export function useModal<TData = void, TReason extends string = string>(
   });
 
   onCleanup(() => {
-    teardownModal(store, dm, modalId, getDialog());
+    teardownModal(store, manager, modalId, getDialog());
   });
 
   // ── What the caller places ──────────────────────────────────────────────────
@@ -343,7 +343,7 @@ export function useModal<TData = void, TReason extends string = string>(
     handle,
     action,
     Modal,
-    dialogManager: dm,
+    dialogManager: manager,
     get isVisible() {
       return isVisible();
     },

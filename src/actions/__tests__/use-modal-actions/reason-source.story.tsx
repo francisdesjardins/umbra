@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 import { useModal } from '../../../react/use-modal.js';
 
-/** What the `save` action closes with. Declared on the marker, checked at the modal. */
+/** What the `save` action closes with. Declared on the hook, checked at every door. */
 type SaveResult = { readonly id: number };
 
 /**
- * The config key is the action's close reason, and a marker's declared payload is what its
- * `close(data)` accepts — end to end, through the bridge, into `onClose`.
+ * The reason an action is declared with is the reason the modal closes with, and the payload the
+ * hook declares is what its `close(data)` accepts — end to end, into `onClose`.
  */
 export function ReasonSourceHarness() {
   const [lastReason, setLastReason] = useState('');

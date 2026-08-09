@@ -153,7 +153,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
             dialog: {
               color: 'inherit',
             },
-            // Prevent background scroll when a blocking modal is open (critical on mobile
+            // Prevent background scroll when a modal dialog is open (critical on mobile
             // where touch-scrolling passes through the native backdrop).
             // Non-modal dialogs (data-modal-type="non-modal") leave scroll intact.
             'html:has(dialog[open][data-modal-type="modal"])': {

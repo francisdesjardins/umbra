@@ -60,7 +60,7 @@ export function StackedModalsHarness() {
     },
   });
 
-  // ── Middle: a blocking modal, holding the message modal in its own subtree ──
+  // ── Middle: a modal dialog, holding the message modal in its own subtree ──
   const middle = useModal<void, 'save'>({
     id: 'stack-middle',
     ariaLabel: 'Middle',

@@ -45,7 +45,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
      * A second binding inherits the behaviour instead of re-deriving it, and it can be tested
      * without a browser.
      */
-    let openController: AbortController | null = null;
+    let prepareController: AbortController | null = null;
     let onCloseCallback:
       ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 
@@ -116,8 +116,8 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         log('Open requested', { id });
         // A fresh one per open: a reopen must not inherit the previous open's aborted signal,
         // which would cancel the new load before it began.
-        openController?.abort();
-        openController = new AbortController();
+        prepareController?.abort();
+        prepareController = new AbortController();
         set({ phase: 'opening', isPreparing: true, closeResult: null });
       },
 
@@ -137,7 +137,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
       },
 
       /** `prepare` has settled — release the `open()` promises waiting on it. */
-      resolveOpen(): void {
+      finishPreparing(): void {
         flushOpenResolvers();
         set((s) => {
           return { ...s, isPreparing: false };
@@ -160,7 +160,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         rafId = 0;
         // The close is the abort, and it happens here rather than at the end of the exit
         // animation: nobody is waiting for that request the moment the dialog starts leaving.
-        openController?.abort();
+        prepareController?.abort();
 
         log('Close requested', { id, reason });
 
@@ -210,7 +210,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
        */
       abandon(): void {
         // Torn down while open is a close nobody reported; the work has to stop for it too.
-        openController?.abort();
+        prepareController?.abort();
         flushOpenResolvers();
 
         const pending = closeResolvers.splice(0);
@@ -230,9 +230,9 @@ export function createModalStore<TData = unknown, TReason extends string = strin
        * Created on demand as well as on open, so a caller reading it before the first open gets a
        * live signal rather than having to handle `null`.
        */
-      openSignal(): AbortSignal {
-        openController ??= new AbortController();
-        return openController.signal;
+      prepareSignal(): AbortSignal {
+        prepareController ??= new AbortController();
+        return prepareController.signal;
       },
 
       addCloseResolver(resolver: CloseResolver<TData, TReason>): void {

@@ -6,7 +6,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  *
  * The page is deliberately taller than the viewport so a classic scrollbar is present, and
  * carries a right-aligned marker: hiding `overflow` without compensating the scrollbar width
- * widens the viewport and shifts that marker — the ~15px "jump" a modal used to cause.
+ * widens the viewport and shifts that marker — the ~15px "jump" an uncompensated modal causes.
  *
  * Also renders a `position: fixed` bar that opts into `--dialog-scrollbar-width`, proving the
  * published custom property is usable from user-land (the library never touches fixed elements
@@ -18,7 +18,7 @@ export function ScrollLockHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Blocking modal</p>
+          <p>Modal dialog</p>
           {/* Top-layer rule: a control usable while this modal is open must live inside the
             render callback, since the native backdrop swallows clicks outside the dialog. */}
           <button
@@ -40,14 +40,14 @@ export function ScrollLockHarness() {
     },
   });
 
-  // Second blocking modal, stacked on the first: both lock, but the compensation must be
+  // Second modal dialog, stacked on the first: both lock, but the compensation must be
   // applied exactly once.
   const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Second blocking modal</p>
+          <p>Second modal dialog</p>
           <button
             onClick={() => {
               handle.close('done');

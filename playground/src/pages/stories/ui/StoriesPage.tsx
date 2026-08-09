@@ -71,8 +71,8 @@ import {
   LookupForegroundHarness,
   LookupUnregisteredHarness,
   MultiModalHarness,
-  BlockingHarness,
-  BlockingLookupHarness,
+  ModalVariantHarness,
+  ModalVariantLookupHarness,
   NoProviderHarness,
   ProviderIsolationHarness,
   ScrollLockHarness,
@@ -175,7 +175,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The styling surface',
         description:
-          'The whole of it: --dialog-backdrop for the backdrop, data-modal-id and data-modal-type to reach one dialog or every non-blocking one from CSS. No class names to learn, and nothing that requires knowing how the tree is built.',
+          'The whole of it: --dialog-backdrop for the backdrop, data-modal-id and data-modal-type to reach one dialog or every non-modal one from CSS. No class names to learn, and nothing that requires knowing how the tree is built.',
         component: StylingSurfaceHarness,
         codeKey: 'story-styling-surface',
       },
@@ -572,18 +572,18 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-dm-scroll-lock-two-managers',
       },
       {
-        title: 'Blocking vs Non-Blocking',
+        title: 'Modal vs Non-Modal',
         description:
-          'Modal and non-modal dialogs side by side — only blocking ones lock body scroll, and getOpen() can be filtered to either.',
-        component: BlockingHarness,
-        codeKey: 'story-dm-blocking',
+          'Modal and non-modal dialogs side by side — only modal ones lock body scroll, and getOpen() can be filtered to either.',
+        component: ModalVariantHarness,
+        codeKey: 'story-dm-modal-variant',
       },
       {
-        title: 'Blocking Lookup Queries',
+        title: 'Variant Lookup Queries',
         description:
           "lookup().getOpen('modal') / ('non-modal') read live state at call time, split by how the dialog was shown.",
-        component: BlockingLookupHarness,
-        codeKey: 'story-dm-blocking-lookup',
+        component: ModalVariantLookupHarness,
+        codeKey: 'story-dm-modal-variant-lookup',
       },
       {
         title: 'Provider Isolation',
@@ -616,7 +616,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Scroll Lock Compensation',
         description:
-          'A page taller than the viewport with a right-aligned marker and a fixed bar. Opening the blocking modal locks scrolling and reserves the reclaimed scrollbar width, so nothing shifts; the fixed bar pads itself from --dialog-scrollbar-width. The non-modal never locks.',
+          'A page taller than the viewport with a right-aligned marker and a fixed bar. Opening the modal dialog locks scrolling and reserves the reclaimed scrollbar width, so nothing shifts; the fixed bar pads itself from --dialog-scrollbar-width. The non-modal never locks.',
         component: ScrollLockHarness,
         codeKey: 'story-dm-scroll-lock',
       },
@@ -630,7 +630,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'DOM Events',
         description:
-          'Listens to modal:open and modal:close on document. Verifies id, modalType, and reason in the CustomEvent detail for both modal and slide types.',
+          'Listens to modal:open and modal:close on document. Verifies id, template, and reason in the CustomEvent detail for both modal and slide types.',
         component: DomEventHarness,
         codeKey: 'story-dm-dom-events',
       },

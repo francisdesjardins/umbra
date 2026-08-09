@@ -36,7 +36,7 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
      */
     readonly dialog: HTMLDialogElement;
     /**
-     * The element a *contained* non-blocking panel is positioned against
+     * The element a *contained* non-modal panel is positioned against
      * (`nonModal: true` without `portal`). Defaults to the dialog's parent.
      *
      * It must be sized, because the dialog fills it — see `dialogPlacement`. Ignored for every

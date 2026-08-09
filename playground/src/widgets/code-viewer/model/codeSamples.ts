@@ -81,7 +81,7 @@ import storyActionsHotkeyWhilePreparingSrc from 'umbra/actions/__tests__/use-mod
 import storyUseModalTransitionToggleSrc from 'umbra/react/__tests__/use-modal/transition-toggle.story.tsx?raw';
 import storyUseModalKeyPassthroughSrc from 'umbra/react/__tests__/use-modal/key-passthrough.story.tsx?raw';
 import storyDmScrollLockTwoManagersSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-two-managers.story.tsx?raw';
-import storyDmBlockingSrc from 'umbra/manager/__tests__/dialog-manager/blocking.story.tsx?raw';
+import storyDmModalVariantSrc from 'umbra/manager/__tests__/dialog-manager/modal-variant.story.tsx?raw';
 import storyDmProviderIsolationSrc from 'umbra/manager/__tests__/dialog-manager/provider-isolation.story.tsx?raw';
 import storyUseModalStructuralToggleSrc from 'umbra/react/__tests__/use-modal/structural-toggle.story.tsx?raw';
 
@@ -289,8 +289,8 @@ export const codeSamples: Record<string, string> = {
   'story-use-modal-transition-toggle': storyUseModalTransitionToggleSrc,
   'story-use-modal-key-passthrough': storyUseModalKeyPassthroughSrc,
   'story-dm-scroll-lock-two-managers': storyDmScrollLockTwoManagersSrc,
-  'story-dm-blocking': storyDmBlockingSrc,
-  'story-dm-blocking-lookup': storyDmBlockingSrc,
+  'story-dm-modal-variant': storyDmModalVariantSrc,
+  'story-dm-modal-variant-lookup': storyDmModalVariantSrc,
   'story-dm-provider-isolation': storyDmProviderIsolationSrc,
   'story-dm-no-provider': storyDmProviderIsolationSrc,
   'story-use-modal-structural-toggle': storyUseModalStructuralToggleSrc,

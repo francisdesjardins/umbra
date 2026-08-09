@@ -4,7 +4,7 @@ import {
   restoreFocus,
   settleOpeningFocus,
 } from './focus-policy.js';
-import type { FocusManagementOptions, ModalDomContext } from './attach-types.js';
+import type { FocusCoordinatorOptions, ModalDomContext } from './attach-types.js';
 import type { ModalPhase } from './types.js';
 
 /**
@@ -19,7 +19,7 @@ import type { ModalPhase } from './types.js';
  */
 export function createFocusCoordinator(
   ctx: Pick<ModalDomContext, 'getDialog'>,
-  options: FocusManagementOptions
+  options: FocusCoordinatorOptions
 ) {
   const { getDialog } = ctx;
   const { engine } = options;

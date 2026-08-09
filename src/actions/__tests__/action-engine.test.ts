@@ -160,7 +160,7 @@ test.describe('hotkeys', () => {
 
   test('ownsHotkey compares labels, not raw strings', () => {
     // `'Shift+s'` and `'Shift+S'` are one hotkey — the modifier list discriminates, and CapsLock
-    // must not change which one fires. `dismissKeyIsOwnedByAction` relies on exactly this.
+    // must not change which one fires. The dismiss-key gate in `attach-keydown` relies on exactly this.
     const engine = createActionEngine<void>('labels');
     engine.declare('shout', 'Shift+s');
 

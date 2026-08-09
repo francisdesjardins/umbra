@@ -18,22 +18,22 @@ function BystanderModal() {
 /**
  * Two dialog managers, one body.
  *
- * The blocking modal belongs to the outer manager, so the body scroll lock is held on its
+ * The modal dialog belongs to the outer manager, so the body scroll lock is held on its
  * behalf. The nested provider owns a second, isolated manager with nothing open — and its own
  * registry churn (here, a modal unmounting) must not release a lock it never took.
  *
- * The toggle lives inside the blocking modal's render callback: that modal owns the top layer,
+ * The toggle lives inside the modal dialog's render callback: that modal owns the top layer,
  * so a button outside it would not be clickable while it is open.
  */
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);
 
   const { open, Modal } = useModal<void, 'done'>({
-    id: 'two-managers-blocking',
+    id: 'two-managers-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Blocking modal (manager A)</p>
+          <p>Modal dialog (manager A)</p>
           <button
             onClick={() => {
               setBystanderMounted(false);
@@ -46,7 +46,7 @@ export function ScrollLockTwoManagersHarness() {
               handle.close('done');
             }}
           >
-            Close Blocking
+            Close Modal
           </button>
         </div>
       );
@@ -60,7 +60,7 @@ export function ScrollLockTwoManagersHarness() {
           await open();
         }}
       >
-        Open Blocking
+        Open Modal
       </button>
       <DialogManagerProvider>{bystanderMounted ? <BystanderModal /> : null}</DialogManagerProvider>
       {Modal}

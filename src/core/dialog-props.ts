@@ -21,7 +21,7 @@ export type DialogAttributeOptions = {
  * The attribute set for a `<dialog>`, spreadable onto it in any binding.
  *
  * `data-modal-id` and `data-modal-type` are the styling contract — how user-land CSS reaches one
- * dialog, or every non-blocking one, without knowing anything about the tree it renders in.
+ * dialog, or every non-modal one, without knowing anything about the tree it renders in.
  * `data-testid` is for tests and is deliberately *not* documented as a styling hook.
  */
 export type DialogAttributes = {

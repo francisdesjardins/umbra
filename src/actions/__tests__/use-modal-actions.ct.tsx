@@ -376,7 +376,10 @@ test.describe('action lifecycle logging', () => {
 });
 
 test.describe('action identity and payload', () => {
-  test('the config key is the close reason', async ({ mount, page }) => {
+  test('the reason an action is declared with is the reason it closes with', async ({
+    mount,
+    page,
+  }) => {
     await mount(<ReasonSourceHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Dismiss' }).click();

@@ -1,5 +1,5 @@
 import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
-import type { ActionEngine, EngineSnapshot } from '../actions/action-engine.js';
+import type { ActionEngine, ActionEngineSnapshot } from '../actions/action-engine.js';
 import type { ActionCloseFn, ActionFactory, ActionState } from '../actions/types.js';
 
 /**
@@ -37,7 +37,7 @@ const IDLE: ActionState = { isRunning: false, error: null };
  */
 export function createActionFactory<TData, TReason extends string = string>(
   engine: ActionEngine<TData, TReason>,
-  readState: () => EngineSnapshot
+  readState: () => ActionEngineSnapshot
 ): ActionFactory<TData, TReason> {
   return (reason, handlerOrOptions) => {
     const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;

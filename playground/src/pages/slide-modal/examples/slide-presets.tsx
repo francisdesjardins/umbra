@@ -229,13 +229,13 @@ function ShapeTile({
   options,
   edge,
   dashed = false,
-  prepare,
+  onOpen,
 }: {
   readonly label: string;
   readonly options: string;
   readonly edge: 'right' | 'bottom' | 'top';
   readonly dashed?: boolean;
-  readonly prepare: () => Promise<void> | void;
+  readonly onOpen: () => Promise<void> | void;
 }) {
   const band =
     edge === 'right'
@@ -249,7 +249,7 @@ function ShapeTile({
       component="button"
       type="button"
       onClick={() => {
-        void prepare();
+        void onOpen();
       }}
       sx={{
         gap: 1,
@@ -324,26 +324,26 @@ export function SlidePresetsExample() {
             label="Right drawer"
             options="direction: 'right'"
             edge="right"
-            prepare={drawer.open}
+            onOpen={drawer.open}
           />
           <ShapeTile
             label="Bottom sheet"
             options="direction: 'bottom'"
             edge="bottom"
-            prepare={sheet.open}
+            onOpen={sheet.open}
           />
           <ShapeTile
             label="Command palette"
             options="direction: 'top' · align: 'center'"
             edge="top"
-            prepare={palette.open}
+            onOpen={palette.open}
           />
           <ShapeTile
             label="Contained panel"
             options="nonModal · portal: false"
             edge="right"
             dashed
-            prepare={async () => {
+            onOpen={async () => {
               setSelected(ROWS[0] ?? null);
               await inspector.open();
             }}

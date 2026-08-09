@@ -5,7 +5,7 @@ import { dialogAttributes } from '../dialog-props.js';
  * The attribute table both bindings spread onto their `<dialog>`.
  *
  * Worth pinning because two of these are a *contract*: `data-modal-id` and `data-modal-type` are
- * how user-land CSS reaches one dialog or every non-blocking one, so renaming either breaks
+ * how user-land CSS reaches one dialog or every non-modal one, so renaming either breaks
  * stylesheets that never imported anything. And the aria fields must stay `undefined` rather than
  * empty — a binding that defaulted them would hide a missing accessible name from an audit.
  */

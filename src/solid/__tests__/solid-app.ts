@@ -276,7 +276,7 @@ function SlideApp(): Built {
     }, 'open-count'),
     text(() => {
       const current = info();
-      return current.exists && current.isVisible ? current.modalType : 'none';
+      return current.exists && current.isVisible ? current.template : 'none';
     }, 'lookup-type'),
     h(
       'button',
@@ -317,7 +317,7 @@ function MessageApp(): Built {
     text(lastReason, 'last-reason'),
     text(() => {
       const current = info();
-      return current.exists && current.isVisible ? current.modalType : 'none';
+      return current.exists && current.isVisible ? current.template : 'none';
     }, 'lookup-type'),
     h(
       'button',

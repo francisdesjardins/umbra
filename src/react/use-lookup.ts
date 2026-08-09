@@ -22,8 +22,8 @@ import type { ModalInfo } from '../manager/types.js';
  * }
  */
 export function useLookup(id: string): ModalInfo {
-  const dm = useDialogManagerContext();
-  const snapshot = useSyncExternalStore(dm.subscribeSnapshot, dm.getSnapshot);
+  const manager = useDialogManagerContext();
+  const snapshot = useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
 
   // Linear scan — n is always tiny (1-3 open modals)
   const openModal = snapshot.openDialogs.find((d) => {
@@ -34,5 +34,5 @@ export function useLookup(id: string): ModalInfo {
   }
 
   // Closed or unregistered — derive from imperative lookup
-  return dm.lookup(id);
+  return manager.lookup(id);
 }

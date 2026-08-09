@@ -37,15 +37,19 @@ export type RegisteredModalInfo = ModalInfoBase & {
   /** The discriminant: this modal is registered. */
   readonly exists: true;
   /**
-   * The label its creator gave it, set at registration.
+   * Which template built it, as its creator named it at registration.
    *
    * Any string, and purely informational — nothing in the library reads it. It exists so an
    * application can tell one kind of dialog from another across a cross-cutting listener
    * (analytics, a handler that only cares about drawers) without keeping its own id-to-kind
    * table. `useModal` defaults to `'modal'`, `useSlideModal` reports `'slide'`, and a template
    * you write should name itself too.
+   *
+   * Distinct from `nonModal` below, which is the library's own two-valued distinction and
+   * reaches the DOM as `data-modal-type`. One word for both is a word that contradicts itself:
+   * a `nonModal` dialog naming no template defaults to `'modal'`.
    */
-  readonly modalType: string;
+  readonly template: string;
   /** Whether the modal uses `dialog.show()` instead of `dialog.showModal()`. */
   readonly nonModal: boolean;
 };
@@ -62,7 +66,7 @@ export type UnregisteredModalInfo = ModalInfoBase & {
 /**
  * Rich snapshot of a modal's state at query time, discriminated by `exists`.
  *
- * Always returned by `lookup(id)` — never `undefined`. Reading `modalType` or `nonModal` off
+ * Always returned by `lookup(id)` — never `undefined`. Reading `template` or `nonModal` off
  * one requires narrowing with `exists` first, which is the point: those are registration-time
  * facts and an unregistered modal has none. Queries that can only ever return registered
  * modals (`getOpen`, `getClosed`, `getForeground`, `openDialogs`) are typed

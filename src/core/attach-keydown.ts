@@ -185,7 +185,7 @@ export function attachWindowDismissKey(
   ctx: ModalDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase, dm } = ctx;
+  const { store, getDialog, modalId, phase, manager } = ctx;
   const { isPreparing, dismissKey, engine, nonModal, dismissWhilePreparing } = options;
 
   if (!nonModal || phase === 'closed' || dismissKey === false) {
@@ -197,7 +197,7 @@ export function attachWindowDismissKey(
       return;
     }
     // Only the topmost dialog intercepts the dismiss key — stand down if another dialog is above us.
-    if (!dm.lookup().isForeground(modalId)) {
+    if (!manager.lookup().isForeground(modalId)) {
       return;
     }
 

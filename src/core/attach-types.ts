@@ -22,7 +22,7 @@ export type ModalDomContext = {
   readonly getDialog: GetDialog;
   readonly modalId: string;
   readonly phase: ModalPhase;
-  readonly dm: DialogManager;
+  readonly manager: DialogManager;
 };
 
 /** Options for the opening half of the dialog lifecycle. */
@@ -58,6 +58,6 @@ export type ClickOutsideOptions = {
 };
 
 /** Options for the focus coordinator. */
-export type FocusManagementOptions = {
+export type FocusCoordinatorOptions = {
   readonly engine: ActionGate;
 };

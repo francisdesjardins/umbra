@@ -1,4 +1,7 @@
-export { BlockingHarness, BlockingLookupHarness } from './dialog-manager/blocking.story';
+export {
+  ModalVariantHarness,
+  ModalVariantLookupHarness,
+} from './dialog-manager/modal-variant.story';
 export { DomEventHarness } from './dialog-manager/dom-events.story';
 export { EventSubscribeHarness } from './dialog-manager/event-subscribe.story';
 export { ImperativeHarness } from './dialog-manager/imperative.story';

@@ -26,7 +26,7 @@ const ITEMS: readonly Item[] = [
  * first is a noun standing between them and it.
  *
  * The confirm is opened from *inside* the panel's render, which is not a style choice: the panel
- * is non-blocking here, but a blocking dialog swallows every click outside itself, so a trigger
+ * is non-modal here, but a modal dialog swallows every click outside itself, so a trigger
  * that must work while a modal is open has to live in that modal's tree. The confirm's `<dialog>`
  * therefore nests inside the panel's, and both keep their own Escape and their own hotkey.
  */

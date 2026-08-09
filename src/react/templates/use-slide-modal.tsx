@@ -104,7 +104,7 @@ export function useSlideModal<TData = void, TReason extends string = string>(
     >(options, {
       animation: slideAnimation(options.direction, align),
       style: slideDialogStyle(options.direction, contained, align),
-      modalType: 'slide',
+      template: 'slide',
     }),
     // A slide enters/exits by translating past its container edge; clip the contained
     // wrapper so an off-screen (positive-translate) panel doesn't expand document overflow.

@@ -18,8 +18,11 @@ export type { DialogManagerSnapshot };
  * };
  */
 export function useDialogManager(): DialogManagerSnapshot {
-  const dm = useDialogManagerContext();
-  const snapshot = fromStore({ subscribe: dm.subscribeSnapshot, getSnapshot: dm.getSnapshot });
+  const manager = useDialogManagerContext();
+  const snapshot = fromStore({
+    subscribe: manager.subscribeSnapshot,
+    getSnapshot: manager.getSnapshot,
+  });
 
   return {
     get openDialogs() {

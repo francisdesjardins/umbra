@@ -17,7 +17,7 @@ import type {
  *
  * The five exclusions are exactly what a template does not inherit: `id`, `render` and
  * `onClose` are redeclared by {@link TemplateBaseOptions} (`render` with the template's own
- * context type), while `modalType` and `clipContainer` are the template's to set — a template
+ * context type), while `template` and `clipContainer` are the template's to set — a template
  * names itself, and clipping follows from its animation.
  *
  * Built from the flat `UseModalBaseOptions` and intersected with `ModalVariant` directly, so
@@ -32,7 +32,7 @@ export type TemplateCommonOptions<
   TNode = unknown,
 > = Omit<
   UseModalBaseOptions<TData, TReason, TStyle, TNode>,
-  'id' | 'render' | 'onClose' | 'modalType' | 'clipContainer'
+  'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 > &
   ModalVariant;
 
@@ -120,8 +120,8 @@ function mergeStyle<TStyle extends DialogStyle>(
 }
 
 /**
- * Maps template options to `useModal` options, applying the template's defaults for animation,
- * style and modalType. Eliminates the repeated prop-by-prop passthrough in each template hook.
+ * Maps template options to `useModal` options, applying the template's own animation, style and
+ * name. Eliminates the repeated prop-by-prop passthrough in each template hook.
  *
  * A caller's `style` is merged *over* the template's structural one rather than replacing it:
  * the template's placement is what makes it that template, but sizing is the caller's — a
@@ -140,13 +140,13 @@ export function buildModalOptions<
   defaults: {
     readonly animation: ModalAnimation<TStyle>;
     readonly style?: TStyle | undefined;
-    readonly modalType?: UseModalBaseOptions['modalType'];
+    readonly template?: UseModalBaseOptions['template'];
   }
 ) {
   return {
     ...options,
     animation: options.animation ?? defaults.animation,
     style: mergeStyle(defaults.style, options.style),
-    modalType: defaults.modalType,
+    template: defaults.template,
   };
 }

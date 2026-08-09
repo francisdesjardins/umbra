@@ -6,11 +6,11 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { openSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
+import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
 import { dialogAttributes } from '../core/dialog-props.js';
 import {
   createModalRuntime,
-  resolveModalConfig,
+  resolveModalOptions,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -37,7 +37,7 @@ const log = createLogger('modal');
  * callback; a vanilla binding that did the same would have to invent a renderer, and a library
  * whose first rule is "zero shipped UI" has no business doing that. So the element is yours and
  * the lifecycle is ours: phases and the entrance/exit animation, `prepare` with its `AbortSignal`,
- * the dismiss key (dialog, native `cancel`, and window-level for a non-blocking panel),
+ * the dismiss key (dialog, native `cancel`, and window-level for a non-modal panel),
  * click-outside, backdrop hit-testing, opening focus and restoration, the manager registration
  * that makes it addressable by id, and the typed close.
  *
@@ -66,9 +66,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
 ): DialogController<TData, TReason> {
   const modalId = options.id;
   const { dialog } = options;
-  const dm = options.manager ?? singleton;
+  const manager = options.manager ?? singleton;
 
-  const config = resolveModalConfig(options);
+  const resolved = resolveModalOptions(options);
   // Annotated for the reason the other two bindings give: an un-annotated fallback leaves a union
   // whose branches disagree about the style parameter `getDialogAnimationStyles` infers.
   const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
@@ -84,7 +84,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   for (const [name, value] of Object.entries(
     dialogAttributes({
       modalId,
-      nonModal: config.isNonModal,
+      nonModal: resolved.isNonModal,
       ariaLabel: options.ariaLabel,
       ariaLabelledBy: options.ariaLabelledBy,
       ariaDescribedBy: options.ariaDescribedBy,
@@ -99,14 +99,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
   }
 
-  if (config.placement.host) {
+  if (resolved.placement.host) {
     // A contained panel is positioned `absolute` against a host, and in a binding that owns no
     // markup the host has to be pointed at. The parent is the sane default — it is what the
     // dialog is already inside.
     const host = options.host ?? dialog.parentElement;
     if (host) {
       host.setAttribute('data-modal-container', modalId);
-      applyStyle(host, config.placement.host);
+      applyStyle(host, resolved.placement.host);
     } else {
       log.warn('Contained dialog has no host to position against', { id: modalId });
     }
@@ -118,9 +118,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  dm.register(modalId, store, {
-    modalType: config.modalType,
-    nonModal: config.isNonModal,
+  manager.register(modalId, store, {
+    template: resolved.template,
+    nonModal: resolved.isNonModal,
     ...(options.onOpenRequest !== undefined && {
       // Returned, not swallowed: the manager awaits the handler, so an owner that validates
       // asynchronously still gets to refuse before `requestOpenAndWait` answers.
@@ -140,9 +140,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
       shouldDismissOnBackdropClick(event, dialog, {
         store,
         engine,
-        isNonModal: config.isNonModal,
-        dismissOnBackdropClick: config.dismissOnBackdropClick,
-        dismissWhilePreparing: config.dismissWhilePreparing,
+        isNonModal: resolved.isNonModal,
+        dismissOnBackdropClick: resolved.dismissOnBackdropClick,
+        dismissWhilePreparing: resolved.dismissWhilePreparing,
       })
     ) {
       store.close('dismiss');
@@ -164,16 +164,16 @@ export function bindDialog<TData = void, TReason extends string = string>(
   let attachedFor = '';
 
   const domContext = (phase: DialogSnapshot['phase']): ModalDomContext => {
-    return { store, getDialog, modalId, phase, dm };
+    return { store, getDialog, modalId, phase, manager };
   };
 
   const sync = () => {
     const snapshot = store.getSnapshot();
 
-    // Styles first, so the exit/entrance state is on the element before `openSequence` shows it.
+    // Styles first, so the exit/entrance state is on the element before `syncOpenSequence` shows it.
     appliedStyle = applyStyle(
       dialog,
-      getDialogAnimationStyles(snapshot.phase, animation, options.style, config.placement),
+      getDialogAnimationStyles(snapshot.phase, animation, options.style, resolved.placement),
       appliedStyle
     );
 
@@ -188,10 +188,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
       const keydownOptions = {
         isPreparing: snapshot.isPreparing,
         onKeyDown: options.onKeyDown,
-        dismissKey: config.dismissKey,
+        dismissKey: resolved.dismissKey,
         engine,
-        nonModal: config.isNonModal,
-        dismissWhilePreparing: config.dismissWhilePreparing,
+        nonModal: resolved.isNonModal,
+        dismissWhilePreparing: resolved.dismissWhilePreparing,
       };
 
       detachments = [
@@ -199,12 +199,12 @@ export function bindDialog<TData = void, TReason extends string = string>(
         attachDialogCancel(ctx, keydownOptions),
         attachWindowDismissKey(ctx, keydownOptions),
         attachClickOutside(ctx, {
-          dismissOnClickOutside: config.dismissOnClickOutside,
-          dismissWhilePreparing: config.dismissWhilePreparing,
+          dismissOnClickOutside: resolved.dismissOnClickOutside,
+          dismissWhilePreparing: resolved.dismissWhilePreparing,
           engine,
         }),
         syncCloseSequence(ctx, {
-          nonModal: config.isNonModal,
+          nonModal: resolved.isNonModal,
           primaryProperty,
           exitDuration,
         }),
@@ -216,9 +216,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
     // Guarded internally on `phase === 'opening'` and `!dialog.open`, so calling it on every
     // notification is what the other two bindings' dependency-array-free effect does.
-    openSequence(domContext(snapshot.phase), {
+    syncOpenSequence(domContext(snapshot.phase), {
       prepare: options.prepare,
-      nonModal: config.isNonModal,
+      nonModal: resolved.isNonModal,
     });
   };
 
@@ -294,7 +294,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
-    teardownModal(store, dm, modalId, dialog);
+    teardownModal(store, manager, modalId, dialog);
   };
 
   return {
@@ -305,6 +305,6 @@ export function bindDialog<TData = void, TReason extends string = string>(
     subscribe,
     getSnapshot,
     destroy,
-    dialogManager: dm,
+    dialogManager: manager,
   };
 }

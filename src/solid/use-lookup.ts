@@ -18,8 +18,11 @@ import type { ModalInfo } from '../manager/types.js';
  * };
  */
 export function useLookup(id: string): Accessor<ModalInfo> {
-  const dm = useDialogManagerContext();
-  const snapshot = fromStore({ subscribe: dm.subscribeSnapshot, getSnapshot: dm.getSnapshot });
+  const manager = useDialogManagerContext();
+  const snapshot = fromStore({
+    subscribe: manager.subscribeSnapshot,
+    getSnapshot: manager.getSnapshot,
+  });
 
   return () => {
     // Linear scan — n is always tiny (1-3 open modals)
@@ -31,6 +34,6 @@ export function useLookup(id: string): Accessor<ModalInfo> {
     }
 
     // Closed or unregistered — derive from imperative lookup
-    return dm.lookup(id);
+    return manager.lookup(id);
   };
 }

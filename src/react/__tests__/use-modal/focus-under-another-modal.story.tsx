@@ -6,7 +6,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * A modal running a slow action, with a second modal opened over it while that action is still
  * in flight — a background save and a confirm on top of it, which is ordinary.
  *
- * Both are blocking: only a dialog in the top layer can hold focus while another is open, so
+ * Both are modal: only a dialog in the top layer can hold focus while another is open, so
  * this is the shape where the question is even askable. When the save settles, the modal
  * underneath restores focus — and the modal in front is the one the user is actually in.
  */

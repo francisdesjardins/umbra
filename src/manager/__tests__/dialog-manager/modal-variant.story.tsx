@@ -3,33 +3,32 @@ import { useModal } from '../../../react/use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests blocking/nonBlocking derivation from the snapshot's openDialogs.
+ * Tests the modal / non-modal split derived from the snapshot's `openDialogs`.
  *
- * Registers one blocking modal (showModal) and one nonModal (show).
- * Opens them independently and in combination, verifying the snapshot
- * correctly distinguishes between blocking and non-blocking dialogs.
+ * Registers one modal dialog (`showModal()`) and one non-modal (`show()`), opens them
+ * independently and together, and verifies the snapshot tells the two apart.
  */
-export function BlockingHarness() {
+export function ModalVariantHarness() {
   const { openDialogs } = useDialogManager();
-  const blocking = openDialogs.filter((d) => {
+  const modal = openDialogs.filter((d) => {
     return !d.nonModal;
   });
-  const nonBlocking = openDialogs.filter((d) => {
+  const nonModal = openDialogs.filter((d) => {
     return d.nonModal;
   });
 
   const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
-    id: 'blocking-modal',
+    id: 'variant-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Blocking Modal</p>
+          <p>Modal</p>
           <button
             onClick={() => {
               handle.close('done');
             }}
           >
-            Close Blocking
+            Close Modal
           </button>
         </div>
       );
@@ -37,18 +36,18 @@ export function BlockingHarness() {
   });
 
   const { Modal: Modal2 } = useModal<void, 'done'>({
-    id: 'non-blocking-modal',
+    id: 'variant-non-modal',
     nonModal: true,
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-Blocking Modal</p>
+          <p>Non-Modal</p>
           <button
             onClick={() => {
               handle.close('done');
             }}
           >
-            Close Non-Blocking
+            Close Non-Modal
           </button>
         </div>
       );
@@ -59,24 +58,24 @@ export function BlockingHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('blocking-modal');
+          dialogManager.open('variant-modal');
         }}
       >
-        Open Blocking
+        Open Modal
       </button>
       <button
         onClick={() => {
-          dialogManager.open('non-blocking-modal');
+          dialogManager.open('variant-non-modal');
         }}
       >
-        Open Non-Blocking
+        Open Non-Modal
       </button>
       <span data-testid="has-any-open">{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="open-count">{openDialogs.length}</span>
-      <span data-testid="has-blocking">{blocking.length > 0 ? 'yes' : 'no'}</span>
-      <span data-testid="blocking-count">{blocking.length}</span>
-      <span data-testid="has-non-blocking">{nonBlocking.length > 0 ? 'yes' : 'no'}</span>
-      <span data-testid="non-blocking-count">{nonBlocking.length}</span>
+      <span data-testid="has-modal">{modal.length > 0 ? 'yes' : 'no'}</span>
+      <span data-testid="modal-count">{modal.length}</span>
+      <span data-testid="has-non-modal">{nonModal.length > 0 ? 'yes' : 'no'}</span>
+      <span data-testid="non-modal-count">{nonModal.length}</span>
       {Modal1}
       {Modal2}
     </div>
@@ -86,31 +85,31 @@ export function BlockingHarness() {
 /**
  * Tests the getOpen() filter argument on the ModalLookup API.
  */
-export function BlockingLookupHarness() {
+export function ModalVariantLookupHarness() {
   const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
-    id: 'bl-modal',
+    id: 'lookup-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Blocking</p>
+          <p>Modal</p>
           <button
             onClick={() => {
               const q = dialogManager.lookup();
-              const blockingOpen = q.getOpen('modal');
-              const nonBlockingOpen = q.getOpen('non-modal');
+              const modalOpen = q.getOpen('modal');
+              const nonModalOpen = q.getOpen('non-modal');
               const el = document.getElementById('lookup-result');
               if (el) {
                 el.textContent = [
-                  `blocking:${String(blockingOpen.length > 0)}`,
-                  `blockingCount:${String(blockingOpen.length)}`,
-                  `blockingIds:${blockingOpen
+                  `modal:${String(modalOpen.length > 0)}`,
+                  `modalCount:${String(modalOpen.length)}`,
+                  `modalIds:${modalOpen
                     .map((m) => {
                       return m.id;
                     })
                     .join(',')}`,
-                  `nonBlocking:${String(nonBlockingOpen.length > 0)}`,
-                  `nonBlockingCount:${String(nonBlockingOpen.length)}`,
-                  `nonBlockingIds:${nonBlockingOpen
+                  `nonModal:${String(nonModalOpen.length > 0)}`,
+                  `nonModalCount:${String(nonModalOpen.length)}`,
+                  `nonModalIds:${nonModalOpen
                     .map((m) => {
                       return m.id;
                     })
@@ -126,7 +125,7 @@ export function BlockingLookupHarness() {
               handle.close('done');
             }}
           >
-            Close Blocking
+            Close Modal
           </button>
         </div>
       );
@@ -134,18 +133,18 @@ export function BlockingLookupHarness() {
   });
 
   const { Modal: Modal2 } = useModal<void, 'done'>({
-    id: 'bl-non-modal',
+    id: 'lookup-non-modal',
     nonModal: true,
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-Blocking</p>
+          <p>Non-Modal</p>
           <button
             onClick={() => {
               handle.close('done');
             }}
           >
-            Close Non-Blocking
+            Close Non-Modal
           </button>
         </div>
       );
@@ -156,17 +155,17 @@ export function BlockingLookupHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('bl-modal');
+          dialogManager.open('lookup-modal');
         }}
       >
-        Open Blocking
+        Open Modal
       </button>
       <button
         onClick={() => {
-          dialogManager.open('bl-non-modal');
+          dialogManager.open('lookup-non-modal');
         }}
       >
-        Open Non-Blocking
+        Open Non-Modal
       </button>
       <span data-testid="lookup-result" id="lookup-result" />
       {Modal1}

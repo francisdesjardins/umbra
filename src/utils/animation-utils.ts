@@ -56,7 +56,7 @@ export type ResolvedAnimation = {
  *
  * The single place that knows the defaults. Both consumers read from it — the
  * style builder below (which needs the durations and the property list) and
- * `useDialogLifecycle` (which needs the exit duration and the primary property
+ * `syncCloseSequence` (which needs the exit duration and the primary property
  * to drive `transitionend`) — so a dialog's declared transition and the exit
  * listener waiting on it can never disagree.
  */

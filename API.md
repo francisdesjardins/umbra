@@ -303,7 +303,7 @@ Everything above, plus:
 | `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                          |
 | `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                         |
 | `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on. Default: `'dialog'`.                                                                                                                                              |
-| `modalType?`              | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [modalType](#modaltype). Default: `'modal'`.                                                                                                                                         |
+| `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                           |
 | `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                         |
 | `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.             |
 | `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the topmost non-modal responds. Default: `false`.       |
@@ -351,7 +351,7 @@ const panel = useSlideModal({
 
 #### Body scroll lock (modal only)
 
-While at least one **blocking** dialog is open, the library sets `data-dialog-open` on `<body>` and applies `overflow: hidden`. Hiding overflow removes a classic scrollbar, which widens the viewport and shifts every centered or right-aligned element — so the reclaimed width is reserved as body padding and the layout stays put.
+While at least one **modal** dialog is open, the library sets `data-dialog-open` on `<body>` and applies `overflow: hidden`. Hiding overflow removes a classic scrollbar, which widens the viewport and shifts every centered or right-aligned element — so the reclaimed width is reserved as body padding and the layout stays put.
 
 The compensation is the width the lock **actually reclaims**, not the current scrollbar width. Those differ, and the difference matters:
 
@@ -547,7 +547,7 @@ const panel = useSlideModal<void, 'save'>({
 | `align?`    | `'stretch' \| 'start' \| 'center' \| 'end'` | Cross-axis alignment (see below). Default: `'stretch'`. |
 
 Plus the shared template options — every `useModal` option except the two a template owns
-(`modalType`, since a template names itself, and the internal `clipContainer`): `id`, `render`,
+(`template`, since a template names itself, and the internal `clipContainer`): `id`, `render`,
 `animation`, `style`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `prepare`,
 `onClose`, `onKeyDown`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`, `role`. The exclusion is
 stated that way round in the source, so a new core option reaches every template by default.
@@ -798,7 +798,7 @@ info.isForeground; // true if topmost open modal
 info.phase; // 'closed' | 'opening' | 'open' | 'closing'
 info.isPreparing; // true while its prepare is still running
 info.openedAt; // timestamp (0 for unregistered)
-info.modalType; // the label its creator gave it (only on the registered branch)
+info.template; // the label its creator gave it (only on the registered branch)
 info.nonModal; // boolean (absent for unregistered)
 
 // Collection-level queries
@@ -816,7 +816,7 @@ all.isForeground('my-modal'); // true if topmost
 
 // Counts and existence checks derive from the arrays:
 all.getOpen().length; // open count
-all.getOpen('modal').length > 0; // any blocking dialog open?
+all.getOpen('modal').length > 0; // any modal dialog open?
 all.getClosed().length; // closed count
 ```
 
@@ -845,13 +845,13 @@ first — an unregistered modal has none:
 
 | Property (registered only) | Type      | Description                                                                                                              |
 | -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `modalType`                | `string`  | The label its creator gave it — `'modal'` by default, `'slide'` from `useSlideModal`, anything your own template reports |
+| `template`                 | `string`  | The label its creator gave it — `'modal'` by default, `'slide'` from `useSlideModal`, anything your own template reports |
 | `nonModal`                 | `boolean` | Whether opened with `dialog.show()`                                                                                      |
 
 ```typescript
 const info = dialogManager.lookup('my-modal');
 if (info.exists) {
-  info.modalType; // string — no `?? ''` needed
+  info.template; // string — no `?? ''` needed
 }
 ```
 
@@ -891,15 +891,15 @@ import { MODAL_OPEN_EVENT, MODAL_CLOSE_EVENT } from 'umbra';
 import type { ModalOpenEventDetail, ModalCloseEventDetail } from 'umbra';
 
 document.addEventListener(MODAL_OPEN_EVENT, (e: Event) => {
-  const { id, modalType, openedAt } = e.detail;
-  analytics.track('modal_shown', { id, modalType, openedAt });
+  const { id, template, openedAt } = e.detail;
+  analytics.track('modal_shown', { id, template, openedAt });
 });
 
 document.addEventListener(MODAL_CLOSE_EVENT, (e: Event) => {
-  const { id, modalType, reason, openedAt } = e.detail;
+  const { id, template, reason, openedAt } = e.detail;
   analytics.track('modal_hidden', {
     id,
-    modalType,
+    template,
     reason,
     durationMs: Date.now() - openedAt,
   });
@@ -917,22 +917,22 @@ document.addEventListener(MODAL_CLOSE_EVENT, (e: Event) => {
 
 **`ModalOpenEventDetail`**
 
-| Field       | Type     | Description                   |
-| ----------- | -------- | ----------------------------- |
-| `id`        | `string` | Modal id                      |
-| `modalType` | `string` | The label its creator gave it |
-| `openedAt`  | `number` | `Date.now()` at open start    |
+| Field      | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Modal id                      |
+| `template` | `string` | The label its creator gave it |
+| `openedAt` | `number` | `Date.now()` at open start    |
 
 **`ModalCloseEventDetail`**
 
-| Field       | Type                  | Description                         |
-| ----------- | --------------------- | ----------------------------------- |
-| `id`        | `string`              | Modal id                            |
-| `modalType` | `string`              | The label its creator gave it       |
-| `reason`    | `string \| undefined` | Close reason                        |
-| `openedAt`  | `number`              | `Date.now()` recorded at open start |
+| Field      | Type                  | Description                         |
+| ---------- | --------------------- | ----------------------------------- |
+| `id`       | `string`              | Modal id                            |
+| `template` | `string`              | The label its creator gave it       |
+| `reason`   | `string \| undefined` | Close reason                        |
+| `openedAt` | `number`              | `Date.now()` recorded at open start |
 
-### modalType
+### template
 
 A label the creator attaches, carried into `lookup()` and both DOM events. Any string, and
 purely informational — nothing in the library reads it. It saves a cross-cutting listener
@@ -942,6 +942,11 @@ purely informational — nothing in the library reads it. It saves a cross-cutti
 reports `'message'` and `useSlideModal` `'slide'`. A
 template you write should name itself rather than inherit the default — the core deliberately
 does not enumerate the templates built on it.
+
+**It is not the modal / non-modal distinction.** That one is `nonModal`, and it reaches the DOM
+as `data-modal-type` — two values, the library's own. This one is yours and open-ended; a
+`nonModal` dialog that names no template still defaults to `'modal'`, which is why the two
+cannot share a word.
 
 ---
 
@@ -973,8 +978,8 @@ function ModalOverlay() {
 | `openDialogs` | `readonly ModalInfo[]`   | Open modals (modal and nonModal), sorted by open time — index = stack position |
 | `foreground`  | `ModalInfo \| undefined` | Most recently opened modal                                                     |
 
-Everything else derives from `openDialogs`: counts via `.length`, blocking vs
-non-blocking via `ModalInfo.nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
+Everything else derives from `openDialogs`: counts via `.length`, modal vs
+non-modal via `ModalInfo.nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
 and stack position via array index.
 
 ---

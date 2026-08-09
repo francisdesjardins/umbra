@@ -75,31 +75,31 @@ export function DomEventsExample() {
     const OWN = new Set([ALERT_ID, PANEL_ID]);
 
     // No cast: the library augments `DocumentEventMap`, so `e.detail` is already typed.
-    const prepare = (e: DocumentEventMap['modal:open']) => {
-      const { id, modalType, openedAt } = e.detail;
+    const onOpen = (e: DocumentEventMap['modal:open']) => {
+      const { id, template, openedAt } = e.detail;
       if (!OWN.has(id)) {
         return;
       }
       const ts = new Date(openedAt).toLocaleTimeString();
-      store.addEvent(`[${ts}] modal:open  id=${id}  type=${modalType}`);
+      store.addEvent(`[${ts}] modal:open  id=${id}  template=${template}`);
     };
 
     const onClose = (e: DocumentEventMap['modal:close']) => {
-      const { id, modalType, reason, openedAt } = e.detail;
+      const { id, template, reason, openedAt } = e.detail;
       if (!OWN.has(id)) {
         return;
       }
       const duration = Date.now() - openedAt;
       const ts = new Date().toLocaleTimeString();
       store.addEvent(
-        `[${ts}] modal:close id=${id}  type=${modalType}  reason=${reason ?? '—'}  open=${String(duration)}ms`
+        `[${ts}] modal:close id=${id}  template=${template}  reason=${reason ?? '—'}  open=${String(duration)}ms`
       );
     };
 
-    document.addEventListener(MODAL_OPEN_EVENT, prepare);
+    document.addEventListener(MODAL_OPEN_EVENT, onOpen);
     document.addEventListener(MODAL_CLOSE_EVENT, onClose);
     return () => {
-      document.removeEventListener(MODAL_OPEN_EVENT, prepare);
+      document.removeEventListener(MODAL_OPEN_EVENT, onOpen);
       document.removeEventListener(MODAL_CLOSE_EVENT, onClose);
     };
   }, []);

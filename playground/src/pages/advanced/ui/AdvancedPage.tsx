@@ -160,7 +160,7 @@ export const AdvancedPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="One flow, end to end"
-            description="A panel that edits something, a confirm raised from inside it, an async action that fails about a third of the time, and a typed payload coming back out. The confirm is opened from inside the panel's render — not a style choice: a blocking dialog swallows every click outside itself, so a trigger that must work while a modal is open has to live in that modal's tree. Both dialogs keep their own Escape and their own Enter."
+            description="A panel that edits something, a confirm raised from inside it, an async action that fails about a third of the time, and a typed payload coming back out. The confirm is opened from inside the panel's render — not a style choice: a modal dialog swallows every click outside itself, so a trigger that must work while a modal is open has to live in that modal's tree. Both dialogs keep their own Escape and their own Enter."
             codeKey="grocery-list"
             modalId={GROCERY_LIST_ID}
             tryLabel="Open the list"

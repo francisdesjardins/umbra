@@ -1,9 +1,12 @@
 /**
  * Framework-agnostic native-`<dialog>` DOM orchestration.
  *
- * These functions operate directly on a `<dialog>` element and contain no React — the
- * `useDialogLifecycle` hook wires them to store transitions via effects, but the DOM logic
- * lives here so it is testable in isolation and reusable outside React.
+ * These functions operate directly on a `<dialog>` element and know nothing about a store or a
+ * phase — `attach-lifecycle.ts` is what wires them to store transitions. The split is what keeps
+ * the DOM logic testable in isolation and usable from a binding that owns its own element.
+ *
+ * Everything here is a `run*`/`show*` verb: it does the thing it names, immediately. The
+ * phase-driven decisions of whether to do it at all are `sync*`, next door.
  */
 
 /**
@@ -74,13 +77,13 @@ export function runDialogExit(
   dialog: HTMLDialogElement,
   {
     nonModal,
-    primaryProp,
+    primaryProperty,
     exitDuration,
     onFinish,
     onFallbackTimeout,
   }: {
     nonModal: boolean;
-    primaryProp: string;
+    primaryProperty: string;
     exitDuration: number;
     onFinish: () => void;
     onFallbackTimeout?: () => void;
@@ -107,7 +110,7 @@ export function runDialogExit(
   }, exitDuration + 50);
 
   const handleTransitionEnd = (e: TransitionEvent) => {
-    if (e.target !== dialog || e.propertyName !== primaryProp) {
+    if (e.target !== dialog || e.propertyName !== primaryProperty) {
       return;
     }
     clearTimeout(fallbackTimer);
@@ -146,13 +149,13 @@ export function runCloseSequence(
   dialog: HTMLDialogElement,
   {
     nonModal,
-    primaryProp,
+    primaryProperty,
     exitDuration,
     finalize,
     log,
   }: {
     nonModal: boolean;
-    primaryProp: string;
+    primaryProperty: string;
     exitDuration: number;
     /** Close the dialog and settle the store. Called exactly once. */
     finalize: () => void;
@@ -182,7 +185,7 @@ export function runCloseSequence(
 
   return runDialogExit(dialog, {
     nonModal,
-    primaryProp,
+    primaryProperty,
     exitDuration,
     onFinish: () => {
       finishOnce('animated');

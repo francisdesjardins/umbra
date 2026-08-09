@@ -153,7 +153,7 @@ export function CosmicOverrideExample() {
     // non-modal, never takes focus, and is announced by nothing.
     ariaLabel: 'Warp core',
     // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
-    modalType: 'cosmic',
+    template: 'cosmic',
     animation: WARP_ANIMATION,
     dismissKey: Key.Escape,
     // Off, so the corona is something to look at rather than a trapdoor: the backdrop is the
@@ -221,7 +221,7 @@ export function CosmicOverrideExample() {
 
   const gate = useModal<void, 'closed'>({
     id: GATE_ID,
-    modalType: 'cosmic',
+    template: 'cosmic',
     nonModal: true,
     // A non-modal lets clicks through, so click-outside would dismiss the gate the moment you
     // reach for anything else on the page — including the code viewer for this very example.

@@ -8,11 +8,11 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { openSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
+import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import {
   createModalRuntime,
-  resolveModalConfig,
+  resolveModalOptions,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -85,11 +85,11 @@ export function useModal<TData = void, TReason extends string = string>(
     dismissOnClickOutside,
     dismissWhilePreparing,
     dismissKey,
-    modalType,
+    template,
     placement,
-  } = resolveModalConfig(options);
+  } = resolveModalOptions(options);
 
-  const dm = useDialogManagerContext();
+  const manager = useDialogManagerContext();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -141,7 +141,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // waits on and the duration it times out against always match it.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  const domContext: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, dm };
+  const domContext: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
 
   // Intentionally no deps array — runs every render to always capture the latest onClose
   // reference without needing a ref. The attach functions and the teardown read it via the store.
@@ -152,10 +152,10 @@ export function useModal<TData = void, TReason extends string = string>(
   // ── Lifecycle ───────────────────────────────────────────────────────────
   //
   // No deps array on the opening pass either, so `prepare` is always the latest closure. The
-  // phase guard and the `dialog.open` check inside `openSequence` are what stop the work
+  // phase guard and the `dialog.open` check inside `syncOpenSequence` are what stop the work
   // happening twice, rather than a dependency list.
   useEffect(() => {
-    openSequence(domContext, { prepare, nonModal: isNonModal });
+    syncOpenSequence(domContext, { prepare, nonModal: isNonModal });
   });
 
   // Explicit deps: only re-runs when the phase or the resolved animation changes. The context is
@@ -163,10 +163,10 @@ export function useModal<TData = void, TReason extends string = string>(
   // listeners on every render.
   useEffect(() => {
     return syncCloseSequence(
-      { store, getDialog, modalId, phase: snap.phase, dm },
+      { store, getDialog, modalId, phase: snap.phase, manager },
       { nonModal: isNonModal, primaryProperty, exitDuration }
     );
-  }, [snap.phase, primaryProperty, exitDuration, modalId, store, getDialog, dm, isNonModal]);
+  }, [snap.phase, primaryProperty, exitDuration, modalId, store, getDialog, manager, isNonModal]);
 
   // ── Dismiss key ─────────────────────────────────────────────────────────
   //
@@ -174,7 +174,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // on the window, so the key works wherever focus is. One effect, because they share a
   // dependency list to the letter, and because that is the shape Solid's binding has too.
   useEffect(() => {
-    const ctx: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, dm };
+    const ctx: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
     const keydownOptions = {
       isPreparing: snap.isPreparing,
       onKeyDown,
@@ -204,7 +204,7 @@ export function useModal<TData = void, TReason extends string = string>(
     modalId,
     store,
     getDialog,
-    dm,
+    manager,
   ]);
 
   // ── Focus ───────────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   useEffect(() => {
     return attachClickOutside(
-      { store, getDialog, modalId, phase: snap.phase, dm },
+      { store, getDialog, modalId, phase: snap.phase, manager },
       { dismissOnClickOutside, dismissWhilePreparing, engine }
     );
   }, [
@@ -228,11 +228,11 @@ export function useModal<TData = void, TReason extends string = string>(
     modalId,
     store,
     getDialog,
-    dm,
+    manager,
   ]);
 
   // ── Registry registration + teardown ────────────────────────────────────
-  // Re-runs when the reported flags (`modalType` / `nonModal`) change, because those
+  // Re-runs when the reported flags (`template` / `nonModal`) change, because those
   // change the rendered DOM structure (inline / portal / contained wrapper) and a native
   // <dialog> cannot survive being remounted into a different structure while open. The
   // cleanup therefore both unregisters AND finalizes an open modal: on a structural prop
@@ -251,8 +251,8 @@ export function useModal<TData = void, TReason extends string = string>(
   const acceptsOpenRequests = onOpenRequest !== undefined;
 
   useEffect(() => {
-    dm.register(modalId, store, {
-      modalType,
+    manager.register(modalId, store, {
+      template,
       nonModal: isNonModal,
       ...(acceptsOpenRequests && {
         // Returned, not swallowed: the manager awaits the handler, so an owner that validates
@@ -264,12 +264,12 @@ export function useModal<TData = void, TReason extends string = string>(
     });
 
     return () => {
-      teardownModal(store, dm, modalId, getDialog());
+      teardownModal(store, manager, modalId, getDialog());
     };
     // `shouldPortal` is a dep (though unused in the body) because it, like `nonModal`,
     // changes the rendered structure — so toggling it while open must tear the modal down
     // too, otherwise the remounted-into-a-new-structure <dialog> is left stuck open.
-  }, [acceptsOpenRequests, dm, getDialog, isNonModal, modalId, modalType, shouldPortal, store]);
+  }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, shouldPortal, store]);
 
   // ── Backdrop click ──────────────────────────────────────────────────────
 
@@ -398,6 +398,6 @@ export function useModal<TData = void, TReason extends string = string>(
     action,
     hasRunningAction: actionSnap.hasRunningAction,
     error: actionSnap.error,
-    dialogManager: dm,
+    dialogManager: manager,
   };
 }

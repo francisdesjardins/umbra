@@ -771,7 +771,7 @@ test.describe('the styling surface', () => {
       'modal'
     );
     // And the variant attribute pairs with it: `dialog[data-modal-type='non-modal']` is every
-    // non-blocking dialog at once.
+    // non-modal dialog at once.
     await expect(page.locator('dialog[data-modal-id="styling-surface-slide"]')).toHaveCount(1);
   });
 
