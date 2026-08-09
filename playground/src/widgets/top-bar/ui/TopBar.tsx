@@ -64,7 +64,18 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
             {/* The umbra is the total-shadow core of an eclipse — what a modal backdrop
                 casts over the page. Same badge geometry as the sibling stardust playground,
                 so the two read as a set. */}
-            <Typography variant="body2" sx={{ color: 'primary.contrastText', fontWeight: 700 }}>
+            <Typography
+              component="span"
+              sx={{
+                color: 'primary.contrastText',
+                fontWeight: 700,
+                // 20px, which is what `fontSize="small"` resolves to on the theme toggle beside
+                // it: both badges are 32px, so matching the glyph to that icon is what makes the
+                // two ends of the bar read as the same weight.
+                fontSize: 20,
+                lineHeight: 1,
+              }}
+            >
               ◐
             </Typography>
           </Box>
