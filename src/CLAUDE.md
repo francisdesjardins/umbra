@@ -463,7 +463,7 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   constants (`A: 'a'`, `Digit0`, `F12` …), whose names are their documentation. Nothing else in
   the public surface is undocumented — run `yarn docs:check --validation.notDocumented` before
   assuming that is still true.
-- `disableSources` is on because there is no git remote yet, so every "view source" link would 404. Turn it off once the repository exists.
+- `disableSources` is `false`: the repository exists (`github.com/francisdesjardins/umbra`), so typedoc's "view source" links resolve.
 - All four entry points are in `entryPoints`, and the four core option/return types are listed in
   `intentionallyNotExported` **by qualified name** (`umbra/src/core/types.ts:UseModalOptions`) —
   the plain name would also silence the two bindings' exported ones, which is exactly the warning
