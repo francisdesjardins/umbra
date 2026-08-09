@@ -160,6 +160,20 @@ shared by every binding; layers 2 and 3 exist once per binding and are thin.
 
 ### The styling surface
 
+**A hairline flush to the dialog's edge is a trap, and it is worth knowing why before debugging
+one.** A `<dialog>` keeps the UA's `fit-content`, so its box lands on a fraction of a pixel, and
+`margin: auto` puts both edges off-pixel. A 1px border on content that reaches that edge therefore
+occupies the box's last fractional pixel, and how much of it the compositor keeps is not the
+author's to decide. Measured on the microfrontend demo: three dialogs at 154.844px, 243.094px and
+252.266px wide kept 16%, 91% and 73% of their right border — the first read as plainly missing
+while the other two looked fine, from identical markup and identical computed styles. Every
+binding is affected equally; the fix is user-land (inset the border a pixel, size the dialog in
+whole pixels, or move the border inward) and the `style` option's doc says so.
+
+The symptom is worth recognising too, because it misleads: the border is correct on the first
+draw and gone after, and toggling _any_ property in devtools brings it back — both of which read
+as a CSS problem and are neither.
+
 Everything a consumer needs to style a dialog, and nothing that requires knowing how the tree
 is built:
 

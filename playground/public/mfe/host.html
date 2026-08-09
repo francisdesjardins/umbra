@@ -240,7 +240,27 @@
       /* The dialog wears its owner's colour — the one thing a screenshot of this demo has to
          say on its own is which microfrontend a modal came from. */
       .panel {
-        border: 1px solid color-mix(in srgb, var(--own) 40%, var(--line));
+        /* One pixel off the dialog's edge, and that is the fix for a real artifact rather than a
+           nicety. A `<dialog>` is `width: fit-content`, so its box lands on a fraction — the three
+           here measure 154.844, 243.094 and 252.266 — and `margin: auto` puts both edges off-pixel.
+           The right border occupies the box's last pixel, so whatever the compositor does with
+           that final fraction is done to the border: at .844 only 0.156px of it survives and it
+           reads as missing, while .094 and .266 leave 91% and 73% and look fine. Same markup, same
+           computed styles (diffed, open, property by property) — only the width differs, which is
+           why it was only ever Checkout.
+
+           Insetting by 1px puts the border wholly inside the box's whole-pixel part, whatever the
+           fraction. It costs 2px of panel width and nothing else. */
+        margin: 1px;
+        /* Mixed toward the ink rather than the line, for contrast alone. At the previous
+           `40%, var(--line)` the three borders measured 1.67:1 (amber), 1.76:1 (teal) and
+           2.00:1 (violet) against their own panels — under any reasonable bar for a visible
+           edge. This measures 4.56 / 7.08 / 5.11 in light and 8.07 / 6.94 / 8.69 in dark, past
+           the 3:1 non-text threshold, with the owner's hue still dominant.
+
+           It is **not** the fix for the right edge going missing on some dialogs: that survives a
+           high-contrast border, so it is a clipped raster and not a faint one. Left open. */
+        border: 1px solid color-mix(in srgb, var(--own) 75%, var(--ink));
         border-top: 3px solid var(--own);
         border-radius: 10px;
         background: color-mix(in srgb, var(--own) 7%, var(--panel));

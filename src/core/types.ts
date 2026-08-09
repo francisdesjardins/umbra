@@ -233,6 +233,15 @@ export type UseModalBaseOptions<
    * Styles for what is *inside* the dialog belong in `render`, where they can respond to the
    * state the callback is handed. These are merged after the placement and before the
    * animation, so they can override the former and not the latter.
+   *
+   * **A hairline flush to the edge is worth avoiding.** Left at `fit-content` a dialog's box
+   * lands on a fraction of a pixel, and `margin: auto` puts both edges off-pixel — so a 1px
+   * border on content that reaches the dialog's edge occupies that last fractional pixel, and
+   * how much of it survives is the compositor's business rather than yours. Measured on one
+   * page: three dialogs at 154.844px, 243.094px and 252.266px wide kept 16%, 91% and 73% of
+   * their right border, and the first read as missing. Inset the border by a pixel, give the
+   * dialog a whole-pixel `width`, or put the border on an inner element — any of the three
+   * removes the question.
    */
   readonly style?: TStyle | undefined;
   /**

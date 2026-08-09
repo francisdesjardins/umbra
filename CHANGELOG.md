@@ -11,6 +11,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Fixed — a `<dialog>`'s last fractional pixel, and the border that lived in it
+
+Checkout's modal in the microfrontend demo was missing its right border. Only that one, in every
+theme, in every browser session — which read as a bug in the React binding, and is not one.
+
+A `<dialog>` keeps the UA's `fit-content`, so its box lands on a fraction of a pixel, and
+`margin: auto` puts both edges off-pixel. The panel's 1px border occupies the box's _last_ pixel,
+so whatever the compositor does with that trailing fraction it does to the border. The three
+dialogs on that page measure 154.844px, 243.094px and 252.266px wide, keeping 16%, 91% and 73% of
+their right border — the first reads as missing and the other two look fine. Identical markup and
+identical computed styles: diffed open, property by property, across the dialog, the content
+wrapper and the panel, the only differences were the colour from `--own` and the width with the
+values derived from it.
+
+Fixed where the border is: `.panel` is inset a pixel, so it ends inside the box's whole-pixel part
+whatever the fraction. Documented where it will be met again — the `style` option's JSDoc and
+`src/CLAUDE.md`'s styling surface — because every binding is exposed equally and the symptom
+misleads twice over: the border is correct on the first draw and gone after, and toggling any
+property in devtools brings it back.
+
+Three earlier explanations were wrong and are recorded here so they are not re-tried: it is not
+the identity `transform` the default animation leaves at rest (removing it changes nothing, and
+writing `transform: 'none'` into the entrance keyframe would break the animation outright —
+`scale(0.95) → none` snaps rather than interpolating); it is not the wrapper's `display: flex`
+(flex, block and flow-root all produce the same 154.8438px); and it is not contrast, though that
+was independently too low at 1.67:1 and is now 4.56:1.
+
 ### Added — `umbra/vanilla`, a third binding of a different kind
 
 `binding.js` in the microfrontend demo was forty hand-written lines driving a `<dialog>` from the
