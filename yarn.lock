@@ -1211,18 +1211,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router@npm:1.170.21":
-  version: 1.170.21
-  resolution: "@tanstack/react-router@npm:1.170.21"
+"@tanstack/react-router@npm:1.170.23":
+  version: 1.170.23
+  resolution: "@tanstack/react-router@npm:1.170.23"
   dependencies:
     "@tanstack/history": "npm:1.162.1"
     "@tanstack/react-store": "npm:^0.9.3"
-    "@tanstack/router-core": "npm:1.171.18"
+    "@tanstack/router-core": "npm:1.171.19"
     isbot: "npm:^5.1.22"
   peerDependencies:
     react: ">=18.0.0 || >=19.0.0"
     react-dom: ">=18.0.0 || >=19.0.0"
-  checksum: 10c0/1af6b57d8d68c65305e23d3293969832b98228758da803c4d8d7a46789f0e01627adc53f50eee39dc41796779a6ff19ae9dc11b314868e1b88cd3da929555fe3
+  checksum: 10c0/5764825f111138178cffd87e4fe6aac63bcfe1705cbfb642307e3c1f89918b5261cfc5911e7811770251399e973ccc077a0892dac2cbd9e723c9db15f7d78153
   languageName: node
   linkType: hard
 
@@ -1239,15 +1239,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-core@npm:1.171.18":
-  version: 1.171.18
-  resolution: "@tanstack/router-core@npm:1.171.18"
+"@tanstack/router-core@npm:1.171.19":
+  version: 1.171.19
+  resolution: "@tanstack/router-core@npm:1.171.19"
   dependencies:
     "@tanstack/history": "npm:1.162.1"
     cookie-es: "npm:^3.0.0"
     seroval: "npm:^1.6.2"
     seroval-plugins: "npm:^1.6.2"
-  checksum: 10c0/e94c581bb871c90d87bea280f14d3e76ed908806c4d5fe81026597657a8d186faaa9a88d69694afce75aa7c006ed00f52cfea4f4e3a722834a9a17adde992228
+  checksum: 10c0/98199dc3982110cd29ae7354d7e6caf149e060911df627044f28e1b0d5d09bd1c011468a22e7e576b5efd354f54bf1525ee9cd440c84234c1c254c2e0613a251
   languageName: node
   linkType: hard
 
@@ -1309,12 +1309,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^26.1.2":
-  version: 26.1.2
-  resolution: "@types/node@npm:26.1.2"
+"@types/node@npm:^26.2.0":
+  version: 26.2.0
+  resolution: "@types/node@npm:26.2.0"
   dependencies:
     undici-types: "npm:~8.3.0"
-  checksum: 10c0/a45503222c7db8f374afd5c9381db63dd95b6b1f703abea0890dd3d4a09eeb41da489e08a1a45baf18fe89fb77fbf310ff2789f680c490b04dafc41a60800a86
+  checksum: 10c0/f8566d88162241eb55a46f7e4ea097188eab0aaafefea7a58e63adab8c4144eb98c08b7911452c846104c339a0f82282f5e1ed4b26b578d60709614fe2843f4d
   languageName: node
   linkType: hard
 
@@ -2140,9 +2140,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.8.0":
-  version: 10.8.0
-  resolution: "eslint@npm:10.8.0"
+"eslint@npm:^10.8.1":
+  version: 10.8.1
+  resolution: "eslint@npm:10.8.1"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.8.0"
     "@eslint-community/regexpp": "npm:^4.12.2"
@@ -2181,7 +2181,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10c0/2dbc523578834088615f388e08418d2620b25655f7a398f6d415765fa2a3a25d6b8b43bd3293d40f977e12752323a841d52654a2648697a00c0102c9794bb3dc
+  checksum: 10c0/0c4720a43ef2052829db18e37aa79adb5f0a62137bdf4a4f8e9507bbbbf888ba0669fc03e4b7139d8f27b59b051bbbcd0a3988b068c30fa934a766d60a81f599
   languageName: node
   linkType: hard
 
@@ -3071,13 +3071,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-check-updates@npm:23.0.1":
-  version: 23.0.1
-  resolution: "npm-check-updates@npm:23.0.1"
+"npm-check-updates@npm:23.0.2":
+  version: 23.0.2
+  resolution: "npm-check-updates@npm:23.0.2"
   bin:
     ncu: build/cli.js
     npm-check-updates: build/cli.js
-  checksum: 10c0/0e389e5665e325116185b7b3051734562b68b16724fbbcd60b97f8bbcaa7c652667c86de383c5002e26d111c0d1d01d730a09d0fac0397770916287af1fb6d75
+  checksum: 10c0/1f2db050aabcb3baa766d73f51ac95e625b717178718e50eb20a69b9ab01d08569557e77a9e5f59fb72746d5ca8d5ad4d68f1e7c4aa4e260f93e327c9f1f0107
   languageName: node
   linkType: hard
 
@@ -3901,7 +3901,7 @@ __metadata:
     "@mui/icons-material": "npm:^9.3.1"
     "@mui/material": "npm:^9.3.1"
     "@mui/system": "npm:9.3.0"
-    "@tanstack/react-router": "npm:1.170.21"
+    "@tanstack/react-router": "npm:1.170.23"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
     "@types/react-syntax-highlighter": "npm:^15.5.13"
@@ -3923,20 +3923,20 @@ __metadata:
     "@playwright/experimental-ct-react": "npm:1.62.1"
     "@playwright/test": "npm:1.62.1"
     "@rolldown/plugin-babel": "npm:0.2.3"
-    "@types/node": "npm:^26.1.2"
+    "@types/node": "npm:^26.2.0"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
     "@vitejs/plugin-react": "npm:^6.0.5"
     babel-plugin-react-compiler: "npm:1.0.0"
     c8: "npm:12.0.0"
     cross-env: "npm:10.1.0"
-    eslint: "npm:^10.8.0"
+    eslint: "npm:^10.8.1"
     eslint-config-prettier: "npm:^10.1.8"
     eslint-plugin-oxlint: "npm:^1.77.0"
     eslint-plugin-react-hooks: "npm:^7.1.1"
     eslint-plugin-react-refresh: "npm:^0.5.3"
     globals: "npm:^17.9.0"
-    npm-check-updates: "npm:23.0.1"
+    npm-check-updates: "npm:23.0.2"
     oxlint: "npm:^1.77.0"
     prettier: "npm:^3.9.6"
     react: "npm:^19.2.8"
