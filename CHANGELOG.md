@@ -11,6 +11,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Fixed — the `type` badge was drawn in the page's own background colour
+
+On `/api` in dark mode the `type` chip was invisible, in the rail and in every symbol header.
+Measured rather than eyeballed: **1.00:1** in the rail, 1.11:1 on a card — not "hard to read",
+literally the same colour as what is behind it.
+
+`KindBadge` asked for `secondary.main`, and `secondary` in this palette is the mascot's **body** —
+the theme says so beside it, "not a second accent" — which in dark mode is the exact value
+`background.default` takes. A fill colour used as a foreground.
+
+Two accents and a neutral now. A type is the quietest of the three kinds, so it reads as the
+absence of an accent rather than as a third one the palette does not have. The other half of the
+fix is the ramp: `main` is tuned to sit _under_ `contrastText`, and as 11px bold text on the page
+it was the wrong end — `fn` measured 3.19:1 in **light** mode, under the 4.5:1 that size needs, a
+second failure nobody had reported. Light mode takes `dark` and dark mode takes `light` now, which
+is the pair MUI ships for this. All six badge/mode combinations measure 5.7:1 or better.
+
+The `opacity: 0.9` went too: it multiplies whatever contrast was just measured, and a badge this
+small has none to spare.
+
+`playground-smoke`'s `--theme dark` was also testing `backgroundColor === 'rgb(0, 0, 0)'`, which
+no longer describes anything — dark mode is `#0f172a`. It compares luminance now and fails loudly
+if the toggle does not land, so the one switch that would surface this class of bug stops silently
+reporting every page as light.
+
 ### Added — `umbra/solid` and `umbra/vanilla` chapters in `API.md`
 
 The generated reference grew two bindings; the handwritten one still opened with "every snippet

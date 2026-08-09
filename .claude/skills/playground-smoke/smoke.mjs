@@ -339,13 +339,29 @@ page.on('console', (m) => {
 await page.goto(BASE, { waitUntil: 'networkidle' });
 
 if (THEME === 'dark' || THEME === 'light') {
-  // The toggle flips between the two; click it if we are not already where we want to be.
-  const isDark = await page.evaluate(() => {
-    return getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)';
-  });
-  if ((THEME === 'dark') !== isDark) {
+  // Measured, not matched against a literal: the palette is the mascot's, so dark mode is its
+  // body (`#0f172a`) rather than black, and an equality test against `rgb(0, 0, 0)` reports
+  // every page as light — which silently makes `--theme dark` a no-op.
+  const luminance = async () => {
+    return page.evaluate(() => {
+      const [r, g, b] = getComputedStyle(document.body)
+        .backgroundColor.match(/[\d.]+/g)
+        .slice(0, 3)
+        .map(Number);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    });
+  };
+  const before = await luminance();
+  if ((THEME === 'dark') !== before < 0.5) {
     await page.locator('header button').last().click();
     await page.waitForTimeout(500);
+    const after = await luminance();
+    if ((THEME === 'dark') !== after < 0.5) {
+      console.log(
+        `FAIL theme:${THEME} — the toggle did not land there (luminance ${after.toFixed(2)})`
+      );
+      process.exit(1);
+    }
   }
 }
 

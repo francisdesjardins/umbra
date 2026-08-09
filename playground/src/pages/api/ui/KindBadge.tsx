@@ -4,17 +4,37 @@ import type { ApiSymbol } from 'virtual:dialog-api';
 /**
  * What a symbol *is*, at a glance.
  *
- * Colour carries it in the rail and in search results, where there is no room for the word:
- * one accent per kind, the same three everywhere on the page.
+ * Colour carries it in the rail and in search results, where there is no room for the word.
+ * Two accents and a neutral rather than three accents, because the palette only has two: it is
+ * the mascot's, and `secondary` there is the eclipse's **body** — a fill, and in dark mode the
+ * very value `background.default` takes. A type is the quietest of the three kinds anyway, so it
+ * reads as the absence of an accent rather than as a third one nobody has.
  */
 const KIND = {
-  function: { label: 'fn', color: 'primary' },
-  variable: { label: 'const', color: 'success' },
-  type: { label: 'type', color: 'secondary' },
+  function: { label: 'fn', tone: 'primary' },
+  variable: { label: 'const', tone: 'success' },
+  type: { label: 'type', tone: 'neutral' },
 } as const;
 
+type Tone = (typeof KIND)[keyof typeof KIND]['tone'];
+
+/**
+ * The readable end of a tone, per mode.
+ *
+ * `main` is tuned to be a background with `contrastText` on it; as 11px text on the *page* it is
+ * the wrong end of the ramp — amber `primary.main` measures 3.19:1 on white, under the 4.5:1 an
+ * 11px bold glyph needs. So light mode takes `dark` and dark mode takes `light`, which is the
+ * pair MUI ships for exactly this.
+ */
+const toneColor = (theme: Theme, tone: Tone): string => {
+  if (tone === 'neutral') {
+    return theme.palette.text.secondary;
+  }
+  return theme.palette.mode === 'dark' ? theme.palette[tone].light : theme.palette[tone].dark;
+};
+
 export const KindBadge = ({ kind }: { readonly kind: ApiSymbol['kind'] }) => {
-  const { label, color } = KIND[kind];
+  const { label, tone } = KIND[kind];
   return (
     <Box
       component="span"
@@ -27,11 +47,14 @@ export const KindBadge = ({ kind }: { readonly kind: ApiSymbol['kind'] }) => {
         px: 0.75,
         borderRadius: 0.75,
         border: 1,
-        color: `${color}.main`,
-        borderColor: (theme: Theme) => {
-          return theme.palette[color].main;
+        color: (theme: Theme) => {
+          return toneColor(theme, tone);
         },
-        opacity: 0.9,
+        borderColor: (theme: Theme) => {
+          return toneColor(theme, tone);
+        },
+        // No `opacity` here: it multiplies the contrast that was just measured, and a badge this
+        // small has none to give away. Reach for a dimmer tone instead if one is wanted.
         flexShrink: 0,
       }}
     >
