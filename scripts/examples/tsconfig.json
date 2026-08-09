@@ -31,9 +31,17 @@
     "noImplicitAny": false,
     "allowUnreachableCode": true,
 
+    // Every published specifier, mapped to source. **All of them, or the check is not hermetic:**
+    // an unmapped one falls through to node resolution, finds `node_modules/umbra` (the workspace
+    // self-link), and resolves through `exports` into `dist/` — so the example type-checks against
+    // the last build on a machine that has one and fails with TS2307 on a machine that does not.
+    // That is a check whose answer depends on whether you happened to run `yarn build`, which is
+    // exactly how `umbra/solid` and `umbra/vanilla` passed locally and failed in CI.
     "paths": {
       "umbra": ["../../src/index.ts"],
-      "umbra/react": ["../../src/react.ts"]
+      "umbra/react": ["../../src/react.ts"],
+      "umbra/solid": ["../../src/solid.ts"],
+      "umbra/vanilla": ["../../src/vanilla.ts"]
     }
   },
   "include": ["generated/**/*.tsx"]

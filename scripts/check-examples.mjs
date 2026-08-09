@@ -316,6 +316,43 @@ function run(command, args) {
   }
 }
 
+/**
+ * Every published specifier must be mapped to source in the examples tsconfig.
+ *
+ * An unmapped one does not fail — it falls through to node resolution, finds the workspace
+ * self-link at `node_modules/umbra`, and resolves through `exports` into `dist/`. So the example
+ * type-checks against whatever was last built on a machine that has a `dist/`, and reports
+ * TS2307 on one that does not. A gate whose answer depends on that is not a gate, and the
+ * asymmetry is invisible until CI (which never builds before this job) disagrees with a laptop.
+ */
+function assertSpecifiersMapped() {
+  const { exports: published } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  // JSONC: the config is commented, and `tsc` reads it happily — strip before `JSON.parse`.
+  const config = readFileSync(join(EXAMPLES_DIR, 'tsconfig.json'), 'utf8').replace(
+    /^\s*\/\/.*$/gm,
+    ''
+  );
+  const mapped = new Set(Object.keys(JSON.parse(config).compilerOptions.paths ?? {}));
+
+  const missing = Object.keys(published)
+    .map((subpath) => {
+      return subpath === '.' ? 'umbra' : `umbra${subpath.slice(1)}`;
+    })
+    .filter((specifier) => {
+      return !mapped.has(specifier);
+    });
+
+  if (missing.length > 0) {
+    console.error(
+      `\n${String(missing.length)} published specifier(s) are not mapped in ` +
+        `scripts/examples/tsconfig.json: ${missing.join(', ')}.\n` +
+        `Add each to "paths" pointing at its source entry, or an @example importing one ` +
+        `resolves through dist/ and this check stops meaning anything.`
+    );
+    process.exit(1);
+  }
+}
+
 function typeCheck() {
   return run(process.execPath, [
     join(ROOT, 'node_modules', 'typescript-7', 'bin', 'tsc'),
@@ -433,6 +470,10 @@ if (FIX) {
     }
   }
 }
+
+// Before the first `tsc`, so a forgotten mapping is reported as the one-line configuration
+// problem it is rather than as N confusing TS2307s attributed to individual examples.
+assertSpecifiersMapped();
 
 writeModules(examples, exported, {});
 const stubs = collectStubs(typeCheck());
