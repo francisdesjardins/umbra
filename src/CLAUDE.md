@@ -461,12 +461,15 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   `intentionallyNotExported` **by qualified name** (`umbra/src/core/types.ts:UseModalOptions`) —
   the plain name would also silence the two bindings' exported ones, which is exactly the warning
   worth keeping.
-- **The playground's `/api` reference covers `umbra` and `umbra/react` only.** Its projection keys
-  declarations by bare symbol name, and the two bindings deliberately export the same names, so a
-  third entry would collide silently and show one binding's signature under the other's specifier.
-  The plugin therefore passes its own `--entryPoints` rather than taking typedoc's. Documenting
-  `umbra/solid` there needs the model keyed by `specifier:name` first, which reaches the category
-  table, the anchors and the search index.
+- **The playground's `/api` reference covers all four entry points**, and its projection keys
+  every declaration by `specifier#name` — because a bare name is not an identity here: three
+  bindings export `useModal`, and a bare-name map keeps whichever entry point typedoc walked
+  last. Two consequences worth knowing before editing it. A type the bindings _share_
+  (`ModalHandle`, `ActionOptions`, anything from `core/types.ts`) is **one** reflection, which
+  typedoc materialises under the first entry that names it and references from the rest — so the
+  model falls back to that single declaration, and only when exactly one exists. And a
+  cross-reference resolves against the **category table**, not against where the declaration was
+  materialised, so a link out of the Solid chapter lands in the Solid chapter.
 
 **`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier,
 `tsc`, eslint — by extracting each one to a real module under `scripts/examples/generated/`

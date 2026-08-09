@@ -32,7 +32,7 @@ const MemberType = ({ member }: { readonly member: ApiMember }) => {
     >
       {member.type.map((part, index) => {
         return part.link !== undefined ? (
-          <SymbolLink key={index} name={part.link}>
+          <SymbolLink key={index} symbolKey={part.link}>
             {part.text}
           </SymbolLink>
         ) : (

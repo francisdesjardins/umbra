@@ -1,7 +1,7 @@
 import { Box, Typography, type SxProps, type Theme } from '@mui/material';
 import type { ReactNode } from 'react';
 import type { DocPart } from 'virtual:dialog-api';
-import { categoryHref, categoryOf } from '../model/api-index';
+import { categoryHref, symbolAnchor, symbolFor } from '../model/api-index';
 import { RouterLink } from './RouterLink';
 
 const CODE_SX: SxProps<Theme> = {
@@ -14,30 +14,32 @@ const CODE_SX: SxProps<Theme> = {
 };
 
 /**
- * A cross-reference to another symbol.
+ * A cross-reference to another symbol, addressed by its `specifier#name` key.
  *
  * Symbols live on category pages, so this is a route + hash rather than a bare `#anchor` —
- * which also keeps it working under the hash history the file:// build uses.
+ * which also keeps it working under the hash history the file:// build uses. A key nothing
+ * answers to is a type the entry points do not export, and renders as inline code: the reader
+ * is told what it is called and not offered a link that goes nowhere.
  */
 export const SymbolLink = ({
-  name,
+  symbolKey,
   children,
 }: {
-  readonly name: string;
+  readonly symbolKey: string;
   readonly children?: ReactNode;
 }) => {
-  const category = categoryOf(name);
-  if (category === undefined) {
+  const symbol = symbolFor(symbolKey);
+  if (symbol === undefined) {
     return (
       <Box component="code" sx={CODE_SX}>
-        {children ?? name}
+        {children ?? symbolKey}
       </Box>
     );
   }
   return (
     <RouterLink
-      to={categoryHref(category)}
-      hash={`api-${name}`}
+      to={categoryHref(symbol.category)}
+      hash={symbolAnchor(symbol.name)}
       sx={{
         fontFamily: 'monospace',
         color: 'primary.main',
@@ -47,7 +49,7 @@ export const SymbolLink = ({
         '&:hover': { textDecorationStyle: 'solid' },
       }}
     >
-      {children ?? name}
+      {children ?? symbol.name}
     </RouterLink>
   );
 };
@@ -110,7 +112,7 @@ export const DocProse = ({ parts, variant = 'body1', color }: DocProseProps) => 
     >
       {parts.map((part, index) => {
         return part.link !== undefined ? (
-          <SymbolLink key={index} name={part.link}>
+          <SymbolLink key={index} symbolKey={part.link}>
             {part.text}
           </SymbolLink>
         ) : (

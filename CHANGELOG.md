@@ -11,6 +11,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Added — `umbra/solid` and `umbra/vanilla` in the generated `/api` reference
+
+The reference documented two of four entry points. The blocker was recorded rather than fixed:
+the projection keyed every declaration by bare symbol name, and three bindings deliberately
+export the same words — `useModal`, `UseModalOptions`, `DialogManagerSnapshot` — so a third
+entry point collided silently and showed one binding's signature under another's specifier.
+
+Keyed by `specifier#name` now, and two things that were not obvious came out of doing it:
+
+- **A shared type is one reflection.** `ModalHandle`, `ActionOptions`, `SlideDirection` and the
+  rest of the framework-free vocabulary are named by every binding but declared once, so typedoc
+  materialises them under the first entry point that names them and emits references from the
+  others — which the kind filter drops. `declarationFor` falls back to that single declaration,
+  and only when exactly one exists: two declarations of a name are two different types, and
+  picking one is precisely the failure this rename exists to prevent.
+- **Cross-references resolve against the category table, not the declaration.** A link out of the
+  Solid chapter lands in the Solid chapter — `UseModalOptions` to Solid's page, `ModalPhase` in
+  the same signature to the core's — whichever module typedoc happened to walk first.
+
+Six new category pages (Solid's `useModal`, templates, actions and manager; vanilla's
+`bindDialog` and actions), the index grown from two entry-point sections to four with a blurb
+each, start-here rows qualified by specifier because three of them are called `useModal`, and
+search results carrying theirs for the same reason.
+
+Asserted in a browser rather than assumed: Solid's `useModal` page prints `JSX.Element` and
+never `ReactNode`, React's prints `ReactNode`, the vanilla page advertises no `render` callback,
+and a `UseModalOptions` link on a Solid page resolves to a Solid page while a core type on the
+same page resolves to the core's.
+
 ### Changed — a core terminology pass, and the vocabulary written down
 
 A third naming sweep over the framework-free core. Two of the four findings are the previous two

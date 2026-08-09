@@ -112,7 +112,7 @@ export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => 
           {hits.slice(0, RESULT_LIMIT).map((hit) => {
             return (
               <RouterLink
-                key={hit.symbol.name}
+                key={hit.symbol.key}
                 to={categoryHref(hit.symbol.category)}
                 hash={symbolAnchor(hit.symbol.name)}
                 onClick={() => {
@@ -126,6 +126,14 @@ export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => 
                   sx={{ fontFamily: 'monospace', fontSize: '0.8125rem', minWidth: 0, flex: 1 }}
                 >
                   <Highlight text={hit.symbol.name} ranges={hit.match.ranges} />
+                </Box>
+                {/* Three bindings export `useModal`, so a hit without its specifier is a row a
+                    reader cannot choose between. */}
+                <Box
+                  component="span"
+                  sx={{ fontFamily: 'monospace', fontSize: '0.6875rem', color: 'text.disabled' }}
+                >
+                  {hit.symbol.specifier}
                 </Box>
                 <KindBadge kind={hit.symbol.kind} />
               </RouterLink>

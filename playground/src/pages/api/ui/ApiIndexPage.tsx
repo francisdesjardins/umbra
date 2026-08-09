@@ -8,15 +8,43 @@ import {
   SYMBOLS,
   categoriesFor,
   categoryHref,
-  categoryOf,
   symbolAnchor,
+  symbolAt,
 } from '../model/api-index';
 import { ApiLayout } from './ApiLayout';
 import { KindBadge } from './KindBadge';
 import { RouterLink } from './RouterLink';
 
-/** Four entry points into the library, for a reader who has not decided what they need yet. */
-const START_HERE = ['useModal', 'useSlideModal', 'dialogManager', 'createStore'];
+/**
+ * The doors in, for a reader who has not decided what they need yet.
+ *
+ * Qualified, because the first question is which binding — three of them export `useModal` and
+ * the chips would otherwise repeat one word three times without saying what differs.
+ */
+const START_HERE: readonly { readonly specifier: string; readonly name: string }[] = [
+  { specifier: 'umbra/react', name: 'useModal' },
+  { specifier: 'umbra/solid', name: 'useModal' },
+  { specifier: 'umbra/vanilla', name: 'bindDialog' },
+  { specifier: 'umbra', name: 'dialogManager' },
+];
+
+/** What each entry point is, in the order a reader meets them. */
+const ENTRY_BLURB: Record<string, string> = {
+  umbra: 'The framework-agnostic core. Resolves and runs with no framework installed at all.',
+  'umbra/react':
+    'Hooks, the outlet and React-flavoured store access. It re-exports the core, so a React app imports from this path only.',
+  'umbra/solid':
+    'The same surface for Solid, plus `fromStore`. Live values are getters over signals, so do not destructure the render args.',
+  'umbra/vanilla':
+    'A controller for a <dialog> you wrote yourself: no render, no Modal, no outlet — and no framework, optional or otherwise.',
+};
+
+const ENTRY_TITLE: Record<string, string> = {
+  umbra: 'Core',
+  'umbra/react': 'React binding',
+  'umbra/solid': 'Solid binding',
+  'umbra/vanilla': 'Vanilla binding',
+};
 
 const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
   return (
@@ -64,18 +92,15 @@ const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
 const StartHere = () => {
   return (
     <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-      {START_HERE.map((name) => {
-        const category = categoryOf(name);
-        const symbol = SYMBOLS.find((entry) => {
-          return entry.name === name;
-        });
-        if (category === undefined || symbol === undefined) {
+      {START_HERE.map(({ specifier, name }) => {
+        const symbol = symbolAt(specifier, name);
+        if (symbol === undefined) {
           return null;
         }
         return (
           <RouterLink
-            key={name}
-            to={categoryHref(category)}
+            key={symbol.key}
+            to={categoryHref(symbol.category)}
             hash={symbolAnchor(name)}
             sx={{
               display: 'flex',
@@ -94,6 +119,9 @@ const StartHere = () => {
               '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
             }}
           >
+            <Box component="span" sx={{ color: 'text.disabled' }}>
+              {specifier}
+            </Box>
             {name}
             <KindBadge kind={symbol.kind} />
           </RouterLink>
@@ -135,12 +163,8 @@ export const ApiIndexPage = () => {
             return (
               <ExampleSection
                 key={specifier}
-                title={specifier.endsWith('/react') ? 'React binding' : 'Core'}
-                description={
-                  specifier.endsWith('/react')
-                    ? `${specifier} — hooks, the outlet and the React-flavoured store access. It re-exports the core, so a React app imports from this path only.`
-                    : `${specifier} — the framework-agnostic core. Resolves and runs with React absent entirely.`
-                }
+                title={ENTRY_TITLE[specifier] ?? specifier}
+                description={`${specifier} — ${ENTRY_BLURB[specifier] ?? ''}`}
               >
                 <ExampleGrid columns={2}>
                   {categoriesFor(specifier).map((category) => {

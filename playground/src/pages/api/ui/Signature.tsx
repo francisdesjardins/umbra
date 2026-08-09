@@ -35,7 +35,7 @@ export const Signature = ({ parts }: { readonly parts: readonly DocPart[] }) => 
     <Box component="code" sx={PANEL_SX}>
       {parts.map((part, index) => {
         return part.link !== undefined ? (
-          <SymbolLink key={index} name={part.link}>
+          <SymbolLink key={index} symbolKey={part.link}>
             {part.text}
           </SymbolLink>
         ) : (

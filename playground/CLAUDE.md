@@ -103,6 +103,21 @@ typedoc carries none of it — `src/utils/` alone holds four chapters. **A new e
 added there**: `buildModel` throws on any export that belongs to no category, because an
 uncategorised one would be unreachable in the reference.
 
+**All four entry points are documented, and a symbol's identity is `specifier#name`.** A bare
+name is not one: `useModal` is three different declarations, `UseModalOptions` is three different
+aliases, and keying on the name shows one binding's signature under another's specifier. Two
+things follow, and both are load-bearing:
+
+- **A shared type is one reflection.** `ModalHandle`, `ActionOptions`, `SlideDirection` and the
+  rest of `core/types.ts` are named by every binding but declared once, so typedoc materialises
+  them under the first entry point that names them and emits references from the others.
+  `declarationFor` falls back to that single declaration — and only when there is exactly one,
+  because two declarations of a name are two different types.
+- **Links follow the category table, not the declaration.** `PrintContext.resolve` asks where
+  `CATEGORIES` renders a name for _this_ specifier, then for the core. So `UseModalOptions` in a
+  Solid signature links to the Solid chapter and `ModalPhase` in the same signature links to the
+  core's, whichever module typedoc happened to walk first.
+
 What the projection adds beyond the doc comments:
 
 - **A printed signature** per symbol, with every referenced export kept linkable. The printer
@@ -113,8 +128,13 @@ What the projection adds beyond the doc comments:
 - **Reflowed prose**: the source's 100-column hard wrap becomes browser wrapping, while blank
   lines and list markers are left alone. `@example` blocks keep every newline — they are code.
 
-A symbol name is a URL: `categoryHref` + `symbolAnchor` in `pages/api/model/api-index.ts` build
-every link in the reference, including the ones inside signatures and `{@link}` prose.
+A symbol is a URL: `categoryHref` + `symbolAnchor` in `pages/api/model/api-index.ts` build every
+link in the reference, including the ones inside signatures and `{@link}` prose. The page never
+constructs a key — the plugin mints them and the page treats them as opaque ids, resolving one
+with `symbolFor`. `symbolAt(specifier, name)` is the one door for a link that starts from
+neither, which is the start-here row on `/api`. The **anchor** stays the bare name: a category
+renders one specifier, so `api-useModal` is unique on the page it lives on and is what a reader
+can guess and share.
 
 ## Page composition
 

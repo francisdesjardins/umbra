@@ -15,10 +15,27 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
 const CORE = 'umbra';
 const REACT = 'umbra/react';
+const SOLID = 'umbra/solid';
+const VANILLA = 'umbra/vanilla';
 
 const ENTRY_LABEL: Record<string, string> = {
   index: CORE,
   react: REACT,
+  solid: SOLID,
+  vanilla: VANILLA,
+};
+
+/**
+ * How a symbol is addressed everywhere downstream — the specifier it ships from, then its name.
+ *
+ * A bare name is not an identity here. The three bindings deliberately export the same words —
+ * `useModal`, `UseModalOptions`, `DialogManagerSnapshot`, `ModalHandle` — with different
+ * signatures, so keying on the name alone silently shows one binding's declaration under
+ * another's specifier. This is the key the category table, the cross-reference links and the
+ * search index all agree on.
+ */
+export const symbolKey = (specifier: string, name: string): string => {
+  return `${specifier}#${name}`;
 };
 
 /** Typedoc's `ReflectionKind`, narrowed to what the page groups by. */
@@ -191,6 +208,105 @@ const CATEGORIES: readonly CategoryDef[] = [
       'useDialogManagerContext',
     ],
   },
+  {
+    id: 'solid-use-modal',
+    label: 'useModal',
+    specifier: SOLID,
+    blurb:
+      'The same hook, the same words. Two differences and both are the renderer’s: the live values are getters over signals, so do not destructure the render args — and `portal: true` mounts the dialog itself, leaving `Modal` as null.',
+    symbols: [
+      'useModal',
+      'UseModalOptions',
+      'UseModalBaseOptions',
+      'UseModalReturn',
+      'ModalRenderArgs',
+      'ModalHandle',
+      'ModalVariant',
+      'ModalAnimation',
+      'AwaitedClose',
+      'ModalOutlet',
+    ],
+  },
+  {
+    id: 'solid-templates',
+    label: 'Template hooks',
+    specifier: SOLID,
+    blurb:
+      'Message and slide, built on Solid’s useModal — the same three lines over the same framework-free geometry the React pair uses.',
+    symbols: [
+      'useMessageModal',
+      'UseMessageModalOptions',
+      'UseMessageModalReturn',
+      'MessageModalRenderContext',
+      'MessageModalType',
+      'useSlideModal',
+      'UseSlideModalOptions',
+      'UseSlideModalReturn',
+      'SlideModalRenderContext',
+      'SlideDirection',
+      'SlideAlign',
+    ],
+  },
+  {
+    id: 'solid-actions',
+    label: 'Actions',
+    specifier: SOLID,
+    blurb:
+      'The same action factory the React binding hands out. Its three live fields are getters, so spreading the props inside a tracking scope subscribes each attribute individually — no re-render, no wrapper.',
+    symbols: [
+      'ActionFactory',
+      'ActionOptions',
+      'ActionButtonProps',
+      'ActionClickEvent',
+      'ActionCloseFn',
+      'HotkeyDef',
+    ],
+  },
+  {
+    id: 'solid-manager',
+    label: 'Manager in Solid',
+    specifier: SOLID,
+    blurb:
+      'Reading manager state from a component, scoping a manager to a subtree, and the six-line bridge from any store this package hands you to a signal.',
+    symbols: [
+      'useDialogManager',
+      'DialogManagerSnapshot',
+      'useLookup',
+      'DialogManagerProvider',
+      'useDialogManagerContext',
+      'fromStore',
+    ],
+  },
+  {
+    id: 'vanilla',
+    label: 'bindDialog',
+    specifier: VANILLA,
+    blurb:
+      'A controller, not a renderer: the <dialog> and everything in it is markup you already wrote, and this drives its lifecycle over the top. No render, no Modal, no outlet — and bindAction, which is the half a renderer does elsewhere.',
+    symbols: [
+      'bindDialog',
+      'BindDialogOptions',
+      'DialogController',
+      'DialogSnapshot',
+      'ModalHandle',
+      'ModalVariant',
+      'AwaitedClose',
+    ],
+  },
+  {
+    id: 'vanilla-actions',
+    label: 'Actions',
+    specifier: VANILLA,
+    blurb:
+      'The same actions, bound rather than rendered: what you pass to bindAction, and the props it applies on their behalf as one runs.',
+    symbols: [
+      'ActionOptions',
+      'ActionButtonProps',
+      'ActionClickEvent',
+      'ActionCloseFn',
+      'HotkeyDef',
+    ],
+  },
 ];
 
 type CategoryDef = {
@@ -200,6 +316,9 @@ type CategoryDef = {
   readonly blurb: string;
   readonly symbols: readonly string[];
 };
+
+/** One reflection typedoc emitted, and the entry point it was materialised under. */
+type Declaration = { readonly node: Node; readonly specifier: string };
 
 /** A named thing inside a symbol: a parameter, a type parameter, or an object member. */
 export type ApiMember = {
@@ -213,10 +332,16 @@ export type ApiMember = {
  * A run of prose. `link` is set when the source wrote `{@link Symbol}` and typedoc resolved it,
  * or when a rendered type names another exported symbol, so the page can anchor to that symbol
  * instead of printing its name.
+ *
+ * It carries a {@link symbolKey} when the target is exported and a bare name when it is not —
+ * the page renders the second kind as inline code, which is the honest answer for a type a
+ * reader cannot navigate to.
  */
 export type DocPart = { readonly text: string; readonly link?: string };
 
 export type ApiSymbol = {
+  /** `specifier#name` — see {@link symbolKey}. Its identity everywhere off this page. */
+  readonly key: string;
   readonly name: string;
   readonly kind: 'function' | 'variable' | 'type';
   /** Which page it lives on — the `id` of its {@link ApiCategory}. */
@@ -322,15 +447,23 @@ function text(parts: CommentPart[] | undefined): string {
  * Same, but keeping `{@link}` targets as links.
  *
  * Typedoc gives an inline tag a numeric `target` pointing into its own reflection graph, so
- * `names` maps those ids back to symbol names; anything it cannot resolve degrades to the text
- * the author wrote.
+ * `names` maps those ids back to symbol names; the name is then resolved against the specifier
+ * the linking symbol ships from, and anything neither step can answer degrades to the text the
+ * author wrote.
  */
-function doc(parts: CommentPart[] | undefined, names: Map<number, string>): DocPart[] {
+function doc(
+  parts: CommentPart[] | undefined,
+  names: Map<number, string>,
+  ctx: PrintContext
+): DocPart[] {
   return (parts ?? [])
     .map((part) => {
       const target = typeof part.target === 'number' ? names.get(part.target) : undefined;
+      // A target the entry points do not export stays a link part carrying its bare name: the
+      // page renders those as inline code, which is the honest answer for a type a reader
+      // cannot navigate to.
       return part.kind === 'inline-tag' && target !== undefined
-        ? { text: part.text ?? target, link: target }
+        ? { text: part.text ?? target, link: ctx.resolve(target) ?? target }
         : { text: reflow(part.text ?? '') };
     })
     .filter((part) => {
@@ -341,12 +474,13 @@ function doc(parts: CommentPart[] | undefined, names: Map<number, string>): DocP
 function blockTag(
   comment: Comment | undefined,
   tag: string,
-  names: Map<number, string>
+  names: Map<number, string>,
+  ctx: PrintContext
 ): DocPart[] {
   const found = comment?.blockTags?.find((entry) => {
     return entry.tag === tag;
   });
-  return doc(found?.content, names);
+  return doc(found?.content, names, ctx);
 }
 
 /** Typedoc hands `@example` back as a fenced markdown block; the page renders code, not markdown. */
@@ -392,8 +526,8 @@ class Tokens {
     this.parts.push({ text: value });
   }
 
-  link(name: string): void {
-    this.parts.push({ text: name, link: name });
+  link(name: string, key: string): void {
+    this.parts.push({ text: name, link: key });
   }
 
   done(): DocPart[] {
@@ -402,8 +536,17 @@ class Tokens {
 }
 
 type PrintContext = {
-  /** Exported symbol names — the only things a printed type is allowed to link to. */
-  readonly exported: Set<string>;
+  /**
+   * The symbol a name means *here*, as a {@link symbolKey}, or `undefined` when nothing on these
+   * pages answers to it.
+   *
+   * Own specifier first, then the core — so `UseModalOptions` inside a Solid signature links to
+   * Solid's page and `ModalPhase` inside the same signature links to the core's. Driven by the
+   * category table rather than by where typedoc happened to materialise a declaration: a type
+   * three bindings re-export is one reflection, and a reader following a link from the Solid
+   * chapter should land in the Solid chapter.
+   */
+  readonly resolve: (name: string) => string | undefined;
   readonly warn: (message: string) => void;
 };
 
@@ -497,8 +640,9 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
     }
     case 'reference': {
       const name = node.name ?? 'unknown';
-      if (ctx.exported.has(name)) {
-        out.link(name);
+      const key = ctx.resolve(name);
+      if (key !== undefined) {
+        out.link(name, key);
       } else {
         out.push(name);
       }
@@ -729,19 +873,20 @@ function toSymbol(
   const comment = signature?.comment ?? node.comment;
 
   return {
+    key: symbolKey(specifier, node.name),
     name: node.name,
     kind,
     category,
     specifier,
     signature: printSignature(node, kind, ctx),
-    summary: doc(comment?.summary, names),
-    remarks: blockTag(comment, '@remarks', names),
+    summary: doc(comment?.summary, names, ctx),
+    remarks: blockTag(comment, '@remarks', names, ctx),
     see: (comment?.blockTags ?? [])
       .filter((entry) => {
         return entry.tag === '@see';
       })
       .map((entry) => {
-        return doc(entry.content, names);
+        return doc(entry.content, names, ctx);
       }),
     examples: allBlockTags(comment, '@example'),
     typeParams: (signature?.typeParameters ?? node.typeParameters ?? []).map((param) => {
@@ -756,7 +901,7 @@ function toSymbol(
       .map((param) => {
         return toMember(param, ctx);
       }),
-    returns: blockTag(comment, '@returns', names),
+    returns: blockTag(comment, '@returns', names, ctx),
     members: members(node, ctx),
   };
 }
@@ -821,17 +966,19 @@ function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) 
         join(repoRoot, 'node_modules', 'typedoc', 'bin', 'typedoc'),
         '--options',
         join(repoRoot, 'typedoc.json'),
-        // Entry points are named here rather than taken from `typedoc.json`, which also lists
-        // `src/solid.ts`. The projection below keys declarations by bare symbol name, and the
-        // two bindings deliberately export the same names — `useModal`, `UseModalOptions`,
-        // `ModalOutlet` — so a third entry would collide silently and the reference would show
-        // one binding's signature under the other's specifier. Documenting `umbra/solid` here
-        // needs the model keyed by `specifier:name` first, which reaches the category table,
-        // the anchors and the search index.
+        // Named here rather than taken from `typedoc.json` so this projection decides its own
+        // scope: the reference documents every published entry point, and adding one is a line
+        // here plus its categories above. The projection keys declarations by `specifier#name`
+        // (see `symbolKey`), which is what lets three bindings export `useModal` and get three
+        // pages rather than the last one to be walked.
         '--entryPoints',
         'src/index.ts',
         '--entryPoints',
         'src/react.ts',
+        '--entryPoints',
+        'src/solid.ts',
+        '--entryPoints',
+        'src/vanilla.ts',
         '--json',
         jsonPath,
         '--out',
@@ -847,46 +994,98 @@ function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) 
   rmSync(join(cacheDir, 'html'), { recursive: true, force: true });
   const names = collectNames(root);
 
-  // Where each exported symbol lives, and under which specifier — built first so a printed
-  // type can link to any of them and so an uncategorised export is caught before rendering.
-  const declarations = new Map<string, { node: Node; specifier: string }>();
+  // Every declaration typedoc emitted, by qualified key and by bare name.
+  //
+  // The two indexes exist because a re-exported type is **one** reflection: `ModalHandle` comes
+  // from `core/types.ts` and is named by `./react`, `./solid` and `./vanilla` alike, so typedoc
+  // materialises it under whichever entry point it walked first and emits references from the
+  // rest — which `KIND` filters out. So a binding asking for a name it genuinely exports has to
+  // be able to fall back to that single declaration. `UseModalOptions` is the opposite case:
+  // `react/types.ts` and `solid/types.ts` declare two different aliases, each gets its own
+  // qualified key, and the fallback is never consulted.
+  //
+  // A binding's `export * from './index.js'` does not land here either, for the same reason —
+  // so the root's symbols are documented once, on the root's pages.
+  const declarations = new Map<string, Declaration>();
+  const byName = new Map<string, Declaration[]>();
   for (const module of root.children ?? []) {
     const specifier = ENTRY_LABEL[module.name] ?? module.name;
     for (const child of module.children ?? []) {
       if (KIND[child.kind]) {
-        declarations.set(child.name, { node: child, specifier });
+        const declaration = { node: child, specifier };
+        declarations.set(symbolKey(specifier, child.name), declaration);
+        byName.set(child.name, [...(byName.get(child.name) ?? []), declaration]);
       }
     }
   }
 
-  const ctx: PrintContext = { exported: new Set(declarations.keys()), warn };
-  const placed = new Set<string>();
+  /**
+   * The declaration a category means. Its own if it has one, otherwise the single shared
+   * reflection — and never a guess: two declarations of a name are two different types, and
+   * picking one of them is how a binding's page ends up showing the other's signature.
+   */
+  const declarationFor = (specifier: string, name: string): Declaration | undefined => {
+    const own = declarations.get(symbolKey(specifier, name));
+    if (own !== undefined) {
+      return own;
+    }
+    const shared = byName.get(name) ?? [];
+    return shared.length === 1 ? shared[0] : undefined;
+  };
+
+  // Where the category table says each name is rendered — built before anything is printed,
+  // because that is what a cross-reference has to resolve against. A link out of the Solid
+  // chapter lands in the Solid chapter, whichever entry point typedoc happened to walk first.
+  const pageOf = new Set(
+    CATEGORIES.flatMap((category) => {
+      return category.symbols.map((name) => {
+        return symbolKey(category.specifier, name);
+      });
+    })
+  );
+
+  const consumed = new Set<string>();
 
   const categories: ApiCategory[] = CATEGORIES.map((category) => {
+    const ctx: PrintContext = {
+      resolve: (name) => {
+        const own = symbolKey(category.specifier, name);
+        if (pageOf.has(own)) {
+          return own;
+        }
+        const core = symbolKey(CORE, name);
+        return pageOf.has(core) ? core : undefined;
+      },
+      warn,
+    };
     return {
       id: category.id,
       label: category.label,
       specifier: category.specifier,
       blurb: category.blurb,
       symbols: category.symbols.map((name) => {
-        const declaration = declarations.get(name);
+        const declaration = declarationFor(category.specifier, name);
         if (declaration === undefined) {
           throw new Error(
-            `[dialog-api] category "${category.id}" lists "${name}", which no entry point exports.`
+            `[dialog-api] category "${category.id}" lists "${name}", which "${category.specifier}" does not export.`
           );
         }
-        placed.add(name);
-        const symbol = toSymbol(declaration.node, declaration.specifier, category.id, names, ctx);
+        consumed.add(symbolKey(declaration.specifier, name));
+        // The symbol is keyed by the page it is on, not by where it was declared: a shared type
+        // appears in each binding's chapter, and each copy has to be its own link target.
+        const symbol = toSymbol(declaration.node, category.specifier, category.id, names, ctx);
         if (symbol === null) {
-          throw new Error(`[dialog-api] "${name}" has no renderable kind.`);
+          throw new Error(
+            `[dialog-api] "${symbolKey(category.specifier, name)}" has no renderable kind.`
+          );
         }
         return symbol;
       }),
     };
   });
 
-  const orphans = [...declarations.keys()].filter((name) => {
-    return !placed.has(name);
+  const orphans = [...declarations.keys()].filter((key) => {
+    return !consumed.has(key);
   });
   if (orphans.length > 0) {
     throw new Error(
