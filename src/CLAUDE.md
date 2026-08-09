@@ -50,6 +50,13 @@ Two more that are easy to blur:
   every pass. A `run*` function (`runDialogExit`, `runCloseSequence`) performs what it names, every
   time it is called.
 
+Two near-misses, considered and kept, so the next pass does not re-open them. `ActionGate` and
+`DismissGate` are "gate" in two senses — a narrowed view of the engine, and the inputs to one
+predicate — and the alternatives (`ReadonlyActionEngine`, `CanDismissOptions`) each cost more than
+the ambiguity does. `ModalRenderArgs` and `BaseRenderContext` are two words for one shape on
+purpose: the alias is the seam `SlideModalRenderContext` intersects, and "args" is right for a
+callback's parameter where "context" is right for what a template hands its render.
+
 ### Where a file goes
 
 The folder names are the architecture's documentation, so a React hook in `core/` is a
@@ -457,7 +464,7 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   the public surface is undocumented — run `yarn docs:check --validation.notDocumented` before
   assuming that is still true.
 - `disableSources` is on because there is no git remote yet, so every "view source" link would 404. Turn it off once the repository exists.
-- All three entry points are in `entryPoints`, and the four core option/return types are listed in
+- All four entry points are in `entryPoints`, and the four core option/return types are listed in
   `intentionallyNotExported` **by qualified name** (`umbra/src/core/types.ts:UseModalOptions`) —
   the plain name would also silence the two bindings' exported ones, which is exactly the warning
   worth keeping.
