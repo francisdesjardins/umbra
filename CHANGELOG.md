@@ -11,6 +11,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Added — `umbra/solid` and `umbra/vanilla` chapters in `API.md`
+
+The generated reference grew two bindings; the handwritten one still opened with "every snippet
+below imports from one of two specifiers". Both now describe four.
+
+The two chapters are shaped by what each binding actually is. **`umbra/solid`** is short on
+purpose: the hook bindings share a surface deliberately, so the page says so once and documents
+only what differs — the live values are getters (with the destructuring trap spelled out, because
+it is the one that bites), `portal: true` returns `Modal: null`, `useLookup` returns an accessor
+because `ModalInfo` is a discriminated union, and `fromStore` is the adapter React does not need.
+**`umbra/vanilla`** is long, because it is the one chapter that cannot be read as a delta: it does
+not render, so `render`, `Modal` and the outlet have no counterpart, and `bindDialog`,
+`DialogController`, `bindAction` and the `subscribe`/`getSnapshot` pair are documented in full.
+
+Also: `Reading a store` now names Solid's adapter and the no-framework case beside React's
+`useSyncExternalStore`, and every internal anchor in `API.md` and `README.md` was checked to
+resolve against a real heading.
+
 ### Added — `umbra/solid` and `umbra/vanilla` in the generated `/api` reference
 
 The reference documented two of four entry points. The blocker was recorded rather than fixed:

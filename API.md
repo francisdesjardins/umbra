@@ -12,16 +12,27 @@
 
 ### Entry points
 
-Every snippet below imports from one of two specifiers, and which one is not cosmetic:
+Four specifiers, and which one a snippet uses is not cosmetic:
 
-- **`umbra`** — the framework-agnostic core. The manager, the store engine,
-  `normalizeError`, `Key`. Resolves with React not installed.
-- **`umbra/react`** — the React binding (all hooks, `ModalOutlet`), **plus a wholesale
-  re-export of the root**. A React app can import everything from here and never touch the root.
+- **`umbra`** — the framework-agnostic core. The manager, the store engine, the placement table,
+  `normalizeError`, `Key`. Resolves with no framework installed at all.
+- **`umbra/react`** — the React binding (all hooks, `ModalOutlet`), **plus a wholesale re-export
+  of the root**. A React app imports everything from here and never touches the root.
+- **`umbra/solid`** — the same surface for Solid, plus `fromStore`, and the same wholesale
+  re-export. See [umbra/solid](#umbrasolid) for the three differences, all of them the
+  renderer's.
+- **`umbra/vanilla`** — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no
+  `Modal`, no outlet, and no framework. See [umbra/vanilla](#umbravanilla).
+
+**The body of this page is written against `umbra/react`,** because the two hook bindings share a
+surface deliberately — down to the option names and the render-arg fields — so a Solid reader can
+read every section below as their own and consult the Solid chapter only for what differs. The
+vanilla chapter is the one that cannot be read that way: it does not render, so `render`, `Modal`
+and the outlet have no counterpart there and it documents its own surface in full.
 
 A snippet using only core symbols is shown on the root deliberately, to mark it as usable from
-non-React code. React consumers may read every `umbra` import below as
-`umbra/react` if they prefer a single import path.
+code with no renderer. Binding consumers may read every `umbra` import below as their own
+specifier if they prefer a single import path.
 
 ### Core Concepts
 
@@ -678,6 +689,231 @@ function Dashboard() {
 
 ---
 
+## umbra/solid
+
+A sibling of `umbra/react`, not a port of it. Both sit on the same framework-free core — the modal
+store, the action engine, the manager, the `attach*` DOM wiring, the placement table and the slide
+geometry — and what each binding adds is how its framework schedules effects and owns nodes.
+
+**The surface is the same, on purpose**, so a team running both frameworks writes the same modal
+twice with the same words. Every section above applies unchanged: the same options, the same
+render args, the same `action` factory, the same typed close. Three things differ, and all three
+are the renderer's rather than a choice.
+
+```tsx
+import { Show } from 'solid-js';
+import { useModal } from 'umbra/solid';
+
+const modal = useModal<{ id: string }, 'save' | 'cancel'>({
+  id: 'settings',
+  ariaLabel: 'Settings',
+  render: (ctx) => (
+    <div>
+      <Show when={ctx.isPreparing} fallback={<Form />}>
+        Loading…
+      </Show>
+      <button {...ctx.action('cancel')}>Cancel</button>
+      <button
+        {...ctx.action('save', async (close) => {
+          close({ id: await save() });
+        })}
+      >
+        Save
+      </button>
+    </div>
+  ),
+  onClose: (result) => {
+    if (result.reason === 'save') {
+      report(result.data);
+    }
+  },
+});
+```
+
+### 1. Live values are getters — do not destructure the render args
+
+`isVisible`, `isPreparing`, `hasRunningAction` and `error` are getters over signals. `modal.isVisible`
+reads the same way it does in React; inside JSX it subscribes that one expression instead of
+re-rendering a component.
+
+```tsx
+// ✅ take the context and read through it — each read subscribes
+render: (ctx) => <Show when={ctx.isPreparing}>…</Show>;
+
+// ❌ destructuring reads the value once and freezes it, exactly as it does for props
+render: ({ isPreparing }) => <Show when={isPreparing}>…</Show>;
+```
+
+The same applies to an action's props: spreading them inside a tracking scope subscribes
+`disabled`, `data-loading` and `aria-busy` individually. That is why the `action` factory is shared
+between the bindings rather than reimplemented — a virtual-DOM renderer spreads the object and
+reads each getter once, which is the snapshot it wanted.
+
+### 2. `portal: true` returns `Modal: null`
+
+React's `createPortal` returns a node you still have to render. A Solid modal owns its element, so
+the binding mounts it into `document.body` itself and there is nothing left to place. `portal: false`
+(the default) behaves exactly as it does in React.
+
+### 3. `useLookup` returns an accessor
+
+`ModalInfo` is a discriminated union — `info.exists` narrows it — and a union cannot be handed back
+as one object of getters without flattening the discriminant away, which would cost exactly the
+narrowing the type exists for. So this one is called; `useDialogManager` next door is not.
+
+```typescript
+const info = useLookup('settings');
+const label = () => (info().exists && info().isVisible ? 'Open' : 'Closed');
+
+const manager = useDialogManager(); // a snapshot object, like React's
+```
+
+### `fromStore`
+
+The bridge from the library's store contract to a Solid signal, and the one export React has no
+counterpart for — React consumes `{ subscribe, getSnapshot }` through `useSyncExternalStore` with
+no adapter. It is public because every Solid consumer would otherwise write the same six lines.
+
+```typescript
+import { createStore } from 'umbra';
+import { fromStore } from 'umbra/solid';
+
+const counter = createStore({ count: 0 });
+const snapshot = fromStore(counter);
+
+createEffect(() => {
+  console.log(snapshot().count);
+});
+```
+
+`equals: false` inside, because the store already decides what a change is — it skips notifying
+when the next snapshot is equal, so a second identity check could only swallow a notification the
+store meant to send.
+
+> Solid is an **optional** peer (`^1.9.14`). Only this entry point touches it; the root and
+> `umbra/vanilla` resolve with it absent.
+
+---
+
+## umbra/vanilla
+
+The third binding, and deliberately **not** the same shape as the other two. `umbra/react` and
+`umbra/solid` render a dialog _and_ its contents from a `render` callback; a vanilla binding that
+did the same would have to ship a renderer, which is the one thing this library refuses to do.
+
+So this one is a **controller**. The `<dialog>` and everything in it is markup you already wrote;
+`bindDialog` drives the lifecycle over the top of it.
+
+```html
+<dialog id="confirm">
+  <h2 id="confirm-title">Approve charge?</h2>
+  <button id="cancel">Cancel</button>
+  <button id="approve">Approve</button>
+</dialog>
+```
+
+```typescript
+import { bindDialog } from 'umbra/vanilla';
+
+// `querySelector` returns `Element | null`, so narrow once rather than assert at the seam —
+// this is also the check that tells you the id in the markup and the id here disagree.
+const dialog = document.querySelector('#confirm');
+if (!(dialog instanceof HTMLDialogElement)) {
+  throw new Error('#confirm is not a <dialog>');
+}
+
+const confirm = bindDialog<{ receipt: string }, 'approve' | 'cancel'>({
+  id: 'billing:confirm',
+  dialog,
+  ariaLabelledBy: 'confirm-title',
+  prepare: async (signal) => {
+    await loadQuote({ signal });
+  },
+  onClose: (result) => {
+    if (result.reason === 'approve') {
+      report(result.data);
+    }
+  },
+});
+
+confirm.bindAction(cancelButton, 'cancel');
+const unbind = confirm.bindAction(approveButton, 'approve', {
+  hotkey: 'Enter',
+  onAction: async (close) => {
+    close({ receipt: await charge() });
+  },
+});
+
+const [error, result] = await confirm.openAndWait();
+```
+
+**Everything a modal _is_ is the same code the hook bindings run, in the same order**: phases and
+the entrance/exit animation, `prepare` with its `AbortSignal`, the dismiss key on the dialog, on
+its native `cancel` and at the window for a non-modal panel, click-outside, backdrop hit-testing,
+opening focus and restoration after a failed action, the registration that makes it addressable by
+id from another microfrontend, and the typed close. Every option documented under
+[useModal](#usemodal-base-primitive) applies, minus `render`.
+
+### `bindDialog(options)`
+
+`BindDialogOptions` is `UseModalOptions` without `render`, plus three of its own:
+
+| Option    | Type                | Description                                                                                                                                                                                                                           |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dialog`  | `HTMLDialogElement` | **Required.** The element to drive. It is yours — this shows, hides, animates and listens on it, and never touches what is inside. Attributes the options do not name are left alone, so an `aria-labelledby` in the markup survives. |
+| `host`    | `HTMLElement`       | The element a _contained_ non-modal panel is positioned against (`nonModal: true` without `portal`). Defaults to the dialog's parent, and must be sized — see [dialogPlacement](#dialogplacement). Ignored for every other variant.   |
+| `manager` | `DialogManager`     | The manager to register with. Defaults to the `dialogManager` singleton. This is the vanilla answer to `DialogManagerProvider`: there is no tree to read a context from, so an isolated instance is passed rather than provided.      |
+
+Positioning and animation are applied as **inline styles**, which outrank a stylesheet rule on
+`dialog` — the same bargain the other two bindings make.
+
+### `DialogController`
+
+| Member                                 | Type                                          | Description                                                                 |
+| -------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `open()`                               | `() => Promise<void>`                         | Opens it. Resolves after `prepare` completes.                               |
+| `openAndWait()`                        | `() => Promise<AwaitedClose<TData, TReason>>` | Opens it and resolves with how it closed — see [openAndWait](#openandwait). |
+| `handle`                               | `ModalHandle<TData, TReason>`                 | `handle.close(reason?, data?)`, typed with this dialog's payload.           |
+| `bindAction(button, reason, options?)` | `(…) => () => void`                           | Turns a button into one of this dialog's actions. Returns an **unbind**.    |
+| `subscribe(listener)`                  | `(() => void) => () => void`                  | Every state change — phases and actions alike.                              |
+| `getSnapshot()`                        | `() => DialogSnapshot`                        | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
+| `destroy()`                            | `() => void`                                  | Unregister, close if open, settle every waiter, detach every listener.      |
+| `dialogManager`                        | `DialogManager`                               | The manager this dialog is registered with.                                 |
+
+### `bindAction` — the half a renderer does elsewhere
+
+The vanilla counterpart of spreading `action(reason)` onto a button, and the one addition this
+binding makes. It exists because nothing here re-renders: it attaches the click handler, writes
+`aria-keyshortcuts` and `data-focus-on-open` once, and then keeps `disabled`, `data-loading` and
+`aria-busy` synchronised as the action runs.
+
+It takes the same [`ActionOptions`](#actionreason-handleroroptions) the hook bindings do —
+`onAction`, `onClick`, `disabled`, `type`, `hotkey`, `focusOnOpen`.
+
+**Call the unbind when the button goes away.** It removes the listener _and_ retires the action's
+declaration, which is what stops a hotkey outliving its button and what lets backdrop dismissal go
+back to its no-actions default.
+
+### Reacting to state without a renderer
+
+`subscribe` / `getSnapshot` are how content that has to change with the dialog gets told, since
+nothing re-renders it for you. The pair is the same `StoreContract` everything else in this package
+speaks, so `fromStore` and `useSyncExternalStore` consume it unchanged.
+
+```typescript
+const stop = confirm.subscribe(() => {
+  const { isPreparing, hasRunningAction } = confirm.getSnapshot();
+  spinner.hidden = !isPreparing;
+  form.inert = hasRunningAction;
+});
+```
+
+> **No framework, optional or otherwise.** This entry point imports nothing React or Solid ship, so
+> it resolves in exactly the environments the root does — a plain page, an Astro island, a web
+> component, a server-rendered app with a sprinkle of JavaScript.
+
+---
+
 ## Dialog Manager (Imperative)
 
 ```typescript
@@ -1222,6 +1458,16 @@ The library ships the engine, not the conveniences over it. `StoreContract` — 
 import { useSyncExternalStore } from 'react';
 
 const count = useSyncExternalStore(store.subscribe, () => store.getSnapshot().count);
+```
+
+Solid needs one adapter and it ships as [`fromStore`](#fromstore) — six lines, public because
+every Solid consumer would otherwise write the same six. Outside a component, the pair _is_ the
+whole contract: subscribe, and read `getSnapshot()` when told.
+
+```typescript
+const stop = store.subscribe(() => {
+  render(store.getSnapshot());
+});
 ```
 
 `useStore` (selectors and custom equality), `createStoreContext` (a store scoped to a subtree),
