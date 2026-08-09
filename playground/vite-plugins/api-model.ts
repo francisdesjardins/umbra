@@ -64,10 +64,23 @@ const CATEGORIES: readonly CategoryDef[] = [
       'ModalPhase',
       'ModalStoreSnapshot',
       'CloseResult',
+      'setLogLevel',
+    ],
+  },
+  {
+    id: 'placement',
+    label: 'Placement & styling',
+    specifier: CORE,
+    blurb:
+      'Where a dialog is positioned from, as a table rather than as markup — and the one way the library writes a style onto an element. What a binding, or a host you write yourself, reads to place a dialog the way the shipped ones do.',
+    symbols: [
       'dialogPlacement',
       'DialogPlacement',
       'DialogPlacementOptions',
-      'setLogLevel',
+      'DialogHostStyle',
+      'DialogPositionStyle',
+      'applyStyle',
+      'DialogStyle',
     ],
   },
   {
@@ -808,6 +821,17 @@ function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) 
         join(repoRoot, 'node_modules', 'typedoc', 'bin', 'typedoc'),
         '--options',
         join(repoRoot, 'typedoc.json'),
+        // Entry points are named here rather than taken from `typedoc.json`, which also lists
+        // `src/solid.ts`. The projection below keys declarations by bare symbol name, and the
+        // two bindings deliberately export the same names — `useModal`, `UseModalOptions`,
+        // `ModalOutlet` — so a third entry would collide silently and the reference would show
+        // one binding's signature under the other's specifier. Documenting `umbra/solid` here
+        // needs the model keyed by `specifier:name` first, which reaches the category table,
+        // the anchors and the search index.
+        '--entryPoints',
+        'src/index.ts',
+        '--entryPoints',
+        'src/react.ts',
         '--json',
         jsonPath,
         '--out',

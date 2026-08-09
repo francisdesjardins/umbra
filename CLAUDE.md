@@ -1,27 +1,36 @@
 # CLAUDE.md
 
-Framework-agnostic dialog/modal manager, with React shipped as one binding over it. No UI
-components exported; users bring their own.
+Framework-agnostic dialog/modal manager, with React and Solid shipped as two bindings over it.
+No UI components exported; users bring their own.
 
 ## Entry points
 
-The package root is plain TypeScript and **must resolve with React absent**. Bindings are the
-optional layer.
+The package root is plain TypeScript and **must resolve with no framework installed**. Bindings
+are the optional layer.
 
-| Specifier     | Contents                                                                                                                                                                                                          |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | `dialogManager`, `createDialogManager`, `dialogPlacement`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No React.             |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only. |
+| Specifier     | Contents                                                                                                                                                                                                                |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`       | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No framework. |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.       |
+| `umbra/solid` | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                             |
 
-Adding a binding (Solid, Vue, a web component) means adding a sibling of `src/react.ts` and a
-new `exports` entry. Nothing under the root changes.
+**The two bindings share a surface on purpose.** Same hook names, same options, same return
+shape, so a team running both writes the same modal twice with the same words. Two differences,
+and both are the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`,
+`error`) are getters over signals rather than re-rendered values — so **do not destructure the
+render args** — and `portal: true` mounts the dialog itself, leaving `Modal` as `null`.
 
-**The root's React-freedom is a test, not a convention:**
-[src/\_\_tests\_\_/root-react-free.test.ts](src/__tests__/root-react-free.test.ts) walks the real
-import graph from `src/index.ts` and fails on any runtime `react` import (type-only imports are
-erased, so those are fine). A companion assertion requires `src/react.ts` to come back dirty, so
-the guard cannot pass by failing to resolve anything. `peerDependenciesMeta` marks `react` and
-`react-dom` optional, which is the promise that test defends.
+Adding a third binding (Vue, a web component) means adding a sibling of `src/react.ts` and a new
+`exports` entry. Nothing under the root changes — see [src/CLAUDE.md](src/CLAUDE.md#what-a-binding-actually-does)
+for the list of what it inherits.
+
+**Entry-point isolation is a test, not a convention:**
+[src/\_\_tests\_\_/entry-isolation.test.ts](src/__tests__/entry-isolation.test.ts) walks the real
+import graph from each entry and asserts that the root reaches no framework, and that each
+binding reaches its own and only its own (type-only imports are erased, so those are fine). The
+positive halves are what stop the root's assertion from passing because the walker resolved
+nothing. `peerDependenciesMeta` marks `react`, `react-dom` and `solid-js` optional, which is the
+promise those tests defend, and `verify:package` re-checks all of it against the built artifact.
 
 ## Commands
 
@@ -58,6 +67,34 @@ yarn test:component:ui      # Component tests with UI
 | `*.ct.tsx`    | Component tests — Playwright CT         |
 | `*.story.tsx` | Harness components imported by CT tests |
 
+### What coverage measures
+
+`yarn test:unit:coverage` measures the **unit** project, which is Node with no DOM — so the
+exclude list in `.c8rc.json` is not a way to make a number look better, it is the statement of
+what that project can reach. Three groups, and the reason each is there:
+
+- **Type-only modules** (`core/types.ts`, `actions/types.ts`, the two bindings' `types.ts`, …) —
+  no runtime at all, so they report 0% forever and drag the number with them.
+- **Both bindings** (`src/react/**`, `src/solid/**`) and the entry barrels — component-tested. A
+  glob, because a new file there is component-test territory too.
+- **The DOM-only core modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`) — listed **one by
+  one**, deliberately. A new module in `core/` is not silently excluded: it shows up as a gap
+  until someone decides which kind it is.
+
+So a partially-covered file in the report is either a genuine gap or a DOM branch, and both are
+worth looking at. **If something is hard to unit-test because it is tangled with a renderer, that
+is the finding** — extract the framework-free half into `core/` and test it there, the way the
+action factory, the option resolution and the slide geometry were.
+
+**The Solid binding is tested through a React CT harness that hosts a real Solid root**
+([src/solid/\_\_tests\_\_/](src/solid/__tests__/)): the story renders a `<div>`, calls Solid's
+`render` into it from an effect, and returns the disposer as the cleanup. Playwright's
+`@playwright/experimental-ct-solid` stopped at 1.48 and does not track this version, and a second
+CT project is not worth its own Vite config — this way both bindings are asserted against the same
+browser, the same real `<dialog>` and the same top layer. The Solid harnesses use `h`
+(`solid-js/h`) rather than JSX, so no Solid compiler enters the build; hyperscript detects the
+getters an action's props carry and tracks them, so nothing about the reactivity is faked.
+
 Colocated in `__tests__/` next to the file under test, named to match. The `unit` project is
 rooted at the repo, so `playground/src/**/__tests__/*.test.ts` runs with the library's — a
 helper is a helper wherever it ships.
@@ -92,7 +129,7 @@ helper is a helper wherever it ships.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
 - **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
-- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
+- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Solid ^1.9.14 (optional peer — required only by `./solid`) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
 - **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
 - **Yarn workspaces**: the repo is two packages — `umbra` (root, published) and `umbra-playground` (`playground/`, `private: true`). One `yarn install` at the root installs both. **The published package's dependency list is the root manifest**, so anything the demo needs — MUI, Emotion, TanStack Router, immer, react-syntax-highlighter — belongs in `playground/package.json` and must never be added to the root. The root's own `dependencies` stay empty: the library ships zero runtime dependencies. Root `dev`/`playground:*` scripts delegate via `yarn workspace umbra-playground <script>`.
 - **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin — so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** (`'./types.js'`, `'../store/index.js'`) because `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext` — silently, under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
@@ -103,8 +140,12 @@ helper is a helper wherever it ships.
 ## Design Philosophy
 
 - **Core is framework-agnostic**: anything that does not need a framework goes under the root
-  and stays importable without React. New logic belongs in the core unless it genuinely needs
-  a renderer — a binding should be thin enough that writing a second one is unremarkable.
+  and stays importable without a renderer. New logic belongs in the core unless it genuinely
+  needs one — a binding should be thin enough that writing a second one is unremarkable, and
+  `umbra/solid` is what holds that claim honest. **The test for "does this belong in the core"
+  is now mechanical**: if adding it to one binding would mean adding it to the other, it is
+  core. That is how the `attach*` functions, the action factory, the dialog attributes, the
+  slide geometry and the default animation ended up there.
 - **Headless-first**: zero shipped UI — never add UI components
 - **Minimal surface**: extend `useModal` over adding template hooks
 - **No abstraction leakage**: templates must not expose core internals

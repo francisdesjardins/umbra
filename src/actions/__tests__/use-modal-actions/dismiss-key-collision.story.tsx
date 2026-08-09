@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useModal } from '../../../core/use-modal.js';
+import { useModal } from '../../../react/use-modal.js';
 import { Key } from '../../../utils/keys.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests that when a actions action's hotkey matches the modal's dismissKey,

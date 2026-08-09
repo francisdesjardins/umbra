@@ -9,6 +9,227 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-09
+
+### Added — `umbra/solid`, a second binding, and the answer to what a binding actually is
+
+The claim "React is one binding, not the library" was a comment with a test behind it. It is now
+two bindings with the same surface: same hook names, same options object, same return shape, same
+typed close. A team running both frameworks writes the same modal twice with the same words.
+
+Two differences, and both are the renderer's rather than a choice. Solid's live values
+(`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are **getters over signals**, so
+`modal.isVisible` reads identically but subscribes one expression instead of re-rendering a
+component — which means **do not destructure the render args**, exactly as you would not
+destructure props anywhere else in Solid. And `portal: true` mounts the dialog itself, leaving
+`Modal` as `null`: React's `createPortal` returns a node you still have to render, while a Solid
+modal owns its element.
+
+Solid is an optional peer, on the same terms React is. `fromStore` ships with it — six lines
+bridging the library's `subscribe`/`getSnapshot` contract into a signal, public because the
+alternative is every Solid app writing it.
+
+### Changed — what moved out of the renderers and into the core
+
+Writing the second binding is what settled the question the first one could only assert. The test
+turned out to be mechanical: **if adding something to one binding would mean adding it to the
+other, it is core.** By that measure the following were never React's, and had to move before
+`umbra/solid` could exist without copying them:
+
+- **The DOM wiring**, as `attach*` functions returning their own teardown: `openSequence` /
+  `syncCloseSequence`, `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey`,
+  `attachClickOutside`, and `createFocusCoordinator`. The four hooks in `src/hooks/` are now
+  ~20-line wrappers that call them from `useEffect`; Solid calls the same functions from
+  `createEffect` + `onCleanup`. The bodies moved unchanged, which is why the existing component
+  suite was the proof the extraction changed nothing.
+- **The action factory** (`core/action-factory.ts`). Its three live fields are getters, and that
+  is what lets one factory serve both: a virtual-DOM renderer spreads the object during render and
+  reads them once — the snapshot it wanted — while a fine-grained one spreads it inside a tracking
+  scope and subscribes each attribute individually. Nothing is duplicated, and neither binding is
+  compromised.
+- **The `<dialog>`'s attributes and the backdrop-click test** (`core/dialog-props.ts`). Two
+  bindings answering "is `data-modal-type` called that" separately is how a documented styling
+  contract quietly becomes two.
+- **The slide panel's geometry** (`templates/slide-geometry.ts`) and the default modal animation.
+  Which edge a drawer is pinned to is not renderer work, and two `useSlideModal`s that disagreed
+  about it would be two templates wearing one name.
+
+### Fixed — the root's published types no longer require `@types/react`
+
+`dialogPlacement` is a root export, and `dist/esm/core/placement.d.ts` opened with
+`import type { CSSProperties } from 'react'`. Type-only, so the React-freedom guard passed by
+design — and it walks _runtime_ imports, which is the right thing for it to walk. But the promise
+`peerDependenciesMeta` makes is about resolving the package, and a Solid-only consumer reading
+`DialogPlacement` needed React's types in their tree to do it.
+
+The fix is `DialogStyle` (`core/style.ts`): a mapped type over the `string`-valued keys of the
+DOM's own `CSSStyleDeclaration`, so the property list grows with the platform rather than with an
+edit here. React's `CSSProperties` is assignable to it, which is what lets
+`getDialogAnimationStyles<TStyle extends DialogStyle>` take a binding's own style type and hand
+back an intersection React's `style` prop accepts with no assertion. `applyStyle` ships beside it
+— the one way to write a style object onto an element, clearing what the previous one set, for a
+binding that owns its DOM node instead of describing it.
+
+`core/types.ts` became generic over exactly two things, because exactly two differ between
+frameworks: the style type and the node type. `react/types.ts` and `solid/types.ts` pin them and
+re-export the four resulting types under their ordinary names, so no consumer sees a type
+parameter.
+
+### Added — `engine.undeclare`, and the bug it exists for
+
+Actions are declared by being rendered, and React expires a declaration by re-running `render`
+wholesale. Solid never re-runs the parent: a button removed by its own `<Show>` has to retire its
+own declaration, which the Solid factory does from `onCleanup`. Without it the consequence is
+worse than a stale hotkey — `hasActions()` decides whether a backdrop click dismisses, so a modal
+that had drawn its last action would silently stay opt-in. Pinned by a Solid component test that
+toggles the only action away and asserts backdrop dismissal comes back.
+
+### Changed — the microfrontend demo is three microfrontends, across three frameworks
+
+Checkout (React) asks Billing (no binding at all) to approve a charge; over the limit Billing
+refuses _and_ hands the refusal to Support (Solid), which opens a ticket and answers back. One
+request crossing three frameworks in a single trip, with typed payloads travelling home, because
+what the three share is the manager and not the renderer.
+
+The host's import map went from three names pointing at one file to eight naming the package's
+real specifiers — `umbra`, `umbra/react`, `umbra/solid`, `react`, `solid-js` and friends. They are
+one rolldown build, not eight: code-splitting hoists everything shared, the manager included, into
+a chunk each entry imports. Separate builds would give separate registries, which is the failure
+the demo exists to rule out.
+
+### Changed — `root-react-free.test.ts` is now `entry-isolation.test.ts`
+
+It asserts more than it did. The root reaches no framework; `./react` reaches React and **not**
+Solid; `./solid` reaches Solid and **not** React. That last pair is the new guarantee — without
+it, installing one binding's peer could quietly become a condition for using the other.
+`verify:package` makes the same three assertions against the built artifact.
+
+### Changed — the React binding lives in `src/react/`, and the folder names stop lying
+
+Adding a second binding made the first one's filing visible: `useModal`, the outlet, the provider,
+the manager hooks and both templates were React-only files sitting in `core/`, `manager/` and
+`templates/` — folders whose names are the architecture's documentation. They moved, along with
+their tests, so `react/` and `solid/` now mirror each other file for file. No behaviour changed;
+the 478 tests and `verify:all` are the proof.
+
+Doing the move is what surfaced the rest of the friction, which was the point of doing it:
+
+- **`story-styles.ts` was in `core/__tests__/`** and imported by four folders' stories. A shared
+  harness helper belongs to none of them — it is `src/__tests__/story-styles.ts` now.
+- **The playground reached into the library's tests with `../../../../../src/…`**, fifty-odd times
+  across two files, and broke on the first move that came along. They go through the `umbra/*`
+  alias now (`umbra/react/__tests__/use-modal.story`), which the playground already had for
+  everything else, so the next move inside `src/` is a one-line change instead of fifty.
+  `playground/tsconfig.json`'s `include` had two stale story globs for the same reason.
+- **`react/hooks/` has no Solid counterpart**, and will not get one: its four files are
+  `useEffect(() => attachX(…), [deps])` and nothing else, because `createEffect` reads its
+  dependencies rather than being told them. That is React's cost, not a missing abstraction, and
+  it is now written down rather than rediscovered.
+- **A test stays next to what it tests, whatever framework its harness uses.**
+  `core/__tests__/apply-style.ct.tsx` drives a core function through React and belongs where it
+  is; so do the manager's and the action engine's CT tests. Only tests of a binding's own surface
+  moved.
+
+`src/templates/` now holds two framework-free files (`shared.ts`, `slide-geometry.ts`). Folding it
+into `core/` was considered and declined: "template" is vocabulary a reader of this library
+already has, and `core/` is not improved by absorbing it.
+
+### Fixed — `umbra/solid` looked like it was missing a slide modal, and the folders were why
+
+It exported `useSlideModal` all along. What it did not have was a file called `use-slide-modal`
+next to `modal-outlet`, because both templates sat in a combined `templates.ts` — and the honest
+reading of that folder was "Solid does not have one". The same was true of `useLookup`, folded
+into `use-dialog-manager.ts`.
+
+Both are split out, and the two bindings now mirror each other file for file. The rule is enforced
+rather than remembered: `__tests__/binding-parity.test.ts` diffs the two entry points' export
+**names** and their module **paths**, so a hook added to one and forgotten on the other fails, and
+so does putting it at a different depth. One asymmetry is allowlisted, with its reason:
+`fromStore`, which React does not need because `useSyncExternalStore` takes the library's store
+contract unadapted.
+
+### Changed — a `templates/` folder in each binding, and no `hooks/` folder in either
+
+`useMessageModal` and `useSlideModal` are built _on_ `useModal`, not peers of it, and the
+framework-free half of them already lived in `src/templates/`. They now sit in
+`react/templates/` and `solid/templates/`, which says both things.
+
+React's four internal effect hooks are gone the other way — inlined into `react/use-modal.tsx`.
+Their whole content was a dependency array, and a folder holding `use-click-outside.ts` reads as a
+feature list Solid is missing, which is exactly how it was read. The three dismiss-key listeners
+collapsed into the single effect Solid already used, since they shared a dependency list to the
+letter. Both bindings now wire the same `attach*` functions inline, in the same order.
+
+### Changed — the duplication between the two bindings, measured and removed
+
+`core/modal-runtime.ts` takes the parts that were written twice and were identical both times:
+`resolveModalConfig` (the defaults **and** the variant narrowing — reading `dismissOnBackdropClick`
+without checking `nonModal` first is a type error in the core and a silently-ignored option in a
+binding that got it wrong), `createModalRuntime` (store, engine, `open`, `openAndWait`, `handle`),
+`shouldDismissOnBackdropClick` (the whole four-step chain), and `teardownModal`.
+
+`animation` is deliberately not resolved there: its fallback is a concrete literal that a function
+generic over the binding's style type cannot return, so each binding keeps the one annotated line —
+which is also where the comment explaining the annotation belongs.
+
+What is left in each `use-modal` is renderer work: create a node, schedule an effect, bridge a
+store to whatever that framework calls reactive. The two files are ~390 and ~360 lines and no
+longer share a decision between them.
+
+### Added — unit tests for the framework-free logic that only React had ever exercised
+
+Coverage of the unit project read 43%, and the number was mostly an artifact — type-only modules
+and component-tested bindings counted as zero. Under it were three real gaps, all of them core
+logic both bindings now depend on:
+
+- **`actions/action-engine.ts`** had no unit test at all. Everything it does was reached through a
+  React component test, a browser and a render pass away from the question. It is a store and a
+  handler runner with no DOM in it: the declaration window, `undeclare`, the hotkey table
+  (including that `ownsHotkey` compares _labels_, so `'Shift+s'` and `'Shift+S'` are one hotkey),
+  the aggregation and the error capture are all decidable in Node. 81% → 99%.
+- **`core/action-factory.ts`** likewise. The design under test is the `readState` parameter: the
+  factory reads engine state through a callback the binding supplies, which is what lets React
+  hand it a snapshot and Solid a signal. Asserted with neither framework present.
+- **`templates/shared.ts`** — the two rules that fail silently in one direction only: a caller's
+  structural style merges _over_ the template's (a replace would unposition a drawer that only
+  asked to be 380px wide) while a caller's animation replaces it outright.
+
+Solid's own suite grew from 11 to 15: the slide and message templates, and the manager hooks. The
+slide test is the interesting one — `useSlideModal` composes its context with `mergeProps`, and a
+spread would hand the template a frozen copy where `isPreparing` goes in and never comes back.
+
+Three test helpers moved to `src/__tests__/` on the way (`fake-frames`, `fake-events`,
+`story-styles`): each was private to one file and needed by another, and a second copy of a fake
+that forgot `metaKey` would make a hotkey look like it matched.
+
+### Fixed — the logger stopped warning where there is no `localStorage`
+
+Every log call read `globalThis.localStorage`, and Node answers that with `undefined` **and** an
+`ExperimentalWarning` unless started with `--localstorage-file`. Nothing throws, so the existing
+`try`/`catch` could not quiet it — the unit suite printed it once per worker, and so would a
+worker, an SSR render or any Node consumer of the root.
+
+`localStorage` is a `Window` API, so the fix is to ask whether there is a window at all — in a way
+that never touches the getter — and cache the answer. Reading the pattern per call is kept, which
+is what makes setting the key in devtools take effect without a reload.
+
+### Changed — the coverage exclude list says what the unit project can reach
+
+It still named four files deleted months ago. Now it is three deliberate groups: type-only modules
+(no runtime, 0% forever), both bindings and the entry barrels (component-tested, globbed), and the
+DOM-only core modules — those **listed one by one**, so a new module in `core/` is not silently
+excluded but shows up as a gap until someone decides which kind it is. 43% → 94%, and every file
+still under 100% is a DOM branch the component suite covers.
+
+### Known gap — the generated API reference covers `umbra` and `umbra/react` only
+
+The playground's `/api` projection keys declarations by bare symbol name, and the two bindings
+deliberately export the same names, so a third entry point would collide silently and print one
+binding's signature under the other's specifier. The plugin now passes its own `--entryPoints`
+rather than taking typedoc's, so the omission is deliberate and visible rather than a silent
+mis-render. Documenting `umbra/solid` there needs the model keyed by `specifier:name` first, which
+reaches the category table, the anchors and the search index.
+
 ## 2026-08-08
 
 ### Added — `openAndWait()`, because the call order was load-bearing and undocumented

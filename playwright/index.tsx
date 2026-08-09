@@ -1,5 +1,5 @@
 import { beforeMount } from '@playwright/experimental-ct-react/hooks';
-import { DialogManagerProvider } from '../src/manager/dialog-manager-context';
+import { DialogManagerProvider } from '../src/react/dialog-manager-context.js';
 
 /**
  * Global test wrapper applied to every Playwright CT mount.

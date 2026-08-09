@@ -12,6 +12,29 @@ It consumes the library through the same public specifiers as any user: `umbra/r
 for hooks and components, and `umbra` (the root) for anything that must work without
 React — see `pages/advanced/examples/deployment-service.ts`. Vite aliases both to `../src`.
 
+**The app itself is React, and stays React.** `umbra/solid` is exercised in the one place it can
+be without putting a second compiler in this build: the microfrontend frame, which has no build
+step at all — see below.
+
+## The microfrontend frame (`public/mfe/` + `mfe-src/` + `vite-plugins/mfe-umbra.ts`)
+
+`/advanced#microfrontends` loads a plain HTML page in an iframe: an import map, three
+`<script type="module">`, no bundler. Three microfrontends share one `dialogManager` and ask each
+other for dialogs — Checkout on `umbra/react`, Support on `umbra/solid`, Billing on no binding at
+all.
+
+- `mfe-src/*.ts` — one tiny module per specifier the import map names (`umbra`, `umbra/react`,
+  `umbra/solid`, `react`, `react-dom/client`, `solid-js`, `solid-js/web`, `solid-js/h`).
+- `vite-plugins/mfe-umbra.ts` bundles **all of them in one rolldown build**, so code-splitting
+  hoists what they share — the manager included — into a chunk each entry imports. Separate builds
+  would give separate registries and the demo's central claim would be false. It serves them from
+  `/mfe/*.mjs` in dev (rebuilding when `src/` or `mfe-src/` changes) and emits them at build time.
+- The scripts in `public/mfe/` are served verbatim, which is why they use `createElement` and `h`
+  rather than JSX: nothing compiles them, and that is the point being made.
+
+Adding a fourth microfrontend means a panel in `host.html`, a script beside the others, and a
+`codeSamples` entry — no new build wiring.
+
 ## Architecture (Feature-Sliced Design)
 
 ```
@@ -28,6 +51,12 @@ playground/src/
 
 Use the `@/<layer>/<slice>` path alias for cross-slice imports — never reach into `ui/`/`model/`
 segments. Imports flow downward only: app → pages → widgets → entities → shared.
+
+**Reach into the library through `umbra/…`, never through `../../../../../src/…`.** The `/stories`
+page renders the library's own CT harnesses and the code viewer shows their source, so two files
+here import from `src/**/__tests__/`. Both go through the alias — a deep relative climb is a
+silent hostage to where a library file happens to sit today, and it broke on the first move that
+came along.
 
 **A page slice owns its own examples.** `pages/<route>/examples/` may only be imported by
 `pages/<route>/ui/`. Page-to-page imports are an FSD violation — if two routes need the same

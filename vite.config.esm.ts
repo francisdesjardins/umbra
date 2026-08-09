@@ -34,13 +34,23 @@ export default defineConfig({
       entry: {
         index: resolve(import.meta.dirname, 'src/index.ts'),
         react: resolve(import.meta.dirname, 'src/react.ts'),
+        solid: resolve(import.meta.dirname, 'src/solid.ts'),
       },
       formats: ['es'],
     },
 
     rollupOptions: {
+      // Every optional peer stays external — bundling one would put a second copy of a
+      // framework in a consumer's app, which for both React and Solid means two module-level
+      // runtimes and nothing working.
       external: (id) => {
-        return id === 'react' || id === 'react-dom' || id === 'react/jsx-runtime';
+        return (
+          id === 'react' ||
+          id === 'react-dom' ||
+          id === 'react/jsx-runtime' ||
+          id === 'solid-js' ||
+          id.startsWith('solid-js/')
+        );
       },
       output: {
         preserveModules: true,

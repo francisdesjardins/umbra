@@ -19,11 +19,11 @@ import {
   ReasonSourceHarness,
   VanillaAriaKeyshortcutsHarness,
   FocusOnOpenHarness,
-} from '../../../../../src/actions/__tests__/use-modal-actions.story';
+} from 'umbra/actions/__tests__/use-modal-actions.story';
 import {
   RefusesEverythingHarness,
   OpenRequestHarness,
-} from '../../../../../src/core/__tests__/open-request.story';
+} from 'umbra/react/__tests__/open-request.story';
 import {
   NoOutletHarness,
   OutletBasicHarness,
@@ -31,7 +31,7 @@ import {
   OutletNestedHarness,
   OutletPaintTimingHarness,
   OutletNullModalHarness,
-} from '../../../../../src/core/__tests__/modal-outlet.story';
+} from 'umbra/react/__tests__/modal-outlet.story';
 import {
   BasicHarness,
   CustomDismissKeyHarness,
@@ -61,7 +61,7 @@ import {
   EscWithoutFocusHarness,
   AccessibleNameHarness,
   StylingSurfaceHarness,
-} from '../../../../../src/core/__tests__/use-modal.story';
+} from 'umbra/react/__tests__/use-modal.story';
 import {
   DomEventHarness,
   EventSubscribeHarness,
@@ -78,12 +78,12 @@ import {
   ScrollLockHarness,
   ScrollLockTwoManagersHarness,
   UnregisteredNoOpHarness,
-} from '../../../../../src/manager/__tests__/dialog-manager.story';
+} from 'umbra/manager/__tests__/dialog-manager.story';
 import {
   UseLookupForegroundHarness,
   UseLookupHarness,
   UseLookupUnregisteredHarness,
-} from '../../../../../src/manager/__tests__/use-lookup.story';
+} from 'umbra/react/__tests__/use-lookup.story';
 import { StoreContextHarness } from '@/shared/lib/__tests__/create-store-context.story';
 import { UseStoreHarness } from '@/shared/lib/__tests__/use-store.story';
 import {
@@ -91,14 +91,14 @@ import {
   BasicMessageHarness,
   DataMessageHarness,
   OpenAndWaitMessageHarness,
-} from '../../../../../src/templates/__tests__/use-message-modal.story';
+} from 'umbra/react/__tests__/use-message-modal.story';
 import {
   BasicSlideHarness,
   DirectionSlideHarness,
   MultiDirectionSlideHarness,
   NonModalEscHotkeySlideHarness,
   OpenAndWaitSlideHarness,
-} from '../../../../../src/templates/__tests__/use-slide-modal.story';
+} from 'umbra/react/__tests__/use-slide-modal.story';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 

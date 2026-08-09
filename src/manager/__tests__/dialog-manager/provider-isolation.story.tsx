@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { DialogManagerProvider } from '../../dialog-manager-context.js';
-import { useDialogManager } from '../../use-dialog-manager.js';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
+import { useDialogManager } from '../../../react/use-dialog-manager.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * A self-contained modal that registers with the nearest DialogManager

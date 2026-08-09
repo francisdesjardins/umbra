@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
 import type { DialogPlacement } from '../core/placement.js';
+import type { DialogStyle } from '../core/style.js';
 import type { ModalAnimation, ModalPhase } from '../core/types.js';
 
 /**
@@ -15,6 +15,20 @@ import type { ModalAnimation, ModalPhase } from '../core/types.js';
 export function getPrimaryTransitionProperty(transitionProp: string): string {
   return transitionProp.split(',')[0]?.trim() ?? transitionProp;
 }
+
+/**
+ * What a bare `useModal` animates with when the caller names no animation.
+ *
+ * Shared by every binding on purpose: the default modal is the same modal in each of them, and
+ * two copies of this object would be two products the day one of them is tuned.
+ */
+export const DEFAULT_MODAL_ANIMATION = {
+  entrance: { opacity: 1, transform: 'scale(1)' },
+  exit: { opacity: 0, transform: 'scale(0.95)' },
+  duration: 200,
+  exitDuration: 150,
+  transitionProperty: 'opacity, transform',
+} satisfies ModalAnimation;
 
 /** Entrance duration (ms) applied when `ModalAnimation.duration` is omitted. */
 export const DEFAULT_DURATION = 200;
@@ -71,14 +85,18 @@ export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
  * @param placement - Where this dialog is positioned from, from `dialogPlacement()`. Only its
  *   `dialog` half applies here; the `host` half belongs to the element the caller renders
  *   around it.
- * @returns Merged `CSSProperties` object to spread onto the `<dialog>` element.
+ * @returns The merged style object for the `<dialog>` element. It carries the caller's own
+ *   `TStyle` through the intersection, so a binding whose style type is stricter than
+ *   {@link DialogStyle} — React's `CSSProperties` — can hand the result straight to its renderer.
+ *
+ * @typeParam TStyle - The style object type this binding speaks, inferred from `animation`.
  */
-export function getDialogAnimationStyles(
+export function getDialogAnimationStyles<TStyle extends DialogStyle>(
   phase: ModalPhase,
-  animation: ModalAnimation,
-  customStyle?: CSSProperties,
+  animation: ModalAnimation<TStyle>,
+  customStyle?: TStyle,
   placement: DialogPlacement = { host: null, dialog: {} }
-): CSSProperties {
+): DialogStyle & Partial<TStyle> {
   const isAnimating = phase === 'open';
   const { entranceDuration, exitDuration, transitionProperty } = resolveAnimation(animation);
   const activeDuration = isAnimating ? entranceDuration : exitDuration;
@@ -93,7 +111,7 @@ export function getDialogAnimationStyles(
     })
     .join(', ');
 
-  return {
+  const base = {
     // A closed dialog is out of layout, which the UA would do on its own — `dialog:not([open])`
     // is `display: none` — except that the inline `display: flex` below outranks it. Saying it
     // here keeps that override from turning a closed contained dialog into an invisible,
@@ -107,8 +125,16 @@ export function getDialogAnimationStyles(
     // `dialog.show()` renders in normal flow and needs explicit positioning; `showModal()`
     // does not. Which one this is, and what it anchors to, is `dialogPlacement`'s answer.
     ...placement.dialog,
-    ...customStyle,
-    transition: transitionValue,
-    ...(isAnimating ? animation.entrance : animation.exit),
   };
+
+  // `Object.assign` rather than one object literal, and that is a type decision rather than a
+  // style one: spreading a generic `TStyle` into a literal loses it, while `Object.assign`
+  // returns the intersection of what it merged — which is what carries `TStyle` into the return
+  // type and lets React's `style` prop accept the result without an assertion.
+  return Object.assign(
+    base,
+    customStyle ?? {},
+    { transition: transitionValue },
+    isAnimating ? animation.entrance : animation.exit
+  );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { DialogManagerProvider } from '../../dialog-manager-context.js';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** A modal registered with whichever manager is nearest — never opened, only mounted. */
 function BystanderModal() {

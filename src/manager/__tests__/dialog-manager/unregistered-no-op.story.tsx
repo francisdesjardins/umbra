@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDialogManagerContext } from '../../dialog-manager-context.js';
+import { useDialogManagerContext } from '../../../react/dialog-manager-context.js';
 
 /**
  * Tests that calling open/close on an unregistered id is a silent no-op.

@@ -1,13 +1,15 @@
 // MFA 1 — "Checkout", a React microfrontend.
 //
-// The three specifiers below resolve to the same file — the host's import map says so — but they
-// are written apart because that is what they are: the library exports no React, and `react`
-// here is React. No JSX and no build step, so `createElement` is what a browser can run as-is;
-// the point being made is about *sharing a manager*, not about tooling.
+// The specifiers below are the package's real ones: `umbra` is the framework-free library,
+// `umbra/react` is its React binding, and `react` is React. The host's import map points them at
+// modules from one build, so everything underneath is shared — but they stay written apart,
+// because that is what they are. No JSX and no build step, so `createElement` is what a browser
+// can run as-is; the point being made is about *sharing a manager*, not about tooling.
 //
 // It owns `checkout:receipt` through the React binding, and it asks Billing — a microfrontend it
 // never imports — to open a dialog it does not own.
-import { createOpenRequest, dialogManager, Key, useModal } from 'umbra';
+import { createOpenRequest, dialogManager, Key } from 'umbra';
+import { useModal } from 'umbra/react';
 import { createElement as h, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { logTo } from './binding.js';

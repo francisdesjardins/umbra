@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { createModalStore } from '../modal-store.js';
 import type { AwaitedClose } from '../types.js';
 
@@ -14,50 +15,6 @@ import type { AwaitedClose } from '../types.js';
  * `requestAnimationFrame` rather than a real one: frames advance only when the test says so,
  * which is what makes the "close cancels a pending open frame" assertions deterministic.
  */
-
-type FrameControl = {
-  readonly flush: () => void;
-  readonly pending: () => number;
-  readonly restore: () => void;
-};
-
-const installFakeFrames = (): FrameControl => {
-  // Node has no rAF, so these are installed rather than replaced. `Record` keeps the
-  // save/restore assignable under `exactOptionalPropertyTypes`, where writing back an
-  // `undefined` original to an optional property is an error.
-  const globals = globalThis as unknown as Record<string, unknown>;
-  const originalRequest = globals['requestAnimationFrame'];
-  const originalCancel = globals['cancelAnimationFrame'];
-
-  let nextHandle = 1;
-  const queue = new Map<number, FrameRequestCallback>();
-
-  globals['requestAnimationFrame'] = (cb: FrameRequestCallback): number => {
-    const handle = nextHandle++;
-    queue.set(handle, cb);
-    return handle;
-  };
-  globals['cancelAnimationFrame'] = (handle: number): void => {
-    queue.delete(handle);
-  };
-
-  return {
-    flush: () => {
-      const callbacks = [...queue.values()];
-      queue.clear();
-      for (const cb of callbacks) {
-        cb(0);
-      }
-    },
-    pending: () => {
-      return queue.size;
-    },
-    restore: () => {
-      globals['requestAnimationFrame'] = originalRequest;
-      globals['cancelAnimationFrame'] = originalCancel;
-    },
-  };
-};
 
 let frames: FrameControl;
 

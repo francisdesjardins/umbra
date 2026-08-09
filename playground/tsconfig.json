@@ -19,8 +19,10 @@
     "vite.config.ts",
     "vite-plugins/**/*",
     "mfe-src/**/*",
-    "../src/__tests__/*.story.tsx",
-    "../src/templates/__tests__/*.story.tsx"
+    // The `/stories` page renders the library's own CT harnesses, and the code viewer shows
+    // their source. They are reached through the `umbra/*` alias rather than a `../../../../..`
+    // climb, so moving a story inside `src/` is a one-line change here instead of forty.
+    "../src/**/__tests__/*.story.tsx"
   ],
   "exclude": ["node_modules", "dist"]
 }

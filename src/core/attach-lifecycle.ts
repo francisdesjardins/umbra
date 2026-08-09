@@ -1,0 +1,113 @@
+import { fireAndForget } from '../utils/fire-and-forget.js';
+import { createLogger } from '../utils/logger.js';
+import { refreshTransitionsDisabled, runCloseSequence, showDialog } from './dialog-lifecycle.js';
+import { finalizeModalClose } from './finalize-close.js';
+import type { CloseSequenceOptions, ModalDomContext, OpenSequenceOptions } from './attach-types.js';
+
+const log = createLogger('modal:lifecycle');
+
+/**
+ * The `<dialog>` lifecycle, driven by phase — with no framework deciding what a phase is.
+ *
+ * The DOM operations themselves live in `dialog-lifecycle.ts`; these two functions are the
+ * sequencing between them and the store, which used to be spelled as React effects and is not
+ * React's either. A binding calls `openSequence` when it sees `'opening'` and `syncCloseSequence`
+ * on every other phase change.
+ */
+
+/**
+ * Show the dialog, schedule its entrance frame, and run `prepare`.
+ *
+ * A no-op unless the phase is `'opening'` and the element is not already open, which is what
+ * makes it safe to call on every render of the opening phase — the guard, not a dependency list,
+ * is what stops the work happening twice.
+ */
+export function openSequence(ctx: ModalDomContext, options: OpenSequenceOptions): void {
+  const { store, getDialog, modalId, phase, dm } = ctx;
+  const { prepare, nonModal } = options;
+
+  if (phase !== 'opening') {
+    return;
+  }
+
+  const dialog = getDialog();
+  if (!dialog || dialog.open) {
+    return;
+  }
+
+  log('Showing dialog', { id: modalId, nonModal });
+
+  showDialog(dialog, { nonModal, zIndex: dm.getZIndex(modalId) });
+
+  store.scheduleOpenTransition();
+
+  if (prepare) {
+    // The signal is the store's — it aborts on `close()`, which is a transition this sequence
+    // does not own and should not be re-deriving from `phase`.
+    const signal = store.openSignal();
+    fireAndForget(
+      async () => {
+        await prepare(signal);
+        log('prepare completed', { id: modalId });
+      },
+      (error) => {
+        log.error('prepare failed', { id: modalId, error: error.message });
+      },
+      () => {
+        store.resolveOpen();
+      }
+    );
+  } else {
+    store.resolveOpen();
+  }
+}
+
+/**
+ * Re-measure on `'open'`, run the exit and finalize on `'closing'`.
+ *
+ * The `'open'` pass re-measures the transition state on every open, so the closing path reads
+ * *this* open's answer from the cache rather than the first one's — and reads it without a
+ * reflow. The `'closing'` pass short-circuits when transitions are disabled, otherwise waits for
+ * the exit (`transitionend` or the fallback timeout) before finalizing.
+ *
+ * @returns The teardown for the exit listeners, or `undefined` when nothing was attached.
+ */
+export function syncCloseSequence(
+  ctx: ModalDomContext,
+  options: CloseSequenceOptions
+): (() => void) | undefined {
+  const { store, getDialog, modalId, phase } = ctx;
+  const { nonModal, primaryProperty, exitDuration } = options;
+
+  const dialog = getDialog();
+  if (!dialog) {
+    return undefined;
+  }
+
+  if (phase === 'open') {
+    refreshTransitionsDisabled(dialog);
+    return undefined;
+  }
+
+  if (phase !== 'closing') {
+    return undefined;
+  }
+
+  return runCloseSequence(dialog, {
+    nonModal,
+    primaryProp: primaryProperty,
+    exitDuration,
+    finalize: () => {
+      finalizeModalClose(store, dialog, (error) => {
+        log.error('onClose callback failed', { id: modalId, error: error.message });
+      });
+    },
+    log: (how) => {
+      if (how === 'fallback-timeout') {
+        log.warn('Animation fallback timeout', { id: modalId, exitDuration });
+        return;
+      }
+      log('Close finished', { id: modalId, how });
+    },
+  });
+}

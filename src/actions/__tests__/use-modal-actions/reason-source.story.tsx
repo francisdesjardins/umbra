@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
-import { useModal } from '../../../core/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
+import { useModal } from '../../../react/use-modal.js';
 
 /** What the `save` action closes with. Declared on the marker, checked at the modal. */
 type SaveResult = { readonly id: number };

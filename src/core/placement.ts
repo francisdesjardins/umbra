@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react';
-
 // ── Placement ────────────────────────────────────────────────────────────────
 //
 // Where a dialog is positioned from, expressed as data rather than as markup.
@@ -10,6 +8,29 @@ import type { CSSProperties } from 'react';
 // the single answer, so the React binding, a future binding, and a host you write yourself all
 // place a dialog the same way.
 
+/**
+ * Styles for the element a contained dialog is positioned against.
+ *
+ * Spelled out property by property rather than typed as a general style object, because it is a
+ * fixed answer and not a free-form one — and because a literal type is assignable to *every*
+ * binding's style type, which a general one is not. Read the reasoning on
+ * {@link dialogPlacement}.
+ */
+export type DialogHostStyle = {
+  readonly position: 'absolute';
+  readonly inset: 0;
+  readonly minHeight: 0;
+  readonly pointerEvents: 'none';
+  readonly overflow?: 'clip' | undefined;
+};
+
+/** Positioning styles for the `<dialog>` itself — empty for a top-layer (modal) dialog. */
+export type DialogPositionStyle = {
+  readonly position?: 'fixed' | 'absolute' | undefined;
+  readonly inset?: 0 | undefined;
+  readonly pointerEvents?: 'auto' | undefined;
+};
+
 /** The two elements a placement has an opinion about. */
 export type DialogPlacement = {
   /**
@@ -19,9 +40,9 @@ export type DialogPlacement = {
    * When this is non-null the dialog **must** be rendered inside an element carrying these
    * styles, and that element must have a size: the dialog fills it.
    */
-  readonly host: CSSProperties | null;
+  readonly host: DialogHostStyle | null;
   /** Positioning styles for the `<dialog>` itself. */
-  readonly dialog: CSSProperties;
+  readonly dialog: DialogPositionStyle;
 };
 
 export type DialogPlacementOptions = {
@@ -37,7 +58,7 @@ export type DialogPlacementOptions = {
   readonly clip?: boolean | undefined;
 };
 
-const CONTAINED_HOST: CSSProperties = {
+const CONTAINED_HOST: DialogHostStyle = {
   // Absolute, not a block in the flow: the ordinary use of a contained dialog is to cover
   // something already in its region — a detail pane over the list it belongs to — and a
   // `height: 100%` block is laid out *after* that content, pushing it out of a clipped region

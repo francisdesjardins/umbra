@@ -1,6 +1,6 @@
-import { useDialogManager } from '../../use-dialog-manager.js';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { useDialogManager } from '../../../react/use-dialog-manager.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests stack queries: foreground and openDialogs ordering via useDialogManager.

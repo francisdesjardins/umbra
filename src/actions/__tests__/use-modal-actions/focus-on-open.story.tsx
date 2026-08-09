@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * An action claiming the modal's opening focus.

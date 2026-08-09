@@ -4,10 +4,11 @@
 
 **Headless dialogs on the native top layer.**
 
-Framework-agnostic core with a React binding.
+Framework-agnostic core, with React and Solid bindings over it.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -15,18 +16,26 @@ Framework-agnostic core with a React binding.
 
 ---
 
-A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React ships as one binding over it**. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
+A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React and Solid ship as two bindings over it**, with the same surface — same hook names, same options, same typed close. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
 
 ## ◐ Entry points
 
-| Specifier     | Contents                                                                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | The manager (`dialogManager`), the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No React.**    |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path. |
+| Specifier     | Contents                                                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `umbra`       | The manager (`dialogManager`), the placement and style tables, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No framework.** |
+| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path.                                  |
+| `umbra/solid` | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                    |
 
-The root resolves and runs with React not installed at all, which is what lets a plain `.ts`
-service, a router guard, a worker or an SSR path raise a dialog without a component. That is
-enforced by a test that walks the root's import graph, not by convention.
+The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
+service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding
+reaches its own framework and only its own, so installing one is never a condition for using the
+other. All of that is enforced by tests that walk the real import graphs — and re-checked against
+the built package — not by convention.
+
+**The two bindings share a surface deliberately.** Two differences, and both are the renderer's:
+Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are getters over
+signals, so read them through the object rather than destructuring it; and `portal: true` mounts
+the dialog for you, leaving `Modal` as `null`.
 
 ## ◑ Features
 
@@ -55,8 +64,9 @@ yarn install
 yarn dev
 ```
 
-**React is optional.** The root is plain TypeScript and resolves with React absent; `react` and
-`react-dom` (`^19.2.4`) are needed only by `umbra/react`.
+**Both frameworks are optional peers.** The root is plain TypeScript and resolves with neither
+installed; `react` / `react-dom` (`^19.2.4`) are needed only by `umbra/react`, and `solid-js`
+(`^1.9.14`) only by `umbra/solid`.
 
 **Requirements:** Node >= 24.0.0 | Chrome 138+ (native `<dialog>`)
 
@@ -142,10 +152,10 @@ you get three things: a mistyped `action('submmit')` is a compile error, the rea
 autocompletes, and the `switch` above is **exhaustive**. `'dismiss'` is always in the union
 because the library produces it itself, on Escape, on a backdrop click and on teardown.
 
-## ◑ Without React
+## ◑ Without a framework
 
 A module that has no component to hang a hook off — an API client, a router guard, a worker —
-imports the root and drives dialogs by id. This file compiles and runs with React absent:
+imports the root and drives dialogs by id. This file compiles and runs with no renderer installed:
 
 ```ts
 import { dialogManager } from 'umbra';

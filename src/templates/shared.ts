@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { DialogStyle } from '../core/style.js';
 import type {
   CloseResult,
   ModalAnimation,
@@ -25,8 +25,13 @@ import type {
  *
  * @internal Not exported from index.ts.
  */
-export type TemplateCommonOptions<TData = void, TReason extends string = string> = Omit<
-  UseModalBaseOptions<TData, TReason>,
+export type TemplateCommonOptions<
+  TData = void,
+  TReason extends string = string,
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
+> = Omit<
+  UseModalBaseOptions<TData, TReason, TStyle, TNode>,
   'id' | 'render' | 'onClose' | 'modalType' | 'clipContainer'
 > &
   ModalVariant;
@@ -47,11 +52,13 @@ export type TemplateBaseOptions<
   TData,
   TRenderContext,
   TReason extends string = string,
-> = TemplateCommonOptions<TData, TReason> & {
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
+> = TemplateCommonOptions<TData, TReason, TStyle, TNode> & {
   /** Unique modal identifier */
   readonly id: string;
   /** Render function receiving template-specific context */
-  readonly render: (ctx: TRenderContext) => ReactNode;
+  readonly render: (ctx: TRenderContext) => TNode;
   /** Called when the modal closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 };
@@ -90,6 +97,29 @@ export const DEFAULT_FADE_ANIMATION = {
 } satisfies ModalAnimation;
 
 /**
+ * The caller's structural styles over the template's, or whichever one exists.
+ *
+ * Written as a function with a declared return type rather than inline, because merging two
+ * values of the same generic style type has to *stay* that type: spreading `TStyle | undefined`
+ * twice in a literal produces a union the checker can no longer call a `TStyle`, and the
+ * template's options would stop accepting its own output.
+ *
+ * @internal Not exported from index.ts.
+ */
+function mergeStyle<TStyle extends DialogStyle>(
+  base: TStyle | undefined,
+  override: TStyle | undefined
+): TStyle | undefined {
+  if (base === undefined) {
+    return override;
+  }
+  if (override === undefined) {
+    return base;
+  }
+  return { ...base, ...override };
+}
+
+/**
  * Maps template options to `useModal` options, applying the template's defaults for animation,
  * style and modalType. Eliminates the repeated prop-by-prop passthrough in each template hook.
  *
@@ -103,18 +133,20 @@ export function buildModalOptions<
   TData = void,
   TRenderContext = unknown,
   TReason extends string = string,
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
 >(
-  options: TemplateBaseOptions<TData, TRenderContext, TReason>,
+  options: TemplateBaseOptions<TData, TRenderContext, TReason, TStyle, TNode>,
   defaults: {
-    readonly animation: ModalAnimation;
-    readonly style?: CSSProperties | undefined;
+    readonly animation: ModalAnimation<TStyle>;
+    readonly style?: TStyle | undefined;
     readonly modalType?: UseModalBaseOptions['modalType'];
   }
 ) {
   return {
     ...options,
     animation: options.animation ?? defaults.animation,
-    style: { ...defaults.style, ...options.style },
+    style: mergeStyle(defaults.style, options.style),
     modalType: defaults.modalType,
   };
 }

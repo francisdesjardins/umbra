@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests dialogManager.subscribe() — records open/close events as a CSV string.

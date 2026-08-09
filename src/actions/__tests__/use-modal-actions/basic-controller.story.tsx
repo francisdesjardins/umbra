@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
-import { useModal } from '../../../core/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
+import { useModal } from '../../../react/use-modal.js';
 import { createStore } from '../../../store/index.js';
 
 const countStore = createStore({ count: 0 }, ({ set, reset }) => {

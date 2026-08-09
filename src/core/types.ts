@@ -1,6 +1,15 @@
-import type { CSSProperties, ReactNode } from 'react';
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
+import type { DialogStyle } from './style.js';
+
+// The model a binding instantiates, and the reason the two knobs below exist at all.
+//
+// Everything a dialog *is* — its phases, its close result, its options, what its render callback
+// is handed — is the same in every framework. Two things are not: the type of a style object and
+// the type of a rendered node. So those are type parameters with framework-free defaults, and a
+// binding pins them once: `src/react/types.ts` says `CSSProperties` and `ReactNode`,
+// `src/solid/types.ts` says `DialogStyle` and Solid's `JSX.Element`. Nothing else is duplicated,
+// and a third binding is two aliases and a renderer.
 
 // ── Close Results ─────────────────────────────────────────────────────────────
 
@@ -44,6 +53,9 @@ export type AwaitedClose<TData = void, TReason extends string = string> =
 /**
  * CSS transition configuration for modal entrance/exit animations.
  *
+ * @typeParam TStyle - The style object type this binding speaks. Defaults to the framework-free
+ * {@link DialogStyle}; the React binding pins it to React's `CSSProperties`.
+ *
  * @example
  * const fade: ModalAnimation = {
  *   entrance: { opacity: 1, transform: 'scale(1)' },
@@ -52,11 +64,11 @@ export type AwaitedClose<TData = void, TReason extends string = string> =
  *   transitionProperty: 'opacity, transform',
  * };
  */
-export type ModalAnimation = {
+export type ModalAnimation<TStyle extends DialogStyle = DialogStyle> = {
   /** CSS properties applied during entrance (after animation starts) */
-  readonly entrance: CSSProperties;
+  readonly entrance: TStyle;
   /** CSS properties applied during exit (and before entrance starts) */
-  readonly exit: CSSProperties;
+  readonly exit: TStyle;
   /** Entrance duration in milliseconds (also used for exit if exitDuration is not set). Default: 200 */
   readonly duration?: number | undefined;
   /** Exit duration in milliseconds. Falls back to `duration` if not set. */
@@ -194,14 +206,22 @@ export type ModalVariant =
  *
  * `UseModalOptions` is `UseModalBaseOptions & ModalVariant`; template hooks
  * also `Pick` from this flat type without intersecting with `ModalVariant`.
+ *
+ * @typeParam TStyle - The style object type this binding speaks.
+ * @typeParam TNode - What this binding's `render` returns and what it renders.
  */
-export type UseModalBaseOptions<TData = void, TReason extends string = string> = {
+export type UseModalBaseOptions<
+  TData = void,
+  TReason extends string = string,
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
+> = {
   /** Unique modal identifier */
   readonly id: string;
   /** Render function for modal content. Receives modal state as arguments. */
-  readonly render: (args: ModalRenderArgs<TData, TReason>) => ReactNode;
+  readonly render: (args: ModalRenderArgs<TData, TReason>) => TNode;
   /** CSS transition animation configuration */
-  readonly animation?: ModalAnimation | undefined;
+  readonly animation?: ModalAnimation<TStyle> | undefined;
   /**
    * Structural styles for the `<dialog>` element itself: how big the box is and where it sits.
    *
@@ -214,7 +234,7 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    * state the callback is handed. These are merged after the placement and before the
    * animation, so they can override the former and not the latter.
    */
-  readonly style?: CSSProperties | undefined;
+  readonly style?: TStyle | undefined;
   /**
    * Key that dismisses the modal. Accepts any `HotkeyDef` string (e.g. `Key.Escape`,
    * `'Ctrl+3'`) or `false` to disable key-based dismissal entirely.
@@ -351,9 +371,9 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
    */
   readonly clipContainer?: boolean | undefined;
   /**
-   * Render the `<dialog>` via `createPortal(node, document.body)`.
+   * Render the `<dialog>` into `document.body` rather than where it was declared.
    *
-   * When `false` (default), the dialog renders inline in the React tree.
+   * When `false` (default), the dialog renders inline in the tree.
    * Modal dialogs are promoted to the browser's top layer by `showModal()`,
    * so they are viewport-anchored regardless of ancestors.
    *
@@ -376,44 +396,27 @@ export type UseModalBaseOptions<TData = void, TReason extends string = string> =
  * Options for `useModal`.
  *
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
+ * @typeParam TStyle - The style object type this binding speaks.
+ * @typeParam TNode - What this binding's `render` returns.
  */
-export type UseModalOptions<TData = void, TReason extends string = string> = UseModalBaseOptions<
-  TData,
-  TReason
-> &
-  ModalVariant;
+export type UseModalOptions<
+  TData = void,
+  TReason extends string = string,
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
+> = UseModalBaseOptions<TData, TReason, TStyle, TNode> & ModalVariant;
 
 /**
  * Return type of `useModal`.
  *
  * @typeParam TData - Type of the close data payload.
- *
- * @example
- * function DeleteButton() {
- *   const { openAndWait, Modal } = useModal<boolean>({
- *     id: 'confirm-delete',
- *     render: ({ handle, action }) => {
- *       return <button onClick={() => handle.close('confirm', true)}>Yes, delete</button>;
- *     },
- *   });
- *
- *   const ask = async () => {
- *     const [error, result] = await openAndWait();
- *     return error === null && result.data === true;
- *   };
- *
- *   return (
- *     <>
- *       <button onClick={() => void ask()}>Delete</button>
- *       {Modal}
- *     </>
- *   );
- * }
+ * @typeParam TNode - What this binding renders. `Modal` is one of these.
  */
-export type UseModalReturn<TData = void, TReason extends string = string> = ModalRenderArgs<
-  TData,
-  TReason
-> & {
+export type UseModalReturn<
+  TData = void,
+  TReason extends string = string,
+  TNode = unknown,
+> = ModalRenderArgs<TData, TReason> & {
   /**
    * Open the modal. Resolves after `prepare` completes.
    * Always settles: joins an in-flight open, or resolves immediately when
@@ -430,8 +433,11 @@ export type UseModalReturn<TData = void, TReason extends string = string> = Moda
    * distinction matters — measuring, focusing, deciding a dialog has settled — read `phase`.
    */
   readonly isVisible: boolean;
-  /** React element to render. Place in JSX as {Modal}. Renders null when closed. */
-  readonly Modal: ReactNode;
+  /**
+   * The node to render — place it in your markup. `null` when a `ModalOutlet` above this modal
+   * has taken it, since the outlet renders it instead.
+   */
+  readonly Modal: TNode;
   /**
    * Open the modal and resolve with how it closed — the two halves in one call, in the only
    * order that is safe.

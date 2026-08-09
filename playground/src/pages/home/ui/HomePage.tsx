@@ -11,8 +11,9 @@ const GETTING_IT = `git clone https://github.com/francisdesjardins/umbra.git
 cd umbra && yarn install && yarn dev
 
 # Or lift what you need out of src/ — plain TypeScript, MIT, no ceremony.
-import { dialogManager } from 'umbra';   // the root: no React needed
-import { useModal } from 'umbra/react';  // the React binding`;
+import { dialogManager } from 'umbra';   // the root: no framework needed
+import { useModal } from 'umbra/react';  // the React binding
+import { useModal } from 'umbra/solid';  // …or the Solid one, same surface`;
 
 const HELLO = `const modal = useModal<void, 'confirm' | 'cancel'>({
   id: 'hello',
@@ -136,9 +137,10 @@ export const HomePage = () => {
             Headless dialogs on the native top layer.
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 2, maxWidth: 560 }}>
-            A dialog manager whose core is plain TypeScript — it resolves and runs with React not
-            installed at all. React ships as one binding over it. Zero UI components: the markup,
-            the animation and the styling stay yours.
+            A dialog manager whose core is plain TypeScript — it resolves and runs with no framework
+            installed at all. React and Solid ship as two bindings over it, with the same surface:
+            same hooks, same options, same typed close. Zero UI components: the markup, the
+            animation and the styling stay yours.
           </Typography>
 
           {lastReason ? (
@@ -154,6 +156,7 @@ export const HomePage = () => {
             <Chip size="small" label="0 runtime dependencies" />
             <Chip size="small" label="native <dialog>" />
             <Chip size="small" label="typed close payloads" />
+            <Chip size="small" label="React + Solid bindings" />
             <Chip size="small" label="React Compiler ready" />
           </Stack>
 

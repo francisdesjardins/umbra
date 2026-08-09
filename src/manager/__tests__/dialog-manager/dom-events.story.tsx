@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useMessageModal } from '../../../templates/use-message-modal.js';
-import { useSlideModal } from '../../../templates/use-slide-modal.js';
-import { useModal } from '../../../core/use-modal.js';
-import { dialogStyle } from '../../../core/__tests__/story-styles.js';
+import { useMessageModal } from '../../../react/templates/use-message-modal.js';
+import { useSlideModal } from '../../../react/templates/use-slide-modal.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests that modal:open and modal:close CustomEvents are dispatched on document

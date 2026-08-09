@@ -11,11 +11,15 @@
     <!--
       The host's entire job: name the shared modules and hand the same ones to everybody.
 
-      Three specifiers, one file, on purpose. `dialogManager` is a module-level singleton, so
-      this map is what decides whether two microfrontends share a registry or each get their
-      own — and React has the same problem one layer down, since two copies mean two hook
-      dispatchers. Nothing here is re-exported by the library: `umbra` is the library, `react`
-      is React, and the host simply serves both out of one bundle so there is one of each.
+      Eight specifiers, one build. `dialogManager` is a module-level singleton, so this map is
+      what decides whether three microfrontends share a registry or each get their own — and the
+      frameworks have the same problem one layer down, since two copies of React mean two hook
+      dispatchers and two copies of Solid mean two owner graphs.
+
+      The names are the package's real ones: `umbra` is the library, `umbra/react` and
+      `umbra/solid` are its two bindings, and `react` / `solid-js` are the frameworks themselves.
+      Nothing here is re-exported by the library — the host simply serves every module out of one
+      build, so the parts they share are shared rather than duplicated.
 
       No bundler runs on this page. The map is resolved by the browser.
     -->
@@ -23,8 +27,13 @@
       {
         "imports": {
           "umbra": "./umbra.mjs",
-          "react": "./umbra.mjs",
-          "react-dom/client": "./umbra.mjs"
+          "umbra/react": "./umbra-react.mjs",
+          "umbra/solid": "./umbra-solid.mjs",
+          "react": "./react.mjs",
+          "react-dom/client": "./react-dom-client.mjs",
+          "solid-js": "./solid-js.mjs",
+          "solid-js/web": "./solid-js-web.mjs",
+          "solid-js/h": "./solid-js-h.mjs"
         }
       }
     </script>
@@ -43,6 +52,7 @@
            not to whoever asked for it. */
         --checkout: #d97706;
         --billing: #7c3aed;
+        --support: #0d9488;
         --ok: #15803d;
         --no: #b91c1c;
       }
@@ -56,19 +66,23 @@
           --accent: #f59e0b;
           --checkout: #f59e0b;
           --billing: #a78bfa;
+          --support: #2dd4bf;
           --ok: #4ade80;
           --no: #f87171;
         }
       }
-      /* `--own` is this microfrontend's colour and `--peer` is the other's, so a log line can
-         say who it is about by colour alone without either side naming the other. */
+      /* `--own` is this microfrontend's colour. With three parties on the page a single "the
+         other one" colour would be a lie, so an incoming line is marked by its glyph and by one
+         shared tint — the transcript still says who asked and who decided, it just no longer
+         claims to say which of the other two it was. */
       .checkout {
         --own: var(--checkout);
-        --peer: var(--billing);
       }
       .billing {
         --own: var(--billing);
-        --peer: var(--checkout);
+      }
+      .support {
+        --own: var(--support);
       }
       * {
         box-sizing: border-box;
@@ -82,14 +96,21 @@
           14px/1.5 system-ui,
           sans-serif;
       }
-      /* Two equal columns, and every row inside them lines up across the pair: the panels are
-         siblings in one grid, so `1fr 1fr` and a shared internal skeleton is all it takes.
-         Under 560px they stack, which is the phone case. */
+      /* Three equal columns, and every row inside them lines up across the set: the panels are
+         siblings in one grid with a shared internal skeleton. Explicit counts rather than
+         `auto-fit`, which cannot help here: the note below spans `1 / -1`, so no repeated track
+         is ever empty and none of them would collapse — the panels would sit in three of five
+         columns and leave two blank. Two columns at tablet width, one on a phone. */
       .host {
         display: grid;
         gap: 16px;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr);
         align-items: stretch;
+      }
+      @media (max-width: 860px) {
+        .host {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
       @media (max-width: 560px) {
         .host {
@@ -116,7 +137,7 @@
         font-size: 12px;
         margin-bottom: 12px;
       }
-      /* One field and one button row per panel, in that order — which is what makes the two
+      /* One field and one button row per panel, in that order — which is what makes the three
          logs start at the same height without a magic number holding them there. */
       .controls {
         display: grid;
@@ -188,7 +209,7 @@
         color: var(--own);
       }
       .log .in {
-        color: var(--peer);
+        color: var(--accent);
       }
       .log .yes {
         color: var(--ok);
@@ -197,13 +218,13 @@
         color: var(--no);
       }
       /* The surface goes on `.panel`, not on `dialog` — and that is the library's contract,
-         not a workaround. It writes `background: transparent; border: none; padding: 0` inline
-         on the element it owns, so the dialog is a box you fill: a stylesheet rule on `dialog`
-         loses to those inline styles and the modal comes out invisible. Billing's hand-written
-         <dialog> would escape that, since nothing styles it; keeping both panels on the same
-         rule is what stops the two microfrontends from looking like different products. */
+         not a workaround. It writes `background: transparent; border: none; padding: 0` on the
+         element it owns, so the dialog is a box you fill: a stylesheet rule on `dialog` loses to
+         those styles and the modal comes out invisible. Billing's hand-written <dialog> would
+         escape that, since nothing styles it; keeping every panel on the same rule is what stops
+         the three microfrontends from looking like three different products. */
       dialog {
-        /* The same reset the library writes inline on the dialogs it owns. Spelled out here so
+        /* The same reset the library writes on the dialogs it owns. Spelled out here so
            Billing's hand-written <dialog> — which the library never styles — does not keep the
            UA's white box and end up framed twice. */
         border: none;
@@ -247,21 +268,22 @@
   <body>
     <div class="host">
       <p class="note">
-        Two microfrontends, one shared <code>umbra</code> from the import map. Neither imports the
-        other. In the logs: <b>&rarr;</b> I asked · <b>&larr;</b> I was asked · <b>&check;</b> I
+        Three microfrontends, one shared <code>umbra</code> from the import map. None of them
+        imports another. Push Checkout past Billing's limit and watch the refusal travel on to
+        Support. In the logs: <b>&rarr;</b> I asked · <b>&larr;</b> I was asked · <b>&check;</b> I
         opened · <b>&cross;</b> I refused · <b>~</b> happened next door.
       </p>
 
       <section class="mfa checkout">
         <h2>Checkout</h2>
-        <div class="kind">React microfrontend · owns <code>checkout:receipt</code></div>
+        <div class="kind">React binding · owns <code>checkout:receipt</code></div>
         <div id="mfa1-root"></div>
         <div class="log" id="mfa1-log"></div>
       </section>
 
       <section class="mfa billing">
         <h2>Billing</h2>
-        <div class="kind">Plain-JS microfrontend · owns <code>billing:confirm</code></div>
+        <div class="kind">Plain JS, no binding · owns <code>billing:confirm</code></div>
         <div class="controls">
           <label class="field">
             <span>Approval limit</span>
@@ -289,9 +311,17 @@
           </div>
         </dialog>
       </section>
+
+      <section class="mfa support">
+        <h2>Support</h2>
+        <div class="kind">Solid binding · owns <code>support:ticket</code></div>
+        <div id="mfa3-root"></div>
+        <div class="log" id="mfa3-log"></div>
+      </section>
     </div>
 
     <script type="module" src="./mfa1.js"></script>
     <script type="module" src="./mfa2.js"></script>
+    <script type="module" src="./mfa3.js"></script>
   </body>
 </html>

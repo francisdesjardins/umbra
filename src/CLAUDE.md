@@ -3,19 +3,106 @@
 ## Entry points
 
 - **[index.ts](index.ts)** — the package root: the framework-agnostic dialog manager, the
-  store engine, the async helpers, `Key`. **Must resolve without React**, enforced by
-  [\_\_tests\_\_/root-react-free.test.ts](__tests__/root-react-free.test.ts).
-- **[react.ts](react.ts)** — the React binding: hooks, `ModalOutlet`, the React store
-  bindings, the provider. Re-exports the root wholesale so React apps use one specifier.
+  store engine, the placement and style tables, `Key`. **Must resolve with no framework
+  installed**, enforced by [\_\_tests\_\_/entry-isolation.test.ts](__tests__/entry-isolation.test.ts).
+- **[react.ts](react.ts)** — the React binding: hooks, `ModalOutlet`, the provider. Re-exports
+  the root wholesale so React apps use one specifier.
+- **[solid.ts](solid.ts)** — the Solid binding, the same surface. Everything under
+  [solid/](solid/); re-exports the root wholesale too.
 
-When adding an export, the default home is the root. It belongs in `react.ts` only if it
-imports React as a _value_ — a type-only `import type { CSSProperties } from 'react'` is
-erased and stays in the core. If in doubt, add it to the root and let the guard test decide.
+When adding an export, the default home is the root. It belongs in a binding only if it imports
+that framework as a _value_ — a type-only `import type { CSSProperties } from 'react'` is erased
+and could stay in the core. **It should not**: the root's own `.d.ts` must not name a renderer's
+types either, or a Solid-only consumer needs `@types/react` in their tree to read them. That is
+why the style type is derived from the DOM (`core/style.ts`) rather than borrowed from React —
+see [The two open knobs](#the-two-open-knobs) below.
 
 A type also belongs at the root if the root's own public surface **refers** to it: `ModalInfo`
 is a root export, so `ModalPhase` must be too, or a root consumer cannot annotate what it was
-handed. The hook-shaped types (`ModalHandle`, `UseModalOptions`, `UseModalReturn`) stay on
-`./react` — they describe rendering a dialog, and nothing at the root can hand you one.
+handed. The hook-shaped types (`ModalHandle`, `ModalRenderArgs`, `ModalVariant`) are at the root
+because they are framework-free; the two that are not — the option and return types — are the
+core model instantiated per binding.
+
+### Where a file goes
+
+The folder names are the architecture's documentation, so a React hook in `core/` is a
+contradiction rather than an inconvenience. One rule decides:
+
+| Folder                                                            | Holds                                                                                                                      |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `core/`, `manager/`, `store/`, `actions/`, `utils/`, `templates/` | Framework-free. Must survive `entry-isolation.test.ts` walking the root.                                                   |
+| `react/`, `solid/`                                                | Everything that imports its framework as a value — hooks, components, providers, and the option/return type instantiation. |
+
+`react/` and `solid/` mirror each other **file for file** — `use-modal`, `modal-outlet`,
+`dialog-manager-context`, `use-dialog-manager`, `use-lookup`, `types.ts` and
+`templates/use-{message,slide}-modal` — with one documented exception, `solid/from-store.ts`
+(React reads a store through `useSyncExternalStore` and needs no bridge). That mirror is not a
+convention to be remembered: [\_\_tests\_\_/binding-parity.test.ts](__tests__/binding-parity.test.ts)
+diffs the two entry points' export names _and_ their module paths, so a hook added to one and
+forgotten on the other fails, and so does putting it at a different depth.
+
+**It is worth being that strict about the paths**, because the surface can be complete while the
+folders lie: `useSlideModal` was exported from `./solid` for a week from inside a combined
+`templates.ts`, and the honest reading of a `solid/` folder with no `use-slide-modal` in it was
+"Solid does not have one". A `templates/` folder on each side says the other true thing — the two
+template hooks are built _on_ `useModal`, not peers of it, and the framework-free half of them
+already lives in `src/templates/`.
+
+React's effects are **not** split into per-concern hook files. Their whole content is a dependency
+array, and a `react/hooks/` folder holding `use-click-outside.ts` reads as a feature list that
+Solid is missing — which is exactly how it was read. Both bindings now wire the same `attach*`
+functions inline in their own `use-modal`, in the same order, and the diff between them is
+scheduling.
+
+**A test lives next to what it tests, whatever framework its harness uses.** `apply-style.ct.tsx`
+tests a core function through a React harness and belongs in `core/__tests__/`; so do the manager's
+and the action engine's CT tests. Only tests of a binding's own surface moved to
+`react/__tests__/`. Shared harness helpers (`story-styles.ts`) live in `src/__tests__/`, because a
+helper used by four folders' stories belongs to none of them.
+
+### What is shared, and what a binding actually does
+
+[core/modal-runtime.ts](core/modal-runtime.ts) holds the parts that were written twice and were
+identical both times: `resolveModalConfig` (the defaults _and_ the variant narrowing — reading
+`dismissOnBackdropClick` without checking `nonModal` first is a type error here and a
+silently-ignored option in a binding that got it wrong), `createModalRuntime` (store, engine,
+`open`, `openAndWait`, `handle`), `shouldDismissOnBackdropClick` (the full four-step chain), and
+`teardownModal`. `animation` is deliberately _not_ resolved there: its fallback is a concrete
+literal that a function generic over the binding's style type could not return, so each binding
+keeps the one annotated line.
+
+### What a binding actually does
+
+The short list, and it is the measure of whether the core is doing its job. A binding:
+
+1. builds a `<dialog>` element and puts the shared attributes on it (`core/dialog-props.ts`),
+2. subscribes to `createModalStore` and `createActionEngine` the way its framework subscribes,
+3. runs the `attach*` functions below from whatever it calls an effect, tearing down with
+   whatever it calls a cleanup,
+4. writes the computed style (`getDialogAnimationStyles`) onto the element,
+5. calls `render` inside `engine.beginRender()` / `engine.endRender()`,
+6. registers with the manager and unregisters on teardown.
+
+Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys, the
+placement table, the slide geometry, the action factory, the default animation — is shared. The
+two shipped bindings differ in about 200 lines each, and none of it is logic.
+
+### The two open knobs
+
+`core/types.ts` is generic over exactly two things, because exactly two things differ between
+frameworks: the type of a **style object** and the type of a **rendered node**. Each binding pins
+them in one small file — [react/types.ts](react/types.ts) says `CSSProperties` and `ReactNode`,
+[solid/types.ts](solid/types.ts) says `DialogStyle` and `JSX.Element` — and re-exports the four
+resulting types (`ModalAnimation`, `UseModalBaseOptions`, `UseModalOptions`, `UseModalReturn`)
+under their ordinary names. A consumer never sees a type parameter.
+
+`DialogStyle` ([core/style.ts](core/style.ts)) is the framework-free default: a mapped type over
+the `string`-valued keys of the DOM's own `CSSStyleDeclaration`, so the property list grows with
+the platform rather than with an edit. React's `CSSProperties` is assignable to it, which is what
+lets `getDialogAnimationStyles<TStyle extends DialogStyle>` take a binding's own style type and
+return `DialogStyle & Partial<TStyle>` — an intersection React's `style` prop accepts with no
+assertion. `applyStyle` is the other half: the one way to write a style object onto an element,
+clearing what the previous one set, for a binding that owns its DOM node instead of describing it.
 
 ## Import specifiers carry `.js`
 
@@ -33,20 +120,28 @@ built declarations.
 
 ## Architecture
 
-Three layers: framework-agnostic core, React binding, headless template hooks.
+Three layers: framework-agnostic core, the bindings over it, headless template hooks. Layer 1 is
+shared by every binding; layers 2 and 3 exist once per binding and are thin.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([core/use-modal.tsx](core/use-modal.tsx)) — React binding only; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, React-free, exports the `ModalStore` type consumed by `hook-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (or `createPortal` when `portal: true`). Returns `{ open, openAndWait, isVisible, Modal, handle, dialogManager }` — `handle` = `{ close }` (the modal itself; its buttons come from the `action` factory in the render args). `openAndWait` registers the close resolver _before_ requesting the open, and that is why `addCloseResolver` is **not** public: a resolver answers the _next_ close, so one added after a close has landed waits forever, and the surface never lets a caller choose the order. The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
+- **`useModal`** ([react/use-modal.tsx](react/use-modal.tsx) for React, [solid/use-modal.ts](solid/use-modal.ts) for Solid) — a binding each; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, framework-free, exports the `ModalStore` type consumed by `core/attach-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `requestOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `resolveOpen`, `close`, `finalize`, `abandon`, `openSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (React portals with `createPortal` when `portal: true`; Solid owns the element and mounts it itself, so its `Modal` is `null` on that branch). Returns `{ open, openAndWait, isVisible, Modal, handle, dialogManager }` — `handle` = `{ close }` (the modal itself; its buttons come from the `action` factory in the render args). `openAndWait` registers the close resolver _before_ requesting the open, and that is why `addCloseResolver` is **not** public: a resolver answers the _next_ close, so one added after a close has landed waits forever, and the surface never lets a caller choose the order. The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
   - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — the `style` prop is the public lever for the box itself (the same one the template hooks pull), and styles for what is inside belong in `render`.
 - **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`, plus the asking door: `requestOpen(id, request)` fires and forgets, `requestOpenAndWait(id, request)` returns an `OpenRequestOutcome` — refusal is explicit through `request.refuse(reason)`, acceptance is the default (the manager cannot infer it: the React binding's open is asynchronous), and the accepted branch carries the close. `RegisteredStore` gained `addCloseResolver` for that, erased at `unknown` because a callback in a parameter position is contravariant. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by `openedAt` (index = stack position); counts and blocking/non-blocking splits derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
-- **`DialogManagerProvider`** ([manager/dialog-manager-context.tsx](manager/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
-- **`useDialogManager`** ([manager/use-dialog-manager.ts](manager/use-dialog-manager.ts)) — Reactive hook via `useSyncExternalStore`. Returns `DialogManagerSnapshot` from nearest context or singleton.
+- **`DialogManagerProvider`** ([react/dialog-manager-context.tsx](react/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
+- **`useDialogManager`** ([react/use-dialog-manager.ts](react/use-dialog-manager.ts)) — Reactive hook via `useSyncExternalStore`. Returns `DialogManagerSnapshot` from nearest context or singleton.
 - **Types**: [core/types.ts](core/types.ts) — `ModalAnimation`, `ModalHandle`, `ModalRenderArgs`, `UseModalOptions`, `UseModalReturn`, `ModalPhase`, `ModalStoreSnapshot`, `GetDialog`. Also [manager/types.ts](manager/types.ts) — `LookupSnapshot`, `UseLookupOptions`. And [actions/types.ts](actions/types.ts) — `HotkeyDef`, `ActionDefinition`, `ActionButtonProps`, etc.
 
-**Internal hooks** — 2-param convention: `(ctx: ModalHookContext, options)`. Context in [hooks/hook-types.ts](hooks/hook-types.ts): `{ store, getDialog, modalId, phase, dm }`.
+**The DOM wiring is `attach*` functions, not hooks** — 2-param convention: `(ctx: ModalDomContext, options)`, returning a teardown (or `undefined` when nothing was attached). Context in [core/attach-types.ts](core/attach-types.ts): `{ store, getDialog, modalId, phase, dm }`. React calls them from `useEffect` inside `react/use-modal.tsx`; Solid calls the same functions from `createEffect` + `onCleanup`. The bodies moved unchanged, which is why the component suite was the proof that the extraction was behaviour-preserving.
 
-- `useDialogLifecycle` ([hooks/use-dialog-lifecycle.ts](hooks/use-dialog-lifecycle.ts)) — Wires the native `<dialog>` DOM lifecycle to store transitions in two effects: (1) opening effect (no deps, always captures latest `prepare`): `showDialog()`, `store.scheduleOpenTransition()`, `resolveOpen`/`prepare`; (2) closing/re-measure effect (explicit deps): calls `refreshTransitionsDisabled` on every `'open'` phase (per open, not per element — the `<dialog>` outlives every cycle and its transition config can change between them), on `'closing'`: disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). `finalized` flag guards against ESC cancel race. The DOM orchestration itself is framework-agnostic — see below.
+- `openSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts))
+- `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey` ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes, hence three functions
+- `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
+- `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator rather than a bare function, because where the opening focus landed has to outlive one attachment
+- `createActionFactory` ([core/action-factory.ts](core/action-factory.ts)) — see below
+- `dialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE` ([core/dialog-props.ts](core/dialog-props.ts))
+
+- `openSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) — the native `<dialog>` DOM lifecycle, driven by phase: (1) opening — `showDialog()`, `store.scheduleOpenTransition()`, `resolveOpen`/`prepare`, guarded on `phase === 'opening'` and `!dialog.open` so it is safe to call on every pass; (2) `'open'` — `refreshTransitionsDisabled` per open, not per element (the `<dialog>` outlives every cycle and its transition config can change between them); (3) `'closing'` — disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). A `finalized` flag guards the ESC cancel race. React runs these from two effects; Solid runs them from two `createEffect`s.
 - **`manager/scroll-lock.ts`** ([manager/scroll-lock.ts](manager/scroll-lock.ts)) — React-free body scroll lock used when any _blocking_ dialog is open. Claimed per owner (`lockBodyScroll(owner)`) and released when the last claim goes — the lock target is one global `<body>` shared by every manager instance, and a shared boolean would make it last-writer-wins. Sets `data-dialog-open` on `<body>` (the injected stylesheet keys `overflow: hidden` off it) and compensates the width the lock **actually reclaims** — `computeScrollCompensation(before, after)`, not the current scrollbar width. That distinction is the whole point: a page with `scrollbar-gutter: stable` keeps its gutter through `overflow: hidden`, so padding by the scrollbar width would shift content inward instead of holding it still. Publishes the amount as `--dialog-scrollbar-width` on `:root` so user-land `position: fixed` elements can compensate too — the library never walks the consumer's DOM looking for them.
 
 ### The styling surface
@@ -94,15 +189,17 @@ front of. `getDialogAnimationStyles` takes the phase for exactly this reason.
 - **`core/dialog-lifecycle.ts`** ([core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)) — Pure, React-free native-`<dialog>` DOM operations used by the hook above: `showDialog()` (show/showModal + z-index), `refreshTransitionsDisabled()` / `checkTransitionsDisabled()` (WeakMap-cached, re-measured per open), `runDialogExit()` (backdrop WAAPI + `transitionend`/timeout, returns a teardown). Kept out of the hook so the DOM logic is testable in isolation and reusable outside React.
 - **`utils/dismiss-gate.ts`** ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — `canDismiss({ phase, isPreparing, dismissWhilePreparing, hasRunningAction })`, the one predicate every dismissal path shares (dialog-level keydown, non-modal window keydown, click-outside, backdrop click). Each path layers its own check on top (backdrop opt-in, hotkey suppression, foreground, hit testing); nothing else re-implements the shared chain.
 - **`utils/animation-utils.ts` → `resolveAnimation()`** — resolves a `ModalAnimation`'s optional fields (`DEFAULT_DURATION` 200, `DEFAULT_TRANSITION_PROPERTY` `'opacity'`) once. Both the inline `transition` on the `<dialog>` and `useDialogLifecycle`'s `transitionend` wait read it, so the declared transition and the listener waiting on it cannot disagree.
-- `useDialogKeydown` ([hooks/use-dialog-keydown.ts](hooks/use-dialog-keydown.ts)) — ESC dismiss, prevents native cancel cascade on stacked dialogs
-- `useFocusManagement` ([hooks/use-focus-management.ts](hooks/use-focus-management.ts)) — Autofocus capture, clear on close, restore after failed action
+- `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey` ([core/attach-keydown.ts](core/attach-keydown.ts)) — dismiss key, native cancel cascade guard on stacked dialogs, and the window-level listener a non-modal panel needs
+- `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — opening-focus capture, clear on close, restore after a failed action
 
 ### Layer 2: Template Hooks
 
-Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`).
+Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`, `buildModalOptions`), and the slide panel's geometry — its transforms and its positioning — in [templates/slide-geometry.ts](templates/slide-geometry.ts), which is framework-free and read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates.ts](solid/templates.ts) and are the same three lines each.
 
-- `useMessageModal<TData>` ([templates/use-message-modal.tsx](templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `modalType: 'message'`
-- `useSlideModal` ([templates/use-slide-modal.tsx](templates/use-slide-modal.tsx)) — Direction-based animation, reports `modalType: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
+`buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
+
+- `useMessageModal<TData>` ([react/use-message-modal.tsx](react/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `modalType: 'message'`
+- `useSlideModal` ([react/use-slide-modal.tsx](react/use-slide-modal.tsx)) — Direction-based animation, reports `modalType: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
 
@@ -122,13 +219,25 @@ no second hook, and nothing to pass into `useModal`.
   it on Escape, backdrop click and teardown, and an action may also be named it.
 - **Close payload** is `useModal<Result>` — with no marker left to carry it, the modal declares
   what it closes with.
-- **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state, React-free.
-  `useModal` builds one in the same `useState` initializer as the store and binds it straight to
-  `close`, which is why there is no bridge: nothing is handed _in_, so nothing needs bridging.
+- **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state,
+  framework-free. `useModal` builds one alongside the store and binds it straight to `close`,
+  which is why there is no bridge: nothing is handed _in_, so nothing needs bridging.
+- **[core/action-factory.ts](core/action-factory.ts)** builds the `action` function itself, and it
+  is shared. **Its three live fields are getters** (`disabled`, `data-loading`, `aria-busy`) —
+  that is what lets one factory serve both bindings: a virtual-DOM renderer spreads the object
+  during render and reads them once, which is the snapshot it wanted, while a fine-grained one
+  spreads it inside a tracking scope and subscribes each attribute individually. The engine state
+  is read through a `readState` callback the binding supplies, not from the engine's own getters,
+  because only the binding knows what "reactively" means for it.
 - **Declaration window**: `useModal` wraps the `render` call in `beginRender()`/`endRender()`, so
   the engine knows which actions the pass drew. Re-declaring per pass rather than accumulating is
   what stops a hotkey outliving its button and going on suppressing the dismiss key.
-- The four internal hooks take the engine (as the payload-free `ActionGate`) and read it lazily —
+- **`undeclare` is the fine-grained half of that.** A pass is a React concept: Solid never re-runs
+  the parent, so a button removed by its own `<Show>` has to retire its own declaration, which the
+  Solid factory does from `onCleanup`. It is not only a stale hotkey — `hasActions()` decides
+  whether a backdrop click dismisses, so without it a modal that has drawn its last action stays
+  silently opt-in. Pinned by a Solid component test.
+- The `attach*` functions take the engine (as the payload-free `ActionGate`) and read it lazily —
   `ownsHotkey` at keydown, not captured at render, because actions do not exist until render has
   run.
 - Aggregated `hasRunningAction` / `error` are pre-computed at write time and reach both the render args
@@ -148,7 +257,7 @@ render: ({ action }) => (
 
 ```
 
-**Flow:** `action(reason, { hotkey })` records it on the engine during render → `useDialogKeydown` asks the engine to match the event → finds the button by `aria-keyshortcuts` → `click()` runs the same path a real click does.
+**Flow:** `action(reason, { hotkey })` records it on the engine during render → `attachDialogKeydown` asks the engine to match the event → finds the button by `aria-keyshortcuts` → `click()` runs the same path a real click does.
 
 **`aria-keyshortcuts` forwarding**: Custom button wrappers **must** forward this prop to the `<button>` element or hotkeys silently fail.
 
@@ -168,7 +277,7 @@ declare fires at every level it passes.
 
 ### Opening focus
 
-`action(reason, { focusOnOpen: true })` emits `data-focus-on-open`, and `useFocusManagement`
+`action(reason, { focusOnOpen: true })` emits `data-focus-on-open`, and the focus coordinator
 focuses that button once the phase reaches `'open'`. The restore target after a failed action is
 _not_ that button by default: the hook captures whoever held focus when the action started — the
 retry belongs to the button that was pressed — and falls back to the claimed one. It is not React's `autoFocus`: React does not put the native `autofocus` attribute
@@ -191,12 +300,18 @@ ModalRenderArgs<TData>                ← the render-time slice:
     ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
     └── SlideModalRenderContext<TData>   = BaseRenderContext<TData> & { direction }
 
-UseModalBaseOptions<TData>            ← flat, variant-free option surface
-├── UseModalOptions<TData>  = UseModalBaseOptions<TData> & ModalVariant
-└── TemplateCommonOptions<TData> = Omit<UseModalBaseOptions<TData>, the 5 a template owns>
-    │                              & ModalVariant
-    └── TemplateBaseOptions<TData, TRenderContext>
+UseModalBaseOptions<TData, …, TStyle, TNode>   ← flat, variant-free option surface
+├── UseModalOptions<…>      = UseModalBaseOptions<…> & ModalVariant
+│   ├── react/types.ts      = …<CSSProperties, ReactNode>     ← exported as `UseModalOptions`
+│   └── solid/types.ts      = …<DialogStyle, JSX.Element>     ← exported as `UseModalOptions`
+└── TemplateCommonOptions<…> = Omit<UseModalBaseOptions<…>, the 5 a template owns>
+    │                          & ModalVariant
+    └── TemplateBaseOptions<TData, TRenderContext, …>
 ```
+
+The two trailing parameters are the whole of what a binding contributes to the model, and they
+carry defaults (`DialogStyle`, `unknown`) so the core's own code never spells them. A consumer
+never sees them either: each binding re-exports the instantiation under the plain name.
 
 `TemplateCommonOptions` is stated as a **complement** on purpose: an option added to
 `UseModalBaseOptions` reaches every template hook by default, and only a deliberate edit to the
@@ -289,6 +404,16 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   the public surface is undocumented — run `yarn docs:check --validation.notDocumented` before
   assuming that is still true.
 - `disableSources` is on because there is no git remote yet, so every "view source" link would 404. Turn it off once the repository exists.
+- All three entry points are in `entryPoints`, and the four core option/return types are listed in
+  `intentionallyNotExported` **by qualified name** (`umbra/src/core/types.ts:UseModalOptions`) —
+  the plain name would also silence the two bindings' exported ones, which is exactly the warning
+  worth keeping.
+- **The playground's `/api` reference covers `umbra` and `umbra/react` only.** Its projection keys
+  declarations by bare symbol name, and the two bindings deliberately export the same names, so a
+  third entry would collide silently and show one binding's signature under the other's specifier.
+  The plugin therefore passes its own `--entryPoints` rather than taking typedoc's. Documenting
+  `umbra/solid` there needs the model keyed by `specifier:name` first, which reaches the category
+  table, the anchors and the search index.
 
 **`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier,
 `tsc`, eslint — by extracting each one to a real module under `scripts/examples/generated/`
@@ -316,14 +441,14 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 
 ## Code Organization
 
-1. Side effects → hooks in `hooks/`
+1. Side effects → an `attach*` function in `core/` (framework-free, returns its teardown), called inline from each binding's `use-modal` — `useEffect` for React, `createEffect` + `onCleanup` for Solid. A new one goes in the core even if only one binding needs it today — the second binding is the reason the first is written that way
 2. Pure functions → `utils/`
 3. Compiler ref complaints → inline the handler
 4. State → the `store/` module ([store/CLAUDE.md](store/CLAUDE.md)) — hand-rolled reactive cell, zero runtime deps
-5. Types → `core/types.ts` (modal + close result types), `manager/types.ts` (lookup), `actions/types.ts` (modal actions)
+5. Types → `core/types.ts` (the framework-free model, generic over style and node), `react/types.ts` and `solid/types.ts` (the two instantiations), `core/style.ts` (`DialogStyle`), `manager/types.ts` (lookup), `actions/types.ts` (modal actions)
 6. Template shared → `templates/shared.ts`
 7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` an action reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land and lives in `playground/src/shared/lib/`, demonstrated and copied like the modal templates; a dialog manager is not where anyone looks for a mutex. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**: it exists for the lifecycle's own detached callbacks and is deliberately not exported
-8. Non-React store observation → `store.subscribe(listener)` and read `getSnapshot()`; that pair is the whole contract, and the selector conveniences that used to wrap it are playground reference code now
+8. Framework-free store observation → `store.subscribe(listener)` and read `getSnapshot()`; that pair is the whole contract. React consumes it through `useSyncExternalStore` with no adapter; Solid's is `fromStore` (`solid/from-store.ts`), six lines, and public because every Solid consumer would otherwise write it
 
 ### State (store module)
 
@@ -350,7 +475,9 @@ counter.increment(); // methods merge at the root, zustand-style — no `actions
 
 ## Testing Details
 
-Tests auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](../playwright/index.tsx) — each test gets isolated state.
+Tests auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](../playwright/index.tsx) — each test gets isolated state. That wrapper is **React's**, so a Solid harness wraps itself in Solid's `DialogManagerProvider` or its modals register with the module-level singleton and leak between tests.
+
+**Solid harnesses** ([solid/\_\_tests\_\_/](solid/__tests__/)) are a Solid root hosted inside a React CT story: the story renders a `<div>`, calls Solid's `render` into it from an effect, and returns the disposer as the cleanup. They are written with `h` (`solid-js/h`) rather than JSX, so no Solid compiler enters the CT bundle — and nothing is lost, because hyperscript detects the getters an action's props carry (through the property descriptor) and spreads them reactively, exactly as compiled JSX would.
 
 **Cross-modal in stories** — use `dialogManager` from `useModal` return, not the static singleton:
 

@@ -208,7 +208,9 @@ function moduleName(example, index) {
   return `${file}--${example.symbol}-${index}`;
 }
 
-function buildModule(example, exported, stubs) {
+function buildModule(example, exportsBySpecifier, stubs) {
+  const specifier = specifierFor(example.file);
+  const exported = exportsBySpecifier.get(specifier) ?? new Map();
   const code = normalise(example.code);
   const used = (kind) => {
     return [...exported]
@@ -234,8 +236,8 @@ function buildModule(example, exported, stubs) {
 
   const header = [
     `// ${relative(ROOT, example.file).replaceAll('\\', '/')}:${String(example.line)} — @example on \`${example.symbol}\``,
-    values.length > 0 ? `import { ${values.join(', ')} } from 'umbra/react';` : '',
-    types.length > 0 ? `import type { ${types.join(', ')} } from 'umbra/react';` : '',
+    values.length > 0 ? `import { ${values.join(', ')} } from '${specifier}';` : '',
+    types.length > 0 ? `import type { ${types.join(', ')} } from '${specifier}';` : '',
     'export {};',
     ...stubs.map((stub) => {
       return `declare const ${stub}: any;`;
@@ -254,10 +256,22 @@ function buildModule(example, exported, stubs) {
   return `${header.join('\n')}\n\n${body}\n`;
 }
 
-/** Every public export, so an example can be handed the imports it uses. */
-function publicExports() {
+/**
+ * Which entry point an example's file belongs to.
+ *
+ * The two bindings deliberately export the same names, so an example under `src/solid/` that was
+ * handed `useLookup` from `umbra/react` would be type-checked against the wrong one — and would
+ * fail in a way that reads as a bug in the example rather than in this harness.
+ */
+function specifierFor(file) {
+  const path = relative(SRC, file).replaceAll('\\', '/');
+  return path === 'solid.ts' || path.startsWith('solid/') ? 'umbra/solid' : 'umbra/react';
+}
+
+/** Every public export of one entry point (plus the root it re-exports), by specifier. */
+function publicExports(binding) {
   const exported = new Map();
-  for (const entry of ['index.ts', 'react.ts']) {
+  for (const entry of ['index.ts', binding]) {
     const source = readFileSync(join(SRC, entry), 'utf8');
     for (const match of source.matchAll(/export\s+(type\s+)?\{([^}]*)\}/g)) {
       for (const name of match[2].split(',')) {
@@ -379,7 +393,10 @@ function attributeLint(messages, byModule) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const examples = collectExamples();
-const exported = publicExports();
+const exported = new Map([
+  ['umbra/react', publicExports('react.ts')],
+  ['umbra/solid', publicExports('solid.ts')],
+]);
 examples.forEach((example, index) => {
   example.module = moduleName(example, index);
 });

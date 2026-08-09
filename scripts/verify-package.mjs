@@ -102,6 +102,19 @@ try {
     ].join('\n')
   );
 
+  // The second binding, resolved the same way — same hook names, same re-exported root. A
+  // consumer must be able to import it without React installed, which is what the leak walk
+  // below checks; here it is the `exports` entry and the emitted `.d.ts` that are on trial.
+  writeFileSync(
+    join(sandbox, 'solid-entry.ts'),
+    [
+      "import { useModal, useMessageModal, useSlideModal } from 'umbra/solid';",
+      "import { ModalOutlet, fromStore, dialogManager } from 'umbra/solid';",
+      'export const used = [useModal, useMessageModal, useSlideModal,',
+      '  ModalOutlet, fromStore, dialogManager];',
+    ].join('\n')
+  );
+
   // Type-level promises that only hold if the emitted `.d.ts` carries them: the global
   // `DocumentEventMap` augmentation, the `exists`-discriminated `ModalInfo`, the payload
   // typing on `handle.close`, and the payload *inference* that lets a consumer declare it
@@ -212,7 +225,21 @@ report(
   }`
 );
 
-// ── 2. The root ships no React ───────────────────────────────────────────────
+// ── 2. Each entry ships exactly its own framework ────────────────────────────
+
+/** The frameworks the package can bind to, by the bare specifiers each one owns. */
+const FRAMEWORKS = {
+  react: ['react', 'react-dom'],
+  solid: ['solid-js'],
+};
+
+const frameworkOf = (specifier) => {
+  return Object.keys(FRAMEWORKS).find((name) => {
+    return FRAMEWORKS[name].some((root) => {
+      return specifier === root || specifier.startsWith(`${root}/`);
+    });
+  });
+};
 
 const walk = (entry) => {
   const seen = new Set();
@@ -233,8 +260,9 @@ const walk = (entry) => {
 
     for (const match of source.matchAll(/from\s*["']([^"']+)["']/g)) {
       const specifier = match[1];
-      if (specifier === 'react' || specifier.startsWith('react/') || specifier === 'react-dom') {
-        leaks.push(`${file.replace(DIST, 'dist')} -> ${specifier}`);
+      const framework = frameworkOf(specifier);
+      if (framework !== undefined) {
+        leaks.push({ framework, detail: `${file.replace(DIST, 'dist')} -> ${specifier}` });
         continue;
       }
       if (specifier.startsWith('.')) {
@@ -246,16 +274,44 @@ const walk = (entry) => {
   return { seen, leaks };
 };
 
+const frameworksIn = (result) => {
+  return new Set(
+    result.leaks.map((leak) => {
+      return leak.framework;
+    })
+  );
+};
+const describe = (result) => {
+  return result.leaks
+    .map((leak) => {
+      return leak.detail;
+    })
+    .join(', ');
+};
+
 const root = walk(join(DIST, 'esm', 'index.js'));
 report(
   root.leaks.length === 0 && root.seen.size > 3,
-  'the built root imports no React',
-  `${root.seen.size} modules${root.leaks.length > 0 ? ` — LEAKS: ${root.leaks.join(', ')}` : ''}`
+  'the built root imports no framework',
+  `${root.seen.size} modules${root.leaks.length > 0 ? ` — LEAKS: ${describe(root)}` : ''}`
 );
 
-// Mirror assertion: if the walker resolved nothing, the check above passes for the wrong reason.
-const binding = walk(join(DIST, 'esm', 'react.js'));
-report(binding.leaks.length > 0, 'the built React binding does import React (walker is not blind)');
+// Mirror assertions: if the walker resolved nothing, the check above passes for the wrong
+// reason. Each binding must reach its own framework — and only its own, or installing one
+// binding's peer would be a condition for using the other.
+for (const [entry, own, other] of [
+  ['react.js', 'react', 'solid'],
+  ['solid.js', 'solid', 'react'],
+]) {
+  const result = walk(join(DIST, 'esm', entry));
+  const reached = frameworksIn(result);
+  report(reached.has(own), `the built ${own} binding does import ${own} (walker is not blind)`);
+  report(
+    !reached.has(other),
+    `the built ${own} binding imports no ${other}`,
+    reached.has(other) ? describe(result) : ''
+  );
+}
 
 console.log(failures === 0 ? '\nPACKAGE OK' : `\n${failures} PACKAGE CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

@@ -1,17 +1,16 @@
 import { expect, test } from '@playwright/test';
 import type { ActionFactory } from '../../actions/types.js';
 import type { BaseRenderContext, TemplateCommonOptions } from '../../templates/shared.js';
-import type { useMessageModal } from '../../templates/use-message-modal.js';
-import type { SlideModalRenderContext, useSlideModal } from '../../templates/use-slide-modal.js';
-import type { useModal } from '../use-modal.js';
+import type { useMessageModal } from '../../react/templates/use-message-modal.js';
 import type {
-  CloseResult,
-  ModalHandle,
-  ModalRenderArgs,
-  ModalVariant,
-  UseModalBaseOptions,
-  UseModalReturn,
-} from '../types.js';
+  SlideModalRenderContext,
+  useSlideModal,
+} from '../../react/templates/use-slide-modal.js';
+import type { useModal } from '../../react/use-modal.js';
+import type { CloseResult, ModalHandle, ModalRenderArgs, ModalVariant } from '../types.js';
+// The React instantiations, not the core model they are built from: the hooks under assertion
+// are React's, so the types they must agree with are the ones with `ReactNode` in them.
+import type { UseModalBaseOptions, UseModalReturn } from '../../react/types.js';
 
 /**
  * Compile-time assertions on the shape of the public type model.

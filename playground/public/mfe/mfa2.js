@@ -1,7 +1,9 @@
 // MFA 2 — "Billing". It owns a dialog and decides who may open it.
 //
-// It never imports MFA 1, and MFA 1 never imports it. The only thing they share is the module the
-// import map points both of them at, which is why `requestOpen` can cross between them at all.
+// It imports neither of the other two, and neither imports it. The only thing the three share is
+// the module the import map points all of them at, which is why `requestOpen` can cross between
+// them at all — and why it crosses a framework boundary without noticing: this file uses no
+// binding, Checkout uses React's and Support uses Solid's.
 import { createOpenRequest, dialogManager } from 'umbra';
 import { bindDialog, logTo } from './binding.js';
 
@@ -43,6 +45,24 @@ const billing = bindDialog({
     if (amount > APPROVAL_LIMIT) {
       logTo(LOG, 'no', `refused — over the ${APPROVAL_LIMIT}$ limit`);
       request.refuse(`over-limit:${APPROVAL_LIMIT}`);
+      // A refusal the customer is owed an explanation for. Billing does not own that
+      // conversation, so it hands it on rather than growing a dialog of its own — the same
+      // `requestOpen` door Checkout used to get here, one hop further, into a third framework
+      // this file knows nothing about.
+      logTo(LOG, 'out', 'asked support:ticket to pick it up');
+      void dialogManager
+        .requestOpenAndWait(
+          'support:ticket',
+          createOpenRequest({ amount, limit: APPROVAL_LIMIT }, { source: 'billing' })
+        )
+        .then(async (outcome) => {
+          if (!outcome.accepted) {
+            logTo(LOG, 'no', `support refused — ${outcome.reason}`);
+            return;
+          }
+          const [, result] = await outcome.closed;
+          logTo(LOG, 'yes', `support answered — "${result?.reason ?? 'inconnu'}"`);
+        });
       return;
     }
 

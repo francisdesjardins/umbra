@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.app/schema.json",
-  "entryPoints": ["src/index.ts", "src/react.ts"],
+  "entryPoints": ["src/index.ts", "src/react.ts", "src/solid.ts"],
   "out": "docs/api",
   "name": "Dialog Manager",
   "includeVersion": true,
@@ -20,7 +20,18 @@
     "ModalInfoBase",
     "BaseRenderContext",
     "TemplateBaseOptions",
-    "RegisteredStore"
+    "RegisteredStore",
+    // The derived-from-the-DOM key list behind `DialogStyle`. It has no name a user would ever
+    // write; the type built from it does.
+    "umbra/src/core/style.ts:CssPropertyName",
+    // The generic model each binding instantiates. A reader reaches these through `./react` or
+    // `./solid`, where they appear under the same names with the framework's own style and node
+    // types filled in — documenting the open form as well would put two `UseModalOptions` in the
+    // reference and make the reader pick.
+    "umbra/src/core/types.ts:ModalAnimation",
+    "umbra/src/core/types.ts:UseModalBaseOptions",
+    "umbra/src/core/types.ts:UseModalOptions",
+    "umbra/src/core/types.ts:UseModalReturn"
   ],
   "disableSources": false,
   "treatWarningsAsErrors": true

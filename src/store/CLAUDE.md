@@ -31,10 +31,15 @@ action engine, the outlet and the manager are all built on `createStore`, so it 
 regardless — keeping it private would only force a second copy into the playground.
 `StoreContract` comes with it as the `{ subscribe, getSnapshot }` pair every store satisfies.
 
-Note what this is _not_ justified by. A second binding would live in this repo beside
-`src/react.ts` and import internals (`createModalStore`, `finalizeModalClose`) directly, none of
-which are exported — so "an external binding author needs it" is not the reason, and a Solid
-binding would reach for signals over this cell anyway.
+Note what this is _not_ justified by. A binding in this repo lives beside `src/react.ts` and
+imports internals (`createModalStore`, `finalizeModalClose`) directly, none of which are exported
+— so "an external binding author needs it" is not the reason.
+
+**The Solid binding settled the other half of that question.** It does not reach for signals
+_over_ this cell; it bridges it into one, in six lines (`solid/from-store.ts`: seed a signal from
+`getSnapshot()`, write it from `subscribe`, drop the unsubscribe on `onCleanup`). The cell stayed
+the single source of truth and the framework's primitive stayed a view of it — which is the
+argument for `subscribe`/`getSnapshot` being the contract rather than something framework-shaped.
 
 Everything built _over_ the engine is not exported. `useStore`, `createStoreContext`, `watch`
 and `shallowEqual` had no caller inside the library, and a dialog manager is not where anyone

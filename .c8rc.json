@@ -4,13 +4,28 @@
   "exclude": [
     "src/**/*.d.ts",
     "src/**/__tests__/**",
-    "src/**/*.story.tsx",
-    "src/ts-reset.ts",
-    "src/store/create-store-context.tsx",
-    "src/store/react.ts",
-    "src/store/use-store.ts"
+
+    "src/core/types.ts",
+    "src/core/attach-types.ts",
+    "src/actions/types.ts",
+    "src/manager/types.ts",
+    "src/react/types.ts",
+    "src/solid/types.ts",
+
+    "src/react.ts",
+    "src/solid.ts",
+
+    "src/react/**",
+    "src/solid/**",
+
+    "src/core/attach-click-outside.ts",
+    "src/core/attach-focus.ts",
+    "src/core/attach-keydown.ts",
+    "src/core/attach-lifecycle.ts",
+    "src/core/dialog-lifecycle.ts",
+    "src/core/focus-policy.ts"
   ],
-  "reporter": ["text-summary", "html", "lcov"],
+  "reporter": ["text-summary", "html", "lcov", "json"],
   "reportsDir": "coverage",
   "checkCoverage": false
 }

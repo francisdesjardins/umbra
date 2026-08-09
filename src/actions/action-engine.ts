@@ -18,7 +18,12 @@ const log = createLogger('action');
  * ever drawn — which matters because a stale hotkey would keep suppressing the dismiss key.
  */
 
-type EngineSnapshot = {
+/**
+ * The engine's public state. Exported because a binding reads it *reactively* — the action
+ * factory's `disabled` and `data-loading` are computed from a snapshot the binding hands in,
+ * not from the engine's own getters, so a fine-grained renderer can track them.
+ */
+export type EngineSnapshot = {
   readonly states: Readonly<Record<string, ActionState>>;
   /**
    * Pre-computed: true when **any** action is running — the same flag the hook publishes as
@@ -144,6 +149,20 @@ export function createActionEngine<TData, TReason extends string = string>(modal
         declared = pending;
         pending = null;
       }
+    },
+
+    /**
+     * Drop an action's declaration.
+     *
+     * The counterpart to {@link declare} for a binding whose render is not a *pass*. React
+     * re-runs `render` wholesale and the `beginRender`/`endRender` swap is what expires a
+     * declaration; a fine-grained renderer never re-runs the parent, so a button removed by its
+     * own conditional has to say so. Without it the hotkey outlives the button, and — because
+     * `hasActions()` decides whether backdrop click dismisses — a modal that has drawn its last
+     * action silently stays opt-in.
+     */
+    undeclare(reason: TReason | 'dismiss'): void {
+      (pending ?? declared).delete(reason);
     },
 
     // ── Hotkeys ───────────────────────────────────────────────────────────────

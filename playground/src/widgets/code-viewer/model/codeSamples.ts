@@ -16,8 +16,11 @@ import microfrontendsSrc from '@/pages/advanced/examples/microfrontends.tsx?raw'
 import mfeHostSrc from '../../../../public/mfe/host.html?raw';
 import mfeCheckoutSrc from '../../../../public/mfe/mfa1.js?raw';
 import mfeBillingSrc from '../../../../public/mfe/mfa2.js?raw';
+import mfeSupportSrc from '../../../../public/mfe/mfa3.js?raw';
 import mfeBindingSrc from '../../../../public/mfe/binding.js?raw';
-import mfeSharedEntrySrc from '../../../../mfe-src/shared.ts?raw';
+// The build behind the import map. Not a file a user copies — it is the answer to "how do three
+// independently-written scripts end up with one manager", which is the demo's whole subject.
+import mfeDistributionSrc from '../../../../vite-plugins/mfe-umbra.ts?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
@@ -41,74 +44,74 @@ import vanillaMessageSrc from '@/pages/ui-integrations/examples/vanilla-message.
 import vanillaSlideSrc from '@/pages/ui-integrations/examples/vanilla-slide.tsx?raw';
 
 // ── useModal stories ─────────────────────────────────────────────────────────
-import storyUseModalBasicSrc from '../../../../../src/core/__tests__/use-modal/basic.story.tsx?raw';
-import storyUseModalCustomDismissKeySrc from '../../../../../src/core/__tests__/use-modal/custom-dismiss-key.story.tsx?raw';
-import storyUseModalDismissKeyDisabledSrc from '../../../../../src/core/__tests__/use-modal/dismiss-key-disabled.story.tsx?raw';
-import storyUseModalDismissWhilePreparingSrc from '../../../../../src/core/__tests__/use-modal/dismiss-while-preparing.story.tsx?raw';
-import storyUseModalNonModalClickOutsideDefaultSrc from '../../../../../src/core/__tests__/use-modal/non-modal-click-outside-default.story.tsx?raw';
-import storyUseModalNonModalClickOutsideSrc from '../../../../../src/core/__tests__/use-modal/non-modal-click-outside.story.tsx?raw';
-import storyUseModalNonModalCustomDismissKeySrc from '../../../../../src/core/__tests__/use-modal/non-modal-custom-dismiss-key.story.tsx?raw';
-import storyUseModalNonModalEscIsolationSrc from '../../../../../src/core/__tests__/use-modal/non-modal-esc-isolation.story.tsx?raw';
-import storyUseModalNonModalStackSrc from '../../../../../src/core/__tests__/use-modal/non-modal-stack.story.tsx?raw';
-import storyUseModalNonModalSrc from '../../../../../src/core/__tests__/use-modal/non-modal.story.tsx?raw';
-import storyUseModalPortalDefaultSrc from '../../../../../src/core/__tests__/use-modal/portal-default.story.tsx?raw';
-import storyUseModalPortalNonModalDefaultSrc from '../../../../../src/core/__tests__/use-modal/portal-non-modal-default.story.tsx?raw';
-import storyUseModalPortalNonModalOptInSrc from '../../../../../src/core/__tests__/use-modal/portal-non-modal-opt-in.story.tsx?raw';
-import storyUseModalPortalOptInSrc from '../../../../../src/core/__tests__/use-modal/portal-opt-in.story.tsx?raw';
-import storyUseModalReopenSettlesSrc from '../../../../../src/core/__tests__/use-modal/reopen-settles.story.tsx?raw';
-import storyUseModalStableIdentitySrc from '../../../../../src/core/__tests__/use-modal/stable-identity.story.tsx?raw';
-import storyUseModalBackdropHitTestSrc from '../../../../../src/core/__tests__/use-modal/backdrop-hit-test.story.tsx?raw';
-import storyOutletPaintTimingSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
-import storyUseModalOpenAndWaitSrc from '../../../../../src/core/__tests__/use-modal/open-and-wait.story.tsx?raw';
+import storyUseModalBasicSrc from 'umbra/react/__tests__/use-modal/basic.story.tsx?raw';
+import storyUseModalCustomDismissKeySrc from 'umbra/react/__tests__/use-modal/custom-dismiss-key.story.tsx?raw';
+import storyUseModalDismissKeyDisabledSrc from 'umbra/react/__tests__/use-modal/dismiss-key-disabled.story.tsx?raw';
+import storyUseModalDismissWhilePreparingSrc from 'umbra/react/__tests__/use-modal/dismiss-while-preparing.story.tsx?raw';
+import storyUseModalNonModalClickOutsideDefaultSrc from 'umbra/react/__tests__/use-modal/non-modal-click-outside-default.story.tsx?raw';
+import storyUseModalNonModalClickOutsideSrc from 'umbra/react/__tests__/use-modal/non-modal-click-outside.story.tsx?raw';
+import storyUseModalNonModalCustomDismissKeySrc from 'umbra/react/__tests__/use-modal/non-modal-custom-dismiss-key.story.tsx?raw';
+import storyUseModalNonModalEscIsolationSrc from 'umbra/react/__tests__/use-modal/non-modal-esc-isolation.story.tsx?raw';
+import storyUseModalNonModalStackSrc from 'umbra/react/__tests__/use-modal/non-modal-stack.story.tsx?raw';
+import storyUseModalNonModalSrc from 'umbra/react/__tests__/use-modal/non-modal.story.tsx?raw';
+import storyUseModalPortalDefaultSrc from 'umbra/react/__tests__/use-modal/portal-default.story.tsx?raw';
+import storyUseModalPortalNonModalDefaultSrc from 'umbra/react/__tests__/use-modal/portal-non-modal-default.story.tsx?raw';
+import storyUseModalPortalNonModalOptInSrc from 'umbra/react/__tests__/use-modal/portal-non-modal-opt-in.story.tsx?raw';
+import storyUseModalPortalOptInSrc from 'umbra/react/__tests__/use-modal/portal-opt-in.story.tsx?raw';
+import storyUseModalReopenSettlesSrc from 'umbra/react/__tests__/use-modal/reopen-settles.story.tsx?raw';
+import storyUseModalStableIdentitySrc from 'umbra/react/__tests__/use-modal/stable-identity.story.tsx?raw';
+import storyUseModalBackdropHitTestSrc from 'umbra/react/__tests__/use-modal/backdrop-hit-test.story.tsx?raw';
+import storyOutletPaintTimingSrc from 'umbra/react/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
+import storyUseModalOpenAndWaitSrc from 'umbra/react/__tests__/use-modal/open-and-wait.story.tsx?raw';
 
 // ── useModalActions stories ───────────────────────────────────────────────
-import storyActionsBasicSrc from '../../../../../src/actions/__tests__/use-modal-actions/basic-controller.story.tsx?raw';
-import storyActionsDefinitionSrc from '../../../../../src/actions/__tests__/use-modal-actions/definition-controller.story.tsx?raw';
-import storyActionsDismissCollisionSrc from '../../../../../src/actions/__tests__/use-modal-actions/dismiss-key-collision.story.tsx?raw';
-import storyActionsErrorSrc from '../../../../../src/actions/__tests__/use-modal-actions/error-controller.story.tsx?raw';
-import storyActionsFocusSrc from '../../../../../src/actions/__tests__/use-modal-actions/focus-restoration.story.tsx?raw';
-import storyActionsHotkeySrc from '../../../../../src/actions/__tests__/use-modal-actions/hotkey-controller.story.tsx?raw';
-import storyActionsActionBasicSrc from '../../../../../src/actions/__tests__/use-modal-actions/modal-action-basic.story.tsx?raw';
-import storyActionsCustomHandlerSrc from '../../../../../src/actions/__tests__/use-modal-actions/modal-action-custom-handler.story.tsx?raw';
-import storyActionsActionHotkeySrc from '../../../../../src/actions/__tests__/use-modal-actions/modal-action-hotkey.story.tsx?raw';
-import storyActionsActionMultipleSrc from '../../../../../src/actions/__tests__/use-modal-actions/modal-action-multiple.story.tsx?raw';
-import storyActionsVanillaAriaSrc from '../../../../../src/actions/__tests__/use-modal-actions/vanilla-aria-keyshortcuts.story.tsx?raw';
-import storyActionsReasonSourceSrc from '../../../../../src/actions/__tests__/use-modal-actions/reason-source.story.tsx?raw';
-import storyActionsHotkeyWhilePreparingSrc from '../../../../../src/actions/__tests__/use-modal-actions/hotkey-while-preparing.story.tsx?raw';
-import storyUseModalTransitionToggleSrc from '../../../../../src/core/__tests__/use-modal/transition-toggle.story.tsx?raw';
-import storyUseModalKeyPassthroughSrc from '../../../../../src/core/__tests__/use-modal/key-passthrough.story.tsx?raw';
-import storyDmScrollLockTwoManagersSrc from '../../../../../src/manager/__tests__/dialog-manager/scroll-lock-two-managers.story.tsx?raw';
-import storyDmBlockingSrc from '../../../../../src/manager/__tests__/dialog-manager/blocking.story.tsx?raw';
-import storyDmProviderIsolationSrc from '../../../../../src/manager/__tests__/dialog-manager/provider-isolation.story.tsx?raw';
-import storyUseModalStructuralToggleSrc from '../../../../../src/core/__tests__/use-modal/structural-toggle.story.tsx?raw';
+import storyActionsBasicSrc from 'umbra/actions/__tests__/use-modal-actions/basic-controller.story.tsx?raw';
+import storyActionsDefinitionSrc from 'umbra/actions/__tests__/use-modal-actions/definition-controller.story.tsx?raw';
+import storyActionsDismissCollisionSrc from 'umbra/actions/__tests__/use-modal-actions/dismiss-key-collision.story.tsx?raw';
+import storyActionsErrorSrc from 'umbra/actions/__tests__/use-modal-actions/error-controller.story.tsx?raw';
+import storyActionsFocusSrc from 'umbra/actions/__tests__/use-modal-actions/focus-restoration.story.tsx?raw';
+import storyActionsHotkeySrc from 'umbra/actions/__tests__/use-modal-actions/hotkey-controller.story.tsx?raw';
+import storyActionsActionBasicSrc from 'umbra/actions/__tests__/use-modal-actions/modal-action-basic.story.tsx?raw';
+import storyActionsCustomHandlerSrc from 'umbra/actions/__tests__/use-modal-actions/modal-action-custom-handler.story.tsx?raw';
+import storyActionsActionHotkeySrc from 'umbra/actions/__tests__/use-modal-actions/modal-action-hotkey.story.tsx?raw';
+import storyActionsActionMultipleSrc from 'umbra/actions/__tests__/use-modal-actions/modal-action-multiple.story.tsx?raw';
+import storyActionsVanillaAriaSrc from 'umbra/actions/__tests__/use-modal-actions/vanilla-aria-keyshortcuts.story.tsx?raw';
+import storyActionsReasonSourceSrc from 'umbra/actions/__tests__/use-modal-actions/reason-source.story.tsx?raw';
+import storyActionsHotkeyWhilePreparingSrc from 'umbra/actions/__tests__/use-modal-actions/hotkey-while-preparing.story.tsx?raw';
+import storyUseModalTransitionToggleSrc from 'umbra/react/__tests__/use-modal/transition-toggle.story.tsx?raw';
+import storyUseModalKeyPassthroughSrc from 'umbra/react/__tests__/use-modal/key-passthrough.story.tsx?raw';
+import storyDmScrollLockTwoManagersSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-two-managers.story.tsx?raw';
+import storyDmBlockingSrc from 'umbra/manager/__tests__/dialog-manager/blocking.story.tsx?raw';
+import storyDmProviderIsolationSrc from 'umbra/manager/__tests__/dialog-manager/provider-isolation.story.tsx?raw';
+import storyUseModalStructuralToggleSrc from 'umbra/react/__tests__/use-modal/structural-toggle.story.tsx?raw';
 
 // ── dialogManager stories ────────────────────────────────────────────────────
-import storyDmDomEventsSrc from '../../../../../src/manager/__tests__/dialog-manager/dom-events.story.tsx?raw';
-import storyDmEventSubscribeSrc from '../../../../../src/manager/__tests__/dialog-manager/event-subscribe.story.tsx?raw';
-import storyOpenRequestSrc from '../../../../../src/core/__tests__/open-request.story.tsx?raw';
-import storyDmImperativeSrc from '../../../../../src/manager/__tests__/dialog-manager/imperative.story.tsx?raw';
-import storyDmLookupSrc from '../../../../../src/manager/__tests__/dialog-manager/lookup.story.tsx?raw';
-import storyDmMultiModalSrc from '../../../../../src/manager/__tests__/dialog-manager/multi-modal.story.tsx?raw';
-import storyDmScrollLockSrc from '../../../../../src/manager/__tests__/dialog-manager/scroll-lock.story.tsx?raw';
-import storyDmUnregisteredSrc from '../../../../../src/manager/__tests__/dialog-manager/unregistered-no-op.story.tsx?raw';
-import storyUseLookupSrc from '../../../../../src/manager/__tests__/use-lookup.story.tsx?raw';
+import storyDmDomEventsSrc from 'umbra/manager/__tests__/dialog-manager/dom-events.story.tsx?raw';
+import storyDmEventSubscribeSrc from 'umbra/manager/__tests__/dialog-manager/event-subscribe.story.tsx?raw';
+import storyOpenRequestSrc from 'umbra/react/__tests__/open-request.story.tsx?raw';
+import storyDmImperativeSrc from 'umbra/manager/__tests__/dialog-manager/imperative.story.tsx?raw';
+import storyDmLookupSrc from 'umbra/manager/__tests__/dialog-manager/lookup.story.tsx?raw';
+import storyDmMultiModalSrc from 'umbra/manager/__tests__/dialog-manager/multi-modal.story.tsx?raw';
+import storyDmScrollLockSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock.story.tsx?raw';
+import storyDmUnregisteredSrc from 'umbra/manager/__tests__/dialog-manager/unregistered-no-op.story.tsx?raw';
+import storyUseLookupSrc from 'umbra/react/__tests__/use-lookup.story.tsx?raw';
 
 // ── Store stories ────────────────────────────────────────────────────────────
 import storyStoreContextSrc from '@/shared/lib/__tests__/create-store-context.story.tsx?raw';
 import storyUseStoreSrc from '@/shared/lib/__tests__/use-store.story.tsx?raw';
 
 // ── ModalOutlet stories ──────────────────────────────────────────────────────
-import storyOutletNoOutletSrc from '../../../../../src/core/__tests__/modal-outlet/no-outlet.story.tsx?raw';
-import storyOutletBasicSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-basic.story.tsx?raw';
-import storyOutletMultiSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-multi.story.tsx?raw';
-import storyOutletNestedSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-nested.story.tsx?raw';
-import storyOutletNullModalSrc from '../../../../../src/core/__tests__/modal-outlet/outlet-null-modal.story.tsx?raw';
+import storyOutletNoOutletSrc from 'umbra/react/__tests__/modal-outlet/no-outlet.story.tsx?raw';
+import storyOutletBasicSrc from 'umbra/react/__tests__/modal-outlet/outlet-basic.story.tsx?raw';
+import storyOutletMultiSrc from 'umbra/react/__tests__/modal-outlet/outlet-multi.story.tsx?raw';
+import storyOutletNestedSrc from 'umbra/react/__tests__/modal-outlet/outlet-nested.story.tsx?raw';
+import storyOutletNullModalSrc from 'umbra/react/__tests__/modal-outlet/outlet-null-modal.story.tsx?raw';
 
 // ── useMessageModal stories ──────────────────────────────────────────────────
-import storyMsgAsyncOpenSrc from '../../../../../src/templates/__tests__/use-message-modal/async-open-message.story.tsx?raw';
-import storyMsgBasicSrc from '../../../../../src/templates/__tests__/use-message-modal/basic-message.story.tsx?raw';
-import storyMsgDataSrc from '../../../../../src/templates/__tests__/use-message-modal/data-message.story.tsx?raw';
-import storyMsgOpenAndWaitSrc from '../../../../../src/templates/__tests__/use-message-modal/open-and-wait-message.story.tsx?raw';
+import storyMsgAsyncOpenSrc from 'umbra/react/__tests__/use-message-modal/async-open-message.story.tsx?raw';
+import storyMsgBasicSrc from 'umbra/react/__tests__/use-message-modal/basic-message.story.tsx?raw';
+import storyMsgDataSrc from 'umbra/react/__tests__/use-message-modal/data-message.story.tsx?raw';
+import storyMsgOpenAndWaitSrc from 'umbra/react/__tests__/use-message-modal/open-and-wait-message.story.tsx?raw';
 
 // ── MUI template components ─────────────────────────────────────────────────
 import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
@@ -193,19 +196,19 @@ import sharedComponentResultDisplaySrc from '@/shared/ui/ResultDisplay/ResultDis
 import sharedComponentViewCodeButtonSrc from '@/shared/ui/ViewCodeButton/ViewCodeButton.tsx?raw';
 
 // ── useSlideModal stories ────────────────────────────────────────────────────
-import storySlideBasicSrc from '../../../../../src/templates/__tests__/use-slide-modal/basic-slide.story.tsx?raw';
-import storySlideDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/direction-slide.story.tsx?raw';
-import storySlideMultiDirectionSrc from '../../../../../src/templates/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
-import storySlideNonModalEscHotkeySrc from '../../../../../src/templates/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
-import storySlideOpenAndWaitSrc from '../../../../../src/templates/__tests__/use-slide-modal/open-and-wait-slide.story.tsx?raw';
+import storySlideBasicSrc from 'umbra/react/__tests__/use-slide-modal/basic-slide.story.tsx?raw';
+import storySlideDirectionSrc from 'umbra/react/__tests__/use-slide-modal/direction-slide.story.tsx?raw';
+import storySlideMultiDirectionSrc from 'umbra/react/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
+import storySlideNonModalEscHotkeySrc from 'umbra/react/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
+import storySlideOpenAndWaitSrc from 'umbra/react/__tests__/use-slide-modal/open-and-wait-slide.story.tsx?raw';
 
-import storyFocusOnOpenSrc from '../../../../../src/actions/__tests__/use-modal-actions/focus-on-open.story.tsx?raw';
-import storyStackedModalsSrc from '../../../../../src/core/__tests__/use-modal/stacked-modals.story.tsx?raw';
-import storyNestedHotkeyScopeSrc from '../../../../../src/core/__tests__/use-modal/nested-hotkey-scope.story.tsx?raw';
-import storyFocusUnderAnotherModalSrc from '../../../../../src/core/__tests__/use-modal/focus-under-another-modal.story.tsx?raw';
-import storyEscWithoutFocusSrc from '../../../../../src/core/__tests__/use-modal/esc-without-focus.story.tsx?raw';
-import storyAccessibleNameSrc from '../../../../../src/core/__tests__/use-modal/accessible-name.story.tsx?raw';
-import storyStylingSurfaceSrc from '../../../../../src/core/__tests__/use-modal/styling-surface.story.tsx?raw';
+import storyFocusOnOpenSrc from 'umbra/actions/__tests__/use-modal-actions/focus-on-open.story.tsx?raw';
+import storyStackedModalsSrc from 'umbra/react/__tests__/use-modal/stacked-modals.story.tsx?raw';
+import storyNestedHotkeyScopeSrc from 'umbra/react/__tests__/use-modal/nested-hotkey-scope.story.tsx?raw';
+import storyFocusUnderAnotherModalSrc from 'umbra/react/__tests__/use-modal/focus-under-another-modal.story.tsx?raw';
+import storyEscWithoutFocusSrc from 'umbra/react/__tests__/use-modal/esc-without-focus.story.tsx?raw';
+import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
+import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-modal/styling-surface.story.tsx?raw';
 
 export const codeSamples: Record<string, string> = {
   // Playground examples
@@ -232,8 +235,9 @@ export const codeSamples: Record<string, string> = {
   'mfe-host-html': mfeHostSrc,
   'mfe-checkout': mfeCheckoutSrc,
   'mfe-billing': mfeBillingSrc,
+  'mfe-support': mfeSupportSrc,
   'mfe-binding': mfeBindingSrc,
-  'mfe-shared-entry': mfeSharedEntrySrc,
+  'mfe-distribution': mfeDistributionSrc,
   'mui-message': muiMessageSrc,
   'mui-slide': muiSlideSrc,
   'mui-form': muiFormSrc,

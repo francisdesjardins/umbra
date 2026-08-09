@@ -69,7 +69,19 @@ export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.j
 // from the root means the React binding, a future one, and a host written by hand all position
 // a dialog identically — see `core/placement.ts`.
 export { dialogPlacement } from './core/placement.js';
-export type { DialogPlacement, DialogPlacementOptions } from './core/placement.js';
+export type {
+  DialogHostStyle,
+  DialogPlacement,
+  DialogPlacementOptions,
+  DialogPositionStyle,
+} from './core/placement.js';
+
+// The style vocabulary those tables are written in, and the one way to write one onto an element.
+// A binding that owns its DOM node — Solid's does, and so does a hand-written connector — has no
+// renderer to hand a style object to, so `applyStyle` is the other half of `dialogPlacement`
+// being data: here is the table, and here is how it is applied.
+export { applyStyle } from './core/style.js';
+export type { DialogStyle } from './core/style.js';
 
 // ── State ────────────────────────────────────────────────────────────────────
 //

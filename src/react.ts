@@ -11,19 +11,16 @@
  * alongside this file and share everything under it.
  */
 
-export { ModalOutlet } from './core/modal-outlet.js';
-export { useModal } from './core/use-modal.js';
+export { ModalOutlet } from './react/modal-outlet.js';
+export { useModal } from './react/use-modal.js';
 
-export { useMessageModal } from './templates/use-message-modal.js';
-export { useSlideModal } from './templates/use-slide-modal.js';
+export { useMessageModal } from './react/templates/use-message-modal.js';
+export { useSlideModal } from './react/templates/use-slide-modal.js';
 
-export {
-  DialogManagerProvider,
-  useDialogManagerContext,
-} from './manager/dialog-manager-context.js';
-export { useDialogManager } from './manager/use-dialog-manager.js';
-export type { DialogManagerSnapshot } from './manager/use-dialog-manager.js';
-export { useLookup } from './manager/use-lookup.js';
+export { DialogManagerProvider, useDialogManagerContext } from './react/dialog-manager-context.js';
+export { useDialogManager } from './react/use-dialog-manager.js';
+export type { DialogManagerSnapshot } from './react/use-dialog-manager.js';
+export { useLookup } from './react/use-lookup.js';
 
 // The framework-agnostic core, re-exported wholesale: dialogManager, createStore, watch, the
 // async helpers, Key. A React consumer needs exactly one import path.
@@ -40,16 +37,17 @@ export * from './index.js';
 // `CloseResult`, `ModalPhase` and `ModalStoreSnapshot` are deliberately absent: they are part
 // of the framework-agnostic vocabulary and ship from the root, which this file re-exports
 // wholesale. Naming them again here would be a duplicate export, not a convenience.
+export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from './core/types.js';
+
+// The four the core leaves open: `ModalAnimation` and the option/return types are the model in
+// `core/types.ts` with its style and node parameters turned to `CSSProperties` and `ReactNode`.
+// A React consumer never sees the parameters — these are the names, with React's meanings.
 export type {
   ModalAnimation,
-  ModalHandle,
-  ModalRenderArgs,
-  ModalVariant,
   UseModalBaseOptions,
   UseModalOptions,
   UseModalReturn,
-  AwaitedClose,
-} from './core/types.js';
+} from './react/types.js';
 
 // Actions are declared by being rendered — `render` is handed an `ActionFactory`, and there is
 // no controller to build or pass in. What ships is the vocabulary a caller needs to name what
@@ -68,11 +66,11 @@ export type {
   MessageModalType,
   UseMessageModalOptions,
   UseMessageModalReturn,
-} from './templates/use-message-modal.js';
+} from './react/templates/use-message-modal.js';
 export type {
   SlideAlign,
   SlideDirection,
   SlideModalRenderContext,
   UseSlideModalOptions,
   UseSlideModalReturn,
-} from './templates/use-slide-modal.js';
+} from './react/templates/use-slide-modal.js';

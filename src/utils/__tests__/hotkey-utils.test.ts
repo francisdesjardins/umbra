@@ -1,25 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { keyboardEvent as makeEvent } from '../../__tests__/fake-events.js';
 import { formatHotkeyLabel, matchesHotkey } from '../hotkey-utils.js';
-
-// Pure object that satisfies the property subset accessed by matchesHotkey.
-// KeyboardEvent is a DOM type; casting lets us test without a live browser.
-function makeEvent(
-  key: string,
-  mods: Partial<{
-    ctrlKey: boolean;
-    altKey: boolean;
-    shiftKey: boolean;
-    metaKey: boolean;
-  }> = {}
-): KeyboardEvent {
-  return {
-    key,
-    ctrlKey: mods.ctrlKey ?? false,
-    altKey: mods.altKey ?? false,
-    shiftKey: mods.shiftKey ?? false,
-    metaKey: mods.metaKey ?? false,
-  } as KeyboardEvent;
-}
 
 test.describe('formatHotkeyLabel', () => {
   test('returns multi-char key as-is', () => {
