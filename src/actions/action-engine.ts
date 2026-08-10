@@ -2,7 +2,7 @@ import { createStore } from '../store/index.js';
 import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
 import { createLogger } from '../utils/logger.js';
 import { normalizeError } from '../utils/normalize-error.js';
-import type { DismissReason } from '../core/dismiss-reason.js';
+import { DISMISS_REASON, type DismissReason } from '../core/dismiss-reason.js';
 import type { ActionCloseFn, ActionReason, ActionState, HotkeyDef } from './types.js';
 
 const log = createLogger('action');
@@ -45,6 +45,8 @@ export function createActionEngine<TData, TReason extends string = string>(modal
   let declared = new Map<string, HotkeyDef | undefined>();
   /** Filled while a render pass is in flight, then swapped in wholesale. */
   let pending: Map<string, HotkeyDef | undefined> | null = null;
+  /** So the reserved-reason warning below is said once, not once per render pass. */
+  let warnedDismiss = false;
 
   // The close path accepts `'dismiss'`, because the library produces it; the action-facing
   // methods below do not, because no action may be named it — see `ActionReason`.
@@ -140,8 +142,24 @@ export function createActionEngine<TData, TReason extends string = string>(modal
       pending = new Map();
     },
 
-    /** Called by the `action()` factory as each button is drawn. */
+    /**
+     * Called by the `action()` factory as each button is drawn.
+     *
+     * The guard is the runtime half of a compile-time rule, and it is needed because the type
+     * only half-delivers: `ActionReason` is `Exclude<TReason, DismissReason>`, and
+     * `Exclude<string, 'dismiss'>` is `string` — so a modal that left `TReason` at its default
+     * gets no error at all, which is precisely the modal most likely to name a button
+     * `'dismiss'` without meaning what that produces. Warned rather than refused: the button
+     * works, it is the close it reports that stops being distinguishable from the four the
+     * library raises on its own. Said once per engine, because React re-declares every pass.
+     */
     declare(reason: ActionReason<TReason>, hotkey: HotkeyDef | undefined): void {
+      if (!warnedDismiss && reason === DISMISS_REASON) {
+        warnedDismiss = true;
+        log.warn('Action declared with the reserved dismiss reason — name it cancel or close', {
+          id: modalId,
+        });
+      }
       (pending ?? declared).set(reason, hotkey);
     },
 

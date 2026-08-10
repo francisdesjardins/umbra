@@ -12,6 +12,12 @@
  * factory's `ActionReason` excludes it: name that button `'cancel'` or `'close'`, and `'dismiss'`
  * keeps meaning exactly one thing.
  *
+ * **The exclusion reaches as far as the declared union does, and no further.** `ActionReason` is
+ * an `Exclude`, and `Exclude<string, 'dismiss'>` is `string` — so a modal that left `TReason` at
+ * its default is told nothing by the checker, which is why the engine warns at declaration too.
+ * Belt and braces, and the braces are the only thing holding for the call site that skipped the
+ * one rule the design asks for.
+ *
  * It is excluded from an action's *name*, not from a close. `handle.close('dismiss')` stays legal
  * and is the right call for a control whose whole meaning is "I did not act on this" — a toast's
  * ✕. What it is not is an action: no hotkey, no running state, nothing to disable.

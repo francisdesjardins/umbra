@@ -285,7 +285,8 @@ no second hook, and nothing to pass into `useModal`.
   call site. The `TReason = string` default accepts anything, which costs the three properties
   the design exists for — a mistyped `action('savee')` rejected, autocomplete, and an exhaustive
   `switch (result.reason)` in `onClose`. `'dismiss'` is always in the union: the library produces
-  it on Escape, backdrop click and teardown, and an action may also be named it.
+  it on Escape, backdrop click and teardown — and it is the one reason **no action may be named**,
+  which is a fourth thing declaring buys, since `Exclude` has nothing to remove from `string`.
 - **Close payload** is `useModal<Result>` — there is nothing else to carry it, so the modal declares
   what it closes with.
 - **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state,
@@ -317,8 +318,10 @@ no second hook, and nothing to pass into `useModal`.
   aggregate has to name its scope), and the factory is where actions live. It is built in
   `core/action-factory.ts` over the same `readState` the live props use, so **neither hook binding
   contributes a line** — except Solid's, which re-wraps the factory to attach `undeclare` and must
-  therefore re-attach the property; a forwarding arrow silently drops it, which is what the Solid
-  component test pins. `./vanilla` has no factory, so the controller carries the noun:
+  therefore re-attach the property. Dropping it does not compile (`ActionFactory` is an object
+  type with a call signature, so a bare arrow is missing a required property); what the checker
+  cannot say is that it stays _live_ through the wrapper, and that is what the Solid component
+  test pins. `./vanilla` has no factory, so the controller carries the noun:
   `isActionRunning(reason)`.
 - **`'dismiss'` is reserved, and the reservation is a type.** [core/dismiss-reason.ts](core/dismiss-reason.ts)
   holds `DISMISS_REASON` and `DismissReason` — the constant for the two places a literal would sit
@@ -327,7 +330,11 @@ no second hook, and nothing to pass into `useModal`.
   library compiling rather than leaving one path spelling it the old way. Actions take
   `ActionReason<TReason>` = `Exclude<TReason, DismissReason>`, so no action may be _named_ it —
   `Exclude` rather than a comment because a caller may legitimately declare `'dismiss'` in their
-  own union and would otherwise get an action they can name. `handle.close('dismiss')` stays
+  own union and would otherwise get an action they can name. **The type only half-delivers**:
+  `Exclude<string, 'dismiss'>` is `string`, so the modal that left `TReason` at its default — the
+  one most likely to do this by accident — gets no error, and `engine.declare` warns once for it.
+  Narrowing the type instead is not available: anything strict enough to reject `'dismiss'` out of
+  a bare `string` rejects every other reason too. `handle.close('dismiss')` stays
   legal: reporting a dismissal is not declaring an action. What a "dismiss action" would have
   bought already has two unambiguous spellings — `hotkey: Key.Escape` on a named action for the
   key, and `onClose` for every dismissal path including the two that cannot run a handler.

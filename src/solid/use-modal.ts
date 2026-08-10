@@ -144,9 +144,14 @@ export function useModal<TData = void, TReason extends string = string>(
    * branch it sits in — so a button that disappears takes its declaration with it.
    *
    * Wrapping the *call* means re-attaching what hangs off it: `isRunning` is a property of the
-   * factory, and an arrow that only forwards the call would leave Solid with a factory the
-   * React one has and it does not — the kind of divergence `binding-parity.test.ts` exists to
-   * catch, and the kind a type annotation alone would not.
+   * factory, so an arrow that only forwarded the call would leave Solid with a factory the React
+   * one has and it does not. The `typeof baseAction` annotation is what refuses that — since
+   * `ActionFactory` is an object type with a call signature, a bare arrow is missing a required
+   * property and fails to compile. `binding-parity.test.ts` would not catch it: that one diffs
+   * the entry points' export *names*, and a property of a factory is not one.
+   *
+   * What the type cannot say is that the property stays *live* through the wrapper — that it is
+   * still reading the same `readState` the props do — so a Solid component test asserts it.
    */
   const action: typeof baseAction = Object.assign(
     (...args: Parameters<typeof baseAction>) => {

@@ -105,10 +105,13 @@ what that project can reach. Three groups, and the reason each is there:
 `yarn test:component:coverage` is the other half, and it exists because the first list above is
 only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
 instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
-modules that c8 cannot reach — currently 90.13% statements over 46 files, against the unit
-project's 97.37% over the framework-free half.
+modules that c8 cannot reach — currently 90.17% statements over 46 files, against the unit
+project's 97.39% over the framework-free half.
 
-Two things about it are load-bearing and neither is obvious:
+**Every way this has failed so far has failed quietly**, which is why the list is three items long
+and why `ct-coverage-report.mjs` prints all three when it finds nothing. An empty `.nyc_output`
+does not say which stage produced nothing, and reading it as "the flag was not set" is the
+expensive mistake:
 
 - **Instrumentation is `enforce: 'pre'`** ([scripts/vite-plugin-ct-coverage.mjs](scripts/vite-plugin-ct-coverage.mjs)),
   on the file as written. `vite-plugin-istanbul` is the obvious tool and it instruments _stripped_
@@ -119,6 +122,16 @@ Two things about it are load-bearing and neither is obvious:
   and the failure is silent, an empty `.nyc_output` rather than an error. `use.ctCacheDir` splits
   them. Editing the instrumenter itself invalidates neither; delete `playwright/.cache-coverage/`
   by hand for that one.
+- **The path filter is separator-normalised.** Vite hands module ids with forward slashes and
+  `path.relative` answers in the platform's, so on Windows the filter compared `src\core\style.ts`
+  against a `src/` prefix and matched nothing — the whole feature a no-op, presenting as the same
+  empty `.nyc_output`. Any path predicate in this repo that a Windows machine will run gets the
+  same `.replaceAll('\\', '/')`.
+- **`.nyc_output/` is emptied per run** by a `globalSetup` ([scripts/ct-coverage-reset.mjs](scripts/ct-coverage-reset.mjs)),
+  not by the yarn script, because the invocation that gets this wrong is the ad-hoc
+  `CT_COVERAGE=1 playwright test --grep …`: it writes three files where the last full run left
+  twenty-one, and the report sums all twenty-four without a word. It cannot be the fixture's job —
+  workers are separate processes and each would delete the others' output mid-run.
 
 **A DOM type in a signature is not the same as a DOM dependency**, and telling them apart is
 worth doing before reaching for the exclude list. `isBackdropClick`, `shouldDismissOnBackdropClick`
@@ -181,7 +194,7 @@ helper is a helper wherever it ships.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
 - **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
-- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.2.4 (optional peer — required only by `./react`) | Solid ^1.9.14 (optional peer — required only by `./solid`; `./vanilla` needs neither) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM)
+- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.0.0 (optional peer — required only by `./react`) | Solid ^1.9.0 (optional peer — required only by `./solid`; `./vanilla` needs neither) | Chrome 138+ | ES2024, ESNext modules | Vite v8 (ESM). The **peer** ranges are what a consumer must satisfy and they are the wide ones; the repo's own `devDependencies` sit far above them (React 19.2.8, Solid 1.9.14) — quoting the dev pin as the requirement is how the README came to ask for more than the package does.
 - **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
 - **Yarn workspaces**: the repo is two packages — `umbra` (root, published) and `umbra-playground` (`playground/`, `private: true`). One `yarn install` at the root installs both. **The published package's dependency list is the root manifest**, so anything the demo needs — MUI, Emotion, TanStack Router, immer, react-syntax-highlighter — belongs in `playground/package.json` and must never be added to the root. The root's own `dependencies` stay empty: the library ships zero runtime dependencies. Root `dev`/`playground:*` scripts delegate via `yarn workspace umbra-playground <script>`.
 - **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin — so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** (`'./types.js'`, `'../store/index.js'`) because `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext` — silently, under `skipLibCheck`. `yarn verify:package` fails on any that slip through.

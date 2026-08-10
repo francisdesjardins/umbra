@@ -10,9 +10,14 @@ import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
  * so the source is instrumented on the way in instead, and each test reads the counters back out
  * of its own page. Off by default: instrumentation is a real cost on every CT run, and the
  * numbers are only wanted when someone is asking about them.
+ *
+ * Read once: the flag decides four things below, and four independent reads of an environment
+ * variable is four chances for them to answer differently.
  */
+const withCoverage = process.env['CT_COVERAGE'] === '1';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped by design; the Vite plugin shape is widened below anyway
-const coveragePlugins: any[] = process.env['CT_COVERAGE'] === '1' ? [ctCoverage()] : [];
+const coveragePlugins: any[] = withCoverage ? [ctCoverage()] : [];
 
 // @playwright/experimental-ct-core bundles its own Vite version whose Plugin
 // type diverges from the project's Vite 8 beta. The plugin is runtime-compatible;
@@ -42,6 +47,9 @@ const vitePlugins: any[] = [
  */
 export default defineConfig({
   testDir: './src',
+  // Empties `.nyc_output/` before any worker writes to it, and only when coverage is on — see the
+  // file for why stale counters are worse than missing ones.
+  globalSetup: './scripts/ct-coverage-reset.mjs',
   snapshotDir: './__snapshots__',
   timeout: 10 * 1000,
   fullyParallel: true,
@@ -62,15 +70,11 @@ export default defineConfig({
     // One edge survives, because Playwright's freshness check walks the *component sources*: an
     // edit to `scripts/vite-plugin-ct-coverage.mjs` alone does not invalidate anything, so
     // changing the instrumenter means deleting `playwright/.cache-coverage/` by hand.
-    ctCacheDir:
-      process.env['CT_COVERAGE'] === '1' ? 'playwright/.cache-coverage' : 'playwright/.cache',
+    ctCacheDir: withCoverage ? 'playwright/.cache-coverage' : 'playwright/.cache',
     ctViteConfig: {
       // Keep pre-bundled deps in a dedicated dir separate from the dev-server cache.
       // CI pipelines can cache node_modules/.vite-ct between runs for faster startup.
-      cacheDir:
-        process.env['CT_COVERAGE'] === '1'
-          ? 'node_modules/.vite-ct-coverage'
-          : 'node_modules/.vite-ct',
+      cacheDir: withCoverage ? 'node_modules/.vite-ct-coverage' : 'node_modules/.vite-ct',
       optimizeDeps: {
         // Explicitly pre-bundle React so it is processed once and cached rather
         // than re-transformed on every cold start.

@@ -1,7 +1,7 @@
 {
   "name": "umbra",
   "version": "1.0.0",
-  "description": "Framework-agnostic dialog/modal manager on the native <dialog> top layer, zero shipped UI \u2014 with React, Solid and vanilla bindings on ./react, ./solid and ./vanilla.",
+  "description": "Framework-agnostic dialog/modal manager on the native <dialog> top layer, zero shipped UI — with React, Solid and vanilla bindings on ./react, ./solid and ./vanilla.",
   "keywords": [
     "dialog",
     "modal",

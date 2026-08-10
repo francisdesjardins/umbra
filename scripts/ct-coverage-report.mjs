@@ -27,18 +27,33 @@ const INPUT_DIR = resolve(ROOT, '.nyc_output');
 const jsonFlag = process.argv.indexOf('--json');
 const jsonOut = jsonFlag !== -1 ? process.argv[jsonFlag + 1] : null;
 
+/**
+ * What "no counters" can actually mean — all three have happened, and the flag is only the first.
+ *
+ * Naming the other two is the whole value of this message: an empty `.nyc_output` says nothing
+ * about which stage produced nothing, and reading it as "you forgot the flag" is how an afternoon
+ * goes missing.
+ */
+const NOTHING_WRITTEN = [
+  'No component coverage was written. One of:',
+  '  · CT_COVERAGE=1 was not set, so nothing instrumented the bundle;',
+  '  · the instrumenter changed but playwright/.cache-coverage/ did not — the freshness check',
+  '    walks the component sources, so delete that directory by hand;',
+  "  · scripts/vite-plugin-ct-coverage.mjs matched no files (check its path filter's separators).",
+].join('\n');
+
 let files;
 try {
   files = readdirSync(INPUT_DIR).filter((name) => {
     return name.endsWith('.json');
   });
 } catch {
-  console.error(`No ${relative(ROOT, INPUT_DIR)}/ — run the component project with CT_COVERAGE=1.`);
+  console.error(NOTHING_WRITTEN);
   process.exit(1);
 }
 
 if (files.length === 0) {
-  console.error(`${relative(ROOT, INPUT_DIR)}/ is empty — was CT_COVERAGE=1 set?`);
+  console.error(NOTHING_WRITTEN);
   process.exit(1);
 }
 
@@ -55,15 +70,23 @@ for (const name of files) {
       merged.set(path, structuredClone(entry));
       continue;
     }
+    // `?? 0` on every read, and it is not defensive padding: two files instrumented from
+    // different revisions of the same source have different counter ids, and summing them blind
+    // reads `undefined` and poisons the total with `NaN` — silently, since a NaN percentage
+    // prints as `NaN%` in one row and leaves the summary looking fine. `.nyc_output/` is cleared
+    // per run so this should not arise; if it ever does, an id nobody else counted is zero.
     for (const key of Object.keys(entry.s)) {
-      existing.s[key] += entry.s[key];
+      existing.s[key] = (existing.s[key] ?? 0) + entry.s[key];
     }
     for (const key of Object.keys(entry.f)) {
-      existing.f[key] += entry.f[key];
+      existing.f[key] = (existing.f[key] ?? 0) + entry.f[key];
     }
     for (const key of Object.keys(entry.b)) {
+      existing.b[key] ??= entry.b[key].map(() => {
+        return 0;
+      });
       entry.b[key].forEach((count, index) => {
-        existing.b[key][index] += count;
+        existing.b[key][index] = (existing.b[key][index] ?? 0) + count;
       });
     }
   }
@@ -76,7 +99,13 @@ const ratio = (covered, total) => {
 const rows = [];
 const totals = { s: [0, 0], b: [0, 0], f: [0, 0] };
 
-for (const [path, entry] of [...merged].sort()) {
+// Sorted by path, spelled out: the default comparator would stringify each `[path, entry]` pair
+// and sort on the object's `[object Object]` tail as readily as on the path.
+const byPath = [...merged].sort(([a], [b]) => {
+  return a.localeCompare(b);
+});
+
+for (const [path, entry] of byPath) {
   const statements = Object.values(entry.s);
   const functions = Object.values(entry.f);
   const branches = Object.values(entry.b).flat();
@@ -95,7 +124,9 @@ for (const [path, entry] of [...merged].sort()) {
   totals.b[1] += branches.length;
 
   rows.push({
-    file: relative(ROOT, path),
+    // Forward slashes whatever the platform: this column is read as a path into the repo, and
+    // half a report in `src\core\style.ts` is a report nobody can paste anywhere.
+    file: relative(ROOT, path).replaceAll('\\', '/'),
     statements: ratio(covered.s, statements.length),
     missed: statements.length - covered.s,
     branches: ratio(covered.b, branches.length),

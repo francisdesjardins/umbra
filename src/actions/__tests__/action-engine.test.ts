@@ -243,6 +243,70 @@ test.describe('the edges', () => {
     }
   });
 
+  test('warns once when an action is declared with the reserved dismiss reason', () => {
+    // `ActionReason` excludes `'dismiss'`, but `Exclude<string, 'dismiss'>` is `string` — so the
+    // modal that left `TReason` at its default (the one this warning is for) gets no type error.
+    // Declared here with that default on purpose: annotating the union is what would make this
+    // unreachable, and then the test would be asserting the checker rather than the guard.
+    const engine = createActionEngine<void>('reserved');
+    const warnings: unknown[][] = [];
+    const originalWarn = console.warn;
+    const originalDebug = console.debug;
+    console.warn = (...args) => {
+      warnings.push(args);
+    };
+    console.debug = () => {
+      return;
+    };
+    setLogLevel('action');
+
+    try {
+      engine.declare('dismiss', undefined);
+      // Every pass re-declares, so a per-call warning would be a per-frame warning.
+      engine.beginRender();
+      engine.declare('dismiss', undefined);
+      engine.endRender();
+
+      expect(warnings).toHaveLength(1);
+      expect(String(warnings[0]?.[0])).toContain('reserved dismiss reason');
+
+      // Warned, not refused: the declaration still lands, so the button keeps working and
+      // `hasActions()` still counts it.
+      expect(engine.hasActions()).toBe(true);
+    } finally {
+      console.warn = originalWarn;
+      console.debug = originalDebug;
+      setLogLevel(false);
+    }
+  });
+
+  test('a named action never trips the reserved-reason warning', () => {
+    // The negative half: a guard that only ever fires would pass this suite while warning on
+    // every action anyone declares.
+    const engine = createActionEngine<void, 'save' | 'cancel'>('not-reserved');
+    const warnings: unknown[][] = [];
+    const originalWarn = console.warn;
+    const originalDebug = console.debug;
+    console.warn = (...args) => {
+      warnings.push(args);
+    };
+    console.debug = () => {
+      return;
+    };
+    setLogLevel('action');
+
+    try {
+      engine.declare('save', 'Enter');
+      engine.declare('cancel', 'Escape');
+
+      expect(warnings).toHaveLength(0);
+    } finally {
+      console.warn = originalWarn;
+      console.debug = originalDebug;
+      setLogLevel(false);
+    }
+  });
+
   test('an action that has never run reports the idle state, not undefined', () => {
     const engine = createActionEngine<void, 'save'>('never');
 

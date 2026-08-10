@@ -32,8 +32,10 @@ export type CloseResult<TData = void, TReason extends string = string> = {
    * Why it closed: an action's reason, or `'dismiss'` — which the library itself produces on
    * Escape, backdrop click and teardown, so it is always possible regardless of `TReason`.
    *
-   * The two are disjoint by construction: no action may be *named* `'dismiss'`, so this field
-   * carrying it means nobody acted, every time. See {@link DismissReason}.
+   * The two are disjoint wherever `TReason` is declared: no action may be *named* `'dismiss'`, so
+   * this field carrying it means nobody acted. Left at the `string` default there is nothing for
+   * `ActionReason`'s `Exclude` to remove, and the engine warns at declaration instead — one more
+   * reason to declare the union. See {@link DismissReason}.
    *
    * Declare a union on `useModal` and this narrows to it, making a `switch` here exhaustive.
    */

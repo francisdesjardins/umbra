@@ -10,6 +10,11 @@ import type { KeyValue } from '../utils/keys.js';
  * legitimate thing to write, since it is a reason `onClose` will see) would otherwise get an
  * action they can name. See {@link DismissReason} for what it costs: two doors producing one
  * reason, one of which runs a handler and one of which cannot.
+ *
+ * It removes nothing from the `TReason = string` default — `Exclude<string, 'dismiss'>` is
+ * `string`, since `string` is not assignable to the literal. That is not a hole to plug in the
+ * type (narrowing it would reject every legitimate reason too); the engine warns at declaration
+ * for that case, and declaring the union is the rule that makes the checker do the work.
  */
 export type ActionReason<TReason extends string> = Exclude<TReason, DismissReason>;
 

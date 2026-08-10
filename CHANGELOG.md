@@ -11,6 +11,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Fixed — the component coverage measured nothing at all on Windows
+
+The fourth way this setup has found to fail quietly, and the largest: `scripts/vite-plugin-ct-coverage.mjs`
+filtered by `relative(root, id).startsWith('src/')`. Vite hands module ids with forward slashes;
+`path.relative` answers in the **platform's** separator. So on Windows every file arrived as
+`src\core\style.ts`, the prefix never matched, `instrumentSync` was never called, no page defined
+`__coverage__`, nothing was written — and the report said `.nyc_output` was empty, which reads as
+"you forgot the flag". Every stage after the first was working perfectly on nothing.
+
+Measured both ways with the coverage cache cleared between, so the cache could not be the
+explanation: without the normalisation, 240 tests pass and 0 counter files exist; with it, the
+same 240 produce **90.17% of 1210 statements over 46 files** — within four hundredths of the
+90.13% recorded here yesterday, which is the confirmation that only the filter was ever wrong.
+
+The fix is `.replaceAll('\\', '/')` on the one line. The finding is the class: a path predicate
+comparing a `path.relative` result against a POSIX literal is broken on half the machines that
+will run it, and this repo is developed on one of them.
+
+### Fixed — the report merged the previous run's counters into this one
+
+`.nyc_output/` was never emptied. The fixture writes `ct-<worker>-<n>.json` per test and the
+report merges every file it finds, so counters outlive the run that produced them: a full run
+leaves 21 files, then a targeted one (`--grep`, a single spec) writes 3 and the report sums all
+24 — a coverage nobody just measured, printed as though someone had. The header even reports the
+file count as "N tests", so the wrong total is on screen looking ordinary.
+
+A `globalSetup` ([scripts/ct-coverage-reset.mjs](scripts/ct-coverage-reset.mjs)) rather than a
+`rimraf` in front of the yarn script, because the invocation that gets this wrong is the ad-hoc
+one someone types while chasing a single file's number. It cannot be the fixture's job: workers
+are separate processes, and each would delete the others' output mid-run.
+
+The merge is `?? 0` on every counter now, and the "nothing was written" message names all three
+causes instead of guessing the first — an empty directory does not say which stage produced
+nothing, and that is exactly what made the two failures above cost what they did.
+
+### Changed — the dismiss reservation now holds where the type cannot
+
+`ActionReason<TReason>` is `Exclude<TReason, DismissReason>`, and `Exclude<string, 'dismiss'>` is
+`string` — `string` is not assignable to the literal, so there is nothing to remove. The
+reservation therefore bound exactly the callers who had already followed the rule it depends on,
+and left the modal that skipped it — the one most likely to name a button `'dismiss'` without
+meaning what that produces — with no error at all.
+
+Narrowing the type is not available: anything strict enough to reject `'dismiss'` out of a bare
+`string` rejects every other reason with it. So `engine.declare` warns instead, once per engine
+(React re-declares every pass) and warns rather than refuses, because the button does work — it is
+the close it reports that stops being distinguishable from the four the library raises on its own.
+
+And `CloseResult.reason` said the invariant in absolute terms — "carrying it means nobody acted,
+**every time**" — while the type delivered it conditionally. It now says which condition, and
+that condition is one more thing declaring the union buys.
+
+### Fixed — four claims in the docs and comments that had stopped being true
+
+Each was true when written, which is the only interesting thing about them.
+
+**`solid/use-modal.ts` credited the wrong two mechanisms.** It warned that a forwarding arrow
+would drop `isRunning` and be caught by `binding-parity.test.ts` "and not by a type annotation
+alone" — both halves backwards. The annotation is exactly what catches it: turning `ActionFactory`
+into an object type with a call signature, which the same commit did, makes a bare arrow a missing
+required property (`TS2741`, verified). And `binding-parity.test.ts` structurally cannot see it —
+it regexes `export {…} from` in the two entry files, and a property of a factory is not an export.
+What the checker cannot say is that the property stays _live_ through the wrapper, and that is
+what the Solid component test actually pins.
+
+**`src/__tests__/ct-coverage.ts` still credited `vite-plugin-istanbul`** with instrumenting the
+bundle, twenty lines above the sentence telling the reader not to swap in `vite-plugin-istanbul`.
+Yesterday's doc pass fixed the other stale note in that file and left this one.
+
+**`src/CLAUDE.md` still said an action may be named `'dismiss'`**, four bullets above the one
+declaring it reserved. It slipped through for the same reason the type only half-works: the
+sentence was about the `TReason` default.
+
+**The README asked for more React than the package does** — `^19.2.4` / `^1.9.14`, which are the
+repo's own dev pins, against peer ranges of `^19.0.0` / `^1.9.0`. That one was corrected yesterday
+in the README and not in `CLAUDE.md`; both now say the peer range and say which is which. The
+coverage chips are re-set from the two commands as they stand today (97% / 90%), and
+`package.json`'s description is back to a literal em dash — Yarn rewrites the `—` escape on
+any install, so it was never going to survive anyway.
+
 ### Changed — breaking: `DialogSnapshot` is `ModalSnapshot`
 
 The vocabulary rule says `dialog` is the element and `modal` is the unit of state, and this type

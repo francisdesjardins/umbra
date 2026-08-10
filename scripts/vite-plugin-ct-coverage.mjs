@@ -16,6 +16,13 @@ import { relative, resolve } from 'node:path';
  * directly. Everything downstream — the TS transform, the React compiler, Solid's hyperscript —
  * then treats the injected counters as the ordinary JavaScript they are.
  *
+ * **The path filter is separator-normalised, and on Windows that is the difference between
+ * measuring and not.** Vite hands module ids with forward slashes, but `path.relative` answers in
+ * the platform's own separator — so `relative(root, id)` is `src\core\style.ts` here, and
+ * `startsWith('src/')` is false for every file in the library. Nothing is instrumented, no page
+ * defines `__coverage__`, nothing is written, and the report says `.nyc_output` is empty — which
+ * reads as "you forgot the flag" and is the third way this setup has found to fail quietly.
+ *
  * @param {{ include?: (id: string) => boolean }} [options]
  */
 export const ctCoverage = (options = {}) => {
@@ -24,7 +31,7 @@ export const ctCoverage = (options = {}) => {
   const shouldInstrument =
     options.include ??
     ((id) => {
-      const path = relative(root, id);
+      const path = relative(root, id).replaceAll('\\', '/');
       return (
         path.startsWith('src/') &&
         /\.tsx?$/.test(path) &&
