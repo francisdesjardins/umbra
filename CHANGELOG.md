@@ -38,11 +38,21 @@ hook bindings keep the more specific answer.
 Pinned by a regression test in plain markup, with `focusOnOpen` on the _other_ button so a pass
 cannot be "focus never moved" — and confirmed to fail without the fix.
 
-**Still open, measured and not yet fixed:** the library's `dialog::backdrop` rule does not reach a
-dialog inside a shadow root. It is adopted onto `document`, and document stylesheets do not cross
-the boundary, so such a dialog gets the UA default — measured `rgba(0, 0, 0, 0.1)` against the
-library's `rgba(0, 0, 0, 0.7)`. `--dialog-backdrop` is documented as settable "anywhere above the
-dialog", which is untrue across a shadow root.
+The second finding from the same experiment is fixed too: **the library's `dialog::backdrop` rule
+now follows the dialog into a shadow root.** The sheet was adopted onto `document`, and
+`adoptedStyleSheets` does not cross the boundary — so a dialog inside a web component got the UA's
+backdrop, measured `rgba(0, 0, 0, 0.1)` against the library's `rgba(0, 0, 0, 0.7)`, while
+`--dialog-backdrop` inherited in perfectly well and had no rule left to feed. The custom property
+crossing and the rule not crossing is precisely what made it invisible.
+
+The sheet moved out of the manager into [core/dialog-styles.ts](src/core/dialog-styles.ts) and is
+adopted **per root**: the document, plus `dialog.getRootNode()` at every `showDialog`, idempotent
+per root through a `WeakSet`. `showDialog` is the one place that knows which tree a given dialog is
+in. `BODY_LOCK_ATTR` moved with it, so the selector and the `setAttribute` that has to match it now
+share one constant instead of agreeing by memory.
+
+Both findings are pinned by component tests that fail without their fix — one in a shadow root, one
+in plain markup.
 
 ### Fixed — the `type` badge was drawn in the page's own background colour
 

@@ -5,7 +5,8 @@
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
-import { BODY_LOCK_ATTR, lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
+import { ensureDialogStyles } from '../core/dialog-styles.js';
+import { lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
 import type {
   ModalInfo,
   ModalLookup,
@@ -429,34 +430,16 @@ export type DialogManager = {
 };
 
 // ── CSS injection (shared across instances) ─────────────────────────────────
-
-let stylesheet: CSSStyleSheet | null = null;
+//
+// The sheet itself lives in `core/dialog-styles.ts`, because the document is not the only root
+// that needs it: a dialog inside a shadow root has to adopt it too, and `showDialog` is what
+// knows which root that is. This is the document's half.
 
 function ensureStyles() {
   if (typeof document === 'undefined') {
     return;
   }
-
-  if (stylesheet) {
-    return;
-  }
-
-  stylesheet = new CSSStyleSheet();
-  // The scrollbar-width compensation itself is an inline style set by `lockBodyScroll()` —
-  // it has to be measured at lock time and added to the page's own padding, which CSS
-  // cannot express. Only the overflow rule lives here.
-  // The one piece of appearance the library ships, and it is a custom property so overriding
-  // it is a declaration rather than a specificity fight: set `--dialog-backdrop` anywhere above
-  // the dialog (`:root`, a theme class, the dialog itself) and this rule picks it up.
-  stylesheet.replaceSync(`
-    body[${BODY_LOCK_ATTR}] {
-      overflow: hidden;
-    }
-    dialog::backdrop {
-      background: var(--dialog-backdrop, rgba(0, 0, 0, 0.7));
-    }
-  `);
-  document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet];
+  ensureDialogStyles(document);
 }
 
 // ── Store registry types ────────────────────────────────────────────────────

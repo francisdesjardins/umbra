@@ -264,3 +264,79 @@ export function VanillaFailingActionHarness() {
     </>
   );
 }
+
+/**
+ * A `<dialog>` inside a shadow root, which is the one tree the library cannot reach into.
+ *
+ * Two things it changes and both were wrong before: `adoptedStyleSheets` does not cross the
+ * boundary, so the library's own `dialog::backdrop` never applied and the dialog fell back to the
+ * UA's; and `document.activeElement` answers with the *host*, so every focus check concluded that
+ * focus had left the dialog.
+ *
+ * React's only job is to make the host — everything inside is plain DOM, which is the shape a web
+ * component has anyway.
+ */
+export function VanillaShadowRootHarness() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [controller, setController] = useState<Bound<'confirm'> | null>(null);
+  const [visible, setVisible] = useState('closed');
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) {
+      return;
+    }
+
+    // `open` so the test can select into it — a closed root would also hide the dialog from the
+    // assertions, and what is under test is the library's reach, not the tree's opacity.
+    const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    root.innerHTML = `
+      <dialog data-testid="shadow-dialog">
+        <p>Inside a shadow root</p>
+        <button id="confirm">Confirm</button>
+      </dialog>
+    `;
+
+    const dialog = root.querySelector('dialog');
+    const confirm = root.getElementById('confirm');
+    if (!(dialog instanceof HTMLDialogElement) || !(confirm instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'confirm'>({
+      id: 'vanilla-shadow',
+      dialog,
+      ariaLabel: 'Vanilla in a shadow root',
+      manager: createDialogManager(),
+    });
+
+    const unbindConfirm = bound.bindAction(confirm, 'confirm', { focusOnOpen: true });
+    const stop = bound.subscribe(() => {
+      setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
+    });
+
+    setController(bound);
+
+    return () => {
+      stop();
+      unbindConfirm();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="is-visible">{visible}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+      <div ref={hostRef} data-testid="shadow-host" />
+    </>
+  );
+}

@@ -9,6 +9,8 @@
  * phase-driven decisions of whether to do it at all are `sync*`, next door.
  */
 
+import { ensureDialogStyles, styleRootOf } from './dialog-styles.js';
+
 /**
  * Per-element cache for transition-disabled detection, so the closing path never triggers a
  * synchronous `getComputedStyle` reflow at close time. A `WeakMap` lets the entry be GC'd with
@@ -54,6 +56,15 @@ export function showDialog(
   dialog: HTMLDialogElement,
   { nonModal, zIndex }: { nonModal: boolean; zIndex: number }
 ): void {
+  // Here rather than only at the manager, because the document is not the only root that needs
+  // the sheet: `adoptedStyleSheets` does not cross a shadow boundary, so a dialog inside a web
+  // component would show the UA's backdrop instead of this library's. This is the one place that
+  // knows which root a given dialog is in, and adoption is idempotent per root.
+  const styleRoot = styleRootOf(dialog);
+  if (styleRoot) {
+    ensureDialogStyles(styleRoot);
+  }
+
   if (nonModal) {
     dialog.show();
   } else {

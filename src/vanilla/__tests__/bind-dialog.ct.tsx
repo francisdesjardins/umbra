@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/experimental-ct-react';
 import {
   VanillaBasicHarness,
   VanillaFailingActionHarness,
+  VanillaShadowRootHarness,
   VanillaUnbindHarness,
 } from './bind-dialog.story';
 
@@ -147,5 +148,32 @@ test.describe('bindDialog', () => {
     await expect(page.getByTestId('error')).toHaveText('submit failed');
 
     await expect(page.getByTestId('submit')).toBeFocused();
+  });
+  test('a dialog in a shadow root gets the library backdrop and its opening focus', async ({
+    mount,
+    page,
+  }) => {
+    // `adoptedStyleSheets` does not cross a shadow boundary and `document.activeElement`
+    // answers with the host, so both of these were silently wrong: the dialog fell back to the
+    // UA backdrop, and the focus policy concluded focus had left the dialog on every check.
+    await mount(<VanillaShadowRootHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    const measured = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="shadow-host"]')?.shadowRoot;
+      const dialog = root?.querySelector('dialog');
+      return {
+        inTopLayer: dialog?.matches(':modal') ?? false,
+        backdrop: dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : null,
+        focused: root?.activeElement?.id ?? null,
+      };
+    });
+
+    expect(measured.inTopLayer).toBe(true);
+    // The library own value, not merely "something painted" — Chrome ships a UA default, so a
+    // non-transparent result would pass while proving nothing.
+    expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
+    expect(measured.focused).toBe('confirm');
   });
 });

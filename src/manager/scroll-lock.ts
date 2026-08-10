@@ -19,6 +19,8 @@
  * ```
  */
 
+import { BODY_LOCK_ATTR } from '../core/dialog-styles.js';
+
 /**
  * Custom property published on `:root` while the lock is held, holding the width the lock
  * reclaimed — i.e. exactly how much to compensate. `0px` when nothing was reclaimed (overlay
@@ -27,8 +29,10 @@
  */
 export const SCROLLBAR_WIDTH_VAR = '--dialog-scrollbar-width';
 
-/** Attribute the injected stylesheet keys `overflow: hidden` off. */
-export const BODY_LOCK_ATTR = 'data-dialog-open';
+// The attribute and the rule that reads it live together in `core/dialog-styles.ts`, so the
+// selector and this `setAttribute` cannot drift apart. Re-exported because this module is where
+// a reader looks for it.
+export { BODY_LOCK_ATTR };
 
 /**
  * Who currently wants the body locked.

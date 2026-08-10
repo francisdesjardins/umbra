@@ -213,6 +213,14 @@ is built:
   `dialog::backdrop` rule and defaulted to `rgba(0, 0, 0, 0.7)`. Inherited, so setting it on
   `:root`, a theme class or the dialog itself is a declaration rather than a specificity fight
   against an adopted stylesheet.
+
+  **The sheet is adopted per _root_, not per document** ([core/dialog-styles.ts](core/dialog-styles.ts)),
+  and that is not an optimisation. `adoptedStyleSheets` does not cross a shadow boundary, so a
+  `<dialog>` inside a web component gets the UA's backdrop — measured `rgba(0, 0, 0, 0.1)` — while
+  the custom property it is supposed to read inherits in perfectly well. The rule has to follow the
+  element. `showDialog` adopts into `dialog.getRootNode()` on every open, idempotent per root,
+  because it is the one place that knows which tree a given dialog is in.
+
 - **`data-modal-id`** (the modal's id) and **`data-modal-type`** (`'modal'` / `'non-modal'`) on
   the `<dialog>` — how CSS reaches one dialog or every non-modal one. `data-testid` is for
   tests; it is not a styling contract and must not be documented as one.
