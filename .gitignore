@@ -3,6 +3,7 @@ dist/
 docs/api/
 *.tsbuildinfo
 coverage/
+.nyc_output/
 .playwright-targeted-output.txt
 playwright-report/
 test-results/

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/experimental-ct-react';
+import { expect, test } from '../../__tests__/ct-coverage.js';
 import {
   AsyncOpenMessageHarness,
   BasicMessageHarness,

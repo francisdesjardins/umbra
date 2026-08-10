@@ -1,7 +1,7 @@
 {
   "name": "umbra",
   "version": "1.0.0",
-  "description": "Framework-agnostic dialog/modal manager on the native <dialog> top layer, zero shipped UI — with React, Solid and vanilla bindings on ./react, ./solid and ./vanilla.",
+  "description": "Framework-agnostic dialog/modal manager on the native <dialog> top layer, zero shipped UI \u2014 with React, Solid and vanilla bindings on ./react, ./solid and ./vanilla.",
   "keywords": [
     "dialog",
     "modal",
@@ -96,6 +96,7 @@
     "test:unit:ui": "playwright test -c playwright.config.ts --project=unit --ui",
     "test:component": "playwright test -c playwright.config.ts --project=component",
     "test:component:ui": "playwright test -c playwright.config.ts --project=component --ui",
+    "test:component:coverage": "cross-env CT_COVERAGE=1 playwright test -c playwright.config.ts --project=component && node scripts/ct-coverage-report.mjs",
     "type-check:watch": "node node_modules/typescript-7/bin/tsc --noEmit --watch",
     "type-check": "node node_modules/typescript-7/bin/tsc --noEmit && node node_modules/typescript-7/bin/tsc -p playground/tsconfig.json --noEmit"
   },
@@ -146,7 +147,8 @@
     "typescript": "6.0.3",
     "typescript-7": "npm:typescript@7.0.2",
     "typescript-eslint": "^8.66.0",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "vite-plugin-istanbul": "^9.0.1"
   },
   "packageManager": "yarn@4.18.0"
 }

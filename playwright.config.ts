@@ -1,5 +1,33 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
 import react from '@vitejs/plugin-react';
+import istanbul from 'vite-plugin-istanbul';
+
+/**
+ * Component-test coverage, opt-in through `CT_COVERAGE=1`.
+ *
+ * The unit project measures itself with c8 (V8 coverage of a Node process). A component test has
+ * no Node process to measure — the code under test runs in the browser, in a bundle Vite built —
+ * so the source is instrumented on the way in instead, and each test reads the counters back out
+ * of its own page. Off by default: instrumentation is a real cost on every CT run, and the
+ * numbers are only wanted when someone is asking about them.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const coveragePlugins: any[] =
+  process.env['CT_COVERAGE'] === '1'
+    ? [
+        istanbul({
+          include: ['src/**/*.ts', 'src/**/*.tsx'],
+          // The harnesses are the test, not the subject.
+          exclude: ['**/__tests__/**', '**/node_modules/**'],
+          extension: ['.ts', '.tsx'],
+          requireEnv: false,
+          // Playwright CT *builds* its bundle rather than serving it, and the plugin instruments
+          // only in serve mode unless told otherwise — without this the run is green and the
+          // counters never exist.
+          forceBuildInstrument: true,
+        }),
+      ]
+    : [];
 
 // @playwright/experimental-ct-core bundles its own Vite version whose Plugin
 // type diverges from the project's Vite 8 beta. The plugin is runtime-compatible;
@@ -11,6 +39,8 @@ const vitePlugins: any[] = [
       plugins: [['babel-plugin-react-compiler', { target: '19' }]],
     },
   }),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- widened above, same reason
+  ...coveragePlugins,
 ];
 
 /**
