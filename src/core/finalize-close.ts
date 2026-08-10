@@ -5,6 +5,12 @@ import type { ModalStore } from './modal-store.js';
 type FinalizableStore = Pick<ModalStore, 'getSnapshot' | 'runOnClose' | 'finalize'>;
 
 /**
+ * The two members of the element this actually touches — narrowed for the reason the store is,
+ * and with the same consequence: the close tail becomes assertable without a browser.
+ */
+type ClosableDialog = Pick<HTMLDialogElement, 'open' | 'close'>;
+
+/**
  * Shared tail of every close path: close the native dialog if still open,
  * fire the user's `onClose` callback with the close result, then finalize the
  * store (settle the close resolvers, transition to `'closed'`).
@@ -16,7 +22,7 @@ type FinalizableStore = Pick<ModalStore, 'getSnapshot' | 'runOnClose' | 'finaliz
  */
 export function finalizeModalClose(
   store: FinalizableStore,
-  dialog: HTMLDialogElement | null,
+  dialog: ClosableDialog | null,
   onCloseError: (error: Error) => void
 ): void {
   if (dialog?.open) {

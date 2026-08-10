@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
+import { createActionEngine } from '../../actions/action-engine.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
-import { createModalRuntime, resolveModalOptions, teardownModal } from '../modal-runtime.js';
+import { setLogLevel } from '../../utils/logger.js';
+import {
+  createModalRuntime,
+  resolveModalOptions,
+  shouldDismissOnBackdropClick,
+  teardownModal,
+} from '../modal-runtime.js';
 
 /**
  * The parts of a modal both bindings share, tested where they live rather than twice through two
@@ -54,6 +61,17 @@ test.describe('resolveModalOptions', () => {
     // an opt-in, because it sits over a live page.
     expect(resolveModalOptions({ nonModal: true }).dismissOnClickOutside).toBe(false);
     expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(false);
+  });
+
+  test('an explicit nonModal: false reads the same as leaving it out', () => {
+    // `nonModal` is optional *and* has a `false` branch in the union, so a caller may write it
+    // either way — and a resolution that only handled the absent case would silently drop the
+    // backdrop option for everyone who spelled it out.
+    expect(
+      resolveModalOptions({ nonModal: false, dismissOnBackdropClick: true }).dismissOnBackdropClick
+    ).toBe(true);
+    expect(resolveModalOptions({ nonModal: false }).isNonModal).toBe(false);
+    expect(resolveModalOptions({ nonModal: false }).dismissOnClickOutside).toBe(false);
   });
 
   test('dismissKey: false survives, because it is not "unset"', () => {
@@ -191,5 +209,228 @@ test.describe('teardownModal', () => {
     const [error, result] = await closed;
     expect(error).toBeInstanceOf(Error);
     expect(result).toBeNull();
+  });
+});
+
+test.describe('shouldDismissOnBackdropClick', () => {
+  /** A dialog is a rect here — the geometry is the last question, and only if the first three pass. */
+  const boxed = {
+    getBoundingClientRect: () => {
+      return { left: 100, right: 300, top: 100, bottom: 200 };
+    },
+  };
+  const surface = new EventTarget();
+  /** A click on the dialog itself, well outside its box: the geometry says "backdrop". */
+  const onBackdrop = { target: surface, currentTarget: surface, clientX: 0, clientY: 0 };
+
+  /**
+   * A real engine in the two states the chain asks about — no fake, because the engine is
+   * framework-free and driving it is what makes "has actions" and "one is running" mean here
+   * exactly what they mean in a binding.
+   */
+  const gate = (options: { hasActions: boolean; hasRunningAction?: boolean }) => {
+    const engine = createActionEngine<void, 'save'>('backdrop-gate');
+    if (options.hasActions) {
+      engine.declare('save', undefined);
+    }
+    if (options.hasRunningAction === true) {
+      // Never settles for the life of the test, which is the point: the action is *running*.
+      void engine.run('save', () => {
+        return new Promise<void>(() => {
+          return undefined;
+        });
+      });
+    }
+    return engine;
+  };
+
+  test('a non-modal dialog has no backdrop to click', () => {
+    const { store } = createModalRuntime('backdrop-non-modal');
+    expect(
+      shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        store,
+        engine: gate({ hasActions: false }),
+        isNonModal: true,
+        dismissOnBackdropClick: true,
+        dismissWhilePreparing: true,
+      })
+    ).toBe(false);
+  });
+
+  test('defaults to opt-out with no actions, and opt-in with them', () => {
+    // A modal offering buttons wants to be dismissed through one, so drawing an action flips the
+    // default. Both halves here, because the default is the whole subtlety.
+    const frames = installFakeFrames();
+    try {
+      const { store } = createModalRuntime('backdrop-default');
+      store.beginOpen();
+      store.scheduleOpenTransition();
+      frames.flush();
+      store.finishPreparing();
+
+      const options = {
+        store,
+        isNonModal: false as const,
+        dismissWhilePreparing: true,
+        dismissOnBackdropClick: undefined,
+      };
+
+      expect(
+        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+          ...options,
+          engine: gate({ hasActions: false }),
+        })
+      ).toBe(true);
+
+      expect(
+        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+          ...options,
+          engine: gate({ hasActions: true }),
+        })
+      ).toBe(false);
+    } finally {
+      frames.restore();
+    }
+  });
+
+  test('an explicit `true` opts a modal with actions back in', () => {
+    const frames = installFakeFrames();
+    try {
+      const { store } = createModalRuntime('backdrop-explicit');
+      store.beginOpen();
+      store.scheduleOpenTransition();
+      frames.flush();
+      store.finishPreparing();
+
+      expect(
+        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+          store,
+          engine: gate({ hasActions: true }),
+          isNonModal: false,
+          dismissOnBackdropClick: true,
+          dismissWhilePreparing: true,
+        })
+      ).toBe(true);
+    } finally {
+      frames.restore();
+    }
+  });
+
+  test('a running action holds the backdrop shut', () => {
+    // The shared gate, reached only after the first two questions pass — the same predicate the
+    // dismiss key and click-outside ask.
+    const frames = installFakeFrames();
+    try {
+      const { store } = createModalRuntime('backdrop-running');
+      store.beginOpen();
+      store.scheduleOpenTransition();
+      frames.flush();
+      store.finishPreparing();
+
+      expect(
+        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+          store,
+          engine: gate({ hasActions: false, hasRunningAction: true }),
+          isNonModal: false,
+          dismissOnBackdropClick: true,
+          dismissWhilePreparing: true,
+        })
+      ).toBe(false);
+    } finally {
+      frames.restore();
+    }
+  });
+
+  test('a closed modal never dismisses, whatever the pointer did', () => {
+    const { store } = createModalRuntime('backdrop-closed');
+    expect(store.getSnapshot().phase).toBe('closed');
+    expect(
+      shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        store,
+        engine: gate({ hasActions: false }),
+        isNonModal: false,
+        dismissOnBackdropClick: true,
+        dismissWhilePreparing: true,
+      })
+    ).toBe(false);
+  });
+
+  test('and the geometry still decides, last', () => {
+    const frames = installFakeFrames();
+    try {
+      const { store } = createModalRuntime('backdrop-geometry');
+      store.beginOpen();
+      store.scheduleOpenTransition();
+      frames.flush();
+      store.finishPreparing();
+
+      const options = {
+        store,
+        engine: gate({ hasActions: false }),
+        isNonModal: false as const,
+        dismissOnBackdropClick: true,
+        dismissWhilePreparing: true,
+      };
+
+      // Inside the box, and on the element: not a backdrop click.
+      expect(
+        shouldDismissOnBackdropClick(
+          { target: surface, currentTarget: surface, clientX: 200, clientY: 150 },
+          boxed,
+          options
+        )
+      ).toBe(false);
+
+      // Outside the box, but targeting content: still not one.
+      expect(
+        shouldDismissOnBackdropClick(
+          { target: new EventTarget(), currentTarget: surface, clientX: 0, clientY: 0 },
+          boxed,
+          options
+        )
+      ).toBe(false);
+    } finally {
+      frames.restore();
+    }
+  });
+});
+
+test.describe('teardownModal reports a failing onClose', () => {
+  test('logs instead of losing an error thrown during cleanup', async () => {
+    // Teardown runs while the component is going away, so a throwing `onClose` has nobody left to
+    // catch it — `fireAndForget` hands it here, and here it becomes a log line rather than an
+    // unhandled rejection in whatever unmounted the modal.
+    const dm = createDialogManager();
+    const { store } = createModalRuntime<void, 'save'>('teardown-throws');
+    dm.register('teardown-throws', store, { template: 'modal', nonModal: false });
+
+    store.setOnClose(() => {
+      throw new Error('cleanup exploded');
+    });
+    store.beginOpen();
+
+    const errors: unknown[][] = [];
+    const originalError = console.error;
+    const originalDebug = console.debug;
+    console.error = (...args) => {
+      errors.push(args);
+    };
+    // Enabling the namespace turns its `debug` lines on too; a passing test should not print them.
+    console.debug = () => {
+      return;
+    };
+    setLogLevel('modal');
+
+    try {
+      teardownModal(store, dm, 'teardown-throws', null);
+      await Promise.resolve();
+
+      expect(errors).toHaveLength(1);
+      expect(String(errors[0]?.[0])).toContain('onClose callback failed during cleanup');
+    } finally {
+      console.error = originalError;
+      console.debug = originalDebug;
+      setLogLevel(false);
+    }
   });
 });

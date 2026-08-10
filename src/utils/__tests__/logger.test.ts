@@ -135,3 +135,61 @@ test.describe('createLogger / setLogLevel', () => {
     expect(Number(secondId)).toBe(Number(firstId) + 1);
   });
 });
+
+test.describe('persistence and namespace colours', () => {
+  // Same capture the suite above installs: these tests read what reached the console, so they
+  // need the console replaced and the buffers cleared per test.
+  test.beforeEach(() => {
+    debugCalls.length = 0;
+    console.debug = (...args) => {
+      debugCalls.push(args);
+    };
+  });
+
+  test.afterEach(() => {
+    console.debug = originalDebug;
+    setLogLevel(false);
+  });
+
+  test('setLogLevel persists through storage when asked, and survives its absence', () => {
+    // The unit project is Node: there is no window, so `getStorage()` answers `null` and every
+    // write short-circuits. That is the path an SSR render and a worker take, and it must be a
+    // no-op rather than a throw — which is the whole assertion.
+    setLogLevel('modal', true);
+    createLogger('modal')('enabled and persisted');
+    expect(debugCalls).toHaveLength(1);
+
+    setLogLevel(false, true);
+    createLogger('modal')('should not fire');
+    expect(debugCalls).toHaveLength(1);
+  });
+
+  test('a sub-namespace inherits the nearest ancestor that has a colour', () => {
+    // `resolveColor` drops one `:` segment at a time and stops at the first match — so a child of
+    // `modal:lifecycle` takes *its* colour, not `modal`'s, and a namespace two levels below one
+    // that has no entry of its own keeps walking. Both, because the nearest-match rule is the
+    // whole of the behaviour and asserting only the deep walk would pass on a table lookup.
+    setLogLevel('*');
+    createLogger('modal:lifecycle')('parent');
+    createLogger('modal:lifecycle:deep')('child');
+    createLogger('action')('other family');
+    createLogger('action:sub:deeper')('two levels below an entry that does not exist');
+
+    const colourOf = (call: unknown[] | undefined) => {
+      return String((call ?? [])[1]);
+    };
+    expect(debugCalls).toHaveLength(4);
+    expect(colourOf(debugCalls[1])).toBe(colourOf(debugCalls[0]));
+    expect(colourOf(debugCalls[3])).toBe(colourOf(debugCalls[2]));
+    // And the two families stay distinct, so the assertion above is not "everything is one colour".
+    expect(colourOf(debugCalls[0])).not.toBe(colourOf(debugCalls[2]));
+  });
+
+  test('a namespace nobody has a colour for still gets one', () => {
+    setLogLevel('*');
+    createLogger('nothing-like-this')('unknown namespace');
+
+    expect(debugCalls).toHaveLength(1);
+    expect(String(debugCalls[0]?.[1])).toContain('#999');
+  });
+});

@@ -88,9 +88,20 @@ what that project can reach. Three groups, and the reason each is there:
   no runtime at all, so they report 0% forever and drag the number with them.
 - **Every binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`) and the entry barrels —
   component-tested. A glob, because a new file there is component-test territory too.
-- **The DOM-only core modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`) — listed **one by
-  one**, deliberately. A new module in `core/` is not silently excluded: it shows up as a gap
-  until someone decides which kind it is.
+- **The DOM-only modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`, `dialog-styles`,
+  `utils/dialog-scope`) — listed **one by one**, deliberately. A new module is not silently
+  excluded: it shows up as a gap until someone decides which kind it is. The line is _zero_
+  reachable runtime in Node — `dialog-styles` needs `CSSStyleSheet` and `adoptedStyleSheets`,
+  `dialog-scope` needs `Element` and `closest`. A file with a testable half stays visible and
+  partially covered (`manager/scroll-lock`, `core/style`, `utils/hotkey-utils`), because
+  excluding it would hide the half that is a real gap.
+
+**A DOM type in a signature is not the same as a DOM dependency**, and telling them apart is
+worth doing before reaching for the exclude list. `isBackdropClick`, `shouldDismissOnBackdropClick`
+and `finalizeModalClose` each asked for an `HTMLDialogElement` while reading one or two members of
+it; narrowed to what they use (`BackdropDialog`, `Pick<HTMLDialogElement, 'open' | 'close'>`) they
+became ordinary unit tests, and no call site changed. The same move `BackdropClickEvent` already
+made for the event.
 
 So a partially-covered file in the report is either a genuine gap or a DOM branch, and both are
 worth looking at. **If something is hard to unit-test because it is tangled with a renderer, that

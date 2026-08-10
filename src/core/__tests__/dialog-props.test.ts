@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dialogAttributes } from '../dialog-props.js';
+import { dialogAttributes, isBackdropClick } from '../dialog-props.js';
 
 /**
  * The attribute table both bindings spread onto their `<dialog>`.
@@ -53,5 +53,76 @@ test.describe('dialogAttributes', () => {
       'aria-describedby': 'body',
       role: 'alertdialog',
     });
+  });
+});
+
+test.describe('isBackdropClick', () => {
+  /** A dialog is a rect here, which is all the test needs it to be. */
+  const dialogAt = (box: { left: number; right: number; top: number; bottom: number }) => {
+    return {
+      getBoundingClientRect: () => {
+        return box;
+      },
+    };
+  };
+
+  const rect = dialogAt({ left: 100, right: 300, top: 100, bottom: 200 });
+  // Real ones: Node ships `EventTarget`, so the fixture satisfies the type instead of
+  // approximating it — identity is all the target test compares.
+  const surface = new EventTarget();
+  const inside = new EventTarget();
+
+  test('a click that started inside the content is never a backdrop click', () => {
+    // Checked before the geometry, and the order is what makes the geometry safe: anything
+    // originating in the content bubbles up with a descendant as its target.
+    expect(
+      isBackdropClick({ target: inside, currentTarget: surface, clientX: 0, clientY: 0 }, rect)
+    ).toBe(false);
+  });
+
+  test('a keyboard-activated button reports 0,0 and must not dismiss', () => {
+    // The reason the target test comes first. `clientX`/`clientY` of 0 lies outside a centred
+    // dialog's rect, so on geometry alone Enter on a button would read as a backdrop click.
+    expect(
+      isBackdropClick({ target: inside, currentTarget: surface, clientX: 0, clientY: 0 }, rect)
+    ).toBe(false);
+  });
+
+  test('a click on the dialog itself, outside its box, is the backdrop', () => {
+    const outside = [
+      { clientX: 99, clientY: 150 },
+      { clientX: 301, clientY: 150 },
+      { clientX: 200, clientY: 99 },
+      { clientX: 200, clientY: 201 },
+    ];
+
+    for (const point of outside) {
+      expect(
+        isBackdropClick({ target: surface, currentTarget: surface, ...point }, rect),
+        `${String(point.clientX)},${String(point.clientY)} is outside the box`
+      ).toBe(true);
+    }
+  });
+
+  test('a click on the dialog itself, inside its box, is not', () => {
+    // The dialog's box can extend past the panel a user sees — padding, a template's sizing — so
+    // targeting the element is not on its own enough.
+    expect(
+      isBackdropClick({ target: surface, currentTarget: surface, clientX: 200, clientY: 150 }, rect)
+    ).toBe(false);
+  });
+
+  test('the edges belong to the dialog, not to the backdrop', () => {
+    for (const point of [
+      { clientX: 100, clientY: 150 },
+      { clientX: 300, clientY: 150 },
+      { clientX: 200, clientY: 100 },
+      { clientX: 200, clientY: 200 },
+    ]) {
+      expect(
+        isBackdropClick({ target: surface, currentTarget: surface, ...point }, rect),
+        `${String(point.clientX)},${String(point.clientY)} is on the edge`
+      ).toBe(false);
+    }
   });
 });

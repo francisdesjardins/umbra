@@ -2,7 +2,7 @@ import { createActionEngine } from '../actions/action-engine.js';
 import { canDismiss } from '../utils/dismiss-gate.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
-import { isBackdropClick, type BackdropClickEvent } from './dialog-props.js';
+import { isBackdropClick, type BackdropClickEvent, type BackdropDialog } from './dialog-props.js';
 import { DISMISS_REASON } from './dismiss-reason.js';
 import { finalizeModalClose } from './finalize-close.js';
 import { createModalStore } from './modal-store.js';
@@ -168,7 +168,7 @@ export type BackdropDismissOptions = {
  */
 export function shouldDismissOnBackdropClick(
   event: BackdropClickEvent,
-  dialog: HTMLDialogElement,
+  dialog: BackdropDialog,
   options: BackdropDismissOptions
 ): boolean {
   const { store, engine, isNonModal, dismissOnBackdropClick, dismissWhilePreparing } = options;

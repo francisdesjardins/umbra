@@ -17,12 +17,14 @@
     "src/react/**",
     "src/solid/**",
     "src/vanilla/**",
+    "src/core/dialog-styles.ts",
     "src/core/attach-click-outside.ts",
     "src/core/attach-focus.ts",
     "src/core/attach-keydown.ts",
     "src/core/attach-lifecycle.ts",
     "src/core/dialog-lifecycle.ts",
-    "src/core/focus-policy.ts"
+    "src/core/focus-policy.ts",
+    "src/utils/dialog-scope.ts"
   ],
   "reporter": ["text-summary", "html", "lcov", "json"],
   "reportsDir": "coverage",

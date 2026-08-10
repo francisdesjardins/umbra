@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { keyboardEvent } from '../../__tests__/fake-events.js';
+import { setLogLevel } from '../../utils/logger.js';
 import { createActionEngine } from '../action-engine.js';
 
 /**
@@ -192,5 +193,79 @@ test.describe('subscription', () => {
     unsubscribe();
     await engine.run('save', () => {});
     expect(notifications).toBeGreaterThanOrEqual(2);
+  });
+});
+
+test.describe('the edges', () => {
+  test('warns when a second action starts while one is running', () => {
+    // Every binding disables every button while an action runs, so overlap means something
+    // bypassed that — a caller's own wrapper dropping `disabled`, or a programmatic run. The
+    // engine does not refuse it (it has no business vetoing the caller) but it says so.
+    const engine = createActionEngine<void, 'save' | 'other'>('overlap');
+    const warnings: unknown[][] = [];
+    const originalWarn = console.warn;
+    const originalDebug = console.debug;
+    console.warn = (...args) => {
+      warnings.push(args);
+    };
+    // Swallowed rather than left to print: enabling the namespace turns on its `debug` lines too,
+    // and a passing test should not write four of them to the run's output.
+    console.debug = () => {
+      return;
+    };
+    // The logger is silent until a pattern says otherwise, warnings included — so a test that
+    // asserts on one has to turn it on, or it asserts on the logger being off.
+    setLogLevel('action');
+
+    try {
+      let releaseFirst = () => {
+        return;
+      };
+      const first = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+
+      void engine.run('save', async () => {
+        await first;
+      });
+      void engine.run('other', () => {
+        return;
+      });
+
+      releaseFirst();
+
+      expect(warnings).toHaveLength(1);
+      expect(String(warnings[0]?.[0])).toContain('Action overlap');
+    } finally {
+      console.warn = originalWarn;
+      console.debug = originalDebug;
+      setLogLevel(false);
+    }
+  });
+
+  test('an action that has never run reports the idle state, not undefined', () => {
+    const engine = createActionEngine<void, 'save'>('never');
+
+    expect(engine.stateOf('save')).toEqual({ isRunning: false, error: null });
+  });
+
+  test('undeclaring mid-pass retires from the pass, not from the live table', () => {
+    // `undeclare` writes to whichever table is open — the pending one during a render pass, the
+    // live one outside it. A fine-grained binding removes a button inside a pass, and the
+    // declaration has to leave with the pass rather than reach back into what is on screen.
+    const engine = createActionEngine<void, 'save'>('undeclare-pending');
+
+    engine.declare('save', 'Enter');
+    expect(engine.ownsHotkey('Enter')).toBe(true);
+
+    engine.beginRender();
+    engine.declare('save', 'Enter');
+    engine.undeclare('save');
+    // Still the previous pass's table: nothing has been swapped in yet.
+    expect(engine.ownsHotkey('Enter')).toBe(true);
+
+    engine.endRender();
+    expect(engine.ownsHotkey('Enter')).toBe(false);
+    expect(engine.hasActions()).toBe(false);
   });
 });

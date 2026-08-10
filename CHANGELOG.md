@@ -11,6 +11,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Added — unit coverage, and the three signatures that were blocking it
+
+93.88% → **96.37%** statements, 92.38% → **94.22%** branches, 88.46% → **93.6%** functions, and
+25 new tests. Worth splitting the two causes, because only one of them is testing:
+
+- **The tests alone** take statements to 95.35% and functions to 90%. Everything below is a real
+  assertion that did not exist.
+- **Classifying two modules** accounts for the rest. `core/dialog-styles.ts` and
+  `utils/dialog-scope.ts` have _zero_ reachable runtime in Node — one needs `CSSStyleSheet` and
+  `adoptedStyleSheets`, the other `Element` and `closest` — and `dialog-styles` had been sitting
+  unclassified since it was extracted on 2026-08-09, which is exactly the state the one-by-one
+  exclude list exists to surface.
+
+**Three functions were untestable only because their signatures asked for more than they read.**
+`isBackdropClick`, `shouldDismissOnBackdropClick` and `finalizeModalClose` each took an
+`HTMLDialogElement` and touched one or two members of it — a rect, or `open` plus `close()`.
+Narrowed to what they use (`BackdropDialog`, `Pick<HTMLDialogElement, 'open' | 'close'>`) they
+became ordinary Node tests, and **no call site changed**: a real `<dialog>` satisfies both. It is
+the move `BackdropClickEvent` in the same file already made for the event, with the same
+justification written next to it.
+
+That unlocked the backdrop dismissal chain — four questions, each of which exists for a reason and
+none of which had a unit test: a non-modal dialog has no backdrop; dismissal is opt-out without
+actions and opt-in with them; the shared gate covers phase, `prepare` and a running action; and
+only then does the geometry decide. Plus `isBackdropClick` itself, where the order of its two
+questions is the whole subtlety — a keyboard-activated button reports `clientX: 0`, which is
+outside a centred dialog's rect and would dismiss the modal on geometry alone.
+
+New `finalize-close.test.ts` for the shared close tail both paths run: the element closed only
+when still open (calling `close()` on a closed dialog fires a second `close` event at whoever is
+listening), the null element teardown passes, `onClose` before finalize, and a throwing `onClose`
+reported rather than lost. The engine gained the action-overlap warning, the idle-state fallback
+and `undeclare` mid-pass; `slideDialogStyle` gained the cross axis it was missing — a panel
+sliding up from the bottom is aligned left/right, and only the top/bottom pair had a test; the
+logger gained its persistence branches and the nearest-ancestor colour walk.
+
+Two tests were wrong before they were right, and both were the code being correct: the overlap
+warning goes through the logger, which is silent until a pattern is set, so asserting on it
+without `setLogLevel` asserts that the logger is off; and `modal:lifecycle:deep` inherits
+`modal:lifecycle`'s colour, not `modal`'s, because `resolveColor` stops at the nearest ancestor
+that has one.
+
+What is left uncovered is now honest: `manager/scroll-lock` and `core/style` write to real
+elements, `utils/hotkey-utils` has one DOM function among pure ones, and the manager's remaining
+gaps are all behind `typeof document === 'undefined'` guards whose _guard_ is the covered branch.
+
 ### Added — `action.isRunning(reason)`, the per-action state away from its button
 
 The engine has always known which action is running; only the button was told. `data-loading`

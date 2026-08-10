@@ -85,6 +85,14 @@ test.describe('slideDialogStyle', () => {
 
     expect(slideDialogStyle('right', false, 'end')).toMatchObject({ bottom: 0 });
     expect(slideDialogStyle('right', false, 'center')).toMatchObject({ top: '50%' });
+
+    // The other axis, because "the cross axis" swaps with the direction: a panel sliding up from
+    // the bottom is aligned left/right, not top/bottom, and the two pairs are separate branches.
+    const verticalStart = slideDialogStyle('bottom', false, 'start');
+    expect(verticalStart).toMatchObject({ left: 0, maxWidth: '100dvw' });
+    expect(verticalStart.width).toBeUndefined();
+
+    expect(slideDialogStyle('bottom', false, 'end')).toMatchObject({ right: 0 });
     expect(slideDialogStyle('bottom', false, 'center')).toMatchObject({ left: '50%' });
   });
 

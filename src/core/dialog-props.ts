@@ -84,6 +84,23 @@ export type BackdropClickEvent = {
 };
 
 /**
+ * The part of a dialog a backdrop test needs.
+ *
+ * Structural for the reason {@link BackdropClickEvent} is, and it buys the same two things: a
+ * binding that hands something else rect-shaped is served, and the test for this can be written
+ * in Node — the geometry is arithmetic, and requiring a real `<dialog>` to assert it was the only
+ * thing making it a browser question.
+ */
+export type BackdropDialog = {
+  readonly getBoundingClientRect: () => {
+    readonly left: number;
+    readonly right: number;
+    readonly top: number;
+    readonly bottom: number;
+  };
+};
+
+/**
  * Whether this click landed on the backdrop rather than in the dialog.
  *
  * Two questions, and the order matters. A real backdrop click targets the `<dialog>` itself;
@@ -96,7 +113,7 @@ export type BackdropClickEvent = {
  * (padding, a template's sizing), so a click on the element is not necessarily a click outside
  * the panel the user sees.
  */
-export function isBackdropClick(event: BackdropClickEvent, dialog: HTMLDialogElement): boolean {
+export function isBackdropClick(event: BackdropClickEvent, dialog: BackdropDialog): boolean {
   if (event.target !== event.currentTarget) {
     return false;
   }
