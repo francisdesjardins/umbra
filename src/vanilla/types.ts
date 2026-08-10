@@ -53,8 +53,13 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
     readonly manager?: DialogManager | undefined;
   };
 
-/** The live state of a bound dialog, read through {@link DialogController.getSnapshot}. */
-export type DialogSnapshot = {
+/**
+ * The live state of a bound dialog, read through {@link DialogController.getSnapshot}.
+ *
+ * `Modal`, not `Dialog`: the vocabulary splits them, and this holds no element — it is the unit of
+ * state the controller drives, the same one `ModalStoreSnapshot` describes for the hook bindings.
+ */
+export type ModalSnapshot = {
   /** Where the `<dialog>` is in its lifecycle. */
   readonly phase: ModalPhase;
   /** `phase !== 'closed'` — still true through the exit animation. */
@@ -115,7 +120,7 @@ export type DialogController<TData = void, TReason extends string = string> = {
   /** Subscribe to every state change — the dialog's phases and its actions alike. */
   readonly subscribe: (listener: () => void) => () => void;
   /** Read the current state. */
-  readonly getSnapshot: () => DialogSnapshot;
+  readonly getSnapshot: () => ModalSnapshot;
   /** Unregister, close if open, settle every waiter, and detach every listener. */
   readonly destroy: () => void;
   /** The manager this dialog is registered with. */

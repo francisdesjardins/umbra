@@ -25,7 +25,7 @@
  */
 
 export { bindDialog } from './vanilla/bind-dialog.js';
-export type { BindDialogOptions, DialogController, DialogSnapshot } from './vanilla/types.js';
+export type { BindDialogOptions, DialogController, ModalSnapshot } from './vanilla/types.js';
 
 // The framework-agnostic core, re-exported wholesale: `dialogManager`, `createStore`,
 // `dialogPlacement`, `applyStyle`, `Key`. One import path.

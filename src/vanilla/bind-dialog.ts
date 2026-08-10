@@ -26,7 +26,7 @@ import { createLogger } from '../utils/logger.js';
 import type { ModalDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, ModalAnimation } from '../core/types.js';
-import type { BindDialogOptions, DialogController, DialogSnapshot } from './types.js';
+import type { BindDialogOptions, DialogController, ModalSnapshot } from './types.js';
 
 const log = createLogger('modal');
 
@@ -164,7 +164,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   let detachments: (() => void)[] = [];
   let attachedFor = '';
 
-  const domContext = (phase: DialogSnapshot['phase']): ModalDomContext => {
+  const domContext = (phase: ModalSnapshot['phase']): ModalDomContext => {
     return { store, getDialog, modalId, phase, manager };
   };
 
@@ -273,7 +273,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   // ── Reading state ───────────────────────────────────────────────────────────
 
-  const getSnapshot = (): DialogSnapshot => {
+  const getSnapshot = (): ModalSnapshot => {
     const { phase, isPreparing } = store.getSnapshot();
     const { hasRunningAction, error } = engine.aggregated();
     return { phase, isVisible: phase !== 'closed', isPreparing, hasRunningAction, error };

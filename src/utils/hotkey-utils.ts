@@ -1,4 +1,3 @@
-import { queryOwn } from './dialog-scope.js';
 import type { HotkeyDef } from '../actions/types.js';
 
 function parse(def: HotkeyDef): {
@@ -48,22 +47,6 @@ export function formatHotkeyLabel(def: HotkeyDef): string {
   }
   parts.push(key.length === 1 ? key.toUpperCase() : key);
   return parts.join('+');
-}
-
-/**
- * Find the button wired to a hotkey (via its `aria-keyshortcuts` label) inside
- * `root`, then focus and click it — dispatching the action through the same
- * path as a real click.
- *
- * @internal
- */
-export function clickHotkeyButton(root: HTMLElement, def: HotkeyDef): void {
-  // Scoped to `root`'s own content: a modal opened from inside this one lives in this subtree,
-  // and its buttons answer to its own hotkeys — clicking one from here would fire the action of
-  // a modal that is not even in front.
-  const button = queryOwn(root, `[aria-keyshortcuts="${CSS.escape(formatHotkeyLabel(def))}"]`);
-  button?.focus();
-  button?.click();
 }
 
 /**

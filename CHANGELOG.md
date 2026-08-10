@@ -11,6 +11,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Changed — breaking: `DialogSnapshot` is `ModalSnapshot`
+
+The vocabulary rule says `dialog` is the element and `modal` is the unit of state, and this type
+holds `{ phase, isVisible, isPreparing, hasRunningAction, error }` — no element anywhere. It sat
+between two neighbours that follow the rule (`ModalStoreSnapshot` in the core) or are recorded as
+an exception (`DialogManagerSnapshot`), and was neither. It slipped through the terminology passes
+because `umbra/vanilla` shipped after them.
+
+`DialogController` keeps its name: that one does drive the element.
+
+### Changed — two more signatures narrowed, and a file put where it belongs
+
+Both are the move that `isBackdropClick`, `shouldDismissOnBackdropClick` and `finalizeModalClose`
+already made, applied to what the coverage report was still showing as a gap.
+
+**`applyStyle` writes through `setProperty` and `removeProperty`, and nothing else.** Asking for an
+`HTMLElement` was the only thing making its clearing logic a browser question — and the clearing is
+the reason the function exists rather than an `Object.assign`: a style is recomputed per phase, so
+a property named only in the entrance keyframe has to be removed when the exit one omits it. Get
+that wrong and a dialog leaves scaled, which reads as an animation bug three layers away.
+`StyleTarget` is those two methods; a real element satisfies it and no call site changed.
+`core/style.ts` 68.6% → 98.3%.
+
+**`clickHotkeyButton` was the one DOM function in an otherwise pure module**, and hosting it kept
+`utils/hotkey-utils.ts` — `formatHotkeyLabel`, `matchesHotkey`, the parser — out of the unit
+project's reach entirely. It moved to `core/attach-keydown.ts`, its only caller and already
+DOM-only. `utils/hotkey-utils.ts` is at 100% statements now, and left the exclude-list prose that
+named it as a partially-covered file.
+
+Unit coverage 96.37% → **97.37%** statements, functions 93.6% → **95.96%**.
+
+**One thing was tried and reverted, and the failure is the finding.** `toCssName` passes a `--*`
+key through untouched, but `DialogStyle` — a mapped type over `CSSStyleDeclaration`'s own keys —
+cannot express one, so that branch is unreachable from TypeScript. Adding a `` `--${string}` ``
+index makes React's `CSSProperties`, which has no such index, stop satisfying `DialogStyle`, and
+that assignability is what lets `getDialogAnimationStyles` take a binding's own style type. So the
+branch stays for the callers the type does not reach — `umbra/vanilla` is used from plain
+JavaScript, and `--dialog-backdrop` is the one lever the library documents — and the reason is
+written beside it instead of being rediscovered as an uncovered line.
+
 ### Changed — the docs the coverage work left behind
 
 Caught by asking whether they were current, which they were not. `scripts/ct-coverage-report.mjs`

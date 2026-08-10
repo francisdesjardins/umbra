@@ -100,6 +100,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'DialogPositionStyle',
       'applyStyle',
       'DialogStyle',
+      'StyleTarget',
     ],
   },
   {
@@ -291,7 +292,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'bindDialog',
       'BindDialogOptions',
       'DialogController',
-      'DialogSnapshot',
+      'ModalSnapshot',
       'ModalHandle',
       'ModalVariant',
       'AwaitedClose',

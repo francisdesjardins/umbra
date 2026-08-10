@@ -960,7 +960,7 @@ Positioning and animation are applied as **inline styles**, which outrank a styl
 | `bindAction(button, reason, options?)` | `(…) => () => void`                           | Turns a button into one of this dialog's actions. Returns an **unbind**.    |
 | `isActionRunning(reason)`              | `(reason) => boolean`                         | Whether **that** action is running — the hook bindings' `action.isRunning`. |
 | `subscribe(listener)`                  | `(() => void) => () => void`                  | Every state change — phases and actions alike.                              |
-| `getSnapshot()`                        | `() => DialogSnapshot`                        | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
+| `getSnapshot()`                        | `() => ModalSnapshot`                         | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
 | `destroy()`                            | `() => void`                                  | Unregister, close if open, settle every waiter, detach every listener.      |
 | `dialogManager`                        | `DialogManager`                               | The manager this dialog is registered with.                                 |
 

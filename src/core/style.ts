@@ -47,6 +47,14 @@ export type DialogStyle = {
  *
  * `setProperty` is the only cast-free way to write a computed key onto a `CSSStyleDeclaration`,
  * and it speaks the hyphenated form.
+ *
+ * **The `--` branch is unreachable from TypeScript, deliberately kept, and worth explaining once.**
+ * `DialogStyle` is a mapped type over `CSSStyleDeclaration`'s own keys, so a custom property is not
+ * one of them; adding a `` `--${string}` `` index would make React's `CSSProperties` — which has no
+ * such index — stop satisfying `DialogStyle`, and that assignability is what lets
+ * `getDialogAnimationStyles` take a binding's own style type. The branch stays for the callers the
+ * type does not reach: `umbra/vanilla` is used from plain JavaScript, and `--dialog-backdrop` is
+ * the one lever the library documents. It is why this function is not fully covered.
  */
 const toCssName = (key: string): string => {
   if (key.startsWith('--')) {
@@ -59,6 +67,18 @@ const toCssName = (key: string): string => {
   // hyphenates to `webkit-mask-image`, which is not a property. The four prefixes are the ones
   // `CSSStyleDeclaration` itself exposes.
   return /^(webkit|moz|ms|o)-/.test(hyphenated) ? `-${hyphenated}` : hyphenated;
+};
+
+/**
+ * The part of an element this writes through.
+ *
+ * Two methods, which is all it ever calls — narrowed for the reason `BackdropDialog` and
+ * `ClosableDialog` are: a real `HTMLElement` satisfies it unchanged, and the clearing logic below
+ * becomes assertable in Node, where the interesting half lives. Asking for the whole element was
+ * the only thing making this a browser question.
+ */
+export type StyleTarget = {
+  readonly style: Pick<CSSStyleDeclaration, 'setProperty' | 'removeProperty'>;
 };
 
 /**
@@ -81,7 +101,7 @@ const toCssName = (key: string): string => {
  * applyStyle(dialog, { opacity: 1 }, exitStyle); // `transform` is removed
  */
 export function applyStyle(
-  element: HTMLElement,
+  element: StyleTarget,
   next: DialogStyle,
   previous?: DialogStyle
 ): DialogStyle {

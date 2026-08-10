@@ -97,8 +97,8 @@ what that project can reach. Three groups, and the reason each is there:
   excluded: it shows up as a gap until someone decides which kind it is. The line is _zero_
   reachable runtime in Node — `dialog-styles` needs `CSSStyleSheet` and `adoptedStyleSheets`,
   `dialog-scope` needs `Element` and `closest`. A file with a testable half stays visible and
-  partially covered (`manager/scroll-lock`, `core/style`, `utils/hotkey-utils`), because
-  excluding it would hide the half that is a real gap.
+  partially covered (`manager/scroll-lock`, `core/style`), because excluding it would hide the
+  half that is a real gap.
 
 ### The component project measures itself
 
@@ -106,7 +106,7 @@ what that project can reach. Three groups, and the reason each is there:
 only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
 instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
 modules that c8 cannot reach — currently 90.13% statements over 46 files, against the unit
-project's 96.37% over the framework-free half.
+project's 97.37% over the framework-free half.
 
 Two things about it are load-bearing and neither is obvious:
 
@@ -125,7 +125,13 @@ worth doing before reaching for the exclude list. `isBackdropClick`, `shouldDism
 and `finalizeModalClose` each asked for an `HTMLDialogElement` while reading one or two members of
 it; narrowed to what they use (`BackdropDialog`, `Pick<HTMLDialogElement, 'open' | 'close'>`) they
 became ordinary unit tests, and no call site changed. The same move `BackdropClickEvent` already
-made for the event.
+made for the event, and `applyStyle` after them — it writes through `setProperty` and
+`removeProperty` and nothing else, so `StyleTarget` is those two.
+
+**And a DOM function among pure ones is a file in the wrong place.** `clickHotkeyButton` was the
+only thing in `utils/hotkey-utils.ts` that needed a document, and hosting it kept the whole module
+out of the unit project's reach. It lives in `core/attach-keydown.ts` now — its only caller, already
+DOM-only — and the module it left is fully covered.
 
 So a partially-covered file in the report is either a genuine gap or a DOM branch, and both are
 worth looking at. **If something is hard to unit-test because it is tangled with a renderer, that
