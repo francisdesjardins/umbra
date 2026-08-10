@@ -18,10 +18,18 @@ step at all — see below.
 
 ## The microfrontend frame (`public/mfe/` + `mfe-src/` + `vite-plugins/mfe-umbra.ts`)
 
-`/advanced#microfrontends` loads a plain HTML page in an iframe: an import map, three
-`<script type="module">`, no bundler. Three microfrontends share one `dialogManager` and ask each
-other for dialogs — one per binding: Checkout on `umbra/react`, Support on `umbra/solid`, Billing
-on `umbra/vanilla` over a `<dialog>` written by hand in `host.html`.
+It has its own route, `/microfrontends` — the frame is the widest thing here and the claim it
+makes is the peer of stacking or imperative control, not a card under them.
+
+`/microfrontends` loads a plain HTML page in an iframe: an import map, four
+`<script type="module">`, no bundler. Four microfrontends share one `dialogManager` and ask each
+other for dialogs: Checkout on `umbra/react`, Support on `umbra/solid`, Billing on `umbra/vanilla`
+over a `<dialog>` written by hand in `host.html`, and Audit — a web component whose `<dialog>`
+lives in a **shadow root**, which is a different DOM tree rather than a different framework.
+
+Audit is there because it found things: a shadow boundary changes what `document.activeElement`
+reports and which stylesheets apply, and both broke the core. Keep it, and keep its `Escalate`
+action throwing — that is the harness for the focus-restore half.
 
 - `mfe-src/*.ts` — one tiny module per specifier the import map names (`umbra`, `umbra/react`,
   `umbra/solid`, `umbra/vanilla`, `react`, `react-dom/client`, `solid-js`, `solid-js/web`,
@@ -35,8 +43,9 @@ on `umbra/vanilla` over a `<dialog>` written by hand in `host.html`.
   shared helper left there — driving Billing's hand-written dialog used to be forty lines beside
   it, and is now `umbra/vanilla`.
 
-Adding a fourth microfrontend means a panel in `host.html`, a script beside the others, and a
-`codeSamples` entry — no new build wiring.
+Adding a fifth means a panel in `host.html`, a script beside the others, a `codeSamples` entry and
+a card on the route — no new build wiring. The frame sizes itself from the document inside
+(`host-frame.tsx`) rather than from breakpoints, so a new panel needs no height tuning either.
 
 ## Architecture (Feature-Sliced Design)
 
@@ -75,6 +84,7 @@ Grouped in the sidebar; the order is the intended reading order.
 | Learn     | `/modal-actions`   | Action state: `hasRunningAction`, `error`, hotkeys         |
 | Patterns  | `/slide-modal`     | The four slide shapes as presets, and the toast            |
 | Patterns  | `/advanced`        | Stacking, imperative control, outlet, events, showcases    |
+| Patterns  | `/microfrontends`  | Four bindings, one manager, in a frame with no build step  |
 | Reference | `/ui-integrations` | MUI vs vanilla, paired by use case                         |
 | Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |

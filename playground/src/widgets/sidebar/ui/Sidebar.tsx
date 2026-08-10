@@ -6,6 +6,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import HubIcon from '@mui/icons-material/Hub';
 import {
   Box,
   Drawer,
@@ -33,7 +34,7 @@ type NavGroup = {
 };
 
 /**
- * Grouped so the seven routes read as a path rather than a flat list: learn the core loop,
+ * Grouped so the eight routes read as a path rather than a flat list: learn the core loop,
  * then the patterns built on it, then the copy-paste reference, then the test harnesses.
  */
 const NAV_GROUPS: readonly NavGroup[] = [
@@ -49,6 +50,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { path: '/slide-modal', label: 'Slide Modals', icon: ViewSidebarIcon },
       { path: '/advanced', label: 'Advanced', icon: TuneIcon },
+      { path: '/microfrontends', label: 'Microfrontends', icon: HubIcon },
     ],
   },
   {

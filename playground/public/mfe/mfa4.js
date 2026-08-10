@@ -66,7 +66,7 @@ const MARKUP = `
       <p id="detail">Nothing under review.</p>
       <div class="row">
         <button id="dismiss">Not now</button>
-        <button id="escalate">Escalate</button>
+        <button id="escalate">Escalate (fails)</button>
         <button id="flag">Flag it ⏎</button>
       </div>
       <p id="error" class="error" hidden></p>
@@ -93,8 +93,8 @@ class AuditPanel extends HTMLElement {
       dialog: $('dialog'),
       ariaLabelledBy: 'title',
 
-      // Reached by id from three microfrontends that know nothing about custom elements. The
-      // registry is keyed by string, so a shadow root is not a boundary it can even perceive —
+      // Reached by id from the three panels beside it, none of which knows what a custom element
+      // is. The registry is keyed by string, so a shadow root is not a boundary it can perceive —
       // which is the half of this experiment that was never in doubt.
       onOpenRequest: (payload, request) => {
         const from = request.context?.source ?? 'anonymous';

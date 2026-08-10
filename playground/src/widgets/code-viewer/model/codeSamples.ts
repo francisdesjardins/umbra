@@ -9,7 +9,7 @@ import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.t
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
 import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
 import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
-import microfrontendsSrc from '@/pages/advanced/examples/microfrontends.tsx?raw';
+import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw';
 // The microfrontend demo's own files. Not under `src/`, and that is the point: they are served
 // verbatim from `public/`, so what the viewer shows is byte-for-byte what the browser runs — no
 // alias, no JSX, no build step between the two.
@@ -232,7 +232,7 @@ export const codeSamples: Record<string, string> = {
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
   'modal-outlet': modalOutletSrc,
-  microfrontends: microfrontendsSrc,
+  'mfe-host-frame': mfeHostFrameSrc,
   'mfe-host-html': mfeHostSrc,
   'mfe-checkout': mfeCheckoutSrc,
   'mfe-billing': mfeBillingSrc,

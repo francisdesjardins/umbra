@@ -82,6 +82,16 @@ const advancedRoute = createRoute({
   }, 'AdvancedPage'),
 });
 
+const microfrontendsRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/microfrontends',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/microfrontends');
+  }, 'MicrofrontendsPage'),
+});
+
 const uiIntegrationsRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
@@ -120,6 +130,7 @@ const routeTree = rootRoute.addChildren([
   apiCategoryRoute,
   slideModalRoute,
   advancedRoute,
+  microfrontendsRoute,
   uiIntegrationsRoute,
   uiTemplatesRoute,
   storiesRoute,

@@ -9,7 +9,6 @@ import {
   GroceryListExample,
 } from '@/pages/advanced/examples/grocery-list';
 import { ImperativeExample } from '@/pages/advanced/examples/imperative';
-import { MicrofrontendsExample } from '@/pages/advanced/examples/microfrontends';
 import { OpenRequestExample } from '@/pages/advanced/examples/open-request';
 import {
   MODAL_ID as OUTLET_DEMO_ID,
@@ -28,7 +27,6 @@ const SECTIONS = [
   { id: 'stacking', label: 'Stacking, keyboard and focus' },
   { id: 'imperative-control', label: 'Imperative control' },
   { id: 'rendering-events', label: 'Rendering & events' },
-  { id: 'microfrontends', label: 'Microfrontends' },
   { id: 'showcases', label: 'Showcases' },
 ] as const;
 
@@ -108,51 +106,6 @@ export const AdvancedPage = () => {
             description="modal:open and modal:close fire on document for every dialog on the page — including ones raised by a different copy of this library, in another bundle. That reach is the point: dialogManager.subscribe reports the same two moments and is the better tool inside one app, but it binds to one manager instance. These events are the observation half of what requestOpen opens on the way in, and a tag manager or a plain script can listen having imported nothing."
             codeKey="dom-events"
             example={<DomEventsExample />}
-          />
-        </ExampleGrid>
-      </ExampleSection>
-
-      <ExampleSection
-        id="microfrontends"
-        title="Microfrontends"
-        description="One manager, distributed to independently-deployed frontends. The frame below loads a plain HTML page whose only wiring is an import map: dialogManager is a module-level singleton, so resolving umbra to one shared module is what makes three microfrontends share a registry — three copies would be three registries. Everything here happens inside the frame, which is a separate document and a separate realm; the playground around it hears nothing."
-      >
-        <ExampleGrid columns={1}>
-          <ExampleCard
-            title="Three microfrontends, three frameworks, one manager"
-            description="Checkout uses umbra/react and owns checkout:receipt. Support uses umbra/solid — the same call, the same options, the same return — and owns support:ticket. Billing uses umbra/vanilla, the controller binding, over a <dialog> written by hand in the host page, and owns billing:confirm. None of them imports another. Each asks the others with requestOpenAndWait, and the owner decides: send more than 500$ and Billing refuses through request.refuse, then hands the refusal on to Support — one request crossing React, plain JavaScript and Solid in a single trip, because what the three share is the manager and not the renderer."
-            codeKey="microfrontends"
-            example={<MicrofrontendsExample />}
-          />
-          <ExampleCard
-            title="host.html — the distribution, all of it"
-            description="No bundler runs on this page. An import map names the nine specifiers the three microfrontends write — umbra, its two bindings, React, Solid — three <script type=module> tags load them, and the browser resolves the rest. This is the file that decides whether the three share a manager."
-            codeKey="mfe-host-html"
-          />
-          <ExampleCard
-            title="mfa1.js — Checkout, on the React binding"
-            description="createElement rather than JSX, because nothing compiles this file. It imports umbra from umbra, useModal from umbra/react and react from react — the package's real specifiers, which the host resolves to modules out of one build so there comes to be one manager and one React rather than several. onOpenRequest lets the others raise its dialog; requestOpen sends the other way. Its Enter hotkey and its opening focus work on a bare <button> with no wrapper — the props carry aria-keyshortcuts and data-focus-on-open, which is all either mechanism needs."
-            codeKey="mfe-checkout"
-          />
-          <ExampleCard
-            title="mfa3.js — Support, on the Solid binding"
-            description="Put this beside Checkout: the useModal call is the same one. Same options object, same render callback, same action factory spread onto a bare <button>, same typed close travelling back to whoever asked. What differs is underneath — nothing re-renders, and the live fields of an action's props are getters Solid subscribes to individually. h() rather than JSX for the same reason Checkout uses createElement: no build step runs on this page, and Solid's JSX is one."
-            codeKey="mfe-support"
-          />
-          <ExampleCard
-            title="mfa2.js — Billing, on the vanilla binding"
-            description="The third kind of binding: a controller, not a renderer. The <dialog> is written by hand in host.html and stays the page’s; umbra/vanilla drives its lifecycle and bindAction turns two existing buttons into actions — close path, hotkey, and the disabled/loading sync a hook binding gets from a spread. A payload that crossed an ownership boundary is unknown until this side says otherwise, so it validates before it opens, and over the limit it refuses and passes the conversation to Support, which it has never heard of."
-            codeKey="mfe-billing"
-          />
-          <ExampleCard
-            title="mfa4.js — Audit, a web component behind a shadow root"
-            description="The other three prove the core is indifferent to the framework; this one asks whether it is indifferent to the tree. A custom element with attachShadow puts its <dialog> in a document of its own, which changes what document.activeElement answers, what an event's target is once it leaves, and which stylesheets apply at all — the three things a dialog manager leans on. Same bindDialog call as Billing's, same options, same actions, so every difference in behaviour is the boundary talking rather than the binding."
-            codeKey="mfe-audit"
-          />
-          <ExampleCard
-            title="The build behind the import map"
-            description="One rolldown build with eight entries, not eight builds: code-splitting hoists everything the microfrontends have in common — the manager included — into a shared chunk each of them imports. That is the mechanism the demo rests on, and separate builds would quietly break it."
-            codeKey="mfe-distribution"
           />
         </ExampleGrid>
       </ExampleSection>

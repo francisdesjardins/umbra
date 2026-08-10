@@ -11,6 +11,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Added — the microfrontends get a route of their own
+
+They were one card on `/advanced`, which is where they stopped fitting: four panels inside a frame,
+inside a card, inside a column shared with five other sections. `/microfrontends` is the page now —
+three sections (the demo, the distribution, the four panels), the frame across the whole column,
+and a card per file.
+
+**The frame sizes itself from the document inside it**, which is the part worth keeping. It used
+hard-coded heights per breakpoint and every one of them was wrong: MUI's breakpoints key off the
+**viewport** while the host's own grid keys off the **frame's width**, and the two diverge by the
+sidebar plus the page padding — so a height computed for a 1200px viewport was being applied to a
+604px frame that had reflowed to two columns and wanted twice as much. Adding a fourth panel made
+most of them wrong at once. Same origin, so it reads `documentElement.scrollHeight` directly and
+watches it with a `ResizeObserver`; it adds the frame's own border, because `box-sizing:
+border-box` was otherwise leaving the inner viewport two pixels short and growing a scrollbar for
+exactly those two. Verified at six widths from 420px to 1600px — no inner scrollbar at any of them.
+
+Audit's `Escalate` button says `(fails)` now. It throws on purpose, since it is the harness for the
+focus-restore fix below, and unlabelled it simply read as a broken demo.
+
 ### Fixed — a failed action handed focus to the dialog instead of the button that ran it
 
 Found by adding a fourth microfrontend on a hunch, and the hunch was wrong in an instructive way.
