@@ -16,7 +16,7 @@ import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
  */
 const withCoverage = process.env['CT_COVERAGE'] === '1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- a .mjs plugin, untyped by design; the Vite plugin shape is widened below anyway
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped by design; the Vite plugin shape is widened below anyway
 const coveragePlugins: any[] = withCoverage ? [ctCoverage()] : [];
 
 // @playwright/experimental-ct-core bundles its own Vite version whose Plugin
