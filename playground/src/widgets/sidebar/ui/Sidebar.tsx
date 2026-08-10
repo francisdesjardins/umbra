@@ -34,7 +34,7 @@ type NavGroup = {
 };
 
 /**
- * Grouped so the eight routes read as a path rather than a flat list: learn the core loop,
+ * Grouped so the nine routes read as a path rather than a flat list: learn the core loop,
  * then the patterns built on it, then the copy-paste reference, then the test harnesses.
  */
 const NAV_GROUPS: readonly NavGroup[] = [

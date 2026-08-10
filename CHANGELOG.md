@@ -31,6 +31,14 @@ exactly those two. Verified at six widths from 420px to 1600px — no inner scro
 Audit's `Escalate` button says `(fails)` now. It throws on purpose, since it is the harness for the
 focus-restore fix below, and unlabelled it simply read as a broken demo.
 
+Reading `/advanced` back after the move turned up three counts that no longer described anything.
+Its own description promised "two showcases" and there are three — wrong since the third was
+added, not by the move. The sidebar's comment said seven routes when there were eight, and adding
+one made it eight when there were nine. And the **landing page** still said "React and Solid ship
+as two bindings", months after `umbra/vanilla` became the third — the most visible sentence in the
+playground, and the one nobody re-reads. All three now say what is there, and `/advanced` points at
+the new page rather than leaving the topic to vanish.
+
 ### Fixed — a failed action handed focus to the dialog instead of the button that ran it
 
 Found by adding a fourth microfrontend on a hunch, and the hunch was wrong in an instructive way.

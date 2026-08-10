@@ -12,11 +12,10 @@ const SECTIONS = [
 /**
  * The microfrontend demo, on a page of its own.
  *
- * It was one card on `/advanced`, which is where it stopped fitting: four panels inside a frame,
- * inside a card, inside a column that shares a page with five other sections. The frame is the
- * widest thing the playground has and it needs the whole column — and the demo makes a claim
- * (one manager across four bindings and a shadow boundary) that is the peer of stacking or
- * imperative control, not a footnote under them.
+ * It earns one. The frame is the widest thing the playground renders — four panels that only fit
+ * side by side across a whole column — and the claim it makes, one manager shared across four
+ * bindings and a shadow boundary, is the peer of stacking or imperative control rather than a
+ * card filed under them.
  */
 export const MicrofrontendsPage = () => {
   return (

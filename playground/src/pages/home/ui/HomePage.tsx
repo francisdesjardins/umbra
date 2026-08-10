@@ -139,9 +139,10 @@ export const HomePage = () => {
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 2, maxWidth: 560 }}>
             A dialog manager whose core is plain TypeScript — it resolves and runs with no framework
-            installed at all. React and Solid ship as two bindings over it, with the same surface:
-            same hooks, same options, same typed close. Zero UI components: the markup, the
-            animation and the styling stay yours.
+            installed at all. React and Solid ship as two bindings over it with the same surface —
+            same hooks, same options, same typed close — and vanilla as a third that renders
+            nothing: a controller for a &lt;dialog&gt; you wrote yourself. Zero UI components either
+            way: the markup, the animation and the styling stay yours.
           </Typography>
 
           {lastReason ? (

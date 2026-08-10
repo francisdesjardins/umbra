@@ -34,7 +34,7 @@ export const AdvancedPage = () => {
   return (
     <PageLayout
       title="Advanced Patterns"
-      description="What a modal does once there is more than one of them: stacking and the keyboard that goes with it, control from outside React, outlet rendering, DOM events — and two showcases that combine them."
+      description="What a modal does once there is more than one of them: stacking and the keyboard that goes with it, control from outside React, outlet rendering, DOM events — and three showcases that combine them. Distributing one manager across independently-deployed frontends has its own page, under Microfrontends."
     >
       <SectionNav sections={SECTIONS} />
 
