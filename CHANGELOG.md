@@ -11,6 +11,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Fixed — the component coverage was pointing at the wrong lines
+
+The experiment reported percentages that were sound and positions that were not, and it took
+trying to _use_ one to notice. `vite-plugin-istanbul` runs `enforce: 'post'`, so it instruments
+the output after TypeScript has been stripped and remaps through the combined source map. That map
+exists and looks healthy — 2760 mappings, the right source, verified with a probe plugin — and the
+result is still wrong: on `solid/modal-outlet.ts` every counter below the file's 20-line JSDoc
+block lands exactly 16 lines early, `createLogger` at line 12 is attributed correctly, statements
+sit on prose, and `export function ModalOutlet` reads as never executed while sixteen tests walk
+through it. `build: { sourcemap: true }` changes nothing.
+
+So the remapping is avoided rather than debugged. [scripts/vite-plugin-ct-coverage.mjs](scripts/vite-plugin-ct-coverage.mjs)
+instruments at `enforce: 'pre'`, where the file is still the file as written and the positions need
+no map to be right — Babel parses the TypeScript and JSX directly, and everything downstream treats
+the injected counters as the ordinary JavaScript they are. Totals are unchanged, which is the
+confirmation that the counts were never the problem: 88.81% before and after, to the statement.
+
+### Fixed — the CT build cache made the coverage switch a coin toss
+
+Playwright keys its component build on the Playwright and Vite versions and a hash of the
+**sources** — not on the plugin list. So toggling `CT_COVERAGE` alone reuses whatever bundle is
+already there: a coverage run after an ordinary one produces no counters at all, and the report
+says `.nyc_output` is empty rather than that anything is wrong. It cost me two false conclusions in
+one sitting, the second after having written the warning myself.
+
+`use.ctCacheDir` is the knob (`viteUtils.js:51`), so there are two caches now — `playwright/.cache`
+and `playwright/.cache-coverage`, with Vite's dep cache split the same way. Each build is valid on
+its own terms and switching costs one rebuild instead of a wrong answer. Verified by alternating
+four runs, clearing nothing: 0 counter files, 21, 0, 21.
+
+One edge survives and is written down beside the setting: the freshness check walks the component
+sources, so editing `scripts/vite-plugin-ct-coverage.mjs` alone invalidates nothing, and changing
+the instrumenter means deleting `playwright/.cache-coverage/` by hand.
+
+### Added — the four Solid paths nothing was asserting
+
+With positions to trust, the report named them: `teardownModal`, `outlet.unregister`, the
+`portal: true` branch and the contained-placement host had **zero** executions in the Solid suite,
+while React's covers all four — and React has already regressed on one of them, when `portal` fell
+out of the teardown deps and left an orphaned open dialog.
+
+All four pass. No bug: disposal unregisters, the outlet forgets, the portal mounts into
+`document.body` and the contained host is built. They are pinned now, which they were not, and that
+is the honest result — coverage found unasserted behaviour, not broken behaviour.
+
+`solid/use-modal.ts` 82.5% → 92.2% statements, `solid/modal-outlet.ts` 65.2% → 91.3% (branches 25%
+→ 50%), and the project 88.81% → 90.13%.
+
+**The gap it measures is still there**: `use-modal.ct.tsx` has 60 tests, the Solid suite has 20.
+`binding-parity.test.ts` asserts the two bindings export the same names; nothing asserts they are
+tested to the same depth, and they are not. Closing that is a test-by-test walk, and the four here
+were the ones coverage could point at.
+
+Three of the four failed when first written, and all three were the test rather than the library:
+twice the top-layer rule (an unmount button outside a `showModal()` dialog cannot be clicked, so it
+had to move inside `render`), and once an invented assertion — the contained host is
+`position: absolute`, which `dialogPlacement` spells out and its doc explains, not the `relative`
+the prose in the root guide had left in my head.
+
 ### Added — unit coverage, and the three signatures that were blocking it
 
 93.88% → **96.37%** statements, 92.38% → **94.22%** branches, 88.46% → **93.6%** functions, and

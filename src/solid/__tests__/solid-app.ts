@@ -342,6 +342,226 @@ function MessageApp(): Built {
   );
 }
 
+/**
+ * Disposal, an outlet, and a portal — the three paths the Solid suite never walked.
+ *
+ * Every one of them is `onCleanup` work the binding does on the way out: unregistering from the
+ * manager, retiring the outlet entry, removing a portaled element from `document.body`. React's
+ * suite covers all three (it has already regressed on one, when `portal` fell out of the teardown
+ * deps and left an orphaned open dialog); nothing here did, which coverage put at 0 executions
+ * for `teardownModal`, `outlet.unregister` and the portal branch alike.
+ *
+ * A child function is what disposes them: hyperscript re-runs it, and the owner of the branch it
+ * replaces is disposed — which is exactly what unmounting a component is in Solid.
+ */
+function DisposalInner(props: { readonly dispose: () => void }): Built {
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-disposal',
+    ariaLabel: 'Solid disposal',
+    render: () => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Disposable content'),
+          // Inside `render`: the dialog owns the top layer while it is open, so a button outside
+          // it cannot be clicked. Same rule every story here follows.
+          h(
+            'button',
+            {
+              'data-testid': 'unmount-from-inside',
+              onClick: () => {
+                props.dispose();
+              },
+            },
+            'Unmount from inside'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
+function DisposalApp(): Built {
+  const [mounted, setMounted] = createSignal(true);
+  const info = useLookup('solid-disposal');
+
+  return h(
+    'div',
+    null,
+    text(() => {
+      return info().exists ? 'registered' : 'gone';
+    }, 'registration'),
+    text(() => {
+      return info().isVisible ? 'open' : 'closed';
+    }, 'is-visible'),
+    h(
+      'button',
+      {
+        'data-testid': 'unmount',
+        onClick: () => {
+          setMounted(false);
+        },
+      },
+      'Unmount'
+    ),
+    () => {
+      return mounted()
+        ? el(
+            h(DisposalInner, {
+              dispose: () => {
+                setMounted(false);
+              },
+            })
+          )
+        : null;
+    }
+  );
+}
+
+/** The same disposal, one level down: the outlet has to forget it too. */
+function OutletDisposalInner(props: { readonly dispose: () => void }): Built {
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-outlet-disposal',
+    ariaLabel: 'Solid outlet disposal',
+    render: () => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Outlet disposable'),
+          h(
+            'button',
+            {
+              'data-testid': 'unmount-from-inside',
+              onClick: () => {
+                props.dispose();
+              },
+            },
+            'Unmount from inside'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'button',
+    {
+      'data-testid': 'open',
+      onClick: () => {
+        void modal.open();
+      },
+    },
+    'Open'
+  );
+}
+
+function OutletDisposalApp(): Built {
+  const [mounted, setMounted] = createSignal(true);
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'unmount',
+        onClick: () => {
+          setMounted(false);
+        },
+      },
+      'Unmount'
+    ),
+    h(ModalOutlet, null, () => {
+      return mounted()
+        ? el(
+            h(OutletDisposalInner, {
+              dispose: () => {
+                setMounted(false);
+              },
+            })
+          )
+        : null;
+    })
+  );
+}
+
+/** `portal: true` — the binding mounts the element itself, and `Modal` stays null. */
+function PortalApp(): Built {
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-portal',
+    ariaLabel: 'Solid portal',
+    portal: true,
+    render: () => {
+      return el(h('p', null, 'Portaled content'));
+    },
+  });
+
+  return h(
+    'div',
+    { 'data-testid': 'portal-host' },
+    text(() => {
+      return modal.Modal === null ? 'null' : 'node';
+    }, 'modal-slot'),
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
+/** A contained non-modal panel: positioned against a host the binding creates. */
+function ContainedApp(): Built {
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-contained',
+    ariaLabel: 'Solid contained',
+    nonModal: true,
+    render: () => {
+      return el(h('p', null, 'Contained content'));
+    },
+  });
+
+  return h(
+    'div',
+    { 'data-testid': 'contained-host', style: 'position: relative; width: 300px; height: 200px' },
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
 export const SolidBasicApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, BasicApp));
 };
@@ -360,4 +580,20 @@ export const SolidSlideApp = (): JSX.Element => {
 
 export const SolidMessageApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, MessageApp));
+};
+
+export const SolidDisposalApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, DisposalApp));
+};
+
+export const SolidOutletDisposalApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, OutletDisposalApp));
+};
+
+export const SolidPortalApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, PortalApp));
+};
+
+export const SolidContainedApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, ContainedApp));
 };

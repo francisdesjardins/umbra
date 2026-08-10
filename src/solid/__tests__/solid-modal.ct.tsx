@@ -1,6 +1,10 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import {
   SolidBasicHarness,
+  SolidContainedHarness,
+  SolidDisposalHarness,
+  SolidOutletDisposalHarness,
+  SolidPortalHarness,
   SolidDeclarationHarness,
   SolidMessageHarness,
   SolidOutletHarness,
@@ -213,5 +217,89 @@ test.describe('template hooks (Solid)', () => {
 
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
+  });
+});
+
+test.describe('what Solid does on the way out', () => {
+  // Three cleanup paths React's suite covers and this one did not — coverage put every one of
+  // them at zero executions. Disposal in Solid is a branch being replaced, which is what a child
+  // function does here: the owner of the old branch is disposed, and its `onCleanup`s run.
+
+  test('a disposed modal unregisters itself from the manager', async ({ mount, page }) => {
+    await mount(<SolidDisposalHarness />);
+    await expect(page.getByTestId('registration')).toHaveText('registered');
+
+    await page.getByTestId('unmount').click();
+
+    await expect(page.getByTestId('registration')).toHaveText('gone');
+  });
+
+  test('disposing it while open closes it and leaves no dialog behind', async ({ mount, page }) => {
+    // The regression React already had once, in the other direction: a teardown that missed a
+    // dependency left an orphaned dialog open in the top layer with nothing driving it.
+    await mount(<SolidDisposalHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('modal-solid-disposal')).toBeVisible();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // From inside the dialog: it owns the top layer while open, so the outer button is unclickable.
+    await page.getByTestId('unmount-from-inside').click();
+
+    await expect(page.getByTestId('registration')).toHaveText('gone');
+    await expect(page.locator('dialog[data-modal-id="solid-disposal"]')).toHaveCount(0);
+    await expect(page.locator('dialog:modal')).toHaveCount(0);
+  });
+
+  test('an outlet forgets a modal that was disposed inside it', async ({ mount, page }) => {
+    // `outlet.unregister` had never run. Without it the outlet keeps rendering the element of a
+    // modal whose reactive graph is gone — visible, and driven by nothing.
+    await mount(<SolidOutletDisposalHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('modal-solid-outlet-disposal')).toBeVisible();
+
+    await page.getByTestId('unmount-from-inside').click();
+
+    await expect(page.locator('dialog[data-modal-id="solid-outlet-disposal"]')).toHaveCount(0);
+  });
+});
+
+test.describe('placement (Solid)', () => {
+  test('portal: true mounts the dialog itself and leaves Modal null', async ({ mount, page }) => {
+    // The one place the two hook bindings' surfaces differ: React's `createPortal` returns a node
+    // the caller still renders, so a Solid modal that owns its element mounts it and hands back
+    // `null`. Untested until now, which also meant the `document.body` cleanup was.
+    await mount(<SolidPortalHarness />);
+    await expect(page.getByTestId('modal-slot')).toHaveText('null');
+
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('modal-solid-portal')).toBeVisible();
+
+    // In `document.body`, not inside the component that declared it.
+    expect(
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[data-modal-id="solid-portal"]');
+        return dialog?.parentElement === document.body;
+      })
+    ).toBe(true);
+  });
+
+  test('a contained non-modal panel gets a positioned host of its own', async ({ mount, page }) => {
+    // `nonModal: true` without `portal` renders into a library-owned wrapper and positions
+    // `absolute` against it — the branch that makes an inline panel immune to a transformed
+    // ancestor. In Solid the binding builds that wrapper itself, and nothing had exercised it.
+    await mount(<SolidContainedHarness />);
+    await page.getByTestId('open').click();
+
+    await expect(page.getByTestId('modal-solid-contained')).toBeVisible();
+    const host = page.locator('[data-modal-container="solid-contained"]');
+    await expect(host).toHaveCount(1);
+    // `absolute`, which `dialogPlacement` spells out and its doc explains: the host covers the
+    // region it was placed in rather than taking part in the flow, and the dialog is positioned
+    // against it.
+    expect(
+      await host.evaluate((element) => {
+        return getComputedStyle(element).position;
+      })
+    ).toBe('absolute');
   });
 });

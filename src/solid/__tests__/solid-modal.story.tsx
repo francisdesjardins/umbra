@@ -3,9 +3,13 @@ import { render } from 'solid-js/web';
 import type { JSX } from 'solid-js';
 import {
   SolidBasicApp,
+  SolidContainedApp,
   SolidDeclarationApp,
+  SolidDisposalApp,
   SolidMessageApp,
   SolidOutletApp,
+  SolidOutletDisposalApp,
+  SolidPortalApp,
   SolidSlideApp,
 } from './solid-app.js';
 
@@ -55,4 +59,20 @@ export function SolidSlideHarness() {
 
 export function SolidMessageHarness() {
   return <SolidRoot app={SolidMessageApp} />;
+}
+
+export function SolidDisposalHarness() {
+  return <SolidRoot app={SolidDisposalApp} />;
+}
+
+export function SolidOutletDisposalHarness() {
+  return <SolidRoot app={SolidOutletDisposalApp} />;
+}
+
+export function SolidPortalHarness() {
+  return <SolidRoot app={SolidPortalApp} />;
+}
+
+export function SolidContainedHarness() {
+  return <SolidRoot app={SolidContainedApp} />;
 }

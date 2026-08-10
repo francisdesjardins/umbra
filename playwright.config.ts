@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
 import react from '@vitejs/plugin-react';
-import istanbul from 'vite-plugin-istanbul';
+import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
 
 /**
  * Component-test coverage, opt-in through `CT_COVERAGE=1`.
@@ -11,23 +11,8 @@ import istanbul from 'vite-plugin-istanbul';
  * of its own page. Off by default: instrumentation is a real cost on every CT run, and the
  * numbers are only wanted when someone is asking about them.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const coveragePlugins: any[] =
-  process.env['CT_COVERAGE'] === '1'
-    ? [
-        istanbul({
-          include: ['src/**/*.ts', 'src/**/*.tsx'],
-          // The harnesses are the test, not the subject.
-          exclude: ['**/__tests__/**', '**/node_modules/**'],
-          extension: ['.ts', '.tsx'],
-          requireEnv: false,
-          // Playwright CT *builds* its bundle rather than serving it, and the plugin instruments
-          // only in serve mode unless told otherwise — without this the run is green and the
-          // counters never exist.
-          forceBuildInstrument: true,
-        }),
-      ]
-    : [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped by design; the Vite plugin shape is widened below anyway
+const coveragePlugins: any[] = process.env['CT_COVERAGE'] === '1' ? [ctCoverage()] : [];
 
 // @playwright/experimental-ct-core bundles its own Vite version whose Plugin
 // type diverges from the project's Vite 8 beta. The plugin is runtime-compatible;
@@ -67,10 +52,25 @@ export default defineConfig({
   use: {
     trace: 'on-first-retry',
     ctPort: 3100,
+    // One cache per bundle *shape*, and it is not a nicety. Playwright keys its CT build on the
+    // Playwright and Vite versions and a hash of the sources — not on the plugin list — so
+    // toggling CT_COVERAGE alone leaves the previous bundle in place: coverage runs produce no
+    // counters at all, and the report says `.nyc_output` is empty rather than that anything is
+    // wrong. Two directories means each build is valid on its own terms and switching costs one
+    // rebuild instead of a wrong answer.
+    //
+    // One edge survives, because Playwright's freshness check walks the *component sources*: an
+    // edit to `scripts/vite-plugin-ct-coverage.mjs` alone does not invalidate anything, so
+    // changing the instrumenter means deleting `playwright/.cache-coverage/` by hand.
+    ctCacheDir:
+      process.env['CT_COVERAGE'] === '1' ? 'playwright/.cache-coverage' : 'playwright/.cache',
     ctViteConfig: {
       // Keep pre-bundled deps in a dedicated dir separate from the dev-server cache.
       // CI pipelines can cache node_modules/.vite-ct between runs for faster startup.
-      cacheDir: 'node_modules/.vite-ct',
+      cacheDir:
+        process.env['CT_COVERAGE'] === '1'
+          ? 'node_modules/.vite-ct-coverage'
+          : 'node_modules/.vite-ct',
       optimizeDeps: {
         // Explicitly pre-bundle React so it is processed once and cached rather
         // than re-transformed on every cold start.
