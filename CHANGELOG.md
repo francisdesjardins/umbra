@@ -11,6 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Added — a note on the tooling, in the README
+
+Who wrote this, said plainly: Claude typed it, nearly 30 years of doing it by hand directed it.
+It sits after "How this repo is run" because it is the same kind of warning — how this repo
+works, so nothing surprises you.
+
+The section makes its case out of evidence already in the tree rather than asserting rigour: the
+renames in this file, each with the reasoning that produced it, and the entry-point isolation
+tests, which exist because someone knew in advance how a framework import sneaks into a
+framework-free core. A model writes ten dialog managers before lunch; which of the ten to keep is
+the part it cannot judge, and that is the whole of the claim.
+
 ### Changed — the README lists the surface that exists
 
 Read against `src/` rather than against the last edit, and four kinds of drift came out.

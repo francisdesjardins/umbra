@@ -290,6 +290,25 @@ explains _why_ each name moved rather than only that it did.
 
 If you have lifted code out of `src/`, pin the commit you took it from.
 
+## ● On the tooling
+
+**This library was written by Claude, and directed by nearly 30 years of doing it by hand.** Worth
+saying plainly, because the interesting question is not whether an AI can write a dialog manager —
+it can write ten before lunch, and nine of them will have `isOpen` meaning three different things
+in three files.
+
+The question is whether anyone notices. Every rename in the CHANGELOG is that noticing, written
+down: `isOpen` → `isVisible`, because the flag stayed true through the entire exit animation and
+the semantics were right — the name was the lie; `onOpen` → `prepare`, because it is a gate and not
+a notification; `modalType` → `template`, because the field and the `data-modal-type` attribute it
+shadowed were each right about something different. No model asked for one of those. The
+entry-point isolation tests exist because someone knew, before it happened, exactly how a framework
+import sneaks into a framework-free core.
+
+That is the trade this repo makes visible: the tool is extraordinary at the part that used to be
+slow, and no judge at all of which of its own output is worth keeping. **The taste is still yours
+to supply, and it is still the expensive half.**
+
 ## ◐ License
 
 [MIT](./LICENSE) © 2026 Francis Desjardins
