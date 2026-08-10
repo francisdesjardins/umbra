@@ -11,6 +11,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-09
 
+### Fixed — a failed action handed focus to the dialog instead of the button that ran it
+
+Found by adding a fourth microfrontend on a hunch, and the hunch was wrong in an instructive way.
+
+The demo now carries **Audit**, a web component whose `<dialog>` lives in a shadow root, driven by
+the same `bindDialog` call Billing makes twenty lines away. The theory was that a shadow boundary
+would break the focus policy, because `focus-policy.ts` reads `document.activeElement` — which
+answers with the shadow _host_, so `dialog.contains(active)` is false and every check silently
+concludes focus has left. That much was true, and it is fixed: those reads go through
+`activeWithin(dialog)`, which asks the dialog's own root (`getRootNode()`) instead of the document.
+
+But the visible failure the probe caught was **not** the boundary. After an action throws, the
+modal is supposed to put focus back on the button that ran it — the retry belongs under that hand.
+It was landing on the dialog. The cause is subscriber order, in plain markup, in every
+`umbra/vanilla` dialog: `bindAction` writes `disabled` from its own synchronous engine subscriber,
+and a caller binds actions _after_ `bindDialog` returns, so that subscriber is registered ahead of
+the focus coordinator's. The browser blurs a disabled element, so by the time the coordinator asks
+who was standing on the action, nobody is.
+
+The coordinator now remembers focus as it arrives, with a `focusin` listener on the dialog scoped
+by `isOwnEventTarget` the way the keydown listener is. `focusin` cannot lose that race — it fires
+when focus lands, before anything disables anything. The live read is still tried first, so the
+hook bindings keep the more specific answer.
+
+Pinned by a regression test in plain markup, with `focusOnOpen` on the _other_ button so a pass
+cannot be "focus never moved" — and confirmed to fail without the fix.
+
+**Still open, measured and not yet fixed:** the library's `dialog::backdrop` rule does not reach a
+dialog inside a shadow root. It is adopted onto `document`, and document stylesheets do not cross
+the boundary, so such a dialog gets the UA default — measured `rgba(0, 0, 0, 0.1)` against the
+library's `rgba(0, 0, 0, 0.7)`. `--dialog-backdrop` is documented as settable "anywhere above the
+dialog", which is untrue across a shadow root.
+
 ### Fixed — the `type` badge was drawn in the page's own background colour
 
 On `/api` in dark mode the `type` chip was invisible, in the rail and in every symbol header.

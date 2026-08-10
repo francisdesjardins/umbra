@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/experimental-ct-react';
-import { VanillaBasicHarness, VanillaUnbindHarness } from './bind-dialog.story';
+import {
+  VanillaBasicHarness,
+  VanillaFailingActionHarness,
+  VanillaUnbindHarness,
+} from './bind-dialog.story';
 
 /**
  * `umbra/vanilla`, against a real browser and a `<dialog>` the caller wrote.
@@ -125,5 +129,23 @@ test.describe('bindDialog', () => {
 
     await page.mouse.click(5, 5);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
+  });
+
+  test('a failed action hands focus back to the button that ran it', async ({ mount, page }) => {
+    // Regression: `bindAction` disables the button from its own synchronous engine subscriber,
+    // and the caller registers that subscriber before the focus coordinator exists — so reading
+    // `activeElement` when the action starts found an already-blurred button and the retry landed
+    // on the dialog. Found by putting a dialog in a shadow root, but never a shadow-root problem:
+    // this harness is plain markup.
+    await mount(<VanillaFailingActionHarness />);
+    await page.getByTestId('open').click();
+
+    // The opening focus is Cancel, so a pass here cannot be "focus never moved".
+    await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
+
+    await page.getByTestId('submit').click();
+    await expect(page.getByTestId('error')).toHaveText('submit failed');
+
+    await expect(page.getByTestId('submit')).toBeFocused();
   });
 });

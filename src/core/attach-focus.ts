@@ -1,4 +1,6 @@
+import { isOwnEventTarget } from '../utils/dialog-scope.js';
 import {
+  activeWithin,
   captureActionRunner,
   preferredRestoreTarget,
   restoreFocus,
@@ -25,6 +27,20 @@ export function createFocusCoordinator(
   const { engine } = options;
 
   let openingFocus: HTMLElement | null = null;
+  /**
+   * The last element inside the dialog to take focus, remembered as it happens.
+   *
+   * Reading `activeElement` when the engine reports a running action assumes nothing has
+   * disabled the button yet, and that assumption is a subscriber-order bet. It holds where the
+   * binding commits on a later frame and loses where the binding writes `disabled` from its own
+   * synchronous engine subscriber — `umbra/vanilla`, whose `bindAction` subscribes before this
+   * coordinator does, because the caller binds actions after `bindDialog` has returned. The
+   * browser blurs a disabled element, so the read finds nothing and the retry lands on the
+   * dialog instead of on the button that was pressed.
+   *
+   * `focusin` cannot lose that race: it fires when focus arrives, which is before any of it.
+   */
+  let lastFocusInside: HTMLElement | null = null;
 
   return {
     /**
@@ -36,11 +52,12 @@ export function createFocusCoordinator(
       // Clear on close so the next open starts fresh.
       if (phase === 'closed') {
         openingFocus = null;
+        lastFocusInside = null;
         return undefined;
       }
 
       // Settle the opening focus once the dialog is fully open, and remember where it landed —
-      // reading `document.activeElement` is reliable here, because `showModal()` fires autofocus
+      // reading the active element is reliable here, because `showModal()` fires autofocus
       // synchronously before a binding's effects run.
       if (phase === 'open' && openingFocus === null) {
         const dialog = getDialog();
@@ -80,7 +97,10 @@ export function createFocusCoordinator(
         const { hasRunningAction } = engine.aggregated();
         if (hasRunningAction) {
           if (!wasRunning) {
-            runner = captureActionRunner(getDialog());
+            // The live read first — it is the most specific answer and it is what the hook
+            // bindings give. `lastFocusInside` is the floor for the binding that has already
+            // disabled the button by now; see its declaration.
+            runner = captureActionRunner(getDialog()) ?? lastFocusInside;
           }
           wasRunning = true;
           return;
@@ -98,14 +118,39 @@ export function createFocusCoordinator(
           return;
         }
         // No action transition — restore only if focus escaped the dialog.
-        if (!dialog.contains(document.activeElement)) {
+        if (!dialog.contains(activeWithin(dialog))) {
           restoreFocus(dialog, openingFocus);
         }
       };
 
       const unsubscribe = engine.subscribe(check);
+
+      // Remember focus as it arrives. Scoped with `isOwnEventTarget` for the same reason the
+      // keydown listener is: a modal opened from inside this one renders its `<dialog>` in this
+      // subtree, and `focusin` bubbles — without this, the modal underneath would restore focus
+      // to a button belonging to the modal above it.
+      let stopRemembering: (() => void) | undefined;
+      const watched = getDialog();
+      if (watched) {
+        const remember = (event: Event) => {
+          const { target } = event;
+          if (
+            target instanceof HTMLElement &&
+            target !== watched &&
+            isOwnEventTarget(watched, target)
+          ) {
+            lastFocusInside = target;
+          }
+        };
+        watched.addEventListener('focusin', remember);
+        stopRemembering = () => {
+          watched.removeEventListener('focusin', remember);
+        };
+      }
+
       return () => {
         cancelAnimationFrame(frame);
+        stopRemembering?.();
         unsubscribe();
       };
     },

@@ -145,6 +145,11 @@ export const AdvancedPage = () => {
             codeKey="mfe-billing"
           />
           <ExampleCard
+            title="mfa4.js — Audit, a web component behind a shadow root"
+            description="The other three prove the core is indifferent to the framework; this one asks whether it is indifferent to the tree. A custom element with attachShadow puts its <dialog> in a document of its own, which changes what document.activeElement answers, what an event's target is once it leaves, and which stylesheets apply at all — the three things a dialog manager leans on. Same bindDialog call as Billing's, same options, same actions, so every difference in behaviour is the boundary talking rather than the binding."
+            codeKey="mfe-audit"
+          />
+          <ExampleCard
             title="The build behind the import map"
             description="One rolldown build with eight entries, not eight builds: code-splitting hoists everything the microfrontends have in common — the manager included — into a shared chunk each of them imports. That is the mechanism the demo rests on, and separate builds would quietly break it."
             codeKey="mfe-distribution"

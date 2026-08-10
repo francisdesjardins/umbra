@@ -54,6 +54,7 @@
         --checkout: #d97706;
         --billing: #7c3aed;
         --support: #0d9488;
+        --audit: #be123c;
         --ok: #15803d;
         --no: #b91c1c;
       }
@@ -68,14 +69,15 @@
           --checkout: #f59e0b;
           --billing: #a78bfa;
           --support: #2dd4bf;
+          --audit: #fb7185;
           --ok: #4ade80;
           --no: #f87171;
         }
       }
-      /* `--own` is this microfrontend's colour. With three parties on the page a single "the
+      /* `--own` is this microfrontend's colour. With four parties on the page a single "the
          other one" colour would be a lie, so an incoming line is marked by its glyph and by one
          shared tint — the transcript still says who asked and who decided, it just no longer
-         claims to say which of the other two it was. */
+         claims to say which of the other three it was. */
       .checkout {
         --own: var(--checkout);
       }
@@ -84,6 +86,9 @@
       }
       .support {
         --own: var(--support);
+      }
+      .audit {
+        --own: var(--audit);
       }
       * {
         box-sizing: border-box;
@@ -97,15 +102,15 @@
           14px/1.5 system-ui,
           sans-serif;
       }
-      /* Three equal columns, and every row inside them lines up across the set: the panels are
+      /* Four equal columns, and every row inside them lines up across the set: the panels are
          siblings in one grid with a shared internal skeleton. Explicit counts rather than
          `auto-fit`, which cannot help here: the note below spans `1 / -1`, so no repeated track
-         is ever empty and none of them would collapse — the panels would sit in three of five
+         is ever empty and none of them would collapse — the panels would sit in four of six
          columns and leave two blank. Two columns at tablet width, one on a phone. */
       .host {
         display: grid;
         gap: 16px;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         align-items: stretch;
       }
       @media (max-width: 860px) {
@@ -289,10 +294,10 @@
   <body>
     <div class="host">
       <p class="note">
-        Three microfrontends, one shared <code>umbra</code> from the import map. None of them
-        imports another. Push Checkout past Billing's limit and watch the refusal travel on to
-        Support. In the logs: <b>&rarr;</b> I asked · <b>&larr;</b> I was asked · <b>&check;</b> I
-        opened · <b>&cross;</b> I refused · <b>~</b> happened next door.
+        Four microfrontends, one shared <code>umbra</code> from the import map. None of them imports
+        another. Push Checkout past Billing's limit and watch the refusal travel on to Support. In
+        the logs: <b>&rarr;</b> I asked · <b>&larr;</b> I was asked · <b>&check;</b> I opened ·
+        <b>&cross;</b> I refused · <b>~</b> happened next door.
       </p>
 
       <section class="mfa checkout">
@@ -339,10 +344,21 @@
         <div id="mfa3-root"></div>
         <div class="log" id="mfa3-log"></div>
       </section>
+
+      <section class="mfa audit">
+        <h2>Audit</h2>
+        <div class="kind">Web component · owns <code>audit:review</code></div>
+        <!-- The only panel whose contents are not in this file. `<audit-panel>` builds its own
+             shadow root, so its dialog and its buttons are in a tree the page cannot select into
+             — which is the question this fourth panel exists to ask of the library. -->
+        <audit-panel></audit-panel>
+        <div class="log" id="mfa4-log"></div>
+      </section>
     </div>
 
     <script type="module" src="./mfa1.js"></script>
     <script type="module" src="./mfa2.js"></script>
     <script type="module" src="./mfa3.js"></script>
+    <script type="module" src="./mfa4.js"></script>
   </body>
 </html>

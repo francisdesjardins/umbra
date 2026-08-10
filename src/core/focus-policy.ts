@@ -13,6 +13,24 @@ import { queryOwn } from '../utils/dialog-scope.js';
 const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
 
 /**
+ * Who holds focus, **as this dialog's own tree sees it**.
+ *
+ * `document.activeElement` is the wrong question for a dialog inside a shadow root: it answers
+ * with the *host* element, and `dialog.contains(host)` is false, so every check below silently
+ * concluded that focus had left the dialog. The visible cost was a modal in a web component
+ * putting focus on itself after a failed action instead of back on the button that ran it —
+ * the retry is under that hand, and the docs promise it.
+ *
+ * `getRootNode()` returns the `Document` for an ordinary dialog and the `ShadowRoot` for one in a
+ * component, and both answer `activeElement` about their own tree. Nested roots resolve to the
+ * nearest one, which is the granularity `dialog.contains()` needs.
+ */
+export function activeWithin(dialog: HTMLElement): Element | null {
+  const root = dialog.getRootNode();
+  return root instanceof ShadowRoot || root instanceof Document ? root.activeElement : null;
+}
+
+/**
  * Hand the opening focus to the action that asked for it, and report where focus actually is.
  *
  * Scoped to the dialog's own content: a modal opened from inside this one renders its
@@ -26,7 +44,7 @@ const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
 export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | null {
   const claimed = queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR);
   claimed?.focus();
-  const active = document.activeElement;
+  const active = activeWithin(dialog);
   return active instanceof HTMLElement && active !== dialog && dialog.contains(active)
     ? active
     : null;
@@ -42,7 +60,7 @@ export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | nul
  * @internal
  */
 export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLElement | null {
-  const active = document.activeElement;
+  const active = dialog === null ? null : activeWithin(dialog);
   return active instanceof HTMLElement && dialog?.contains(active) === true ? active : null;
 }
 
@@ -57,7 +75,7 @@ export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLEleme
  */
 export function restoreFocus(dialog: HTMLDialogElement, preferred: HTMLElement | null): void {
   (preferred ?? dialog).focus();
-  if (!dialog.contains(document.activeElement)) {
+  if (!dialog.contains(activeWithin(dialog))) {
     dialog.focus();
   }
 }

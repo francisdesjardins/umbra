@@ -182,3 +182,85 @@ export function VanillaUnbindHarness() {
     </>
   );
 }
+
+/**
+ * Where focus lands after an action **fails** — the retry belongs under the hand that pressed it.
+ *
+ * The controller is the binding where that is hardest, and it is why this harness exists rather
+ * than a Solid or React twin: `bindAction` writes `disabled` from its own synchronous engine
+ * subscriber, and the caller binds actions *after* `bindDialog` has returned, so that subscriber
+ * is registered ahead of the focus coordinator's. The browser blurs a disabled element, so
+ * reading who held focus when the action started finds nothing — and the retry lands on the
+ * dialog instead of on the button.
+ *
+ * Nothing about that needs a shadow root or a second framework; it is plain markup here on
+ * purpose, because the bug was never about either.
+ */
+export function VanillaFailingActionHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const failRef = useRef<HTMLButtonElement>(null);
+  const [controller, setController] = useState<Bound<'cancel' | 'submit'> | null>(null);
+  const [error, setError] = useState('none');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const cancel = cancelRef.current;
+    const fail = failRef.current;
+    if (!dialog || !cancel || !fail) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'cancel' | 'submit'>({
+      id: 'vanilla-failing-action',
+      dialog,
+      ariaLabel: 'Vanilla failing action',
+      manager: createDialogManager(),
+    });
+
+    // `focusOnOpen` on the *other* button, so "focus went back to the runner" cannot be confused
+    // with "focus never moved": the opening focus is Cancel and the runner is Submit.
+    const unbindCancel = bound.bindAction(cancel, 'cancel', { focusOnOpen: true });
+    const unbindFail = bound.bindAction(fail, 'submit', {
+      onAction: () => {
+        throw new Error('submit failed');
+      },
+    });
+
+    const stop = bound.subscribe(() => {
+      setError(bound.getSnapshot().error?.message ?? 'none');
+    });
+
+    setController(bound);
+
+    return () => {
+      stop();
+      unbindCancel();
+      unbindFail();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="error">{error}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      <dialog ref={dialogRef}>
+        <p>Submit throws</p>
+        <button ref={cancelRef}>Cancel</button>
+        <button ref={failRef} data-testid="submit">
+          Submit
+        </button>
+      </dialog>
+    </>
+  );
+}
