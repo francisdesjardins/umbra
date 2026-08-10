@@ -23,8 +23,17 @@ const LOG = 'mfa4-log';
  */
 const STYLE = `
   :host { display: block; }
-  .controls { display: flex; flex-direction: column; gap: 8px; }
-  .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+  /* Every number here is the host's, restated. The four panels are read side by side, so the one
+     behind the boundary has to land its label, its field and its button row on the same lines the
+     other three do — and it gets none of that for free. The uppercase label is the tell: it lived
+     in a \`.field > span\` rule that stops at the shadow root, so Audit alone said "Account" in
+     sentence case, one row out of step with three that shouted. */
+  .controls { display: flex; flex-direction: column; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field > span {
+    color: var(--muted); font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
   .field input {
     font: inherit; padding: 6px 8px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--panel); color: var(--ink);
@@ -54,8 +63,8 @@ const MARKUP = `
       <input id="account" type="text" value="ACME-77" />
     </label>
     <div class="row">
-      <button id="ask">Ask Checkout for a receipt</button>
-      <button id="own">Open my own review</button>
+      <button id="ask">Ask Checkout</button>
+      <button id="own">Open my review</button>
     </div>
   </div>
 

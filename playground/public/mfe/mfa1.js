@@ -120,7 +120,7 @@ function Checkout() {
               });
           },
         },
-        'Ask Billing to confirm'
+        'Ask Billing'
       ),
       h(
         'button',
@@ -129,7 +129,7 @@ function Checkout() {
             void receipt.open();
           },
         },
-        'Open my own receipt'
+        'Open my receipt'
       )
     ),
     receipt.Modal

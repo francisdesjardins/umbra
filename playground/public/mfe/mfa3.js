@@ -142,7 +142,7 @@ function Support() {
               });
           },
         },
-        'Ask Checkout for a receipt'
+        'Ask Checkout'
       ),
       h(
         'button',
@@ -151,7 +151,7 @@ function Support() {
             void ticket.open();
           },
         },
-        'Open my own ticket'
+        'Open my ticket'
       )
     ),
     // The dialog itself. `Modal` is a real DOM node here rather than a description of one —

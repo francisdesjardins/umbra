@@ -102,21 +102,21 @@
           14px/1.5 system-ui,
           sans-serif;
       }
-      /* Four equal columns, and every row inside them lines up across the set: the panels are
-         siblings in one grid with a shared internal skeleton. Explicit counts rather than
-         `auto-fit`, which cannot help here: the note below spans `1 / -1`, so no repeated track
-         is ever empty and none of them would collapse — the panels would sit in four of six
-         columns and leave two blank. Two columns at tablet width, one on a phone. */
+      /* Two by two, not four across. The frame is 990px wide inside the playground's content
+         column, which four tracks divide into 227px each: every button wrapped to two lines, the
+         log lines were cut mid-word, and the panels disagreed about where their controls ended.
+         Two tracks give 471px, which fits the longest line either half has to say. The rows cost
+         nothing now that the logs are a fixed height — the frame's height stopped being a
+         function of how much anyone clicked.
+
+         Explicit counts rather than `auto-fit`, which cannot help here: the note above spans
+         `1 / -1`, so no repeated track is ever empty and none of them would collapse — the panels
+         would sit in two of four columns and leave two blank. One column on a phone. */
       .host {
         display: grid;
         gap: 16px;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         align-items: stretch;
-      }
-      @media (max-width: 860px) {
-        .host {
-          grid-template-columns: repeat(2, 1fr);
-        }
       }
       @media (max-width: 560px) {
         .host {
@@ -143,8 +143,12 @@
         font-size: 12px;
         margin-bottom: 12px;
       }
-      /* One field and one button row per panel, in that order — which is what makes the three
-         logs start at the same height without a magic number holding them there. */
+      /* One field and one button row per panel, in that order — which is what makes all four
+         logs start at the same height without a magic number holding them there. It only holds
+         while the labels fit on one line, so they are two or three words each: "Ask Checkout",
+         "Open my ticket". The longer wording wrapped one panel's row and not another's, and a
+         row that is two lines tall in one place and one in another is the whole alignment gone.
+         Audit restates these rules in its own shadow styles — none of this crosses to it. */
       .controls {
         display: grid;
         gap: 10px;
@@ -196,11 +200,20 @@
       button:hover {
         border-color: var(--own, var(--accent));
       }
+      /* A fixed box that scrolls, not one that grows.
+         `flex: 1` with only a `min-height` made the panel a function of how much anyone had
+         clicked: every line made it taller, the document with it, and `host-frame.tsx` — which
+         measures the document inside — grew the frame to match. Four panels filling at once
+         walked the page down and pushed whatever you were reading off the screen.
+         Sized in lines rather than pixels so the number stays meaningful if the type does: eight
+         and a half, the half being the part that says there is more below. Newest is first
+         (`log.js`), so the half you cannot see is the history, which is the half nobody needs. */
       .log {
-        flex: 1;
+        --log-lines: 8.5;
+        flex: 0 0 auto;
         margin-top: 12px;
-        min-height: 132px;
-        overflow: auto;
+        height: calc(var(--log-lines) * 1.7em + 16px);
+        overflow-y: auto;
         background: color-mix(in srgb, var(--ink) 6%, transparent);
         border-radius: 6px;
         padding: 8px;
@@ -318,7 +331,7 @@
             <output id="mfa2-limit">—</output>
           </label>
           <div class="row">
-            <button id="mfa2-ask">Ask Checkout for a receipt</button>
+            <button id="mfa2-ask">Ask Checkout</button>
           </div>
         </div>
         <div class="log" id="mfa2-log"></div>

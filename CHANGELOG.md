@@ -11,6 +11,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Changed — the microfrontend frame is two by two, and its four panels finally agree
+
+Four columns was a decision made against a viewport the frame never gets. Inside the playground's
+content column it is **990px wide**, which four tracks divide into 227px: every button wrapped to
+two lines, log lines were cut mid-word, and — because a two-line button row is taller than a
+one-line one — the four panels disagreed about where their controls ended and their logs began.
+Two tracks give 471px, and the rows cost nothing now that the logs are a fixed height.
+
+The labels came down with it, to two or three words each: `Ask Billing`, `Ask Checkout`,
+`Open my receipt` / `Open my ticket` / `Open my review`. Parallel wording across four panels is
+not decoration here — the panels are read side by side, so a phrase that wraps in one and not
+another is the alignment gone. Measured after: all four logs at the same `y` in their row, all
+441×182.
+
+**Audit was the one out of step, and the boundary is why.** Its label read `Account` in sentence
+case while three others shouted, because the uppercase lives in a `.field > span` rule that stops
+at the shadow root. Its own styles restate the host's spacing and label treatment now — which is
+the fourth thing this panel has taught the demo about what a shadow root costs, after
+`document.activeElement`, the backdrop sheet and event targets.
+
+### Changed — the microfrontend logs are fixed boxes, newest first
+
+Four panels write at once, and every line made its box taller: `.log` was `flex: 1` over a bare
+`min-height`, so the panel grew, the document with it, and `host-frame.tsx` — which sizes the
+frame by measuring the document inside — grew the frame to match. Reading the page meant watching
+it walk downward, and the line that explained what had just happened was the one below the fold.
+
+So the box is a fixed height that scrolls, sized in lines rather than pixels (`8.5`, the half
+being the part that says there is more below) so the number survives a change of type. And
+`logTo` prepends: the newest line is the one you are already looking at, and scrolling is for the
+curious rather than for keeping up. Nothing is scrolled into view — prepending above the viewport
+would shove a reader's place down the box, and scroll anchoring holds it instead.
+
+Measured in the frame rather than assumed: through thirteen logged lines the document stays
+471px and all four boxes stay 182px, where before both climbed with every click. The
+`ResizeObserver` stays — it now answers the question it is actually good for, the frame's width
+crossing one of the host grid's breakpoints and re-laying four columns into two.
+
 ### Fixed — the component coverage measured nothing at all on Windows
 
 The fourth way this setup has found to fail quietly, and the largest: `scripts/vite-plugin-ct-coverage.mjs`

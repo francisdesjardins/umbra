@@ -49,7 +49,10 @@ export function HostFrame() {
    * some width, and adding a fourth panel made most of them wrong at once.
    *
    * Same origin, so `contentDocument` is readable and no `postMessage` handshake is needed. The
-   * `ResizeObserver` covers what `load` cannot: the panels grow as their logs fill.
+   * `ResizeObserver` covers what `load` cannot: the frame's own width crossing one of the host
+   * grid's breakpoints re-lays the panels into two columns or one, and the document is a
+   * different height on the other side of it. It is no longer clicking that moves this — the
+   * logs are fixed boxes that scroll, so the height a panel reports is the height it keeps.
    */
   useEffect(() => {
     const frame = frameRef.current;
