@@ -13,6 +13,12 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
+**[Open the playground →](https://francisdesjardins.ca/playground/dialog/)**
+
+Every example on this page, running — plus the generated API reference for all four entry points,
+the component test harnesses, and four microfrontends sharing one manager across React, Solid,
+vanilla and a web component.
+
 </div>
 
 ---
@@ -21,11 +27,12 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 
 ## ◐ Entry points
 
-| Specifier     | Contents                                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `umbra`       | The manager (`dialogManager`), the placement and style tables, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No framework.** |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path.                                  |
-| `umbra/solid` | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                    |
+| Specifier       | Contents                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `umbra`         | The manager (`dialogManager`), the placement and style tables, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No framework.** |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path.                                  |
+| `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                    |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.           |
 
 The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding

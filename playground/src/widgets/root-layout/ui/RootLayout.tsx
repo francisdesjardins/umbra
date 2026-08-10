@@ -6,7 +6,7 @@ import { useCodePane } from '@/widgets/code-viewer/model/useCodePane';
 import { Sidebar } from '@/widgets/sidebar/ui/Sidebar';
 import { TopBar } from '@/widgets/top-bar/ui/TopBar';
 import { Box, Toolbar, useMediaQuery, useTheme } from '@mui/material';
-import { Outlet } from '@tanstack/react-router';
+import { Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 const MainContent = () => {
@@ -90,13 +90,23 @@ const ResponsiveShell = () => {
 };
 
 export const RootLayout = () => {
+  // Everywhere but the landing page, where the same moon is already the hero at 78% of its
+  // column. The joke is that one is *hiding*, and a hider needs to be the only one of its kind
+  // on screen — beside a full-size twin it reads as a stray second render, and worse, it arrives
+  // a second and a half after the page settles, which reads as a bug rather than a visit.
+  const onHome = useRouterState({
+    select: (state) => {
+      return state.location.pathname === '/';
+    },
+  });
+
   return (
     <ThemeProvider>
       <CodePaneProvider>
         <ResponsiveShell />
         {/* Sits at z-index 1200, below the 1300+ the manager assigns dialogs, so the mascot
             never covers a panel it is meant to be charming next to. */}
-        <PeekingMoon />
+        {!onHome && <PeekingMoon />}
       </CodePaneProvider>
     </ThemeProvider>
   );
