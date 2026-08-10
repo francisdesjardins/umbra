@@ -5,6 +5,10 @@
   --modal-text: #1a1a1a;
   --modal-text-secondary: #666666;
   --modal-border: #dee2e6;
+  /* A control's edge is what says where the control is, so 1.4.11 asks 3:1 of it — the divider
+     grey above is 1.3:1. Kept separate from `--modal-border`: a hairline between two areas of
+     one surface conveys nothing on its own and would only look heavy at this weight. */
+  --modal-control-border: #8c8c8c;
   --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   --modal-radius: 8px;
   --modal-spacing: 16px;
@@ -15,12 +19,18 @@
 
   /* Colors */
   --color-primary: #d97706;
-  --color-primary-hover: #92400e;
+  /* What goes *on* the amber, and why the hover brightens instead of deepening: white on
+     `#d97706` is 3.19:1, and the `#92400e` this hover used to be is unreadable under a dark
+     ink. Fire is the background here; the eclipsed body is the text. */
+  --color-primary-ink: #0f172a;
+  --color-primary-hover: #f59e0b;
   --color-primary-disabled: color-mix(in srgb, var(--color-primary) 50%, transparent);
   --color-success: #2e7d32;
   --color-error: #d32f2f;
-  --color-warning: #ed6c02;
-  --color-info: #0288d1;
+  /* MUI's mid-tones for these two are backgrounds: #ed6c02 is 3.11:1 as text on the surface
+     and #0288d1 is 3.86:1. The dark ends of the same ramps carry the same meaning and read. */
+  --color-warning: #a35200;
+  --color-info: #01579b;
 
   /* Typography */
   --font-family:
@@ -41,6 +51,7 @@
   --modal-text: rgba(255, 255, 255, 0.87);
   --modal-text-secondary: rgba(255, 255, 255, 0.6);
   --modal-border: #424242;
+  --modal-control-border: #757575;
   --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --button-hover-bg: rgba(255, 255, 255, 0.08);
   --button-hover-border: rgba(255, 255, 255, 0.23);
@@ -148,7 +159,7 @@
 .button {
   padding: 8px 16px;
   border-radius: 4px;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--modal-control-border);
   background: transparent;
   color: var(--modal-text);
   font-size: var(--font-size-sm);
@@ -177,12 +188,12 @@
 
 .button:disabled:hover {
   background: transparent;
-  border-color: var(--modal-border);
+  border-color: var(--modal-control-border);
 }
 
 .buttonPrimary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-primary-ink);
   border-color: var(--color-primary);
 }
 

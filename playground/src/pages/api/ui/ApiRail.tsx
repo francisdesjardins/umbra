@@ -36,7 +36,7 @@ const SYMBOL_SX: SxProps<Theme> = {
   fontFamily: 'monospace',
   fontSize: '0.75rem',
   color: 'text.secondary',
-  '&:hover': { color: 'primary.main', borderColor: 'primary.main' },
+  '&:hover': { color: 'accent.onSurface', borderColor: 'accent.onSurface' },
 };
 
 type ApiRailProps = {
@@ -84,7 +84,7 @@ export const ApiRail = ({ activeCategory, activeSymbol }: ApiRailProps) => {
                       to={categoryHref(category.id)}
                       sx={{
                         ...CATEGORY_SX,
-                        ...(isActive && { color: 'primary.main', fontWeight: 700 }),
+                        ...(isActive && { color: 'accent.onSurface', fontWeight: 700 }),
                       }}
                     >
                       <Box component="span" sx={{ flex: 1 }}>
@@ -107,8 +107,8 @@ export const ApiRail = ({ activeCategory, activeSymbol }: ApiRailProps) => {
                               sx={{
                                 ...SYMBOL_SX,
                                 ...(isCurrent && {
-                                  color: 'primary.main',
-                                  borderColor: 'primary.main',
+                                  color: 'accent.onSurface',
+                                  borderColor: 'accent.onSurface',
                                   fontWeight: 700,
                                 }),
                               }}

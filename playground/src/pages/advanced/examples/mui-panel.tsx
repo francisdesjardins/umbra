@@ -156,8 +156,13 @@ export function MuiPanelExample() {
     render: ({ action, error }) => {
       const title = STEP_TITLES[setup.step] ?? STEP_TITLES[0];
 
+      // `100%`, not `92vw`. The UA caps a `<dialog>` at `calc(100% - 6px - 2em)` — 337px on a
+      // 375px phone — so a panel sized against the *viewport* asks for 345 and overflows its own
+      // dialog by eight pixels: cut off on the right, and its rounded corner with it. Above about
+      // 475px the two agree and nothing shows, which is why this only ever appeared on a phone.
+      // Sizing against the dialog's own box cannot disagree with it.
       return (
-        <PanelModal.PanelContainer sx={{ width: 'min(600px, 92vw)' }}>
+        <PanelModal.PanelContainer sx={{ width: 'min(600px, 100%)' }}>
           <PanelModal.PanelHeader>
             <PanelModal.HeaderActionLayout
               content={

@@ -170,6 +170,36 @@ Every page is built from the same three pieces — do not hand-roll headings or 
 hidden). It creates a scroll container that never scrolls and silently disables sticky for
 `SectionNav`. `RootLayout` carries a comment guarding this.
 
+## Colour is measured, not chosen
+
+The palette is held to **WCAG 2.2 AA**, and the check is a real browser rather than a reading of
+the theme: `node .claude/skills/wcag-audit/audit.mjs --attach --route … --focus` (PowerShell on
+Windows — Git Bash rewrites a bare `/` argument into a path). Run it after any edit to colours,
+tokens or a component's theme. Nine routes × both schemes is currently clean, dialogs included.
+
+Two things it caught that source review had not, and both are the reason it exists:
+
+- **A component library can resolve a token against you.** MUI derives `contrastText` through
+  `contrastThreshold`, which defaults to **3** — AA for large text only. White scores 3.19:1 on the
+  amber and got picked, so every contained button shipped at 3.19:1 with a palette that looked
+  deliberate. The threshold is 4.5 here and `primary.contrastText` is stated outright.
+- **`opacity` never appears in a computed `color`.** A ratio measured without it is a ratio of a
+  pixel nobody sees.
+
+Three rules follow, and they are where a new colour goes:
+
+- **`primary.main` is a fill; `accent.onSurface` is the text.** Amber on the page is 3.19:1. Never
+  write `color: 'primary.main'` — the token exists for exactly that, per mode.
+- **A filled primary brightens on hover, it does not deepen.** The ink on it is dark, so
+  `primary.dark` under it is 2.5:1. Same trap in `Sidebar`'s selected entry.
+- **The vanilla templates are copied into other people's apps**, so a failure there propagates.
+  Their control boundaries (`--*-control-border`) are a separate token from the layout hairline
+  (`--*-border`) because 1.4.11 asks 3:1 of the first and nothing of the second.
+
+Keyboard focus is part of the same gate. There is **one** global ring, declared in `theme.ts` as
+`body :focus-visible` — the descendant element is load-bearing, since `.MuiButtonBase-root` zeroes
+the outline at equal specificity and is injected later. Do not add per-component focus styles.
+
 ## Templates (`src/entities/modal-template/ui/`)
 
 Reference UI — not exported from the library. Users copy them into their projects.

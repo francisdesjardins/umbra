@@ -36,7 +36,7 @@ export function PerActionStateExample() {
 
       return (
         <MessageModal.DefaultLayout
-          slotProps={{ container: { sx: { width: 'min(520px, 92vw)' } } }}
+          slotProps={{ container: { sx: { width: 'min(520px, 100%)' } } }}
         >
           <MessageModal.Header>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>

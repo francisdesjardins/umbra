@@ -116,7 +116,7 @@ export function FocusOnOpenExample() {
                 },
               })}
             >
-              Delete ⏎
+              Delete
             </Shared.Button>
           </MessageModal.Footer>
         </MessageModal.DefaultLayout>

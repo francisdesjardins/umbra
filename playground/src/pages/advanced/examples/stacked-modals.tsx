@@ -61,7 +61,7 @@ export function StackedModalsExample() {
                 },
               })}
             >
-              Acknowledge ⏎
+              Acknowledge
             </Shared.Button>
           </MessageModal.Footer>
         </MessageModal.DefaultLayout>
@@ -106,7 +106,7 @@ export function StackedModalsExample() {
                 },
               })}
             >
-              Save ⏎
+              Save
             </Shared.Button>
           </MessageModal.Footer>
           {/* Rendered here, inside level 2 — which is what makes the nesting real. */}
@@ -156,7 +156,7 @@ export function StackedModalsExample() {
                 },
               })}
             >
-              Close panel ⏎
+              Close panel
             </Shared.Button>
           </SlideModal.Footer>
           {middle.Modal}

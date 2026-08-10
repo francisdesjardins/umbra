@@ -190,6 +190,78 @@ test.describe('persistence and namespace colours', () => {
     createLogger('nothing-like-this')('unknown namespace');
 
     expect(debugCalls).toHaveLength(1);
-    expect(String(debugCalls[0]?.[1])).toContain('#999');
+    expect(String(debugCalls[0]?.[1])).toContain('#B0B0B0');
   });
+});
+
+/**
+ * The console has two backgrounds and the page cannot pick between them — it follows the system
+ * theme, and can be overridden in devtools independently of that. No single colour is readable on
+ * both (the two 4.5:1 bars leave an empty window between luminance 0.183 and 0.237), so a label
+ * that colours *text* is unreadable on one console or the other by construction. Every namespace
+ * colour here once was, on a light one.
+ *
+ * The badge is what removes the dependency, so these assert the badge — not the palette. A new
+ * namespace picks any colour it likes and fails here only if the label would not read on it.
+ */
+test.describe('namespace labels do not depend on the console theme', () => {
+  // The capture is per-describe in Playwright, so this block installs its own — without it these
+  // read whatever the previous suite left in the buffer, which is a test that passes by accident.
+  test.beforeEach(() => {
+    debugCalls.length = 0;
+    console.debug = (...args) => {
+      debugCalls.push(args);
+    };
+  });
+
+  test.afterEach(() => {
+    console.debug = originalDebug;
+    setLogLevel(false);
+  });
+
+  const NAMESPACES = [
+    'manager',
+    'modal',
+    'modal:lifecycle',
+    'modal:keydown',
+    'modal:click-outside',
+    'action',
+    'outlet',
+    'nothing-like-this',
+  ];
+
+  const luminance = (hex: string): number => {
+    const n = Number.parseInt(hex.slice(1), 16);
+    const channel = (v: number) => {
+      const x = v / 255;
+      return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+    };
+    return (
+      0.2126 * channel((n >> 16) & 255) +
+      0.7152 * channel((n >> 8) & 255) +
+      0.0722 * channel(n & 255)
+    );
+  };
+
+  const contrast = (a: string, b: string): number => {
+    const la = luminance(a);
+    const lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  };
+
+  for (const namespace of NAMESPACES) {
+    test(`${namespace} paints its own background, and its ink reads on it`, () => {
+      setLogLevel('*');
+      createLogger(namespace)('measure me');
+
+      const style = String(debugCalls[0]?.[1]);
+      const background = /background:(#[0-9a-f]{6})/i.exec(style)?.[1];
+      const ink = /(?:^|;)color:(#[0-9a-f]{6})/i.exec(style)?.[1];
+
+      // Without a background the label is at the mercy of whichever console theme is on.
+      expect(background, style).toBeDefined();
+      expect(ink, style).toBeDefined();
+      expect(contrast(ink ?? '#000000', background ?? '#ffffff')).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });

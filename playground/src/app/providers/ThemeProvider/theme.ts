@@ -21,12 +21,20 @@ declare module '@mui/material/styles' {
       track: string;
       width?: string | undefined;
     };
+    accent: {
+      onSurface: string;
+      ring: string;
+    };
   }
   interface PaletteOptions {
     scrollbar?: {
       thumb?: string | undefined;
       track?: string | undefined;
       width?: string | undefined;
+    };
+    accent?: {
+      onSurface?: string | undefined;
+      ring?: string | undefined;
     };
   }
 }
@@ -62,8 +70,27 @@ const MASCOT = {
   },
 } as const;
 
+/**
+ * What sits *on* the corona, in both modes.
+ *
+ * Amber cannot carry white text: `#d97706` measures 3.19:1 against `#ffffff` and `#f59e0b` only
+ * 2.15:1, so a contained button was the least readable thing on the page — worst in dark mode,
+ * where the fill is brightest. The eclipse already answers this: fire is what you read the dark
+ * body against, not the other way round.
+ *
+ * The consequence is that **primary hover has to brighten, not darken.** Deepening the fill to
+ * `flameEdge` under a dark ink lands at 2.5:1 — the old hover was compensating for the old ink.
+ */
+const INK_ON_FLAME = '#0f172a';
+
 export const createAppTheme = (mode: 'light' | 'dark') => {
   const mascot = MASCOT[mode];
+
+  // The readable end of the corona, per mode — amber as *text* rather than as a fill.
+  // `main` is tuned to be a background, and on the page it is the wrong end of the ramp:
+  // `#d97706` measures 3.19:1 on white. Light mode takes the deep edge, dark mode the bright
+  // ink, which is the pair MUI ships for exactly this and the one `KindBadge` already used.
+  const accent = mode === 'dark' ? mascot.ink : mascot.flameEdge;
 
   return createTheme({
     // Scrollbar tokens (used by global styles to theme scrollbars)
@@ -74,11 +101,22 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
     },
     palette: {
       mode,
+      // MUI's default is 3, which is AA for *large* text only — so white scores 3.19 on
+      // `#d97706`, clears the bar and gets picked, and every contained button ships at 3.19:1.
+      // At 4.5 the derived `contrastText` is a readable ink on error and success too.
+      contrastThreshold: 4.5,
+      accent: {
+        onSurface: accent,
+        ring: accent,
+      },
       primary: {
         main: mascot.flame,
         light: mascot.ink,
         dark: mascot.flameEdge,
-        contrastText: '#ffffff',
+        // The eclipse's own body, not a generic black: the mascot is fire behind a dark disc,
+        // and this is that disc. The *deepest* of the two bodies in both modes — the lighter
+        // one clears 4.5 by a tenth, and a tenth is what a washed-out panel spends.
+        contrastText: INK_ON_FLAME,
       },
       // The body, not a second accent. An eclipse is one fire against one shadow, and a palette
       // with two warm accents has nowhere left to put emphasis.
@@ -88,16 +126,27 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         dark: mode === 'dark' ? '#020617' : '#0f172a',
         contrastText: '#ffffff',
       },
+      /**
+       * A third step in the text ramp, and a readable one.
+       *
+       * `text.disabled` is MUI's *inactive control* tone (0.38 in light mode, 2.68:1 on white)
+       * and this app spends it as tertiary text — counts, specifier labels, hints, the “Result:”
+       * placeholder — none of which is inactive, so none of which 1.4.3 exempts. Eighteen call
+       * sites, one decision: raise the token rather than repaint the sites.
+       *
+       * The step it leaves is small on purpose. Below `secondary` there is no room left above
+       * 4.5:1, so the hierarchy under this line is carried by size and weight, not by fading.
+       */
+      text: {
+        ...(mode === 'dark' ? { primary: '#ffffff', secondary: 'rgba(255, 255, 255, 0.7)' } : {}),
+        disabled: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.55)',
+      },
       ...(mode === 'dark' && {
         background: {
           // The mascot's own body rather than pure black: amber on `#000` is a warning label,
           // amber on slate is dusk. It is also what the moon is already drawn on.
           default: mascot.body,
           paper: mascot.bodyEdge === '#334155' ? '#111c30' : '#121212',
-        },
-        text: {
-          primary: '#ffffff',
-          secondary: 'rgba(255, 255, 255, 0.7)',
         },
       }),
     },
@@ -115,12 +164,43 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         },
       },
       MuiButton: {
-        styleOverrides: {
-          contained: {
-            '&:hover': {
-              backgroundColor: MASCOT[mode].flameEdge,
+        // Matched on `color: 'primary'`, not applied to the `contained` slot: the unscoped rule
+        // this replaces painted *every* filled button amber on hover, so the red Delete buttons
+        // on /modal-actions turned brand-coloured under the pointer. A destructive action has to
+        // stay destructive.
+        variants: [
+          {
+            props: { variant: 'contained', color: 'primary' },
+            // The corona flares — it does not go out. With a dark ink on the fill, deepening it
+            // is what breaks contrast; brightening keeps the pair legible (8.3:1 light, 10.7:1
+            // dark), and is what an eclipse does anyway.
+            style: {
+              '&:hover': { backgroundColor: mode === 'dark' ? mascot.ink : MASCOT.dark.flame },
             },
           },
+          // The unfilled variants paint `primary.main` on the *page*, which is the 3.19:1 pair
+          // the accent token exists to replace. The outline goes with it: MUI draws it at
+          // `alpha(main, .5)`, which is 2.1:1 against the page and below what a boundary needs.
+          {
+            props: { variant: 'text', color: 'primary' },
+            style: { color: accent },
+          },
+          {
+            props: { variant: 'outlined', color: 'primary' },
+            style: { color: accent, borderColor: accent },
+          },
+        ],
+      },
+      MuiLink: {
+        styleOverrides: {
+          root: { color: accent },
+        },
+      },
+      // A focused field's label turns `primary.main`, which is the same 3.19:1 pair as everywhere
+      // else — and a label is the one piece of text a filled field cannot do without.
+      MuiFormLabel: {
+        styleOverrides: {
+          root: { '&.Mui-focused': { color: accent } },
         },
       },
       MuiCssBaseline: {
@@ -146,6 +226,31 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
             },
             '*::-webkit-scrollbar-thumb:hover': {
               backgroundColor: alpha(theme.scrollbar.thumb, 0.9),
+            },
+            /**
+             * One keyboard focus ring, for everything.
+             *
+             * There was none. `ButtonBase` zeroes the UA outline and marks focus with its own
+             * `.Mui-focusVisible` class, and in this theme that class resolves to no visual
+             * change at all — measured in the browser, not inferred: outline, box-shadow,
+             * border, background and both pseudo-elements are byte-identical focused and not.
+             * So every button, every sidebar entry and every card link was focusable with
+             * nothing on screen to say which one had it.
+             *
+             * Declared globally rather than per component, because the custom link surfaces
+             * (the home cards, the brand) are plain `<a>` and would each need their own rule.
+             * The 2px offset puts the ring on the page rather than on the control, which is
+             * what keeps it readable on top of the amber fill.
+             *
+             * `body ` is load-bearing, not tidiness: `ButtonBase` zeroes the outline from
+             * `.MuiButtonBase-root`, which is the same specificity as a bare `:focus-visible`
+             * and is injected after this, so it won. The descendant element lifts this above
+             * it. Measured — with the bare selector the plain links got a ring and every MUI
+             * button silently did not.
+             */
+            'body :focus-visible': {
+              outline: `2px solid ${theme.palette.accent.ring}`,
+              outlineOffset: '2px',
             },
             // Browser UA stylesheet sets `color: black` on <dialog> elements explicitly,
             // overriding any inherited theme colour. Reset it to inherit so MUI theme

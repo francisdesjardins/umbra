@@ -88,7 +88,14 @@ function useLiveControls() {
         </Typography>
       </Box>
 
-      <Stack direction="row" spacing={3} sx={{ width: '100%', alignItems: 'flex-start' }}>
+      {/* Three columns in one row is a desktop shape. On a phone the dialog is 337px and the
+          third column's buttons ended up 82px past its right edge — a row that cannot wrap has
+          to push something out. Stacked below `sm`; unchanged above it. */}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={3}
+        sx={{ width: '100%', alignItems: 'flex-start' }}
+      >
         {/* Counter Controls */}
         <Stack direction="column" spacing={1} sx={{ flex: 1, alignItems: 'center' }}>
           <Typography
@@ -223,7 +230,7 @@ export function ReactiveDepsExample() {
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout
-          slotProps={{ container: { sx: { width: 'min(600px, 92vw)' } } }}
+          slotProps={{ container: { sx: { width: 'min(600px, 100%)' } } }}
         >
           <MessageModal.Header>
             <MessageModal.Icon type={severity} sx={{ mb: 0 }} />

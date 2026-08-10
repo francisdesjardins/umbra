@@ -181,27 +181,32 @@ export function SlideCornerToastExample() {
 
   const { isVisible, handle } = toast;
 
-  // The countdown: one interval while the toast is open and the pointer is elsewhere. Closing
-  // on the tick that reaches zero keeps the visible number and the actual lifetime the same
-  // thing rather than two timers that drift apart.
+  // The countdown: one interval while the toast is open and the pointer is elsewhere.
   useEffect(() => {
     if (!isVisible || isPaused) {
       return;
     }
+    // The updater stays pure. React may run one during a render, and closing from inside it
+    // writes to the modal store mid-render — “Cannot update a component while rendering a
+    // different component”, logged on every toast that ran out on its own.
     const id = window.setInterval(() => {
       setRemaining((left) => {
-        const next = left - TICK_MS;
-        if (next <= 0) {
-          handle.close('timeout');
-          return 0;
-        }
-        return next;
+        return Math.max(0, left - TICK_MS);
       });
     }, TICK_MS);
     return () => {
       window.clearInterval(id);
     };
-  }, [isVisible, isPaused, handle]);
+  }, [isVisible, isPaused]);
+
+  // Closing is the side effect the tick implies, so it happens after the render that showed the
+  // zero — still the same tick, so the visible number and the actual lifetime remain one thing
+  // rather than two timers that drift apart.
+  useEffect(() => {
+    if (isVisible && remaining <= 0) {
+      handle.close('timeout');
+    }
+  }, [isVisible, remaining, handle]);
 
   return (
     <ExampleLayout result={result} modals={toast.Modal}>

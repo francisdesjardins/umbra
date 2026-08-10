@@ -68,7 +68,7 @@ export function MuiFormExample() {
     render: ({ action, error }) => {
       return (
         <FormModal.DefaultLayout
-          sx={{ minWidth: 'min(475px, 90vw)', maxWidth: 'min(800px, 92vw)', maxHeight: '70vh' }}
+          sx={{ minWidth: 'min(475px, 100%)', maxWidth: 'min(800px, 100%)', maxHeight: '70vh' }}
         >
           <FormModal.Header>
             <Shared.Heading>Create User</Shared.Heading>

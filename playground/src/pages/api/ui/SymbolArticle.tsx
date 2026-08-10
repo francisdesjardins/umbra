@@ -59,7 +59,7 @@ export const SymbolArticle = ({ symbol }: { readonly symbol: ApiSymbol }) => {
                 sx={{
                   display: 'flex',
                   color: 'text.disabled',
-                  '&:hover': { color: 'primary.main' },
+                  '&:hover': { color: 'accent.onSurface' },
                 }}
               >
                 <LinkIcon fontSize="small" />

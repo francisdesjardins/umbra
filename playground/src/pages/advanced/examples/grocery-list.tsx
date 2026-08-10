@@ -81,7 +81,7 @@ export function GroceryListExample() {
                 },
               })}
             >
-              Send ⏎
+              Send
             </Shared.Button>
           </MessageModal.Footer>
         </MessageModal.DefaultLayout>

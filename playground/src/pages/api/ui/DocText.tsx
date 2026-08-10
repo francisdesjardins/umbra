@@ -42,7 +42,7 @@ export const SymbolLink = ({
       hash={symbolAnchor(symbol.name)}
       sx={{
         fontFamily: 'monospace',
-        color: 'primary.main',
+        color: 'accent.onSurface',
         textDecoration: 'underline',
         textDecorationStyle: 'dotted',
         textUnderlineOffset: 3,

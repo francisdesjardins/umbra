@@ -1,3 +1,4 @@
+import { MoonPhase } from '@/shared/ui/MoonPhase';
 import { ThemeToggleButton } from '@/shared/ui/ThemeToggleButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
@@ -47,7 +48,7 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
             textDecoration: 'none',
             color: 'inherit',
             borderRadius: 1,
-            '&:hover .umbra-wordmark': { color: 'primary.main' },
+            '&:hover .umbra-wordmark': { color: 'accent.onSurface' },
           }}
         >
           <Box
@@ -63,21 +64,15 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
           >
             {/* The umbra is the total-shadow core of an eclipse — what a modal backdrop
                 casts over the page. Same badge geometry as the sibling stardust playground,
-                so the two read as a set. */}
-            <Typography
-              component="span"
-              sx={{
-                color: 'primary.contrastText',
-                fontWeight: 700,
-                // 20px, which is what `fontSize="small"` resolves to on the theme toggle beside
-                // it: both badges are 32px, so matching the glyph to that icon is what makes the
-                // two ends of the bar read as the same weight.
-                fontSize: 20,
-                lineHeight: 1,
-              }}
-            >
-              ◐
-            </Typography>
+                so the two read as a set.
+
+                20px, which is what `fontSize="small"` resolves to on the theme toggle beside
+                it: both badges are 32px, so matching the mark to that icon is what makes the
+                two ends of the bar read as the same weight. It is a size now rather than a
+                font size, so it is the same 20px in every font. */}
+            <Box sx={{ color: 'primary.contrastText', display: 'flex' }}>
+              <MoonPhase phase="first-quarter" size={20} />
+            </Box>
           </Box>
           {/* Not an <h1>: the page's own title owns that, and two h1s per page leaves
               screen-reader users without a unique document heading. */}

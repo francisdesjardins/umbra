@@ -141,7 +141,10 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
                         '&.Mui-selected': {
                           bgcolor: 'primary.main',
                           color: 'primary.contrastText',
-                          '&:hover': { bgcolor: 'primary.dark' },
+                          // Brighter, not deeper — `primary.dark` under the dark ink the fill
+                          // now carries lands at 2.5:1, so the entry you are on would become
+                          // the one you cannot read the moment you point at it.
+                          '&:hover': { bgcolor: 'primary.light' },
                           '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
                         },
                       }}

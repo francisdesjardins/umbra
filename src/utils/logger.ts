@@ -53,6 +53,23 @@ const storageKey = 'dialog:log';
 
 // ── Namespace colors (visible in browser devtools) ──────────────────────────
 
+/**
+ * Namespace colours, painted as a **filled badge** rather than as coloured text.
+ *
+ * The devtools console has two backgrounds and the page cannot choose between them: the console
+ * follows the *system* theme, not the theme a page picked or a user toggled in the app, and it can
+ * be set independently of both in devtools' own settings. So a namespace colour has to be legible
+ * on white and on `#1f1f1f` at once — and no colour is. The bar is 4.5:1 against a white console,
+ * which caps a colour's relative luminance at 0.183, and 4.5:1 against a dark one, which floors it
+ * at 0.237. The window is empty; the best any single value can do on both is about 4.06:1.
+ *
+ * Measured against that, every colour below used to fail on a light console — `action` at 2.16:1,
+ * `modal:click-outside` at 2.30:1 — and two of them failed on a dark one as well.
+ *
+ * A badge sidesteps the whole problem: the label's contrast is against the colour behind it, which
+ * this file owns, so it reads the same on either console. The `padding` and `border-radius` here
+ * were always written for a background; only the background was missing.
+ */
 const colors: Readonly<Record<string, string>> = {
   manager: '#4CAF50',
   modal: '#2196F3',
@@ -60,14 +77,24 @@ const colors: Readonly<Record<string, string>> = {
   'modal:keydown': '#009688',
   'modal:click-outside': '#00BCD4',
   action: '#FF9800',
-  outlet: '#AB47BC',
+  // Lifted a step off `#AB47BC`, which was the one hue the shared ink could not clear (4.36:1).
+  outlet: '#BA68C8',
 };
 
+/** One ink for every badge — near-black, and ≥5:1 on all seven. */
+const labelInk = '#10131a';
+
 const labelStyle = (color: string) => {
-  return `color:${color};font-weight:bold;padding:1px 4px;border-radius:2px`;
+  return `background:${color};color:${labelInk};font-weight:bold;padding:1px 4px;border-radius:2px`;
 };
 const resetStyle = 'color:inherit';
-const idStyle = 'color:#888;font-weight:normal';
+/**
+ * The sequence id is the one thing left that is bare text on the console's own background, and
+ * it cannot be a badge without turning every line into two of them. `#7e7e7e` is the exact
+ * luminance where the two console themes are equally bad — 4.06:1 on both — which is the best a
+ * single value can do, and better than the `#888` it replaces (3.54:1 on a light console).
+ */
+const idStyle = 'color:#7e7e7e;font-weight:normal';
 
 // ── Sequence id ─────────────────────────────────────────────────────────────
 
@@ -192,7 +219,9 @@ function resolveColor(namespace: string): string {
     return colors[namespace];
   }
   const idx = namespace.lastIndexOf(':');
-  return idx !== -1 ? resolveColor(namespace.slice(0, idx)) : '#999';
+  // The unknown-namespace fallback is a badge like the rest, so it takes the same ink: `#999`
+  // reached only 4.36:1 against it where every named colour clears 5.
+  return idx !== -1 ? resolveColor(namespace.slice(0, idx)) : '#B0B0B0';
 }
 
 export function createLogger(namespace: string): Logger {

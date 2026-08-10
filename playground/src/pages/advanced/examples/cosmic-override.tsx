@@ -22,14 +22,38 @@ export const WARP_ID = 'cosmic-warp';
  */
 const COSMIC_CSS = `
   dialog[data-modal-id="${WARP_ID}"] {
+    /* The corona is its own custom property so the phone can restate *only this layer*.
+       On a wide screen a circle sized to the closest side is the shape: the band clears the rim
+       and the fade dies at the nearest edge, with nothing cut. (The CSS default,
+       \`farthest-corner\`, is not — its radius on a 390×844 phone is ~465px against a 195px
+       half-width, so the band ran straight off both sides and the halo looked sliced.) */
+    --warp-corona:
+      radial-gradient(circle closest-side at 50% 50%,
+        transparent 28%, rgba(245,158,11,0.30) 46%, rgba(180,83,9,0.14) 66%, transparent 100%);
+
     --dialog-backdrop:
       radial-gradient(1.5px 1.5px at 20% 30%, #fde68a, transparent),
       radial-gradient(2px 2px at 75% 15%, #fbbf24, transparent),
       radial-gradient(1px 1px at 45% 70%, #fef3c7, transparent),
       radial-gradient(1.5px 1.5px at 90% 60%, #f59e0b, transparent),
-      radial-gradient(circle at 50% 50%,
-        transparent 24%, rgba(245,158,11,0.30) 33%, rgba(180,83,9,0.14) 44%, transparent 58%),
+      var(--warp-corona),
       radial-gradient(ellipse at 50% 50%, #1e293b 0%, #020617 72%);
+  }
+
+  /* Still a circle on a phone — what changes is which side it is sized to.
+     The composition is a *ratio*: on a desktop the ring sits at roughly four times the disc's
+     radius, and sizing to the closest side on a tall screen collapses that to two — a collar
+     around the eclipse with the screen dark above and below. \`farthest-side\` takes the
+     half-height instead, which restores the ratio and fills the height. The band then runs a
+     little past the left and right edges, and that is correct: what leaves the screen is the
+     soft outer falloff, not the ring. Scoped here on purpose — the desktop shape above is the
+     one that was wanted and is left exactly as it is. */
+  @media (max-width: 599.98px) {
+    dialog[data-modal-id="${WARP_ID}"] {
+      --warp-corona:
+        radial-gradient(circle farthest-side at 50% 50%,
+          transparent 28%, rgba(245,158,11,0.30) 46%, rgba(180,83,9,0.14) 66%, transparent 100%);
+    }
   }
 
   dialog[data-modal-id="${WARP_ID}"]::backdrop {
@@ -173,8 +197,26 @@ export function CosmicOverrideExample() {
         },
       });
 
+      // `60vh` is the warp core's proportion on a desktop and a trap on a short phone: the
+      // eclipse, the title, the paragraph and the buttons do not fit in 400px, and centred
+      // content that does not fit spills equally out of both ends — so the disc lost its top.
+      // Content-sized below `md` instead, and deliberately **not** a scroll container: the
+      // pulse is a 90px `box-shadow` on the disc, and a box that scrolls clips at its padding
+      // edge, which cut the glow off in a straight line above the eclipse.
       return (
-        <Box sx={{ ...panelSx, width: '80vw', maxWidth: 560, height: '60vh' }}>
+        <Box
+          sx={{
+            ...panelSx,
+            width: '80vw',
+            maxWidth: 560,
+            // Full height on a phone, content centred inside it (`panelSx` already centres on
+            // both axes). The pulse is a 90px `box-shadow` on the disc and the `<dialog>` is a
+            // scroll container, so it clips at its own edge: a content-sized panel put the disc
+            // within 30px of the top and the glow was cut off in a straight line above it.
+            // Filling the height gives the glow the room it needs inside the box that clips.
+            height: { xs: '100dvh', md: '60vh' },
+          }}
+        >
           <Box sx={eclipseSx} />
           <Typography
             variant="h5"
@@ -190,7 +232,7 @@ export function CosmicOverrideExample() {
           </Typography>
           <Stack direction="row" sx={{ gap: 1.5 }}>
             <Box component="button" sx={buttonSx} {...engage}>
-              {engage['data-loading'] ? 'Charging…' : 'Engage ⏎'}
+              {engage['data-loading'] ? 'Charging…' : <>Engage</>}
             </Box>
             <Box
               component="button"
@@ -233,9 +275,26 @@ export function CosmicOverrideExample() {
           sx={{
             ...panelSx,
             gap: 1.5,
+            // 20px, not the shared 24: `height: 100%` resolves against a host with no height of
+            // its own, so the panel is content-sized and the 24px band at each end pushed it
+            // past the dialog, which clips — taking the rim with it. The sides were never at
+            // risk, which is why only the top and bottom went missing.
+            p: 2.5,
             overflow: 'hidden',
             background: 'linear-gradient(160deg, rgba(30,41,59,0.92), rgba(2,6,23,0.96))',
-            border: '1px solid rgba(245,158,11,0.45)',
+            /**
+             * Inset, and opaque enough to survive being split.
+             *
+             * This panel fills a contained dialog whose box lands where the page's vertical
+             * rhythm puts it: measured at DPR 1, left and right were 41.000 and 334.000 — whole
+             * pixels, crisp — while top and bottom were 222.4375 and 567.875. A 1px band on a
+             * fractional edge is spread over two device pixels at ~56/44, and at the 0.45 alpha
+             * this used to carry each half lands near 0.25 against a dark gradient, which is
+             * nothing. The sides looked fine and the top and bottom looked absent, from one
+             * declaration. Alpha is the half that is actually fixable here — the geometry
+             * belongs to the ancestors — so the rim is drawn opaque and inset.
+             */
+            boxShadow: 'inset 0 0 0 1px rgba(245,158,11,0.9)',
             borderRadius: 3,
           }}
         >
@@ -260,7 +319,7 @@ export function CosmicOverrideExample() {
                 void warp.open();
               }}
             >
-              Enter the umbra
+              Enter
             </Box>
             <Box
               component="button"
@@ -269,7 +328,7 @@ export function CosmicOverrideExample() {
                 handle.close('closed');
               }}
             >
-              Close gate
+              Close
             </Box>
           </Stack>
         </Box>

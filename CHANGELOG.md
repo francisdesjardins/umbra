@@ -11,6 +11,177 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Fixed — WCAG 2.2 AA: 28 contrast failures, and no keyboard focus indicator anywhere
+
+Measured in a real Chrome across nine routes in both colour schemes, not read off the stylesheets
+— which is the point, because the two worst findings were invisible to a careful read of the
+theme. The tool is now [.claude/skills/wcag-audit](.claude/skills/wcag-audit/SKILL.md), so the
+number can be re-checked rather than re-argued.
+
+**Nothing drew a focus ring.** `ButtonBase` zeroes the UA outline and marks focus with
+`.Mui-focusVisible`, and in this theme that class resolved to no visual change at all — outline,
+box-shadow, border, background and both pseudo-elements byte-identical focused and not. Every
+button, sidebar entry and card link was focusable with nothing on screen to say which had it. One
+global rule fixes it, and the selector is `body :focus-visible` rather than `:focus-visible`:
+`.MuiButtonBase-root` is the same specificity and is injected later, so the bare selector gave
+plain links a ring and every MUI button silently nothing.
+
+**Amber cannot carry white text.** `#d97706` measures 3.19:1 against `#ffffff` and `#f59e0b` only
+2.15:1, so a contained button was the least readable thing on the page — worst in dark mode, where
+the fill is brightest. Deleting the hard-coded `contrastText` does not fix it: MUI's
+`contrastThreshold` defaults to 3, which is AA for large text, so white clears the bar and gets
+picked again. The threshold is 4.5 now and the ink is the eclipse's own body, `#0f172a`.
+
+That inverts the hover. Deepening the fill to `flameEdge` under a dark ink lands at 2.5:1 — the
+old hover was compensating for the old ink — so primary now **brightens** on hover, which is what
+a corona does anyway. The rule was also matched on the `contained` slot rather than on
+`color: 'primary'`, so it had been painting the red Delete buttons amber under the pointer.
+
+The rest, each measured and each fixed at its token rather than at its call sites:
+
+- **`primary.main` as text** is a new `palette.accent.onSurface` — the readable end of the ramp per
+  mode. The observation was already written down in `KindBadge`; it is a token now, and MUI's own
+  text and outlined variants read it too.
+- **`text.disabled` was tertiary text**, not inactive controls: 2.68:1 on white across eighteen
+  call sites. Raised in both modes. The step it leaves is small because below `secondary` there is
+  no room left above 4.5:1 — hierarchy under that line is size and weight, not fading.
+- **The syntax themes are corrected to the surface they are painted on.** `oneLight` and `oneDark`
+  are tuned for their own backgrounds; on this app's they shipped six failing token colours, the
+  worst at 2.58:1, and code samples are most of what this site is. `readableSyntaxStyle` walks each
+  token's **lightness** only, so each theme still reads as itself. Line numbers were 1.49:1.
+- **The vanilla templates** — the ones users copy — had 1.3:1 input borders (an input that only
+  exists once you click into it), a 2.85:1 hint, and the same white-on-amber button. Control
+  boundaries are now their own token, separate from the layout's hairline, which stays a hairline.
+
+### Fixed — the new focus ring was being cut in half, and the audit now says so
+
+A ring at `outline-offset: 2px` reaches 4px past a button's border box, and any ancestor that is
+not `overflow: visible` clips at its padding box. A modal footer is exactly that: a bounded box
+with its buttons flush against the edge, so **Delete** and **Cancel** lost the ring on their right
+and bottom sides — measured at a 0.0px gap, which reads as a rendering glitch rather than as the
+missing half of a focus indicator.
+
+Three places, three different reasons:
+
+- The MUI message layout reserves the room in the padding it already had, the way the vanilla form
+  modal does; `focusRingSpace` is now a shared token so the two agree.
+- The vanilla form's own reservation was **2px**, sized for the 1px box-shadow ring it used to be
+  the only one to draw. It is 4px.
+- A scrolling list needed `scroll-padding`, not padding: tabbing to a row scrolls it into view,
+  and scroll-into-view parks it flush against the edge — so the ring was clipped for whichever
+  button you had just reached, every time, no matter how much padding was there at rest.
+
+The audit reports clipping as its own finding now, and stops walking at an open `<dialog>`: a
+top-layer element is painted outside its DOM ancestors' boxes, so continuing up reported the card
+the dialog happens to be declared inside as a clipper. One real clip, one phantom above it.
+
+### Fixed — mobile: a 13×13 checkbox, and the reflow that was fine all along
+
+Audited at 390 and 320 CSS px, both schemes, with every modal, slide panel, toast and form error
+state opened — 81 surfaces, 65 of them inside a dialog. Two WCAG 2.2 criteria only bite there, and
+only one of them found anything:
+
+- **2.5.8 Target Size** — the vanilla slide panel's checkbox is a native input at 13×13, which is
+  a thumb against a fingernail. Sized to 24×24 rather than left to the spacing exception: that
+  exception is about crowding, and this is about being able to hit the control at all.
+- **1.4.10 Reflow** — clean. `scrollWidth` equals the viewport at 320px on every route. The two
+  things that reach past the edge are meant to: the mascot peeking in from the side, and the code
+  block scrolling inside its own `<pre>`, which is what the criterion asks for.
+
+### Fixed — four modals were cut off on the right, and only on a phone
+
+A `<dialog>` is capped by the user-agent at `calc(100% - 6px - 2em)` — **337px on a 375px phone**.
+A panel sized `width: min(600px, 92vw)` asks for 345 and is clipped by eight pixels, losing its
+right rounded corner. Above about 475px the two agree and nothing shows, which is why it read as
+deliberate on every desktop.
+
+The panel with steps, the reactivity demo and both form modals were sized this way (the forms
+through `min-width: 90vw`, which overflows the same way at 320px). All four size against `100%` —
+the dialog's own box — which cannot disagree with the dialog.
+
+**The audit was blind to it, and that is the more important half.** It compared boxes to the
+_viewport_, and nothing passed the viewport: the document never scrolled sideways and the reflow
+pass called all four clean while the modals were visibly cut. It now measures every painted
+descendant against **its own dialog's** box.
+
+Two more the same round: the panel header (`HeaderActionLayout`) gave the title 99px of 345 because
+its actions never shrink — it wraps now, with a floor under the content side. And the reactivity
+modal's three columns were one non-wrapping row, pushing the third 82px past the edge.
+
+### Removed — the ⏎ glyph on every button that declares a hotkey
+
+Seven of them. A shortcut is announced by `aria-keyshortcuts`, which the action already sets, so
+the glyph was a second announcement of the same thing — and telling a reader what key to press is
+the application's job, not a dialog demo's.
+
+### Fixed — the cosmic gate lost its top and bottom rim
+
+Measured at DPR 1: the panel's left and right edges land on 41.000 and 334.000 — whole pixels,
+crisp — and its top and bottom on 222.4375 and 567.875. A 1px band on a fractional edge is spread
+across two device pixels at roughly 56/44, and at the `0.45` alpha it carried each half arrives
+near 0.25 against a dark gradient, which is nothing. One declaration, two sides fine and two
+apparently absent. The geometry belongs to the ancestors; the alpha does not, so the rim is opaque
+and drawn inset. Its buttons are `Enter` and `Close` now — at two words each they wrapped, and a
+wrapped button is what made the panel tall enough to land where it did.
+
+### Fixed — the MUI form modal's bottom border was missing a pixel
+
+The trap `src/CLAUDE.md` documents, met in the wild: a `<dialog>` keeps `fit-content` and centres
+with `margin: auto`, so its box lands on a fraction of a pixel — measured at `top 300.734,
+bottom 599.25` — and this layout shares that rectangle exactly. Its 1px border therefore occupied
+the last fractional pixel, and the compositor kept the sides and dropped the bottom. Drawn as an
+inset shadow it lands on whole pixels regardless of where the box does. That is the "move the
+border inward" remedy, demonstrated where users copy from.
+
+### Fixed — the cosmic backdrop's corona was sliced, then marooned
+
+`radial-gradient(circle …)` with no size means `farthest-corner`: on a 390×844 phone the radius is
+about 465px against a 195px half-width, so the ring's band ran off both sides and the halo read as
+cut. Sizing the circle to the _closest_ side fits — and is then as small as the narrow dimension,
+a collar in the middle of a tall screen with the eclipse marooned in the dark.
+
+The composition is a **ratio**: on a desktop the ring sits at roughly four times the disc's
+radius. `farthest-side` takes the half-height instead of the half-width, which restores that ratio
+and fills the screen; what leaves the viewport sideways is the soft outer falloff, not the ring.
+Scoped to a media query so the desktop shape is untouched — the corona is its own custom property
+now, so the phone restates that one layer rather than the whole stack.
+
+The panel is `100dvh` below `md`, with its content centred. `60vh` is a desktop proportion, and on
+a 667px screen it put the disc within 30px of the top — where the pulse, a 90px `box-shadow`, was
+cut off in a straight line by the `<dialog>`, which is a scroll container and clips at its own
+edge. Filling the height gives the glow its room inside the box that clips it.
+
+### Fixed — the corner toast logged a React error every time it expired
+
+`handle.close('timeout')` was called from inside a `setRemaining` updater. React may run an
+updater during a render, and closing from there writes to the modal store mid-render — "Cannot
+update a component while rendering a different component", on every toast that ran out on its own.
+The updater is pure now and the close moved to an effect on the tick that reaches zero, so the
+visible number and the actual lifetime are still one thing rather than two timers that drift.
+
+### Fixed — the debug logger was unreadable on a light devtools console
+
+Every namespace colour failed 4.5:1 against a white console — `action` at 2.16:1 — and two failed
+on a dark one as well. It cannot be solved by picking better colours: the console follows the
+_system_ theme, which the page cannot read reliably, and the two 4.5:1 bars leave an empty window
+between luminance 0.183 and 0.237. No single colour is readable on both.
+
+So the namespace label is a filled **badge** now: its contrast is against the colour behind it,
+which this library owns, and the console theme stops mattering. The `padding` and `border-radius`
+were always there — only the background was missing.
+
+### Changed — the moon glyphs are an SVG, and the decorative ones are marked as such
+
+`◐`, `◑` and `●` were characters, so the page title inherited them at 48px and an `overline` label
+at 12px, and the geometric-shapes block is drawn to different optical weights per font — the disc
+and the half-disc were never the same size on screen. `MoonPhase` takes a `size` in px, uses
+`currentColor`, and is `aria-hidden`, which also stops a screen reader announcing “circle with left
+half black Umbra”.
+
+Same reason for the `⏎` on the seven buttons that carry a hotkey: it was inside the accessible
+name, so the shortcut was announced twice — once properly from `aria-keyshortcuts`, once as a
+stray return symbol.
+
 ### Changed — the microfrontend frame is two by two, and its four panels finally agree
 
 Four columns was a decision made against a viewport the frame never gets. Inside the playground's

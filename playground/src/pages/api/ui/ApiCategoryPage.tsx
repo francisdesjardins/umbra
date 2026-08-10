@@ -86,7 +86,7 @@ export const ApiCategoryPage = () => {
         description={`No API page is called “${categoryId}”.`}
       >
         <ApiLayout>
-          <RouterLink to="/api" sx={{ color: 'primary.main' }}>
+          <RouterLink to="/api" sx={{ color: 'accent.onSurface' }}>
             Back to the API reference
           </RouterLink>
         </ApiLayout>
@@ -112,7 +112,7 @@ export const ApiCategoryPage = () => {
       <ApiLayout activeCategory={category.id} activeSymbol={activeSymbol}>
         <Stack sx={{ gap: 2.5 }}>
           <Stack direction="row" sx={{ gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
-            <RouterLink to="/api" sx={{ color: 'primary.main', fontSize: '0.875rem' }}>
+            <RouterLink to="/api" sx={{ color: 'accent.onSurface', fontSize: '0.875rem' }}>
               API Reference
             </RouterLink>
             <Typography variant="body2" color="text.disabled">

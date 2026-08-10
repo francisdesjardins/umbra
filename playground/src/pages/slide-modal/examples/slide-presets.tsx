@@ -1,6 +1,7 @@
 import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
 import { useState } from 'react';
@@ -361,14 +362,30 @@ export function SlidePresetsExample() {
               position: 'relative',
               height: 220,
               mt: 0.5,
+              // Clips so the contained panel cannot escape its card — and so it also clips the
+              // focus ring of the row buttons that reach this edge. The scroll container inside
+              // reserves its own room; this reserves the rest, because both boxes clip.
               overflow: 'hidden',
+              py: focusRingSpace,
               border: 1,
               borderColor: 'divider',
               borderRadius: 1,
               bgcolor: 'background.paper',
             }}
           >
-            <Stack sx={{ height: '100%', overflowY: 'auto' }}>
+            {/* Tabbing to a row's button scrolls it into view, and scroll-into-view parks it
+                flush against the container edge — so the ring is clipped for whichever button
+                you just reached, every time. `scroll-padding` is the property for exactly that:
+                it tells the scroll the edge is four pixels further in. The padding covers the
+                resting case, where a row already sits at the edge with no scrolling involved. */}
+            <Stack
+              sx={{
+                height: '100%',
+                overflowY: 'auto',
+                py: focusRingSpace,
+                scrollPaddingBlock: focusRingSpace,
+              }}
+            >
               {ROWS.map((row) => {
                 return (
                   <Stack

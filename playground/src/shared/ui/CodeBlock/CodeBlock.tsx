@@ -1,9 +1,19 @@
+import { readableSyntaxStyle } from '@/shared/lib/readable-syntax';
 import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, useTheme } from '@mui/material';
 import { useCallback, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+/**
+ * The surface code is painted on — named once, because two things depend on it agreeing.
+ *
+ * The block paints it, and `readableSyntaxStyle` measures every token colour against it. A
+ * literal in each place is a pair that drifts silently: the tokens would be corrected for a
+ * background the code is no longer on, and the report would still come back green.
+ */
+const CODE_SURFACE = { light: '#ffffff', dark: '#1a1a1a' } as const;
 
 type CodeBlockProps = {
   code: string;
@@ -22,6 +32,7 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
   const [copied, setCopied] = useState(false);
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
+  const surface = CODE_SURFACE[theme.palette.mode];
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(code);
@@ -70,7 +81,7 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
         sx={{
           flex: 1,
           overflow: 'auto',
-          bgcolor: isDarkMode ? '#1a1a1a' : '#ffffff',
+          bgcolor: surface,
           '& pre': {
             margin: '0 !important',
             background: 'transparent !important',
@@ -100,7 +111,7 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
       >
         <SyntaxHighlighter
           language={language}
-          style={isDarkMode ? oneDark : oneLight}
+          style={readableSyntaxStyle(isDarkMode ? oneDark : oneLight, surface)}
           customStyle={{
             fontSize: '0.9rem',
             lineHeight: 1.8,
@@ -117,7 +128,10 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
           lineNumberStyle={{
             minWidth: '3.5em',
             paddingRight: '1.5em',
-            color: isDarkMode ? '#4a5568' : '#cbd5e0',
+            // A line number is text a reader is expected to use — to point at a line in a
+            // review, to match an error. `#cbd5e0` on white measured 1.49:1, which is a
+            // decoration pretending to be a number.
+            color: isDarkMode ? '#8b94a7' : '#6b7280',
             userSelect: 'none',
             textAlign: 'right',
             fontSize: '0.85rem',

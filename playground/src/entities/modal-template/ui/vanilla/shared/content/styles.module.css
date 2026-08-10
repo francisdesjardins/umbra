@@ -3,9 +3,13 @@
   /* Light mode */
   --content-text-primary: #1a1a1a;
   --content-text-secondary: #666666;
-  --content-text-disabled: #999999;
+  /* `.hint` is prose a reader is meant to read, not an inactive control, so 1.4.3 applies to it
+     in full. The #999999 it used to be measured 2.85:1 on the modal surface. */
+  --content-text-disabled: #6f6f6f;
   --content-alert-bg: rgba(2, 136, 209, 0.1);
-  --content-alert-text: #0277bd;
+  /* Measured against the tint above once composited (#e6f3fa), not against the page: the alert
+     paints its own background, and #0277bd on it is 4.24:1 — a near miss is still a miss. */
+  --content-alert-text: #01579b;
   --content-spacing: 16px;
   --content-spacing-sm: 8px;
 
@@ -22,7 +26,8 @@
 :root[data-mui-color-scheme='dark'] {
   --content-text-primary: rgba(255, 255, 255, 0.87);
   --content-text-secondary: rgba(255, 255, 255, 0.6);
-  --content-text-disabled: rgba(255, 255, 255, 0.38);
+  /* 0.38 is 3.57:1 on the dark surface — the same hint, the same miss, the other mode. */
+  --content-text-disabled: rgba(255, 255, 255, 0.55);
 }
 
 /* ========== Message ========== */

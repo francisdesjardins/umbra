@@ -40,7 +40,7 @@ const Highlight = ({
           <Box
             component="span"
             key={index}
-            sx={piece.hit ? { color: 'primary.main', fontWeight: 700 } : undefined}
+            sx={piece.hit ? { color: 'accent.onSurface', fontWeight: 700 } : undefined}
           >
             {piece.text}
           </Box>

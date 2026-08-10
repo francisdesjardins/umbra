@@ -1,4 +1,5 @@
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
+import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
 import { Box, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
 import { Link } from '@tanstack/react-router';
@@ -92,7 +93,7 @@ export const HomePage = () => {
                 and the action would never run — the exact prop-dropping the library warns about.
                 An action with no handler closes with its own reason, which is all this needs. */}
             <Button size="small" variant="contained" {...action('confirm', { hotkey: Key.Enter })}>
-              Confirm ⏎
+              Confirm
             </Button>
           </Stack>
         </Box>
@@ -130,9 +131,24 @@ export const HomePage = () => {
           <Typography
             variant="h3"
             component="h1"
-            sx={{ fontWeight: 800, letterSpacing: '-0.03em', fontSize: { xs: '2rem', md: '3rem' } }}
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              fontSize: { xs: '2rem', md: '3rem' },
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+            }}
           >
-            ◐ Umbra
+            {/* Sized to the heading's two steps rather than left to inherit them: the mark is
+                part of the lockup here, not a bullet like the ones further down. */}
+            <Box component="span" sx={{ display: { xs: 'none', md: 'flex' } }}>
+              <MoonPhase phase="first-quarter" size={40} />
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'flex', md: 'none' } }}>
+              <MoonPhase phase="first-quarter" size={28} />
+            </Box>
+            Umbra
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ mt: 1, fontWeight: 500 }}>
             Headless dialogs on the native top layer.
@@ -148,7 +164,7 @@ export const HomePage = () => {
           {lastReason ? (
             <Typography
               variant="caption"
-              sx={{ display: 'block', mt: 2, fontFamily: 'monospace', color: 'primary.main' }}
+              sx={{ display: 'block', mt: 2, fontFamily: 'monospace', color: 'accent.onSurface' }}
             >
               onClose → result.reason === &apos;{lastReason}&apos;
             </Typography>
@@ -187,14 +203,24 @@ export const HomePage = () => {
           ask for — full width, each of these fits. */}
       <Stack sx={{ gap: 3, mb: 5, minWidth: 0 }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" color="text.secondary">
-            ◐ Getting it
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
+          >
+            <MoonPhase phase="first-quarter" size={14} />
+            Getting it
           </Typography>
           <CodeBlock code={GETTING_IT} language="bash" />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" color="text.secondary">
-            ◑ The whole API of a confirm dialog
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
+          >
+            <MoonPhase phase="last-quarter" size={14} />
+            The whole API of a confirm dialog
           </Typography>
           <CodeBlock code={HELLO} language="tsx" />
         </Box>
@@ -202,23 +228,30 @@ export const HomePage = () => {
 
       {/* Where to go next — the three things worth seeing first. */}
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, pb: 6 }}>
-        {[
-          {
-            to: '/getting-started',
-            title: '● Start here',
-            body: 'Open, render, close — and the typed reason that comes back.',
-          },
-          {
-            to: '/advanced',
-            title: '◐ Stacking and focus',
-            body: 'One Escape closes one modal; a shared hotkey fires at one level only.',
-          },
-          {
-            to: '/api',
-            title: '◑ API reference',
-            body: 'Generated from the source, so it cannot drift from the code.',
-          },
-        ].map((card) => {
+        {(
+          [
+            {
+              to: '/getting-started',
+              phase: 'full',
+              title: 'Start here',
+              body: 'Open, render, close — and the typed reason that comes back.',
+            },
+            {
+              to: '/advanced',
+              phase: 'first-quarter',
+              title: 'Stacking and focus',
+              body: 'One Escape closes one modal; a shared hotkey fires at one level only.',
+            },
+            {
+              to: '/api',
+              phase: 'last-quarter',
+              title: 'API reference',
+              body: 'Generated from the source, so it cannot drift from the code.',
+            },
+            // `satisfies`, so each `phase` narrows to its literal instead of widening to
+            // `string` — the array is the only thing that knows which moon a card carries.
+          ] satisfies readonly { to: string; phase: Phase; title: string; body: string }[]
+        ).map((card) => {
           return (
             <Box
               key={card.to}
@@ -236,7 +269,11 @@ export const HomePage = () => {
                 '&:hover': { borderColor: 'primary.main', transform: 'translateY(-2px)' },
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              <Typography
+                variant="subtitle1"
+                sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                <MoonPhase phase={card.phase} size={16} />
                 {card.title}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -247,10 +284,15 @@ export const HomePage = () => {
         })}
       </Stack>
 
+      {/* Decoration, and marked as such: a screen reader reading “light shade medium shade dark
+          shade” at the end of the page is noise. The `opacity` it used to carry is gone with it —
+          multiplied into `text.secondary` it measured 4.3:1, and an ornament is not worth a
+          contrast exception when the same tone one step up looks the same. */}
       <Typography
+        aria-hidden="true"
         align="center"
         color="text.secondary"
-        sx={{ letterSpacing: '0.5em', pb: 4, opacity: 0.6 }}
+        sx={{ letterSpacing: '0.5em', pb: 4 }}
       >
         ░ ▒ ▓ ● ▓ ▒ ░
       </Typography>

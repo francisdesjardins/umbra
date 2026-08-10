@@ -96,11 +96,27 @@
 }
 
 /* ========== Checkbox Label ========== */
+/* The label is the target, not the box.
+   A native checkbox renders 13×13, under the 24×24 WCAG 2.2 asks of a target (2.5.8) — a thumb
+   against a fingernail on a phone. Sizing the input itself to 24 does clear the bar and looks
+   wrong beside the MUI panel: measured, MUI's is a 38px button around a 24px icon, so its mark
+   is light and its hit area is generous, while a native input at 24 is 24px of solid square.
+   Growing the label instead gets both — clicking a label toggles its input, so the target is
+   this whole row at 32px, and the box stays the weight of the one next door. */
 .checkboxLabel {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  min-block-size: 32px;
+}
+
+.checkboxLabel input[type='checkbox'] {
+  inline-size: 18px;
+  block-size: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary, #d97706);
+  margin: 0;
 }
 
 /* ========== Button Container ========== */
