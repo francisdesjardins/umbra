@@ -27,12 +27,12 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 
 ## ◐ Entry points
 
-| Specifier       | Contents                                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `umbra`         | The manager (`dialogManager`), the placement and style tables, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`. **No framework.** |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet` — **plus everything above**, so a React app imports one path.                                  |
-| `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                    |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.           |
+| Specifier       | Contents                                                                                                                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `matchesHotkey`, `formatHotkeyLabel`) and `setLogLevel`. **No framework.** |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                             |
+| `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                         |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — and `bindAction` for its buttons. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                             |
 
 The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding
@@ -58,13 +58,17 @@ does the half a renderer would: attach the handler, then keep `disabled`, `data-
 - **Headless** — No UI opinions; use any component library or plain HTML/CSS
 - **Framework-agnostic core** — React is a binding, not the library; a second binding is a sibling file
 - **Primitive + template layers** — Core `useModal` powers `useMessageModal`, `useSlideModal`
-- **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ onClick, disabled, 'data-loading', 'aria-keyshortcuts'? }` to spread. Every field is a DOM prop, so the same set fits a bare `<button>`, MUI's, or your own — the core never guesses what your buttons are called
+- **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ type, onClick, disabled, 'data-loading', 'aria-busy', 'aria-keyshortcuts'?, 'data-focus-on-open'? }` to spread. Every field is a DOM prop, so the same set fits a bare `<button>`, MUI's, or your own — the core never guesses what your buttons are called
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
+- **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the modal closes, so a dialog dismissed while it loads drops the work it started
+- **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
 - **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
 - **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
-- **Zero runtime dependencies** — `react` and `react-dom` are _optional_ peers, needed only by `./react`
+- **Shadow DOM** — a `<dialog>` inside a web component gets the library's backdrop (the sheet is adopted per root, since `adoptedStyleSheets` does not cross the boundary) and its focus policy asks that root rather than the document
+- **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `modal:open` / `modal:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
+- **Zero runtime dependencies** — `react` / `react-dom` and `solid-js` are _optional_ peers, each needed only by its own binding; `./vanilla` and the root need neither
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
 
@@ -81,8 +85,8 @@ yarn dev
 ```
 
 **Both frameworks are optional peers.** The root is plain TypeScript and resolves with neither
-installed; `react` / `react-dom` (`^19.2.4`) are needed only by `umbra/react`, and `solid-js`
-(`^1.9.14`) only by `umbra/solid`. `umbra/vanilla` needs neither, and resolves wherever the root
+installed; `react` / `react-dom` (`^19.0.0`) are needed only by `umbra/react`, and `solid-js`
+(`^1.9.0`) only by `umbra/solid`. `umbra/vanilla` needs neither, and resolves wherever the root
 does — a plain page, an Astro island, a web component, a server-rendered app with a sprinkle of
 JavaScript.
 
@@ -146,9 +150,8 @@ const modal = useModal<User, 'submit' | 'cancel'>({
         {...action('submit', (close) => {
           close(draft);
         })}
-        disabled={hasRunningAction}
       >
-        Save
+        {hasRunningAction ? 'Saving…' : 'Save'}
       </button>
     </>
   ),
@@ -211,10 +214,15 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `useModal` — Base primitive
 - `useMessageModal` / `useSlideModal` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
+- `dialogPlacement` / `ModalAnimation` — where a non-modal dialog sits, and how any of them animates
+- `ModalOutlet` — render registered modals from one place instead of placing `{modal.Modal}`
+- `umbra/solid` — the three differences from the React chapter, all of them the renderer's, plus `fromStore`
+- `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, and reading state without a renderer
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
-- `dialogManager` — Imperative open/close
+- `dialogManager` — Imperative open/close, and the `lookup` query API
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
+- `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `matchesHotkey`, `HotkeyDef`)
 - Debug logging
@@ -262,14 +270,17 @@ yarn type-check      # TypeScript strict check
 yarn test            # Unit + component tests
 yarn lint            # oxlint + ESLint
 yarn format          # Prettier
+yarn check           # type-check + lint + format + docs, the pre-commit gate
+yarn verify:all      # lint + type-check + build + package checks, against the built artifact
 ```
 
 ## ◑ How this repo is run
 
 Friendly warning, so nothing here surprises you: **I commit to `main`.** No release branches, no
 deprecation cycles, and **no semver** — a name can change between two commits if a better one
-turns up, and it does. This week `isOpen` became `isVisible` and `onOpen` became `prepare`,
-because both were describing themselves inaccurately.
+turns up, and it does. The last three naming passes turned `isOpen` into `isVisible`, `onOpen`
+into `prepare` and `ModalInfo.modalType` into `template`, because each was describing itself
+inaccurately.
 
 That is a deliberate trade, not neglect. The library is not published, so nobody's build breaks
 when a name improves; what you get instead is a surface that says what it means. The day I decide
