@@ -2,11 +2,19 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Fallback height, used for the instant between mount and the first measurement.
+ * Height for the instant between mount and the first measurement — the two-column layout's,
+ * measured, rather than a number chosen to be inoffensive.
  *
- * Not a guess at the content — just enough that the frame is not a sliver while it loads.
+ * It has to be close, and `loading="lazy"` is why: the frame is fetched as it scrolls into view,
+ * so the correction from this value to the real one lands exactly when the reader arrives at it.
+ * Wrong by four hundred pixels, that is the page walking down under them at the worst moment —
+ * which is what a placeholder left over from the four-column layout was doing.
+ *
+ * The common case, not a universal one: below 560px the host goes single-column and is nearly
+ * twice this. A phone corrects upward on the first frame; it is the desktop read that this
+ * spares.
  */
-const INITIAL_HEIGHT = 470;
+const INITIAL_HEIGHT = 869;
 
 /**
  * Four microfrontends, one shared manager, in an iframe.

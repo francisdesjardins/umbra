@@ -60,8 +60,9 @@ filtered by `relative(root, id).startsWith('src/')`. Vite hands module ids with 
 
 Measured both ways with the coverage cache cleared between, so the cache could not be the
 explanation: without the normalisation, 240 tests pass and 0 counter files exist; with it, the
-same 240 produce **90.17% of 1210 statements over 46 files** — within four hundredths of the
-90.13% recorded here yesterday, which is the confirmation that only the filter was ever wrong.
+same 240 produce **90.17% of 1210 statements over 46 files**. The 90.13% and 88.81% recorded here
+yesterday are within a rounding error of that, so they were real numbers — but they cannot have
+been measured on a Windows checkout, because on one the filter matches nothing at all.
 
 The fix is `.replaceAll('\\', '/')` on the one line. The finding is the class: a path predicate
 comparing a `path.relative` result against a POSIX literal is broken on half the machines that
