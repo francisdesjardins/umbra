@@ -35,6 +35,7 @@ spelling — a synonym for any of them is a bug report, not a style preference.
 | `showModal()` vs `show()`     | **modal / non-modal**         | blocking / non-blocking                    |
 | Which template built a dialog | **`template`**                | `modalType`, kind, category                |
 | An unconditional transition   | **`beginOpen`**               | `requestOpen` (that one asks and may fail) |
+| Closed with nobody acting     | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`   |
 | The work gating an open       | **`prepare` / `isPreparing`** | `onOpen` (a notification, not a gate)      |
 
 Two more that are easy to blur:
@@ -310,6 +311,26 @@ no second hook, and nothing to pass into `useModal`.
   run.
 - Aggregated `hasRunningAction` / `error` are pre-computed at write time and reach both the render args
   and the hook's return, so a trigger button outside the dialog can read them.
+- **`action.isRunning(reason)` is the per-action half**, and it hangs on the factory rather than
+  joining `ModalRenderArgs` for two reasons that are the same reason: the argument already says
+  whose state is being asked for (which is why `ActionState.isRunning` is one word and the
+  aggregate has to name its scope), and the factory is where actions live. It is built in
+  `core/action-factory.ts` over the same `readState` the live props use, so **neither hook binding
+  contributes a line** — except Solid's, which re-wraps the factory to attach `undeclare` and must
+  therefore re-attach the property; a forwarding arrow silently drops it, which is what the Solid
+  component test pins. `./vanilla` has no factory, so the controller carries the noun:
+  `isActionRunning(reason)`.
+- **`'dismiss'` is reserved, and the reservation is a type.** [core/dismiss-reason.ts](core/dismiss-reason.ts)
+  holds `DISMISS_REASON` and `DismissReason` — the constant for the two places a literal would sit
+  unchecked (the manager's DOM event details type `reason` as `string`), the type for everything
+  else: every producer takes `TReason | DismissReason`, so editing that one line stops the whole
+  library compiling rather than leaving one path spelling it the old way. Actions take
+  `ActionReason<TReason>` = `Exclude<TReason, DismissReason>`, so no action may be _named_ it —
+  `Exclude` rather than a comment because a caller may legitimately declare `'dismiss'` in their
+  own union and would otherwise get an action they can name. `handle.close('dismiss')` stays
+  legal: reporting a dismissal is not declaring an action. What a "dismiss action" would have
+  bought already has two unambiguous spellings — `hotkey: Key.Escape` on a named action for the
+  key, and `onClose` for every dismissal path including the two that cannot run a handler.
 
 ### Hotkey System
 

@@ -11,6 +11,85 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Added — `action.isRunning(reason)`, the per-action state away from its button
+
+The engine has always known which action is running; only the button was told. `data-loading`
+carries it in the props you spread, so a header, a field or a status line — anything not spreading
+those props — had `hasRunningAction` and no way to tell two waits apart. Publishing and saving a
+draft are not the same wait.
+
+The request that started this was `hasRunningAction.is('save')`, and it is worth recording why it
+is not that. **No falsy value in JavaScript can carry a method** — `false`, `0`, `''`, `null`,
+`undefined` and `NaN` take no properties, and every object, `new Boolean(false)` included, is
+truthy. `if (hasRunningAction)`, `!hasRunningAction`, `disabled={hasRunningAction}` and
+`<Show when>` would all have gone silently always-true, with no type error to catch it, and
+`Symbol.toPrimitive` does not help: it governs `+x` and `` `${x}` ``, never the truthiness of
+`if (x)`.
+
+So the same ergonomics, on the one thing in the render args that is **already an object**: the
+`action` factory. `action.isRunning('publish')` reads as it was meant to, and the reason it works
+there is the reason it is right there — the argument says whose state is being asked for, which is
+why `ActionState.isRunning` is one word while the aggregate has to spell out its scope.
+
+It lives in [core/action-factory.ts](src/core/action-factory.ts), over the same `readState` the
+live props already use, so **neither hook binding contributes a line** and both are reactive by
+construction rather than by two implementations agreeing. One exception, and it is the interesting
+one: Solid re-wraps the factory to attach `undeclare` on cleanup, and a wrapper that forwards only
+the _call_ drops what hangs off it. Its component test fails without the re-attach — confirmed by
+breaking it on purpose.
+
+`./vanilla` has no factory to hang it on, so the controller carries the noun:
+`isActionRunning(reason)`. `bindAction` already keeps the button in step; this is the same fact for
+everything that is not the button.
+
+Not `stateOf(reason)`, which would have carried the per-action **error** too. That is a second
+feature with its own questions (does the aggregated `error` stay? does an action's error clear on
+retry?) and this one does not block it.
+
+### Changed — breaking: `'dismiss'` is reserved, and it is a type now
+
+Asking whether `'dismiss'` belonged in `isRunning`'s union turned up something worse than an
+answer. It was reachable — `action('dismiss', handler)` was a legal declaration — and that made it
+**two doors producing one reason**:
+
+- the button, which ran a handler and closed with `'dismiss'`;
+- the dismiss key, which consults the engine by _hotkey_ and never by name, so it closed the store
+  directly and the handler never ran.
+
+Both arrived at `onClose` as `reason: 'dismiss'`, indistinguishable. Every other action is exempt
+from this — press Escape with a `'cancel'` button on screen and the close says `'dismiss'`, so the
+two paths are legible. Only the name that collides with the library's own was ambiguous. Confirmed
+in a browser before changing anything, with a handler that recorded whether it ran.
+
+`'dismiss'` now means one thing: **the modal was dismissed rather than acted on** — the dismiss
+key, a backdrop click, a click outside a non-modal panel, or teardown. Actions take
+`ActionReason<TReason>` = `Exclude<TReason, DismissReason>`, so no action may be _named_ it.
+`Exclude` rather than a doc note, because declaring `'dismiss'` in your own union is legitimate —
+it is a reason `onClose` sees either way, and writing it out makes the `switch` honest — and
+without the exclusion that declaration also handed you an action you could name.
+
+Nothing is lost. Both halves of what a "dismiss action" bought already have unambiguous spellings,
+and one of them is the precedent that raised the question: **a key that should run your handler
+instead of dismissing is `action('cancel', { hotkey: Key.Escape, onAction })`** — the dismiss key
+already defers to it, and dispatch is a real click, so running state and veto apply. And work that
+must happen on _every_ dismissal, including the backdrop click and the teardown that can never run
+a handler, belongs in `onClose`, the one door every close passes through. Extending the key's
+deference to a name would have given three behaviours where there are two.
+
+**The reservation is enforced by the type system, not by prose.** `'dismiss'` was written as a
+bare literal 34 times across 13 source files; it is now [core/dismiss-reason.ts](src/core/dismiss-reason.ts),
+and both halves earn their place. The **type** is what makes a change impossible to ignore — every
+producer takes `TReason | DismissReason`, so editing that one line stops the library compiling
+rather than leaving one path spelling it the old way. The **constant** covers what the type cannot:
+the manager's DOM event details type `reason` as a plain `string`, where a literal sat unchecked.
+Both ship from the root, so a consumer comparing against it never retypes the string either.
+
+Breaking for three call sites, all of which were saying something they did not mean. The failure
+modal's Dismiss button is `action('acknowledge')` — and that hook now declares its reasons, which
+it should have all along. The corner toast's Dismiss button became `handle.close('dismiss')`,
+joining the ✕ beside it that already did: a control whose whole meaning is "I did not act on this"
+is a close you _report_, not an action you declare, and it wanted nothing an action provides.
+
 ### Added — a note on the tooling, in the README
 
 Who wrote this, said plainly: Claude typed it, nearly 30 years of doing it by hand directed it.

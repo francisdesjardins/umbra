@@ -15,6 +15,10 @@ import {
   MODAL_ID as REACTIVE_DEPS_ID,
   ReactiveDepsExample,
 } from '@/pages/modal-actions/examples/reactive-deps';
+import {
+  MODAL_ID as PER_ACTION_STATE_ID,
+  PerActionStateExample,
+} from '@/pages/modal-actions/examples/per-action-state';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { Alert, Typography } from '@mui/material';
 
@@ -60,6 +64,14 @@ export const ModalActionsPage = () => {
             modalId={DELETE_ITEM_ID}
             tryLabel="Delete Document"
             example={<DeleteItemModalExample />}
+          />
+          <ExampleCard
+            title="Which action is running?"
+            description="Spreading an action's props gives that button data-loading, and for the button that is enough — but the header, the locked field and the notice are not that button, and hasRunningAction only tells them that something is running. action.isRunning('publish') is the same fact for everything else: publishing locks the release note, saving a draft leaves it editable, and every button is disabled either way."
+            codeKey="per-action-state"
+            modalId={PER_ACTION_STATE_ID}
+            tryLabel="Open"
+            example={<PerActionStateExample />}
           />
         </ExampleGrid>
       </ExampleSection>

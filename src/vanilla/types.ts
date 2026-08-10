@@ -1,4 +1,4 @@
-import type { ActionOptions } from '../actions/types.js';
+import type { ActionOptions, ActionReason } from '../actions/types.js';
 import type { DialogStyle } from '../core/style.js';
 import type {
   AwaitedClose,
@@ -96,9 +96,22 @@ export type DialogController<TData = void, TReason extends string = string> = {
    */
   readonly bindAction: (
     button: HTMLButtonElement,
-    reason: TReason | 'dismiss',
+    reason: ActionReason<TReason>,
     options?: ActionOptions<TData>
   ) => () => void;
+  /**
+   * Whether **that** action is running.
+   *
+   * The hook bindings hang this on their `action` factory, where the argument alone says whose
+   * state is being asked for. There is no factory here — actions are bound, not rendered — so
+   * the name carries the noun instead.
+   *
+   * `bindAction` already keeps `disabled`, `data-loading` and `aria-busy` on the button itself;
+   * this is the same fact for everything that is *not* that button — a spinner in the header, a
+   * form field, a status line. Read it from a {@link DialogController.subscribe} listener, which
+   * fires on every action transition.
+   */
+  readonly isActionRunning: (reason: ActionReason<TReason>) => boolean;
   /** Subscribe to every state change — the dialog's phases and its actions alike. */
   readonly subscribe: (listener: () => void) => () => void;
   /** Read the current state. */

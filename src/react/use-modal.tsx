@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { createActionFactory } from '../core/action-factory.js';
+import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
 import {
@@ -49,8 +50,9 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * @typeParam TReason - The reasons this modal closes with. Left at `string` any reason is
  * accepted; declaring a union (`useModal<Result, 'save' | 'cancel'>`) rejects a mistyped
  * reason, autocompletes it, and makes a `switch` on `result.reason` in `onClose` exhaustive.
- * `'dismiss'` is always allowed — the library produces it on Escape, backdrop click and
- * teardown.
+ * `'dismiss'` is always among them — the library produces it on Escape, backdrop click and
+ * teardown — and is the one reason **no action may be named**, so that a close carrying it
+ * always means the same thing. See `DismissReason`.
  *
  * @example
  * const { openAndWait, Modal } = useModal<void, 'ok'>({
@@ -290,7 +292,7 @@ export function useModal<TData = void, TReason extends string = string>(
         dismissWhilePreparing,
       })
     ) {
-      store.close('dismiss');
+      store.close(DISMISS_REASON);
     }
   };
 

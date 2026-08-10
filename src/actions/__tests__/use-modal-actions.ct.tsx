@@ -19,6 +19,7 @@ import {
   VanillaAriaKeyshortcutsHarness,
   BrokenAriaKeyshortcutsHarness,
   FocusOnOpenHarness,
+  ActionIsRunningHarness,
 } from './use-modal-actions.story';
 
 /** Distinctive close payload — must never appear in a captured log line. */
@@ -382,8 +383,8 @@ test.describe('action identity and payload', () => {
   }) => {
     await mount(<ReasonSourceHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await page.getByRole('button', { name: 'Dismiss' }).click();
-    await expect(page.getByTestId('reason-source-last')).toHaveText('dismiss');
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByTestId('reason-source-last')).toHaveText('close');
   });
 
   test("an action's declared payload reaches onClose", async ({ mount, page }) => {
@@ -397,7 +398,7 @@ test.describe('action identity and payload', () => {
   test('an action that closes bare carries no payload', async ({ mount, page }) => {
     await mount(<ReasonSourceHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await page.getByRole('button', { name: 'Dismiss' }).click();
+    await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByTestId('reason-source-id')).toHaveText('none');
   });
 
@@ -636,5 +637,35 @@ test.describe('focus after a failed action follows the button that ran it', () =
         });
       })
       .toBe('foo-confirm');
+  });
+});
+
+test.describe('action.isRunning — the per-action question, away from the button', () => {
+  test('names which action is running, where the aggregate only says that one is', async ({
+    mount,
+    page,
+  }) => {
+    // The header, the field and the cancel readout all sit outside the props of the action that
+    // is running. Before this they had `hasRunningAction` — true, and silent about which.
+    await mount(<ActionIsRunningHarness />);
+    await page.getByRole('button', { name: 'Open' }).click();
+
+    await expect(page.getByTestId('status')).toHaveText('idle');
+    await expect(page.getByTestId('field')).toBeEnabled();
+
+    await page.getByTestId('save-btn').click();
+
+    await expect(page.getByTestId('status')).toHaveText('saving');
+    await expect(page.getByTestId('aggregate')).toHaveText('true');
+    // The discrimination the aggregate cannot make: cancel is not the one running.
+    await expect(page.getByTestId('cancel-running')).toHaveText('false');
+    await expect(page.getByTestId('field')).toBeDisabled();
+
+    // Inside the dialog: the top layer swallows a click on anything outside it.
+    await page.getByTestId('release-btn').click();
+
+    // The handler closes on its own reason once released, so the modal goes and takes its
+    // readouts with it — which is also the running state ending.
+    await expect(page.getByTestId('modal-action-is-running')).not.toBeVisible();
   });
 });

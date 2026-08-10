@@ -87,7 +87,7 @@ export function SlideCornerToastExample() {
     prepare: () => {
       returnFocusTo.current?.focus();
     },
-    render: ({ action, handle }) => {
+    render: ({ handle }) => {
       return (
         <Box
           // The announcement, and the only thing here assistive technology reacts to.
@@ -150,7 +150,17 @@ export function SlideCornerToastExample() {
             </IconButton>
           </Stack>
           <Stack direction="row" sx={{ px: 2, pb: 1.5, gap: 1, justifyContent: 'flex-end' }}>
-            <Shared.Button size="small" variant="text" {...action('dismiss')}>
+            {/* `handle.close('dismiss')`, not `action('dismiss')`: `'dismiss'` is the
+                library's reason for a toast nobody acted on, so it is a close you *report*
+                rather than an action you declare — and this button wants nothing an action
+                provides (no hotkey, no running state, nothing to disable). */}
+            <Shared.Button
+              size="small"
+              variant="text"
+              onClick={() => {
+                handle.close('dismiss');
+              }}
+            >
               Dismiss
             </Shared.Button>
           </Stack>

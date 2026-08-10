@@ -25,6 +25,8 @@ export function VanillaBasicHarness() {
   const [controller, setController] = useState<Bound<'confirm' | 'cancel'> | null>(null);
   const [lastReason, setLastReason] = useState('none');
   const [visible, setVisible] = useState('closed');
+  const [confirmRunning, setConfirmRunning] = useState('no');
+  const [cancelRunning, setCancelRunning] = useState('no');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -58,9 +60,13 @@ export function VanillaBasicHarness() {
       }),
     ];
 
-    // Nothing re-renders the caller's markup, so state reaches the page the vanilla way.
+    // Nothing re-renders the caller's markup, so state reaches the page the vanilla way. The
+    // subscription covers the actions as well as the phases, which is what makes the per-action
+    // reads below live without a second listener.
     const stop = bound.subscribe(() => {
       setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
+      setConfirmRunning(bound.isActionRunning('confirm') ? 'yes' : 'no');
+      setCancelRunning(bound.isActionRunning('cancel') ? 'yes' : 'no');
     });
 
     setController(bound);
@@ -79,6 +85,8 @@ export function VanillaBasicHarness() {
     <>
       <span data-testid="is-visible">{visible}</span>
       <span data-testid="last-reason">{lastReason}</span>
+      <span data-testid="confirm-running">{confirmRunning}</span>
+      <span data-testid="cancel-running">{cancelRunning}</span>
       <button
         data-testid="open"
         onClick={() => {

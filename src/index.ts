@@ -65,6 +65,13 @@ export type {
 // can hand you one.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
 
+// The library's own close reason, as a value and as a type. Public because `CloseResult.reason`
+// is `TReason | DismissReason` — a consumer who can name the result must be able to name that
+// half of it — and because a caller comparing against it should not be retyping the string the
+// library reserves. See `core/dismiss-reason.ts` for why it is reserved.
+export { DISMISS_REASON } from './core/dismiss-reason.js';
+export type { DismissReason } from './core/dismiss-reason.js';
+
 // Placement is the one piece of a binding's rendering job that is not framework work: it is a
 // table of CSS, and getting it wrong is what makes an inline non-modal dialog jump. Shipping it
 // from the root means the React binding, a future one, and a host written by hand all position

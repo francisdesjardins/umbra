@@ -3,6 +3,7 @@ import { canDismiss } from '../utils/dismiss-gate.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
 import { isBackdropClick, type BackdropClickEvent } from './dialog-props.js';
+import { DISMISS_REASON } from './dismiss-reason.js';
 import { finalizeModalClose } from './finalize-close.js';
 import { createModalStore } from './modal-store.js';
 import { dialogPlacement, type DialogPlacement } from './placement.js';
@@ -133,7 +134,7 @@ export function createModalRuntime<TData = void, TReason extends string = string
   };
 
   const handle: ModalHandle<TData, TReason> = {
-    close: (reason = 'dismiss', data?: TData) => {
+    close: (reason = DISMISS_REASON, data?: TData) => {
       store.close(reason, data);
     },
   };
@@ -222,7 +223,7 @@ export function teardownModal(
     // If not already closing, this initiates the close with a 'dismiss' reason so `closeResult`
     // is set for both `onClose` and the close resolvers (it also cancels any pending open frame).
     // If already closing, it is a no-op and `closeResult` keeps the original reason.
-    store.close('dismiss');
+    store.close(DISMISS_REASON);
 
     finalizeModalClose(store, dialog, (error) => {
       log.error('onClose callback failed during cleanup', { id: modalId, error: error.message });

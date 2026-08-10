@@ -1,4 +1,17 @@
+import type { DismissReason } from '../core/dismiss-reason.js';
 import type { KeyValue } from '../utils/keys.js';
+
+/**
+ * What an action may be *named* — every reason the modal declares, except the one the library
+ * reserves for itself.
+ *
+ * `'dismiss'` is excluded rather than merely discouraged, and `Exclude` rather than a comment
+ * because a caller who declares it in their own union (`useModal<void, 'save' | 'dismiss'>` — a
+ * legitimate thing to write, since it is a reason `onClose` will see) would otherwise get an
+ * action they can name. See {@link DismissReason} for what it costs: two doors producing one
+ * reason, one of which runs a handler and one of which cannot.
+ */
+export type ActionReason<TReason extends string> = Exclude<TReason, DismissReason>;
 
 // ── Hotkey ───────────────────────────────────────────────────────────────────
 
@@ -207,10 +220,46 @@ export type ActionOptions<TData = never> = {
  *   );
  * };
  */
-export type ActionFactory<TData = never, TReason extends string = string> = (
-  reason: TReason | 'dismiss',
-  handlerOrOptions?: ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
-) => ActionButtonProps;
+export type ActionFactory<TData = never, TReason extends string = string> = {
+  (
+    reason: ActionReason<TReason>,
+    handlerOrOptions?:
+      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+  ): ActionButtonProps;
+  /**
+   * Whether **that** action is running — the per-action question, asked away from its button.
+   *
+   * `data-loading` is this same fact *on* the button, and until now it was the only form of it:
+   * a spinner in the dialog's header, a field disabled while one particular action runs, a
+   * label that changes for `'save'` but not for `'cancel'` — all of them had the state they
+   * needed sitting in a props object they were not the ones spreading.
+   *
+   * It hangs here rather than joining the render args because the factory is where actions
+   * live, and because of the rule the aggregate follows in reverse: `hasRunningAction` has to
+   * name its scope, a per-action flag does not — the argument already says whose. Same reason
+   * the engine's own per-action `isRunning` is one word.
+   *
+   * Asking never declares. Only calling the factory does that.
+   *
+   * It takes {@link ActionReason}, the same union declaring does, so `'dismiss'` is not among
+   * them: the library's own dismissal closes the store directly and never runs an action, which
+   * means there would be nothing to answer about.
+   *
+   * @example
+   * render: ({ action }) => {
+   *   return (
+   *     <header>
+   *       <button {...action('save', save)}>Save</button>
+   *       {action.isRunning('save') ? <Spinner /> : null}
+   *     </header>
+   *   );
+   * };
+   */
+  // A property holding a closure, not a method: it closes over the binding's `readState` and
+  // never touches `this`, so it survives being detached — which `umbra/vanilla` does, handing it
+  // straight to the controller. Declared as a method it would read as one that must not be.
+  readonly isRunning: (reason: ActionReason<TReason>) => boolean;
+};
 
 // ── Internal ────────────────────────────────────────────────────────────────
 

@@ -81,6 +81,8 @@ const CATEGORIES: readonly CategoryDef[] = [
       'ModalPhase',
       'ModalStoreSnapshot',
       'CloseResult',
+      'DISMISS_REASON',
+      'DismissReason',
       'setLogLevel',
     ],
   },
@@ -188,6 +190,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'Declared by being rendered: one call names the reason, binds the handler and returns the button props. Pending state, error capture, hotkeys and typed close reasons come with it.',
     symbols: [
       'ActionFactory',
+      'ActionReason',
       'ActionOptions',
       'ActionButtonProps',
       'ActionClickEvent',
@@ -255,6 +258,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'The same action factory the React binding hands out. Its three live fields are getters, so spreading the props inside a tracking scope subscribes each attribute individually — no re-render, no wrapper.',
     symbols: [
       'ActionFactory',
+      'ActionReason',
       'ActionOptions',
       'ActionButtonProps',
       'ActionClickEvent',
@@ -300,6 +304,7 @@ const CATEGORIES: readonly CategoryDef[] = [
     blurb:
       'The same actions, bound rather than rendered: what you pass to bindAction, and the props it applies on their behalf as one runs.',
     symbols: [
+      'ActionReason',
       'ActionOptions',
       'ActionButtonProps',
       'ActionClickEvent',

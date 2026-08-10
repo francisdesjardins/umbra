@@ -18,3 +18,4 @@ export { HotkeyWhilePreparingHarness } from './use-modal-actions/hotkey-while-pr
 export { SpreadContractHarness } from './use-modal-actions/spread-contract.story';
 export { DomSafeSpreadHarness } from './use-modal-actions/dom-safe-spread.story';
 export { FocusOnOpenHarness } from './use-modal-actions/focus-on-open.story';
+export { ActionIsRunningHarness } from './use-modal-actions/action-is-running.story';

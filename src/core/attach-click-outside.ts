@@ -1,5 +1,6 @@
 import { canDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
+import { DISMISS_REASON } from './dismiss-reason.js';
 import type { ClickOutsideOptions, ModalDomContext } from './attach-types.js';
 
 const log = createLogger('modal:click-outside');
@@ -56,7 +57,7 @@ export function attachClickOutside(
     }
 
     log('Click outside', { id: modalId });
-    store.close('dismiss');
+    store.close(DISMISS_REASON);
   };
 
   document.addEventListener('pointerdown', handlePointerDown);

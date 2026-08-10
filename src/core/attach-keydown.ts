@@ -3,6 +3,7 @@ import { canDismiss } from '../utils/dismiss-gate.js';
 import { clickHotkeyButton, matchesHotkey } from '../utils/hotkey-utils.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
+import { DISMISS_REASON } from './dismiss-reason.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
@@ -108,7 +109,7 @@ export function attachDialogKeydown(
       }
 
       log('Dismiss key', { id: modalId, key: dismissKey });
-      store.close('dismiss');
+      store.close(DISMISS_REASON);
     }
   };
 
@@ -166,7 +167,7 @@ export function attachDialogCancel(
     }
 
     log('Dismiss key (native cancel)', { id: modalId });
-    store.close('dismiss');
+    store.close(DISMISS_REASON);
   };
 
   dialog.addEventListener('cancel', handleCancel);
@@ -231,7 +232,7 @@ export function attachWindowDismissKey(
     }
 
     log('Dismiss key (window capture)', { id: modalId, key: dismissKey });
-    store.close('dismiss');
+    store.close(DISMISS_REASON);
   };
 
   window.addEventListener('keydown', handleWindowKeyDown, { capture: true });

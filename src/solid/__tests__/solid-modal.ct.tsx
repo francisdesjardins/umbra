@@ -90,6 +90,29 @@ test.describe('useModal (Solid)', () => {
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
+  test('action.isRunning names which one, and survives the binding’s own wrapper', async ({
+    mount,
+    page,
+  }) => {
+    // Solid re-wraps the core factory to attach `undeclare` on cleanup, so `isRunning` reaches
+    // this binding only because that wrapper re-attaches it. A forwarding arrow would leave the
+    // property behind and this would read `undefined is not a function`.
+    await mount(<SolidBasicHarness />);
+    await page.getByTestId('open').click();
+
+    await expect(page.getByTestId('confirm-running')).toHaveText('no');
+
+    await page.getByRole('button', { name: 'Confirm' }).click();
+
+    // Tracked, not captured: these are two separate reads of the same signal, and only the one
+    // asking about `confirm` changes.
+    await expect(page.getByTestId('confirm-running')).toHaveText('yes');
+    await expect(page.getByTestId('cancel-running')).toHaveText('no');
+    await expect(page.getByTestId('running')).toHaveText('running');
+
+    await expect(page.getByTestId('last-reason')).toHaveText('confirm');
+  });
+
   test('isPreparing is live while prepare runs', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await page.getByTestId('open-slow').click();

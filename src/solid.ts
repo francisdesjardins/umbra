@@ -73,6 +73,7 @@ export type {
   ActionCloseFn,
   ActionFactory,
   ActionOptions,
+  ActionReason,
   HotkeyDef,
 } from './actions/types.js';
 

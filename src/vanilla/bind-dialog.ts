@@ -1,4 +1,5 @@
 import { createActionFactory } from '../core/action-factory.js';
+import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
 import {
@@ -145,7 +146,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         dismissWhilePreparing: resolved.dismissWhilePreparing,
       })
     ) {
-      store.close('dismiss');
+      store.close(DISMISS_REASON);
     }
   };
   dialog.addEventListener('click', handleDialogClick);
@@ -302,6 +303,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     openAndWait,
     handle,
     bindAction,
+    isActionRunning: action.isRunning,
     subscribe,
     getSnapshot,
     destroy,

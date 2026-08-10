@@ -115,6 +115,15 @@ function useDeclaredReasons() {
         close(42);
       });
 
+      // Querying takes the same union declaring does: an action you can name you can watch.
+      action.isRunning('save');
+      // @ts-expect-error the query is constrained to the declared reasons, exactly as the factory is
+      action.isRunning('savee');
+      // @ts-expect-error `'dismiss'` is the library's own reason — no action may be named it
+      action('dismiss');
+      // @ts-expect-error and so there is nothing to ask about
+      action.isRunning('dismiss');
+
       handle.close('cancel');
       handle.close('dismiss');
       // @ts-expect-error the handle is constrained to the declared reasons too
@@ -142,6 +151,26 @@ export type _DeclaredReasonsReachTheReturn = Equals<
   ReturnType<typeof useDeclaredReasons>,
   UseModalReturn<Payload, Reasons>
 >;
+
+/**
+ * Declaring `'dismiss'` in your own union is legitimate — it is a reason `onClose` sees whether
+ * you declare it or not, and writing it out makes the `switch` read honestly. What it must not
+ * do is hand back an action you can name, which is the whole reason `ActionReason` is an
+ * `Exclude` rather than a comment: without it, this call site compiles.
+ */
+export function useDismissInTheDeclaredUnion() {
+  return useModalT<void, 'save' | 'dismiss'>({
+    id: 'i',
+    render: ({ action, handle }) => {
+      action('save');
+      // @ts-expect-error declared or not, the library's own reason is never an action's name
+      action('dismiss');
+      // It stays a reason this modal closes with, and the handle still takes it.
+      handle.close('dismiss');
+      return null;
+    },
+  });
+}
 
 /** Templates inherit the same guarantee rather than re-deriving it. */
 function useTemplateReasons() {

@@ -1,4 +1,5 @@
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
+import type { DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
 
@@ -31,9 +32,12 @@ export type CloseResult<TData = void, TReason extends string = string> = {
    * Why it closed: an action's reason, or `'dismiss'` — which the library itself produces on
    * Escape, backdrop click and teardown, so it is always possible regardless of `TReason`.
    *
+   * The two are disjoint by construction: no action may be *named* `'dismiss'`, so this field
+   * carrying it means nobody acted, every time. See {@link DismissReason}.
+   *
    * Declare a union on `useModal` and this narrows to it, making a `switch` here exhaustive.
    */
-  readonly reason: TReason | 'dismiss';
+  readonly reason: TReason | DismissReason;
   /** The payload, when the modal declares one. */
   readonly data?: TData | undefined;
 };
@@ -91,7 +95,7 @@ export type ModalAnimation<TStyle extends DialogStyle = DialogStyle> = {
  */
 export type ModalHandle<TData = void, TReason extends string = string> = {
   /** Close the modal with a reason and, if the modal declares one, a payload. */
-  readonly close: (reason?: TReason | 'dismiss', data?: TData) => void;
+  readonly close: (reason?: TReason | DismissReason, data?: TData) => void;
 };
 
 /**

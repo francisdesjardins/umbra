@@ -1,6 +1,6 @@
 import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
 import type { ActionEngine, ActionEngineSnapshot } from '../actions/action-engine.js';
-import type { ActionCloseFn, ActionFactory, ActionState } from '../actions/types.js';
+import type { ActionCloseFn, ActionFactory, ActionReason, ActionState } from '../actions/types.js';
 
 /**
  * What an action does when it is given no handler: close with its own reason.
@@ -13,6 +13,18 @@ const autoClose: (close: ActionCloseFn) => void = (close) => {
 };
 
 const IDLE: ActionState = { isRunning: false, error: null };
+
+/**
+ * The factory's call half, derived rather than restated.
+ *
+ * `Object.assign` needs a plain function to attach `isRunning` to, and a bare arrow cannot be
+ * annotated `ActionFactory` while that method is still missing. Deriving the signature means a
+ * change to it in `actions/types.ts` lands here without an edit — and the assembled result is
+ * still checked against `ActionFactory` by this module's return type.
+ */
+type DeclareAction<TData, TReason extends string> = (
+  ...args: Parameters<ActionFactory<TData, TReason>>
+) => ReturnType<ActionFactory<TData, TReason>>;
 
 /**
  * Build the `action` factory a modal's `render` is handed.
@@ -39,7 +51,15 @@ export function createActionFactory<TData, TReason extends string = string>(
   engine: ActionEngine<TData, TReason>,
   readState: () => ActionEngineSnapshot
 ): ActionFactory<TData, TReason> {
-  return (reason, handlerOrOptions) => {
+  /**
+   * One action's state, as the binding currently sees it. Hoisted out of the factory because
+   * `isRunning` asks the same question from outside any single action's props.
+   */
+  const stateOf = (reason: string): ActionState => {
+    return readState().states[reason] ?? IDLE;
+  };
+
+  const declare: DeclareAction<TData, TReason> = (reason, handlerOrOptions) => {
     const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
     const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : opts?.onAction;
     const effective = handler ?? autoClose;
@@ -47,10 +67,6 @@ export function createActionFactory<TData, TReason extends string = string>(
     const hotkey = opts?.hotkey;
 
     engine.declare(reason, hotkey);
-
-    const stateOf = (): ActionState => {
-      return readState().states[reason] ?? IDLE;
-    };
 
     return {
       type: opts?.type ?? 'button',
@@ -64,7 +80,7 @@ export function createActionFactory<TData, TReason extends string = string>(
         await engine.run(reason, effective);
       },
       get 'data-loading'() {
-        return stateOf().isRunning;
+        return stateOf(reason).isRunning;
       },
       // Includes *this* action: a running button that stays clickable re-enters its own handler
       // on a double click, which for a submit means submitting twice.
@@ -72,10 +88,20 @@ export function createActionFactory<TData, TReason extends string = string>(
         return readState().hasRunningAction || (opts?.disabled ?? false);
       },
       get 'aria-busy'() {
-        return stateOf().isRunning;
+        return stateOf(reason).isRunning;
       },
       ...(hotkey !== undefined && { 'aria-keyshortcuts': formatHotkeyLabel(hotkey) }),
       ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };
+
+  // Assigned rather than declared alongside the props: `isRunning` reads the same `readState`
+  // the live props do, so a binding that tracks one tracks the other — React re-renders on the
+  // snapshot it already subscribes to, Solid subscribes the one expression that called this.
+  // Neither binding contributes a line.
+  return Object.assign(declare, {
+    isRunning: (reason: ActionReason<TReason>): boolean => {
+      return stateOf(reason).isRunning;
+    },
+  });
 }

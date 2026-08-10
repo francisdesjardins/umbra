@@ -180,6 +180,36 @@ const modal = useModal({
 modal.hasRunningAction; // same value, outside render
 ```
 
+### Per-action state: `action.isRunning(reason)`
+
+The aggregate says _that_ an action is running. This says **which**:
+
+```tsx
+render: ({ action }) => (
+  <>
+    <header>{action.isRunning('publish') ? 'Publishing…' : 'Ready'}</header>
+    {/* Not an action's button, and locked for one action rather than for any. */}
+    <textarea disabled={action.isRunning('publish')} />
+
+    <button {...action('draft', saveDraft)}>Save draft</button>
+    <button {...action('publish', publish)}>Publish</button>
+  </>
+);
+```
+
+`data-loading` is this same fact **on** the button, and until now it was the only form of it —
+anything not spreading the action's props had `hasRunningAction` and no way to tell two waits
+apart. It hangs on the factory rather than joining the render args because the argument already
+says whose state is being asked for, which is why `ActionState.isRunning` is one word and the
+aggregate has to spell out its scope.
+
+Asking never declares — only calling the factory does. It takes `ActionReason<TReason>`, the
+same union declaring does, so `'dismiss'` is not among them — see
+[The reserved reason](#the-reserved-reason).
+
+`umbra/vanilla` has no factory to hang it on, so the controller carries the noun:
+`controller.isActionRunning(reason)`. See [umbra/vanilla](#umbravanilla).
+
 ### Hotkeys
 
 ```tsx
@@ -209,7 +239,60 @@ const modal = useModal<User, 'submit' | 'cancel'>({ … });
 
 With them declared, `action('submmit')` is a compile error, the reason autocompletes, and a
 `switch` on `result.reason` in `onClose` is exhaustive. Left undeclared, any string is accepted.
-`'dismiss'` is always available — the library produces it on Escape, backdrop click and teardown.
+`'dismiss'` is always available as a _close reason_ — the library produces it on Escape, backdrop
+click and teardown — and is the one reason no action may be named. See below.
+
+### The reserved reason
+
+`'dismiss'` means **the modal was dismissed rather than acted on**: the dismiss key, a backdrop
+click, a click outside a non-modal panel, or teardown while it was still open. All four close the
+store directly, and none of them runs an action — there is none to run.
+
+So an action cannot be named it. `ActionReason<TReason>` is `Exclude<TReason, DismissReason>`, and
+the exclusion is what keeps the reason honest:
+
+```tsx
+const modal = useModal<void, 'save' | 'dismiss'>({
+  render: ({ action, handle }) => (
+    <>
+      <button {...action('save', save)}>Save</button>
+
+      {/* ✗ compile error — a button is an act, and this reason means nobody acted */}
+      <button {...action('dismiss')}>Close</button>
+
+      {/* ✓ the handle takes it: you are reporting a dismissal, not declaring an action */}
+      <button onClick={() => handle.close('dismiss')}>Close</button>
+    </>
+  ),
+});
+```
+
+Declaring `'dismiss'` in your own union stays legitimate — it is a reason `onClose` sees whether
+you write it out or not, and writing it makes the `switch` read honestly. `Exclude` is what stops
+that declaration from also handing you an action you can name.
+
+**If you want a key to run your handler instead of dismissing, that already has a spelling**, and
+it is the one the dismiss key already honours: declare the key on a named action.
+
+```tsx
+// Escape runs this action — the modal dispatches by clicking the button, so the key path is the
+// click path, running state and veto included. Dismissal defers.
+<button {...action('cancel', { hotkey: Key.Escape, onAction: discardDraft })}>Cancel</button>
+```
+
+And for work that must happen on **every** dismissal — including the backdrop and the teardown,
+neither of which can run a handler — the door is `onClose`, which every close passes through:
+
+```tsx
+onClose: (result) => {
+  if (result.reason === DISMISS_REASON) {
+    cleanup();
+  }
+};
+```
+
+`DISMISS_REASON` and its type `DismissReason` ship from the root, so a comparison never retypes
+the string.
 
 ### Presets: say it once, in a wrapper
 
@@ -875,6 +958,7 @@ Positioning and animation are applied as **inline styles**, which outrank a styl
 | `openAndWait()`                        | `() => Promise<AwaitedClose<TData, TReason>>` | Opens it and resolves with how it closed — see [openAndWait](#openandwait). |
 | `handle`                               | `ModalHandle<TData, TReason>`                 | `handle.close(reason?, data?)`, typed with this dialog's payload.           |
 | `bindAction(button, reason, options?)` | `(…) => () => void`                           | Turns a button into one of this dialog's actions. Returns an **unbind**.    |
+| `isActionRunning(reason)`              | `(reason) => boolean`                         | Whether **that** action is running — the hook bindings' `action.isRunning`. |
 | `subscribe(listener)`                  | `(() => void) => () => void`                  | Every state change — phases and actions alike.                              |
 | `getSnapshot()`                        | `() => DialogSnapshot`                        | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
 | `destroy()`                            | `() => void`                                  | Unregister, close if open, settle every waiter, detach every listener.      |
@@ -905,6 +989,9 @@ const stop = confirm.subscribe(() => {
   const { isPreparing, hasRunningAction } = confirm.getSnapshot();
   spinner.hidden = !isPreparing;
   form.inert = hasRunningAction;
+  // Which one, not just that one — `bindAction` already keeps the button itself in step, and
+  // this is the same fact for everything that is not the button.
+  status.textContent = confirm.isActionRunning('publish') ? 'Publishing…' : '';
 });
 ```
 

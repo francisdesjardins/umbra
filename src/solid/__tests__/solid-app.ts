@@ -72,6 +72,15 @@ function BasicApp(): Built {
           text(() => {
             return ctx.hasRunningAction ? 'running' : 'idle';
           }, 'running'),
+          // The per-action question, read through the factory rather than off a button. Solid
+          // wraps the core factory to attach an expiry, so these two also assert that the wrapper
+          // carried `isRunning` across — an arrow that only forwarded the call would not have.
+          text(() => {
+            return ctx.action.isRunning('confirm') ? 'yes' : 'no';
+          }, 'confirm-running'),
+          text(() => {
+            return ctx.action.isRunning('cancel') ? 'yes' : 'no';
+          }, 'cancel-running'),
           h('button', ctx.action('cancel', { hotkey: 'Escape' }), 'Cancel'),
           h(
             'button',

@@ -2,6 +2,7 @@ import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } fro
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
 import { createActionFactory } from '../core/action-factory.js';
+import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
 import {
@@ -141,16 +142,24 @@ export function useModal<TData = void, TReason extends string = string>(
    *
    * The owner here is whatever scope drew the button — the modal's content, or the `<Show>`
    * branch it sits in — so a button that disappears takes its declaration with it.
+   *
+   * Wrapping the *call* means re-attaching what hangs off it: `isRunning` is a property of the
+   * factory, and an arrow that only forwards the call would leave Solid with a factory the
+   * React one has and it does not — the kind of divergence `binding-parity.test.ts` exists to
+   * catch, and the kind a type annotation alone would not.
    */
-  const action: typeof baseAction = (reason, handlerOrOptions) => {
-    const props = baseAction(reason, handlerOrOptions);
-    if (getOwner()) {
-      onCleanup(() => {
-        engine.undeclare(reason);
-      });
-    }
-    return props;
-  };
+  const action: typeof baseAction = Object.assign(
+    (...args: Parameters<typeof baseAction>) => {
+      const props = baseAction(...args);
+      if (getOwner()) {
+        onCleanup(() => {
+          engine.undeclare(args[0]);
+        });
+      }
+      return props;
+    },
+    { isRunning: baseAction.isRunning }
+  );
 
   const isPreparing = () => {
     return snapshot().isPreparing;
@@ -212,7 +221,7 @@ export function useModal<TData = void, TReason extends string = string>(
         dismissWhilePreparing,
       })
     ) {
-      store.close('dismiss');
+      store.close(DISMISS_REASON);
     }
   });
 

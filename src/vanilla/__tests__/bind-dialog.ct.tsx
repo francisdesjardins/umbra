@@ -103,6 +103,23 @@ test.describe('bindDialog', () => {
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
   });
 
+  test('isActionRunning answers for one action, off the button', async ({ mount, page }) => {
+    // `bindAction` keeps the button itself in step; this is the same fact for everything that is
+    // not the button, which here is markup the binding has never touched.
+    await mount(<VanillaBasicHarness />);
+    await page.getByTestId('open').click();
+
+    await expect(page.getByTestId('confirm-running')).toHaveText('no');
+
+    await page.getByRole('button', { name: 'Confirm' }).click();
+
+    await expect(page.getByTestId('confirm-running')).toHaveText('yes');
+    await expect(page.getByTestId('cancel-running')).toHaveText('no');
+
+    await expect(page.getByTestId('confirm-running')).toHaveText('no');
+    await expect(page.getByTestId('last-reason')).toHaveText('confirm');
+  });
+
   test('openAndWait resolves with how it closed', async ({ mount, page }) => {
     await mount(<VanillaBasicHarness />);
     await page.getByTestId('open-and-wait').click();

@@ -46,5 +46,6 @@ export type {
   ActionClickEvent,
   ActionCloseFn,
   ActionOptions,
+  ActionReason,
   HotkeyDef,
 } from './actions/types.js';

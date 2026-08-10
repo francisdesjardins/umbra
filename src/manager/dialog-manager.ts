@@ -6,6 +6,7 @@ import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
+import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
 import type {
   ModalInfo,
@@ -740,11 +741,11 @@ export function createDialogManager(): DialogManager {
     log('Unregistered', { id, registeredCount: registry.size });
 
     if (wasOpen) {
-      emit({ type: 'close', id, reason: 'dismiss' });
+      emit({ type: 'close', id, reason: DISMISS_REASON });
       dispatchModalEvent(MODAL_CLOSE_EVENT, {
         id,
         template: entry.template,
-        reason: 'dismiss',
+        reason: DISMISS_REASON,
         openedAt: entry.openedAt,
       });
     }
@@ -915,7 +916,7 @@ export function createDialogManager(): DialogManager {
       return dispatchOpenRequest(id, request);
     },
 
-    close(id: string, reason: string = 'dismiss'): void {
+    close(id: string, reason: string = DISMISS_REASON): void {
       const entry = registry.get(id);
       if (!entry) {
         log.warn('Close skipped (not registered)', { id });

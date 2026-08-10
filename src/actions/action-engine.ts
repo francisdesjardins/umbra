@@ -2,7 +2,8 @@ import { createStore } from '../store/index.js';
 import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
 import { createLogger } from '../utils/logger.js';
 import { normalizeError } from '../utils/normalize-error.js';
-import type { ActionCloseFn, ActionState, HotkeyDef } from './types.js';
+import type { DismissReason } from '../core/dismiss-reason.js';
+import type { ActionCloseFn, ActionReason, ActionState, HotkeyDef } from './types.js';
 
 const log = createLogger('action');
 
@@ -45,9 +46,9 @@ export function createActionEngine<TData, TReason extends string = string>(modal
   /** Filled while a render pass is in flight, then swapped in wholesale. */
   let pending: Map<string, HotkeyDef | undefined> | null = null;
 
-  // `'dismiss'` is a reason an action may legitimately carry, not only one the library
-  // produces, so every entry point here accepts it alongside the declared union.
-  let closeFn: ((reason: TReason | 'dismiss', data?: TData) => void) | null = null;
+  // The close path accepts `'dismiss'`, because the library produces it; the action-facing
+  // methods below do not, because no action may be named it — see `ActionReason`.
+  let closeFn: ((reason: TReason | DismissReason, data?: TData) => void) | null = null;
 
   const store = createStore(initial, ({ get, set }) => {
     /** Write one action's state and recompute the aggregates in the same pass. */
@@ -78,7 +79,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
       },
 
       async run(
-        reason: TReason | 'dismiss',
+        reason: ActionReason<TReason>,
         handler: (close: ActionCloseFn<TData>) => void | Promise<void>
       ): Promise<void> {
         if (get().hasRunningAction) {
@@ -122,14 +123,14 @@ export function createActionEngine<TData, TReason extends string = string>(modal
       return store.aggregated();
     },
     run: (
-      reason: TReason | 'dismiss',
+      reason: ActionReason<TReason>,
       handler: (close: ActionCloseFn<TData>) => void | Promise<void>
     ) => {
       return store.run(reason, handler);
     },
 
     /** The modal's own close function, bound once by `useModal`. */
-    bindClose(fn: (reason: TReason | 'dismiss', data?: TData) => void): void {
+    bindClose(fn: (reason: TReason | DismissReason, data?: TData) => void): void {
       closeFn = fn;
     },
 
@@ -140,7 +141,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
     },
 
     /** Called by the `action()` factory as each button is drawn. */
-    declare(reason: TReason | 'dismiss', hotkey: HotkeyDef | undefined): void {
+    declare(reason: ActionReason<TReason>, hotkey: HotkeyDef | undefined): void {
       (pending ?? declared).set(reason, hotkey);
     },
 
@@ -161,7 +162,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
      * `hasActions()` decides whether backdrop click dismisses — a modal that has drawn its last
      * action silently stays opt-in.
      */
-    undeclare(reason: TReason | 'dismiss'): void {
+    undeclare(reason: ActionReason<TReason>): void {
       (pending ?? declared).delete(reason);
     },
 

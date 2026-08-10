@@ -58,7 +58,7 @@ export function ServiceLayerExample() {
     },
   });
 
-  const failureModal = useMessageModal({
+  const failureModal = useMessageModal<void, 'acknowledge'>({
     id: FAILURE_MODAL_ID,
     render: ({ action }) => {
       return (
@@ -76,7 +76,7 @@ export function ServiceLayerExample() {
             </Shared.Hint>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('dismiss')}>
+            <Shared.Button variant="outlined" {...action('acknowledge')}>
               Dismiss
             </Shared.Button>
             <Shared.Button

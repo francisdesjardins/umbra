@@ -27,6 +27,22 @@ const clickEvent = (defaultPrevented = false): ActionClickEvent => {
   };
 };
 
+/** A handler that stays running until it is let go — the only way to observe a running action. */
+const deferred = () => {
+  let settle = (): void => {
+    return;
+  };
+  const promise = new Promise<void>((resolve) => {
+    settle = resolve;
+  });
+  return {
+    promise,
+    release: () => {
+      settle();
+    },
+  };
+};
+
 test.describe('the props an action returns', () => {
   test('are all DOM props, and default `type` to button', () => {
     // A `<button>` inside a `<form>` defaults to `type="submit"`, so an action button in a form
@@ -114,6 +130,75 @@ test.describe('the live props', () => {
 
     expect(action('save', { disabled: true }).disabled).toBe(true);
     expect(action('save', { disabled: false }).disabled).toBe(false);
+  });
+});
+
+test.describe('isRunning', () => {
+  test('answers for one action, anywhere but its own props', () => {
+    // `data-loading` is this same fact on the button. This is it for everything that is not the
+    // button — and it reads the binding's snapshot, so it is live wherever the props are.
+    const engine = createActionEngine<void>('per-action');
+    let snapshot: ActionEngineSnapshot = idle;
+    const action = createActionFactory(engine, () => {
+      return snapshot;
+    });
+
+    expect(action.isRunning('save')).toBe(false);
+
+    snapshot = {
+      states: { save: { isRunning: true, error: null } },
+      hasRunningAction: true,
+      error: null,
+    };
+
+    expect(action.isRunning('save')).toBe(true);
+    // The aggregate is true here too; this is what the aggregate cannot tell you.
+    expect(action.isRunning('cancel')).toBe(false);
+  });
+
+  test('a reason that has never run is idle, not undefined', () => {
+    const engine = createActionEngine<void>('never-ran');
+    const action = createActionFactory(engine, () => {
+      return idle;
+    });
+
+    expect(action.isRunning('anything')).toBe(false);
+  });
+
+  test('asking does not declare', () => {
+    // Only calling the factory declares. If asking did too, a status line reading the state of
+    // a button it does not draw would keep that button's hotkey alive and suppress the dismiss
+    // key — and `hasActions()` decides whether a backdrop click dismisses at all.
+    const engine = createActionEngine<void>('ask');
+    const action = createActionFactory(engine, () => {
+      return idle;
+    });
+
+    action.isRunning('save');
+
+    expect(engine.hasActions()).toBe(false);
+  });
+
+  test('tracks a real run, not just a swapped snapshot', async () => {
+    // The other tests here drive `readState` by hand, which proves the plumbing but not the
+    // engine. This one runs an actual handler and holds it open, so the true → false is the
+    // engine's own two writes — the same pair a binding subscribes to.
+    const engine = createActionEngine<void, 'ok'>('real-run');
+    const action = createActionFactory(engine, engine.getSnapshot);
+    const gate = deferred();
+
+    const props = action('ok', async () => {
+      await gate.promise;
+    });
+
+    expect(action.isRunning('ok')).toBe(false);
+
+    const running = props.onClick(clickEvent());
+    expect(action.isRunning('ok')).toBe(true);
+
+    gate.release();
+    await running;
+    expect(action.isRunning('ok')).toBe(false);
   });
 });
 

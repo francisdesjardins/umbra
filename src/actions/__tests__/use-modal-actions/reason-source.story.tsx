@@ -13,7 +13,7 @@ export function ReasonSourceHarness() {
   const [lastReason, setLastReason] = useState('');
   const [lastId, setLastId] = useState('');
 
-  const { open, Modal } = useModal<SaveResult, 'save'>({
+  const { open, Modal } = useModal<SaveResult, 'save' | 'close'>({
     id: 'ctrl-reason-source',
     render: ({ action }) => {
       return (
@@ -25,7 +25,9 @@ export function ReasonSourceHarness() {
           >
             Save
           </button>
-          <button {...action('dismiss')}>Dismiss</button>
+          {/* Not `action('dismiss')` — that reason is the library's, for a modal nobody
+              acted on. A button *is* an act, so it carries its own name. */}
+          <button {...action('close')}>Close</button>
         </div>
       );
     },

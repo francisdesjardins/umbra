@@ -35,6 +35,7 @@ import focusOnOpenSrc from '@/pages/modal-actions/examples/focus-on-open.tsx?raw
 import confirmWithHotkeysSrc from '@/pages/modal-actions/examples/confirm-with-hotkeys.tsx?raw';
 import deleteItemModalSrc from '@/pages/modal-actions/examples/delete-item-modal.tsx?raw';
 import reactivDepsSrc from '@/pages/modal-actions/examples/reactive-deps.tsx?raw';
+import perActionStateSrc from '@/pages/modal-actions/examples/per-action-state.tsx?raw';
 import slideCornerToastSrc from '@/pages/slide-modal/examples/corner-toast.tsx?raw';
 import slidePresetsSrc from '@/pages/slide-modal/examples/slide-presets.tsx?raw';
 import muiFormSrc from '@/pages/ui-integrations/examples/mui-form.tsx?raw';
@@ -220,6 +221,7 @@ export const codeSamples: Record<string, string> = {
   'focus-on-open': focusOnOpenSrc,
   'delete-item-modal': deleteItemModalSrc,
   'reactive-deps': reactivDepsSrc,
+  'per-action-state': perActionStateSrc,
   'slide-presets': slidePresetsSrc,
   'slide-corner-toast': slideCornerToastSrc,
   'stacked-modals': stackedModalsSrc,

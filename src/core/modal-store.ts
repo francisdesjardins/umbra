@@ -1,5 +1,6 @@
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
+import type { DismissReason } from './dismiss-reason.js';
 import type { CloseResolver, CloseResult, ModalStoreSnapshot } from './types.js';
 
 const log = createLogger('modal');
@@ -149,7 +150,7 @@ export function createModalStore<TData = unknown, TReason extends string = strin
        * modal is already `'closing'` or `'closed'`, which is what makes every
        * dismissal path safe to call blindly.
        */
-      close(reason: TReason | 'dismiss', data?: TData): boolean {
+      close(reason: TReason | DismissReason, data?: TData): boolean {
         const { phase } = get();
         if (phase === 'closing' || phase === 'closed') {
           return false;
