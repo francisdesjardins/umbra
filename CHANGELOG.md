@@ -9,6 +9,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-10
+
+### Changed — the README lists the surface that exists
+
+Read against `src/` rather than against the last edit, and four kinds of drift came out.
+
+**The entry-point table named a third of the root and half of `./react`.** `createDialogManager`,
+`applyStyle`, `matchesHotkey`, `formatHotkeyLabel` and `setLogLevel` all ship from the root;
+`DialogManagerProvider`, `useDialogManager` and `useLookup` from the React binding. The vanilla row
+gains `bindAction`, which the paragraph directly under it already documented — the table was the
+part a reader skims.
+
+**The peer ranges quoted were the pinned devDependencies.** `^19.2.4` and `^1.9.14` against
+`package.json`'s `^19.0.0` and `^1.9.0` — someone checking whether their React 19.1 app qualified
+would have concluded it did not. The zero-dependencies bullet was older still: `react` and
+`react-dom`, with no mention of `solid-js` as the second optional peer or of `./vanilla` as the
+entry point that needs neither.
+
+**Four features had no bullet at all** — `prepare` and the `AbortSignal` it hands out,
+`dialogPlacement` with the portaled/contained split for non-modal panels, the stylesheet adopted
+per root so a dialog inside a shadow root gets the library's backdrop, and `requestOpen` with the
+`modal:open` / `modal:close` events that cross bundle boundaries. The `action` props list was four
+fields short of what the factory returns (`type`, `aria-busy`, `data-focus-on-open`, and
+`data-loading` was there but the set read as complete).
+
+**The API.md contents list predated two chapters**, `umbra/solid` and `umbra/vanilla`, and had
+never mentioned `ModalOutlet`, `dialogPlacement` or the lifecycle events.
+
+Two smaller ones. The typed-close snippet spread `action('submit')` and then re-applied
+`disabled={hasRunningAction}` — the same value the spread already carries, which reads as though
+the spread needs help; it uses that arg for the button's label instead. And the naming-pass example
+was dated to "this week", which is the one phrase in a README guaranteed to expire: it names the
+three renames now and leaves the dates to this file.
+
 ## 2026-08-09
 
 ### Added — the microfrontends get a route of their own
