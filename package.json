@@ -73,6 +73,7 @@
     "playground:build": "yarn workspace umbra-playground build",
     "playground:build:file": "yarn workspace umbra-playground build:file",
     "playground:preview": "yarn workspace umbra-playground preview",
+    "smoke": "node scripts/smoke-playground.mjs",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "oxlint && eslint .",

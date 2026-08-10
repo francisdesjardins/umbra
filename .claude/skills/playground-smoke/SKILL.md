@@ -5,8 +5,12 @@ description: Smoke-test the playground in a real browser — walk every route as
 
 # Playground Smoke
 
-A reusable Playwright probe (`smoke.mjs`) that boots nothing itself: point it at a running
-playground and it reports pass/fail per route and per flow, exiting non-zero on failure.
+A Playwright probe — [`scripts/smoke-playground.mjs`](../../../scripts/smoke-playground.mjs) — that
+boots nothing itself: point it at a running playground and it reports pass/fail per route and per
+flow, exiting non-zero on failure.
+
+**It lives in `scripts/`, not here.** CI runs it as `yarn smoke`, so it is a gate the repository
+owns rather than one that exists only when this tool is present. This file is the guide to it.
 
 ## Why this exists
 
@@ -33,11 +37,11 @@ yarn playground:build && yarn playground:preview   # production build — use th
 Then, from the repo root:
 
 ```bash
-node .claude/skills/playground-smoke/smoke.mjs                     # all routes + all flows
-node .claude/skills/playground-smoke/smoke.mjs --flow service      # one flow
-node .claude/skills/playground-smoke/smoke.mjs --shots <tmpdir>    # screenshot every route
-node .claude/skills/playground-smoke/smoke.mjs --theme dark        # run in dark mode
-node .claude/skills/playground-smoke/smoke.mjs --base http://localhost:3000
+yarn smoke                      # all routes + all flows
+yarn smoke --flow service       # one flow
+yarn smoke --shots <tmpdir>     # screenshot every route
+yarn smoke --theme dark         # run in dark mode
+yarn smoke --base http://localhost:3000
 ```
 
 Run it from the repo root so Node resolves `@playwright/test` from `node_modules`.
@@ -83,7 +87,7 @@ Playwright timeout, and one throwing flow no longer aborts the rest of the run.
 
 ## Adding a flow
 
-Add an entry to the `flows` object in `smoke.mjs` returning `[ok, label, detail?]` tuples. Put
+Add an entry to the `flows` object in `scripts/smoke-playground.mjs` returning `[ok, label, detail?]` tuples. Put
 it here rather than writing a one-off script — a flow committed to the repo gets rerun on the
 next refactor, which is the whole point.
 

@@ -8,14 +8,15 @@
  * Routes are discovered from the running app's navigation, not hardcoded — adding a route to
  * the sidebar puts it under test automatically.
  *
- * Usage (from the repo root, with a server already running):
- *   node .claude/skills/playground-smoke/smoke.mjs
- *   node .claude/skills/playground-smoke/smoke.mjs --base http://localhost:3000
- *   node .claude/skills/playground-smoke/smoke.mjs --flow service
- *   node .claude/skills/playground-smoke/smoke.mjs --shots <dir>
- *   node .claude/skills/playground-smoke/smoke.mjs --theme dark
+ * Usage (from the repo root, with a server already running on :3000 — `yarn dev`, or
+ * `yarn playground:build && yarn playground:preview` for the production bundle):
+ *   yarn smoke
+ *   yarn smoke --base http://localhost:4173
+ *   yarn smoke --flow service
+ *   yarn smoke --shots <dir>
+ *   yarn smoke --theme dark
  *
- * Exit code is non-zero if any check fails, so it can gate a commit.
+ * Exit code is non-zero if any check fails, so it gates a commit and a CI job alike.
  */
 import { chromium } from '@playwright/test';
 

@@ -6,6 +6,7 @@
 
 Framework-agnostic core, with React, Solid and vanilla bindings over it.
 
+[![CI](https://github.com/francisdesjardins/umbra/actions/workflows/ci.yml/badge.svg)](https://github.com/francisdesjardins/umbra/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)

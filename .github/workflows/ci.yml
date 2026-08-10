@@ -178,6 +178,59 @@ jobs:
       # Builds the playground, which runs typedoc through its own plugin — the gate that fails
       # when a new public export has no category in the API reference.
       - run: yarn playground:build
+      # And the hash-router build, which is the artifact that actually deploys. The two differ
+      # in how the router reads a URL, so a breakage confined to the hash history ships
+      # undetected if only the browser-history build is ever compiled.
+      - run: yarn playground:build:file
+
+  # ── Playground Smoke ─────────────────────────────────────────────────────────
+  # Renders the app in a real browser: every route the sidebar advertises, then the interaction
+  # flows. It is the only job that loads the playground at all — `yarn test` covers `src/` and
+  # never mounts a page, so a route that throws in the console, an example registered but placed
+  # on no page, or a `position: sticky` that silently stopped sticking all pass everything else.
+  #
+  # Runs in both themes because the palette is the mascot's and dark mode is not a filter over
+  # light: `secondary` there is the same value as the page background, which is how a badge came
+  # to be drawn in its own background colour.
+  smoke:
+    name: Playground Smoke
+    needs: install
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.install.outputs.playwright-version }}-noble
+      options: --user 1001
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      # No corepack — same reason as `test-component`: the container runs unprivileged and the
+      # repo vendors its own Yarn release, which `.yarnrc.yml` points at.
+      - name: Resolve the vendored Yarn
+        id: yarn
+        run: |
+          bin=$(node -e "console.log(require('fs').readFileSync('.yarnrc.yml','utf8').match(/yarnPath:\s*(\S+)/)[1])")
+          echo "bin=$bin" >> "$GITHUB_OUTPUT"
+      - run: node ${{ steps.yarn.outputs.bin }} install --immutable
+      - run: node ${{ steps.yarn.outputs.bin }} playground:build
+      # `preview` serves the built bundle on :3000. Backgrounded, then polled — a fixed sleep is
+      # either a flake or wasted minutes, and the poll fails with the server's own log rather
+      # than as a 30-second Playwright timeout with nothing to read.
+      - name: Serve the playground
+        run: |
+          node ${{ steps.yarn.outputs.bin }} playground:preview > preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sfo /dev/null http://localhost:3000/; then
+              echo "up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "preview never came up:"
+          cat preview.log
+          exit 1
+      - run: node ${{ steps.yarn.outputs.bin }} smoke
+      - run: node ${{ steps.yarn.outputs.bin }} smoke --theme dark
 
   # ── Docs ─────────────────────────────────────────────────────────────────────
   # `docs:check` runs typedoc with treatWarningsAsErrors — a broken {@link} or a public
