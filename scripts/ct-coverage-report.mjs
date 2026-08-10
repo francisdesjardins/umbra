@@ -10,14 +10,11 @@
  * three maps, and adding a coverage framework to read a format we already have would be a
  * dependency bought for its name.
  *
- * **The counts are sound; the line numbers are not.** Istanbul instruments the output *after*
- * TypeScript's types and comments have been stripped, and its statement map is in those
- * coordinates — so a file's totals are right while every position is shifted up by however many
- * comment lines precede it. Measured on `solid/modal-outlet.ts`: `createLogger` at line 12 is
- * attributed correctly, and everything below its 20-line JSDoc block lands 16 lines early, with
- * counters sitting on prose. `build: { sourcemap: true }` on the CT config does not help — the
- * plugin is not consuming the input map, which is the thing to fix before anyone reads a line
- * number here. Until then this reports percentages, and nothing points at a line.
+ * Positions are the source's own, and that took a plugin to arrange: instrumentation happens
+ * before anything transforms the file (`scripts/vite-plugin-ct-coverage.mjs`), because the
+ * off-the-shelf route instruments stripped output and remaps, which lands every counter below a
+ * file's JSDoc block sixteen lines early. A line number here can be trusted; the CHANGELOG for
+ * 2026-08-10 has the measurement.
  *
  * Usage: node scripts/ct-coverage-report.mjs [--json <path>]
  */

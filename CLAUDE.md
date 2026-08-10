@@ -8,11 +8,12 @@ over it. No UI components exported; users bring their own.
 The package root is plain TypeScript and **must resolve with no framework installed**. Bindings
 are the optional layer.
 
-| Specifier     | Contents                                                                                                                                                                                                                |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`       | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No framework. |
-| `umbra/react` | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.       |
-| `umbra/solid` | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                             |
+| Specifier       | Contents                                                                                                                                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No framework. |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.       |
+| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                             |
+| `umbra/vanilla` | `bindDialog` and `bindAction` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                                         |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
@@ -70,6 +71,7 @@ yarn test:unit:coverage     # Unit tests with coverage (c8)
 yarn test:unit:ui           # Unit tests with UI
 yarn test:component         # Component tests only (*.ct.tsx)
 yarn test:component:ui      # Component tests with UI
+yarn test:component:coverage # Component tests with coverage (istanbul, see below)
 ```
 
 | Suffix        | Purpose                                 |
@@ -87,7 +89,9 @@ what that project can reach. Three groups, and the reason each is there:
 - **Type-only modules** (`core/types.ts`, `actions/types.ts`, the two bindings' `types.ts`, …) —
   no runtime at all, so they report 0% forever and drag the number with them.
 - **Every binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`) and the entry barrels —
-  component-tested. A glob, because a new file there is component-test territory too.
+  component-tested, and measured by the _other_ report rather than not at all: see
+  [The component project measures itself](#the-component-project-measures-itself). A glob, because
+  a new file there is component-test territory too.
 - **The DOM-only modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`, `dialog-styles`,
   `utils/dialog-scope`) — listed **one by one**, deliberately. A new module is not silently
   excluded: it shows up as a gap until someone decides which kind it is. The line is _zero_
@@ -95,6 +99,26 @@ what that project can reach. Three groups, and the reason each is there:
   `dialog-scope` needs `Element` and `closest`. A file with a testable half stays visible and
   partially covered (`manager/scroll-lock`, `core/style`, `utils/hotkey-utils`), because
   excluding it would hide the half that is a real gap.
+
+### The component project measures itself
+
+`yarn test:component:coverage` is the other half, and it exists because the first list above is
+only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
+instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
+modules that c8 cannot reach — currently 90.13% statements over 46 files, against the unit
+project's 96.37% over the framework-free half.
+
+Two things about it are load-bearing and neither is obvious:
+
+- **Instrumentation is `enforce: 'pre'`** ([scripts/vite-plugin-ct-coverage.mjs](scripts/vite-plugin-ct-coverage.mjs)),
+  on the file as written. `vite-plugin-istanbul` is the obvious tool and it instruments _stripped_
+  output, remapping through a source map that looks healthy and is not: every counter below a
+  file's JSDoc block lands sixteen lines early, attributing statements to prose.
+- **There are two CT build caches.** Playwright keys its bundle on versions and a hash of the
+  sources, not on the plugin list, so a single cache makes toggling `CT_COVERAGE` a coin toss —
+  and the failure is silent, an empty `.nyc_output` rather than an error. `use.ctCacheDir` splits
+  them. Editing the instrumenter itself invalidates neither; delete `playwright/.cache-coverage/`
+  by hand for that one.
 
 **A DOM type in a signature is not the same as a DOM dependency**, and telling them apart is
 worth doing before reaching for the exclude list. `isBackdropClick`, `shouldDismissOnBackdropClick`

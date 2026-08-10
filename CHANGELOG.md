@@ -11,6 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Changed — the docs the coverage work left behind
+
+Caught by asking whether they were current, which they were not. `scripts/ct-coverage-report.mjs`
+and `src/__tests__/ct-coverage.ts` both still carried the "the line numbers are not sound" warning
+— written when it was true, left in place after the fix that made it false, which is worse than
+never having written it. Both now describe what the setup does and point at the plugin that makes
+positions trustworthy.
+
+Two coverage chips in the README, hand-set from the two commands and labelled as a snapshot rather
+than a gate, plus the paragraph that says why there are two numbers at all: neither project can
+measure the other's half. And `CLAUDE.md`'s entry-point table gained the `umbra/vanilla` row it had
+been missing since that binding shipped — three specifiers listed, four discussed in the prose
+directly below it.
+
 ### Fixed — the component coverage was pointing at the wrong lines
 
 The experiment reported percentages that were sound and positions that were not, and it took

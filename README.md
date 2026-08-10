@@ -10,6 +10,8 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
+[![Unit coverage](https://img.shields.io/badge/unit_coverage-96%25-3fb950?style=flat-square)](#-development)
+[![Component coverage](https://img.shields.io/badge/component_coverage-90%25-3fb950?style=flat-square)](#-development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -274,6 +276,14 @@ yarn format          # Prettier
 yarn check           # type-check + lint + format + docs, the pre-commit gate
 yarn verify:all      # lint + type-check + build + package checks, against the built artifact
 ```
+
+**Two coverage numbers, because there are two test projects and neither can measure the other's
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — 96% statements —
+and its exclude list is the statement of what a Node process can reach, not a way to flatter the
+number. `yarn test:component:coverage` measures what that list leaves out: the three bindings and
+the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs ~45% of the
+run) — 90% statements. The badges above are hand-set from those two commands, so treat them as
+what they are: a snapshot, not a gate.
 
 ## ◑ How this repo is run
 

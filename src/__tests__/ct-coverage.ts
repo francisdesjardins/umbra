@@ -19,10 +19,8 @@ import { resolve } from 'node:path';
  * Inert unless `CT_COVERAGE=1` put the instrumentation there in the first place: with no
  * `__coverage__` on the page there is nothing to write, and the fixture costs one `evaluate`.
  *
- * **Known defect, and it decides what these numbers are good for.** The counters are attributed to
- * the wrong lines — see the note in `scripts/ct-coverage-report.mjs`. Totals and comparisons
- * between files are sound; "which line is uncovered" is not, and reading one will send you to a
- * comment.
+ * The counters carry the *source's* line numbers, which `scripts/vite-plugin-ct-coverage.mjs`
+ * exists to arrange — see the note there before swapping it for the off-the-shelf plugin.
  */
 
 declare global {
