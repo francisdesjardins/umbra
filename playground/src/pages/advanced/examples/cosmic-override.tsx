@@ -269,6 +269,22 @@ export function CosmicOverrideExample() {
     // reach for anything else on the page — including the code viewer for this very example.
     dismissOnClickOutside: false,
     animation: GATE_ANIMATION,
+    /**
+     * Fill the sector, rather than sit centred in it at content size.
+     *
+     * The UA gives every `<dialog>` `margin: auto` and `fit-content` sizing, and those beat
+     * `inset: 0`: an absolutely positioned box with auto margins and a non-`auto` size is
+     * over-constrained, so CSS centres it instead of stretching it. Measured in this 340px
+     * sector, the dialog came out 337.44px — a 1.3px sliver of starfield above and below the
+     * panel, which reads as a seam.
+     *
+     * Asked for here rather than fixed in `dialogPlacement`, because content-sizing is what
+     * keeps the region *around* a contained dialog clickable, and that is a contract the core
+     * tests hold it to. Covering the whole sector is this demo's choice: the trigger is
+     * unmounted while the gate is open and click-outside is already refused, so there is
+     * nothing behind it left to reach.
+     */
+    style: { margin: 0, width: 'auto', height: 'auto' },
     render: ({ handle }) => {
       return (
         <Box
