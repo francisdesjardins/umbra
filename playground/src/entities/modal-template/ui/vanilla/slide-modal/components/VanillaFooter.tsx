@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ButtonRow } from '@/entities/modal-template/ui/vanilla/shared/ButtonRow';
 import styles from '@/entities/modal-template/ui/vanilla/slide-modal/styles.module.css';
 
 type VanillaFooterProps = {
@@ -6,5 +7,5 @@ type VanillaFooterProps = {
 };
 
 export function VanillaFooter({ children }: VanillaFooterProps) {
-  return <div className={styles['slideFooter']}>{children}</div>;
+  return <ButtonRow className={styles['slideFooter']}>{children}</ButtonRow>;
 }

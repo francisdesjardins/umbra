@@ -74,6 +74,10 @@
 }
 
 /* ========== Footer ========== */
+/* Placement comes from `Shared.ButtonRow`, which this footer renders as its own element; what is
+   left here is the chrome. This template used to have no `display: flex` at all, so two actions
+   sat left-aligned and touching while its siblings flexed theirs to the trailing edge — the panel
+   read as a different product from the MUI twin it is paired against. */
 .slideFooter {
   flex-shrink: 0;
   padding: var(--slide-spacing-lg);
@@ -117,12 +121,6 @@
   flex-shrink: 0;
   accent-color: var(--color-primary, #d97706);
   margin: 0;
-}
-
-/* ========== Button Container ========== */
-.buttonContainer {
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* ========== Mobile ========== */

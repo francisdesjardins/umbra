@@ -109,11 +109,10 @@
 }
 
 /* ========== Footer ========== */
+/* Placement — the flex row and its gap — comes from `Shared.ButtonRow`, which this footer renders
+   as its own element. What stays here is this template's chrome. */
 .modalFooter {
   flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--modal-spacing-sm);
 }
 
 /* ========== Container ========== */

@@ -13,7 +13,12 @@ const resultStore = createResultStore();
 export function VanillaSlideExample() {
   const { result } = useStore(resultStore);
 
-  const panel = useSlideModal<void, 'close'>({
+  // The same three sections, the same controls and the same two reasons its MUI twin declares —
+  // deliberately, and it is the whole point of the pair. What differs is the markup underneath and
+  // the one line of prose naming the flavour; anything else differing turns a comparison into two
+  // unrelated demos. Its `SectionGroup` is the counterpart of MUI's inner `<Stack>`: it groups the
+  // checkboxes, not the section around them.
+  const panel = useSlideModal<void, 'cancel' | 'save'>({
     id: MODAL_ID,
     direction: 'right',
     ariaLabelledBy: `${MODAL_ID}-title`,
@@ -33,8 +38,8 @@ export function VanillaSlideExample() {
               </Shared.Detail>
             </Shared.Section>
 
-            <VanillaSlideModal.SectionGroup>
-              <Shared.Section title="Notifications">
+            <Shared.Section title="Notifications">
+              <VanillaSlideModal.SectionGroup>
                 <VanillaSlideModal.CheckboxLabel>
                   <input type="checkbox" defaultChecked />
                   <Shared.Detail>Enable email notifications</Shared.Detail>
@@ -43,12 +48,30 @@ export function VanillaSlideExample() {
                   <input type="checkbox" />
                   <Shared.Detail>Enable push notifications</Shared.Detail>
                 </VanillaSlideModal.CheckboxLabel>
-              </Shared.Section>
-            </VanillaSlideModal.SectionGroup>
+                <VanillaSlideModal.CheckboxLabel>
+                  <input type="checkbox" />
+                  <Shared.Detail>Enable SMS notifications</Shared.Detail>
+                </VanillaSlideModal.CheckboxLabel>
+              </VanillaSlideModal.SectionGroup>
+            </Shared.Section>
+
+            <Shared.Section title="Appearance">
+              <VanillaSlideModal.SectionGroup>
+                <VanillaSlideModal.CheckboxLabel>
+                  <input type="checkbox" />
+                  <Shared.Detail>Dark mode</Shared.Detail>
+                </VanillaSlideModal.CheckboxLabel>
+                <VanillaSlideModal.CheckboxLabel>
+                  <input type="checkbox" defaultChecked />
+                  <Shared.Detail>Compact layout</Shared.Detail>
+                </VanillaSlideModal.CheckboxLabel>
+              </VanillaSlideModal.SectionGroup>
+            </Shared.Section>
           </VanillaSlideModal.Content>
           <VanillaSlideModal.Footer>
-            <Shared.Button variant="primary" {...action('close')}>
-              Close
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
+            <Shared.Button variant="primary" {...action('save')}>
+              Save Changes
             </Shared.Button>
           </VanillaSlideModal.Footer>
         </VanillaSlideModal.DefaultLayout>

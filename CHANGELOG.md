@@ -11,6 +11,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-11
 
+### Fixed — the vanilla form modal's bottom border, and a green ring on a field in error
+
+**Two validators were contradicting each other on screen.** An empty Name carries no `required`
+attribute, so constraint validation calls it _valid_ — and `.input:user-valid` painted a **green**
+border directly above the words "Name is required". It won on order alone: both selectors are one
+class plus one pseudo-class, and the native block came second. Email went red in the same
+screenshot only because `type="email"` gave the browser an opinion that happened to agree.
+`:not(.error)` settles it: whoever says "error" out loud outranks the browser's silence.
+
+**And the layout's bottom border was missing** — the trap `src/CLAUDE.md` already describes, in a
+new place. The library's content wrapper is `flex: 1`, so `.formLayout` stretched to exactly the
+dialog's height and put its bottom border on the last row of an `overflow: auto` box whose height
+lands on a fraction of a pixel. Whatever the compositor does with that fraction it does to the
+border, and the bottom edge read as simply absent while the other three were fine. `margin-block:
+1px` lifts it off the clip edge. Vertical only — a side margin on a `width: 100%` box overflows by
+exactly that margin, which trades a missing border for a scrollbar. The MUI twin never showed it,
+because its Paper is not flush with the scroll container.
+
+### Changed — one component owns where a modal's actions sit
+
+`Shared.ButtonRow`, and it exists because three copies of one flex rule had already drifted: the
+message footer flexed its buttons to the trailing edge with an 8px gap, the form footer used 16,
+and the slide footer had **no `display: flex` at all** — so two actions there sat left-aligned and
+touching, and the panel read as a different product from the MUI twin it is paired against. Each
+footer renders `ButtonRow` as its own element rather than nesting one, so a template keeps its
+chrome and gives up only the placement. All four modals now measure the same: 8px gap, flex-end.
+
+### Changed — the vanilla slide panel says what its MUI twin says
+
+The pair is meant to be read side by side, and only one of them had an Appearance section, a third
+notification and a second action. It declared `'close'` where MUI declared `'cancel' | 'save'`.
+Same three sections now, same controls, same two reasons — what differs is the markup underneath
+and the one line naming the flavour, which is exactly what the message pair already does.
+
 ### Changed — the README's moons are drawn from the favicon
 
 They were the characters `◐ ◑ ●`, and they carried the two defects `MoonPhase` was written for —

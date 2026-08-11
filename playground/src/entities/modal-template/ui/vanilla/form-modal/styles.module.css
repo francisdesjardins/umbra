@@ -56,6 +56,16 @@
   font-family: var(--font-family);
   max-width: 500px;
   width: 100%;
+  /* A pixel off the dialog's top and bottom, and it is the fix for the trap `src/CLAUDE.md`
+     describes rather than a nicety. The library's content wrapper is `flex: 1`, so this box
+     stretches to exactly the dialog's height — putting its bottom border on the last row of an
+     `overflow: auto` box whose own height lands on a fraction of a pixel. Whatever the compositor
+     does with that final fraction it does to the border, and the bottom edge read as simply
+     missing while the other three were fine. MUI's twin never showed it, because its Paper is not
+     flush with the scroll container.
+     Vertical only: the horizontal edges were never clipped, and a side margin on a `width: 100%`
+     box overflows by exactly that margin — which trades a missing border for a scrollbar. */
+  margin-block: 1px;
   border: 1px solid var(--form-border);
 }
 
@@ -104,11 +114,20 @@
 /* Native :user-invalid/:user-valid — no JS error state needed.
    These fire only after the user interacts with a field,
    avoiding the "eager validation" problem. */
-.input:user-valid {
+
+/* `:not(.error)` is what stops two validators contradicting each other on screen, and the case
+   that exposed it is the ordinary one. A field carrying no `required` attribute is *valid* to
+   constraint validation while it is empty — so an empty Name, which the form's own rule rejects,
+   matched `:user-valid` the moment it was touched and drew a **green** border above the words
+   "Name is required". It won on order alone: both selectors are one class and one pseudo-class,
+   and this block came second.
+   Email went red in the same screenshot only because `type="email"` gave the browser an opinion
+   that happened to agree. Whoever says "error" out loud outranks the browser's silence. */
+.input:user-valid:not(.error) {
   border-color: var(--form-success);
 }
 
-.input:user-valid:focus {
+.input:user-valid:not(.error):focus {
   box-shadow: 0 0 0 1px var(--form-success);
 }
 
@@ -179,13 +198,6 @@
   color: var(--form-error);
 }
 
-/* ========== Button Container ========== */
-.buttonContainer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 /* ========== Header / Content / Footer helpers ========== */
 .formHeader {
   flex-shrink: 0;
@@ -209,11 +221,11 @@
   margin: calc(-1 * var(--form-focus-ring-space));
 }
 
+/* Placement comes from `Shared.ButtonRow`; this is the chrome that is this template's own. The gap
+   between the two actions used to be `--form-spacing` (16) where the message modal used 8, which
+   is the drift a single owner exists to prevent. */
 .formFooter {
   flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--form-spacing);
   margin-top: var(--form-spacing);
 }
 
