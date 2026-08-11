@@ -240,14 +240,33 @@ export type UseModalBaseOptions<
    * state the callback is handed. These are merged after the placement and before the
    * animation, so they can override the former and not the latter.
    *
+   * **Size against the dialog, not the viewport.** A `dialog:modal` is capped by the UA at
+   * `calc(100% - 6px - 2em)` — 337px on a 375px phone. So `width: min(600px, 92vw)`, which is
+   * the obvious way to write "600 or the screen, whichever is smaller", asks for 345 and is cut
+   * by eight pixels on the right, rounded corner and all. Above roughly 475px the two agree and
+   * nothing shows, which is what makes it look deliberate on every desktop. `100%` resolves
+   * against the dialog's own box and cannot disagree with it.
+   *
+   * **A modal dialog is a scroll container**, because the same UA rule gives it `overflow: auto`
+   * alongside that cap. It therefore clips whatever a control inside it draws *outside* its own
+   * box: a focus ring at `outline-offset`, a glow, a shadow. Leave room for the ring in the
+   * padding of whichever box clips — and reach for `scroll-padding` rather than padding when
+   * the box scrolls, since scrolling a control into view parks it flush against the edge.
+   *
+   * **Both rules are `:modal` only.** A non-modal dialog gets neither the cap nor the scrolling,
+   * so `nonModal: true` silently changes what your own sizing means. Worth knowing before
+   * porting a panel from one to the other.
+   *
    * **A hairline flush to the edge is worth avoiding.** Left at `fit-content` a dialog's box
    * lands on a fraction of a pixel, and `margin: auto` puts both edges off-pixel — so a 1px
    * border on content that reaches the dialog's edge occupies that last fractional pixel, and
    * how much of it survives is the compositor's business rather than yours. Measured on one
    * page: three dialogs at 154.844px, 243.094px and 252.266px wide kept 16%, 91% and 73% of
-   * their right border, and the first read as missing. Inset the border by a pixel, give the
-   * dialog a whole-pixel `width`, or put the border on an inner element — any of the three
-   * removes the question.
+   * their right border, and the first read as missing. Measured on another, a panel whose sides
+   * landed on whole pixels and whose top and bottom did not lost exactly those two edges — and
+   * a translucent border loses twice, since each half of the split carries half the alpha.
+   * Inset the border by a pixel, give the dialog a whole-pixel `width`, or put the border on an
+   * inner element — any of the three removes the question.
    */
   readonly style?: TStyle | undefined;
   /**

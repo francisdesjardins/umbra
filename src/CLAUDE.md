@@ -205,7 +205,25 @@ whole pixels, or move the border inward) and the `style` option's doc says so.
 
 The symptom is worth recognising too, because it misleads: the border is correct on the first
 draw and gone after, and toggling _any_ property in devtools brings it back — both of which read
-as a CSS problem and are neither.
+as a CSS problem and are neither. A second sighting sharpened it: a panel whose left and right
+edges landed on whole pixels (41.000, 334.000) and whose top and bottom did not (222.4375,
+567.875) lost **exactly those two edges**. A translucent border loses twice, because each half of
+the split carries half the alpha — at `0.45` each half arrives near `0.25` and reads as absent.
+
+**Two more UA rules apply to `dialog:modal` and to nothing else**, and both reach a consumer's
+own box rather than the library's:
+
+- **`max-width`/`max-height: calc(100% - 6px - 2em)`** — 337px on a 375px phone. So a panel
+  sized `min(600px, 92vw)` asks for 345 and is cut by eight pixels on the right, rounded corner
+  included. Above roughly 475px the two agree and nothing shows, which is why it survives every
+  desktop review. Four of the playground's own panels were written this way.
+- **`overflow: auto`** — so a modal dialog is a scroll container and clips whatever a control
+  inside it draws outside its own box: a focus ring at `outline-offset`, a glow. And because it
+  scrolls, `scroll-padding` is the property that keeps a tabbed-to control off its own edge;
+  padding alone does not, since scroll-into-view parks it flush.
+
+A **non-modal** dialog gets neither, so `nonModal: true` silently changes what a caller's own
+sizing means. The `style` option's doc carries both, since that is where a caller meets them.
 
 Everything a consumer needs to style a dialog, and nothing that requires knowing how the tree
 is built:
