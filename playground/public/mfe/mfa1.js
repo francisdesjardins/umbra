@@ -17,6 +17,37 @@ import { logTo } from './log.js';
 const LOG = 'mfa1-log';
 
 /**
+ * The two panel glyphs, drawn rather than imported — nothing here has a bundler to pull an icon
+ * set through, and two paths are cheaper than a font.
+ *
+ * `ASK` is an arrow leaving: this panel asking another to open a dialog it does not own. `MINE`
+ * is a window: opening the one it does own. The distinction is the demo's whole subject, so it is
+ * the one thing the glyphs have to carry; *which* microfrontend is being asked lives in the
+ * tooltip and in `aria-label`, because no icon can say "Billing".
+ */
+const ASK = ['M5 12h13', 'M12 5l7 7-7 7'];
+const MINE = ['M4 5h16v14H4z', 'M4 9h16'];
+
+/** React spells the SVG presentation attributes in camelCase; Solid's hyperscript does not. */
+const icon = (paths) => {
+  return h(
+    'svg',
+    {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: 2,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      'aria-hidden': true,
+    },
+    ...paths.map((d) => {
+      return h('path', { key: d, d });
+    })
+  );
+};
+
+/**
  * What Billing says when it approves. `unknown` on arrival, like every payload that crossed an
  * ownership boundary — the direction does not change the rule.
  *
@@ -67,69 +98,79 @@ function Checkout() {
     },
   });
 
-  // Same skeleton as the plain-JS panel opposite — a field, then a button row. The two are
-  // written in different frameworks and share no components; only the host's stylesheet.
+  // Same skeleton as the plain-JS panel opposite — a field with its buttons beside it. The two
+  // are written in different frameworks and share no components; only the host's stylesheet.
   return h(
     'div',
     { className: 'controls' },
     h(
-      'label',
-      { className: 'field' },
-      h('span', null, 'Amount ($)'),
-      h('input', {
-        type: 'number',
-        value: amount,
-        min: 0,
-        step: 20,
-        onChange: (event) => {
-          return setAmount(Number(event.target.value));
-        },
-      })
-    ),
-    h(
       'div',
-      { className: 'row' },
+      { className: 'field-line' },
       h(
-        'button',
-        {
-          onClick: () => {
-            logTo(LOG, 'out', `asked billing:confirm to open — ${amount}$`);
-            // The whole demo: a dialog owned by another microfrontend, asked to open — and the
-            // answer coming back, which is what makes it a conversation rather than a shout.
-            void dialogManager
-              .requestOpenAndWait(
-                'billing:confirm',
-                createOpenRequest({ amount }, { source: 'checkout' })
-              )
-              .then(async (outcome) => {
-                if (!outcome.accepted) {
-                  logTo(LOG, 'no', `billing refused — ${outcome.reason}`);
-                  return;
-                }
-                const [, result] = await outcome.closed;
-                // Symmetric with Billing's own check: what came back crossed the same boundary,
-                // so it is `unknown` here until this side says otherwise.
-                const receipt = asReceipt(result?.data);
-                logTo(
-                  LOG,
-                  'yes',
-                  receipt === null
-                    ? `billing answered — "${result?.reason ?? 'inconnu'}" (sans reçu)`
-                    : `billing paid ${receipt.amount}$ — ${receipt.transactionId}`
-                );
-              });
+        'label',
+        { className: 'field' },
+        h('span', null, 'Amount ($)'),
+        h('input', {
+          type: 'number',
+          value: amount,
+          min: 0,
+          step: 20,
+          onChange: (event) => {
+            return setAmount(Number(event.target.value));
           },
-        },
-        'Ask Billing'
+        })
       ),
       h(
-        'button',
-        {
-          onClick: () => {
-            void receipt.open();
+        'div',
+        { className: 'row' },
+        h(
+          'button',
+          {
+            className: 'iconbtn',
+            'aria-label': 'Ask Billing',
+            'data-tip': 'Ask Billing',
+            onClick: () => {
+              logTo(LOG, 'out', `asked billing:confirm to open — ${amount}$`);
+              // The whole demo: a dialog owned by another microfrontend, asked to open — and the
+              // answer coming back, which is what makes it a conversation rather than a shout.
+              void dialogManager
+                .requestOpenAndWait(
+                  'billing:confirm',
+                  createOpenRequest({ amount }, { source: 'checkout' })
+                )
+                .then(async (outcome) => {
+                  if (!outcome.accepted) {
+                    logTo(LOG, 'no', `billing refused — ${outcome.reason}`);
+                    return;
+                  }
+                  const [, result] = await outcome.closed;
+                  // Symmetric with Billing's own check: what came back crossed the same boundary,
+                  // so it is `unknown` here until this side says otherwise.
+                  const receipt = asReceipt(result?.data);
+                  logTo(
+                    LOG,
+                    'yes',
+                    receipt === null
+                      ? `billing answered — "${result?.reason ?? 'inconnu'}" (sans reçu)`
+                      : `billing paid ${receipt.amount}$ — ${receipt.transactionId}`
+                  );
+                });
+            },
           },
-        },
-        'Open my receipt'
+          icon(ASK)
+        ),
+        h(
+          'button',
+          {
+            className: 'iconbtn',
+            'aria-label': 'Open my receipt',
+            'data-tip': 'Open my receipt',
+            onClick: () => {
+              void receipt.open();
+            },
+          },
+          icon(MINE)
+        )
       )
     ),
     receipt.Modal

@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider/ThemeContext';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 
@@ -10,11 +11,11 @@ import { useEffect, useRef, useState } from 'react';
  * Wrong by four hundred pixels, that is the page walking down under them at the worst moment —
  * which is what a placeholder left over from the four-column layout was doing.
  *
- * The common case, not a universal one: below 560px the host goes single-column and is nearly
- * twice this. A phone corrects upward on the first frame; it is the desktop read that this
- * spares.
+ * The common case, not a universal one: below 560px the host goes single-column and is taller
+ * than this — though the `maxHeight` below caps what a phone actually renders, so the correction
+ * there is bounded. It is the desktop read this spares.
  */
-const INITIAL_HEIGHT = 869;
+const INITIAL_HEIGHT = 660;
 
 /**
  * Four microfrontends, one shared manager, in an iframe.
@@ -46,6 +47,7 @@ export function HostFrame() {
   const [reloadKey, setReloadKey] = useState(0);
   const [height, setHeight] = useState(INITIAL_HEIGHT);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const { isDarkMode } = useTheme();
 
   /**
    * Take the height from the document inside, rather than from breakpoints.
@@ -55,6 +57,14 @@ export function HostFrame() {
    * so a `md` height computed for a 1200px viewport was being applied to a 604px frame that had
    * reflowed to two columns and wanted twice as much. Every hard-coded value here was wrong at
    * some width, and adding a fourth panel made most of them wrong at once.
+   *
+   * **The body, not `documentElement`, and that is the difference between measuring and
+   * latching.** `documentElement.scrollHeight` is never less than the viewport it is in — and
+   * that viewport is the frame, whose height this sets. So the two agree at whatever the tallest
+   * layout ever produced was and stay there: the frame grows freely and can never shrink, because
+   * the number it reads is the number it wrote. Invisible while the content only ever got taller;
+   * the moment a panel got shorter it left two hundred pixels of blank frame under it. The body is
+   * sized by its content, so it answers the question actually being asked.
    *
    * Same origin, so `contentDocument` is readable and no `postMessage` handshake is needed. The
    * `ResizeObserver` covers what `load` cannot: the frame's own width crossing one of the host
@@ -71,7 +81,7 @@ export function HostFrame() {
     let observer: ResizeObserver | null = null;
 
     const measure = () => {
-      const inner = frame.contentDocument?.documentElement;
+      const inner = frame.contentDocument?.body;
       if (!inner) {
         return;
       }
@@ -83,11 +93,31 @@ export function HostFrame() {
       setHeight(Math.ceil(inner.scrollHeight) + chrome);
     };
 
+    /**
+     * Hand the frame the theme the top bar is showing.
+     *
+     * The page inside is its own document, so it has its own `prefers-color-scheme` — which
+     * answers the OS and knows nothing about a toggle in this app. Same origin, so the attribute
+     * can simply be written; `host.html` turns it into a `color-scheme` and its `light-dark()`
+     * tokens follow.
+     *
+     * It rides along with the measurement effect rather than living in one of its own, because
+     * both need the same thing: a document that exists. A reload wipes the attribute, and `attach`
+     * is already the one place that knows the frame has finished loading.
+     */
+    const applyTheme = () => {
+      const root = frame.contentDocument?.documentElement;
+      if (root) {
+        root.dataset['theme'] = isDarkMode ? 'dark' : 'light';
+      }
+    };
+
     const attach = () => {
-      const inner = frame.contentDocument?.documentElement;
+      const inner = frame.contentDocument?.body;
       if (!inner) {
         return;
       }
+      applyTheme();
       measure();
       observer = new ResizeObserver(measure);
       observer.observe(inner);
@@ -103,7 +133,7 @@ export function HostFrame() {
       frame.removeEventListener('load', attach);
       observer?.disconnect();
     };
-  }, [reloadKey]);
+  }, [reloadKey, isDarkMode]);
 
   return (
     <Stack sx={{ gap: 1.5, width: '100%', minWidth: 0 }}>
@@ -137,6 +167,25 @@ export function HostFrame() {
           width: '100%',
           // Measured from the document inside — see the effect above.
           height,
+          /**
+           * On a phone the frame is capped and scrolls itself, and that is about the modals.
+           *
+           * A `<dialog>` opened with `showModal()` centres in **its own** viewport, and an iframe
+           * sized to its whole document has a viewport as tall as that document — 1802px at a
+           * 390px-wide screen. So the modal centres 900px down, the backdrop dims the frame and
+           * nothing else, and a reader sitting on the Checkout panel sees no dialog at all. It is
+           * not off by a little: it is a screen and a half below the fold.
+           *
+           * Capping the frame makes its viewport the thing that is actually on screen, so a modal
+           * lands where the reader is looking. The cost is a nested scroll area, which is the
+           * cheaper of the two — a demo whose dialogs open out of sight demonstrates nothing.
+           *
+           * A viewport unit rather than the measured height, and a breakpoint rather than the
+           * frame's own width: the note on the effect above is about *content* height, which the
+           * frame's width decides. This is the reader's screen, which is exactly what a media
+           * query is for.
+           */
+          maxHeight: { xs: '80vh', sm: 'none' },
           border: 1,
           borderColor: 'divider',
           borderRadius: 1,

@@ -96,7 +96,7 @@ JavaScript.
 
 **Requirements:** Node >= 24.0.0 | Chrome 138+ (native `<dialog>`)
 
-## ● Quick Start
+## ◕ Quick Start
 
 An action is declared by being rendered. `action('confirm', handler)` names the reason, binds
 the handler and returns the props to spread — one expression, at the one place it matters.
@@ -302,7 +302,7 @@ explains _why_ each name moved rather than only that it did.
 
 If you have lifted code out of `src/`, pin the commit you took it from.
 
-## ● On the tooling
+## ◕ On the tooling
 
 **This library was written by Claude, and directed by nearly 30 years of doing it by hand.** Worth
 saying plainly, because the interesting question is not whether an AI can write a dialog manager —

@@ -43,6 +43,29 @@ export const SectionNav = ({ sections }: SectionNavProps) => {
         bgcolor: 'background.default',
         borderBottom: 1,
         borderColor: 'divider',
+        /**
+         * A two-pixel bleed of *background only*, which is a subpixel fix and nothing more.
+         *
+         * A highlighted card and this bar are both the content column's width, so the card's 1px
+         * border should pass exactly behind it. They do not land on the same pixel: the column's
+         * width is fractional, so the card's border straddles the bar's edge and roughly half of
+         * it stays lit — an orange hairline down each side of the bar, moving as the page scrolls.
+         *
+         * It has to be the background that widens and not the box. Widening the box (negative
+         * margins with matching padding) takes the `borderBottom` with it, and the divider then
+         * runs past the cards it is supposed to sit above — which is far more visible than the
+         * hairline it fixes. Hence a pseudo-element behind: the bar's own edges, border included,
+         * do not move at all.
+         */
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          insetBlock: 0,
+          left: -2,
+          right: -2,
+          bgcolor: 'background.default',
+          zIndex: -1,
+        },
       }}
     >
       {sections.map((section) => {

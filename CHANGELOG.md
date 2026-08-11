@@ -11,6 +11,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-11
 
+### Fixed — the microfrontend frame was unusable on a phone, and 200px too tall everywhere
+
+**A modal in an iframe centres in the iframe's viewport**, and that viewport was the whole
+document: 1802px at a 390px-wide screen. So a dialog opened 900px below the fold, the backdrop
+dimmed a frame nobody was looking at, and a reader on the first panel saw nothing happen at all.
+The frame is now capped at `80vh` below `sm` and scrolls itself, which makes its viewport the part
+that is actually on screen — the same dialog now lands at y=248 of an 844px phone. A nested scroll
+area is the cheaper of the two costs; a demo whose dialogs open out of sight demonstrates nothing.
+
+**The frame's height could only ever grow.** It was measured from
+`documentElement.scrollHeight`, which is never less than the viewport it sits in — and that
+viewport is the frame, whose height the measurement sets. The two agreed at whatever the tallest
+layout had been and stayed there. Invisible for as long as the content only got taller; the moment
+a panel got shorter it left two hundred pixels of blank frame below it. Measured from the body now,
+which is sized by its content.
+
+**The panels are compact.** Each field's buttons moved beside it rather than under it, and became
+icon buttons with a tooltip — the label survives in the tooltip and in `aria-label`, which is the
+half that matters, since "Ask Checkout" and "Ask Billing" are the same glyph and _who is being
+asked_ is the entire subject. The logs went from eight and a half lines to five and a half, which
+still carries a whole exchange. Desktop: 869px → 660px.
+
+Two things that had to be stated once and were not. Every control now takes its height from a
+single `--control-h`, because an input's natural box (35px) and a square button's typed number
+never agreed, and they now sit on the same line. And Audit — the panel behind a shadow root — was
+missing `box-sizing: border-box`, which does not cross that boundary: its input asked for the same
+34px as the other three and rendered 48, standing taller than the field beside it while the
+stylesheet insisted they were identical. The rule changes no layout of its own; it changes what
+every other number means.
+
+### Fixed — the microfrontend frame ignored the theme toggle
+
+It is a separate document, so its `prefers-color-scheme` answers the **operating system** and went
+on answering it while the top bar said otherwise — a light frame inside a dark app. The parent now
+writes `data-theme` onto the frame's document (same origin, so it can), and the page turns that
+into a `color-scheme`. Its palette is one list of `light-dark()` tokens rather than two blocks to
+keep in step, and with no attribute — opened on its own, outside the playground — it still follows
+the OS.
+
+### Fixed — a hairline beside the sticky jump bar
+
+A highlighted card and `SectionNav` are both the content column's width, but that width is
+fractional, so the card's 1px border straddled the bar's edge and half of it stayed lit as the page
+scrolled. The bar's _background_ now bleeds two pixels through a pseudo-element. It deliberately is
+not the box that widens: negative margins take `borderBottom` with them, and a divider running past
+the cards it sits above is far more visible than the hairline it fixes.
+
 ### Fixed — `aria-keyshortcuts` was not a conforming ARIA value
 
 Every token of `aria-keyshortcuts` must be a `KeyboardEvent.key` value from the UI Events spec,

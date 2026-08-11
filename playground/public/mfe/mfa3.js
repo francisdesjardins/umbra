@@ -20,6 +20,34 @@ import { logTo } from './log.js';
 const LOG = 'mfa3-log';
 
 /**
+ * The same two glyphs Checkout draws, and deliberately the same paths: an arrow leaving for a
+ * dialog this panel does not own, a window for the one it does.
+ *
+ * Spelled with hyphenated SVG attributes rather than React's camelCase — hyperscript sets them on
+ * the element as written, which is the one place the two panels' source has to differ.
+ */
+const ASK = ['M5 12h13', 'M12 5l7 7-7 7'];
+const MINE = ['M4 5h16v14H4z', 'M4 9h16'];
+
+const icon = (paths) => {
+  return h(
+    'svg',
+    {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': 2,
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      'aria-hidden': 'true',
+    },
+    ...paths.map((d) => {
+      return h('path', { d });
+    })
+  );
+};
+
+/**
  * What Billing sends when a charge is refused. `unknown` on arrival, like every payload that
  * crossed an ownership boundary.
  *
@@ -98,60 +126,70 @@ function Support() {
     },
   });
 
-  // Same skeleton as the two panels beside it — a field, then a button row. The three are written
-  // in three different ways and share no components; only the host's stylesheet.
+  // Same skeleton as the two panels beside it — a field with its buttons beside it. The three are
+  // written in three different ways and share no components; only the host's stylesheet.
   return h(
     'div',
     { class: 'controls' },
     h(
-      'label',
-      { class: 'field' },
-      h('span', null, 'Order reference'),
-      h('input', {
-        type: 'text',
-        get value() {
-          return reference();
-        },
-        onInput: (event) => {
-          return setReference(event.target.value);
-        },
-      })
-    ),
-    h(
       'div',
-      { class: 'row' },
+      { class: 'field-line' },
       h(
-        'button',
-        {
-          onClick: () => {
-            logTo(LOG, 'out', `asked checkout:receipt to open — ${reference()}`);
-            // A support agent looking up a customer's receipt: a dialog owned by another
-            // microfrontend, asked for by name, with the answer coming back.
-            void dialogManager
-              .requestOpenAndWait(
-                'checkout:receipt',
-                createOpenRequest({ ref: reference() }, { source: 'support' })
-              )
-              .then(async (outcome) => {
-                if (!outcome.accepted) {
-                  logTo(LOG, 'no', `checkout refused — ${outcome.reason}`);
-                  return;
-                }
-                const [, result] = await outcome.closed;
-                logTo(LOG, 'yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
-              });
+        'label',
+        { class: 'field' },
+        h('span', null, 'Order reference'),
+        h('input', {
+          type: 'text',
+          get value() {
+            return reference();
           },
-        },
-        'Ask Checkout'
+          onInput: (event) => {
+            return setReference(event.target.value);
+          },
+        })
       ),
       h(
-        'button',
-        {
-          onClick: () => {
-            void ticket.open();
+        'div',
+        { class: 'row' },
+        h(
+          'button',
+          {
+            class: 'iconbtn',
+            'aria-label': 'Ask Checkout',
+            'data-tip': 'Ask Checkout',
+            onClick: () => {
+              logTo(LOG, 'out', `asked checkout:receipt to open — ${reference()}`);
+              // A support agent looking up a customer's receipt: a dialog owned by another
+              // microfrontend, asked for by name, with the answer coming back.
+              void dialogManager
+                .requestOpenAndWait(
+                  'checkout:receipt',
+                  createOpenRequest({ ref: reference() }, { source: 'support' })
+                )
+                .then(async (outcome) => {
+                  if (!outcome.accepted) {
+                    logTo(LOG, 'no', `checkout refused — ${outcome.reason}`);
+                    return;
+                  }
+                  const [, result] = await outcome.closed;
+                  logTo(LOG, 'yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
+                });
+            },
           },
-        },
-        'Open my ticket'
+          icon(ASK)
+        ),
+        h(
+          'button',
+          {
+            class: 'iconbtn',
+            'aria-label': 'Open my ticket',
+            'data-tip': 'Open my ticket',
+            onClick: () => {
+              void ticket.open();
+            },
+          },
+          icon(MINE)
+        )
       )
     ),
     // The dialog itself. `Modal` is a real DOM node here rather than a description of one —

@@ -42,37 +42,45 @@
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f8fafc;
-        --panel: #ffffff;
-        --ink: #0f172a;
-        --muted: #64748b;
-        --line: #e2e8f0;
-        --accent: #d97706;
+        /* One control height for every control on the page, because two of them now sit on the
+           same line. Left to their natural boxes an input came out 35px (14px × 1.5, plus 6px of
+           padding twice and two borders) and a square icon button whatever number was typed for
+           it — so the two edges missed by a few pixels and the row read as crooked. Stating it
+           once is what makes "same height" a fact rather than an arithmetic coincidence that a
+           font-size change would quietly end.
+           It inherits into Audit's shadow root, which is the one thing that crosses that boundary
+           for free — so the fourth panel agrees with the other three without restating a number. */
+        --control-h: 34px;
+        /* Both schemes in one list, resolved against the used `color-scheme` rather than against
+           the OS directly. That is what lets the playground's own toggle reach in here: this page
+           is a separate document, so a `prefers-color-scheme` query answers the *operating
+           system* and goes on answering it while the top bar says otherwise — the frame stayed
+           light inside a dark app. `host-frame.tsx` sets `data-theme` on this document (same
+           origin, so it can), the two rules below turn that into a `color-scheme`, and every
+           token follows without a second palette to keep in step. */
+        --bg: light-dark(#f8fafc, #0b1120);
+        --panel: light-dark(#ffffff, #131c2e);
+        --ink: light-dark(#0f172a, #e2e8f0);
+        --muted: light-dark(#64748b, #94a3b8);
+        --line: light-dark(#e2e8f0, #24314a);
+        --accent: light-dark(#d97706, #f59e0b);
         /* One colour per microfrontend, and the dialog each one renders wears its owner's.
            The point the demo has to make visually: a dialog belongs to whoever registered it,
            not to whoever asked for it. */
-        --checkout: #d97706;
-        --billing: #7c3aed;
-        --support: #0d9488;
-        --audit: #be123c;
-        --ok: #15803d;
-        --no: #b91c1c;
+        --checkout: light-dark(#d97706, #f59e0b);
+        --billing: light-dark(#7c3aed, #a78bfa);
+        --support: light-dark(#0d9488, #2dd4bf);
+        --audit: light-dark(#be123c, #fb7185);
+        --ok: light-dark(#15803d, #4ade80);
+        --no: light-dark(#b91c1c, #f87171);
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0b1120;
-          --panel: #131c2e;
-          --ink: #e2e8f0;
-          --muted: #94a3b8;
-          --line: #24314a;
-          --accent: #f59e0b;
-          --checkout: #f59e0b;
-          --billing: #a78bfa;
-          --support: #2dd4bf;
-          --audit: #fb7185;
-          --ok: #4ade80;
-          --no: #f87171;
-        }
+      /* Absent the attribute, `color-scheme: light dark` above leaves it to the OS — which is
+         what this page does when opened on its own, outside the playground. */
+      :root[data-theme='light'] {
+        color-scheme: light;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
       }
       /* `--own` is this microfrontend's colour. With four parties on the page a single "the
          other one" colour would be a lie, so an incoming line is marked by its glyph and by one
@@ -153,9 +161,29 @@
         display: grid;
         gap: 10px;
       }
+      /* Field and buttons on one line, which is where a row of vertical space per panel went.
+         `flex-end` rather than `center`: the label sits above the input, so the two halves agree
+         on the input's bottom edge and not on the middle of a taller stack.
+
+         It wraps, and that is the phone. Below roughly 300px of panel the buttons drop under the
+         field and the layout is the one this replaced — no breakpoint needed, because the only
+         question is whether they fit. */
+      .field-line {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .field-line .field {
+        flex: 1 1 9rem;
+      }
+      .field-line .row {
+        flex: 0 1 auto;
+      }
       .field {
         display: grid;
         gap: 4px;
+        min-width: 0;
       }
       .field > span {
         color: var(--muted);
@@ -168,13 +196,19 @@
         font: inherit;
         display: block;
         width: 100%;
+        height: var(--control-h);
         padding: 6px 8px;
         border-radius: 6px;
         border: 1px solid var(--line);
         background: transparent;
         color: inherit;
       }
+      /* An <output> is not a form control the browser centres text in, so it has to say so —
+         otherwise the one panel showing a value sits its text a few pixels above the three
+         showing an input's. */
       .field output {
+        display: flex;
+        align-items: center;
         color: var(--muted);
       }
       .row {
@@ -200,16 +234,69 @@
       button:hover {
         border-color: var(--own, var(--accent));
       }
+      /* An icon button is square and does not stretch — that is the space a text label was
+         costing beside every field. The label does not disappear, it moves into the tooltip and
+         into `aria-label`, which is the half that matters: "Ask Checkout" and "Ask Billing" are
+         the same glyph, and *who is being asked* is the one thing this demo exists to show. An
+         icon alone would say a request left; only the name says where it went. */
+      /* `.row .iconbtn`, not `.iconbtn` — `.row button` above sets `flex: 1 1 0` to make text
+         buttons share the row, and it outranks a single class. An icon button must not stretch,
+         so the override has to carry the same weight the rule it is answering does. */
+      .row .iconbtn {
+        flex: 0 0 auto;
+      }
+      .iconbtn {
+        position: relative;
+        width: var(--control-h);
+        height: var(--control-h);
+        padding: 0;
+        display: inline-grid;
+        place-items: center;
+      }
+      .iconbtn svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+      }
+      /* Ours rather than `title`, for two reasons: the native one waits about a second, which
+         reads as nothing happening, and it never appears for a keyboard user. This one is
+         instant and answers `:focus-visible` too, so tabbing through a panel names each button.
+         `aria-hidden` on it — the accessible name is `aria-label`, and a screen reader that also
+         read this would say everything twice. */
+      .iconbtn::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        background: var(--ink);
+        color: var(--bg);
+        font-size: 11px;
+        line-height: 1.4;
+        padding: 3px 7px;
+        border-radius: 4px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+        z-index: 5;
+      }
+      .iconbtn:hover::after,
+      .iconbtn:focus-visible::after {
+        opacity: 1;
+      }
       /* A fixed box that scrolls, not one that grows.
          `flex: 1` with only a `min-height` made the panel a function of how much anyone had
          clicked: every line made it taller, the document with it, and `host-frame.tsx` — which
          measures the document inside — grew the frame to match. Four panels filling at once
          walked the page down and pushed whatever you were reading off the screen.
-         Sized in lines rather than pixels so the number stays meaningful if the type does: eight
+         Sized in lines rather than pixels so the number stays meaningful if the type does: five
          and a half, the half being the part that says there is more below. Newest is first
-         (`log.js`), so the half you cannot see is the history, which is the half nobody needs. */
+         (`log.js`), so the half you cannot see is the history, which is the half nobody needs.
+         Five carries a whole exchange — asked, decided, opened, and the two lines next door — so
+         the reader still sees a request cross a boundary without scrolling for it. */
       .log {
-        --log-lines: 8.5;
+        --log-lines: 5.5;
         flex: 0 0 auto;
         margin-top: 12px;
         height: calc(var(--log-lines) * 1.7em + 16px);
@@ -324,14 +411,38 @@
         <h2>Billing</h2>
         <div class="kind">Vanilla binding · owns <code>billing:confirm</code></div>
         <div class="controls">
-          <label class="field">
-            <span>Approval limit</span>
-            <!-- Written by mfa2.js from the same constant its refusal reads, so the number
-                 shown and the rule enforced cannot drift apart. -->
-            <output id="mfa2-limit">—</output>
-          </label>
-          <div class="row">
-            <button id="mfa2-ask">Ask Checkout</button>
+          <!-- The buttons are beside the field, not under it — but outside the <label>, which is
+               what makes that safe: a <button> inside a label is a click the label also answers. -->
+          <div class="field-line">
+            <label class="field">
+              <span>Approval limit</span>
+              <!-- Written by mfa2.js from the same constant its refusal reads, so the number
+                   shown and the rule enforced cannot drift apart. -->
+              <output id="mfa2-limit">—</output>
+            </label>
+            <div class="row">
+              <button
+                id="mfa2-ask"
+                class="iconbtn"
+                aria-label="Ask Checkout"
+                data-tip="Ask Checkout"
+              >
+                <!-- An arrow leaving toward someone else: this panel asking another to open. The
+                     same glyph on all four; the tooltip says which one is being asked. -->
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h13" />
+                  <path d="M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         <div class="log" id="mfa2-log"></div>
