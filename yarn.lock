@@ -1232,18 +1232,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router@npm:1.170.23":
-  version: 1.170.23
-  resolution: "@tanstack/react-router@npm:1.170.23"
+"@tanstack/react-router@npm:1.170.25":
+  version: 1.170.25
+  resolution: "@tanstack/react-router@npm:1.170.25"
   dependencies:
     "@tanstack/history": "npm:1.162.1"
     "@tanstack/react-store": "npm:^0.9.3"
-    "@tanstack/router-core": "npm:1.171.19"
+    "@tanstack/router-core": "npm:1.171.21"
     isbot: "npm:^5.1.22"
   peerDependencies:
     react: ">=18.0.0 || >=19.0.0"
     react-dom: ">=18.0.0 || >=19.0.0"
-  checksum: 10c0/5764825f111138178cffd87e4fe6aac63bcfe1705cbfb642307e3c1f89918b5261cfc5911e7811770251399e973ccc077a0892dac2cbd9e723c9db15f7d78153
+  checksum: 10c0/e2f9ad888c287b38ef3df7ee345702ddb65a091d75f46e00374b621ebbbaa92b1ec9d74697ee8ae6c3d1f6a9e23067e04ddc5becb5765c837adabfe31e72a93a
   languageName: node
   linkType: hard
 
@@ -1260,15 +1260,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-core@npm:1.171.19":
-  version: 1.171.19
-  resolution: "@tanstack/router-core@npm:1.171.19"
+"@tanstack/router-core@npm:1.171.21":
+  version: 1.171.21
+  resolution: "@tanstack/router-core@npm:1.171.21"
   dependencies:
     "@tanstack/history": "npm:1.162.1"
     cookie-es: "npm:^3.0.0"
     seroval: "npm:^1.6.2"
     seroval-plugins: "npm:^1.6.2"
-  checksum: 10c0/98199dc3982110cd29ae7354d7e6caf149e060911df627044f28e1b0d5d09bd1c011468a22e7e576b5efd354f54bf1525ee9cd440c84234c1c254c2e0613a251
+  checksum: 10c0/12c94e26a1750340c49169c05ce4f4de26f00a612fcd50afa1f115452c334053bab0a299f7d3dfdadcc5bed3b0735e899cf400a385e337f0d9cd5e8946666f75
   languageName: node
   linkType: hard
 
@@ -1309,10 +1309,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/istanbul-lib-coverage@npm:^2.0.1":
+"@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.1":
   version: 2.0.6
   resolution: "@types/istanbul-lib-coverage@npm:2.0.6"
   checksum: 10c0/3948088654f3eeb45363f1db158354fb013b362dba2a5c2c18c559484d5eb9f6fd85b23d66c0a7c2fcfab7308d0a585b14dadaca6cc8bf89ebfdc7f8f5102fb7
+  languageName: node
+  linkType: hard
+
+"@types/istanbul-lib-report@npm:*, @types/istanbul-lib-report@npm:^3":
+  version: 3.0.3
+  resolution: "@types/istanbul-lib-report@npm:3.0.3"
+  dependencies:
+    "@types/istanbul-lib-coverage": "npm:*"
+  checksum: 10c0/247e477bbc1a77248f3c6de5dadaae85ff86ac2d76c5fc6ab1776f54512a745ff2a5f791d22b942e3990ddbd40f3ef5289317c4fca5741bedfaa4f01df89051c
+  languageName: node
+  linkType: hard
+
+"@types/istanbul-reports@npm:^3":
+  version: 3.0.4
+  resolution: "@types/istanbul-reports@npm:3.0.4"
+  dependencies:
+    "@types/istanbul-lib-report": "npm:*"
+  checksum: 10c0/1647fd402aced5b6edac87274af14ebd6b3a85447ef9ad11853a70fd92a98d35f81a5d3ea9fcb5dbb5834e800c6e35b64475e33fcae6bfa9acc70d61497c54ee
   languageName: node
   linkType: hard
 
@@ -2671,7 +2689,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"istanbul-lib-coverage@npm:^3.0.0, istanbul-lib-coverage@npm:^3.2.0":
+"istanbul-lib-coverage@npm:^3.0.0, istanbul-lib-coverage@npm:^3.2.0, istanbul-lib-coverage@npm:^3.2.2":
   version: 3.2.2
   resolution: "istanbul-lib-coverage@npm:3.2.2"
   checksum: 10c0/6c7ff2106769e5f592ded1fb418f9f73b4411fd5a084387a5410538332b6567cd1763ff6b6cadca9b9eb2c443cce2f7ea7d7f1b8d315f9ce58539793b1e0922b
@@ -2702,7 +2720,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"istanbul-reports@npm:^3.1.6":
+"istanbul-reports@npm:^3.1.6, istanbul-reports@npm:^3.2.0":
   version: 3.2.0
   resolution: "istanbul-reports@npm:3.2.0"
   dependencies:
@@ -3962,7 +3980,7 @@ __metadata:
     "@mui/icons-material": "npm:^9.3.1"
     "@mui/material": "npm:^9.3.1"
     "@mui/system": "npm:9.3.0"
-    "@tanstack/react-router": "npm:1.170.23"
+    "@tanstack/react-router": "npm:1.170.25"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
     "@types/react-syntax-highlighter": "npm:^15.5.13"
@@ -3984,6 +4002,8 @@ __metadata:
     "@playwright/experimental-ct-react": "npm:1.62.1"
     "@playwright/test": "npm:1.62.1"
     "@rolldown/plugin-babel": "npm:0.2.3"
+    "@types/istanbul-lib-report": "npm:^3"
+    "@types/istanbul-reports": "npm:^3"
     "@types/node": "npm:^26.2.0"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
@@ -3997,7 +4017,10 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^7.1.1"
     eslint-plugin-react-refresh: "npm:^0.5.3"
     globals: "npm:^17.9.0"
+    istanbul-lib-coverage: "npm:^3.2.2"
     istanbul-lib-instrument: "npm:^6.0.3"
+    istanbul-lib-report: "npm:^3.0.1"
+    istanbul-reports: "npm:^3.2.0"
     npm-check-updates: "npm:23.0.2"
     oxlint: "npm:^1.77.0"
     prettier: "npm:^3.9.6"
