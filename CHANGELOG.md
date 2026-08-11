@@ -11,6 +11,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-11
 
+### Removed — GitHub code coverage, attempted and reverted the same day
+
+Worth a note only so nobody spends the afternoon again. `actions/upload-code-coverage` takes
+**Cobertura XML** and nothing else — the LCOV both suites already emitted is not read — and it
+returns **HTTP 404** on this repository: Code Quality is gated on an enterprise owner allowing it,
+and `francisdesjardins/umbra` is personal. "Code quality" does not appear under Settings →
+Security at all. The setup page does not say so; its prerequisite links to a second page, and the
+requirement is stated there.
+
+It was found the expensive way, by the step failing the Unit Tests job on the commit that added
+it. The first instinct was to keep the steps wired with `fail-on-error: false` — which is the
+wrong instinct. A step that can only 404 is a step to delete, and running the coverage variants to
+publish an artifact nobody opens costs the component job roughly 45% more runtime for a number
+nothing displays. Coverage stays a local command.
+
+### Changed — the component test report is uploaded only when something failed
+
+It was `if: always()`. The report is worth having on a red run, where it carries the trace
+`on-first-retry` recorded; on a green one it is an artifact nobody opens.
+
+**Two reports, not one merged number**, and that is the same argument `.c8rc.json`'s exclude list
+makes. The unit project deliberately measures only the framework-free half and excludes every
+binding and DOM-only module, because the component project is what covers those. Averaged
+together they would describe a codebase neither suite actually runs against, and the one number
+would move for reasons nobody could attribute. `code-coverage/unit` and `code-coverage/component`
+stay legible on their own.
+
+The unit side needed only `cobertura` added to c8's reporter list. The component side merges its
+own `.nyc_output` — so `ct-coverage-report.mjs` gained `--cobertura`, written through Istanbul's
+reporter rather than by hand. That is not a reversal of the note at the top of that file: printing
+its own table is arithmetic over three maps and `nyc` would have been a framework bought for its
+name, but this document is parsed by something outside the repo, and a hand-rolled XML that GitHub
+quietly declines is exactly the silent failure this setup has already produced three times.
+`istanbul-lib-coverage`, `istanbul-lib-report` and `istanbul-reports` are declared now; they were
+installed all along as c8's transitive dependencies, which is not a thing to import from.
+
+Both uploads skip on pull requests from forks, whose token is read-only — a contributor cannot
+grant `code-quality: write`, so failing there would fail on something they cannot fix. Naming any
+permission on a job drops the rest to `none`, so `contents: read` is restated for the checkout.
+
 ### Fixed — the vanilla form modal's bottom border, and a green ring on a field in error
 
 **Two validators were contradicting each other on screen.** An empty Name carries no `required`

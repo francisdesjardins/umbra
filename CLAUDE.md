@@ -105,8 +105,16 @@ what that project can reach. Three groups, and the reason each is there:
 `yarn test:component:coverage` is the other half, and it exists because the first list above is
 only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
 instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
-modules that c8 cannot reach — currently 92.73% statements over 47 files, against the unit
-project's 97.86% over the framework-free half.
+modules that c8 cannot reach — currently 92.99% statements over 48 files, against the unit
+project's 97.81% over the framework-free half.
+
+**Coverage is a local command, not a CI job, and that is deliberate.** GitHub's code-coverage
+upload (`actions/upload-code-coverage`, Cobertura only) was wired up and reverted the same day: it
+returns **HTTP 404** here because Code Quality is gated on an enterprise owner allowing it, and
+this is a personal repository — "Code quality" does not appear under Settings → Security at all.
+Running the coverage variants in CI to publish an artifact nobody opens costs the component job
+roughly 45% more runtime for a number nothing displays. Do not re-add it unless the repo moves
+under an enterprise **and** something actually renders the result.
 
 **Every way this has failed so far has failed quietly**, which is why the list is three items long
 and why `ct-coverage-report.mjs` prints all three when it finds nothing. An empty `.nyc_output`

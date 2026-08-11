@@ -145,8 +145,11 @@ jobs:
           echo "Yarn at $bin"
       - run: node ${{ steps.yarn.outputs.bin }} install --immutable
       - run: node ${{ steps.yarn.outputs.bin }} test:component
+      # Only when something failed. The report earns its keep on a red run — it carries the trace
+      # `on-first-retry` recorded, which is the difference between reading a failure and
+      # reproducing it — and on a green one it is an artifact nobody opens.
       - name: Upload component test report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: component-test-report
