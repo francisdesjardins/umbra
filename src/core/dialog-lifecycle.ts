@@ -115,10 +115,28 @@ export function runDialogExit(
   }
 
   // Safety timeout: finalize if `transitionend` never fires.
-  const fallbackTimer = setTimeout(() => {
+  //
+  // It is armed here and **re-armed from `transitionstart`**, because those are two different
+  // clocks. This runs when the exit style is written; the transition begins at the style
+  // recalculation that follows, and on a busy page that gap is not a rounding error — measured in
+  // a real application, 245 ms between the two while the exit itself lasts 200. The timer then
+  // expires as the slide is starting and cuts it, intermittently, which reads as a jitter rather
+  // than as a timeout. Re-arming puts both on the transition's own clock.
+  let fallbackTimer = setTimeout(() => {
     onFallbackTimeout?.();
     onFinish();
   }, exitDuration + 50);
+
+  const handleTransitionStart = (e: TransitionEvent) => {
+    if (e.target !== dialog || e.propertyName !== primaryProperty) {
+      return;
+    }
+    clearTimeout(fallbackTimer);
+    fallbackTimer = setTimeout(() => {
+      onFallbackTimeout?.();
+      onFinish();
+    }, exitDuration + 50);
+  };
 
   const handleTransitionEnd = (e: TransitionEvent) => {
     if (e.target !== dialog || e.propertyName !== primaryProperty) {
@@ -128,8 +146,10 @@ export function runDialogExit(
     onFinish();
   };
 
+  dialog.addEventListener('transitionstart', handleTransitionStart);
   dialog.addEventListener('transitionend', handleTransitionEnd);
   return () => {
+    dialog.removeEventListener('transitionstart', handleTransitionStart);
     dialog.removeEventListener('transitionend', handleTransitionEnd);
     clearTimeout(fallbackTimer);
     backdropAnimation?.cancel();
