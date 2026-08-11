@@ -1,6 +1,6 @@
 <div align="center">
 
-# ◐ Umbra
+# <img src="docs/brand/moon-first-quarter.svg" width="24" height="24" alt="" /> Umbra
 
 **Headless dialogs on the native top layer.**
 
@@ -10,8 +10,8 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
-[![Unit coverage](https://img.shields.io/badge/unit_coverage-97%25-3fb950?style=flat-square)](#-development)
-[![Component coverage](https://img.shields.io/badge/component_coverage-90%25-3fb950?style=flat-square)](#-development)
+[![Unit coverage](https://img.shields.io/badge/unit_coverage-98%25-3fb950?style=flat-square)](#development)
+[![Component coverage](https://img.shields.io/badge/component_coverage-93%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -27,7 +27,7 @@ vanilla and a web component.
 
 A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React, Solid and vanilla ship as three bindings over it**. The two hook bindings share a surface — same names, same options, same typed close — and the vanilla one is a _controller_ for a `<dialog>` you wrote yourself. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
 
-## ◐ Entry points
+## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Entry points
 
 | Specifier       | Contents                                                                                                                                                                                                                                                                                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ does the half a renderer would: attach the handler, then keep `disabled`, `data-
 `aria-busy` in step — and hand the button back as it was when you unbind it, since the markup is
 yours and outlives the controller.
 
-## ◑ Features
+## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Features
 
 - **Headless** — No UI opinions; use any component library or plain HTML/CSS
 - **Framework-agnostic core** — React is a binding, not the library; a second binding is a sibling file
@@ -76,7 +76,7 @@ yours and outlives the controller.
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
 
-## ◐ Using it
+## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Using it
 
 Clone the repo and run the playground, or lift what you need straight out of `src/` — it is
 plain TypeScript with no build magic and no runtime dependencies.
@@ -96,7 +96,7 @@ JavaScript.
 
 **Requirements:** Node >= 24.0.0 | Chrome 138+ (native `<dialog>`)
 
-## ◕ Quick Start
+## <img src="docs/brand/moon-full.svg" width="18" height="18" alt="" /> Quick Start
 
 An action is declared by being rendered. `action('confirm', handler)` names the reason, binds
 the handler and returns the props to spread — one expression, at the one place it matters.
@@ -177,7 +177,7 @@ you get three things: a mistyped `action('submmit')` is a compile error, the rea
 autocompletes, and the `switch` above is **exhaustive**. `'dismiss'` is always in the union
 because the library produces it itself, on Escape, on a backdrop click and on teardown.
 
-## ◑ Without a framework
+## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Without a framework
 
 A module that has no component to hang a hook off — an API client, a router guard, a worker —
 imports the root and drives dialogs by id. This file compiles and runs with no renderer installed:
@@ -211,7 +211,7 @@ For a dialog the service does not own, `requestOpenAndWait(id, request)` asks in
 instructing and comes back with the owner's answer — a reason if it refused, the close if it did
 not.
 
-## ◐ API Reference
+## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> API Reference
 
 See **[API.md](API.md)** for the complete API documentation covering:
 
@@ -231,13 +231,13 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)
 - Debug logging
 
-## ◑ Reference Templates
+## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Reference Templates
 
 The library ships no UI components. Reference implementations for **MUI** and **vanilla HTML/CSS** are available in `playground/src/entities/modal-template/ui/`. Copy them into your project or write your own.
 
 > **If you write a custom button wrapper**, you must forward `aria-keyshortcuts` and `data-focus-on-open` onto the underlying `<button>` element. Action hotkeys dispatch by querying `[aria-keyshortcuts]` in the DOM, and `focusOnOpen` finds its button by `[data-focus-on-open]` — dropping either prop makes the feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards both. A wrapper that _builds_ the attribute instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 
-## ◐ Debug Logging
+## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Debug Logging
 
 ```js
 // Browser console — enable all namespaces:
@@ -261,7 +261,7 @@ setLogLevel('*');
 | `outlet`              | ModalOutlet registration             |
 | `action`              | Action start/end, state changes      |
 
-## ◑ Development
+## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Development
 
 This repo uses **Yarn 4**, pinned via the `packageManager` field and resolved through
 [Corepack](https://nodejs.org/api/corepack.html) — run `corepack enable` once, then:
@@ -286,7 +286,7 @@ the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting 
 run) — 90% statements. The badges above are hand-set from those two commands, so treat them as
 what they are: a snapshot, not a gate.
 
-## ◑ How this repo is run
+## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> How this repo is run
 
 Friendly warning, so nothing here surprises you: **I commit to `main`.** No release branches, no
 deprecation cycles, and **no semver** — a name can change between two commits if a better one
@@ -302,7 +302,7 @@ explains _why_ each name moved rather than only that it did.
 
 If you have lifted code out of `src/`, pin the commit you took it from.
 
-## ◕ On the tooling
+## <img src="docs/brand/moon-full.svg" width="18" height="18" alt="" /> On the tooling
 
 **This library was written by Claude, and directed by nearly 30 years of doing it by hand.** Worth
 saying plainly, because the interesting question is not whether an AI can write a dialog manager —
@@ -321,7 +321,7 @@ That is the trade this repo makes visible: the tool is extraordinary at the part
 slow, and no judge at all of which of its own output is worth keeping. **The taste is still yours
 to supply, and it is still the expensive half.**
 
-## ◐ License
+## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> License
 
 [MIT](./LICENSE) © 2026 Francis Desjardins
 
@@ -333,6 +333,6 @@ terms allow without attribution or ceremony.
 
 <div align="center">
 
-░ &nbsp; ▒ &nbsp; ▓ &nbsp; ● &nbsp; ▓ &nbsp; ▒ &nbsp; ░
+<img src="docs/brand/moon-waxing-crescent.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-first-quarter.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-waxing-gibbous.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-full.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-waning-gibbous.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-last-quarter.svg" width="16" height="16" alt="" /> &nbsp; <img src="docs/brand/moon-waning-crescent.svg" width="16" height="16" alt="" />
 
 </div>

@@ -287,15 +287,31 @@ export const HomePage = () => {
       {/* Decoration, and marked as such: a screen reader reading “light shade medium shade dark
           shade” at the end of the page is noise. The `opacity` it used to carry is gone with it —
           multiplied into `text.secondary` it measured 4.3:1, and an ornament is not worth a
-          contrast exception when the same tone one step up looks the same. */}
-      <Typography
+          contrast exception when the same tone one step up looks the same.
+
+          It was `░ ▒ ▓ ● ▓ ▒ ░` — the same falloff, said in shade blocks, which are glyphs and so
+          carry the sizing problem `MoonPhase` exists to solve. Three steps into the umbra and
+          three back out is a lunar cycle already, and the README's footer now says it this way
+          too. */}
+      <Stack
         aria-hidden="true"
-        align="center"
-        color="text.secondary"
-        sx={{ letterSpacing: '0.5em', pb: 4 }}
+        direction="row"
+        sx={{ gap: 1.5, pb: 4, color: 'text.secondary', justifyContent: 'center' }}
       >
-        ░ ▒ ▓ ● ▓ ▒ ░
-      </Typography>
+        {(
+          [
+            'waxing-crescent',
+            'first-quarter',
+            'waxing-gibbous',
+            'full',
+            'waning-gibbous',
+            'last-quarter',
+            'waning-crescent',
+          ] satisfies readonly Phase[]
+        ).map((phase) => {
+          return <MoonPhase key={phase} phase={phase} size={14} />;
+        })}
+      </Stack>
 
       {hello.Modal}
     </Box>
