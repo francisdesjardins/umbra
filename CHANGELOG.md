@@ -11,6 +11,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-11
 
+### Fixed — the exit animation's safety timeout was racing the animation it protects
+
+`runDialogExit` armed its fallback timer at `exitDuration + 50` from the moment it wrote the exit
+style, then waited for a `transitionend` — which the browser counts from the style recalculation
+that follows. Two clocks, and the gap between them is not a rounding error: measured in a real
+application (a form with a rich-text editor in it), **245 ms** passed between writing the exit
+transform and `transitionstart` firing, against a 200 ms exit. So the timeout expired while the
+slide was starting, finalized the close through the fallback path, and cut the animation at
+anywhere from 50 to 150 ms of its 200 depending on how busy that frame was.
+
+Intermittent, and therefore not read as a timeout: what a user reports is a panel that sometimes
+glides away and sometimes jumps. The library was in fact saying so all along — the fallback logs
+`Animation fallback timeout` at warn level — but a warning that names the timeout does not point
+at the animation being the victim rather than the cause.
+
+The timer is now re-armed on `transitionstart` for the primary property, which puts it and the
+`transitionend` it backstops on the transition's own clock. The initial arming stays: a dialog
+whose transition never begins at all still has to be finalized rather than left hanging, and that
+is the case the fallback was written for.
+
+Found while porting `@familiprix/modal-manager` onto this library — a slide panel over a heavy
+form is exactly the shape that makes the gap wide enough to see.
+
 ### Removed — GitHub code coverage, attempted and reverted the same day
 
 Worth a note only so nobody spends the afternoon again. `actions/upload-code-coverage` takes
