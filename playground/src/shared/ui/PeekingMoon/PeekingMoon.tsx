@@ -19,7 +19,7 @@ import { UmbraMoon } from './UmbraMoon';
  * like one family.
  */
 
-type Side = 'right' | 'bottom';
+type Side = 'right' | 'left';
 type Phase = 'peek' | 'shy' | 'eclipse';
 
 type Config = {
@@ -49,13 +49,10 @@ const SHY_RADIUS = 45;
 const SETTLE_MS = 2200;
 
 /** How much of the moon clears the edge it leans against. */
-const VISIBILITY_RATIO: Readonly<Record<Side, number>> = { right: 0.7, bottom: 0.8 };
+const VISIBILITY_RATIO: Readonly<Record<Side, number>> = { right: 0.7, left: 0.7 };
 
 /** When each giggle beat fires. Generated into keyframes below rather than written ten times. */
 const GIGGLE_AT = [10_000, 21_000, 33_000, 45_000, 57_000, 69_000, 81_000, 93_000, 107_000];
-
-/** Width of the persistent sidebar, which the mascot must never sit on top of. */
-const SIDEBAR_PX = 260;
 
 const pct = (ms: number) => {
   return `${((ms / ANIM_MS) * 100).toFixed(3)}%`;
@@ -74,26 +71,21 @@ const responsiveSize = (viewportWidth: number) => {
   return 180;
 };
 
-const computeOffset = (side: Side, size: number) => {
-  if (side === 'right') {
-    return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
-  }
-  // Along the bottom, start past the sidebar — otherwise it lands on the navigation and
-  // swallows clicks meant for it. Below the sidebar's breakpoint there is nothing to avoid.
-  const from = window.innerWidth > 900 ? SIDEBAR_PX : 20;
-  return from + Math.random() * Math.max(1, window.innerWidth - from - size * 1.2);
+// Both edges are vertical, so the resting position is the same formula either side of the page.
+const computeOffset = (size: number) => {
+  return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
 };
 
 const makeConfig = (prev: Config | undefined, size: number): Config => {
-  const sides: readonly Side[] = ['right', 'bottom'];
+  const sides: readonly Side[] = ['right', 'left'];
   // Never the same edge twice running — the reappearance should feel like a new visit.
   const pool = prev
     ? sides.filter((s) => {
         return s !== prev.side;
       })
     : sides;
-  const side = pool[Math.floor(Math.random() * pool.length)] ?? 'bottom';
-  return { side, offset: computeOffset(side, size), key: (prev?.key ?? 0) + 1 };
+  const side = pool[Math.floor(Math.random() * pool.length)] ?? 'right';
+  return { side, offset: computeOffset(size), key: (prev?.key ?? 0) + 1 };
 };
 
 /** Shortest distance from a point to a rectangle; 0 when the point is inside it. */
@@ -121,6 +113,7 @@ export const PeekingMoon = () => {
   const dismissedRef = useRef(false);
   const arrivedAtRef = useRef(0);
   const phaseRef = useRef<Phase>('peek');
+  const prevWidthRef = useRef(window.innerWidth);
 
   useEffect(() => {
     sizeRef.current = size;
@@ -158,11 +151,18 @@ export const PeekingMoon = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      const next = responsiveSize(window.innerWidth);
+      // Mobile browsers fire `resize` on scroll as the URL bar hides/shows, changing only
+      // `innerHeight` — recomputing on that would reshuffle the moon mid-scroll for no reason.
+      const width = window.innerWidth;
+      if (width === prevWidthRef.current) {
+        return;
+      }
+      prevWidthRef.current = width;
+      const next = responsiveSize(width);
       sizeRef.current = next;
       setSize(next);
       setConfig((prev) => {
-        return prev ? { ...prev, offset: computeOffset(prev.side, next) } : prev;
+        return prev ? { ...prev, offset: computeOffset(next) } : prev;
       });
     };
 
@@ -213,12 +213,11 @@ export const PeekingMoon = () => {
 
   const animName = `um-${phase}-${key.toString()}`;
 
-  const tilt = side === 'right' ? ' rotate(-18deg)' : '';
+  // Mirrored lean per edge, so the moon always tilts away from the side it emerged from.
+  const tilt = side === 'right' ? ' rotate(-18deg)' : ' rotate(18deg)';
 
   const off = (px: number) => {
-    return side === 'right'
-      ? `translateX(${px.toString()}px)${tilt}`
-      : `translateY(${px.toString()}px)${tilt}`;
+    return `translateX(${(side === 'right' ? px : -px).toString()}px)${tilt}`;
   };
 
   // Generous on purpose. The artwork is painted well past its own box — the glow is a circle of
@@ -228,7 +227,9 @@ export const PeekingMoon = () => {
   const tHide = off(size * 1.6);
   const tPeek = off(hidden);
 
-  const position = side === 'right' ? { right: 0, top: offset } : { bottom: 0, left: offset };
+  // Anchored flush to its edge either side — on desktop the left one briefly overlaps the
+  // persistent sidebar, which is fine: it's shy and ducks away the moment the pointer nears.
+  const position = side === 'right' ? { right: 0, top: offset } : { left: 0, top: offset };
 
   // Alternate the giggle direction per visit so it never looks looped.
   const sway = key % 2 === 0 ? 1 : -1;
