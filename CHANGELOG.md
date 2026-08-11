@@ -11,6 +11,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-10
 
+### Added — tests for six paths the suites had never taken
+
+Coverage was read as a map of untested behaviour rather than as a number, and what it found was
+one whole feature, two teardowns and a documented promise. Unit 97.41% → 97.86% statements
+(functions 95.96% → 99.19%), component 90.01% → 92.73% (branches 79.17% → 81.33%).
+
+Unit _branch_ coverage reads 94.37% → 93.75%, and that is not a regression: c8 only counts
+branches in code it executed, so reaching the previously-dead guards enlarged the denominator
+faster than the numerator (453/480 → 465/496 — twelve more branches covered, sixteen more
+visible). A file nothing calls contributes no branches to miss.
+
+**`bindDialog`'s contained variant had no test at all** — 83.7% → 100% statements on
+`vanilla/bind-dialog.ts`. `nonModal: true` without `portal` is the one variant that needs
+something from the caller beyond the dialog, because a controller owns no markup and has to be
+pointed at a host; all three branches of that resolution are now asserted (the parent by default,
+an explicit `host`, and neither, which warns and carries on). Also its `onOpenRequest` forwarding,
+and `destroy()`.
+
+**Every uncovered path in the bindings was a teardown**, and the reason is worth writing down: the
+CT coverage fixture reads its counters after the test body and before React's cleanup, so a
+teardown that only ever runs at unmount is a teardown no assertion has watched. Driving it from a
+button on the page is what makes it visible — which is what the Solid suite's unmount buttons were
+already doing. That is how `ModalOutlet`'s `unregister` turned out never to run: a modal that
+unmounts while open must be dropped from the outlet's map, or the outlet goes on rendering a
+`<dialog>` for a hook that no longer exists.
+
+**Solid's live fields reach the hook's return as well as the render args**, and only the render
+args were read. The second copy exists for the trigger _outside_ the modal, and on this binding
+they are getters over signals — so "reaches the return" and "stays live once there" are two
+claims and the type system only checks the first.
+
+**The scroll lock's `Set` of owners now has the test it exists for**: two managers each holding an
+open modal, the first to close releasing nothing. The existing story covers the half where the
+second manager has nothing open — a shared boolean passes that one and fails this one.
+
+The manager gained the `lookup().isVisible` collection query (distinct from `lookup(id).isVisible`,
+and the spelling nothing exercised), unregistering an unknown id, and the guard that keeps a store
+notification which moves no phase from re-emitting an open.
+
+**And the scroll lock is asserted with no document**, which this project is: every entry point
+guards on `typeof document === 'undefined'` and nothing checked that they do. The manager reaches
+all three the moment a modal registers, so a missing guard is a `ReferenceError` on a server
+render — and the component suite cannot see it, because a browser always has a document.
+
+What is left uncovered is left deliberately: the lock's padding arithmetic needs a classic
+space-taking scrollbar, which headless Chromium has no way to produce (`computeScrollCompensation`
+was extracted so it could be unit-tested without one); `applyStyle`'s `--` branch is unreachable
+from TypeScript by design and says so; and `logger.ts`'s storage-failure paths memoise the probe
+at module scope with no reset seam, so a test for them would pass alone and flake in parallel.
+
 ### Fixed — WCAG 2.2 AA: 28 contrast failures, and no keyboard focus indicator anywhere
 
 Measured in a real Chrome across nine routes in both colour schemes, not read off the stylesheets

@@ -3,6 +3,7 @@ import {
   SolidBasicHarness,
   SolidContainedHarness,
   SolidDisposalHarness,
+  SolidLiveStateHarness,
   SolidOutletDisposalHarness,
   SolidPortalHarness,
   SolidDeclarationHarness,
@@ -196,11 +197,15 @@ test.describe('template hooks (Solid)', () => {
     // just an inconsistency.
     await mount(<SolidSlideHarness />);
     await expect(page.getByTestId('open-count')).toHaveText('0');
+    await expect(page.getByTestId('foreground')).toHaveText('none');
     await expect(page.getByTestId('lookup-type')).toHaveText('none');
 
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('open-count')).toHaveText('1');
+    // The snapshot's second field, subscribed to separately on this binding: `openDialogs`
+    // moving is not evidence that `foreground` does.
+    await expect(page.getByTestId('foreground')).toHaveText('solid-slide');
     // A template names itself, which is what makes this readable at all.
     await expect(page.getByTestId('lookup-type')).toHaveText('slide');
   });
@@ -301,5 +306,36 @@ test.describe('placement (Solid)', () => {
         return getComputedStyle(element).position;
       })
     ).toBe('absolute');
+  });
+
+  test('the live fields on the hook’s return stay live outside the dialog', async ({
+    mount,
+    page,
+  }) => {
+    // `isPreparing`, `hasRunningAction` and `error` reach the return as well as the render args,
+    // and that second copy exists for the trigger *outside* the modal — a spinner on the button
+    // that opened it, an error beside it. On this binding they are getters over signals, so
+    // reaching the return and staying live once there are two different claims, and the type
+    // system only checks the first.
+    await mount(<SolidLiveStateHarness />);
+    await expect(page.getByTestId('outer-preparing')).toHaveText('ready');
+    await expect(page.getByTestId('outer-running')).toHaveText('idle');
+    await expect(page.getByTestId('outer-error')).toHaveText('none');
+
+    await page.getByTestId('open').click();
+
+    // `prepare` gates the open, and the gate is visible from outside while it runs.
+    await expect(page.getByTestId('outer-preparing')).toHaveText('preparing');
+    await expect(page.getByTestId('outer-preparing')).toHaveText('ready');
+
+    await page.getByRole('button', { name: 'Boom' }).click();
+    await expect(page.getByTestId('outer-running')).toHaveText('running');
+
+    // The action throws, so the error lands on both sides of the seam and the running flag clears.
+    await expect(page.getByTestId('outer-error')).toHaveText('boom failed');
+    await expect(page.getByTestId('inner-error')).toHaveText('boom failed');
+    await expect(page.getByTestId('outer-running')).toHaveText('idle');
+    // A failed action does not close the modal — there is a retry to offer.
+    await expect(page.getByTestId('modal-solid-live-state')).toBeVisible();
   });
 });

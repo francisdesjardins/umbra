@@ -6,6 +6,7 @@ import {
   SolidContainedApp,
   SolidDeclarationApp,
   SolidDisposalApp,
+  SolidLiveStateApp,
   SolidMessageApp,
   SolidOutletApp,
   SolidOutletDisposalApp,
@@ -75,4 +76,8 @@ export function SolidPortalHarness() {
 
 export function SolidContainedHarness() {
   return <SolidRoot app={SolidContainedApp} />;
+}
+
+export function SolidLiveStateHarness() {
+  return <SolidRoot app={SolidLiveStateApp} />;
 }

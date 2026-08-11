@@ -13,6 +13,7 @@ import {
   NoProviderHarness,
   ProviderIsolationHarness,
   ScrollLockHarness,
+  ScrollLockBothOpenHarness,
   ScrollLockTwoManagersHarness,
   UnregisteredNoOpHarness,
 } from './dialog-manager.story';
@@ -529,5 +530,36 @@ test.describe('dialogManager — scroll lock', () => {
     // The modal dialog is still open, so the lock must still be held.
     await expect(page.getByTestId('modal-two-managers-modal')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
+  });
+
+  test('two managers both holding the lock release it only when the last one lets go', async ({
+    mount,
+    page,
+  }) => {
+    // The other half of the test above, and the one the `Set` of owners exists for: here the
+    // second manager *does* take the lock. A shared boolean passes next door and fails here —
+    // the first manager to close would release a lock the other is still holding, and the body
+    // would scroll behind a modal that is still on screen.
+    await mount(<ScrollLockBothOpenHarness />);
+
+    await page.getByTestId('open-outer').click();
+    await expect(page.getByTestId('modal-both-open-outer')).toBeVisible();
+    await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
+
+    // The nested manager's own modal, opened from inside the outer one — a second, independent
+    // claim on the same body.
+    await page.getByTestId('open-inner').click();
+    await expect(page.getByTestId('modal-both-open-inner')).toBeVisible();
+    await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
+
+    // Manager B lets go while manager A is still open. This is the assertion.
+    await page.getByTestId('close-inner').click();
+    await expect(page.getByTestId('inner-visible')).toHaveText('closed');
+    await expect(page.getByTestId('modal-both-open-outer')).toBeVisible();
+    await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
+
+    // And the last claim going is what actually releases it.
+    await page.getByTestId('close-outer').click();
+    await expect(page.locator('body')).not.toHaveAttribute('data-dialog-open', 'true');
   });
 });

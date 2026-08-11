@@ -89,6 +89,13 @@ function createFakeStore() {
       isPreparing = opening;
       notify();
     },
+    /**
+     * Test control: notify without moving the phase, the way the real store does when something
+     * the manager does not track changes — an action starting, a close resolver being added.
+     */
+    touch(): void {
+      notify();
+    },
   };
 }
 
@@ -325,5 +332,67 @@ test.describe('createDialogManager', () => {
       dm.open('nope');
       dm.close('nope');
     }).not.toThrow();
+  });
+
+  test('unregistering an id that was never registered is a safe no-op', () => {
+    // The teardown path a binding runs unconditionally: an effect that never got as far as
+    // registering still unregisters on cleanup, and must not take the reporting branch below —
+    // an unknown id has no open to report.
+    const dm = createDialogManager();
+    const events: DialogManagerEvent[] = [];
+    dm.subscribe((event) => {
+      events.push(event);
+    });
+
+    expect(() => {
+      dm.unregister('never-registered');
+    }).not.toThrow();
+    expect(events).toHaveLength(0);
+  });
+
+  test('lookup().isVisible asks the snapshot, not the registry', () => {
+    // The collection-level query, distinct from `lookup(id).isVisible`: this one reads
+    // `openDialogs`, so a registered-but-closed modal is absent from it rather than reported
+    // closed. Both spellings exist and only one of them was exercised.
+    const dm = createDialogManager();
+    const open = createFakeStore();
+    const idle = createFakeStore();
+    dm.register('open', open);
+    dm.register('idle', idle);
+
+    openFully(open);
+
+    expect(dm.lookup().isVisible('open')).toBe(true);
+    expect(dm.lookup().isVisible('idle')).toBe(false);
+    expect(dm.lookup().isVisible('never-registered')).toBe(false);
+
+    dm.close('open');
+    open.transition('closed');
+    expect(dm.lookup().isVisible('open')).toBe(false);
+  });
+
+  test('a store notification that moves no phase is not a transition', () => {
+    // The manager subscribes to the whole store, but only phase and `isPreparing` concern it —
+    // everything else a store notifies about (an action starting, a resolver queued) must not
+    // re-emit an open. Without the guard, a modal with a running action reports one open per
+    // keystroke to anything counting them.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const events: DialogManagerEvent[] = [];
+
+    dm.register('m', store);
+    dm.subscribe((event) => {
+      events.push(event);
+    });
+    openFully(store);
+    const afterOpen = events.length;
+    const snapshotAfterOpen = dm.getSnapshot();
+
+    store.touch();
+    store.touch();
+
+    expect(events).toHaveLength(afterOpen);
+    // The snapshot is not even recomputed, so subscribers reading it are not woken either.
+    expect(dm.getSnapshot()).toBe(snapshotAfterOpen);
   });
 });

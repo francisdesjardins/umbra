@@ -30,6 +30,7 @@ import {
   OutletMultiHarness,
   OutletNestedHarness,
   OutletPaintTimingHarness,
+  OutletTeardownHarness,
   OutletNullModalHarness,
 } from 'umbra/react/__tests__/modal-outlet.story';
 import {
@@ -75,6 +76,7 @@ import {
   ModalVariantLookupHarness,
   NoProviderHarness,
   ProviderIsolationHarness,
+  ScrollLockBothOpenHarness,
   ScrollLockHarness,
   ScrollLockTwoManagersHarness,
   UnregisteredNoOpHarness,
@@ -538,6 +540,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         component: OutletPaintTimingHarness,
         codeKey: 'story-outlet-paint-timing',
       },
+      {
+        title: 'Teardown',
+        description:
+          'A modal that unmounts while open must be dropped from the outlet’s map. Left registered, the outlet goes on rendering a <dialog> for a hook that no longer exists — on screen, in the top layer, and driven by nothing.',
+        component: OutletTeardownHarness,
+        codeKey: 'story-outlet-teardown',
+      },
     ],
   },
   {
@@ -570,6 +579,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'A nested provider owns a second manager with nothing open. Its registry churn must not release the body scroll lock the outer manager is holding.',
         component: ScrollLockTwoManagersHarness,
         codeKey: 'story-dm-scroll-lock-two-managers',
+      },
+      {
+        title: 'Two Managers, Both Open',
+        description:
+          'The other half: both managers hold an open modal, so both claim the body scroll lock. The first to close must release nothing — which is why the lock counts owners in a Set rather than a boolean.',
+        component: ScrollLockBothOpenHarness,
+        codeKey: 'story-dm-scroll-lock-both-open',
       },
       {
         title: 'Modal vs Non-Modal',

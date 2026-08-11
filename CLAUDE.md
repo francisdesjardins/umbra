@@ -105,8 +105,8 @@ what that project can reach. Three groups, and the reason each is there:
 `yarn test:component:coverage` is the other half, and it exists because the first list above is
 only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
 instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
-modules that c8 cannot reach — currently 90.17% statements over 46 files, against the unit
-project's 97.39% over the framework-free half.
+modules that c8 cannot reach — currently 92.73% statements over 47 files, against the unit
+project's 97.86% over the framework-free half.
 
 **Every way this has failed so far has failed quietly**, which is why the list is three items long
 and why `ct-coverage-report.mjs` prints all three when it finds nothing. An empty `.nyc_output`

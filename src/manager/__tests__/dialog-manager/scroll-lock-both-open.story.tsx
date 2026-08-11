@@ -1,0 +1,91 @@
+import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
+import { useModal } from '../../../react/use-modal.js';
+import { dialogStyle } from '../../../__tests__/story-styles.js';
+
+/** The nested manager's own modal, opened from inside the outer one. */
+function InnerModal() {
+  const { open, Modal, isVisible } = useModal<void, 'done'>({
+    id: 'both-open-inner',
+    render: ({ handle }) => {
+      return (
+        <div style={dialogStyle}>
+          <p>Modal dialog (manager B)</p>
+          <button
+            data-testid="close-inner"
+            onClick={() => {
+              handle.close('done');
+            }}
+          >
+            Close Inner
+          </button>
+        </div>
+      );
+    },
+  });
+
+  return (
+    <div>
+      <span data-testid="inner-visible">{isVisible ? 'open' : 'closed'}</span>
+      {/* Rendered inside the outer modal's subtree, so it is clickable while that one owns the
+          top layer — the documented way to stack. */}
+      <button
+        data-testid="open-inner"
+        onClick={async () => {
+          await open();
+        }}
+      >
+        Open Inner
+      </button>
+      {Modal}
+    </div>
+  );
+}
+
+/**
+ * Two managers, two open modal dialogs, one body.
+ *
+ * `scroll-lock-two-managers` covers the half where the second manager has nothing open. This is
+ * the other half, and the one the `Set` of owners exists for: both managers claim the lock, and
+ * the first to let go must not release it on the other's behalf. A shared boolean passes the
+ * story next door and fails here — the body would start scrolling behind a modal that is still up.
+ *
+ * The claim is idempotent per owner too, which the outer modal's own stacking exercises on the
+ * way past: nothing double-pads.
+ */
+export function ScrollLockBothOpenHarness() {
+  const { open, Modal } = useModal<void, 'done'>({
+    id: 'both-open-outer',
+    render: ({ handle }) => {
+      return (
+        <div style={dialogStyle}>
+          <p>Modal dialog (manager A)</p>
+          <DialogManagerProvider>
+            <InnerModal />
+          </DialogManagerProvider>
+          <button
+            data-testid="close-outer"
+            onClick={() => {
+              handle.close('done');
+            }}
+          >
+            Close Outer
+          </button>
+        </div>
+      );
+    },
+  });
+
+  return (
+    <div style={{ minHeight: '200vh' }}>
+      <button
+        data-testid="open-outer"
+        onClick={async () => {
+          await open();
+        }}
+      >
+        Open Outer
+      </button>
+      {Modal}
+    </div>
+  );
+}

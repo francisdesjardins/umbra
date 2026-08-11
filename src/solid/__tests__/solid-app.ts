@@ -283,6 +283,11 @@ function SlideApp(): Built {
     text(() => {
       return String(dialogs.openDialogs.length);
     }, 'open-count'),
+    // The snapshot's other field, and a getter of its own — `openDialogs` moving is not evidence
+    // that `foreground` does, since each is subscribed to separately on this binding.
+    text(() => {
+      return dialogs.foreground?.id ?? 'none';
+    }, 'foreground'),
     text(() => {
       const current = info();
       return current.exists && current.isVisible ? current.template : 'none';
@@ -562,8 +567,86 @@ function ContainedApp(): Built {
   );
 }
 
+/**
+ * The live fields on the **hook's return**, read from outside the dialog.
+ *
+ * `hasRunningAction` and `error` reach both the render args and the return, and the reason the
+ * second copy exists is a trigger button that has to show a spinner or an error while the modal
+ * is the thing doing the work. On this binding they are getters over signals rather than
+ * re-rendered values, so "reaches the return" and "stays live once there" are two claims, and only
+ * the first is a type error when it breaks.
+ *
+ * Everything asserted here is therefore *outside* `render`: a frozen getter would read once at
+ * setup and never move again, which is exactly what a passing type-check cannot rule out.
+ */
+function LiveStateApp(): Built {
+  const modal = useModal<void, 'boom'>({
+    id: 'solid-live-state',
+    ariaLabel: 'Solid live state',
+    prepare: async () => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 200);
+      });
+    },
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Live state'),
+          // The render args' own `error` getter — the same fact, on the other side of the seam.
+          text(() => {
+            return ctx.error?.message ?? 'none';
+          }, 'inner-error'),
+          h(
+            'button',
+            ctx.action('boom', {
+              onAction: async () => {
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 120);
+                });
+                throw new Error('boom failed');
+              },
+            }),
+            'Boom'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    text(() => {
+      return modal.isPreparing ? 'preparing' : 'ready';
+    }, 'outer-preparing'),
+    text(() => {
+      return modal.hasRunningAction ? 'running' : 'idle';
+    }, 'outer-running'),
+    text(() => {
+      return modal.error?.message ?? 'none';
+    }, 'outer-error'),
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
 export const SolidBasicApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, BasicApp));
+};
+
+export const SolidLiveStateApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, LiveStateApp));
 };
 
 export const SolidDeclarationApp = (): JSX.Element => {

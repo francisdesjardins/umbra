@@ -64,6 +64,7 @@ import storyUseModalReopenSettlesSrc from 'umbra/react/__tests__/use-modal/reope
 import storyUseModalStableIdentitySrc from 'umbra/react/__tests__/use-modal/stable-identity.story.tsx?raw';
 import storyUseModalBackdropHitTestSrc from 'umbra/react/__tests__/use-modal/backdrop-hit-test.story.tsx?raw';
 import storyOutletPaintTimingSrc from 'umbra/react/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
+import storyOutletTeardownSrc from 'umbra/react/__tests__/modal-outlet/outlet-teardown.story.tsx?raw';
 import storyUseModalOpenAndWaitSrc from 'umbra/react/__tests__/use-modal/open-and-wait.story.tsx?raw';
 
 // ── useModalActions stories ───────────────────────────────────────────────
@@ -82,6 +83,7 @@ import storyActionsReasonSourceSrc from 'umbra/actions/__tests__/use-modal-actio
 import storyActionsHotkeyWhilePreparingSrc from 'umbra/actions/__tests__/use-modal-actions/hotkey-while-preparing.story.tsx?raw';
 import storyUseModalTransitionToggleSrc from 'umbra/react/__tests__/use-modal/transition-toggle.story.tsx?raw';
 import storyUseModalKeyPassthroughSrc from 'umbra/react/__tests__/use-modal/key-passthrough.story.tsx?raw';
+import storyDmScrollLockBothOpenSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-both-open.story.tsx?raw';
 import storyDmScrollLockTwoManagersSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-two-managers.story.tsx?raw';
 import storyDmModalVariantSrc from 'umbra/manager/__tests__/dialog-manager/modal-variant.story.tsx?raw';
 import storyDmProviderIsolationSrc from 'umbra/manager/__tests__/dialog-manager/provider-isolation.story.tsx?raw';
@@ -269,6 +271,7 @@ export const codeSamples: Record<string, string> = {
   'story-use-modal-stable-identity': storyUseModalStableIdentitySrc,
   'story-use-modal-backdrop-hit-test': storyUseModalBackdropHitTestSrc,
   'story-outlet-paint-timing': storyOutletPaintTimingSrc,
+  'story-outlet-teardown': storyOutletTeardownSrc,
 
   // useModalActions stories
   'story-action-basic': storyActionsBasicSrc,
@@ -292,6 +295,7 @@ export const codeSamples: Record<string, string> = {
   'story-action-hotkey-while-preparing': storyActionsHotkeyWhilePreparingSrc,
   'story-use-modal-transition-toggle': storyUseModalTransitionToggleSrc,
   'story-use-modal-key-passthrough': storyUseModalKeyPassthroughSrc,
+  'story-dm-scroll-lock-both-open': storyDmScrollLockBothOpenSrc,
   'story-dm-scroll-lock-two-managers': storyDmScrollLockTwoManagersSrc,
   'story-dm-modal-variant': storyDmModalVariantSrc,
   'story-dm-modal-variant-lookup': storyDmModalVariantSrc,

@@ -17,5 +17,6 @@ export {
   ProviderIsolationHarness,
 } from './dialog-manager/provider-isolation.story';
 export { ScrollLockHarness } from './dialog-manager/scroll-lock.story';
+export { ScrollLockBothOpenHarness } from './dialog-manager/scroll-lock-both-open.story';
 export { ScrollLockTwoManagersHarness } from './dialog-manager/scroll-lock-two-managers.story';
 export { UnregisteredNoOpHarness } from './dialog-manager/unregistered-no-op.story';
