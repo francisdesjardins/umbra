@@ -1,6 +1,12 @@
 export { BasicHarness } from './use-modal/basic.story';
 export { OnOpenAbortHarness } from './use-modal/on-open-abort.story';
 export { AccessibleNameHarness } from './use-modal/accessible-name.story';
+export { BusyWhilePreparingHarness } from './use-modal/busy-while-preparing.story';
+export {
+  DanglingLabelHarness,
+  LateTitleHarness,
+  OutletLabelHarness,
+} from './use-modal/labelling-diagnostics.story';
 export { StylingSurfaceHarness } from './use-modal/styling-surface.story';
 export { OpenAndWaitHarness } from './use-modal/open-and-wait.story';
 export { OpenAndWaitOrderingHarness } from './use-modal/open-and-wait-ordering.story';

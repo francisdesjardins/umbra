@@ -1,7 +1,10 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
+import type { Page } from '@playwright/test';
 import {
   SolidBasicHarness,
+  SolidBusyHarness,
   SolidContainedHarness,
+  SolidLabellingHarness,
   SolidDisposalHarness,
   SolidLiveStateHarness,
   SolidOutletDisposalHarness,
@@ -76,6 +79,23 @@ test.describe('useModal (Solid)', () => {
     await page.getByTestId('open').click();
 
     await expect(page.getByRole('button', { name: 'Confirm' })).toBeFocused();
+  });
+
+  test('the dialog carries its accessible name and its busy state', async ({ mount, page }) => {
+    // Solid builds the element itself, so both halves are its own code. `aria-busy` is the half
+    // that had to become a render effect — the accessible name never changes, this does — which
+    // is why "written" and "still right after the transition" are asserted separately.
+    await mount(<SolidBusyHarness />);
+    await page.getByTestId('open-busy').click();
+
+    const dialog = page.locator('dialog[data-modal-id="solid-busy"]');
+    await expect(page.getByRole('dialog', { name: 'Solid loading' })).toBeVisible();
+    await expect(page.getByTestId('busy-preparing')).toHaveText('preparing');
+    await expect(dialog).toHaveAttribute('aria-busy', 'true');
+
+    await page.getByTestId('busy-release').click();
+    await expect(page.getByTestId('busy-preparing')).toHaveText('ready');
+    await expect(dialog).toHaveAttribute('aria-busy', 'false');
   });
 
   test('a running action is live in the render args and disables every button', async ({
@@ -337,5 +357,56 @@ test.describe('placement (Solid)', () => {
     await expect(page.getByTestId('outer-running')).toHaveText('idle');
     // A failed action does not close the modal — there is a retry to offer.
     await expect(page.getByTestId('modal-solid-live-state')).toBeVisible();
+  });
+});
+
+/**
+ * The labelling diagnostic, on the binding where it is easiest to get wrong.
+ *
+ * Solid's lifecycle effect tracks what its body reads, so the late-title half is what would catch
+ * `isPreparing` going back to being read behind the function instead of passed into it.
+ */
+test.describe('the labelling diagnostic (Solid)', () => {
+  const warningsOn = (page: Page) => {
+    const lines: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning') {
+        lines.push(message.text());
+      }
+    });
+    return lines;
+  };
+
+  const labelling = (lines: string[]) => {
+    return lines.filter((line) => {
+      return line.includes('Dialog labelling');
+    });
+  };
+
+  test('reports a reference that points at no element', async ({ mount, page }) => {
+    const warnings = warningsOn(page);
+
+    await mount(<SolidLabellingHarness />);
+    await page.getByTestId('open-dangling').click();
+    await expect(page.locator('dialog[data-modal-id="solid-dangling"]')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(labelling(warnings)).toHaveLength(1);
+    expect(labelling(warnings)[0]).toContain('solid-dangling-title');
+  });
+
+  test('says nothing about a name its prepare had not rendered yet', async ({ mount, page }) => {
+    const warnings = warningsOn(page);
+
+    await mount(<SolidLabellingHarness />);
+    await page.getByTestId('open-late').click();
+    await expect(page.getByTestId('solid-late-pending')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    await page.getByTestId('solid-late-release').click();
+    await expect(page.locator('#solid-late-title')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(labelling(warnings)).toEqual([]);
   });
 });

@@ -1,12 +1,16 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
+import type { Page } from '@playwright/test';
 import {
   VanillaBasicHarness,
+  VanillaBusyHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
   VanillaExplicitHostHarness,
   VanillaFailingActionHarness,
   VanillaNoHostHarness,
   VanillaOpenRequestHarness,
+  VanillaLabellingHarness,
+  VanillaRestoreOnUnbindHarness,
   VanillaShadowRootHarness,
   VanillaUnbindHarness,
 } from './bind-dialog.story';
@@ -100,6 +104,12 @@ test.describe('bindDialog', () => {
 
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
       'data-loading',
+      'true'
+    );
+    // The one the comment above names and nothing asserted: `data-loading` is for CSS, this is
+    // the half assistive technology reads.
+    await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
+      'aria-busy',
       'true'
     );
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeDisabled();
@@ -356,5 +366,116 @@ test.describe('bindDialog — open requests', () => {
 
     await expect(page.getByTestId('outcome')).toHaveText('refused:wrong payload');
     await expect(page.locator('dialog[data-modal-id="vanilla-request"]')).not.toBeVisible();
+  });
+});
+
+/**
+ * The two things a controller has to clean up that a renderer would have done by unmounting: the
+ * writes on a button it does not own, and the attribute on a dialog it does not own.
+ */
+test.describe('bindDialog — what teardown hands back', () => {
+  test('unbinding restores the caller’s button, mid-action included', async ({ mount, page }) => {
+    await mount(<VanillaRestoreOnUnbindHarness />);
+    await page.getByTestId('open').click();
+
+    const slow = page.getByTestId('slow-action');
+    await expect(slow).toHaveAttribute('aria-keyshortcuts', 'Control+S');
+
+    // Start an action that never settles, so the unbind lands while the button is stuck.
+    await slow.click();
+    await expect(slow).toBeDisabled();
+    await expect(slow).toHaveAttribute('aria-busy', 'true');
+
+    await page.getByTestId('unbind').click();
+
+    // Not a stale attribute — a dead control in the caller's page, which is why this is a fix and
+    // not a tidy-up.
+    await expect(slow).toBeEnabled();
+    await expect(slow).not.toHaveAttribute('aria-busy', /.*/);
+    await expect(slow).not.toHaveAttribute('data-loading', /.*/);
+    await expect(slow).not.toHaveAttribute('aria-keyshortcuts', /.*/);
+    // `bindAction` writes `type`, and a button that had none must not come back with one.
+    await expect(slow).not.toHaveAttribute('type', /.*/);
+
+    // Restored, not cleared: this one was disabled in the markup before anything bound it, and an
+    // unbind that switched it on would be handing back something the caller never wrote.
+    await expect(page.getByTestId('already-off')).toBeDisabled();
+
+    // The hotkey went with the attribute.
+    await page.keyboard.press('Control+s');
+    await expect(slow).toBeEnabled();
+  });
+
+  test('a controller destroyed mid-prepare does not leave the dialog marked busy', async ({
+    mount,
+    page,
+  }) => {
+    // `destroy()` unsubscribes first, so the notification that would clear `aria-busy` never
+    // arrives — and the element is the caller's, so it outlives the controller wearing it.
+    await mount(<VanillaBusyHarness />);
+    await page.getByTestId('open').click();
+
+    const dialog = page.locator('dialog[data-modal-id="vanilla-busy"]');
+    await expect(dialog).toHaveAttribute('aria-busy', 'true');
+
+    await page.getByTestId('destroy').click();
+    await expect(dialog).toHaveAttribute('aria-busy', 'false');
+  });
+
+  test('aria-busy clears when prepare settles', async ({ mount, page }) => {
+    await mount(<VanillaBusyHarness />);
+    await page.getByTestId('open').click();
+
+    const dialog = page.locator('dialog[data-modal-id="vanilla-busy"]');
+    await expect(dialog).toHaveAttribute('aria-busy', 'true');
+
+    await page.getByTestId('release').click();
+    await expect(dialog).toHaveAttribute('aria-busy', 'false');
+  });
+});
+
+/**
+ * The labelling diagnostic, on the binding it was designed around.
+ *
+ * Neither dialog here passes an aria option — both carry their attributes (or their absence) in
+ * the caller's own markup. That is the case reading `options.ariaLabelledBy` would be blind to,
+ * and it is the ordinary one in this binding: the `id` and the reference to it are written by
+ * hand, in two places, by someone who never sees the result.
+ */
+test.describe('bindDialog — the labelling diagnostic', () => {
+  const labellingWarnings = (page: Page) => {
+    const lines: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning' && message.text().includes('Dialog labelling')) {
+        lines.push(message.text());
+      }
+    });
+    return lines;
+  };
+
+  test('reports a reference the caller’s markup gets wrong', async ({ mount, page }) => {
+    const warnings = labellingWarnings(page);
+
+    await mount(<VanillaLabellingHarness />);
+    await page.getByTestId('open-broken').click();
+    await expect(page.locator('dialog[data-modal-id="vanilla-broken-label"]')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('vanilla-broken-title');
+  });
+
+  test('reports a dialog with no accessible name at all', async ({ mount, page }) => {
+    // The finding that never fires in the playground any more, so this is the only place it is
+    // exercised end to end rather than as a pure function.
+    const warnings = labellingWarnings(page);
+
+    await mount(<VanillaLabellingHarness />);
+    await page.getByTestId('open-nameless').click();
+    await expect(page.locator('dialog[data-modal-id="vanilla-nameless"]')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('no accessible name');
   });
 });

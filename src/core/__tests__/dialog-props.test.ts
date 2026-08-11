@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dialogAttributes, isBackdropClick } from '../dialog-props.js';
+import { dialogAttributes, isBackdropClick, setDialogAttributes } from '../dialog-props.js';
 
 /**
  * The attribute table both bindings spread onto their `<dialog>`.
@@ -12,7 +12,9 @@ import { dialogAttributes, isBackdropClick } from '../dialog-props.js';
 
 test.describe('dialogAttributes', () => {
   test('carries the styling contract and the test id', () => {
-    expect(dialogAttributes({ modalId: 'settings', nonModal: false })).toMatchObject({
+    expect(
+      dialogAttributes({ modalId: 'settings', nonModal: false, isPreparing: false })
+    ).toMatchObject({
       'data-modal-id': 'settings',
       'data-testid': 'modal-settings',
       'data-modal-type': 'modal',
@@ -20,13 +22,30 @@ test.describe('dialogAttributes', () => {
   });
 
   test('reports the variant, which is what non-modal CSS keys off', () => {
-    expect(dialogAttributes({ modalId: 'toast', nonModal: true })['data-modal-type']).toBe(
-      'non-modal'
-    );
+    expect(
+      dialogAttributes({ modalId: 'toast', nonModal: true, isPreparing: false })['data-modal-type']
+    ).toBe('non-modal');
+  });
+
+  test('says whether the dialog is still loading, in both directions', () => {
+    // The one attribute here the library owns outright, and the one that toggles: a dialog on
+    // screen while `prepare` runs is the normal state of a loading modal, and so is the state it
+    // leaves. `'false'` is written rather than omitted because `setDialogAttributes` skips
+    // `undefined` — the off half has to be a value or it could never be reached.
+    expect(
+      dialogAttributes({ modalId: 'slow', nonModal: false, isPreparing: true })['aria-busy']
+    ).toBe('true');
+    expect(
+      dialogAttributes({ modalId: 'slow', nonModal: false, isPreparing: false })['aria-busy']
+    ).toBe('false');
   });
 
   test('leaves every aria field undefined when the caller named none', () => {
-    const attributes = dialogAttributes({ modalId: 'unnamed', nonModal: false });
+    const attributes = dialogAttributes({
+      modalId: 'unnamed',
+      nonModal: false,
+      isPreparing: false,
+    });
 
     // Not `''`: both bindings omit an attribute whose value is `undefined`, so an unnamed dialog
     // stays visibly unnamed. `aria-label=""` would satisfy an automated check and tell a screen
@@ -42,6 +61,7 @@ test.describe('dialogAttributes', () => {
       dialogAttributes({
         modalId: 'confirm-delete',
         nonModal: false,
+        isPreparing: false,
         ariaLabel: 'Delete item',
         ariaLabelledBy: 'title',
         ariaDescribedBy: 'body',
@@ -53,6 +73,63 @@ test.describe('dialogAttributes', () => {
       'aria-describedby': 'body',
       role: 'alertdialog',
     });
+  });
+});
+
+test.describe('setDialogAttributes', () => {
+  /**
+   * An element is a `setAttribute` here, which is all the function asks for — the reason its
+   * parameter is narrowed, and the reason this is a unit test and not a browser one.
+   */
+  const recorder = () => {
+    const written = new Map<string, string>();
+    return {
+      written,
+      setAttribute(name: string, value: string) {
+        written.set(name, value);
+      },
+    };
+  };
+
+  test('writes the table onto the element', () => {
+    const element = recorder();
+    setDialogAttributes(
+      element,
+      dialogAttributes({ modalId: 'settings', nonModal: true, isPreparing: true })
+    );
+
+    expect(element.written.get('data-modal-id')).toBe('settings');
+    expect(element.written.get('data-testid')).toBe('modal-settings');
+    expect(element.written.get('data-modal-type')).toBe('non-modal');
+    expect(element.written.get('aria-busy')).toBe('true');
+  });
+
+  test('skips what the caller named nothing for, rather than emptying it', () => {
+    // The reason this is a contract and not an optimisation: in `umbra/vanilla` the element is the
+    // caller's own markup, so an `aria-labelledby` they wrote must survive an option they never
+    // passed. Writing `''` — or removing — would erase it.
+    const element = recorder();
+    setDialogAttributes(
+      element,
+      dialogAttributes({ modalId: 'unnamed', nonModal: false, isPreparing: false })
+    );
+
+    expect(element.written.has('aria-label')).toBe(false);
+    expect(element.written.has('aria-labelledby')).toBe(false);
+    expect(element.written.has('aria-describedby')).toBe(false);
+    expect(element.written.has('role')).toBe(false);
+  });
+
+  test('writes aria-busy even when it is false', () => {
+    // Which is the half the skip above would otherwise swallow: a dialog that finished loading
+    // would keep `aria-busy="true"` welded to it.
+    const element = recorder();
+    setDialogAttributes(
+      element,
+      dialogAttributes({ modalId: 'done', nonModal: false, isPreparing: false })
+    );
+
+    expect(element.written.get('aria-busy')).toBe('false');
   });
 });
 

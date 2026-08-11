@@ -33,12 +33,15 @@ export function ImperativeExample() {
 
   const modal = useMessageModal<void, 'confirm' | 'imperative-demo'>({
     id: 'imperative-demo',
+    ariaLabelledBy: 'imperative-demo-title',
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon type="success" sx={{ mb: 0 }} />
-            <Typography variant="h6">Imperative Modal</Typography>
+            <Typography id="imperative-demo-title" variant="h6">
+              Imperative Modal
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Stack spacing={2}>

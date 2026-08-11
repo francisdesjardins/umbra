@@ -29,12 +29,12 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 
 ## ◐ Entry points
 
-| Specifier       | Contents                                                                                                                                                                                                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `matchesHotkey`, `formatHotkeyLabel`) and `setLogLevel`. **No framework.** |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                             |
-| `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                         |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — and `bindAction` for its buttons. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                             |
+| Specifier       | Contents                                                                                                                                                                                                                                                                                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`) and `setLogLevel`. **No framework.** |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                    |
+| `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                                                                |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — and `bindAction` for its buttons. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                                                                    |
 
 The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding
@@ -53,7 +53,8 @@ yours and `bindDialog` drives the lifecycle over them: phases and animation, `pr
 dismiss key, click-outside, backdrop hit-testing, opening focus, the registration that makes it
 addressable by id, and the typed close. `bindAction(button, reason)` is its one addition, and it
 does the half a renderer would: attach the handler, then keep `disabled`, `data-loading` and
-`aria-busy` in step.
+`aria-busy` in step — and hand the button back as it was when you unbind it, since the markup is
+yours and outlives the controller.
 
 ## ◑ Features
 
@@ -227,14 +228,14 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
 - `normalizeError` — turn whatever was thrown into an `Error`
-- Hotkey system (`Key`, `matchesHotkey`, `HotkeyDef`)
+- Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)
 - Debug logging
 
 ## ◑ Reference Templates
 
 The library ships no UI components. Reference implementations for **MUI** and **vanilla HTML/CSS** are available in `playground/src/entities/modal-template/ui/`. Copy them into your project or write your own.
 
-> **If you write a custom button wrapper**, you must forward `aria-keyshortcuts` and `data-focus-on-open` onto the underlying `<button>` element. Action hotkeys dispatch by querying `[aria-keyshortcuts]` in the DOM, and `focusOnOpen` finds its button by `[data-focus-on-open]` — dropping either prop makes the feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards both.
+> **If you write a custom button wrapper**, you must forward `aria-keyshortcuts` and `data-focus-on-open` onto the underlying `<button>` element. Action hotkeys dispatch by querying `[aria-keyshortcuts]` in the DOM, and `focusOnOpen` finds its button by `[data-focus-on-open]` — dropping either prop makes the feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards both. A wrapper that _builds_ the attribute instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 
 ## ◐ Debug Logging
 
@@ -250,15 +251,15 @@ import { setLogLevel } from 'umbra';
 setLogLevel('*');
 ```
 
-| Namespace             | Description                         |
-| --------------------- | ----------------------------------- |
-| `manager`             | Registration, stack state           |
-| `modal`               | Open/close/unmount lifecycle        |
-| `modal:lifecycle`     | prepare callback, dialog.showModal  |
-| `modal:keydown`       | ESC dismiss, user onKeyDown         |
-| `modal:click-outside` | Click-outside for non-modal dialogs |
-| `outlet`              | ModalOutlet registration            |
-| `action`              | Action start/end, state changes     |
+| Namespace             | Description                          |
+| --------------------- | ------------------------------------ |
+| `manager`             | Registration, stack state            |
+| `modal`               | Open/close/unmount lifecycle         |
+| `modal:lifecycle`     | prepare, showModal, labelling checks |
+| `modal:keydown`       | ESC dismiss, user onKeyDown          |
+| `modal:click-outside` | Click-outside for non-modal dialogs  |
+| `outlet`              | ModalOutlet registration             |
+| `action`              | Action start/end, state changes      |
 
 ## ◑ Development
 

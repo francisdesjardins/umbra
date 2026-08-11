@@ -62,6 +62,7 @@ export function MuiFormExample() {
   // and the `switch` in `onClose` is exhaustive.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {
       store.resetForm();
     },
@@ -71,7 +72,7 @@ export function MuiFormExample() {
           sx={{ minWidth: 'min(475px, 100%)', maxWidth: 'min(800px, 100%)', maxHeight: '70vh' }}
         >
           <FormModal.Header>
-            <Shared.Heading>Create User</Shared.Heading>
+            <Shared.Heading id={`${MODAL_ID}-title`}>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
             {error && (
               <Shared.AlertContent severity="error" sx={{ mt: 2 }}>

@@ -7,8 +7,12 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
-import { dialogAttributes } from '../core/dialog-props.js';
+import {
+  syncOpenSequence,
+  syncCloseSequence,
+  syncLabellingDiagnostics,
+} from '../core/attach-lifecycle.js';
+import { dialogAttributes, setDialogAttributes } from '../core/dialog-props.js';
 import {
   createModalRuntime,
   resolveModalOptions,
@@ -82,23 +86,26 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   // ── The element ─────────────────────────────────────────────────────────────
 
-  for (const [name, value] of Object.entries(
-    dialogAttributes({
-      modalId,
-      nonModal: resolved.isNonModal,
-      ariaLabel: options.ariaLabel,
-      ariaLabelledBy: options.ariaLabelledBy,
-      ariaDescribedBy: options.ariaDescribedBy,
-      role: options.role,
-    })
-  )) {
-    // Skipped when absent rather than emptied, which here does double duty: an unnamed dialog
-    // stays visibly unnamed to an audit, *and* an `aria-labelledby` written in the caller's own
-    // markup is not overwritten by an option they never passed.
-    if (value !== undefined) {
-      dialog.setAttribute(name, value);
-    }
-  }
+  // Absent options skip rather than empty, which here does double duty: an unnamed dialog stays
+  // visibly unnamed to an audit, *and* an `aria-labelledby` written in the caller's own markup is
+  // not overwritten by an option they never passed. `aria-busy` is the exception and always has a
+  // value, which is why this is a function rather than a one-shot loop — it re-runs from `sync`.
+  const writeAttributes = () => {
+    setDialogAttributes(
+      dialog,
+      dialogAttributes({
+        modalId,
+        nonModal: resolved.isNonModal,
+        isPreparing: store.getSnapshot().isPreparing,
+        ariaLabel: options.ariaLabel,
+        ariaLabelledBy: options.ariaLabelledBy,
+        ariaDescribedBy: options.ariaDescribedBy,
+        role: options.role,
+      })
+    );
+  };
+  // Before registration, so nothing can observe the element without its identity on it.
+  writeAttributes();
 
   if (resolved.placement.host) {
     // A contained panel is positioned `absolute` against a host, and in a binding that owns no
@@ -171,6 +178,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const sync = () => {
     const snapshot = store.getSnapshot();
 
+    // `aria-busy` is the only one of these that moves, and the store is the only clock this
+    // binding has.
+    writeAttributes();
+
     // Styles first, so the exit/entrance state is on the element before `syncOpenSequence` shows it.
     appliedStyle = applyStyle(
       dialog,
@@ -221,6 +232,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
       prepare: options.prepare,
       nonModal: resolved.isNonModal,
     });
+
+    syncLabellingDiagnostics(domContext(snapshot.phase), {
+      isPreparing: snapshot.isPreparing,
+    });
   };
 
   const unsubscribe = store.subscribe(sync);
@@ -240,6 +255,30 @@ export function bindDialog<TData = void, TReason extends string = string>(
     actionOptions
   ) => {
     const props = action(reason, actionOptions);
+
+    // Everything below writes onto a button this binding did not create, so retiring the action
+    // has to retire the writes: a `<button>` left `disabled` by an action that no longer exists is
+    // a dead control in the caller's page, not a stale attribute. Restoring rather than clearing
+    // is what keeps a button the caller disabled themselves from being switched on by an unbind —
+    // and it is the *attribute* that is captured, because `button.type` reads `'submit'` for a
+    // button that has no `type` at all, so restoring the property would add one.
+    const restore = [
+      'type',
+      'disabled',
+      'data-loading',
+      'aria-busy',
+      'aria-keyshortcuts',
+      'data-focus-on-open',
+    ].map((name) => {
+      const previous = button.getAttribute(name);
+      return () => {
+        if (previous === null) {
+          button.removeAttribute(name);
+        } else {
+          button.setAttribute(name, previous);
+        }
+      };
+    });
 
     button.type = props.type;
     if (props['aria-keyshortcuts'] !== undefined) {
@@ -268,6 +307,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
       // Retiring the declaration is the half a render pass would have done: it is what stops the
       // hotkey outliving the button, and what lets `hasActions()` go back to false.
       engine.undeclare(reason);
+      for (const undo of restore) {
+        undo();
+      }
     };
   };
 
@@ -296,6 +338,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
     teardownModal(store, manager, modalId, dialog);
+    // The unsubscribe above is what makes this necessary: a controller destroyed mid-`prepare`
+    // never gets the notification that would clear `aria-busy`, and the element is the caller's —
+    // it outlives the controller and would stay marked busy for good.
+    writeAttributes();
   };
 
   return {

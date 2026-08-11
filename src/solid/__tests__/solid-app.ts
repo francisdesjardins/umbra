@@ -1,6 +1,7 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onCleanup } from 'solid-js';
 import h from 'solid-js/h';
 import type { JSX } from 'solid-js';
+import { setLogLevel } from '../../utils/logger.js';
 import { DialogManagerProvider } from '../dialog-manager-context.js';
 import { ModalOutlet } from '../modal-outlet.js';
 import { useMessageModal } from '../templates/use-message-modal.js';
@@ -641,8 +642,168 @@ function LiveStateApp(): Built {
   );
 }
 
+/**
+ * The accessible name and `aria-busy`, on the binding where they are most likely to be wrong.
+ *
+ * Solid owns its `<dialog>` and writes the attributes itself, and `aria-busy` is the one that had
+ * to move out of a one-shot loop into a render effect — so "written at all" and "still written on
+ * the next transition" are two claims here, not one.
+ *
+ * The gate is released from a button *inside* the dialog: a `showModal()` dialog is in the top
+ * layer, and nothing outside it is clickable while it is open.
+ */
+function BusyApp(): Built {
+  // A signal rather than a `let`: the gate is set from inside an async callback, and state is
+  // what the compiler's immutability rule asks for there.
+  const [release, setRelease] = createSignal<(() => void) | undefined>();
+
+  const modal = useModal({
+    id: 'solid-busy',
+    ariaLabel: 'Solid loading',
+    prepare: async () => {
+      await new Promise<void>((resolve) => {
+        setRelease(() => {
+          return resolve;
+        });
+      });
+    },
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          text(() => {
+            return ctx.isPreparing ? 'preparing' : 'ready';
+          }, 'busy-preparing'),
+          h(
+            'button',
+            {
+              'data-testid': 'busy-release',
+              onClick: () => {
+                release()?.();
+              },
+            },
+            'Release'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open-busy',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
 export const SolidBasicApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, BasicApp));
+};
+
+export const SolidBusyApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, BusyApp));
+};
+
+/**
+ * The labelling diagnostic on the binding that can get it wrong.
+ *
+ * Solid's lifecycle effect tracks whatever its body reads, so the check only comes back when
+ * `prepare` settles because `isPreparing` is passed *in* rather than read behind the function —
+ * which is exactly what the late-title half of this harness would catch if that ever changed.
+ */
+function LabellingApp(): Built {
+  const [release, setRelease] = createSignal<(() => void) | undefined>();
+
+  setLogLevel('*');
+  onCleanup(() => {
+    setLogLevel(false);
+  });
+
+  const dangling = useModal({
+    id: 'solid-dangling',
+    ariaLabelledBy: 'solid-dangling-title',
+    render: () => {
+      // Nothing here carries that id.
+      return el(h('p', null, 'Named by nothing at all.'));
+    },
+  });
+
+  const late = useModal({
+    id: 'solid-late',
+    ariaLabelledBy: 'solid-late-title',
+    prepare: async () => {
+      await new Promise<void>((resolve) => {
+        setRelease(() => {
+          return resolve;
+        });
+      });
+    },
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          () => {
+            return ctx.isPreparing
+              ? h('p', { 'data-testid': 'solid-late-pending' }, 'Loading…')()
+              : h('h2', { id: 'solid-late-title' }, 'Loaded at last')();
+          },
+          h(
+            'button',
+            {
+              'data-testid': 'solid-late-release',
+              onClick: () => {
+                release()?.();
+              },
+            },
+            'Release'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open-dangling',
+        onClick: () => {
+          void dangling.open();
+        },
+      },
+      'Open dangling'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'open-late',
+        onClick: () => {
+          void late.open();
+        },
+      },
+      'Open late'
+    ),
+    dangling.Modal,
+    late.Modal
+  );
+}
+
+export const SolidLabellingApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, LabellingApp));
 };
 
 export const SolidLiveStateApp = (): JSX.Element => {

@@ -159,7 +159,7 @@ test.describe('hotkeys', () => {
     expect(engine.matchHotkey(keyboardEvent('Escape'))).toMatchObject({ reason: 'quit' });
   });
 
-  test('ownsHotkey compares labels, not raw strings', () => {
+  test('ownsHotkey compares the canonical form, not raw strings', () => {
     // `'Shift+s'` and `'Shift+S'` are one hotkey — the modifier list discriminates, and CapsLock
     // must not change which one fires. The dismiss-key gate in `attach-keydown` relies on exactly this.
     const engine = createActionEngine<void>('labels');
@@ -167,6 +167,18 @@ test.describe('hotkeys', () => {
 
     expect(engine.ownsHotkey('Shift+S')).toBe(true);
     expect(engine.ownsHotkey('Shift+s')).toBe(true);
+    expect(engine.ownsHotkey('s')).toBe(false);
+  });
+
+  test('ownsHotkey survived the move to the ARIA spelling', () => {
+    // It canonicalises through `formatAriaKeyshortcuts` now, so that one function is what the
+    // attribute, the dispatch selector and this comparison all speak. What must not change is the
+    // equivalence: a modified hotkey is still owned, and a different key still is not.
+    const engine = createActionEngine<void>('aria-form');
+    engine.declare('save', 'Ctrl+s');
+
+    expect(engine.ownsHotkey('Ctrl+S')).toBe(true);
+    expect(engine.ownsHotkey('Ctrl+d')).toBe(false);
     expect(engine.ownsHotkey('s')).toBe(false);
   });
 

@@ -24,11 +24,12 @@ export function NoTransitionMessageExample() {
   const modal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
     animation: NO_ANIMATION,
+    ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Title>No Transition</MessageModal.Title>
+            <MessageModal.Title id={`${MODAL_ID}-title`}>No Transition</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Typography>

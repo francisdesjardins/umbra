@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
@@ -9,7 +10,11 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
+import {
+  syncOpenSequence,
+  syncCloseSequence,
+  syncLabellingDiagnostics,
+} from '../core/attach-lifecycle.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import {
   createModalRuntime,
@@ -160,6 +165,15 @@ export function useModal<TData = void, TReason extends string = string>(
     syncOpenSequence(domContext, { prepare, nonModal: isNonModal });
   });
 
+  // Deliberately listing `isPreparing`: the diagnostic asks its question once the content is
+  // final, and a phase-only dependency would never bring it back when `prepare` settles.
+  useEffect(() => {
+    syncLabellingDiagnostics(
+      { store, getDialog, modalId, phase: snap.phase, manager },
+      { isPreparing: snap.isPreparing }
+    );
+  }, [snap.phase, snap.isPreparing, store, getDialog, modalId, manager]);
+
   // Explicit deps: only re-runs when the phase or the resolved animation changes. The context is
   // rebuilt inside rather than listed, because a fresh object per render would re-attach the exit
   // listeners on every render.
@@ -306,8 +320,7 @@ export function useModal<TData = void, TReason extends string = string>(
    * hotkey from outliving the button that owned it and going on suppressing the dismiss key.
    */
   const renderContent = () => {
-    engine.beginRender();
-    try {
+    return runDeclarationWindow(engine, () => {
       return render({
         isPreparing: snap.isPreparing,
         handle,
@@ -315,9 +328,7 @@ export function useModal<TData = void, TReason extends string = string>(
         hasRunningAction: actionSnap.hasRunningAction,
         error: actionSnap.error,
       });
-    } finally {
-      engine.endRender();
-    }
+    });
   };
 
   const dialogElement = (
@@ -328,6 +339,7 @@ export function useModal<TData = void, TReason extends string = string>(
       {...dialogAttributes({
         modalId,
         nonModal: isNonModal,
+        isPreparing: snap.isPreparing,
         ariaLabel,
         ariaLabelledBy,
         ariaDescribedBy,

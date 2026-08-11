@@ -226,6 +226,10 @@ clicking it, so the key path and the click path are the same path — running st
 and any `onClick` veto all apply. If a hotkey collides with the modal's `dismissKey`, the action
 wins and dismissal defers.
 
+The value it matches on is the ARIA spelling, not the one you declared: `hotkey: 'Ctrl+s'` reaches
+the DOM as `aria-keyshortcuts="Control+S"`, because every token of that attribute must be a
+`KeyboardEvent.key` value — see [formatAriaKeyshortcuts](#key-formathotkeylabel-formatariakeyshortcuts-matcheshotkey).
+
 > **Custom button wrappers must forward `aria-keyshortcuts`** onto the real `<button>`, or the
 > hotkey has nothing to find.
 
@@ -384,26 +388,26 @@ Everything above, plus:
 
 ### Options
 
-| Option                    | Type                                                             | Description                                                                                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                      | `string`                                                         | Unique modal identifier                                                                                                                                                                                                                                  |
-| `render`                  | `(args: ModalRenderArgs<TData, TReason>) => ReactNode`           | Render function                                                                                                                                                                                                                                          |
-| `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                        |
-| `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                    |
-| `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                        |
-| `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                   |
-| `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                          |
-| `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                     |
-| `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                          |
-| `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                         |
-| `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on. Default: `'dialog'`.                                                                                                                                              |
-| `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                           |
-| `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                         |
-| `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.             |
-| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the topmost non-modal responds. Default: `false`.       |
-| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                            |
-| `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                 |
-| `portal?`                 | `boolean`                                                        | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way. |
+| Option                    | Type                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                      | `string`                                                         | Unique modal identifier                                                                                                                                                                                                                                                                                                                                                                            |
+| `render`                  | `(args: ModalRenderArgs<TData, TReason>) => ReactNode`           | Render function                                                                                                                                                                                                                                                                                                                                                                                    |
+| `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                                                                                                                                                                  |
+| `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                                                                                                                                                              |
+| `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                                                                                                                                                                  |
+| `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles, and the `<dialog>` carries `aria-busy` for that window. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                                                                                                     |
+| `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                                                                                                                                                                    |
+| `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                                                                                                                                                               |
+| `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                                                                                                                                                                    |
+| `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                                                                                                                                                                   |
+| `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on — it is announced with its description rather than waiting to be read, so pair it with `ariaDescribedBy`. Not _required_ to: the APG says to omit the description when the content has structure (lists, tables, several paragraphs) that would be flattened into one announced string. Default: `'dialog'`. |
+| `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                                                                                                                                                                     |
+| `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                                                                                                                                                                   |
+| `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.                                                                                                                                                       |
+| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the topmost non-modal responds. Default: `false`.                                                                                                                                                 |
+| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                                                                                                                                                                      |
+| `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                                                                                                                                                           |
+| `portal?`                 | `boolean`                                                        | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way.                                                                                                                                           |
 
 `nonModal` / `dismissOnBackdropClick` / `dismissOnClickOutside` form the `ModalVariant` union, not
 three independent flags: a non-modal dialog has no backdrop to click, so passing
@@ -941,11 +945,11 @@ id from another microfrontend, and the typed close. Every option documented unde
 
 `BindDialogOptions` is `UseModalOptions` without `render`, plus three of its own:
 
-| Option    | Type                | Description                                                                                                                                                                                                                           |
-| --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dialog`  | `HTMLDialogElement` | **Required.** The element to drive. It is yours — this shows, hides, animates and listens on it, and never touches what is inside. Attributes the options do not name are left alone, so an `aria-labelledby` in the markup survives. |
-| `host`    | `HTMLElement`       | The element a _contained_ non-modal panel is positioned against (`nonModal: true` without `portal`). Defaults to the dialog's parent, and must be sized — see [dialogPlacement](#dialogplacement). Ignored for every other variant.   |
-| `manager` | `DialogManager`     | The manager to register with. Defaults to the `dialogManager` singleton. This is the vanilla answer to `DialogManagerProvider`: there is no tree to read a context from, so an isolated instance is passed rather than provided.      |
+| Option    | Type                | Description                                                                                                                                                                                                                                                                                                                  |
+| --------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dialog`  | `HTMLDialogElement` | **Required.** The element to drive. It is yours — this shows, hides, animates and listens on it, and never touches what is inside. Attributes the options do not name are left alone, so an `aria-labelledby` in the markup survives; the exception is `aria-busy`, which the library owns and keeps in step with `prepare`. |
+| `host`    | `HTMLElement`       | The element a _contained_ non-modal panel is positioned against (`nonModal: true` without `portal`). Defaults to the dialog's parent, and must be sized — see [dialogPlacement](#dialogplacement). Ignored for every other variant.                                                                                          |
+| `manager` | `DialogManager`     | The manager to register with. Defaults to the `dialogManager` singleton. This is the vanilla answer to `DialogManagerProvider`: there is no tree to read a context from, so an isolated instance is passed rather than provided.                                                                                             |
 
 Positioning and animation are applied as **inline styles**, which outrank a stylesheet rule on
 `dialog` — the same bargain the other two bindings make.
@@ -974,9 +978,12 @@ binding makes. It exists because nothing here re-renders: it attaches the click 
 It takes the same [`ActionOptions`](#actionreason-handleroroptions) the hook bindings do —
 `onAction`, `onClick`, `disabled`, `type`, `hotkey`, `focusOnOpen`.
 
-**Call the unbind when the button goes away.** It removes the listener _and_ retires the action's
-declaration, which is what stops a hotkey outliving its button and what lets backdrop dismissal go
-back to its no-actions default.
+**Call the unbind when the button goes away.** It removes the listener, retires the action's
+declaration — which is what stops a hotkey outliving its button and what lets backdrop dismissal
+go back to its no-actions default — and hands the button back as it was: `type`, `disabled`,
+`data-loading`, `aria-busy`, `aria-keyshortcuts` and `data-focus-on-open` are all restored to
+their pre-bind values. Restored rather than cleared, so a button _you_ disabled stays disabled.
+Without that, unbinding mid-action would leave a permanently disabled control in your markup.
 
 ### Reacting to state without a renderer
 
@@ -1357,7 +1364,7 @@ Namespace tokens — short form and `dialog:`-prefixed form are interchangeable:
 | --------------------- | --------------------------------------------------------- |
 | `manager`             | Modal registration & open/close lifecycle                 |
 | `modal`               | `useModal` core — open/close requests                     |
-| `modal:lifecycle`     | Opening phase & `prepare` callback                        |
+| `modal:lifecycle`     | Opening phase, `prepare` callback, labelling diagnostics  |
 | `modal:keydown`       | Dismiss-key handling (`dismissKey`, default `Key.Escape`) |
 | `modal:click-outside` | Click-outside detection for non-modal dialogs             |
 | `outlet`              | ModalOutlet registration and rendering                    |
@@ -1369,17 +1376,26 @@ Logging is **opt-in, debug-only, and console-only** — nothing is persisted or 
 
 ---
 
-## Key, formatHotkeyLabel, matchesHotkey
+## Key, formatHotkeyLabel, formatAriaKeyshortcuts, matchesHotkey
 
 A `HotkeyDef` is a string: a key, optionally prefixed with modifiers (`'Enter'`, `'Ctrl+Enter'`,
 `'Ctrl+Shift+Delete'`). `Key` is the const object of key names — `Key.Enter`, `Key.Escape`,
 `Key.S` — and `KeyValue` is the union of its values.
 
-```typescript
-import { Key, formatHotkeyLabel, matchesHotkey } from 'umbra';
+**A hotkey has two audiences, and they spell it differently.**
 
+```typescript
+import { Key, formatAriaKeyshortcuts, formatHotkeyLabel, matchesHotkey } from 'umbra';
+
+// What a person reads — a menu item, a tooltip, a shortcuts sheet.
 formatHotkeyLabel('Ctrl+Enter'); // → 'Ctrl+Enter'
-formatHotkeyLabel('Shift+s'); // → 'Shift+S' — the canonical form, and what reaches the DOM
+formatHotkeyLabel('Shift+s'); // → 'Shift+S' — letter case is not significant, so it normalises
+
+// What the platform parses. Every token of `aria-keyshortcuts` must be a `KeyboardEvent.key`
+// value, and Control's is `Control` — `Ctrl` is a keycap, not a key value. The spacebar is the
+// spec's own exception: its key value is a space, which cannot sit in a space-delimited list.
+formatAriaKeyshortcuts('Ctrl+Enter'); // → 'Control+Enter'
+formatAriaKeyshortcuts('Ctrl+ '); // → 'Control+Space'
 
 // The same matcher the modal uses, for a keydown of your own.
 element.addEventListener('keydown', (event) => {
@@ -1388,6 +1404,12 @@ element.addEventListener('keydown', (event) => {
   }
 });
 ```
+
+`formatAriaKeyshortcuts` is the canonical form: it is what an action writes onto its button, what
+hotkey dispatch queries the DOM by, and what decides whether two hotkeys are the same one. A
+wrapper that _forwards_ `aria-keyshortcuts` needs none of this; a wrapper that **builds** the
+attribute itself must build it with this. The input spelling never changes — `HotkeyDef` still
+takes `Ctrl+`, and `'Control+Enter'` is not one.
 
 **Letter case is not significant.** `Key.S` is `'s'` — what `KeyboardEvent.key` reports without
 Shift — but the browser reports `'S'` while Shift is held, so single-character keys are compared

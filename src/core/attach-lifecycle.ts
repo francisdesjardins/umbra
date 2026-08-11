@@ -1,8 +1,15 @@
 import { fireAndForget } from '../utils/fire-and-forget.js';
 import { createLogger } from '../utils/logger.js';
+import { findLabellingProblems } from './dialog-labelling.js';
 import { refreshTransitionsDisabled, runCloseSequence, showDialog } from './dialog-lifecycle.js';
+import { styleRootOf } from './dialog-styles.js';
 import { finalizeModalClose } from './finalize-close.js';
-import type { CloseSequenceOptions, ModalDomContext, OpenSequenceOptions } from './attach-types.js';
+import type {
+  CloseSequenceOptions,
+  LabellingDiagnosticsOptions,
+  ModalDomContext,
+  OpenSequenceOptions,
+} from './attach-types.js';
 
 const log = createLogger('modal:lifecycle');
 
@@ -113,4 +120,75 @@ export function syncCloseSequence(
       log('Close finished', { id: modalId, how });
     },
   });
+}
+
+/**
+ * Dialogs already told about this open. Membership is dropped on `'closed'`, not left to the
+ * element's lifetime: a `<dialog>` outlives every open/close cycle, so a per-element cache would
+ * stay silent about the *next* open's broken content — the same trap `transitionsDisabledCache`
+ * documents from the other side.
+ */
+const reported = new WeakSet<Element>();
+
+/**
+ * Say, once per open, when this dialog's labelling cannot do its job.
+ *
+ * The check that neither a type nor a linter can make: `aria-labelledby` is a string in one place
+ * and an `id` on an element in another, and only the DOM knows whether they met. What it reports
+ * is in {@link findLabellingProblems}; everything here is about asking at a moment when the answer
+ * means something.
+ *
+ * **Not before `prepare` has settled**, because a name may legitimately point at a heading the
+ * caller has not been able to render yet — a modal that shows a spinner while it loads is the
+ * documented normal case, not an edge one, and a component test on two bindings pins that it stays
+ * quiet there. That guard is the whole of the timing this needs: by the phase `'open'`, every
+ * binding has committed its content, `ModalOutlet` included. That one was the suspect — it
+ * registers its node from an effect, a commit behind — and it is not one, because the phase
+ * reaches `'open'` on its own frame, after the outlet has rendered. Deferring a frame on top of
+ * that was tried, measured against all three cases, and changed nothing; it is not here.
+ */
+export function syncLabellingDiagnostics(
+  ctx: ModalDomContext,
+  options: LabellingDiagnosticsOptions
+): void {
+  const { getDialog, modalId, phase } = ctx;
+
+  const dialog = getDialog();
+  if (!dialog) {
+    return;
+  }
+
+  if (phase === 'closed') {
+    reported.delete(dialog);
+    return;
+  }
+
+  if (phase !== 'open' || options.isPreparing || reported.has(dialog)) {
+    return;
+  }
+  reported.add(dialog);
+
+  const root = styleRootOf(dialog);
+  if (!root) {
+    // A detached fragment resolves nothing, and "we cannot tell" is not "it is broken".
+    return;
+  }
+
+  const problems = findLabellingProblems(
+    {
+      label: dialog.getAttribute('aria-label'),
+      labelledBy: dialog.getAttribute('aria-labelledby'),
+      describedBy: dialog.getAttribute('aria-describedby'),
+    },
+    // The element's own tree, which is what the platform resolves an IDREF against — so for a
+    // dialog in a shadow root, an id out in the light DOM genuinely resolves to nothing for a
+    // screen reader too, and reporting it is right rather than over-strict.
+    (id) => {
+      return root.getElementById(id) !== null;
+    }
+  );
+
+  for (const problem of problems) {
+    log.warn(`Dialog labelling — ${problem}`, { id: modalId });
+  }
 }

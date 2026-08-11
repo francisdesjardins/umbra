@@ -16,11 +16,14 @@ export function VanillaSlideExample() {
   const panel = useSlideModal<void, 'close'>({
     id: MODAL_ID,
     direction: 'right',
+    ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ direction, action }) => {
       return (
         <VanillaSlideModal.DefaultLayout direction={direction}>
           <VanillaSlideModal.Header>
-            <VanillaSlideModal.Title>Settings Panel</VanillaSlideModal.Title>
+            <VanillaSlideModal.Title id={`${MODAL_ID}-title`}>
+              Settings Panel
+            </VanillaSlideModal.Title>
           </VanillaSlideModal.Header>
           <VanillaSlideModal.Content>
             <Shared.Section title="General">

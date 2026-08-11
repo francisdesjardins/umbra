@@ -61,3 +61,14 @@ export type ClickOutsideOptions = {
 export type FocusCoordinatorOptions = {
   readonly engine: ActionGate;
 };
+
+/**
+ * Options for the labelling diagnostic.
+ *
+ * `isPreparing` is passed rather than read off `ctx.store`, and that is what makes the check work
+ * in a fine-grained renderer: Solid's lifecycle effect tracks whatever its body reads, so a guard
+ * hidden inside the function would never re-run it when `prepare` settles.
+ */
+export type LabellingDiagnosticsOptions = {
+  readonly isPreparing: boolean;
+};

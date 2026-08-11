@@ -1,5 +1,5 @@
 import { createStore } from '../store/index.js';
-import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
+import { formatAriaKeyshortcuts, matchesHotkey } from '../utils/hotkey-utils.js';
 import { createLogger } from '../utils/logger.js';
 import { normalizeError } from '../utils/normalize-error.js';
 import { DISMISS_REASON, type DismissReason } from '../core/dismiss-reason.js';
@@ -201,9 +201,9 @@ export function createActionEngine<TData, TReason extends string = string>(modal
      * captured during render, because the actions are only known once render has run.
      */
     ownsHotkey(candidate: HotkeyDef): boolean {
-      const label = formatHotkeyLabel(candidate);
+      const label = formatAriaKeyshortcuts(candidate);
       for (const hotkey of declared.values()) {
-        if (hotkey !== undefined && formatHotkeyLabel(hotkey) === label) {
+        if (hotkey !== undefined && formatAriaKeyshortcuts(hotkey) === label) {
           return true;
         }
       }
@@ -234,3 +234,36 @@ export type ActionEngine<TData = never, TReason extends string = string> = Retur
  * an `ActionGate` whatever `Result` is.
  */
 export type ActionGate = Omit<ActionEngine, 'run' | 'bindClose'>;
+
+/** The two engine methods a declaration window needs, and nothing else. */
+export type RenderWindow = {
+  readonly beginRender: () => void;
+  readonly endRender: () => void;
+};
+
+/**
+ * Run a render pass inside the engine's declaration window.
+ *
+ * Both hook bindings wrap their `render` call in exactly this, so by the rule that decides what
+ * is core, it is core. The `finally` is what makes it worth sharing rather than inlining: a
+ * `render` that throws must still close the window, or the engine keeps the half-built map of a
+ * pass that never finished and every later `hasActions()` answers from it.
+ *
+ * It also has to live *outside* the hook, which is a second reason and the less obvious one. The
+ * React Compiler cannot lower a `try` with no `catch`, and it bails per function — so with these
+ * four lines inline, the whole of `useModal` went uncompiled. Out here they are an ordinary
+ * function the compiler ignores, and the hook compiles.
+ *
+ * @example
+ * const content = runDeclarationWindow(engine, () => {
+ *   return render(args);
+ * });
+ */
+export function runDeclarationWindow<T>(engine: RenderWindow, render: () => T): T {
+  engine.beginRender();
+  try {
+    return render();
+  } finally {
+    engine.endRender();
+  }
+}

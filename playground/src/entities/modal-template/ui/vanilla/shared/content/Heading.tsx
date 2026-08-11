@@ -3,8 +3,14 @@ import styles from '@/entities/modal-template/ui/vanilla/shared/content/styles.m
 
 type HeadingProps = {
   readonly children: ReactNode;
+  /** What a form modal's `ariaLabelledBy` points at. */
+  readonly id?: string | undefined;
 };
 
-export function Heading({ children }: HeadingProps) {
-  return <h3 className={styles['heading']}>{children}</h3>;
+export function Heading({ children, id }: HeadingProps) {
+  return (
+    <h3 id={id} className={styles['heading']}>
+      {children}
+    </h3>
+  );
 }

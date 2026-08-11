@@ -186,7 +186,7 @@ shared by every binding; layers 2 and 3 exist once per binding and are thin.
 - `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
 - `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator rather than a bare function, because where the opening focus landed has to outlive one attachment
 - `createActionFactory` ([core/action-factory.ts](core/action-factory.ts)) — see below
-- `dialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE` ([core/dialog-props.ts](core/dialog-props.ts))
+- `dialogAttributes` / `setDialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE` ([core/dialog-props.ts](core/dialog-props.ts))
 
 - `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) — the native `<dialog>` DOM lifecycle, driven by phase: (1) opening — `showDialog()`, `store.scheduleOpenTransition()`, `prepare`/`finishPreparing`, guarded on `phase === 'opening'` and `!dialog.open` so it is safe to call on every pass; (2) `'open'` — `refreshTransitionsDisabled` per open, not per element (the `<dialog>` outlives every cycle and its transition config can change between them); (3) `'closing'` — disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). A `finalized` flag guards the ESC cancel race. React runs these from two effects; Solid runs them from two `createEffect`s.
 - **`manager/scroll-lock.ts`** ([manager/scroll-lock.ts](manager/scroll-lock.ts)) — React-free body scroll lock used when any _modal_ dialog is open. Claimed per owner (`lockBodyScroll(owner)`) and released when the last claim goes — the lock target is one global `<body>` shared by every manager instance, and a shared boolean would make it last-writer-wins. Sets `data-dialog-open` on `<body>` (the injected stylesheet keys `overflow: hidden` off it) and compensates the width the lock **actually reclaims** — `computeScrollCompensation(before, after)`, not the current scrollbar width. That distinction is the whole point: a page with `scrollbar-gutter: stable` keeps its gutter through `overflow: hidden`, so padding by the scrollbar width would shift content inward instead of holding it still. Publishes the amount as `--dialog-scrollbar-width` on `:root` so user-land `position: fixed` elements can compensate too — the library never walks the consumer's DOM looking for them.
@@ -266,6 +266,56 @@ omission from an audit.
 `role` is deliberately not the whole ARIA surface. A `<dialog>` _is_ a dialog; a surface that is
 not one — a toast, a popover — wants a live region **inside** it, not a role contradicting its
 own element. The corner-toast example in the playground is written that way and says why.
+
+**`role: 'alertdialog'` does not require `ariaDescribedBy`, and making it a type error was
+considered and rejected.** The two live in the same options object, so unlike `ariaLabelledBy` and
+the `id` it points at, the constraint _is_ expressible — `ModalVariant` is the precedent. Two
+things stop it. The APG says to **omit** the description when the content has semantic structure
+(lists, tables, several paragraphs), since it would be announced as one unbroken string; a type
+would turn a conditional recommendation into an absolute rule, against the spec's own advice. And
+`umbra/vanilla` would contradict it outright: there the body text is the caller's markup, and
+`setDialogAttributes` skips `undefined` precisely so an `aria-describedby` already in the HTML
+survives — requiring the option would force restating what is already written. A constraint that
+cannot be uniform across the three bindings does not belong in the model.
+
+**The diagnostic that _is_ shipped** is `syncLabellingDiagnostics` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)),
+over the pure rule in [core/dialog-labelling.ts](core/dialog-labelling.ts). It reports two things,
+both unambiguous: an `aria-labelledby` / `aria-describedby` whose ids resolve to nothing, and a
+dialog that ends up with no accessible name. **It says nothing about an `alertdialog` without a
+description**, for the reason above — warning there would push people toward the pattern the spec
+tells them to avoid.
+
+Three details are load-bearing, and two of them are about not crying wolf:
+
+- **It reads the element, not the options.** In `umbra/vanilla` the markup is the caller's, so
+  `options.ariaLabelledBy` would report a perfectly named dialog as anonymous and miss the ones
+  that are not. `aria-labelledby` also takes **space-delimited IDREFS**, checked element-wise.
+- **Not before `prepare` settles.** A name may legitimately point at a heading the caller has not
+  been able to render yet — the loading modal is the documented normal case. `isPreparing` is
+  passed in rather than read behind the function, which is what subscribes Solid's effect to it;
+  a hidden guard would never bring the check back. A CT test on both bindings pins the silence.
+- **One frame of slack**, as insurance rather than as a fix: `ModalOutlet` was the suspect, since
+  it registers its node one commit late, and measuring says the lag never reaches the check — the
+  phase gets to `'open'` on its own frame. Kept for the renderers not enumerated.
+
+Like every other warning here it goes through the gated logger, so it is **silent until
+`setLogLevel`**. That is the library's uniform policy, not an oversight: this is for someone
+already asking why their screen reader says "dialog", and it hands them the answer in one line.
+
+**`aria-busy` is the one attribute in that table the library owns rather than relays**, and the
+only one that toggles: `phase: 'open'` with `isPreparing: true` is the normal state of a loading
+modal — on screen, content not there yet — and nothing else in the DOM said so. It is therefore
+always written, `'false'` included, because `setDialogAttributes` skips `undefined` rather than
+removing, so the off half could otherwise never be reached and a dialog that finished loading
+would keep `aria-busy="true"` welded on. `isPreparing` is **required** on `DialogAttributeOptions`
+for the same reason: a binding that forgot it would ship a permanent lie, silently.
+
+`setDialogAttributes` is the write loop Solid and vanilla both need (React spreads in JSX, which
+drops `undefined` for free). Its skip-on-undefined is a contract, not an optimisation — in
+`umbra/vanilla` the element is the caller's markup, and an `aria-labelledby` they wrote must
+survive an option they never passed. `bindAction` has the same asymmetry from the other side: it
+writes onto a button it did not create, so its unbind **restores** what it found rather than
+clearing, or a button the caller had disabled comes back switched on.
 
 A **closed** dialog is `display: none`. The UA already says so (`dialog:not([open])`), but the
 library's own inline `display: flex` outranks it — and a contained dialog is `inset: 0`, so
@@ -373,6 +423,16 @@ render: ({ action }) => (
 
 **Flow:** `action(reason, { hotkey })` records it on the engine during render → `attachDialogKeydown` asks the engine to match the event → finds the button by `aria-keyshortcuts` → `click()` runs the same path a real click does.
 
+**The attribute is not the label.** `aria-keyshortcuts` takes `KeyboardEvent.key` values, so the
+Control modifier is `Control` and the spacebar is `Space` — a literal space cannot sit in a
+space-delimited list. `formatAriaKeyshortcuts` produces that form and `formatHotkeyLabel` produces
+the one a person reads (`Ctrl+Enter`); the input spelling stays `Ctrl+`, and `parse()` deliberately
+does not learn the second one, or the runtime surface would be wider than the closed `HotkeyDef`
+union. The lookup is selector-based, so the attribute, the selector in `attach-keydown` and
+`engine.ownsHotkey` all read the same function — a spelling that drifted between them would leave
+every modified hotkey silently dead, which is why they move together and why the end-to-end test
+asserts the attribute _and_ the dispatch in one go.
+
 **`aria-keyshortcuts` forwarding**: Custom button wrappers **must** forward this prop to the `<button>` element or hotkeys silently fail.
 
 ```tsx
@@ -380,7 +440,7 @@ render: ({ action }) => (
 // ❌ <button ... /> — hotkeys won't fire
 ```
 
-Utilities: `matchesHotkey()` + `formatHotkeyLabel()` ([utils/hotkey-utils.ts](utils/hotkey-utils.ts)), `Key` constants ([utils/keys.ts](utils/keys.ts)).
+Utilities: `matchesHotkey()` + `formatHotkeyLabel()` + `formatAriaKeyshortcuts()` ([utils/hotkey-utils.ts](utils/hotkey-utils.ts)), `Key` constants ([utils/keys.ts](utils/keys.ts)).
 
 **Scoped to the declaring dialog** ([utils/dialog-scope.ts](utils/dialog-scope.ts)). A modal opened
 from inside another renders its `<dialog>` in that one's subtree — the documented way to stack,
@@ -398,7 +458,7 @@ retry belongs to the button that was pressed — and falls back to the claimed o
 in the DOM (probed, not assumed), and `showModal()`'s focusing steps read exactly that attribute —
 so the library applies the focus itself, after the dialog is actually open.
 
-**Letter case is not significant.** `Key.S` is `'s'` (what `KeyboardEvent.key` reports without Shift), but the browser reports `'S'` while Shift is held — so `matchesHotkey` compares single-character keys case-insensitively and the modifier list does the discriminating. `'Shift+s'` and `'Shift+S'` are one hotkey, and CapsLock cannot change which one fires. `formatHotkeyLabel()` is the canonical form: it is what reaches the DOM as `aria-keyshortcuts`, and `engine.ownsHotkey` compares labels rather than raw strings so the three agree by construction.
+**Letter case is not significant.** `Key.S` is `'s'` (what `KeyboardEvent.key` reports without Shift), but the browser reports `'S'` while Shift is held — so `matchesHotkey` compares single-character keys case-insensitively and the modifier list does the discriminating. `'Shift+s'` and `'Shift+S'` are one hotkey, and CapsLock cannot change which one fires. `formatAriaKeyshortcuts()` is the canonical form: it is what reaches the DOM as `aria-keyshortcuts`, what the dispatch selector is built from, and what `engine.ownsHotkey` compares rather than raw strings — so the three agree by construction. The two formatters share one `serialize`, which is what keeps their modifier ordering from drifting.
 
 ## Type System
 
@@ -549,10 +609,41 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
 
 ## React Compiler
 
-`babel-plugin-react-compiler` target `'19'`.
+`babel-plugin-react-compiler` target `'19'`, and **it has to be wired by hand in all three
+places**, because the wiring that looks right does nothing. `react({ babel: { plugins: [...] } })`
+is the pre-rolldown form: under this project's Vite it is accepted and transforms _nothing_, which
+is how the shipped bundle and the component suite both came to be uncompiled while the source was
+written — and documented — as if they were not. The library build and the playground go through
+`@rolldown/plugin-babel`; the component bundle cannot, because Playwright's runner bundles a Vite
+of its own, so it uses [scripts/vite-plugin-react-compiler.mjs](../scripts/vite-plugin-react-compiler.mjs).
+One grep tells you which state you are in: a compiled `use-modal.js` opens with `c(76)` and
+imports `react/compiler-runtime`.
+
+**Scoped to `src/react/`, and that is load-bearing.** The compiler decides what a hook is by name,
+and `umbra/solid` exports `useModal`, `useLookup` and two template hooks — unscoped it compiles
+Solid's and writes `import { c } from "react/compiler-runtime"` into the Solid binding, the one
+thing this package promises never to do. Measured, not feared: it did exactly that, and
+`verify:package` failed on it.
+
+**`react/compiler-runtime` must be external in the library build.** It is React's own subpath, so
+bundling it would inline React internals into this package; a bare `id === 'react'` check misses
+it, which is why the externals predicate names it.
+
+Two consequences of turning it on that are worth knowing before turning it off again:
+
+- **`runDeclarationWindow` exists because of it.** The compiler cannot lower a `try` with no
+  `catch`, and it bails per function — so the four lines wrapping `render()` in `beginRender()` /
+  `endRender()` left the whole of `useModal` uncompiled. Both hook bindings had the same four
+  lines, so extracting them was the mechanical rule's answer anyway; the compiler just made the
+  cost visible.
+- **It found a real staleness bug in `useLookup`**, where the closed branch answers from
+  `manager.lookup(id)` — a read of mutable state the compiler cannot see into, memoised on
+  `manager` and `id`, neither of which changes when a modal registers. Uncompiled it re-read every
+  render and looked fine. The snapshot is passed explicitly now. Expect more of this shape if the
+  compiler ever reaches code that was written while it was silently off.
 
 - **No `useMemo`/`useCallback`/`React.memo`** — compiler handles memoization
-- **No ref writes during render** — use `useEffect`. Store objects with DOM methods taint as ref-like → use `GetDialog` getter pattern. (`createModalStore` lives in its own module — verified compiler-neutral: `useModal` compiles to the same 88 memo slots imported or colocated.)
+- **No ref writes during render** — use `useEffect`. Store objects with DOM methods taint as ref-like → use `GetDialog` getter pattern. (`createModalStore` lives in its own module — verified compiler-neutral: `useModal` compiles to the same memo slots imported or colocated.)
 - **No property assignment on `useState` values** — `st.x = value` forbidden everywhere. Use closure mutations or `Map.set()` (method calls exempt).
 - `open()`, `openAndWait()` and `handle` close over the store alone, so they are built once in `useModal`'s `useState` initializer and are reference-stable — the compiler cannot memoize them for us (it treats the store as opaque), so hoisting is what makes them usable as effect deps. Everything else the hook returns is derived per render.
 

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { useDialogManagerContext } from './dialog-manager-context.js';
+import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-manager.js';
 import type { ModalInfo } from '../manager/types.js';
 
 /**
@@ -21,10 +22,7 @@ import type { ModalInfo } from '../manager/types.js';
  *   return <span>{info.isVisible ? 'Open' : 'Closed'}</span>;
  * }
  */
-export function useLookup(id: string): ModalInfo {
-  const manager = useDialogManagerContext();
-  const snapshot = useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
-
+function lookupIn(manager: DialogManager, snapshot: DialogManagerSnapshot, id: string): ModalInfo {
   // Linear scan — n is always tiny (1-3 open modals)
   const openModal = snapshot.openDialogs.find((d) => {
     return d.id === id;
@@ -35,4 +33,18 @@ export function useLookup(id: string): ModalInfo {
 
   // Closed or unregistered — derive from imperative lookup
   return manager.lookup(id);
+}
+
+export function useLookup(id: string): ModalInfo {
+  const manager = useDialogManagerContext();
+  const snapshot = useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
+
+  // `snapshot` is passed rather than read inside, and it is the difference between working and
+  // silently freezing. The closed branch answers from `manager.lookup(id)`, a read of mutable
+  // state the compiler has no way to see into — so left inline it memoises on `manager` and `id`,
+  // neither of which changes when a modal registers, and the hook reports the answer it gave on
+  // the first render for ever. Naming the snapshot makes it the dependency it already was: it is
+  // what says *when* the imperative read may have gone stale. Uncompiled this looks identical,
+  // which is why it took compiling the component bundle to see it at all.
+  return lookupIn(manager, snapshot, id);
 }

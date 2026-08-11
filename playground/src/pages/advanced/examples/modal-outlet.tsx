@@ -17,13 +17,14 @@ const resultStore = createResultStore();
 function ConfirmDialog() {
   const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <MessageModal.Icon type="info" sx={{ mb: 0 }} />
-              <MessageModal.Title>Outlet Modal</MessageModal.Title>
+              <MessageModal.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageModal.Title>
             </Stack>
           </MessageModal.Header>
           <MessageModal.Content>

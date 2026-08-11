@@ -16,15 +16,21 @@ export function VanillaMessageExample() {
 
   const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
+    ariaDescribedBy: `${MODAL_ID}-body`,
+    // Identical to its MUI twin, deliberately: same hooks, same options, different markup.
+    role: 'alertdialog',
     render: ({ action, error }) => {
       return (
         <VanillaMessageModal.DefaultLayout>
           <VanillaMessageModal.Header>
             <VanillaMessageModal.Icon variant="warning" />
-            <VanillaMessageModal.Title>Delete Item?</VanillaMessageModal.Title>
+            <VanillaMessageModal.Title id={`${MODAL_ID}-title`}>
+              Delete Item?
+            </VanillaMessageModal.Title>
           </VanillaMessageModal.Header>
           <VanillaMessageModal.Content>
-            <Shared.Message>
+            <Shared.Message id={`${MODAL_ID}-body`}>
               Are you sure you want to delete this item? This action cannot be undone.
             </Shared.Message>
             <Shared.Hint>This is a vanilla HTML + CSS modal example.</Shared.Hint>

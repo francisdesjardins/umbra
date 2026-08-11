@@ -11,6 +11,12 @@
 export type DialogAttributeOptions = {
   readonly modalId: string;
   readonly nonModal: boolean;
+  /**
+   * Whether `prepare` is still running. Required rather than optional: a binding that forgot it
+   * would ship a dialog permanently announcing itself as loaded, and the omission would be
+   * invisible — so it is a compile error instead.
+   */
+  readonly isPreparing: boolean;
   readonly ariaLabel?: string | undefined;
   readonly ariaLabelledBy?: string | undefined;
   readonly ariaDescribedBy?: string | undefined;
@@ -28,6 +34,7 @@ export type DialogAttributes = {
   readonly 'data-modal-id': string;
   readonly 'data-testid': string;
   readonly 'data-modal-type': 'modal' | 'non-modal';
+  readonly 'aria-busy': 'true' | 'false';
   readonly 'aria-label': string | undefined;
   readonly 'aria-labelledby': string | undefined;
   readonly 'aria-describedby': string | undefined;
@@ -41,19 +48,52 @@ export type DialogAttributes = {
  * Each is left `undefined` when absent rather than defaulted — both React and Solid omit an
  * attribute whose value is `undefined`, so an unnamed dialog stays visibly unnamed to an audit
  * instead of quietly carrying `aria-label=""`.
+ *
+ * `aria-busy` is the opposite case and is always given a value, `'false'` included. It is the one
+ * attribute here the library owns outright rather than relays, and it *toggles* — a dialog on
+ * screen while `prepare` runs is the documented normal state of a loading modal, and the state it
+ * leaves. Absence cannot express the off half, since {@link setDialogAttributes} skips `undefined`
+ * rather than removing, so the value that means "done" has to be written.
  */
 export function dialogAttributes(options: DialogAttributeOptions): DialogAttributes {
-  const { modalId, nonModal, ariaLabel, ariaLabelledBy, ariaDescribedBy, role } = options;
+  const { modalId, nonModal, isPreparing, ariaLabel, ariaLabelledBy, ariaDescribedBy, role } =
+    options;
 
   return {
     'data-modal-id': modalId,
     'data-testid': `modal-${modalId}`,
     'data-modal-type': nonModal ? 'non-modal' : 'modal',
+    'aria-busy': isPreparing ? 'true' : 'false',
     'aria-label': ariaLabel,
     'aria-labelledby': ariaLabelledBy,
     'aria-describedby': ariaDescribedBy,
     role,
   };
+}
+
+/**
+ * The part of an element writing attributes needs.
+ *
+ * Narrowed for the reason `StyleTarget` is: this writes through `setAttribute` and nothing else,
+ * so asking for an `HTMLDialogElement` would make a DOM *type* into a DOM *dependency* and put the
+ * whole attribute table out of the unit project's reach for no benefit.
+ */
+export type AttributeTarget = Pick<Element, 'setAttribute'>;
+
+/**
+ * Write the table onto a `<dialog>` — what a binding that owns its element does instead of the
+ * spread a renderer does.
+ *
+ * **`undefined` is skipped, never removed**, and that is a contract rather than an optimisation:
+ * `undefined` here means *the caller named nothing*, and in `umbra/vanilla` the element is the
+ * caller's own markup — an `aria-labelledby` they wrote must survive an option they never passed.
+ */
+export function setDialogAttributes(element: AttributeTarget, attributes: DialogAttributes): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (value !== undefined) {
+      element.setAttribute(name, value);
+    }
+  }
 }
 
 /**

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createDialogManager } from '../../manager/dialog-manager.js';
+import { setLogLevel } from '../../utils/logger.js';
 import { bindDialog } from '../bind-dialog.js';
 import type { DialogController } from '../types.js';
 
@@ -735,6 +736,256 @@ export function VanillaShadowRootHarness() {
         Open
       </button>
       <div ref={hostRef} data-testid="shadow-host" />
+    </>
+  );
+}
+
+/**
+ * What unbinding hands back.
+ *
+ * `bindAction` writes onto a button this binding did not create, and unlike the two hook bindings
+ * it cannot rely on the button going away — the markup is the caller's and outlives the
+ * controller. So the writes have to be undone, and *restored* rather than cleared: the second
+ * button here is disabled in the markup before it is ever bound, which is the case a naive
+ * `removeAttribute` gets wrong by switching it on.
+ */
+export function VanillaRestoreOnUnbindHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const slowRef = useRef<HTMLButtonElement>(null);
+  const alreadyOffRef = useRef<HTMLButtonElement>(null);
+  const unbindRef = useRef<HTMLButtonElement>(null);
+  const [controller, setController] = useState<Bound<'save' | 'other'> | null>(null);
+  const [visible, setVisible] = useState('closed');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const slow = slowRef.current;
+    const alreadyOff = alreadyOffRef.current;
+    const unbind = unbindRef.current;
+    if (!dialog || !slow || !alreadyOff || !unbind) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'save' | 'other'>({
+      id: 'vanilla-restore',
+      dialog,
+      ariaLabel: 'Vanilla restore',
+      manager: createDialogManager(),
+    });
+
+    // Never resolves: the action stays running so the unbind lands mid-flight, which is the state
+    // that used to weld `disabled` and `aria-busy` onto the caller's button for good.
+    const unbindSlow = bound.bindAction(slow, 'save', {
+      hotkey: 'Ctrl+s',
+      onAction: async () => {
+        await new Promise(() => {
+          // Deliberately never settles.
+        });
+      },
+    });
+    const unbindOther = bound.bindAction(alreadyOff, 'other');
+
+    const handleUnbind = () => {
+      unbindSlow();
+      unbindOther();
+    };
+    unbind.addEventListener('click', handleUnbind);
+
+    const stop = bound.subscribe(() => {
+      setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
+    });
+
+    setController(bound);
+
+    return () => {
+      stop();
+      unbind.removeEventListener('click', handleUnbind);
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="is-visible">{visible}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      <dialog ref={dialogRef}>
+        <button ref={slowRef} data-testid="slow-action">
+          Save
+        </button>
+        {/* Disabled by the caller, before anything binds it. */}
+        <button ref={alreadyOffRef} data-testid="already-off" disabled>
+          Other
+        </button>
+        <button ref={unbindRef} data-testid="unbind">
+          Unbind both
+        </button>
+      </dialog>
+    </>
+  );
+}
+
+/**
+ * `aria-busy` on a `<dialog>` the controller does not own — including the teardown that used to
+ * leave it welded on.
+ *
+ * `destroy()` unsubscribes before it tears the store down, so a controller destroyed while
+ * `prepare` is still running never gets the notification that would clear the attribute. The
+ * element survives the controller here, which is what makes that observable at all.
+ */
+export function VanillaBusyHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const releaseRef = useRef<HTMLButtonElement>(null);
+  const destroyRef = useRef<HTMLButtonElement>(null);
+  const [controller, setController] = useState<Bound<'close'> | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const release = releaseRef.current;
+    const destroy = destroyRef.current;
+    if (!dialog || !release || !destroy) {
+      return;
+    }
+
+    let gate: (() => void) | undefined;
+
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-busy',
+      dialog,
+      ariaLabel: 'Vanilla loading',
+      manager: createDialogManager(),
+      prepare: async () => {
+        await new Promise<void>((resolve) => {
+          gate = resolve;
+        });
+      },
+    });
+
+    const handleRelease = () => {
+      gate?.();
+    };
+    const handleDestroy = () => {
+      bound.destroy();
+    };
+    release.addEventListener('click', handleRelease);
+    destroy.addEventListener('click', handleDestroy);
+
+    setController(bound);
+
+    return () => {
+      release.removeEventListener('click', handleRelease);
+      destroy.removeEventListener('click', handleDestroy);
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      <dialog ref={dialogRef}>
+        <button ref={releaseRef} data-testid="release">
+          Release
+        </button>
+        <button ref={destroyRef} data-testid="destroy">
+          Destroy
+        </button>
+      </dialog>
+    </>
+  );
+}
+
+/**
+ * The labelling diagnostic against markup the binding did not write.
+ *
+ * This is the binding it matters most in and the only one where the failure is *ordinary*: the
+ * `id` and the `aria-labelledby` that references it are both hand-written, in two places, by
+ * someone who will not see the result. Note that neither dialog below passes any aria option —
+ * the check reads the element, which is the whole reason it can see these at all.
+ */
+export function VanillaLabellingHarness() {
+  const brokenRef = useRef<HTMLDialogElement>(null);
+  const namelessRef = useRef<HTMLDialogElement>(null);
+  const [controllers, setControllers] = useState<{
+    broken: Bound<'close'>;
+    nameless: Bound<'close'>;
+  } | null>(null);
+
+  useEffect(() => {
+    const broken = brokenRef.current;
+    const nameless = namelessRef.current;
+    if (!broken || !nameless) {
+      return;
+    }
+
+    setLogLevel('*');
+
+    const manager = createDialogManager();
+    const boundBroken = bindDialog<void, 'close'>({
+      id: 'vanilla-broken-label',
+      dialog: broken,
+      manager,
+    });
+    const boundNameless = bindDialog<void, 'close'>({
+      id: 'vanilla-nameless',
+      dialog: nameless,
+      manager,
+    });
+
+    setControllers({ broken: boundBroken, nameless: boundNameless });
+
+    return () => {
+      setLogLevel(false);
+      boundBroken.destroy();
+      boundNameless.destroy();
+      setControllers(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        data-testid="open-broken"
+        onClick={() => {
+          void controllers?.broken.open();
+        }}
+      >
+        Open broken
+      </button>
+      <button
+        data-testid="open-nameless"
+        onClick={() => {
+          void controllers?.nameless.open();
+        }}
+      >
+        Open nameless
+      </button>
+
+      {/* The id it names is nowhere in this tree — the ordinary hand-written mistake. */}
+      <dialog ref={brokenRef} aria-labelledby="vanilla-broken-title">
+        <h2 id="a-different-id">Broken reference</h2>
+      </dialog>
+
+      {/* No name at all, by either route. */}
+      <dialog ref={namelessRef}>
+        <p>Nothing names this one.</p>
+      </dialog>
     </>
   );
 }

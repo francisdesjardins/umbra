@@ -173,8 +173,6 @@ export function CosmicOverrideExample() {
 
   const warp = useModal<string, 'abort' | 'engage'>({
     id: WARP_ID,
-    // A real dialog, so it says what it is. The gate below stays unnamed on purpose: it is
-    // non-modal, never takes focus, and is announced by nothing.
     ariaLabel: 'Warp core',
     // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
     template: 'cosmic',
@@ -263,6 +261,10 @@ export function CosmicOverrideExample() {
 
   const gate = useModal<void, 'closed'>({
     id: GATE_ID,
+    // Named even though it never takes focus. Not taking focus is not the same as being
+    // unreachable: a non-modal `<dialog>` stays in the accessibility tree, so a screen reader's
+    // virtual cursor walks straight into it — and an unnamed one is announced as just "dialog".
+    ariaLabel: 'Warp gate',
     template: 'cosmic',
     nonModal: true,
     // A non-modal lets clicks through, so click-outside would dismiss the gate the moment you

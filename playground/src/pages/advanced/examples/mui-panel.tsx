@@ -153,6 +153,10 @@ export function MuiPanelExample() {
   // carries one, so `SetupValues` is what this modal closes with.
   const modal = useMessageModal<SetupValues, 'back' | 'close' | 'next' | 'submit'>({
     id: MODAL_ID,
+    // A string, because the heading below is the *step* and changes three times while the dialog
+    // stays open. The wizard is one thing to the user; which step they are on is content, and the
+    // "Step 2 of 3" line beside the heading says it.
+    ariaLabel: 'Project setup',
     render: ({ action, error }) => {
       const title = STEP_TITLES[setup.step] ?? STEP_TITLES[0];
 

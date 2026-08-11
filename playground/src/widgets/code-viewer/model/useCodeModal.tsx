@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import { useCodePane } from '@/widgets/code-viewer/model/useCodePane';
 import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModal';
 
+/** Declared once and passed both ways, since the heading and the reference are in two files. */
+const CODE_VIEWER_TITLE_ID = 'code-viewer-title';
+
 export const useCodeModal = () => {
   const { selectedExample, exampleActions } = useCodePane();
   const routerState = useRouterState();
@@ -24,6 +27,7 @@ export const useCodeModal = () => {
   return useSlideModal({
     id: 'code-viewer',
     direction: 'right',
+    ariaLabelledBy: CODE_VIEWER_TITLE_ID,
     render: ({ handle }) => {
       return (
         <Box
@@ -47,6 +51,7 @@ export const useCodeModal = () => {
             exampleActions={exampleActions}
             handle={handle}
             title="Source Code"
+            titleId={CODE_VIEWER_TITLE_ID}
           />
         </Box>
       );

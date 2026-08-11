@@ -28,13 +28,18 @@ export function ServiceLayerExample() {
 
   const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: CONFIRM_MODAL_ID,
+    ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
+    // A dialog, not an alertdialog: the user pressed the button that raised it. Contrast the
+    // failure below, which arrives without anyone asking for it.
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-              <Typography variant="h6">Confirm deployment</Typography>
+              <Typography id={`${CONFIRM_MODAL_ID}-title`} variant="h6">
+                Confirm deployment
+              </Typography>
             </Stack>
           </MessageModal.Header>
           <MessageModal.Content>
@@ -60,17 +65,25 @@ export function ServiceLayerExample() {
 
   const failureModal = useMessageModal<void, 'acknowledge'>({
     id: FAILURE_MODAL_ID,
+    ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
+    ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,
+    // The clearest `alertdialog` on the site: a blocking error the service raised on its own,
+    // which the user did not open and has to act on. The description is the error text, and an
+    // alertdialog is announced with it rather than waiting to be read.
+    role: 'alertdialog',
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <MessageModal.Icon type="error" sx={{ mb: 0 }} />
-              <Typography variant="h6">Deployment failed</Typography>
+              <Typography id={`${FAILURE_MODAL_ID}-title`} variant="h6">
+                Deployment failed
+              </Typography>
             </Stack>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.Message>{lastError}</Shared.Message>
+            <Shared.Message id={`${FAILURE_MODAL_ID}-body`}>{lastError}</Shared.Message>
             <Shared.Hint>
               Raised by the service after the API call rejected — no component was involved.
             </Shared.Hint>

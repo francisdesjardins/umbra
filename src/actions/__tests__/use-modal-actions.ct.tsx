@@ -138,6 +138,27 @@ test.describe('actions declared by use', () => {
     );
   });
 
+  test('a modified hotkey carries the ARIA spelling, and still dispatches by it', async ({
+    mount,
+    page,
+  }) => {
+    // Both halves in one test on purpose. The attribute assertion alone passes if the dispatch
+    // selector was left on the old spelling; the dispatch assertion alone passes if *both* were.
+    // Only a modified hotkey can tell them apart — `Enter` and `Escape` serialise identically
+    // either way — and the failure mode is a hotkey that silently does nothing.
+    await mount(<HotkeyActionsHarness />);
+    await page.getByRole('button', { name: 'Open' }).click();
+    await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
+
+    await expect(page.getByTestId('modified-hotkey')).toHaveAttribute(
+      'aria-keyshortcuts',
+      'Control+S'
+    );
+
+    await page.keyboard.press('Control+s');
+    await expect(page.getByTestId('last-reason')).toHaveText('save');
+  });
+
   test('focus returns inside the dialog after a failed action', async ({ mount, page }) => {
     await mount(<FocusRestorationHarness />);
     await page.getByRole('button', { name: 'Open' }).click();

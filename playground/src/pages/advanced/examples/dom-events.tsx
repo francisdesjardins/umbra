@@ -26,11 +26,14 @@ export function DomEventsExample() {
 
   const alert = useMessageModal<void, 'ok'>({
     id: ALERT_ID,
+    ariaLabelledBy: `${ALERT_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Typography variant="h6">Message Modal</Typography>
+            <Typography id={`${ALERT_ID}-title`} variant="h6">
+              Message Modal
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Typography>A regular modal — type will be &quot;modal&quot;.</Typography>
@@ -48,11 +51,12 @@ export function DomEventsExample() {
   const panel = useSlideModal<void, 'ok'>({
     id: PANEL_ID,
     direction: 'right',
+    ariaLabelledBy: `${PANEL_ID}-title`,
     render: ({ action }) => {
       return (
         <SlideModal.DefaultLayout direction="right">
           <SlideModal.Header>
-            <SlideModal.Title>Slide Panel</SlideModal.Title>
+            <SlideModal.Title id={`${PANEL_ID}-title`}>Slide Panel</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
             <Typography>A slide modal — type will be &quot;slide&quot;.</Typography>

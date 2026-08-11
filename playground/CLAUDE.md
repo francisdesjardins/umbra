@@ -236,6 +236,44 @@ can reach it. Nothing fails; the example simply does not exist for users.
 on the card itself — it lets you fire the example while reading its code. The button on the
 card comes from the example component's own `ExampleLayout` children.
 
+### Name the dialog
+
+**Every example gives its dialog an accessible name.** Without one it is announced as just
+"dialog", which is the commonest defect in a dialog implementation and the one these examples
+would be teaching people to copy. Nothing enforces it — a lint rule cannot see whether an
+`ariaLabelledBy` points at an element that exists, and a rule that only checks the option is
+present blesses `ariaLabel: ''`, which is the same defect wearing a hat.
+
+The convention is derived from the id you already wrote, so there is nothing to invent:
+
+```tsx
+const MODAL_ID = 'delete-item';
+
+useMessageModal({
+  id: MODAL_ID,
+  ariaLabelledBy: `${MODAL_ID}-title`,
+  render: () => <MessageModal.Title id={`${MODAL_ID}-title`}>Delete item</MessageModal.Title>,
+});
+```
+
+`ariaLabelledBy` whenever a title is already on screen — a name written twice is a name that
+drifts, which is why every `Title` and `Heading` component in `entities/modal-template/` takes an
+`id`. Use `ariaLabel` in the two cases where a reference would lie: the heading **disappears** in
+some state (`getting-started/examples/async-open.tsx` renders only a spinner while loading), or it
+**changes** while the dialog is open (`modal-actions/examples/per-action-state.tsx` goes from
+"Ready to publish" to "Publishing…"; a name that moves under the user disorients).
+
+`role: 'alertdialog'` is for a dialog that **interrupts** — a destructive confirm, a blocking
+error — and it always travels with `ariaDescribedBy`, because an alertdialog is announced with its
+description rather than waiting to be read. That also means the described element has to be worth
+interrupting for: `modal-actions/examples/focus-on-open.tsx` is a delete confirm and deliberately
+stays a plain dialog, because its body text is commentary about focus. Reaching for the
+interrupting role on every confirm is how it stops meaning anything.
+
+Verify it in a browser rather than by reading: open the dialog and check the **computed** name in
+the accessibility pane, not the attribute. A reference pointing at an id nobody rendered looks
+correct in the source and leaves the dialog anonymous.
+
 ## Managing Template Components
 
 Keep the **UI Templates** page (`src/pages/ui-templates/ui/UITemplatesPage.tsx`) in sync:

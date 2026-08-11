@@ -26,12 +26,20 @@ export const CodeModalContent = ({
   exampleActions,
   handle,
   title,
+  titleId,
 }: {
   code: string;
   codeKey: string;
   exampleActions: ReactNode;
   handle: ModalHandle;
   title: string;
+  /**
+   * What the panel's `ariaLabelledBy` points at. It has to be threaded rather than derived,
+   * because the heading lives here and the `useSlideModal` call that references it lives in
+   * `model/useCodeModal.tsx` — the one place in the playground where the two ends of a label
+   * reference are in different files.
+   */
+  titleId: string;
 }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -54,6 +62,7 @@ export const CodeModalContent = ({
         <CodeIcon sx={{ fontSize: 20, color: 'primary.main' }} />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
           <Typography
+            id={titleId}
             variant="h6"
             sx={{
               fontWeight: 600,

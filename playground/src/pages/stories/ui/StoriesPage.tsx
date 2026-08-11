@@ -61,6 +61,7 @@ import {
   FocusUnderAnotherModalHarness,
   EscWithoutFocusHarness,
   AccessibleNameHarness,
+  BusyWhilePreparingHarness,
   StylingSurfaceHarness,
 } from 'umbra/react/__tests__/use-modal.story';
 import {
@@ -173,6 +174,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'ariaLabel, ariaLabelledBy and role reach the <dialog>. A dialog with no accessible name is announced as just "dialog" — the library cannot invent one, so it omits the attribute entirely rather than shipping an empty string an audit would miss.',
         component: AccessibleNameHarness,
         codeKey: 'story-accessible-name',
+      },
+      {
+        title: 'aria-busy while prepare runs',
+        description:
+          'A dialog is on screen well before an async prepare settles — phase "open" with isPreparing true is the normal state of a loading modal. The <dialog> carries aria-busy for exactly that window, and carries "false" once it closes, so the off state is reachable rather than welded on.',
+        component: BusyWhilePreparingHarness,
+        codeKey: 'story-busy-while-preparing',
       },
       {
         title: 'The styling surface',

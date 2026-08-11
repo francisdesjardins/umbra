@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { keyboardEvent as makeEvent } from '../../__tests__/fake-events.js';
-import { formatHotkeyLabel, matchesHotkey } from '../hotkey-utils.js';
+import { formatAriaKeyshortcuts, formatHotkeyLabel, matchesHotkey } from '../hotkey-utils.js';
+import { Key } from '../keys.js';
 
 test.describe('formatHotkeyLabel', () => {
   test('returns multi-char key as-is', () => {
@@ -33,6 +34,72 @@ test.describe('formatHotkeyLabel', () => {
 
   test('formats Escape', () => {
     expect(formatHotkeyLabel('Escape')).toBe('Escape');
+  });
+
+  test('names the spacebar rather than printing it', () => {
+    // `Key.Space` is `' '`, which as a label is nothing at all on the screen.
+    expect(formatHotkeyLabel(Key.Space)).toBe('Space');
+    expect(formatHotkeyLabel('Ctrl+ ')).toBe('Ctrl+Space');
+  });
+});
+
+test.describe('formatAriaKeyshortcuts', () => {
+  test('spells the Control modifier the way the platform does', () => {
+    // Every token of `aria-keyshortcuts` is a `KeyboardEvent.key` value, and Control's is
+    // `'Control'` — `'Ctrl'` is a keycap, not a key value, so it names no key to a screen reader.
+    expect(formatAriaKeyshortcuts('Ctrl+Enter')).toBe('Control+Enter');
+    expect(formatAriaKeyshortcuts('Ctrl+Shift+S')).toBe('Control+Shift+S');
+  });
+
+  test('leaves the three modifiers that were already key values alone', () => {
+    // The change is surgical: `Alt`, `Shift` and `Meta` are what UI Events calls them already.
+    expect(formatAriaKeyshortcuts('Alt+F4')).toBe('Alt+F4');
+    expect(formatAriaKeyshortcuts('Shift+Tab')).toBe('Shift+Tab');
+    expect(formatAriaKeyshortcuts('Meta+k')).toBe('Meta+K');
+  });
+
+  test('writes the spacebar as Space, which the spec asks for by name', () => {
+    // The attribute takes a space-*delimited* list, so the one key whose value is a space cannot
+    // be quoted verbatim. WAI-ARIA states that exception itself.
+    expect(formatAriaKeyshortcuts(Key.Space)).toBe('Space');
+    expect(formatAriaKeyshortcuts('Ctrl+ ')).toBe('Control+Space');
+  });
+
+  test('never produces a token containing a space', () => {
+    // The property the grammar actually needs, asserted as a property: a future key whose value
+    // contains a space fails here without anyone remembering to add a case for it.
+    for (const def of [Key.Space, 'Ctrl+ ', 'Shift+ ', 'Ctrl+Alt+Shift+ '] as const) {
+      expect(formatAriaKeyshortcuts(def)).not.toContain(' ');
+    }
+  });
+
+  test('is unchanged for the unmodified keys everything else asserts', () => {
+    // `Enter` and `Escape` are identical under both spellings, which is exactly why they cannot
+    // be the only hotkeys a suite exercises.
+    expect(formatAriaKeyshortcuts('Enter')).toBe('Enter');
+    expect(formatAriaKeyshortcuts('Escape')).toBe('Escape');
+    expect(formatAriaKeyshortcuts('s')).toBe('S');
+  });
+
+  test('is a different string from the label, on purpose', () => {
+    // Two audiences, two spellings. Collapsing them is what put `Ctrl` in the DOM.
+    expect(formatHotkeyLabel('Ctrl+Enter')).toBe('Ctrl+Enter');
+    expect(formatAriaKeyshortcuts('Ctrl+Enter')).not.toBe(formatHotkeyLabel('Ctrl+Enter'));
+  });
+});
+
+test.describe('the ARIA spelling is an output, not an input', () => {
+  test('`Control+…` is neither a HotkeyDef nor a match for one', () => {
+    // The output vocabulary is the platform's and the input vocabulary is the library's; the
+    // `@ts-expect-error` is half the assertion, and fails the build if `HotkeyDef` ever grows the
+    // ARIA spelling. Without it `parse` would degrade `'Control+Enter'` to a plain `Enter`.
+    // @ts-expect-error — `Control` is the ARIA modifier token; the input spelling is `Ctrl`.
+    expect(matchesHotkey(makeEvent('Enter', { ctrlKey: true }), 'Control+Enter')).toBe(false);
+  });
+
+  test('`Control` on its own is still a legitimate key', () => {
+    // Which is the other reason not to alias the two: `Key.Control` names a real key.
+    expect(matchesHotkey(makeEvent('Control'), Key.Control)).toBe(true);
   });
 });
 

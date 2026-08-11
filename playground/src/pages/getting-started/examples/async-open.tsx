@@ -33,6 +33,11 @@ export function AsyncOpenExample() {
 
   const asyncModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
+    // A string rather than `ariaLabelledBy`, and this is the case that decides which to use: the
+    // pending branch below renders no heading at all, so a reference would point at nothing during
+    // exactly the window where the name matters most. The loaded heading is the fetched name,
+    // which is content — the dialog is "Profile" either way.
+    ariaLabel: 'Profile',
     // Awaiting here is what makes `open()` resolve with the data already in.
     prepare: async () => {
       if (!profileQuery.isCached()) {

@@ -1,6 +1,6 @@
 import { isOwnEventTarget, queryOwn } from '../utils/dialog-scope.js';
 import { canDismiss } from '../utils/dismiss-gate.js';
-import { formatHotkeyLabel, matchesHotkey } from '../utils/hotkey-utils.js';
+import { formatAriaKeyshortcuts, matchesHotkey } from '../utils/hotkey-utils.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
 import { DISMISS_REASON } from './dismiss-reason.js';
@@ -11,17 +11,23 @@ import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
 const log = createLogger('modal:keydown');
 
 /**
- * Find the button a hotkey is wired to — by its `aria-keyshortcuts` label — then focus and click
+ * Find the button a hotkey is wired to — by its `aria-keyshortcuts` value — then focus and click
  * it, so the key dispatches through the same path a real click does.
  *
- * It lives here rather than beside `formatHotkeyLabel`, its only other collaborator: this is the
- * one DOM function in that pair's file, and hosting it kept an otherwise pure module out of reach
- * of the unit project. `queryOwn` scopes it to `dialog`'s own content — a modal opened from inside
- * this one lives in this subtree, and clicking its button from here would fire the action of a
- * modal that is not even in front.
+ * The attribute and this selector are the same function's output on purpose: they are two halves
+ * of one lookup, and a spelling that drifted between them would leave every hotkey silently dead.
+ *
+ * It lives here rather than beside `formatAriaKeyshortcuts`, its only other collaborator: this is
+ * the one DOM function in that pair's file, and hosting it kept an otherwise pure module out of
+ * reach of the unit project. `queryOwn` scopes it to `dialog`'s own content — a modal opened from
+ * inside this one lives in this subtree, and clicking its button from here would fire the action
+ * of a modal that is not even in front.
  */
 function clickHotkeyButton(dialog: HTMLElement, def: HotkeyDef): void {
-  const button = queryOwn(dialog, `[aria-keyshortcuts="${CSS.escape(formatHotkeyLabel(def))}"]`);
+  const button = queryOwn(
+    dialog,
+    `[aria-keyshortcuts="${CSS.escape(formatAriaKeyshortcuts(def))}"]`
+  );
   button?.focus();
   button?.click();
 }

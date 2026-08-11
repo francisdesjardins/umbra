@@ -1,4 +1,4 @@
-import { formatHotkeyLabel } from '../utils/hotkey-utils.js';
+import { formatAriaKeyshortcuts } from '../utils/hotkey-utils.js';
 import type { ActionEngine, ActionEngineSnapshot } from '../actions/action-engine.js';
 import type { ActionCloseFn, ActionFactory, ActionReason, ActionState } from '../actions/types.js';
 
@@ -90,7 +90,7 @@ export function createActionFactory<TData, TReason extends string = string>(
       get 'aria-busy'() {
         return stateOf(reason).isRunning;
       },
-      ...(hotkey !== undefined && { 'aria-keyshortcuts': formatHotkeyLabel(hotkey) }),
+      ...(hotkey !== undefined && { 'aria-keyshortcuts': formatAriaKeyshortcuts(hotkey) }),
       ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };

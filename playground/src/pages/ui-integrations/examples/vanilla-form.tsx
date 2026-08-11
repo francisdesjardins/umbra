@@ -56,6 +56,7 @@ export function VanillaFormExample() {
   // below differs. That is the whole point of this page.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {
       store.resetForm();
     },
@@ -65,7 +66,7 @@ export function VanillaFormExample() {
           style={{ minWidth: 'min(475px, 100%)', maxWidth: 'min(800px, 100%)', maxHeight: '70vh' }}
         >
           <VanillaFormModal.Header>
-            <Shared.Heading>Create User</Shared.Heading>
+            <Shared.Heading id={`${MODAL_ID}-title`}>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
             {error && (
               <Shared.Alert title="Error" severity="error">

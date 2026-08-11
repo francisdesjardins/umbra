@@ -30,6 +30,10 @@ export function PerActionStateExample() {
 
   const modal = useMessageModal<void, 'draft' | 'publish' | 'cancel'>({
     id: MODAL_ID,
+    // A string rather than a reference to the heading below, because that heading is a *status* —
+    // it goes from "Ready to publish" to "Publishing…" while the dialog is open. An accessible
+    // name that changes under the user is disorienting; the status is content, and reads as such.
+    ariaLabel: 'Publish post',
     dismissOnBackdropClick: false,
     render: ({ action, hasRunningAction }) => {
       const publishing = action.isRunning('publish');

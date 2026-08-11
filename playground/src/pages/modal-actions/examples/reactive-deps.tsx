@@ -226,6 +226,7 @@ export function ReactiveDepsExample() {
 
   const reactiveModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
     dismissOnBackdropClick: false,
     render: ({ action }) => {
       return (
@@ -234,7 +235,9 @@ export function ReactiveDepsExample() {
         >
           <MessageModal.Header>
             <MessageModal.Icon type={severity} sx={{ mb: 0 }} />
-            <Typography variant="h6">Reactive Dependencies Demo</Typography>
+            <Typography id={`${MODAL_ID}-title`} variant="h6">
+              Reactive Dependencies Demo
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Stack spacing={2}>

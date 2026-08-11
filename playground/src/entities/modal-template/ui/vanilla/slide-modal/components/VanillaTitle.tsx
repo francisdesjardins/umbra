@@ -3,8 +3,14 @@ import styles from '@/entities/modal-template/ui/vanilla/slide-modal/styles.modu
 
 type VanillaTitleProps = {
   readonly children: ReactNode;
+  /** What the panel's `ariaLabelledBy` points at. */
+  readonly id?: string | undefined;
 };
 
-export function VanillaTitle({ children }: VanillaTitleProps) {
-  return <h2 className={styles['slideTitle']}>{children}</h2>;
+export function VanillaTitle({ children, id }: VanillaTitleProps) {
+  return (
+    <h2 id={id} className={styles['slideTitle']}>
+      {children}
+    </h2>
+  );
 }

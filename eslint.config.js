@@ -126,9 +126,11 @@ export default defineConfig(
       ...sharedTsRules,
     },
   },
-  // Playground template sub-scope: enforce gap/Stack over margin props
+  // Playground template sub-scope: enforce gap/Stack over margin props.
+  // The glob is the path the templates are actually at — `playground/src/shared/templates/` has
+  // never existed, so this block matched nothing from the day it was written.
   {
-    files: ['playground/src/shared/templates/**/*.{ts,tsx}'],
+    files: ['playground/src/entities/modal-template/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
         'error',

@@ -9,6 +9,258 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-11
+
+### Fixed — `aria-keyshortcuts` was not a conforming ARIA value
+
+Every token of `aria-keyshortcuts` must be a `KeyboardEvent.key` value from the UI Events spec,
+and the Control modifier's is **`Control`**. `Ctrl` is what is printed on the keycap; it names no
+key value at all, so every button the library had ever written a modified hotkey onto carried a
+value assistive technology cannot resolve.
+
+The spacebar is worse and is the spec's own named exception: its key value is `' '`, and the
+attribute takes a space-**delimited** list, so `hotkey: Key.Space` produced `aria-keyshortcuts=" "`
+— a value that cannot be parsed as one shortcut, let alone as a list. It is `Space` now, in the
+label as well, where a lone space was equally useless.
+
+**Hotkey dispatch was never broken by either**, and it is worth being exact about that: the
+attribute and the selector that queries it were built by the same function, so the button was
+always found. What was wrong is what a screen reader read off it.
+
+**This changes the DOM.** `hotkey: 'Ctrl+s'` now renders `aria-keyshortcuts="Control+S"`, so a
+stylesheet, an end-to-end selector or an analytics scrape keyed on the old string needs updating.
+Nothing about the input spelling moved — `HotkeyDef` still takes `Ctrl+`, and `'Control+Enter'` is
+deliberately _not_ one of its members, because the closed union is what makes a typo a compile
+error and teaching the parser a second spelling would make the runtime wider than the type.
+
+### Added — `formatAriaKeyshortcuts`, because a hotkey has two audiences
+
+`formatHotkeyLabel` is documented as a human-readable label and exported for exactly that, so it
+keeps `Ctrl+Enter` and now has no caller inside `src/` at all — which makes its own unit tests
+load-bearing rather than redundant. The new function produces the DOM form, and the three places
+that must agree by construction all read it: the attribute in `action-factory`, the selector in
+`attach-keydown`, and `engine.ownsHotkey`. They share one `serialize`, so their modifier ordering
+cannot drift apart either.
+
+The end-to-end test asserts the attribute **and** the dispatch in one go, on a _modified_ hotkey.
+Neither half is sufficient alone — the attribute assertion passes if the selector was left behind,
+and the dispatch assertion passes if both were — and `Enter` and `Escape` serialise identically
+under both spellings, which is why a suite made only of them was green against the bug.
+
+`HotkeyDef` ships from the root too. The root's own signatures name it, so a framework-free
+consumer could not annotate what they were being asked to pass.
+
+### Added — `aria-busy` on the dialog while `prepare` runs
+
+A dialog is shown on the animation frame after it opens, which is usually well before an async
+`prepare` settles — `phase: 'open'` with `isPreparing: true` is the documented normal state of a
+loading modal. The element said nothing about it. `aria-busy` is on the `<dialog>` for that window
+now, in all three bindings.
+
+It is written as `'true'`/`'false'` rather than present/absent, and that is the whole design:
+`setDialogAttributes` **skips** `undefined` rather than removing it, so an omitted off-state would
+weld `aria-busy="true"` onto a dialog that had finished loading. `isPreparing` is required on
+`DialogAttributeOptions` for the matching reason — a binding that forgot it would ship a permanent
+lie with nothing to catch it, so it is a compile error instead.
+
+`setDialogAttributes` is that write loop, lifted into `core/dialog-props.ts` from the two bindings
+that own their element. Its skip-on-undefined is a contract, not an optimisation: in
+`umbra/vanilla` the element is the caller's markup, and an `aria-labelledby` they wrote must
+survive an option they never passed.
+
+### Fixed — the React Compiler had not been running for a while
+
+The source is written under the compiler's rules — no `useMemo`, no `useCallback`, no ref writes
+during render — and `src/CLAUDE.md` said `useModal` compiled to 88 memo slots. The shipped bundle
+had none. Neither did the component-test bundle. `react({ babel: { plugins: [...] } })` is the
+pre-rolldown form: under this project's Vite it is accepted and transforms **nothing**, and it was
+written that way in both the library build and `playwright.config.ts`. Only the playground, which
+had already moved to `@rolldown/plugin-babel`, was compiling anything.
+
+So the package was written for a compiler that was not there. Not a correctness bug — the
+constraints are a superset of correct React — but consumers were getting less memoisation than the
+source assumed, and the docs asserted something the artifact did not do.
+
+The library build now goes through `@rolldown/plugin-babel` like the playground. The component
+bundle cannot: Playwright's runner bundles a Vite of its own, so it gets
+`scripts/vite-plugin-react-compiler.mjs`, a plain Vite plugin in the shape `ct-coverage` already
+uses — ordered _after_ the instrumenter, since both are `enforce: 'pre'` and coverage needs the
+file as written for its counters to land without a source map. Verified both ways: coverage still
+reports (92.99% over the component half), and the compiled `use-modal.js` opens with `c(76)`.
+
+**Two things had to be true for this to be safe, and both were found by measuring rather than
+reasoning:**
+
+- **The compiler must be scoped to `src/react/`.** It decides what a hook is by name, and
+  `umbra/solid` exports `useModal`, `useLookup` and two template hooks — so unscoped it compiled
+  Solid's and wrote `import { c } from "react/compiler-runtime"` into the Solid binding, the one
+  thing this package promises never to do. `verify:package` failed on it, which is the gate
+  earning its keep.
+- **`react/compiler-runtime` must be external.** It is React's own subpath, so bundling it would
+  inline React internals into the package; the externals predicate listed `react` and
+  `react/jsx-runtime` and would have missed it.
+
+### Fixed — `useLookup` answered from the first render for ever
+
+Found by compiling the component bundle, and invisible before it. The closed branch answers from
+`manager.lookup(id)` — a read of mutable state the compiler cannot see into — so it memoised on
+`manager` and `id`, neither of which changes when a modal registers. Uncompiled, the call re-ran
+every render and the staleness never showed. The snapshot is now passed to the helper explicitly,
+which is what it always was: the thing that says _when_ the imperative read may have gone stale.
+
+This is the shape to expect from the rest of the tree: code written while the compiler was
+silently off, holding assumptions only an uncompiled render satisfies.
+
+### Changed — `runDeclarationWindow`
+
+Both hook bindings wrapped their `render` call in `beginRender()` / `try` / `finally` /
+`endRender()`, so by the rule that decides what is core, it was core. The compiler is what made
+the cost visible: it cannot lower a `try` with no `catch` and it bails per function, so those four
+lines left the whole of `useModal` uncompiled. Extracted, the hook compiles and the `finally` — a
+`render` that throws must still close the window — is stated once instead of twice.
+
+### Added — the library says when a labelling reference points at nothing
+
+Naming twenty-four dialogs by hand taught the failure mode, and it is never "I forgot the option".
+It is **the attribute written and the `id` absent** — the dialog stays anonymous while _looking_
+named. No type sees it, no linter sees it, `yarn check` does not see it; it took reading Chrome's
+accessibility tree to be sure. Nobody using this library is going to do that.
+
+The core can, because at the moment a dialog finishes opening it holds both the element and the
+tree to resolve against. `syncLabellingDiagnostics` reports two things, and only things that are
+unambiguously broken: an `aria-labelledby` / `aria-describedby` whose ids resolve to nothing, and
+a dialog that ends up with no accessible name at all. The rule itself is
+`findLabellingProblems` — pure, injected with the resolver, and therefore a unit test rather than
+a browser one, IDREFS splitting included.
+
+Three decisions carry it, and two are about not crying wolf:
+
+- **It reads the element, not the options**, which is the difference between working in all three
+  bindings and working in two. In `umbra/vanilla` the markup is the caller's, so a check on
+  `options.ariaLabelledBy` would call a perfectly named dialog anonymous and miss the ones that
+  really are.
+- **It waits for `prepare` to settle.** A name may legitimately point at a heading the caller has
+  not been able to render yet — the modal that shows a spinner while it loads is the documented
+  normal case. `isPreparing` is passed in rather than read behind the function, and that is what
+  subscribes Solid's effect to it; a hidden guard would never bring the check back when the load
+  finishes. Both bindings have a test that stays silent through that window, and removing the
+  guard makes both fail.
+- **No frame of slack, after all.** One was written in on the theory that `ModalOutlet` — which
+  registers its node a commit late — would need it. Measured, the lag never reaches the check,
+  because the phase gets to `'open'` on its own frame, after the outlet has rendered. Removing the
+  deferral changed none of the five tests, so it is gone: machinery whose justification turned out
+  to be false is not kept as insurance. The outlet test stays, asserting the outcome.
+
+The vanilla binding gets the test the other two have, and it is the one that matters most: there
+the `id` and the `aria-labelledby` referencing it are both hand-written, in two places, by someone
+who will not see the result — and neither dialog in that harness passes an aria option at all,
+which is exactly what reading `options.ariaLabelledBy` would have been blind to. It is also the
+only place the "no accessible name" finding is exercised end to end, since the playground no
+longer has a dialog that trips it.
+
+Silent until `setLogLevel`, like every other warning here. That is the policy, not an oversight —
+a `console.warn` with no dev/prod split is noise in production, and this package has no
+dependencies and resolves without a bundler, so there is no `NODE_ENV` to branch on. It is for
+someone already asking why their screen reader says "dialog", and it hands them the answer.
+
+### Not done — `role: 'alertdialog'` does not require `ariaDescribedBy`
+
+Worth recording because it is the obvious next tightening and it is wrong. The two options live in
+the same object, so unlike `ariaLabelledBy` and the `id` it points at, the constraint **is**
+expressible, and `ModalVariant` is the precedent for a mutually-constrained union here.
+
+The APG says to **omit** the description when the dialog's content has semantic structure — lists,
+tables, several paragraphs — because it would be announced as a single unbroken string. A type
+would turn a conditional recommendation into an absolute rule, in the direction the spec argues
+against. And `umbra/vanilla` would contradict it outright: there the body text is the caller's
+markup, and `setDialogAttributes` skips `undefined` precisely so an `aria-describedby` already in
+the HTML survives an option nobody passed. Requiring the option would force restating what is
+already written, in the one binding built to avoid exactly that.
+
+A constraint that cannot hold uniformly across the three bindings does not belong in the model, so
+the diagnostic above stays quiet about it too — warning would train people toward the pattern the
+spec tells them to avoid. The four alertdialogs in the playground each point at a single simple
+paragraph, which is the case the APG does recommend, and the docs now say which is which.
+
+### Fixed (playground) — 24 dialogs announced as just "dialog"
+
+The library's own docs call an unnamed dialog the commonest defect in a dialog implementation, and
+`.claude/commands/add-example.md` has required a name since it was written. Twenty-four of the
+playground's forty-one dialogs did not have one — including all three _Getting Started_ examples,
+the six `ui-integrations` files that are the MUI and vanilla reference people copy, and the
+"Source Code" panel that is the most-opened dialog on the site. A defect there does not stay
+there; it is pasted into other people's apps.
+
+**The templates were the reason it could not be fixed one file at a time.** Four of the five title
+components forwarded `children` and nothing else, so `ariaLabelledBy` was not expressible: the
+heading existed and was unaddressable. That is why the three examples that _were_ correct had all
+bypassed the template with a hand-written `<Typography id=…>`, and why they read differently from
+their neighbours. `Title`, `Heading` and `Message` — MUI and vanilla alike — now take an `id`.
+
+The convention is derived rather than invented, since a modal's id is already unique:
+`ariaLabelledBy: \`${MODAL_ID}-title\``. Referenced rather than repeated, because a name written
+twice is a name that drifts — which had already happened in `grocery-list`, whose `ariaLabel` sat
+next to a heading saying the same words.
+
+`ariaLabel` is kept for the two shapes where a reference would lie, and they are worth naming
+because they are the cases a rule would get wrong: the heading **disappears** in some state
+(`async-open` renders a spinner while loading, so the reference would dangle exactly when the name
+matters), or it **changes** while the dialog is open (`per-action-state` goes from "Ready to
+publish" to "Publishing…"; `mui-panel` changes per wizard step — a name that moves under the user
+disorients, and the step is content).
+
+**The gate is a browser, not a linter**, and that is a decision rather than an omission. A static
+check can see that `ariaLabelledBy` is present; it cannot see whether the id resolves to anything,
+and one that only checks for the option blesses `ariaLabel: ''` — the same defect wearing a hat.
+So the twenty-four were verified by reading the **computed** accessible name off Chrome's
+accessibility tree, dialog by dialog, which is also how the two that mattered were caught: the
+code viewer's heading lives in a different file from the hook that references it, and the first
+sweep silently measured nothing on two routes because the page had not hydrated yet.
+
+**Two corrections that were not about naming:**
+
+- **The cosmic gate was unnamed on purpose, for a reason that is false.** Its comment read "it is
+  non-modal, never takes focus, and is announced by nothing". Not taking focus is not the same as
+  being unreachable — a non-modal `<dialog>` stays in the accessibility tree and a screen reader's
+  virtual cursor walks straight into it. The playground cannot teach an exception that is not one.
+- **`focus-on-open` is a delete confirm and deliberately stays a plain dialog.** It got
+  `role: 'alertdialog'` in this pass and lost it again: an alertdialog is announced with its
+  description, and everything in that example's body is commentary about where focus went.
+  The role travels with a description worth interrupting for, or it is noise.
+
+`role: 'alertdialog'` therefore lands on four — the deployment failure a service raises with nobody
+asking, and the three "this action cannot be undone" confirms — each with `ariaDescribedBy` on its
+own body text, verified to resolve. Reaching for the interrupting role on every confirm is how it
+stops meaning anything, so the deploy confirm, the archive and the hotkey demo stay dialogs.
+
+Also: `eslint.config.js`'s only `no-restricted-syntax` block was scoped to
+`playground/src/shared/templates/**`, a directory that has never existed — the templates are under
+`entities/modal-template/`. It has matched zero files since it was written. Repointed, it reports
+zero violations, which is the good outcome and not evidence it is still dead: the templates already
+follow the rule it states.
+
+### Fixed — a vanilla button unbound mid-action stayed disabled forever
+
+`bindAction` writes `type`, `disabled`, `data-loading`, `aria-busy`, `aria-keyshortcuts` and
+`data-focus-on-open` onto a button the library did not create. React and Solid unmount theirs, so
+the writes go with them; the controller's button is the caller's markup and outlives the
+controller. Unbinding retired the declaration and left every one of those attributes in place — so
+a button unbound while its action was running was not a stale attribute but a **dead control** in
+someone's page, permanently disabled and permanently busy.
+
+The unbind now hands the button back as it found it. **Restored, not cleared**, which is the
+distinction a naive fix gets wrong: a button the caller had disabled in their own markup must stay
+disabled. And it is the _attribute_ that is captured, not the property — `button.type` reads
+`'submit'` for a button that has no `type` at all, so restoring the property would add one.
+
+`destroy()` had the same shape of bug from the other end: it unsubscribes before it tears the
+store down, so a controller destroyed mid-`prepare` never received the notification that would
+clear `aria-busy`, and the caller's `<dialog>` kept it for good. It writes the attributes once
+more on the way out.
+
+Also asserted, finally: `bind-dialog.ct.tsx` checked `data-loading` and `disabled` on a running
+action while its own comment named `aria-busy` — the half assistive technology actually reads.
+
 ## 2026-08-10
 
 ### Added — tests for six paths the suites had never taken

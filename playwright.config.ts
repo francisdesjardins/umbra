@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
 import react from '@vitejs/plugin-react';
 import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
+import { reactCompiler } from './scripts/vite-plugin-react-compiler.mjs';
 
 /**
  * Component-test coverage, opt-in through `CT_COVERAGE=1`.
@@ -24,13 +25,19 @@ const coveragePlugins: any[] = withCoverage ? [ctCoverage()] : [];
 // only the TypeScript signatures differ, so we widen the type here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const vitePlugins: any[] = [
-  react({
-    babel: {
-      plugins: [['babel-plugin-react-compiler', { target: '19' }]],
-    },
-  }),
+  react(),
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- widened above, same reason
   ...coveragePlugins,
+  // After coverage, deliberately: both are `enforce: 'pre'`, so this array is the order, and the
+  // instrumenter needs the file as written for its counters to land without a source map.
+  //
+  // The compiler is applied here rather than through a plugin option because neither wiring that
+  // looks right actually works: `react({ babel: … })` is the pre-rolldown form and silently
+  // transforms nothing, and `@rolldown/plugin-babel` — which the library build uses — has no
+  // effect inside the Vite that Playwright's component runner bundles. A suite that exercises
+  // uncompiled source while the package ships compiled output is not testing the package.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped like the one above
+  reactCompiler({ target: '19' }),
 ];
 
 /**

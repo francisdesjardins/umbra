@@ -212,6 +212,7 @@ import storyNestedHotkeyScopeSrc from 'umbra/react/__tests__/use-modal/nested-ho
 import storyFocusUnderAnotherModalSrc from 'umbra/react/__tests__/use-modal/focus-under-another-modal.story.tsx?raw';
 import storyEscWithoutFocusSrc from 'umbra/react/__tests__/use-modal/esc-without-focus.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
+import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-modal/busy-while-preparing.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-modal/styling-surface.story.tsx?raw';
 
 export const codeSamples: Record<string, string> = {
@@ -284,6 +285,7 @@ export const codeSamples: Record<string, string> = {
   'story-focus-under-another-modal': storyFocusUnderAnotherModalSrc,
   'story-esc-without-focus': storyEscWithoutFocusSrc,
   'story-accessible-name': storyAccessibleNameSrc,
+  'story-busy-while-preparing': storyBusyWhilePreparingSrc,
   'story-styling-surface': storyStylingSurfaceSrc,
   'story-action-focus': storyActionsFocusSrc,
   'story-action-dismiss-collision': storyActionsDismissCollisionSrc,

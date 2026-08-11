@@ -17,12 +17,17 @@ export function ConfirmWithHotkeysExample() {
 
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
+    // A plain dialog, not an `alertdialog`: this asks, it does not interrupt. Reaching for the
+    // interrupting role on every confirm is how it stops meaning anything.
     render: ({ action, hasRunningAction, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon type="info" sx={{ mb: 0 }} />
-            <Typography variant="h6">Confirm Action</Typography>
+            <Typography id={`${MODAL_ID}-title`} variant="h6">
+              Confirm Action
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Stack spacing={2}>

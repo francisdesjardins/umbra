@@ -3,7 +3,9 @@ import { render } from 'solid-js/web';
 import type { JSX } from 'solid-js';
 import {
   SolidBasicApp,
+  SolidBusyApp,
   SolidContainedApp,
+  SolidLabellingApp,
   SolidDeclarationApp,
   SolidDisposalApp,
   SolidLiveStateApp,
@@ -44,6 +46,14 @@ function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
 
 export function SolidBasicHarness() {
   return <SolidRoot app={SolidBasicApp} />;
+}
+
+export function SolidBusyHarness() {
+  return <SolidRoot app={SolidBusyApp} />;
+}
+
+export function SolidLabellingHarness() {
+  return <SolidRoot app={SolidLabellingApp} />;
 }
 
 export function SolidDeclarationHarness() {

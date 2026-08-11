@@ -131,6 +131,16 @@ export { normalizeError } from './utils/normalize-error.js';
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
 
-export { formatHotkeyLabel, matchesHotkey } from './utils/hotkey-utils.js';
+// Two formatters, because a hotkey has two audiences. `formatHotkeyLabel` is what a person reads
+// on a menu item — `Ctrl` is the spelling on the keycap. `formatAriaKeyshortcuts` is what the
+// platform parses, where every token must be a `KeyboardEvent.key` value: `Control`, and `Space`
+// for the key whose value is a space and so cannot sit in a space-delimited list. The second is
+// what the library writes and dispatches by, so a wrapper that builds the attribute itself needs
+// it — which is the trap of having shipped only the first.
+
+export { formatAriaKeyshortcuts, formatHotkeyLabel, matchesHotkey } from './utils/hotkey-utils.js';
 export { Key } from './utils/keys.js';
 export type { KeyValue } from './utils/keys.js';
+// The root's own signatures name it (`formatHotkeyLabel(def: HotkeyDef)`), so a framework-free
+// consumer must be able to as well.
+export type { HotkeyDef } from './actions/types.js';

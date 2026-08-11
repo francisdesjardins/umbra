@@ -16,17 +16,22 @@ export function MuiMessageExample() {
 
   const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
+    ariaDescribedBy: `${MODAL_ID}-body`,
+    // Its vanilla twin says the same thing with the same role: the point of this page is that the
+    // markup differs and the behaviour does not, accessibility included.
+    role: 'alertdialog',
     render: ({ action, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-              <MessageModal.Title>Delete Item?</MessageModal.Title>
+              <MessageModal.Title id={`${MODAL_ID}-title`}>Delete Item?</MessageModal.Title>
             </Stack>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.Message>
+            <Shared.Message id={`${MODAL_ID}-body`}>
               Are you sure you want to delete this item? This action cannot be undone.
             </Shared.Message>
             <Shared.Hint>This is a Material UI modal example.</Shared.Hint>

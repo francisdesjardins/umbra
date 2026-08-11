@@ -15,6 +15,7 @@ type OnCloseCallback = (result: CloseResult) => void | Promise<void>;
 
 type TextMessageModalConfig = {
   readonly title?: ReactNode | undefined;
+  readonly ariaLabel?: string | undefined;
   readonly message?: ReactNode | undefined;
   readonly showConfirm: boolean;
   readonly showCancel: boolean;
@@ -32,6 +33,15 @@ type TextMessageModalConfig = {
  */
 export type TextMessageModalBuilder = {
   setTitle(title: ReactNode): TextMessageModalBuilder;
+  /**
+   * The dialog's accessible name, for a modal that has no title to point at.
+   *
+   * With a title set, the hook wires `ariaLabelledBy` to it and this is not needed — a name
+   * written twice is a name that drifts. It exists because `setTitle` takes a `ReactNode`, which
+   * cannot be reused as a string, so a titleless modal has nothing to derive a name from and
+   * would otherwise be announced as just "dialog".
+   */
+  setAriaLabel(label: string): TextMessageModalBuilder;
   setMessage(message: ReactNode): TextMessageModalBuilder;
   /** Adds a Confirm button. `handler` is optional — omit it to just close the modal. */
   confirm(handler?: ConfirmHandler): TextMessageModalBuilder;
@@ -70,6 +80,10 @@ function buildConfig(
   const builder: TextMessageModalBuilder = {
     setTitle(title) {
       config = { ...config, title };
+      return builder;
+    },
+    setAriaLabel(label) {
+      config = { ...config, ariaLabel: label };
       return builder;
     },
     setMessage(message) {
@@ -183,9 +197,16 @@ export function useTextMessageModal(
   definition: TextMessageModalDefinition
 ): TextMessageModalReturn {
   const { id, _config: config } = definition;
+  const titleId = `${id}-title`;
 
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id,
+    // An explicit label wins, because a caller who set one meant it; otherwise the title on
+    // screen is the name, referenced rather than repeated. Passing both would be a silent
+    // no-op — `aria-labelledby` beats `aria-label` in every screen reader.
+    ...(config.ariaLabel !== undefined
+      ? { ariaLabel: config.ariaLabel }
+      : config.title !== undefined && { ariaLabelledBy: titleId }),
     prepare: config.prepare,
     onClose: config.onClose,
     render: ({ action, error }) => {
@@ -193,7 +214,7 @@ export function useTextMessageModal(
         <MessageModal.DefaultLayout>
           {config.title !== undefined && (
             <MessageModal.Header>
-              <MessageModal.Title>{config.title}</MessageModal.Title>
+              <MessageModal.Title id={titleId}>{config.title}</MessageModal.Title>
             </MessageModal.Header>
           )}
           {(config.message !== undefined || error) && (

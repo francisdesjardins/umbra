@@ -56,15 +56,17 @@ test.describe('the props an action returns', () => {
     expect(action('save', { type: 'submit' }).type).toBe('submit');
   });
 
-  test('carry the canonical hotkey label, not the string as written', () => {
+  test('carry the ARIA spelling of the hotkey, not the string as written', () => {
     // `aria-keyshortcuts` is what hotkey dispatch finds the button by, and what
-    // `engine.ownsHotkey` compares against — so all three have to agree by construction.
+    // `engine.ownsHotkey` compares against — so all three read `formatAriaKeyshortcuts` and
+    // agree by construction. `Ctrl` is the keycap; `Control` is the key value the attribute takes.
     const engine = createActionEngine<void>('label');
     const action = createActionFactory(engine, () => {
       return idle;
     });
 
-    expect(action('save', { hotkey: 'Ctrl+s' })['aria-keyshortcuts']).toBe('Ctrl+S');
+    expect(action('save', { hotkey: 'Ctrl+s' })['aria-keyshortcuts']).toBe('Control+S');
+    expect(action('quick', { hotkey: 'Ctrl+ ' })['aria-keyshortcuts']).toBe('Control+Space');
     expect(action('plain')['aria-keyshortcuts']).toBeUndefined();
   });
 

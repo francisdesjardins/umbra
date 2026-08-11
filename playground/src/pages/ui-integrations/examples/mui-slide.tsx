@@ -16,11 +16,12 @@ export function MuiSlideExample() {
   const panel = useSlideModal<void, 'cancel' | 'save'>({
     id: MODAL_ID,
     direction: 'right',
+    ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ direction, action }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
-            <SlideModal.Title>Settings Panel</SlideModal.Title>
+            <SlideModal.Title id={`${MODAL_ID}-title`}>Settings Panel</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
             <Stack spacing={3}>

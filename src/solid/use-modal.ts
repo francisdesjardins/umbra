@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } from 'solid-js';
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
+import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
@@ -10,8 +11,16 @@ import {
   attachDialogKeydown,
   attachWindowDismissKey,
 } from '../core/attach-keydown.js';
-import { syncOpenSequence, syncCloseSequence } from '../core/attach-lifecycle.js';
-import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
+import {
+  syncOpenSequence,
+  syncCloseSequence,
+  syncLabellingDiagnostics,
+} from '../core/attach-lifecycle.js';
+import {
+  DIALOG_CONTENT_STYLE,
+  dialogAttributes,
+  setDialogAttributes,
+} from '../core/dialog-props.js';
 import {
   createModalRuntime,
   resolveModalOptions,
@@ -92,22 +101,23 @@ export function useModal<TData = void, TReason extends string = string>(
     return dialog;
   };
 
-  for (const [name, value] of Object.entries(
-    dialogAttributes({
-      modalId,
-      nonModal: isNonModal,
-      ariaLabel: options.ariaLabel,
-      ariaLabelledBy: options.ariaLabelledBy,
-      ariaDescribedBy: options.ariaDescribedBy,
-      role: options.role,
-    })
-  )) {
-    // Omitted rather than emptied when absent — an unnamed dialog stays visibly unnamed to an
-    // audit instead of quietly carrying `aria-label=""`.
-    if (value !== undefined) {
-      dialog.setAttribute(name, value);
-    }
-  }
+  // A render effect rather than a plain one, for the reason the style effect below is: it runs
+  // synchronously at creation, so the element is stamped before anything can insert or show it.
+  // `aria-busy` is why this is an effect at all — the rest of the table never changes.
+  createRenderEffect(() => {
+    setDialogAttributes(
+      dialog,
+      dialogAttributes({
+        modalId,
+        nonModal: isNonModal,
+        isPreparing: snapshot().isPreparing,
+        ariaLabel: options.ariaLabel,
+        ariaLabelledBy: options.ariaLabelledBy,
+        ariaDescribedBy: options.ariaDescribedBy,
+        role: options.role,
+      })
+    );
+  });
 
   const content = document.createElement('div');
   applyStyle(content, DIALOG_CONTENT_STYLE);
@@ -204,12 +214,9 @@ export function useModal<TData = void, TReason extends string = string>(
     // The declaration window. Actions drawn eagerly land in this pass; ones inside a `<Show>`
     // run later and declare themselves then — `declare` falls back to the live table for exactly
     // that case, and `undeclare` above is what retires them.
-    engine.beginRender();
-    try {
+    return runDeclarationWindow(engine, () => {
       return options.render(renderArgs);
-    } finally {
-      engine.endRender();
-    }
+    });
   });
 
   // ── Backdrop click ──────────────────────────────────────────────────────────
@@ -238,6 +245,13 @@ export function useModal<TData = void, TReason extends string = string>(
 
   createEffect(() => {
     syncOpenSequence(domContext(), { prepare: options.prepare, nonModal: isNonModal });
+  });
+
+  // Reading `isPreparing` here is what subscribes this effect to it — the effect above tracks the
+  // phase alone, so a guard hidden inside the function would never bring the check back when
+  // `prepare` settles.
+  createEffect(() => {
+    syncLabellingDiagnostics(domContext(), { isPreparing: snapshot().isPreparing });
   });
 
   const { primaryProperty, exitDuration } = resolveAnimation(animation);

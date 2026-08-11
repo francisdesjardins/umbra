@@ -52,6 +52,11 @@ const TICK_MS = 100;
  * The same reasoning is why `useModal`'s `role` option is `'dialog' | 'alertdialog'` and not
  * every ARIA role: a role that contradicts its own element is not a fix.
  *
+ * **It is still named**, and the two facts do not conflict. The announcement comes from the live
+ * region; the name is for the other way in — the element stays in the accessibility tree, so a
+ * screen reader's virtual cursor can land on it minutes later, and "dialog" is not a useful thing
+ * to find there.
+ *
  * **What changes once the toast carries actions.** Everything above assumes a passing status
  * message. Put a link or a set of choices in it and three things stop being optional:
  *
@@ -79,6 +84,7 @@ export function SlideCornerToastExample() {
   const toast = useSlideModal<void, 'dismiss' | 'timeout'>({
     id: MODAL_ID,
     direction: 'right',
+    ariaLabel: 'Notification',
     align: 'start',
     nonModal: true,
     portal: true,

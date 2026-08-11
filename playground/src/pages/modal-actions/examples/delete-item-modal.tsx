@@ -39,16 +39,23 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
 
   const modal = useMessageModal<void, 'cancel' | 'delete'>({
     id: MODAL_ID,
+    ariaLabelledBy: `${MODAL_ID}-title`,
+    ariaDescribedBy: `${MODAL_ID}-body`,
+    // A destructive confirm interrupts, so it is an alertdialog — and an alertdialog is announced
+    // with its description rather than waiting to be read, which is why the two go together.
+    role: 'alertdialog',
     render: ({ action, hasRunningAction, error }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon type="error" sx={{ mb: 0 }} />
-            <Typography variant="h6">Delete Item</Typography>
+            <Typography id={`${MODAL_ID}-title`} variant="h6">
+              Delete Item
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Stack spacing={2}>
-              <Typography>
+              <Typography id={`${MODAL_ID}-body`}>
                 Are you sure you want to delete <strong>&quot;{itemName}&quot;</strong>?
               </Typography>
               <Shared.AlertContent severity="warning">

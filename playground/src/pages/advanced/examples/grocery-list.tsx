@@ -92,12 +92,14 @@ export function GroceryListExample() {
   const list = useSlideModal<number, 'close' | 'sent'>({
     id: LIST_ID,
     direction: 'right',
-    ariaLabel: 'Grocery list',
+    // Was `ariaLabel: 'Grocery list'`, next to a heading reading "Grocery list" — the name written
+    // twice, which is the drift the option's own doc warns about. One of them is now the other.
+    ariaLabelledBy: `${LIST_ID}-title`,
     render: ({ direction, action, handle }) => {
       return (
         <SlideModal.DefaultLayout direction={direction}>
           <SlideModal.Header>
-            <SlideModal.Title>Grocery list</SlideModal.Title>
+            <SlideModal.Title id={`${LIST_ID}-title`}>Grocery list</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
             <Stack sx={{ gap: 0.5 }}>

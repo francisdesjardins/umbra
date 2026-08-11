@@ -15,12 +15,17 @@ export function SimpleModalExample() {
 
   const simpleModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
+    // Points at the heading below rather than repeating it as a string: a name written twice is
+    // a name that drifts. The id is derived from the modal's own, which is already unique.
+    ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon type="success" sx={{ mb: 0 }} />
-            <Typography variant="h6">Simple Modal</Typography>
+            <Typography id={`${MODAL_ID}-title`} variant="h6">
+              Simple Modal
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.OverflowContainer

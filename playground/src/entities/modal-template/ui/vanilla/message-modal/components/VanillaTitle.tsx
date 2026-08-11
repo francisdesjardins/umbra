@@ -3,8 +3,14 @@ import styles from '@/entities/modal-template/ui/vanilla/message-modal/styles.mo
 
 type VanillaTitleProps = {
   readonly children: ReactNode;
+  /** What `ariaLabelledBy` points at — see the MUI `Title` for why it is a prop rather than a spread. */
+  readonly id?: string | undefined;
 };
 
-export function VanillaTitle({ children }: VanillaTitleProps) {
-  return <h2 className={styles['modalTitle']}>{children}</h2>;
+export function VanillaTitle({ children, id }: VanillaTitleProps) {
+  return (
+    <h2 id={id} className={styles['modalTitle']}>
+      {children}
+    </h2>
+  );
 }

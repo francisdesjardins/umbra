@@ -48,7 +48,12 @@ export function FocusOnOpenExample() {
 
   const modal = useMessageModal<void, 'delete' | 'keep'>({
     id: MODAL_ID,
-    ariaLabelledBy: 'focus-on-open-title',
+    ariaLabelledBy: `${MODAL_ID}-title`,
+    // Deliberately *not* `role: 'alertdialog'`, though the copy is a delete confirm. An
+    // alertdialog is announced with its description, and everything in this one's body is
+    // commentary about where focus went — announcing that immediately would be worse than not
+    // announcing anything. The role travels with a description worth interrupting for; see
+    // `delete-item-modal` for the pair done properly.
     prepare: () => {
       setIsVisible(true);
       setAttempts(0);
@@ -58,7 +63,7 @@ export function FocusOnOpenExample() {
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-            <Typography id="focus-on-open-title" variant="h6">
+            <Typography id={`${MODAL_ID}-title`} variant="h6">
               Delete this file?
             </Typography>
           </MessageModal.Header>

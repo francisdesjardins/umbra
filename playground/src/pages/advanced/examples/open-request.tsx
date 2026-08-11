@@ -66,6 +66,7 @@ export function OpenRequestExample() {
 
   const modal = useMessageModal<ArchiveReceipt, 'confirm' | 'cancel'>({
     id: 'open-request-demo',
+    ariaLabelledBy: 'open-request-demo-title',
 
     // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is refused and
     // logged, and this dialog is reachable only by the code that renders it.
@@ -95,7 +96,9 @@ export function OpenRequestExample() {
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
             <MessageModal.Icon sx={{ mb: 0 }} type="warning" />
-            <Typography variant="h6">Archiver la salle {room}?</Typography>
+            <Typography id="open-request-demo-title" variant="h6">
+              Archiver la salle {room}?
+            </Typography>
           </MessageModal.Header>
           <MessageModal.Content>
             <Typography color="text.secondary" variant="body2">

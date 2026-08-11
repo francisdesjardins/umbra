@@ -144,7 +144,14 @@ const CATEGORIES: readonly CategoryDef[] = [
     label: 'Keys & hotkeys',
     specifier: CORE,
     blurb: 'The vocabulary hotkeys are declared in, plus the helpers that label and match them.',
-    symbols: ['Key', 'KeyValue', 'formatHotkeyLabel', 'matchesHotkey'],
+    symbols: [
+      'Key',
+      'KeyValue',
+      'HotkeyDef',
+      'formatHotkeyLabel',
+      'formatAriaKeyshortcuts',
+      'matchesHotkey',
+    ],
   },
   {
     id: 'use-modal',

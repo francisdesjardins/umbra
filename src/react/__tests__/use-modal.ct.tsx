@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import {
   ActionErrorHotkeyRetryHarness,
   BackdropHitTestHarness,
+  BusyWhilePreparingHarness,
   EscWithoutFocusHarness,
   KeyPassthroughHarness,
   TransitionToggleHarness,
@@ -33,6 +34,9 @@ import {
   NestedHotkeyScopeHarness,
   ContainedOverlayHarness,
   FocusUnderAnotherModalHarness,
+  DanglingLabelHarness,
+  LateTitleHarness,
+  OutletLabelHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -858,6 +862,35 @@ test.describe('the accessible name', () => {
   });
 });
 
+test.describe('aria-busy while prepare runs', () => {
+  test('the dialog says it is loading, and stops saying so', async ({ mount, page }) => {
+    await mount(<BusyWhilePreparingHarness />);
+    await page.getByRole('button', { name: 'Open Slow' }).click();
+
+    const dialog = page.locator('dialog[data-modal-id="busy-slow"]');
+    await expect(dialog).toBeVisible();
+    // Asserted alongside the hook's own `isPreparing`, so the test cannot pass on a dialog that
+    // never got as far as preparing anything.
+    await expect(page.getByTestId('slow-preparing')).toHaveText('preparing');
+    await expect(dialog).toHaveAttribute('aria-busy', 'true');
+
+    await page.getByTestId('release').click();
+    await expect(page.getByTestId('slow-preparing')).toHaveText('ready');
+    await expect(dialog).toHaveAttribute('aria-busy', 'false');
+  });
+
+  test('a modal with no prepare is not busy to begin with', async ({ mount, page }) => {
+    // The off state is written rather than merely absent, so it is assertable — which is what
+    // stops "never busy" and "busy forever" from looking the same to a test.
+    await mount(<BusyWhilePreparingHarness />);
+    await page.getByRole('button', { name: 'Open Instant' }).click();
+
+    const dialog = page.locator('dialog[data-modal-id="busy-instant"]');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('aria-busy', 'false');
+  });
+});
+
 test.describe('prepare is told when the modal goes away', () => {
   test('closing aborts the work it started', async ({ mount, page }) => {
     const component = await mount(<OnOpenAbortHarness />);
@@ -1076,5 +1109,82 @@ test.describe('a contained dialog covers its host rather than displacing it', ()
     const rowAfter = await page.getByTestId('overlay-row').boundingBox();
     expect(rowAfter?.y, 'the row moved when the dialog opened').toBeCloseTo(rowBefore?.y ?? -1, 0);
     await expect(page.getByTestId('overlay-row')).toBeVisible();
+  });
+});
+
+/**
+ * The runtime diagnostic for a labelling reference that resolves to nothing.
+ *
+ * Two of these three are dialogs it must stay **quiet** about, and they are the tests that
+ * matter: a check that warned on correct code would be worse than no check, because the noise
+ * lands on the people who did the work right.
+ */
+test.describe('the labelling diagnostic', () => {
+  /** Every warning the page emitted, as text. */
+  const warningsOn = (page: Page) => {
+    const lines: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning') {
+        lines.push(message.text());
+      }
+    });
+    return lines;
+  };
+
+  test('reports an `ariaLabelledBy` that points at no element', async ({ mount, page }) => {
+    const warnings = warningsOn(page);
+
+    await mount(<DanglingLabelHarness />);
+    await page.getByRole('button', { name: 'Open Dangling' }).click();
+    await expect(page.locator('dialog[data-modal-id="labelling-dangling"]')).toBeVisible();
+    // The check is deferred a frame; give it one and a margin.
+    await page.waitForTimeout(300);
+
+    const labelling = warnings.filter((line) => {
+      return line.includes('Dialog labelling');
+    });
+    expect(labelling).toHaveLength(1);
+    expect(labelling[0]).toContain('labelling-dangling-title');
+  });
+
+  test('says nothing about a name its `prepare` had not rendered yet', async ({ mount, page }) => {
+    // A modal that shows a spinner while it loads is the documented normal case. Checking before
+    // `prepare` settles would report every one of them as broken.
+    const warnings = warningsOn(page);
+
+    await mount(<LateTitleHarness />);
+    await page.getByRole('button', { name: 'Open Late' }).click();
+    await expect(page.getByTestId('late-pending')).toBeVisible();
+    // The window where the reference genuinely resolves to nothing, and must not be read.
+    await page.waitForTimeout(300);
+
+    await page.getByTestId('late-release').click();
+    await expect(page.locator('#labelling-late-title')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(
+      warnings.filter((line) => {
+        return line.includes('Dialog labelling');
+      })
+    ).toEqual([]);
+  });
+
+  test('says nothing about a dialog rendered through the outlet', async ({ mount, page }) => {
+    // The path most likely to lag: `ModalOutlet` registers its node from an effect, so the content
+    // reaches the DOM a commit behind the hook that names it. Measured, the lag does not reach the
+    // check — the phase gets to `'open'` on its own frame, after the outlet has rendered — so this
+    // asserts the outcome rather than the mechanism, and would catch a future change to either.
+    const warnings = warningsOn(page);
+
+    await mount(<OutletLabelHarness />);
+    await page.getByRole('button', { name: 'Open Outlet' }).click();
+    await expect(page.locator('#labelling-outlet-title')).toBeVisible();
+    await page.waitForTimeout(300);
+
+    expect(
+      warnings.filter((line) => {
+        return line.includes('Dialog labelling');
+      })
+    ).toEqual([]);
   });
 });

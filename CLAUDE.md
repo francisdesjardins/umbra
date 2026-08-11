@@ -8,12 +8,12 @@ over it. No UI components exported; users bring their own.
 The package root is plain TypeScript and **must resolve with no framework installed**. Bindings
 are the optional layer.
 
-| Specifier       | Contents                                                                                                                                                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `matchesHotkey`, `formatHotkeyLabel`, `setLogLevel`. No framework. |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.       |
-| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                             |
-| `umbra/vanilla` | `bindDialog` and `bindAction` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                                         |
+| Specifier       | Contents                                                                                                                                                                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`, `setLogLevel`. No framework. |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.                                              |
+| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                                                    |
+| `umbra/vanilla` | `bindDialog` and `bindAction` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                                                                                |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
