@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/experimental-ct-react';
 import type { Page } from '@playwright/test';
 import {
   FocusContainmentHarness,
+  FramedContentHarness,
   HiddenStopHarness,
   RovingToolbarHarness,
 } from './focus-containment.story.js';
@@ -100,6 +101,21 @@ test.describe('what counts as a stop', () => {
     await page.keyboard.press('Tab');
 
     expect(await focused(page)).toBe('inside-first');
+  });
+
+  test('a frame at the end does not let the keyboard out through it', async ({ mount, page }) => {
+    // A press inside an `<iframe>` reaches no listener in the parent document, so a `keydown`
+    // approach cannot answer the Tab that leaves an editor. The marker is reached by the browser
+    // instead of being told about, which is the whole reason it is a marker.
+    const component = await mount(<FramedContentHarness />);
+    await component.getByTestId('open').click();
+    await expect(page.locator('dialog[data-modal-id="focus-containment-frame"]')).toBeVisible();
+
+    await page.getByTestId('editor').focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+
+    expect(await focused(page)).not.toBe('outside');
   });
 
   test('a hidden control is skipped, so the wrap lands on a real destination', async ({

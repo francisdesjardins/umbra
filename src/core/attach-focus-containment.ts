@@ -1,32 +1,39 @@
-import { isOwnEventTarget } from '../utils/dialog-scope.js';
 import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js';
 
 /**
  * Keep Tab inside a dialog the browser is not keeping it inside.
  *
  * `showModal()` makes the rest of the document inert, so a modal dialog is contained for free.
- * `show()` does not: a non-modal dialog is an ordinary part of the page, and four tab presses
- * walk out of it into whatever is behind. That is right for a toast or a popover and wrong for a
- * panel that behaves like a modal in everything but its stacking — which is why this is off by
- * default and asked for with `containFocus`.
+ * `show()` does not: a non-modal dialog is an ordinary part of the page, and a few tab presses walk
+ * out of it into whatever is behind. That is right for a toast or a popover and wrong for a panel
+ * that behaves like a modal in everything but its stacking — which is why this is off by default
+ * and asked for with `containFocus`.
  *
- * **A keydown at the boundary, not a focus trap.** The obvious implementations both overreach:
+ * **Two focusable markers, not a computed boundary.** The obvious implementation answers `Tab` on
+ * the dialog and compares the focused element against the last of its tab stops. It is wrong twice
+ * over, and both were measured against a real application rather than reasoned about:
  *
- * - **`inert` on everything else** takes a subtree out of the tab order *and* out of hit testing.
- *   A dialog in the top layer escapes an inert ancestor; one rendered in place does not. So in a
- *   page where both kinds coexist — an application shell whose own dialogs are ordinary elements —
- *   marking the page inert makes those unanswerable by mouse as well as by keyboard. The blast
- *   radius is every dialog that is not in the top layer.
- * - **Enforcing focus on `focusin`** pulls focus back from anywhere, which fights any legitimate
- *   focus target outside the dialog for exactly the same reason.
+ * - **The tab order cannot be predicted from a selector.** A *roving tabindex* toolbar — the
+ *   standard way to build one — is made of buttons at `tabindex="-1"`; a date field puts
+ *   `tabindex="0"` on a container the browser skips in favour of a span inside it; a hidden
+ *   wrapper carries a `tabindex` and is no stop at all. Counted in one dialog: twenty-one elements
+ *   matched a careful selector where the browser stopped seven times. Filters fix individual cases
+ *   and the next component library invents another.
+ * - **A press inside an `<iframe>` is invisible.** A rich-text editor is a separate document, so a
+ *   `keydown` listener here never hears the press that takes focus out of it.
  *
- * Answering `Tab` on the dialog itself touches neither. It fires only when focus is already inside
- * and only at the two ends, so a click into something outside is left alone and a dialog opened
- * over this one keeps its own keyboard. What it cannot do is bring focus *back* once it has left
- * by other means — that is `show()`'s bargain, not a gap this could close.
+ * A marker needs neither. The browser walks past the end of the content and lands on it, which
+ * *is* the boundary — no list, no prediction, and it works the same whether the last thing inside
+ * was a button or a frame.
  *
- * Two limits worth stating, since both are silent: the focusables are found with a selector, so a
- * control inside a shadow root or an `<iframe>` is not one of them.
+ * **Where focus came from decides where it goes**, which is what lets the same two markers serve
+ * containment and entry. `relatedTarget` inside the dialog means the user tabbed off the end, so
+ * focus wraps to the other end. From outside — `showModal()`'s own opening focus, or a Tab
+ * arriving from the page — it means they are coming *in*, and focus goes to the near end instead.
+ * Without that distinction a modal dialog would open with its last control focused.
+ *
+ * Nothing is rendered: the markers are zero-sized, carry no text and no role, and are removed on
+ * teardown. A binding calls this and passes nothing but the flag.
  *
  * @internal Not part of the public API.
  */
@@ -42,41 +49,48 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+/** Marks the two markers, so they are never mistaken for content to send focus to. */
+const GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
+
 /**
- * The dialog's tab stops, in order.
+ * Move focus to the first candidate that actually takes it, scanning in the given direction.
  *
- * **`tabIndex >= 0` is the load-bearing half, and leaving it out is how this silently stops
- * working.** The selector above says `button:not([disabled])`, which matches a button whose
- * `tabindex` is `-1` — and a *roving tabindex* toolbar, the standard pattern for a toolbar, is
- * made of exactly those: one stop for the whole group, every other button taken out of the tab
- * order and reached with the arrow keys. A rich-text editor's toolbar alone can contribute twenty
- * of them. Counted against a real one: twenty-one elements matched the selector where the browser
- * stopped seven times, so the "last" this compares against was never a place the user could be,
- * the wrap never fired, and the dialog leaked — with the containment looking perfectly present in
- * the source.
- *
- * `checkVisibility` rather than the usual `offsetParent !== null`: that one reports `null` for
- * anything `position: fixed`, so the cheap idiom drops a perfectly visible control — and a dialog
- * is exactly where a pinned toolbar or footer shows up.
- *
- * **Its options are not optional here.** Bare `checkVisibility()` answers for `display: none` and
- * nothing else — in particular it returns `true` for `visibility: hidden`, which is *not* a tab
- * stop. Measured against a real dialog: a hidden file-input wrapper carrying `tabindex="0"` sat
- * last in document order and passed the bare check, so the wrap compared against an element the
- * browser skips and never fired. `opacityProperty` is deliberately left off: an element at
- * `opacity: 0` is still focusable, and excluding it would drop a real stop.
+ * **Asked rather than computed**, which is the other half of not predicting the tab order: a
+ * candidate that matches the selector but cannot hold focus — a container whose child is the real
+ * stop, an element the browser skips — simply fails to become `activeElement`, and the scan moves
+ * on. So a wrong guess costs a step instead of losing the keyboard.
  */
-function destinations(dialog: HTMLElement): readonly HTMLElement[] {
-  return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((element) => {
-    return (
-      element.tabIndex >= 0 &&
-      element.checkVisibility({ contentVisibilityAuto: true, visibilityProperty: true })
-    );
-  });
+function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): void {
+  const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (element) => {
+      return element.getAttribute(GUARD_ATTRIBUTE) === null;
+    }
+  );
+  if (fromEnd) {
+    candidates.reverse();
+  }
+
+  for (const candidate of candidates) {
+    candidate.focus();
+    if (dialog.ownerDocument.activeElement === candidate) {
+      return;
+    }
+  }
+}
+
+/** A focusable marker that occupies nothing and shows nothing. */
+function createGuard(dialog: HTMLElement, position: 'start' | 'end'): HTMLElement {
+  const guard = dialog.ownerDocument.createElement('div');
+  guard.setAttribute(GUARD_ATTRIBUTE, position);
+  guard.tabIndex = 0;
+  // Zero-sized rather than hidden: `visibility: hidden` and `display: none` both take an element
+  // out of the tab order, which is the one thing this must stay in.
+  guard.style.cssText = 'width:0;height:0;overflow:hidden;outline:none';
+  return guard;
 }
 
 /**
- * Wrap Tab from the last focusable to the first, and Shift+Tab the other way.
+ * Wrap Tab at the two ends of a dialog's content.
  *
  * Returns its teardown, or `undefined` when there is nothing to attach.
  */
@@ -92,38 +106,32 @@ export function attachFocusContainment(
     return undefined;
   }
 
-  const handleKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== 'Tab' || event.defaultPrevented) {
-      return;
-    }
-    // A dialog opened from inside this one renders in this one's subtree, so its Tab bubbles
-    // through here. Containing it would wrap the wrong box.
-    if (!isOwnEventTarget(dialog, event.target)) {
-      return;
-    }
+  const start = createGuard(dialog, 'start');
+  const end = createGuard(dialog, 'end');
 
-    const stops = destinations(dialog);
-    const first = stops.at(0);
-    const last = stops.at(-1);
-    if (first === undefined || last === undefined) {
-      return;
-    }
-
-    // `activeElement` rather than `event.target`, because the two differ for a composite widget
-    // that delegates its focus — the wrap has to be decided on what the browser will move from.
-    const active = dialog.ownerDocument.activeElement;
-    const leavingForward = !event.shiftKey && active === last;
-    const leavingBackward = event.shiftKey && active === first;
-    if (!leavingForward && !leavingBackward) {
-      return;
-    }
-
-    event.preventDefault();
-    (leavingForward ? first : last).focus();
+  const handleGuardFocus = (event: FocusEvent, guard: 'start' | 'end'): void => {
+    const from = event.relatedTarget;
+    const cameFromInside = from instanceof Node && dialog.contains(from);
+    // Leaving: wrap to the far end. Arriving: settle on the near one.
+    focusFirstAvailable(dialog, cameFromInside ? guard === 'start' : guard === 'end');
   };
 
-  dialog.addEventListener('keydown', handleKeyDown);
+  const onStart = (event: FocusEvent): void => {
+    handleGuardFocus(event, 'start');
+  };
+  const onEnd = (event: FocusEvent): void => {
+    handleGuardFocus(event, 'end');
+  };
+
+  start.addEventListener('focus', onStart);
+  end.addEventListener('focus', onEnd);
+  dialog.prepend(start);
+  dialog.append(end);
+
   return () => {
-    dialog.removeEventListener('keydown', handleKeyDown);
+    start.removeEventListener('focus', onStart);
+    end.removeEventListener('focus', onEnd);
+    start.remove();
+    end.remove();
   };
 }

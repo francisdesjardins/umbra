@@ -11,6 +11,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Changed — `containFocus` is two focus markers now, not a computed boundary
+
+The first implementation answered `Tab` on the dialog and compared the focused element against the
+last of its tab stops. Twice today that list was corrected — first for `tabindex="-1"` buttons, then
+for `visibility: hidden` wrappers — and twice the keyboard still walked out of a real dialog. The
+approach was the defect, not its filters:
+
+- **A selector cannot predict the tab order.** A _roving tabindex_ toolbar is made of buttons at
+  `tabindex="-1"`; a date field puts `tabindex="0"` on a container the browser skips in favour of a
+  span inside it. Counted in one dialog: twenty-one elements matched a careful selector where the
+  browser stopped seven times. Each fix handled one component library's arrangement and the next
+  one invented another.
+- **A press inside an `<iframe>` is invisible.** A rich-text editor is a separate document, so no
+  listener here ever hears the Tab that takes focus out of it. Measured: two presses of eight never
+  reached the dialog at all.
+
+Two zero-sized focusable markers need neither. The browser walks past the end of the content and
+lands on one, which _is_ the boundary — nothing is predicted, and a frame at the end is no different
+from a button. Where focus came from decides where it goes: `relatedTarget` inside the dialog means
+the user tabbed off the end, so focus wraps to the far end; from outside it means they are coming
+in, and it settles on the near one. Without that second half a modal dialog would open with its
+last control focused.
+
+Sending focus on is asked rather than computed too — each candidate is focused and checked, so a
+guess that cannot hold focus costs a step instead of losing the keyboard.
+
+Nothing is rendered. The markers carry no text, no role and no size, and go on teardown.
+
 ### Fixed — `containFocus` let the keyboard out of any dialog holding a toolbar
 
 The wrap compares the focused element against the last of the dialog's tab stops, and the list it

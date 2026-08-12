@@ -127,6 +127,54 @@ export function RovingToolbarHarness() {
 }
 
 /**
+ * A dialog whose last thing inside is a separate document.
+ *
+ * An editor is an `<iframe>`, and a press made inside one is invisible to every listener in the
+ * parent: a `keydown` approach cannot see the Tab that takes focus out of it. A marker does not
+ * need to — the browser walks out of the frame and lands on it.
+ */
+export function FramedContentHarness() {
+  const modal = useModal({
+    id: 'focus-containment-frame',
+    nonModal: true,
+    containFocus: true,
+    ariaLabel: 'Panel with a frame',
+    render: () => {
+      return (
+        <>
+          <button data-testid="inside-first" type="button">
+            First
+          </button>
+          <iframe
+            data-testid="editor"
+            srcDoc="<!doctype html><button autofocus>In the frame</button>"
+            title="Editor"
+          />
+        </>
+      );
+    },
+  });
+
+  return (
+    <>
+      <button data-testid="outside" type="button">
+        Outside
+      </button>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void modal.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      {modal.Modal}
+    </>
+  );
+}
+
+/**
  * A panel whose middle stop can be hidden, to check what counts as a destination.
  *
  * The hidden one is `display: none` rather than `disabled`, because the selector already excludes
