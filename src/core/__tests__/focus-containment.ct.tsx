@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/experimental-ct-react';
 import type { Page } from '@playwright/test';
-import { FocusContainmentHarness, HiddenStopHarness } from './focus-containment.story.js';
+import {
+  FocusContainmentHarness,
+  HiddenStopHarness,
+  RovingToolbarHarness,
+} from './focus-containment.story.js';
 
 /**
  * `containFocus` — the Tab wrap a non-modal dialog does not get from the browser.
@@ -82,6 +86,22 @@ test.describe('a non-modal dialog with containFocus on', () => {
 });
 
 test.describe('what counts as a stop', () => {
+  test('an element the browser skips is not the end of the dialog', async ({ mount, page }) => {
+    // The failure this exists for, measured in a real application before it was understood: a
+    // roving-tabindex toolbar contributed twenty elements the selector matched and the browser
+    // never stopped on, so the "last" being compared against was unreachable, the wrap never fired
+    // and the keyboard walked out of the dialog. Ordinary buttons cannot show it — every one of
+    // them is a stop.
+    const component = await mount(<RovingToolbarHarness />);
+    await component.getByTestId('open').click();
+    await expect(page.locator('dialog[data-modal-id="focus-containment-toolbar"]')).toBeVisible();
+
+    await page.getByTestId('inside-last').focus();
+    await page.keyboard.press('Tab');
+
+    expect(await focused(page)).toBe('inside-first');
+  });
+
   test('a hidden control is skipped, so the wrap lands on a real destination', async ({
     mount,
     page,

@@ -43,16 +43,35 @@ const FOCUSABLE = [
 ].join(',');
 
 /**
- * The dialog's focusables, in tab order, minus the ones that are not there.
+ * The dialog's tab stops, in order.
+ *
+ * **`tabIndex >= 0` is the load-bearing half, and leaving it out is how this silently stops
+ * working.** The selector above says `button:not([disabled])`, which matches a button whose
+ * `tabindex` is `-1` — and a *roving tabindex* toolbar, the standard pattern for a toolbar, is
+ * made of exactly those: one stop for the whole group, every other button taken out of the tab
+ * order and reached with the arrow keys. A rich-text editor's toolbar alone can contribute twenty
+ * of them. Counted against a real one: twenty-one elements matched the selector where the browser
+ * stopped seven times, so the "last" this compares against was never a place the user could be,
+ * the wrap never fired, and the dialog leaked — with the containment looking perfectly present in
+ * the source.
  *
  * `checkVisibility` rather than the usual `offsetParent !== null`: that one reports `null` for
  * anything `position: fixed`, so the cheap idiom drops a perfectly visible control — and a dialog
- * is exactly where a pinned toolbar or footer shows up. It answers for `display: none` and
- * `visibility: hidden` ancestors, which is the question being asked.
+ * is exactly where a pinned toolbar or footer shows up.
+ *
+ * **Its options are not optional here.** Bare `checkVisibility()` answers for `display: none` and
+ * nothing else — in particular it returns `true` for `visibility: hidden`, which is *not* a tab
+ * stop. Measured against a real dialog: a hidden file-input wrapper carrying `tabindex="0"` sat
+ * last in document order and passed the bare check, so the wrap compared against an element the
+ * browser skips and never fired. `opacityProperty` is deliberately left off: an element at
+ * `opacity: 0` is still focusable, and excluding it would drop a real stop.
  */
 function destinations(dialog: HTMLElement): readonly HTMLElement[] {
   return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((element) => {
-    return element.checkVisibility();
+    return (
+      element.tabIndex >= 0 &&
+      element.checkVisibility({ contentVisibilityAuto: true, visibilityProperty: true })
+    );
   });
 }
 

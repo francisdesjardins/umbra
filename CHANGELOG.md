@@ -11,6 +11,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Fixed — `containFocus` let the keyboard out of any dialog holding a toolbar
+
+The wrap compares the focused element against the last of the dialog's tab stops, and the list it
+compared against was not the browser's. The selector says `button:not([disabled])`, which matches a
+button whose `tabindex` is `-1` — and a **roving tabindex** toolbar, the standard way to build a
+toolbar, is made of exactly those: one stop for the whole group, every other button out of the tab
+order and reached with the arrow keys.
+
+A rich-text editor's toolbar alone contributes twenty of them, and they sit _after_ the dialog's
+real last stop in document order. So "the last one" was an element the user can never be on, the
+comparison never matched, the wrap never fired, and the keyboard walked out — while the containment
+looked perfectly present in the source. Counted against a real dialog: twenty-one elements matched
+the selector where the browser stopped seven times.
+
+`tabIndex >= 0` is one missing half. The other is that bare `checkVisibility()` answers for
+`display: none` and **not** for `visibility: hidden` — its options are not optional. Measured in the
+same dialog: a hidden file-input wrapper carrying `tabindex="0"` sat last in document order and
+passed the bare check, so even with the tabindex filter the comparison still pointed at an element
+the browser skips. `visibilityProperty: true` is what makes the check mean what its name suggests;
+`opacityProperty` stays off, since an element at `opacity: 0` is still focusable.
+
+The regression test carries both shapes, because no harness made of ordinary buttons can show
+either: every ordinary button is a stop, so the list and the tab order agree and the bug hides. Each
+half was checked on its own against a broken implementation.
+
 ### Added — `isKeyClaimedByPopup`, the question the dismiss listeners ask, now askable
 
 The rule landed earlier today inside the two dismiss listeners: before acting on a key, check
