@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
-import { useModal } from '../../react.js';
+import { isKeyClaimedByPopup, useModal } from '../../react.js';
 
 /**
  * A non-modal panel holding the two shapes an open overlay comes in.
@@ -79,6 +79,56 @@ export function DismissKeyOwnershipHarness() {
           </div>,
           document.body
         )}
+    </>
+  );
+}
+
+/**
+ * The predicate on its own, now that it is public.
+ *
+ * Asked directly rather than only through a dismissal, because a caller that imports it gets the
+ * function and not the listener around it — and the two clauses are what that caller is relying on.
+ */
+export function KeyClaimProbeHarness() {
+  const [answers, setAnswers] = useState<string>('');
+
+  return (
+    <>
+      <div data-testid="answers">{answers}</div>
+      <div data-testid="scope" role="dialog">
+        <button data-testid="plain" type="button">
+          Plain
+        </button>
+        <input aria-expanded="true" data-testid="expanded" readOnly role="combobox" />
+      </div>
+      <div data-testid="elsewhere" role="listbox">
+        <button data-testid="in-listbox" type="button">
+          Option
+        </button>
+      </div>
+      <button
+        data-testid="ask"
+        onClick={() => {
+          const scope = document.querySelector<HTMLElement>('[data-testid="scope"]');
+          const at = (id: string) => {
+            return document.querySelector(`[data-testid="${id}"]`);
+          };
+          if (scope === null) {
+            return;
+          }
+          setAnswers(
+            [
+              `plain=${String(isKeyClaimedByPopup(scope, at('plain')))}`,
+              `expanded=${String(isKeyClaimedByPopup(scope, at('expanded')))}`,
+              `listbox=${String(isKeyClaimedByPopup(scope, at('in-listbox')))}`,
+              `nothing=${String(isKeyClaimedByPopup(scope, null))}`,
+            ].join(' ')
+          );
+        }}
+        type="button"
+      >
+        Ask
+      </button>
     </>
   );
 }

@@ -11,6 +11,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `isKeyClaimedByPopup`, the question the dismiss listeners ask, now askable
+
+The rule landed earlier today inside the two dismiss listeners: before acting on a key, check
+whether an open popup has already claimed it. A dialog is not the only thing that answers a key
+over a page, though — a **controlled** surface, one where the key is a request to whoever owns its
+`open` prop rather than a dismissal, binds its own listener and inherits none of ours. It needs the
+same question answered, and a second copy of the rule is a second copy that drifts.
+
+So the predicate is public: `isKeyClaimedByPopup(dialog, target)`, the same one the listeners call,
+with the same two clauses and the same exclusion of the dialog itself.
+
 ### Added — `dialogPlacement` answers for the scrim a non-modal dialog draws itself
 
 `show()` gets no `::backdrop`, so a non-modal dialog that wants to block what is behind it has to

@@ -155,6 +155,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'parseHotkey',
       'formatAriaKeyshortcuts',
       'matchesHotkey',
+      'isKeyClaimedByPopup',
     ],
   },
   {

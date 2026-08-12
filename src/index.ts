@@ -92,6 +92,12 @@ export type {
 export { applyStyle } from './core/style.js';
 export type { DialogStyle, StyleTarget } from './core/style.js';
 
+// The question a surface that answers a key over a page has to ask before acting on one. The
+// library's own dismiss listeners ask it; a controlled surface driving its own key — where the
+// press is a request to its owner rather than a dismissal — has no listener of ours to inherit it
+// from, and a second copy of the rule is a second copy that drifts.
+export { isKeyClaimedByPopup } from './core/attach-keydown.js';
+
 // The decision a controlled wrapper has to make on every pass, so nobody has to rediscover that
 // it turns on `phase` and not on `isVisible`. This library is imperative and a great deal of
 // component API is a boolean prop; the crossing between them is one function, and it is here.

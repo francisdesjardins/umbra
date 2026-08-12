@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/experimental-ct-react';
-import { DismissKeyOwnershipHarness } from './dismiss-key-ownership.story.js';
+import { DismissKeyOwnershipHarness, KeyClaimProbeHarness } from './dismiss-key-ownership.story.js';
 
 /**
  * The dismiss key over an overlay that answers it itself.
@@ -80,4 +80,17 @@ test.describe('the dismiss key still lands', () => {
 
     await expect(component.getByTestId('closed-flag')).toHaveText('closed');
   });
+});
+
+test('the predicate itself answers the two clauses and nothing else', async ({ mount }) => {
+  // Public now, so it is asked directly: a caller imports the function, not the listener around
+  // it, and both clauses plus the dialog exclusion are what that caller relies on.
+  const component = await mount(<KeyClaimProbeHarness />);
+  await component.getByTestId('ask').click();
+
+  await expect(component.getByTestId('answers')).toHaveText(
+    // A press on an ordinary control inside the scope is unclaimed — the scope is a `role="dialog"`
+    // and excluding it is what keeps every press inside from reading as spoken for.
+    'plain=false expanded=true listbox=true nothing=false'
+  );
 });

@@ -44,7 +44,12 @@ const POPUP_ROLES = ['listbox', 'menu', 'tree', 'grid', 'dialog']
   .join(',');
 
 /**
- * Whether something else on the page has already claimed this press.
+ * Whether an open popup has already claimed this press.
+ *
+ * Public because a dialog is not the only thing that answers a key over a page: a controlled
+ * surface driving its own Escape — one where the key is a *request* to its owner rather than a
+ * dismissal — needs the same question answered, and a second copy of the rule is a second copy
+ * that drifts.
  *
  * **The problem this exists for.** The window-level listener below captures, so it runs before
  * every other handler in the page — including the one belonging to whatever the user is actually
@@ -65,7 +70,7 @@ const POPUP_ROLES = ['listbox', 'menu', 'tree', 'grid', 'dialog']
  * The dialog is excluded from the second test, and so is anything containing it: this dialog is a
  * `role="dialog"` and every press inside it would otherwise be read as spoken for.
  */
-function keyIsSpokenFor(dialog: HTMLElement, target: EventTarget | null): boolean {
+export function isKeyClaimedByPopup(dialog: HTMLElement, target: EventTarget | null): boolean {
   if (!(target instanceof Element)) {
     return false;
   }
@@ -153,7 +158,7 @@ export function attachDialogKeydown(
     // hotkey nor dismissal may take it: Escape at an open list means "close the list", and Enter
     // there means "take the highlighted option" rather than "confirm". Left un-prevented too, so
     // the control still gets it.
-    if (keyIsSpokenFor(dialog, event.target)) {
+    if (isKeyClaimedByPopup(dialog, event.target)) {
       return;
     }
 
@@ -280,7 +285,7 @@ export function attachWindowDismissKey(
     // every other handler in the page, so without this a single Escape at an open combobox or
     // picker closes the panel around it instead of the list the user was looking at.
     const openDialog = getDialog();
-    if (openDialog !== null && keyIsSpokenFor(openDialog, event.target)) {
+    if (openDialog !== null && isKeyClaimedByPopup(openDialog, event.target)) {
       return;
     }
 
