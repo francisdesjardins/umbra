@@ -123,7 +123,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // Kept across renders for the same reason, in its own cell: where the opening focus landed has
   // to outlive a phase — it is read when an action settles, several phases later.
   const [focus] = useState(() => {
-    return createFocusCoordinator({ getDialog }, { engine });
+    return createFocusCoordinator({ getDialog, modalId, manager }, { engine });
   });
 
   const snap = useSyncExternalStore(store.subscribe, store.getSnapshot);

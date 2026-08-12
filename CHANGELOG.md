@@ -11,6 +11,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Fixed — a dialog opening underneath another does not take its focus
+
+Opening a dialog runs the platform's focusing steps, and until now the coordinator settled the
+opening focus whatever else was on screen. So a side panel arriving under an interruption pulled
+the keyboard off it — reported from an application: a connection error in the top layer, focused on
+its cancel button, losing focus the instant a route settled a panel behind it.
+
+The consequence is worse than a misplaced ring. A dialog with no focus inside it hears nothing: its
+own keydown listener only sees presses raised within it, so its dismiss key goes dead and the next
+Escape is claimed by whatever else is listening — in that report, the panel underneath, which
+navigated away.
+
+The opening focus now asks the manager whether this dialog is the foreground, and declines when it
+is not. Declining is not enough on its own, because the theft has already happened by the time any
+of this code runs — so the focus is handed back to the dialog that _is_ in front, by `reclaimFocus`.
+Unconditional rather than guarded on "did we take it": taking it is what opening a dialog does, and
+re-reading `activeElement` to confirm would reintroduce the subscriber-order bet the coordinator
+already documents.
+
+**`reclaimFocus` is not `settleOpeningFocus`, and the difference is the whole fix.** Settling only
+_acts_ on a dialog that claimed `focusOnOpen` and merely reads otherwise, which is right for an
+opening — the platform has already put focus somewhere sensible — and useless here, where focus has
+been pulled away: on a dialog with no claim it returns nothing and leaves the keyboard on `<body>`.
+Reclaiming prefers the claim and falls back to the dialog itself, which is enough for its own
+keydown listener to hear a press. Measured in the application before and after, on the reported
+sequence: `focus: BODY` with two Escapes doing nothing, against the interruption holding focus, the
+first Escape closing it alone, and the second closing the panel underneath.
+
+Nothing changes for a dialog opening with nothing in front of it, which is every ordinary open.
+
 ### Fixed — the stack order puts every non-modal dialog under every modal one
 
 `foreground` is not a preference, it is a claim about what is on screen — and between a modal

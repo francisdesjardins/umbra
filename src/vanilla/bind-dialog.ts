@@ -167,7 +167,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   // they depend on change — the phase and whether `prepare` is still running — which is the same
   // dependency list the other two bindings hand their effect systems.
 
-  const focus = createFocusCoordinator({ getDialog }, { engine });
+  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
 
   let appliedStyle: DialogStyle | undefined;
   let detachments: (() => void)[] = [];

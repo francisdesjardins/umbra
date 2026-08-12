@@ -309,7 +309,7 @@ export function useModal<TData = void, TReason extends string = string>(
     }
   });
 
-  const focus = createFocusCoordinator({ getDialog }, { engine });
+  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
   createEffect(() => {
     const teardown = focus.sync(snapshot().phase);
     if (teardown) {

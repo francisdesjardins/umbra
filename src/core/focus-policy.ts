@@ -51,6 +51,22 @@ export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | nul
 }
 
 /**
+ * Give a dialog back the focus another dialog's opening took from it.
+ *
+ * Distinct from {@link settleOpeningFocus}, which only *acts* when the dialog claimed
+ * `focusOnOpen` and merely reads otherwise: that is right for an opening, where the platform has
+ * already put focus somewhere sensible, and wrong here, where the focus has been pulled away and
+ * reading it back would leave the keyboard on `<body>`. So the claim is preferred and the dialog
+ * itself is the floor — enough for its own keydown listener to hear a press, which is the whole
+ * point of taking it back.
+ *
+ * @internal
+ */
+export function reclaimFocus(dialog: HTMLDialogElement): void {
+  restoreFocus(dialog, queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR));
+}
+
+/**
  * Who is standing on the action that is starting.
  *
  * Read at the moment the engine reports `isRunning`, which is the one instant it can be read:

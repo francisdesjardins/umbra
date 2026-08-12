@@ -3,6 +3,7 @@ import {
   activeWithin,
   captureActionRunner,
   preferredRestoreTarget,
+  reclaimFocus,
   restoreFocus,
   settleOpeningFocus,
 } from './focus-policy.js';
@@ -20,13 +21,19 @@ import type { ModalPhase } from './types.js';
  * @internal Not part of the public API.
  */
 export function createFocusCoordinator(
-  ctx: Pick<ModalDomContext, 'getDialog'>,
+  ctx: Pick<ModalDomContext, 'getDialog' | 'modalId' | 'manager'>,
   options: FocusCoordinatorOptions
 ) {
-  const { getDialog } = ctx;
+  const { getDialog, modalId, manager } = ctx;
   const { engine } = options;
 
   let openingFocus: HTMLElement | null = null;
+  /**
+   * Whether the opening focus has been decided for this open — including the decision *not* to
+   * take it. `openingFocus` cannot carry that: `null` is also what a dialog with nothing to focus
+   * records, and the two would be indistinguishable on the next pass.
+   */
+  let settled = false;
   /**
    * The last element inside the dialog to take focus, remembered as it happens.
    *
@@ -52,6 +59,7 @@ export function createFocusCoordinator(
       // Clear on close so the next open starts fresh.
       if (phase === 'closed') {
         openingFocus = null;
+        settled = false;
         lastFocusInside = null;
         return undefined;
       }
@@ -59,10 +67,44 @@ export function createFocusCoordinator(
       // Settle the opening focus once the dialog is fully open, and remember where it landed —
       // reading the active element is reliable here, because `showModal()` fires autofocus
       // synchronously before a binding's effects run.
-      if (phase === 'open' && openingFocus === null) {
+      //
+      // Unless something else is in front. A dialog opening *underneath* another is not what the
+      // user is looking at, and taking the keyboard from what they are looking at is the worst
+      // thing an opening can do: the dialog in front is left with no focus, so its own keydown
+      // listener hears nothing and its dismiss key goes dead. Reported from an application — a
+      // connection error in the top layer, focused on its cancel button, losing the focus the
+      // instant a side panel opened behind it.
+      //
+      // Asked of the manager rather than of the DOM, because the question is which dialog is in
+      // front rather than which element is where, and the manager is the one that knows — modal
+      // before non-modal, then whatever policy is installed.
+      if (phase === 'open' && !settled) {
         const dialog = getDialog();
         if (dialog) {
-          openingFocus = settleOpeningFocus(dialog);
+          settled = true;
+          if (manager.lookup().isForeground(modalId)) {
+            openingFocus = settleOpeningFocus(dialog);
+          } else {
+            // Not only declined but *returned*. `show()` runs the platform's focusing steps
+            // before any of this code, so opening underneath has already pulled the keyboard off
+            // the dialog in front — whether it landed here or fell to `<body>`, it is no longer
+            // where the user is looking. The front dialog's own coordinator will not re-run, so the
+            // focus is settled back onto it here, through the same call it used on its own
+            // opening — which re-honours its `focusOnOpen`. Unconditional rather than guarded on
+            // "did we steal it": the theft is what opening a dialog *is*, and re-reading
+            // `activeElement` to confirm only reintroduces the subscriber-order bet documented
+            // above.
+            openingFocus = null;
+            const front = manager.lookup().getForeground();
+            if (front !== undefined) {
+              const frontElement = dialog.ownerDocument.querySelector<HTMLDialogElement>(
+                `dialog[data-modal-id="${CSS.escape(front.id)}"]`
+              );
+              if (frontElement !== null) {
+                reclaimFocus(frontElement);
+              }
+            }
+          }
         }
       }
 
