@@ -11,6 +11,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Fixed — the stack order puts every non-modal dialog under every modal one
+
+`foreground` is not a preference, it is a claim about what is on screen — and between a modal
+dialog and a non-modal one the platform has already settled it. Top-layer elements paint above
+ordinary ones and no `z-index` reaches between them. The order was sorting by open sequence alone,
+so a panel opened half a second after an interruption was reported as the foreground while the
+interruption was plainly painted in front of it.
+
+That is not an opinion the library is entitled to hold. It is a false statement, and it had a
+visible consequence: `isForeground` decides who answers the dismiss key, so Escape went to the
+panel underneath while the user was looking at the dialog above it. Measured in a real
+application — a side panel and a connection error raised over it, both known to the same manager,
+`foreground` naming the panel.
+
+The two families are now separated before the policy is consulted, which changes `prioritize` from
+advising a rule to enforcing one. Its doc already told authors to order modal dialogs against each
+other and non-modal ones against each other; a policy that ignored that could ask for a lift across
+the boundary that the top layer refuses to perform, and `planRaises` would plan it. Now a large
+number on a panel ranks it against the other panels and moves it no nearer the user.
+
+**This changes the default order**, without a policy installed, for anyone with both families open
+at once — and only in the case where the previous answer contradicted the screen.
+
 ### Added — `dialogManager.prioritize`, because "last one wins" is a race
 
 A dialog's place in the stack is the order its `showModal()` landed in. In an app assembled from

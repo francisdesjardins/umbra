@@ -32,6 +32,51 @@ test.describe('orderStack', () => {
     expect(ids(ordered)).toEqual(['a', 'b', 'c']);
   });
 
+  test('a non-modal dialog is under every modal one, whatever the open order', () => {
+    // Not a policy: the platform paints every top-layer dialog above every ordinary one, and no
+    // `z-index` reaches between them. So an order claiming a later non-modal is in front would be
+    // false rather than opinionated. Measured in a real application before it was understood — an
+    // interruption raised over a side panel read as the foreground while Escape went to the panel,
+    // because the panel had opened half a second later.
+    const ordered = orderStack(
+      [candidate('panel', 2, { nonModal: true }), candidate('alert', 1)],
+      undefined
+    );
+
+    expect(ids(ordered)).toEqual(['panel', 'alert']);
+  });
+
+  test('a policy cannot lift a non-modal dialog over a modal one', () => {
+    // The rule `prioritize` documents, enforced instead of advised. A policy that tries is not
+    // wrong to *want* it — it is asking for something the top layer will not perform, and
+    // `planRaises` would otherwise plan a lift that cannot happen.
+    const ordered = orderStack(
+      [candidate('panel', 1, { nonModal: true }), candidate('alert', 2)],
+      (modal) => {
+        return modal.nonModal ? 100 : 0;
+      }
+    );
+
+    expect(ids(ordered)).toEqual(['panel', 'alert']);
+  });
+
+  test('the policy still orders within each family', () => {
+    // What is left to it, and it is the whole of what the platform leaves open.
+    const ordered = orderStack(
+      [
+        candidate('panel-a', 1, { nonModal: true }),
+        candidate('panel-b', 2, { nonModal: true }),
+        candidate('alert', 3),
+        candidate('confirm', 4),
+      ],
+      (modal) => {
+        return modal.id === 'panel-b' || modal.id === 'alert' ? -10 : 0;
+      }
+    );
+
+    expect(ids(ordered)).toEqual(['panel-b', 'panel-a', 'alert', 'confirm']);
+  });
+
   test('higher priority sits nearer the front, which is the end of the array', () => {
     const priority: StackPriority = (modal) => {
       return modal.id === 'warning' ? 100 : 0;

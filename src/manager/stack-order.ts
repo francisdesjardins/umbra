@@ -30,6 +30,10 @@ export type StackModal = Pick<RegisteredModalInfo, 'id' | 'template' | 'nonModal
  * How far to the front a dialog belongs. Higher is nearer the user; ties keep the order the opens
  * arrived in, so a policy only has to say where it disagrees with that.
  *
+ * It ranks a dialog **among its own family**: every non-modal dialog is under every modal one
+ * before this is consulted, because that is the platform's rule about the top layer rather than
+ * something a policy may answer. A big number on a panel orders it against the other panels.
+ *
  * Called on every open dialog whenever the stack changes, so it must be cheap and must not depend
  * on anything that moves — see {@link StackModal} for what it is allowed to read, and
  * `DialogManager.prioritize` for the whole story.
@@ -84,20 +88,28 @@ export function orderStack<T extends StackCandidate>(
   candidates: readonly T[],
   priority: StackPriority | undefined
 ): T[] {
-  if (!priority) {
-    return candidates.toSorted((a, b) => {
-      return a.openSequence - b.openSequence;
-    });
-  }
-
   // Ranked once, up front: a comparator calling the policy would call it O(n log n) times, and a
-  // policy is allowed to be a lookup rather than arithmetic.
+  // policy is allowed to be a lookup rather than arithmetic. With no policy every rank is the same
+  // and the sort falls through to open order, which is what makes `prioritize` opt-in.
   const ranked = candidates.map((candidate) => {
-    return { candidate, rank: rankOf(candidate, priority) };
+    return { candidate, rank: priority ? rankOf(candidate, priority) : 0 };
   });
 
   return ranked
     .toSorted((a, b) => {
+      // Modality first, and it is not a policy: the platform paints every top-layer dialog above
+      // every ordinary one, and no `z-index` reaches between them. So a non-modal dialog opened
+      // last is *behind* a modal one, whatever the open counter says — and an order that claimed
+      // otherwise would not be an opinion, it would be false. Measured in a real application: an
+      // interruption raised over a side panel was reported as the foreground while Escape went to
+      // the panel, because the panel had opened half a second later.
+      //
+      // Keeping it out of the policy's reach is what makes the rule `prioritize` documents
+      // enforceable rather than advisory, and it is what stops `planRaises` from planning a lift
+      // across the boundary that the top layer would refuse to perform.
+      if (a.candidate.nonModal !== b.candidate.nonModal) {
+        return a.candidate.nonModal ? -1 : 1;
+      }
       if (a.rank !== b.rank) {
         return a.rank - b.rank;
       }

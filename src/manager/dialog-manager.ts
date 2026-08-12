@@ -453,10 +453,14 @@ export type DialogManager = {
    * **What it costs, and the one thing it cannot do.** Moving a dialog inside the top layer means
    * closing and re-showing it — `z-index` does not apply there — so a reorder fires the element's
    * native `close` event and re-runs CSS keyed on `[open]`. `raiseDialog` in
-   * `core/dialog-lifecycle.ts` documents all of it. And a modal dialog always paints above a
-   * non-modal one whatever the policy says: that is the platform's rule about the top layer, not a
-   * policy this library can overrule. Order modal dialogs against each other, and non-modal ones
-   * against each other.
+   * `core/dialog-lifecycle.ts` documents all of it.
+   *
+   * **A policy orders each family, never across them.** Every non-modal dialog sits under every
+   * modal one, and that is settled before the policy is asked — the platform paints top-layer
+   * elements above ordinary ones and no `z-index` reaches between them, so an order claiming
+   * otherwise would not be an opinion the library is entitled to, it would be false. Returning a
+   * huge number for a panel therefore ranks it against the other panels and moves it no nearer the
+   * user.
    *
    * Opt-in, and dormant until called: without a policy the open order *is* the stack order and this
    * costs nothing. Calling it again replaces the policy — it is one project-wide rule, not a stack
