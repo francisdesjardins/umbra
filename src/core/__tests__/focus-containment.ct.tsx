@@ -73,6 +73,41 @@ test.describe('a non-modal dialog with containFocus on', () => {
     expect(await focused(page)).toBe('inside-middle');
   });
 
+  test('sends Tab inward when the click landed on nothing focusable', async ({ mount, page }) => {
+    // Reported from a real panel: click the empty area under the last button, press Tab, and the
+    // keyboard is in the page behind. Clicking non-focusable content focuses the nearest
+    // *click-focusable* ancestor, and an open `<dialog>` is one — so focus is legitimately on the
+    // element itself, and from there the browser may skip the whole subtree rather than descend
+    // into it, leaving the markers unvisited.
+    //
+    // Both assertions have to be exact. The click one pins the mechanism the fix answers, and
+    // `inside-first` is what discriminates: this Chromium *does* descend, so without the handler
+    // focus reaches the start marker with the dialog as `relatedTarget`, is read as leaving, and
+    // wraps to `inside-last`. A "did not leave the panel" assertion passes either way and guards
+    // nothing.
+    const component = await mount(<FocusContainmentHarness containFocus />);
+    await component.getByTestId('open').click();
+    await expect(page.locator(PANEL)).toBeVisible();
+
+    await page.getByTestId('dead-space').click();
+    expect(await focused(page)).toBe('modal-focus-containment');
+
+    await page.keyboard.press('Tab');
+
+    expect(await focused(page)).toBe('inside-first');
+  });
+
+  test('sends Shift+Tab to the far end from that same click', async ({ mount, page }) => {
+    const component = await mount(<FocusContainmentHarness containFocus />);
+    await component.getByTestId('open').click();
+    await expect(page.locator(PANEL)).toBeVisible();
+
+    await page.getByTestId('dead-space').click();
+    await page.keyboard.press('Shift+Tab');
+
+    expect(await focused(page)).toBe('inside-last');
+  });
+
   test('does not pull focus back once something outside has taken it', async ({ mount, page }) => {
     // The deliberate limit: this answers Tab, it does not enforce focus. A `focusin` enforcer
     // would pass this test and, in a page where dialogs outside the top layer coexist with this

@@ -32,6 +32,10 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * arriving from the page — it means they are coming *in*, and focus goes to the near end instead.
  * Without that distinction a modal dialog would open with its last control focused.
  *
+ * **One press the markers cannot see**, and it is the ordinary one: a click on the panel's empty
+ * space leaves focus on the `<dialog>` itself, from where Tab may skip the whole subtree. That
+ * single case is answered by a `keydown` on the element, and only when it is the element's own.
+ *
  * Nothing is rendered: the markers are zero-sized, carry no text and no role, and are removed on
  * teardown. A binding calls this and passes nothing but the flag.
  *
@@ -116,6 +120,20 @@ export function attachFocusContainment(
     focusFirstAvailable(dialog, cameFromInside ? guard === 'start' : guard === 'end');
   };
 
+  // Clicking a panel's empty space — the area under the last button, a paragraph, a footer's
+  // leftover room — focuses the nearest *click-focusable* ancestor, and an open `<dialog>` is one
+  // even though it takes no `tabindex` and refuses `focus()` from script. From there the markers
+  // are unreachable: browsers disagree on whether Tab descends into the dialog's own subtree, and
+  // where it does not the keyboard is in the page behind before a marker is ever visited. So the
+  // one press the markers cannot see is answered directly.
+  const handleDialogTab = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || event.target !== dialog) {
+      return;
+    }
+    event.preventDefault();
+    focusFirstAvailable(dialog, event.shiftKey);
+  };
+
   const onStart = (event: FocusEvent): void => {
     handleGuardFocus(event, 'start');
   };
@@ -125,12 +143,14 @@ export function attachFocusContainment(
 
   start.addEventListener('focus', onStart);
   end.addEventListener('focus', onEnd);
+  dialog.addEventListener('keydown', handleDialogTab);
   dialog.prepend(start);
   dialog.append(end);
 
   return () => {
     start.removeEventListener('focus', onStart);
     end.removeEventListener('focus', onEnd);
+    dialog.removeEventListener('keydown', handleDialogTab);
     start.remove();
     end.remove();
   };

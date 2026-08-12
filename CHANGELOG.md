@@ -90,6 +90,33 @@ a frame late — one painted frame with the wrong dialog in front. `syncOpenSequ
 same task as the `showModal()` it follows, which is also what lets the manager know the real
 top-layer order instead of guessing it: every show in this library goes through that one seam, so at
 most one dialog can have entered between two calls.
+### Fixed — `containFocus` answers the one Tab its markers cannot see
+
+Reported from a real panel and reproduced: click the empty area under the last button, press Tab,
+and the keyboard is in the page behind — while clicking any control inside first leaves the
+containment working perfectly.
+
+Clicking content that is not focusable focuses the nearest _click-focusable_ ancestor, and an open
+`<dialog>` is one. That distinction is not the same as being focusable: the element takes no
+`tabindex`, and `focus()` on it from script does nothing — measured against a bare `<dialog>`, which
+refuses the call. So focus is legitimately on the dialog element itself, and no marker has been
+visited.
+
+What happens on the next Tab is where browsers part ways. The component suite's Chromium descends
+into the dialog's subtree and reaches the start marker; the Chrome this was reported on skips the
+subtree entirely and lands in the page. Instrumented there, the markers' `focus` listeners recorded
+nothing at all — they were never given the chance to fire. Containment cannot rest on a step only
+some browsers take.
+
+So that single press is answered directly, by a `keydown` on the element that acts only when the
+event's target _is_ the element — a nested dialog's press bubbles through with its own target and is
+left alone. Focus is then sent inward the same way the markers send it, by asking each candidate
+rather than computing which one.
+
+The regression test asserts the destination exactly, not merely that focus stayed inside. Without
+the fix this Chromium wraps to the last stop instead of the first, and a Shift+Tab leaves the panel
+outright — a "did not leave" assertion would have passed in one of those two cases and guarded
+nothing.
 
 ### Changed — `containFocus` is two focus markers now, not a computed boundary
 

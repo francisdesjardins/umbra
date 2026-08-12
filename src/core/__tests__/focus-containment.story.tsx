@@ -30,6 +30,12 @@ export function FocusContainmentHarness({ containFocus }: { readonly containFocu
           <button data-testid="inside-last" type="button">
             Last
           </button>
+          {/* The empty half of a panel — a footer's leftover space, a paragraph, the area below
+              the last button. Nothing here is focusable, which is the point: clicking it is the
+              ordinary way a user puts focus nowhere. */}
+          <p data-testid="dead-space" style={{ height: 80 }}>
+            Nothing to focus here.
+          </p>
         </>
       );
     },
