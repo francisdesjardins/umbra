@@ -1,6 +1,7 @@
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
+import { attachFocusContainment } from '../core/attach-focus-containment.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
 import {
   attachDialogCancel,
@@ -215,6 +216,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
           dismissWhilePreparing: resolved.dismissWhilePreparing,
           engine,
         }),
+        attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
         syncCloseSequence(ctx, {
           nonModal: resolved.isNonModal,
           primaryProperty,

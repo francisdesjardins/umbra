@@ -9,6 +9,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-12
+
+### Added — `containFocus`, the Tab wrap a non-modal dialog does not get from the browser
+
+`showModal()` makes the rest of the document inert, so a modal dialog is contained for free.
+`show()` does not, and the library said nothing about the difference: a non-modal dialog placed
+the opening focus and restored it on close, then let a few tab presses walk the keyboard out into
+whatever was behind. That is correct for a toast or a popover — which is why the option is off by
+default — and plainly wrong for a panel that behaves like a modal in everything but its stacking.
+
+**Why it answers Tab instead of trapping focus**, since both obvious implementations overreach and
+the difference only shows in a page that mixes dialog kinds:
+
+- **`inert` on everything else** takes a subtree out of the tab order _and_ out of hit testing. A
+  dialog in the top layer escapes an inert ancestor; one rendered in place does not. So marking
+  the page inert around a non-modal panel leaves every ordinary in-page dialog unanswerable by
+  mouse as well as by keyboard — the blast radius is not the keyboard, it is the pointer.
+- **A `focusin` enforcer** pulls focus back from anywhere, and fights any legitimate focus target
+  outside the dialog for the same reason.
+
+The listener sits on the dialog and fires only when focus is already inside it and already at one
+of the two ends. A click into something outside is left alone, and a dialog opened over this one
+keeps its own keyboard. The deliberate limit is the other side of that bargain: it cannot bring
+focus back once it has left by some other route.
+
+Two silent limits are worth knowing rather than discovering. The focusables are found with a
+selector, so a control inside a shadow root or an `<iframe>` is not a stop; and visibility is
+asked with `checkVisibility()` rather than the usual `offsetParent !== null`, because that idiom
+reports `null` for anything `position: fixed` and would drop a pinned footer's buttons.
+
 ## 2026-08-11
 
 ### Fixed — the exit animation's safety timeout was racing the animation it protects

@@ -36,6 +36,7 @@ export type UnresolvedModalOptions = ModalVariant & {
   readonly clipContainer?: boolean | undefined;
   readonly dismissWhilePreparing?: boolean | undefined;
   readonly dismissKey?: HotkeyDef | false | undefined;
+  readonly containFocus?: boolean | undefined;
   readonly template?: string | undefined;
 };
 
@@ -49,6 +50,7 @@ export type ResolvedModalOptions = {
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly dismissKey: HotkeyDef | false;
+  readonly containFocus: boolean;
   readonly template: string;
   readonly placement: DialogPlacement;
 };
@@ -77,6 +79,10 @@ export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedMo
       options.nonModal === true ? (options.dismissOnClickOutside ?? false) : false,
     dismissWhilePreparing: options.dismissWhilePreparing ?? true,
     dismissKey: options.dismissKey ?? Key.Escape,
+    // Off by default, for both variants and for opposite reasons: a modal dialog is contained by
+    // the browser already, and a non-modal one is often a toast or a popover, where trapping Tab
+    // would be the defect rather than the fix.
+    containFocus: options.containFocus ?? false,
     template: options.template ?? 'modal',
     // Where this dialog is positioned from, and what it has to be positioned *against*. The
     // rules — and why a contained dialog needs a host at all — live in `core/placement.ts`.

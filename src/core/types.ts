@@ -281,6 +281,27 @@ export type UseModalBaseOptions<
    */
   readonly dismissWhilePreparing?: boolean | undefined;
   /**
+   * Wrap Tab from the last focusable back to the first, so the keyboard stays inside the dialog.
+   *
+   * **What it is for.** `showModal()` makes the rest of the document inert, so a modal dialog is
+   * contained by the browser. `show()` does not, and a non-modal dialog is an ordinary part of the
+   * page: a few tab presses walk out of it into whatever is behind. That is correct for a toast or
+   * a popover and wrong for a panel that behaves like a modal in everything but its stacking, so
+   * it is asked for rather than assumed.
+   *
+   * **It answers Tab; it does not trap focus.** The listener sits on the dialog and fires only
+   * when focus is already inside it and already at one of the two ends. Focus moved by a click,
+   * or by another dialog opening, is left alone — which is what makes this safe in a page where
+   * dialogs outside the top layer coexist with it, and is why neither `inert` nor a `focusin`
+   * enforcer is used. Neither can it bring focus back once it has left by some other route.
+   *
+   * A control inside a shadow root or an `<iframe>` is not a stop: the focusables are found with
+   * a selector, which crosses neither boundary.
+   *
+   * @default false
+   */
+  readonly containFocus?: boolean | undefined;
+  /**
    * Answer an open asked for by code that does not own this dialog — another microfrontend, a
    * shell, a deep link — and decide for yourself.
    *

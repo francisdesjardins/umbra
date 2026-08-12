@@ -50,6 +50,11 @@ export type DialogKeydownOptions = {
   readonly dismissWhilePreparing: boolean;
 };
 
+/** Options for the Tab-wrapping listener a non-modal dialog needs. */
+export type FocusContainmentOptions = {
+  readonly containFocus: boolean;
+};
+
 /** Options for the non-modal click-outside listener. */
 export type ClickOutsideOptions = {
   readonly dismissOnClickOutside: boolean;

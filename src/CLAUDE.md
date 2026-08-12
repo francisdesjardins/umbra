@@ -184,6 +184,7 @@ shared by every binding; layers 2 and 3 exist once per binding and are thin.
 - `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts))
 - `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey` ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes, hence three functions
 - `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
+- `attachFocusContainment` ([core/attach-focus-containment.ts](core/attach-focus-containment.ts)) — the Tab wrap `show()` does not give a dialog, opt-in through `containFocus`
 - `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator rather than a bare function, because where the opening focus landed has to outlive one attachment
 - `createActionFactory` ([core/action-factory.ts](core/action-factory.ts)) — see below
 - `dialogAttributes` / `setDialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE` ([core/dialog-props.ts](core/dialog-props.ts))

@@ -5,6 +5,7 @@ import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
+import { attachFocusContainment } from '../core/attach-focus-containment.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
 import {
   attachDialogCancel,
@@ -76,6 +77,7 @@ export function useModal<TData = void, TReason extends string = string>(
     dismissOnClickOutside,
     dismissWhilePreparing,
     dismissKey,
+    containFocus,
     template,
     placement,
   } = resolveModalOptions(options);
@@ -287,6 +289,13 @@ export function useModal<TData = void, TReason extends string = string>(
         teardown?.();
       }
     });
+  });
+
+  createEffect(() => {
+    const teardown = attachFocusContainment(domContext(), { containFocus });
+    if (teardown) {
+      onCleanup(teardown);
+    }
   });
 
   createEffect(() => {
