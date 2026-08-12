@@ -190,6 +190,14 @@ export type RegisterOptions = {
   readonly nonModal?: boolean | undefined;
   /** Makes this dialog reachable by {@link DialogManager.requestOpen}. */
   readonly onOpenRequest?: OpenRequestHandler | undefined;
+  /**
+   * The `<dialog>` this store drives, so the open event can carry it.
+   *
+   * A getter rather than the element, because a binding registers before it has one. The manager
+   * asks once, as it dispatches, and never holds the answer — which is what keeps it a port
+   * rather than a second reference to the DOM.
+   */
+  readonly getDialog?: (() => HTMLElement | null) | undefined;
 };
 
 /**
@@ -256,6 +264,15 @@ export type ModalOpenEventDetail = {
   readonly template: string;
   /** `Date.now()` recorded as the opening sequence started. */
   readonly openedAt: number;
+  /**
+   * The `<dialog>` element, when the binding that registered it supplies one.
+   *
+   * Carried rather than left to be looked up, because the obvious lookup does not always work: a
+   * `document.querySelector('dialog[data-modal-id="…"]')` finds nothing when the dialog lives in
+   * a shadow root, and this library supports one. It is on the open event only — by the close the
+   * element may be on its way out of the document, and the id is enough to match the pair.
+   */
+  readonly element: HTMLElement | null;
 };
 
 /** Payload for the `modal:close` CustomEvent detail. */
@@ -635,7 +652,7 @@ export function createDialogManager(): DialogManager {
    * and emit events to external listeners.
    */
   function register(id: string, store: RegisteredStore, options: RegisterOptions = {}) {
-    const { template = 'modal', nonModal = false, onOpenRequest } = options;
+    const { template = 'modal', nonModal = false, onOpenRequest, getDialog } = options;
     const initial = store.getSnapshot();
     let prevPhase = initial.phase;
     let prevIsPreparing = initial.isPreparing;
@@ -657,7 +674,12 @@ export function createDialogManager(): DialogManager {
           openSequence += 1;
           registry.set(id, { ...entry, openedAt, openSequence });
         }
-        dispatchModalEvent(MODAL_OPEN_EVENT, { id, template, openedAt });
+        dispatchModalEvent(MODAL_OPEN_EVENT, {
+          id,
+          template,
+          openedAt,
+          element: getDialog?.() ?? null,
+        });
       }
 
       // ── Fully opened: phase is 'open' AND prepare has completed ──

@@ -333,6 +333,7 @@ export function useModal<TData = void, TReason extends string = string>(
   manager.register(modalId, store, {
     template,
     nonModal: isNonModal,
+    getDialog,
     ...(options.onOpenRequest !== undefined && {
       // Returned, not swallowed: the manager awaits the handler, so an owner that validates
       // asynchronously still gets to refuse before `requestOpenAndWait` answers.

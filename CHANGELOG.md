@@ -11,6 +11,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `modal:open` carries the `<dialog>` element
+
+The event announced that a dialog had opened and left finding it to the listener, whose only route
+was `document.querySelector('dialog[data-modal-id="…"]')`. That works until the dialog lives in a
+shadow root, which this library supports — and then it does not work and does not say so: the query
+returns `null` and an integration that measures, observes or annotates the element quietly does
+nothing.
+
+`ModalOpenEventDetail.element` is the element, or `null` when the binding that registered the store
+supplies no getter. It is on the open event only: by the close the element may already be leaving
+the document, and the id is enough to match the pair.
+
+The manager still holds no DOM reference of its own — `RegisterOptions.getDialog` is a getter it
+calls once, as it dispatches, which keeps the registry a port rather than a second view of the
+tree.
+
 ### Fixed — a dialog took the dismiss key from the popup the user was actually looking at
 
 Open a combobox, a select or a date picker inside a dialog and press Escape: the list should
