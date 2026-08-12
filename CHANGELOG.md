@@ -90,6 +90,23 @@ a frame late — one painted frame with the wrong dialog in front. `syncOpenSequ
 same task as the `showModal()` it follows, which is also what lets the manager know the real
 top-layer order instead of guessing it: every show in this library goes through that one seam, so at
 most one dialog can have entered between two calls.
+
+### Added — `isOwnEventTarget` is public, beside `isKeyClaimedByPopup`
+
+The rule a listener on a `<dialog>` has to apply before acting: a press raised inside a dialog
+stacked above this one bubbles straight through it, and without the check the surface underneath
+answers for the surface on top. The library's own keydown listeners have always asked it; it was
+`@internal` because nothing outside them did.
+
+Something outside them does now. A control placed inside a dialog by its caller — a button that
+carries its own shortcut, say — has no listener of ours to inherit the rule from, and a second copy
+of it is a second copy that drifts. That is the same argument `isKeyClaimedByPopup` was exported
+under, and this is its sibling: one asks whether a key belongs to a popup that is already answering
+it, the other whether it belongs to this dialog at all.
+
+Nothing about the implementation changed. `queryOwn` stays internal — it is a query helper for the
+library's own dispatch, not a rule a caller has to share.
+
 ### Fixed — `containFocus` answers the one Tab its markers cannot see
 
 Reported from a real panel and reproduced: click the empty area under the last button, press Tab,

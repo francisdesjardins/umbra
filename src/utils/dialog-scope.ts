@@ -28,7 +28,19 @@ export function queryOwn(dialog: HTMLElement, selector: string): HTMLElement | n
  * it. A keydown in a nested dialog bubbles through its ancestors, so without this the modal
  * underneath answers to keys pressed in the modal above it.
  *
- * @internal
+ * Public because the library's own listeners are not the only ones on a `<dialog>`: a control
+ * placed inside one by its caller may bind a key there too, and it needs the same rule rather
+ * than a second copy of it.
+ *
+ * @example
+ * ```ts
+ * dialog.addEventListener('keydown', (event) => {
+ *   if (!isOwnEventTarget(dialog, event.target)) {
+ *     return;
+ *   }
+ *   // …the press belongs to this dialog rather than to one stacked above it.
+ * });
+ * ```
  */
 export function isOwnEventTarget(dialog: HTMLElement, target: EventTarget | null): boolean {
   if (!(target instanceof Element)) {

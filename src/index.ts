@@ -103,6 +103,13 @@ export type { DialogStyle, StyleTarget } from './core/style.js';
 // from, and a second copy of the rule is a second copy that drifts.
 export { isKeyClaimedByPopup } from './core/attach-keydown.js';
 
+// Its sibling, and needed by the same callers for the same reason. Nested dialogs are the normal
+// shape here — the top layer swallows outside clicks, so a second modal is opened from inside the
+// first and lands in its subtree — and a key pressed in the inner one bubbles through the outer.
+// Anything that listens on a dialog it did not build has to drop those, or the surface underneath
+// answers for the surface above it.
+export { isOwnEventTarget } from './utils/dialog-scope.js';
+
 // The decision a controlled wrapper has to make on every pass, so nobody has to rediscover that
 // it turns on `phase` and not on `isVisible`. This library is imperative and a great deal of
 // component API is a boolean prop; the crossing between them is one function, and it is here.
