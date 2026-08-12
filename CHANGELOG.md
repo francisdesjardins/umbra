@@ -11,6 +11,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `parseHotkey`, the way back into `HotkeyDef`
+
+Three functions turned a `HotkeyDef` into text — a label, an `aria-keyshortcuts` value, a match
+against an event — and nothing turned text back into one. That is fine while every shortcut is
+written in the source, where the closed union makes `'Escpae'` a compile error. It stops being fine
+the moment shortcuts arrive as **data**: a configuration file, a user preference, a value off the
+wire, or another library whose own type is `string`. The only crossings were an unchecked cast —
+throwing the union's guarantee away exactly where the input is least trustworthy — or a validator
+written again at each call site.
+
+Nothing is asserted: the key is _found_ in `Key`, so it carries that table's type out, and each
+modifier arrangement is rebuilt from literal pieces. What cannot be built is refused. `HotkeyDef`
+names fourteen shapes rather than every subset of the four modifiers, so `'Alt+Shift+Meta+a'`
+parses as far as its parts and then returns `undefined` instead of inventing a type that does not
+exist — and so do a repeated modifier, an unknown one, and a key that is not in the table.
+
 ### Added — `modal:open` carries the `<dialog>` element
 
 The event announced that a dialog had opened and left finding it to the listener, whose only route

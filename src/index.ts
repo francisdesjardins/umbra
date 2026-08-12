@@ -144,7 +144,16 @@ export { normalizeError } from './utils/normalize-error.js';
 // what the library writes and dispatches by, so a wrapper that builds the attribute itself needs
 // it — which is the trap of having shipped only the first.
 
-export { formatAriaKeyshortcuts, formatHotkeyLabel, matchesHotkey } from './utils/hotkey-utils.js';
+// `parseHotkey` is the way back in, and the reason it exists is that a shortcut is not always
+// written in the source: a configuration file, a user preference, a value off the wire and another
+// library's `string` all have to become a `HotkeyDef` somehow, and the alternatives were an
+// unchecked cast or a validator per call site.
+export {
+  formatAriaKeyshortcuts,
+  formatHotkeyLabel,
+  matchesHotkey,
+  parseHotkey,
+} from './utils/hotkey-utils.js';
 export { Key } from './utils/keys.js';
 export type { KeyValue } from './utils/keys.js';
 // The root's own signatures name it (`formatHotkeyLabel(def: HotkeyDef)`), so a framework-free

@@ -141,3 +141,103 @@ export function matchesHotkey(event: KeyboardEvent, def: HotkeyDef): boolean {
     event.metaKey === meta
   );
 }
+
+/**
+ * The `Key` values, indexed by their lowercase spelling, so a lookup is one map read.
+ *
+ * Built once from the table rather than restated: a key added to `Key` becomes parseable with no
+ * second edit, which is the whole reason the table is the single source.
+ */
+const KEYS_BY_LOWERCASE = new Map(
+  Object.values(Key).map((value) => {
+    return [value.toLowerCase(), value];
+  })
+);
+
+/**
+ * Read a hotkey out of a string, or `undefined` when the string is not one.
+ *
+ * **The inverse the library was missing.** Three functions turn a `HotkeyDef` into text — a label,
+ * an `aria-keyshortcuts` value, a match against an event — and nothing turned text back into a
+ * `HotkeyDef`. That is fine while every shortcut is written in the source, where the closed union
+ * makes `'Escpae'` a compile error. It stops being fine the moment shortcuts arrive as *data*: a
+ * configuration file, a user preference, a value from a server, a string handed over by another
+ * library whose own type is `string`. Without a parser the only crossings are an unchecked cast —
+ * which throws the union's guarantee away exactly where the input is least trustworthy — or a
+ * hand-rolled validator per call site.
+ *
+ * Nothing is asserted here. The key is *found* in `Key`, so it carries that table's type out with
+ * it, and each modifier arrangement is rebuilt from literal pieces. What cannot be built is
+ * rejected: the union names fourteen shapes and not every subset of the four modifiers, so
+ * `'Alt+Shift+Meta+a'` parses as far as its parts and then returns `undefined` rather than
+ * inventing a type that does not exist.
+ *
+ * Case is not significant, matching the type's own rule: `'ctrl+s'`, `'Ctrl+S'` and `'CTRL+s'` are
+ * one hotkey, and the canonical spelling comes back out.
+ *
+ * @example
+ * parseHotkey('Ctrl+S'); // 'Ctrl+s'
+ * parseHotkey('escape'); // 'Escape'
+ * parseHotkey('Ctrl+Nope'); // undefined — not a key in the table
+ * parseHotkey(''); // undefined
+ */
+export function parseHotkey(input: string): HotkeyDef | undefined {
+  const parts = input.split('+');
+  const rawKey = parts.pop();
+  if (rawKey === undefined || rawKey === '') {
+    return undefined;
+  }
+
+  const key = KEYS_BY_LOWERCASE.get(rawKey.toLowerCase());
+  if (key === undefined) {
+    return undefined;
+  }
+
+  const seen = new Set<string>();
+  for (const part of parts) {
+    const modifier = part.toLowerCase();
+    // A repeat is a typo, not an intent, and silently collapsing it would accept `'Ctrl+Ctrl+s'`.
+    if (!['ctrl', 'alt', 'shift', 'meta'].includes(modifier) || seen.has(modifier)) {
+      return undefined;
+    }
+    seen.add(modifier);
+  }
+
+  // The fixed order the union is written in, and the only orders it names. A `default` rather than
+  // an exhaustive map because the union is deliberately not every subset — see the type.
+  const order = ['ctrl', 'alt', 'shift', 'meta'].filter((modifier) => {
+    return seen.has(modifier);
+  });
+  switch (order.join('+')) {
+    case '':
+      return key;
+    case 'ctrl':
+      return `Ctrl+${key}`;
+    case 'alt':
+      return `Alt+${key}`;
+    case 'shift':
+      return `Shift+${key}`;
+    case 'meta':
+      return `Meta+${key}`;
+    case 'ctrl+shift':
+      return `Ctrl+Shift+${key}`;
+    case 'ctrl+alt':
+      return `Ctrl+Alt+${key}`;
+    case 'ctrl+meta':
+      return `Ctrl+Meta+${key}`;
+    case 'alt+shift':
+      return `Alt+Shift+${key}`;
+    case 'alt+meta':
+      return `Alt+Meta+${key}`;
+    case 'shift+meta':
+      return `Shift+Meta+${key}`;
+    case 'ctrl+alt+shift':
+      return `Ctrl+Alt+Shift+${key}`;
+    case 'ctrl+alt+meta':
+      return `Ctrl+Alt+Meta+${key}`;
+    case 'ctrl+shift+meta':
+      return `Ctrl+Shift+Meta+${key}`;
+    default:
+      return undefined;
+  }
+}

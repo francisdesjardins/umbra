@@ -151,6 +151,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'KeyValue',
       'HotkeyDef',
       'formatHotkeyLabel',
+      'parseHotkey',
       'formatAriaKeyshortcuts',
       'matchesHotkey',
     ],
