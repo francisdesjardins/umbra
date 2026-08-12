@@ -6,8 +6,10 @@ import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
+import { raiseDialog, stampZIndex } from '../core/dialog-lifecycle.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
+import { orderStack, planRaises, type StackPriority } from './stack-order.js';
 import type {
   ModalInfo,
   ModalLookup,
@@ -312,12 +314,19 @@ declare global {
  *
  * Everything else is derivable from `openDialogs`: counts via `.length`,
  * modal vs non-modal via `ModalInfo.nonModal`, and stack position via
- * array index (the array is ordered bottom to top by open sequence).
+ * array index (the array is ordered bottom to top).
  */
 export type DialogManagerSnapshot = {
-  /** Open modals (modal and nonModal), in open order — index = stack position. */
+  /**
+   * Open modals (modal and nonModal), bottom of the stack first — index = stack position.
+   *
+   * Open order, unless {@link DialogManager.prioritize} installed a policy that says otherwise.
+   */
   readonly openDialogs: readonly RegisteredModalInfo[];
-  /** The topmost (most recently opened) modal, or undefined if none open. */
+  /**
+   * The one in front — the most recently opened modal, or whichever a
+   * {@link DialogManager.prioritize} policy put there. `undefined` if none are open.
+   */
   readonly foreground: RegisteredModalInfo | undefined;
 };
 
@@ -424,6 +433,65 @@ export type DialogManager = {
   /** One modal's state; a null-object default for an id nobody registered. */
   lookup(id: string): ModalInfo;
 
+  /**
+   * Decide the stack order yourself, instead of letting whoever opened last win.
+   *
+   * **The problem it solves.** A dialog's place in the stack is the order its `showModal()` landed
+   * in, and that order is a race between parts of an app that do not know about each other: a
+   * consent notice raised after a fetch settles, a slide-over opened by a deep link, a session
+   * warning on a timer. Lose the race and the notice is *behind* a panel — under its backdrop,
+   * inert, unreadable, while the user works on something the app was trying to interrupt. Nothing
+   * is broken, and the wrong thing is in front. That is the common shape in an app assembled from
+   * independent features, where no single place decides who interrupts whom.
+   *
+   * **What it does.** One policy, installed once, for the whole manager: a function from a dialog
+   * to a number, higher meaning nearer the user, ties keeping open order. So a policy only has to
+   * say where it disagrees. It applies to dialogs already on screen — a low-priority dialog that
+   * opens over a high-priority one is put back underneath it before the frame is painted, and the
+   * snapshot, `foreground`, `isForeground` and `getZIndex` all move with it.
+   *
+   * **What it costs, and the one thing it cannot do.** Moving a dialog inside the top layer means
+   * closing and re-showing it — `z-index` does not apply there — so a reorder fires the element's
+   * native `close` event and re-runs CSS keyed on `[open]`. `raiseDialog` in
+   * `core/dialog-lifecycle.ts` documents all of it. And a modal dialog always paints above a
+   * non-modal one whatever the policy says: that is the platform's rule about the top layer, not a
+   * policy this library can overrule. Order modal dialogs against each other, and non-modal ones
+   * against each other.
+   *
+   * Opt-in, and dormant until called: without a policy the open order *is* the stack order and this
+   * costs nothing. Calling it again replaces the policy — it is one project-wide rule, not a stack
+   * of them.
+   *
+   * @returns A disposer that restores plain open order, reordering what is on screen to match. It
+   *   does nothing if a later `prioritize` already replaced the policy.
+   *
+   * @example
+   * // Once, at start-up. The warning outranks anything a route or a panel raises.
+   * dialogManager.prioritize((modal) => {
+   *   if (modal.id === 'session-expiring') {
+   *     return 100;
+   *   }
+   *   return modal.template === 'slide' ? -10 : 0;
+   * });
+   */
+  prioritize(priority: StackPriority): () => void;
+
+  /**
+   * Put the open dialogs where the policy from {@link DialogManager.prioritize} says they belong.
+   *
+   * Idempotent, and a no-op until a policy exists — the manager calls it itself on every change it
+   * observes, so an application normally never does. It is public because the manager's own clock
+   * runs one step ahead of the DOM's: a store reaching `'opening'` is not a dialog that has been
+   * shown, so the moment that matters is the one right after `showModal()`, which is a binding's to
+   * report.
+   *
+   * @param shownId The dialog whose element was *just* shown, when the call is reporting one.
+   *   Recorded rather than inferred: every show in this library goes through the one lifecycle seam
+   *   that calls this, so at most one dialog can have entered the top layer between two calls, and
+   *   that is what lets the manager know the real order instead of guessing it.
+   */
+  syncStackOrder(shownId?: string): void;
+
   /** Base z-index for dialog stacking. */
   readonly Z_INDEX_BASE: number;
 
@@ -434,6 +502,10 @@ export type DialogManager = {
    * bottom-most open modal would get. That is the useful answer for the only caller that
    * matters: the dialog is stamped at `show()` time, when it is already in the stack, and a
    * closed dialog's stale z-index is never consulted.
+   *
+   * With a policy from {@link DialogManager.prioritize} the position is the policy's, and the stamp
+   * outlives the show — `syncStackOrder` rewrites it on every dialog whenever the order changes,
+   * because a dialog can move long after it opened.
    */
   getZIndex(id: string): number;
 
@@ -472,6 +544,12 @@ type RegistryEntry = {
    * registry does not open a dialog on behalf of a caller it never heard of.
    */
   readonly onOpenRequest?: OpenRequestHandler | undefined;
+  /**
+   * The `<dialog>` this store drives, when the binding supplies one — see
+   * {@link RegisterOptions.getDialog}. Kept rather than only read at dispatch, because a stack
+   * policy has to reach the element long after the open that announced it.
+   */
+  readonly getDialog?: (() => HTMLElement | null) | undefined;
   /** Wall-clock open time. Public (`ModalInfo.openedAt`, DOM event details) — not an order. */
   readonly openedAt: number;
   /**
@@ -510,10 +588,23 @@ export function createDialogManager(): DialogManager {
   /** Identity this instance claims the global body scroll lock under — see `scroll-lock.ts`. */
   const lockOwner = {};
 
+  const Z_INDEX_BASE = 1300;
+
   const registry = new Map<string, RegistryEntry>();
   const listeners = new Set<DialogManagerSubscriber>();
   /** Incremented on every open; see `RegistryEntry.openSequence`. */
   let openSequence = 0;
+  /** The stack policy, when one was installed — see `prioritize`. Absent means open order. */
+  let priority: StackPriority | undefined;
+  /**
+   * The top layer as this manager last left it, front-most last — the modal dialogs whose elements
+   * are open, in paint order.
+   *
+   * Tracked rather than derived, because the platform does not expose the top layer's order and
+   * nothing else can answer *what has to move*. Only `syncStackOrder` writes it, so with no policy
+   * ever installed it stays empty and the whole feature is inert.
+   */
+  let topLayerOrder: string[] = [];
   // Observable snapshot cell (consumed by `useDialogManager` via useSyncExternalStore).
   const snapshotStore = createStore(emptySnapshot);
 
@@ -624,14 +715,28 @@ export function createDialogManager(): DialogManager {
   /**
    * Build an immutable snapshot from the current registry state.
    *
-   * `openDialogs` is sorted by `openSequence` (bottom of the stack first), so the array index
-   * doubles as the stack position and the last element is the foreground modal. Not by
-   * `openedAt` — see `RegistryEntry.openSequence` for why a wall clock cannot order this.
+   * `openDialogs` is sorted bottom of the stack first, so the array index doubles as the stack
+   * position and the last element is the foreground modal. The order is `openSequence` — not
+   * `openedAt`, see `RegistryEntry.openSequence` for why a wall clock cannot order this — unless
+   * `prioritize` installed a policy, which `orderStack` applies with `openSequence` as its tiebreak.
+   *
+   * `topId` is read off the ordered list rather than computed first: with a policy the foreground is
+   * whatever the policy put in front, so asking "which is topmost" before ordering would answer with
+   * the open order the policy exists to overrule.
    */
   function computeSnapshot(): DialogManagerSnapshot {
-    const openEntries = getOpenEntries().toSorted((a, b) => {
-      return a.entry.openSequence - b.entry.openSequence;
-    });
+    const openEntries = orderStack(
+      getOpenEntries().map(({ id, entry }) => {
+        return {
+          id,
+          entry,
+          template: entry.template,
+          nonModal: entry.nonModal,
+          openSequence: entry.openSequence,
+        };
+      }),
+      priority
+    );
     const topId = openEntries.at(-1)?.id;
 
     const openDialogs = openEntries.map(({ id, entry }) => {
@@ -641,6 +746,95 @@ export function createDialogManager(): DialogManager {
     return {
       openDialogs,
       foreground: openDialogs.at(-1),
+    };
+  }
+
+  // ── Stack order ───────────────────────────────────────────────────────────
+
+  /**
+   * Make the DOM agree with the snapshot's order. See {@link DialogManager.syncStackOrder}.
+   *
+   * Two mechanisms, because the platform has two stacks. A **non-modal** dialog sits in the normal
+   * flow and is ordered by `z-index`, so restamping it is the whole move — `showDialog` only ever
+   * wrote the value that was current when that dialog itself opened. A **modal** dialog is in the
+   * top layer, where `z-index` does not apply at all, and the only way to move one is to close and
+   * re-show it; `planRaises` is what keeps that to the minimum, since each one is a real round-trip.
+   */
+  function syncStackOrder(shownId?: string): void {
+    // Dormant until a policy exists — and for one sync after it is removed, which is what restores
+    // plain open order to a stack the policy had already rearranged.
+    if (!priority && topLayerOrder.length === 0) {
+      return;
+    }
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const open = snapshotStore.getSnapshot().openDialogs;
+
+    open.forEach((info, index) => {
+      const element = registry.get(info.id)?.getDialog?.();
+      if (element) {
+        stampZIndex(element, Z_INDEX_BASE + index);
+      }
+    });
+
+    // Only dialogs whose element is really open are in the top layer. A dialog at phase `'opening'`
+    // has not been shown yet — its own show is what calls back here with `shownId`.
+    const inTopLayer = new Map<string, HTMLDialogElement>();
+    for (const info of open) {
+      if (info.nonModal) {
+        continue;
+      }
+      const element = registry.get(info.id)?.getDialog?.();
+      if (element instanceof HTMLDialogElement && element.open) {
+        inTopLayer.set(info.id, element);
+      }
+    }
+
+    if (shownId !== undefined && inTopLayer.has(shownId)) {
+      topLayerOrder = [
+        ...topLayerOrder.filter((id) => {
+          return id !== shownId;
+        }),
+        shownId,
+      ];
+    }
+
+    // An id the tracking never saw is simply absent from `current`, which makes the plan lift it —
+    // costing a round-trip it may not have needed, never leaving the order wrong.
+    const current = topLayerOrder.filter((id) => {
+      return inTopLayer.has(id);
+    });
+    const desired = [...inTopLayer.keys()];
+
+    for (const id of planRaises(desired, current)) {
+      const dialog = inTopLayer.get(id);
+      if (dialog) {
+        log('Raising dialog', { id, stack: desired });
+        raiseDialog(dialog);
+      }
+    }
+
+    topLayerOrder = desired;
+  }
+
+  function prioritize(next: StackPriority): () => void {
+    priority = next;
+    log('Stack policy installed');
+    notifyChange();
+    syncStackOrder();
+
+    return () => {
+      if (priority !== next) {
+        // A later `prioritize` owns the policy now, and this disposer must not put the manager back
+        // to open order behind its back.
+        return;
+      }
+      priority = undefined;
+      log('Stack policy removed');
+      notifyChange();
+      syncStackOrder();
     };
   }
 
@@ -710,6 +904,11 @@ export function createDialogManager(): DialogManager {
       // Recompute after every observed transition (including 'closing') so
       // the snapshot — which lookup() also reads — never lags the registry.
       notifyChange();
+      // Reads the snapshot just published, so it must follow. This is the clock that catches a
+      // *close*: the dialogs left behind keep their relative order, but their z-index no longer
+      // matches their position. The opens are caught by the lifecycle's own call, which is a step
+      // later than this one — a store at `'opening'` has not been shown yet.
+      syncStackOrder();
       syncBodyScrollLock();
     });
 
@@ -732,6 +931,7 @@ export function createDialogManager(): DialogManager {
       // Spread rather than always-present: `exactOptionalPropertyTypes` distinguishes "absent"
       // from "explicitly undefined", and absent is what "this dialog refuses" is spelled as.
       ...(onOpenRequest !== undefined && { onOpenRequest }),
+      ...(getDialog !== undefined && { getDialog }),
       openedAt: 0,
       openSequence: 0,
     });
@@ -773,6 +973,7 @@ export function createDialogManager(): DialogManager {
     }
 
     notifyChange();
+    syncStackOrder();
     syncBodyScrollLock();
   }
 
@@ -913,8 +1114,6 @@ export function createDialogManager(): DialogManager {
 
   // ── Public API (facade) ───────────────────────────────────────────────────
 
-  const Z_INDEX_BASE = 1300;
-
   return {
     register,
     unregister,
@@ -948,6 +1147,9 @@ export function createDialogManager(): DialogManager {
     },
 
     lookup,
+
+    prioritize,
+    syncStackOrder,
 
     Z_INDEX_BASE,
 

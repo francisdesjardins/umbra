@@ -86,11 +86,11 @@ export type ModalLookup = {
   get(id: string): ModalInfo;
   /** Check if a modal is registered. */
   exists(id: string): boolean;
-  /** Get the topmost (most recently opened) open modal, or `undefined` if none are open. */
+  /** Get the open modal in front — the most recently opened, or the one a policy put there. */
   getForeground(): RegisteredModalInfo | undefined;
   /**
-   * Get currently open modals in open order, bottom of the stack first — so the index is the
-   * stack position. Optionally filter to `'modal'` (`showModal()`) or `'non-modal'`
+   * Get currently open modals in stack order, bottom first — so the index is the stack position.
+   * Open order, unless a `dialogManager.prioritize` policy says otherwise. Optionally filter to `'modal'` (`showModal()`) or `'non-modal'`
    * (`dialog.show()`) dialogs — the same two words as the `nonModal` option and the
    * `data-modal-type` attribute, so one distinction has one vocabulary.
    */

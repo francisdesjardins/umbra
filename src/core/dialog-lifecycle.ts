@@ -70,8 +70,90 @@ export function showDialog(
   } else {
     dialog.showModal();
   }
+  stampZIndex(dialog, zIndex);
+}
+
+/**
+ * Write the stacking z-index onto a dialog, mirrored onto `data-modal-z` for debugging.
+ *
+ * Its own function because the stamp outlives the show: a stack policy can reorder dialogs that are
+ * already open, and for a **non-modal** one — never in the top layer, so ordered by nothing else —
+ * this is the whole of what moving it means.
+ */
+export function stampZIndex(dialog: HTMLElement, zIndex: number): void {
   dialog.style.zIndex = String(zIndex);
   dialog.dataset['modalZ'] = String(zIndex);
+}
+
+/**
+ * The innermost focused element, following shadow boundaries down.
+ *
+ * `document.activeElement` answers with the *host* when focus is inside a shadow tree, and this
+ * library supports a dialog in one — so without the walk, a raise inside a web component would
+ * conclude that focus was on some custom element and put it back there.
+ */
+function deepActiveElement(root: DocumentOrShadowRoot): Element | null {
+  const active = root.activeElement;
+  if (active?.shadowRoot) {
+    return deepActiveElement(active.shadowRoot);
+  }
+  return active;
+}
+
+/** Whether `element` is inside `dialog`, counting through shadow boundaries. */
+function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boolean {
+  let node: Node | null = element;
+  while (node) {
+    if (node === dialog) {
+      return true;
+    }
+    const parent: Node | null = node.parentNode;
+    // Out of a shadow tree and on through its host — `contains` stops at the boundary, and a
+    // dialog holding a web component with its own focusable content is not an edge case.
+    node = parent instanceof ShadowRoot ? parent.host : parent;
+  }
+  return false;
+}
+
+/**
+ * Lift an already-open modal dialog to the front of the top layer.
+ *
+ * Close-and-re-show is not a shortcut, it is the only mechanism: the platform paints top-layer
+ * elements in the order they were added, and `z-index` does not apply between them — a dialog
+ * stamped `z-index: 9999` still paints under one shown after it. So there is no way to move a
+ * dialog within the top layer other than taking it out and putting it back.
+ *
+ * Three consequences a caller should know about, none of them avoidable:
+ *
+ * - **The element's native `close` event still fires.** `close()` queues it, so it arrives after
+ *   the dialog is open again and `dialog.open` is `true` when it does — which is the guard for a
+ *   listener that has to tell a raise from a real close. The library's own close reporting is
+ *   driven by the store and is not involved. It matters most in `umbra/vanilla`, where the
+ *   `<dialog>` and any listener on it are the caller's.
+ * - **Focus is restored only when this dialog had it.** `showModal()` runs the focusing steps and
+ *   would otherwise steal focus from the dialog above; when the raise is part of a reorder, the
+ *   dialog that ends up on top is the one that should hold focus, and it is raised last.
+ * - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
+ *   `dialog[open] { animation }`. The library's own entrance is driven by phase rather than by
+ *   `[open]`, so it is unaffected.
+ *
+ * @returns `false` when there was nothing to lift, so a caller can skip its own bookkeeping.
+ */
+export function raiseDialog(dialog: HTMLDialogElement): boolean {
+  if (!dialog.open) {
+    return false;
+  }
+
+  const active = deepActiveElement(dialog.ownerDocument);
+  const holdsFocus = active !== null && containsAcrossRoots(dialog, active);
+
+  dialog.close();
+  dialog.showModal();
+
+  if (holdsFocus && active instanceof HTMLElement && active.isConnected) {
+    active.focus();
+  }
+  return true;
 }
 
 /**

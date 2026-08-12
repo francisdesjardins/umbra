@@ -1133,7 +1133,7 @@ info.nonModal; // boolean (absent for unregistered)
 
 // Collection-level queries
 const all = dialogManager.lookup();
-all.getOpen(); // ModalInfo[] — all open, sorted by open time (bottom first)
+all.getOpen(); // ModalInfo[] — all open, in stack order (bottom first)
 all.getOpen('modal'); // ModalInfo[] — only showModal() dialogs
 all.getOpen('non-modal'); // ModalInfo[] — only dialog.show() dialogs
 all.getClosed(); // ModalInfo[] — registered but closed
@@ -1190,16 +1190,95 @@ modals, so they are typed `RegisteredModalInfo` and need no narrowing at all.
 
 ### ModalLookup
 
-| Method                 | Returns                  | Description                                                     |
-| ---------------------- | ------------------------ | --------------------------------------------------------------- |
-| `get(id)`              | `ModalInfo`              | Same as `lookup(id)` — null-object default for unregistered     |
-| `exists(id)`           | `boolean`                | Whether the modal is registered                                 |
-| `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                                |
-| `getOpen(filter?)`     | `ModalInfo[]`            | Open modals sorted by open time; filter `'modal'`/`'non-modal'` |
-| `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                          |
-| `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                             |
-| `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                                |
-| `getRegisteredCount()` | `number`                 | Total registered modals                                         |
+| Method                 | Returns                  | Description                                                 |
+| ---------------------- | ------------------------ | ----------------------------------------------------------- |
+| `get(id)`              | `ModalInfo`              | Same as `lookup(id)` — null-object default for unregistered |
+| `exists(id)`           | `boolean`                | Whether the modal is registered                             |
+| `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                            |
+| `getOpen(filter?)`     | `ModalInfo[]`            | Open modals in stack order; filter `'modal'`/`'non-modal'`  |
+| `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                      |
+| `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                         |
+| `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                            |
+| `getRegisteredCount()` | `number`                 | Total registered modals                                     |
+
+---
+
+## prioritize — deciding the stack order
+
+A dialog's place in the stack is the order its `showModal()` landed in, and in an app assembled
+from independent features that order is a **race**. A consent notice raised when a fetch settles, a
+slide-over opened by a deep link, a session warning on a timer: none of them knows about the
+others. Lose the race and the notice is behind a panel — under its backdrop, inert, dimmed —
+while the user carries on with the thing the app was trying to interrupt. Nothing threw; the wrong
+dialog is in front.
+
+`prioritize` is one rule for the whole manager, installed once:
+
+```typescript
+import { dialogManager, type StackPriority } from 'umbra';
+
+// Once, at start-up. Higher is nearer the user; ties keep open order, so a policy only has to say
+// where it disagrees with "last one wins".
+const stopPrioritizing = dialogManager.prioritize((modal) => {
+  if (modal.id === 'session-expiring') {
+    return 100;
+  }
+  return modal.template === 'slide' ? -10 : 0;
+});
+```
+
+It applies to dialogs **already on screen**: a low-priority dialog that opens over a high-priority
+one is put back underneath it before the frame is painted, and `openDialogs`, `foreground`,
+`isForeground` and `getZIndex` all move with it — which matters beyond paint order, since
+`isForeground` is what decides who answers the dismiss key and who owns a click outside.
+
+The policy is told what a dialog **is**, never what it is doing:
+
+| `StackModal` field | Meaning                                                       |
+| ------------------ | ------------------------------------------------------------- |
+| `id`               | The modal's id                                                |
+| `template`         | Which template built it — `'modal'`, `'slide'`, your own name |
+| `nonModal`         | Whether it uses `show()` rather than `showModal()`            |
+
+`phase`, `isPreparing` and `isForeground` are deliberately absent. `isForeground` is what the
+policy _decides_, and the other two move while a dialog is up — a priority that read them would
+restack the top layer under the user's hands.
+
+### What it costs
+
+Moving a dialog inside the top layer means **closing and re-showing it**: the platform paints
+top-layer elements in the order they were added and `z-index` does not apply between them (measured
+— a dialog stamped `z-index: 9999` still paints under one shown after it). There is no other
+mechanism, so a reorder has three visible consequences:
+
+- The element's **native `close` event fires**. It is queued, so it arrives with `dialog.open`
+  already back to `true` — which is the guard for a listener that has to tell a raise from a real
+  close. The library's own `onClose`, `modal:close` and `subscribe` reporting is store-driven and
+  is not involved. This matters most in `umbra/vanilla`, where the `<dialog>` and its listeners are
+  yours.
+- **CSS keyed on the element being shown re-runs** — `@starting-style`, a
+  `dialog[open] { animation: … }`. The library's own entrance is driven by phase rather than by
+  `[open]`, so it is unaffected.
+- Focus is put back where it was **only for the dialog that ends up in front**, which is the one
+  that should hold it: only the topmost modal dialog is not inert.
+
+Reorders are minimal — a swap lifts one dialog, not both — and the whole feature is dormant until
+`prioritize` is called, so an app that never calls it pays nothing and behaves exactly as before.
+
+### The one thing it cannot do
+
+A **modal dialog always paints above a non-modal one**, whatever the policy says. That is the
+platform's rule about the top layer, not a policy this library can overrule. Order modal dialogs
+against each other, and non-modal ones against each other.
+
+And it orders the dialogs of **one manager**. Two copies of this library in one page — two
+microfrontends bundling their own — have two registries and two independent stacks; the
+`modal:open` / `modal:close` document events are the only channel that crosses that line. In one
+app, where features are uncoordinated but the manager is shared, it is the whole answer.
+
+`stopPrioritizing()` restores plain open order, reordering what is on screen to match. Calling
+`prioritize` again **replaces** the policy — it is one project-wide rule, not a stack of them — and
+the replaced policy's disposer becomes a no-op.
 
 ---
 
@@ -1303,14 +1382,17 @@ function ModalOverlay() {
 
 ### DialogManagerSnapshot
 
-| Property      | Type                     | Description                                                                    |
-| ------------- | ------------------------ | ------------------------------------------------------------------------------ |
-| `openDialogs` | `readonly ModalInfo[]`   | Open modals (modal and nonModal), sorted by open time — index = stack position |
-| `foreground`  | `ModalInfo \| undefined` | Most recently opened modal                                                     |
+| Property      | Type                     | Description                                                               |
+| ------------- | ------------------------ | ------------------------------------------------------------------------- |
+| `openDialogs` | `readonly ModalInfo[]`   | Open modals (modal and nonModal), in stack order — index = stack position |
+| `foreground`  | `ModalInfo \| undefined` | The one in front — most recently opened, or whatever the policy put there |
 
 Everything else derives from `openDialogs`: counts via `.length`, modal vs
 non-modal via `ModalInfo.nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
 and stack position via array index.
+
+The stack order is open order unless [`prioritize`](#prioritize--deciding-the-stack-order) installed
+a policy that says otherwise.
 
 ---
 

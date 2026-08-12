@@ -55,6 +55,11 @@ export type {
   UnregisteredModalInfo,
 } from './manager/types.js';
 
+// The stack policy `dialogManager.prioritize` takes, and what it is told about a dialog. A consumer
+// installing one writes the function, so both halves have to be nameable — and the policy is the
+// kind of thing an app declares in its own module and exports, which needs the annotation.
+export type { StackModal, StackPriority } from './manager/stack-order.js';
+
 // The vocabulary the manager's own public surface speaks: `ModalInfo.phase` is a `ModalPhase`,
 // and the store port a `DialogManager` registers reports a `ModalStoreSnapshot`, whose
 // `closeResult` is a `CloseResult`. A root consumer that can name `ModalInfo` but not

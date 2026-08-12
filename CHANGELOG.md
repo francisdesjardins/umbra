@@ -11,6 +11,73 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `dialogManager.prioritize`, because "last one wins" is a race
+
+A dialog's place in the stack is the order its `showModal()` landed in. In an app assembled from
+independent features nobody schedules that order: a consent notice raised when a fetch settles, a
+slide-over opened by a deep link, a session warning on a timer. Lose the race and the notice is
+_behind_ a panel — under its backdrop, inert, dimmed — while the user carries on with exactly the
+thing the app was trying to interrupt. Nothing threw. The wrong dialog is in front.
+
+The honest reading of that is not "the app should coordinate its dialogs". Most do not, and the
+features that would have to agree are the ones that deliberately know nothing about each other.
+So the ordering becomes a policy: one function, installed once, from a dialog to a number, higher
+meaning nearer the user, ties keeping open order — so a policy only says where it disagrees.
+
+```ts
+dialogManager.prioritize((modal) => {
+  return modal.id === 'session-expiring' ? 100 : 0;
+});
+```
+
+It applies to what is already on screen, not only to the next open, and the whole manager moves
+with it: `openDialogs`, `foreground`, `isForeground` and `getZIndex`. That second half is not a
+courtesy — `isForeground` decides which dialog answers the dismiss key and which one owns a click
+outside, so a version that moved only the paint order would put the visible dialog behind the one
+that owns Escape.
+
+**The mechanism is not a number, and that is the whole cost of the feature.** The platform paints
+top-layer elements in the order they were added and `z-index` does not apply between them — measured
+in Chromium, a dialog stamped `z-index: 9999` still paints under one shown after it. So the only way
+to move a modal dialog is to `close()` and `showModal()` it again, and three things follow that no
+implementation could avoid:
+
+- **The element's native `close` event fires.** It is queued, so it arrives with `dialog.open`
+  already back to `true` — which is the guard for a listener that has to tell a raise from a real
+  close. The library's own reporting (`onClose`, `modal:close`, `subscribe`) is store-driven and is
+  not involved. It matters most in `umbra/vanilla`, where the `<dialog>` and its listeners are the
+  caller's.
+- **CSS keyed on the element being shown re-runs** — `@starting-style`, a
+  `dialog[open] { animation }`. The library's own entrance is driven by phase, not by `[open]`.
+- **Focus has to be put back**, and only for the dialog that ends up in front: `showModal()` runs
+  the focusing steps every time, and only the topmost modal dialog is not inert, so restoring focus
+  into a dialog that just went under would leave the keyboard somewhere it cannot act.
+
+Since every raise is a real round-trip, the plan is minimal rather than "re-show everything from the
+bottom up". `planRaises` keeps the longest **prefix of the desired order that is a subsequence of
+the current one** — not their common prefix, and the difference is one round-trip: turning `[a, b]`
+into `[b, a]` lifts `a` and nothing else, because `b` is already the lowest and no amount of
+re-showing could make it lower.
+
+**Two limits, stated rather than worked around.** A modal dialog always paints above a non-modal one
+whatever the policy says — that is the platform's rule about the top layer, and a library cannot
+overrule it, so a policy orders modal dialogs against each other and non-modal ones (by `z-index`)
+against each other. And it orders the dialogs of _one manager_: two copies of this library in one
+page have two registries and two independent stacks, with the `modal:open` / `modal:close` document
+events as the only channel between them. The case it does answer is the common one — one app, one
+manager, features that never learned about each other.
+
+**Opt-in, and inert until asked.** With no policy the open order _is_ the stack order, `orderStack`
+falls through to the sort the manager has always done, and `syncStackOrder` returns on its first
+line — so nothing about an app that never calls `prioritize` changes.
+
+`syncStackOrder(shownId?)` is public for one reason: the manager observes _stores_, and a store
+reaching `'opening'` is not a dialog that has been shown. Left to its own clock a reorder would land
+a frame late — one painted frame with the wrong dialog in front. `syncOpenSequence` calls it in the
+same task as the `showModal()` it follows, which is also what lets the manager know the real
+top-layer order instead of guessing it: every show in this library goes through that one seam, so at
+most one dialog can have entered between two calls.
+
 ### Changed — `containFocus` is two focus markers now, not a computed boundary
 
 The first implementation answered `Tab` on the dialog and compared the focused element against the
