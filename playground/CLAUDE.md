@@ -232,6 +232,12 @@ Step 3 is not optional. An example registered in `codeSamples` but not placed on
 invisible — the file still builds, still type-checks, still ships in the bundle, and nobody
 can reach it. Nothing fails; the example simply does not exist for users.
 
+**A step 4 applies whenever the example demonstrates a new library export**: add that export to
+`CATEGORIES` in [api-model.ts](vite-plugins/api-model.ts). `buildModel` throws on an export
+belonging to no category, so `/api` answers **500** — and `yarn check` cannot see it, because the
+route is generated at serve time. `node scripts/smoke-playground.mjs` against a running dev server
+is what catches it; that is the check to run before believing an example is done.
+
 `ExampleCard`'s `modalId` + `tryLabel` render a trigger **inside the source-code viewer**, not
 on the card itself — it lets you fire the example while reading its code. The button on the
 card comes from the example component's own `ExampleLayout` children.

@@ -78,6 +78,8 @@ const CATEGORIES: readonly CategoryDef[] = [
       'ModalInfo',
       'RegisteredModalInfo',
       'UnregisteredModalInfo',
+      'StackPriority',
+      'StackModal',
       'ModalPhase',
       'ModalStoreSnapshot',
       'CloseResult',

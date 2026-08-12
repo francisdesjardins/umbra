@@ -9,6 +9,7 @@ import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.t
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
 import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
 import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
+import stackPrioritySrc from '@/pages/advanced/examples/stack-priority.tsx?raw';
 import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw';
 // The microfrontend demo's own files. Not under `src/`, and that is the point: they are served
 // verbatim from `public/`, so what the viewer shows is byte-for-byte what the browser runs — no
@@ -228,6 +229,7 @@ export const codeSamples: Record<string, string> = {
   'slide-presets': slidePresetsSrc,
   'slide-corner-toast': slideCornerToastSrc,
   'stacked-modals': stackedModalsSrc,
+  'stack-priority': stackPrioritySrc,
   'imperative-service-layer': serviceLayerSrc,
   'imperative-deployment-service': deploymentServiceSrc,
   'cosmic-override': cosmicOverrideSrc,

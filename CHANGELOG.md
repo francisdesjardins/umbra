@@ -71,6 +71,19 @@ manager, features that never learned about each other.
 falls through to the sort the manager has always done, and `syncStackOrder` returns on its first
 line — so nothing about an app that never calls `prioritize` changes.
 
+**The playground demonstrates the defect before the fix** — `/advanced`, under "Stacking, keyboard
+and focus". The warning fires, a deep link raises a panel over it, and the switch is turned on
+_while both are open_: the warning comes to the front and the panel stays exactly where it was. The
+switch is repeated inside both dialogs, and that is the demonstration rather than a convenience —
+a modal dialog swallows every click outside itself, so the only reachable control is one in the
+dialog that happens to be in front, which is the whole complaint.
+
+Adding it turned up a second thing worth recording: `/api` returned **500** until `StackPriority`
+and `StackModal` were added to `CATEGORIES` in `vite-plugins/api-model.ts`. `buildModel` throws on
+an export that belongs to no category, on purpose — an uncategorised one would be unreachable in the
+reference — and `yarn check` cannot see it, because the route is generated at serve time.
+`scripts/smoke-playground.mjs` is what caught it.
+
 `syncStackOrder(shownId?)` is public for one reason: the manager observes _stores_, and a store
 reaching `'opening'` is not a dialog that has been shown. Left to its own clock a reorder would land
 a frame late — one painted frame with the wrong dialog in front. `syncOpenSequence` calls it in the

@@ -17,6 +17,10 @@ import {
 import { MODAL_ID as PANEL_MODAL_ID, MuiPanelExample } from '@/pages/advanced/examples/mui-panel';
 import { ServiceLayerExample } from '@/pages/advanced/examples/service-layer';
 import {
+  WARNING_ID as STACK_PRIORITY_WARNING_ID,
+  StackPriorityExample,
+} from '@/pages/advanced/examples/stack-priority';
+import {
   PANEL_ID as STACK_PANEL_ID,
   StackedModalsExample,
 } from '@/pages/advanced/examples/stacked-modals';
@@ -51,6 +55,14 @@ export const AdvancedPage = () => {
             modalId={STACK_PANEL_ID}
             tryLabel="Start the stack"
             example={<StackedModalsExample />}
+          />
+          <ExampleCard
+            title="Who is in front is a decision, not a race"
+            description="A session warning is up when a deep link raises a panel. The panel's showModal() lands last, so the platform paints it in front and the warning ends up under its backdrop — inert, dimmed, and lost, while the user carries on with the thing the app was interrupting. Nothing threw. dialogManager.prioritize() installs one project-wide rule that says which kind of dialog outranks which; flip the switch while both are open and the warning comes back without the panel closing. Moving a modal dialog means closing and re-showing it, since the top layer paints in the order elements were added and ignores z-index between them."
+            codeKey="stack-priority"
+            modalId={STACK_PRIORITY_WARNING_ID}
+            tryLabel="Session warning fires"
+            example={<StackPriorityExample />}
           />
         </ExampleGrid>
       </ExampleSection>
