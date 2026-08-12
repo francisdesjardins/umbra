@@ -115,6 +115,8 @@ const CATEGORIES: readonly CategoryDef[] = [
       'ModalCloseEventDetail',
       'DialogManagerEvent',
       'DialogManagerSubscriber',
+      'reconcileOpen',
+      'OpenReconciliation',
     ],
   },
   {

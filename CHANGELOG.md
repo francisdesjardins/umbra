@@ -11,6 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `reconcileOpen`, for wrapping this library in a component driven by an `open` prop
+
+`useModal` is imperative and a great deal of component API is a boolean prop, so anyone building a
+`<Panel open={…} />` over this library writes the same reconciliation. It is short, and it is wrong
+in two ways that both ship as visible defects.
+
+**Reconciled, not reacted to.** Comparing the prop against the dialog's real state on every pass is
+what makes the prop authoritative: a dialog opened or closed from anywhere else — the manager, a
+teardown and remount, a restored stack — gets put back, instead of sitting on screen where its call
+site believes it is closed and cannot close it.
+
+**It turns on `phase`, never on `isVisible`.** `isVisible` is `phase !== 'closed'` by design and
+stays true through the exit — what a renderer wants, the opposite of what a driver wants. A dialog
+dismissed by the user reports its close, the call site lowers the prop, and a reconciliation reading
+`isVisible` then closes a dialog that was already leaving, part-way through its animation. It
+presents as a panel that sometimes glides away and sometimes jumps, because a close driven by the
+prop first never reaches the case.
+
+Both rules now live in one exported function instead of in each caller's `useEffect`, with an
+exhaustive table of its eight inputs as the test.
+
 ### Added — `containFocus`, the Tab wrap a non-modal dialog does not get from the browser
 
 `showModal()` makes the rest of the document inert, so a modal dialog is contained for free.

@@ -91,6 +91,12 @@ export type {
 export { applyStyle } from './core/style.js';
 export type { DialogStyle, StyleTarget } from './core/style.js';
 
+// The decision a controlled wrapper has to make on every pass, so nobody has to rediscover that
+// it turns on `phase` and not on `isVisible`. This library is imperative and a great deal of
+// component API is a boolean prop; the crossing between them is one function, and it is here.
+export { reconcileOpen } from './core/reconcile-open.js';
+export type { OpenReconciliation } from './core/reconcile-open.js';
+
 // ── State ────────────────────────────────────────────────────────────────────
 //
 // The reactive cell the library actually runs on: the modal store, the action engine, the
