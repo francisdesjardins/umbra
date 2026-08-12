@@ -82,7 +82,7 @@ test.describe('resolveModalOptions', () => {
   });
 
   test('threads the variant into the placement table', () => {
-    expect(resolveModalOptions({}).placement).toEqual({ host: null, dialog: {} });
+    expect(resolveModalOptions({}).placement).toEqual({ host: null, dialog: {}, backdrop: null });
     expect(resolveModalOptions({ nonModal: true, portal: true }).placement.host).toBeNull();
     // Contained: the dialog needs a host to be positioned against.
     expect(resolveModalOptions({ nonModal: true }).placement.host).not.toBeNull();

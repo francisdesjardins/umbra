@@ -3,14 +3,26 @@ import { dialogPlacement } from '../placement.js';
 
 test.describe('dialogPlacement', () => {
   test('a modal dialog is positioned by the top layer, so it needs neither host nor styles', () => {
-    expect(dialogPlacement()).toEqual({ host: null, dialog: {} });
-    expect(dialogPlacement({ nonModal: false, portal: true })).toEqual({ host: null, dialog: {} });
+    expect(dialogPlacement()).toEqual({ host: null, dialog: {}, backdrop: null });
+    expect(dialogPlacement({ nonModal: false, portal: true })).toEqual({
+      host: null,
+      dialog: {},
+      // The browser draws this one, in the top layer, where nothing can come between it and the
+      // page. A scrim of our own would be a second one, below the dialog it belongs to.
+      backdrop: null,
+    });
   });
 
   test('a portaled non-modal dialog anchors to the viewport', () => {
     expect(dialogPlacement({ nonModal: true, portal: true })).toEqual({
       host: null,
       dialog: { position: 'fixed', inset: 0 },
+      // Fixed like the dialog: a scrim positioned any other way scrolls away from what it covers.
+      backdrop: {
+        position: 'fixed',
+        inset: 0,
+        background: 'var(--dialog-backdrop, rgba(0, 0, 0, 0.7))',
+      },
     });
   });
 
@@ -59,5 +71,30 @@ test.describe('dialogPlacement', () => {
 
     expect(clipped.host).toMatchObject({ overflow: 'clip' });
     expect(plain.host).not.toHaveProperty('overflow');
+  });
+});
+
+test.describe('the scrim a non-modal dialog has to draw itself', () => {
+  test('is positioned the way the dialog it covers is', () => {
+    // The pair is the whole point: a `fixed` scrim under an `absolute` dialog covers the viewport
+    // instead of the region, and an `absolute` one under a `fixed` dialog scrolls away from it.
+    expect(dialogPlacement({ nonModal: true, portal: true }).backdrop).toMatchObject({
+      position: 'fixed',
+    });
+    expect(dialogPlacement({ nonModal: true }).backdrop).toMatchObject({ position: 'absolute' });
+  });
+
+  test('reads the same custom property the native backdrop does', () => {
+    // So a theme moves both, and a non-modal panel is not a different shade from a modal dialog
+    // beside it.
+    for (const options of [{ nonModal: true }, { nonModal: true, portal: true }]) {
+      expect(dialogPlacement(options).backdrop?.background).toContain('--dialog-backdrop');
+    }
+  });
+
+  test('carries no z-index, because the placement is not what decides the stack', () => {
+    // `getZIndex(id)` is the manager's answer and it depends on how many dialogs are open, which a
+    // static table cannot know.
+    expect(dialogPlacement({ nonModal: true }).backdrop).not.toHaveProperty('zIndex');
   });
 });

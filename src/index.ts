@@ -79,6 +79,7 @@ export type { DismissReason } from './core/dismiss-reason.js';
 export { dialogPlacement } from './core/placement.js';
 export type {
   DialogHostStyle,
+  DialogBackdropStyle,
   DialogPlacement,
   DialogPlacementOptions,
   DialogPositionStyle,

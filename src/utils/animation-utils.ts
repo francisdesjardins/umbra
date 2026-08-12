@@ -95,7 +95,7 @@ export function getDialogAnimationStyles<TStyle extends DialogStyle>(
   phase: ModalPhase,
   animation: ModalAnimation<TStyle>,
   customStyle?: TStyle,
-  placement: DialogPlacement = { host: null, dialog: {} }
+  placement: DialogPlacement = { host: null, dialog: {}, backdrop: null }
 ): DialogStyle & Partial<TStyle> {
   const isAnimating = phase === 'open';
   const { entranceDuration, exitDuration, transitionProperty } = resolveAnimation(animation);

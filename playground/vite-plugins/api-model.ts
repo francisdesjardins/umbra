@@ -97,6 +97,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'DialogPlacement',
       'DialogPlacementOptions',
       'DialogHostStyle',
+      'DialogBackdropStyle',
       'DialogPositionStyle',
       'applyStyle',
       'DialogStyle',

@@ -11,6 +11,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Added — `dialogPlacement` answers for the scrim a non-modal dialog draws itself
+
+`show()` gets no `::backdrop`, so a non-modal dialog that wants to block what is behind it has to
+put an element there — and the library, having an opinion about where the dialog goes, had none
+about where that element goes. Every binding would derive the same pair, and the pair is not
+obvious: a `fixed` scrim under an `absolute` dialog covers the viewport instead of the region, and
+an `absolute` one under a `fixed` dialog scrolls away from what it is covering.
+
+`DialogPlacement.backdrop` is the geometry — `fixed` beside a viewport-anchored dialog, `absolute`
+inside the host of a contained one, `null` for a modal one whose backdrop the browser draws in the
+top layer. Its colour reads the same `--dialog-backdrop` the native one does, so a theme moves both
+and a non-modal panel is not a different shade from a modal dialog beside it.
+
+Still nothing rendered: this is a table, like the rest of the module. The `z-index` is deliberately
+absent — the stack position is `getZIndex(id)`'s answer and depends on how many dialogs are open,
+which a static table cannot know — and so is anything about what a click on the scrim means.
+
 ### Added — `parseHotkey`, the way back into `HotkeyDef`
 
 Three functions turned a `HotkeyDef` into text — a label, an `aria-keyshortcuts` value, a match
