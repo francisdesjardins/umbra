@@ -33,6 +33,50 @@ function clickHotkeyButton(dialog: HTMLElement, def: HotkeyDef): void {
 }
 
 /**
+ * Roles a transient overlay announces itself with. Focus inside one of these means the press is
+ * already spoken for — a listbox, a menu or a picker closes on the dismiss key, and that is what
+ * the user asked of it.
+ */
+const POPUP_ROLES = ['listbox', 'menu', 'tree', 'grid', 'dialog']
+  .map((role) => {
+    return `[role="${role}"]`;
+  })
+  .join(',');
+
+/**
+ * Whether something else on the page has already claimed this press.
+ *
+ * **The problem this exists for.** The window-level listener below captures, so it runs before
+ * every other handler in the page — including the one belonging to whatever the user is actually
+ * looking at. A combobox, a select or a date picker opened from inside a non-modal dialog is an
+ * overlay whose own answer to the dismiss key is "close me", and capturing the press first turns
+ * one Escape into "close the whole panel" while the list is still on screen. The user pressed a
+ * key at a popup and lost their work.
+ *
+ * Two declarative signals, and nothing cleverer, because a guess here fails silently in both
+ * directions:
+ *
+ * - **The control says it is expanded.** `aria-expanded="true"` on the press's target or above it
+ *   is how a combobox reports an open list while keeping focus on itself.
+ * - **Focus is inside the overlay.** A picker portals its popup elsewhere in the document and puts
+ *   focus in it, so the target carries no `aria-expanded` at all — what it does carry is one of
+ *   the roles an overlay announces itself with.
+ *
+ * The dialog is excluded from the second test, and so is anything containing it: this dialog is a
+ * `role="dialog"` and every press inside it would otherwise be read as spoken for.
+ */
+function keyIsSpokenFor(dialog: HTMLElement, target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  if (target.closest('[aria-expanded="true"]') !== null) {
+    return true;
+  }
+  const popup = target.closest(POPUP_ROLES);
+  return popup !== null && popup !== dialog && !popup.contains(dialog);
+}
+
+/**
  * Three listeners answer the dismiss key, and all three are plain DOM.
  *
  * Which key dismisses, whether an action has claimed it, and whether the modal is in a state to
@@ -103,6 +147,14 @@ export function attachDialogKeydown(
       if (event.defaultPrevented) {
         return;
       }
+    }
+
+    // A control inside the dialog with an open popup answers this press itself, and neither a
+    // hotkey nor dismissal may take it: Escape at an open list means "close the list", and Enter
+    // there means "take the highlighted option" rather than "confirm". Left un-prevented too, so
+    // the control still gets it.
+    if (keyIsSpokenFor(dialog, event.target)) {
+      return;
     }
 
     // An action's hotkey beats dismissal, and runs through the button so the click path and
@@ -221,6 +273,14 @@ export function attachWindowDismissKey(
     }
     // Only the topmost dialog intercepts the dismiss key — stand down if another dialog is above us.
     if (!manager.lookup().isForeground(modalId)) {
+      return;
+    }
+
+    // Nor over a popup that answers this key itself. Capturing at the window means running before
+    // every other handler in the page, so without this a single Escape at an open combobox or
+    // picker closes the panel around it instead of the list the user was looking at.
+    const openDialog = getDialog();
+    if (openDialog !== null && keyIsSpokenFor(openDialog, event.target)) {
       return;
     }
 

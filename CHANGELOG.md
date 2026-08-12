@@ -11,6 +11,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-12
 
+### Fixed — a dialog took the dismiss key from the popup the user was actually looking at
+
+Open a combobox, a select or a date picker inside a dialog and press Escape: the list should
+close. It did not — the dialog did, list still on screen, and whatever the user had typed went with
+it. Enter had the same shape: it fired an action bound to it instead of taking the highlighted
+option.
+
+Both listeners were reaching the press before the control could. The window-level one a non-modal
+dialog installs is in the **capture** phase, deliberately, so the key works wherever focus is — and
+capture means running before every other handler in the page. The dialog-level one is the reason
+the same thing happened to a control that keeps focus on itself, since its press bubbles straight
+up to the dialog.
+
+Neither now claims a press that something inside has already spoken for, read from two declarative
+signals rather than guessed:
+
+- `aria-expanded="true"` on the target or above it, which is how a combobox reports an open list
+  while keeping focus.
+- Focus inside an element carrying a popup role — `listbox`, `menu`, `tree`, `grid` or `dialog` —
+  which is how a picker that portals its popup elsewhere and moves focus into it can be recognised
+  at all. The dialog itself is excluded, and so is anything containing it, or every press inside
+  would read as spoken for.
+
+The second rule is a convention rather than a specification: the roles are standard, treating focus
+inside one of them as a claim on the key is this library's reading. It errs toward leaving the key
+alone, which is the safer direction — a dismissal that does not happen is one press away from
+happening, and a dismissal that should not have happened has already taken the dialog down.
+
 ### Added — `reconcileOpen`, for wrapping this library in a component driven by an `open` prop
 
 `useModal` is imperative and a great deal of component API is a boolean prop, so anyone building a
