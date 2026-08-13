@@ -251,6 +251,7 @@ export function useModal<TData = void, TReason extends string = string>(
       exitDuration,
       dismissKey,
       dismissWhilePreparing,
+      onDismissRequest: options.onDismissRequest,
       containFocus,
       dismissOnClickOutside,
     });

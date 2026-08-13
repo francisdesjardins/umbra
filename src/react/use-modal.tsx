@@ -65,6 +65,7 @@ export function useModal<TData = void, TReason extends string = string>(
     prepare,
     onOpenRequest,
     onClose,
+    onDismissRequest,
     ariaLabel,
     ariaLabelledBy,
     ariaDescribedBy,
@@ -159,6 +160,7 @@ export function useModal<TData = void, TReason extends string = string>(
       exitDuration,
       dismissKey,
       dismissWhilePreparing,
+      onDismissRequest,
       containFocus,
       dismissOnClickOutside,
     });

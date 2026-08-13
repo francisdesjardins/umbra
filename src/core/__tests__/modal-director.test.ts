@@ -26,6 +26,7 @@ const BASE: ModalLifecyclePass = {
   dismissKey: 'Escape',
   containFocus: false,
   dismissWhilePreparing: true,
+  onDismissRequest: undefined,
   dismissOnClickOutside: false,
 };
 
@@ -108,6 +109,9 @@ test.describe('what each step reads', () => {
     expect(rebuilds('focus.sync', { phase: 'closing' })).toBe(true);
     for (const changed of [
       { onKeyDown: () => {} },
+      // The same hazard from a second direction: `onDismissRequest` is the option a *controlled*
+      // surface passes, and a controlled surface re-renders on its owner's state.
+      { onDismissRequest: () => {} },
       { isPreparing: true },
       { dismissKey: 'Enter' },
       { containFocus: true },
@@ -145,6 +149,9 @@ test.describe('what each step reads', () => {
     }
     expect(rebuilds('attachDialogKeydown', { onKeyDown: () => {} })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { dismissKey: false })).toBe(true);
+    // The listeners are what call it, so a new handler has to reach them — an owner whose
+    // `onDismissRequest` closes over fresh state would otherwise be answered by a stale one.
+    expect(rebuilds('attachDialogKeydown', { onDismissRequest: () => {} })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { containFocus: true })).toBe(false);
   });
 
@@ -191,6 +198,9 @@ test.describe('what each step reads', () => {
       dismissKey: 'Enter',
       containFocus: true,
       dismissWhilePreparing: false,
+      onDismissRequest: () => {
+        return true;
+      },
       dismissOnClickOutside: true,
     };
     const carried = new Set<unknown>(Object.values(distinct));

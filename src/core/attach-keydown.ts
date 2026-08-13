@@ -7,6 +7,7 @@ import { DISMISS_REASON } from './dismiss-reason.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
+import type { ModalStore } from './modal-store.js';
 
 const log = createLogger('modal:keydown');
 
@@ -101,6 +102,26 @@ const actionOwnsDismissKey = (engine: ActionGate, dismissKey: HotkeyDef | false)
 };
 
 /**
+ * The last step of the dismiss key, and the only one a controlled surface changes.
+ *
+ * Everything before this — which key, whose popup, whose foreground, which gate — is the same
+ * question with the same answer whether the dialog owns its own closing or a prop does. So this
+ * is where the two part, in one place rather than in each listener: `store.close` by default, a
+ * report to the owner when one asked for it.
+ *
+ * Returns whether the press was taken, which only the window listener acts on: it captures, so a
+ * press it swallows is a press the page never sees, and an owner that declined has nothing to
+ * show for it.
+ */
+function answerDismissKey(store: ModalStore, request: (() => boolean | void) | undefined): boolean {
+  if (!request) {
+    store.close(DISMISS_REASON);
+    return true;
+  }
+  return request() !== false;
+}
+
+/**
  * Fire the action whose hotkey this is by clicking its button, so a hotkey runs exactly the
  * path a real click does — loading state, `disabled` and any `onClick` veto all included.
  */
@@ -129,7 +150,8 @@ export function attachDialogKeydown(
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, modalId, phase } = ctx;
-  const { isPreparing, onKeyDown, dismissKey, engine, dismissWhilePreparing } = options;
+  const { isPreparing, onKeyDown, dismissKey, engine, dismissWhilePreparing, onDismissRequest } =
+    options;
 
   const dialog = getDialog();
   if (!dialog || phase === 'closed') {
@@ -188,7 +210,7 @@ export function attachDialogKeydown(
       }
 
       log('Dismiss key', { id: modalId, key: dismissKey });
-      store.close(DISMISS_REASON);
+      answerDismissKey(store, onDismissRequest);
     }
   };
 
@@ -212,7 +234,7 @@ export function attachDialogCancel(
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, modalId, phase } = ctx;
-  const { isPreparing, dismissKey, engine, dismissWhilePreparing } = options;
+  const { isPreparing, dismissKey, engine, dismissWhilePreparing, onDismissRequest } = options;
 
   const dialog = getDialog();
   if (!dialog || phase === 'closed') {
@@ -246,7 +268,7 @@ export function attachDialogCancel(
     }
 
     log('Dismiss key (native cancel)', { id: modalId });
-    store.close(DISMISS_REASON);
+    answerDismissKey(store, onDismissRequest);
   };
 
   dialog.addEventListener('cancel', handleCancel);
@@ -266,7 +288,8 @@ export function attachWindowDismissKey(
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, modalId, phase, manager } = ctx;
-  const { isPreparing, dismissKey, engine, nonModal, dismissWhilePreparing } = options;
+  const { isPreparing, dismissKey, engine, nonModal, dismissWhilePreparing, onDismissRequest } =
+    options;
 
   if (!nonModal || phase === 'closed' || dismissKey === false) {
     return undefined;
@@ -302,15 +325,13 @@ export function attachWindowDismissKey(
       return;
     }
 
-    // From here the panel acts, so the key is ours — no underlying listener should react a
-    // second time to the press that dismissed it.
-    event.preventDefault();
-    event.stopPropagation();
-
     if (actionOwnsDismissKey(engine, dismissKey)) {
-      // An action declared this key as its hotkey.
-      // The window listener's stopPropagation() prevents the dialog-level keydown
-      // from firing, so we must dispatch the action by clicking the button directly.
+      // An action declared this key as its hotkey. The panel acts, so the key is ours — no
+      // underlying listener should react a second time to the press that fired it. And because
+      // stopping propagation here also stops the dialog-level keydown, the action has to be
+      // dispatched by clicking its button directly.
+      event.preventDefault();
+      event.stopPropagation();
       const dialog = getDialog();
       if (dialog) {
         clickHotkeyButton(dialog, dismissKey);
@@ -319,7 +340,13 @@ export function attachWindowDismissKey(
     }
 
     log('Dismiss key (window capture)', { id: modalId, key: dismissKey });
-    store.close(DISMISS_REASON);
+    if (!answerDismissKey(store, onDismissRequest)) {
+      // The owner declined, so nothing happened and the press is not ours to swallow — the same
+      // rule as the gate above, for a condition only the caller could have known.
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   window.addEventListener('keydown', handleWindowKeyDown, { capture: true });

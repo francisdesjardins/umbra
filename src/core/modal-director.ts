@@ -127,6 +127,7 @@ export type ModalLifecyclePass = {
   readonly exitDuration: number;
   readonly dismissKey: HotkeyDef | false;
   readonly dismissWhilePreparing: boolean;
+  readonly onDismissRequest: (() => boolean | void) | undefined;
   readonly containFocus: boolean;
   readonly dismissOnClickOutside: boolean;
 };
@@ -169,6 +170,7 @@ const keydownOptions = (pass: ModalLifecyclePass, engine: ActionGate): DialogKey
     engine,
     nonModal: pass.nonModal,
     dismissWhilePreparing: pass.dismissWhilePreparing,
+    onDismissRequest: pass.onDismissRequest,
   };
 };
 
@@ -180,6 +182,7 @@ const keydownInputs = (pass: ModalLifecyclePass): StepInputs => {
     pass.onKeyDown,
     pass.dismissKey,
     pass.dismissWhilePreparing,
+    pass.onDismissRequest,
     pass.nonModal,
   ];
 };

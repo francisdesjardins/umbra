@@ -284,6 +284,42 @@ export type UseModalBaseOptions<
    */
   readonly dismissKey?: HotkeyDef | false | undefined;
   /**
+   * Hand the dismiss key to the owner instead of closing on it.
+   *
+   * **The dialog stops dismissing itself and starts reporting.** Every gate above this point is
+   * unchanged and still the library's: which key, whether an action claimed it, whether a popup
+   * inside the dialog answers it first, whether a `prepare` or a running action forbids it, and —
+   * for a non-modal panel — which dialog is actually in front. All of that is decided the same
+   * way it is without this option. What changes is the last step: `store.close(DISMISS_REASON)`
+   * becomes this call, and the modal leaves the screen when the owner says so.
+   *
+   * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself: the
+   * boolean upstream would still be `true`, and the next render would put the dialog back. Its
+   * only correct answer to the key is to tell the owner, which is why every controlled wrapper
+   * ends up writing its own listener — and writing it three times, differently, because the
+   * non-modal case cannot be heard from the dialog at all. This is that listener, already built.
+   *
+   * **Return `false` to decline the press.** For a non-modal panel the window listener captures,
+   * so a press it takes is a press no one else sees; declining leaves it un-prevented and still
+   * travelling. Anything else — including returning nothing — means the request was taken. Use it
+   * for a condition only the caller can know, such as another framework's modal being on top.
+   *
+   * @example
+   * ```ts
+   * useModal({
+   *   id: 'filters',
+   *   nonModal: true,
+   *   onDismissRequest: () => {
+   *     onClose();
+   *   },
+   *   render: () => {
+   *     return <Filters />;
+   *   },
+   * });
+   * ```
+   */
+  readonly onDismissRequest?: (() => boolean | void) | undefined;
+  /**
    * Whether the dismiss key and backdrop click can close the modal while `prepare` is executing.
    * @default true
    */

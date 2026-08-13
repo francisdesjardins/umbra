@@ -206,6 +206,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         engine,
         nonModal: resolved.isNonModal,
         dismissWhilePreparing: resolved.dismissWhilePreparing,
+        onDismissRequest: options.onDismissRequest,
       };
 
       detachments = [
