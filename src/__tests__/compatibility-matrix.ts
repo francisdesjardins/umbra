@@ -686,7 +686,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'nothing in the repo still needs TypeScript 6',
     state: 'partial',
-    why: 'The linter is `oxlint --type-aware`, whose type-aware half runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, which uses the previous shape of the compiler API — TS 7 does ship one (`typescript/unstable/sync`). The playground’s `/api` page is built on typedoc’s JSON model, so replacing it is a change of its own.',
+    why: 'The linter runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, whose two remaining jobs are `docs:check` and the JSON model behind the playground’s `/api` page — the HTML half is gone. TS 7 ships an API (`typescript/unstable/sync`) and it is **most of the way there**: exports, doc comments, `@example` tags, `typeToString` and `emitter.printNode` all work, and a lazy declaration node inflates through `resolve()`. Three measured blockers remain, and the middle one is the surprise: the resolved node exposes **no child traversal** (`children` is `undefined`, and no `forEachChild` is exported), so a syntax-level check like `notExported` cannot be written; walking the resolved _type graph_ instead is semantically the wrong question — it reports **0** findings against typedoc’s 10 allowances, because an alias resolves away; and the server **panics** rather than throwing on an unsupported checker call, so preconditions must be guarded rather than probed. So the `/api` model is the nearer half of this, not the validator.',
   },
 ];
 

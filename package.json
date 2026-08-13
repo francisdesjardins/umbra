@@ -80,7 +80,6 @@
     "lint:fix": "oxlint --type-aware --fix",
     "check": "yarn type-check && yarn lint && yarn format:check && yarn docs:check && yarn docs:examples",
     "build:moons": "node scripts/build-moons.mjs",
-    "docs:api": "typedoc --options typedoc.json",
     "docs:examples": "node scripts/check-examples.mjs",
     "docs:examples:fix": "node scripts/check-examples.mjs --fix",
     "docs:check": "typedoc --options typedoc.json --emit none",

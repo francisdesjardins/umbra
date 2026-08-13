@@ -11,6 +11,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Tooling — typedoc's rendering half deleted, and the TS 7 replacement scouted rather than shipped
+
+**`yarn docs:api` is gone, and so is typedoc's whole HTML output.** It wrote `docs/api`, which is
+referenced by nothing in the repository, runs in no CI job, and is published nowhere — a script nobody
+ran producing an artifact nobody read. `typedoc.json` is now a validation-and-model config, and says so.
+
+That leaves typedoc two jobs, which are the only reason `typescript@6.0.3` still exists: `docs:check`'s
+two validations, and the JSON model behind the playground's `/api` page. **The attempt to replace them
+on TS 7's own API is recorded here because it half-worked, and knowing which half saves the next
+attempt.**
+
+What works, measured against this library's real surface: `typescript/unstable/sync` opens the project,
+`getExportsOfModule` returns all 92 exports across the four entry points, aliases resolve through
+`getAliasedSymbol` so a re-export carries the doc a reader sees (54 of 55 root exports documented, which
+matches the claim that only `Key`'s constants are not), `getJsDocTagsOfSymbol` returns the `@example`
+blocks intact, `typeToString` renders signatures, and `emitter.printNode` prints a declaration
+verbatim. A declaration handed back by the checker is a **lazy node** over a byte buffer with nothing on
+it but `resolve()`, which inflates it — that one call unlocks ranges and printing.
+
+**Three blockers remain, and the middle one is the surprise.**
+
+- **The resolved node exposes no child traversal.** `children` is `undefined` and no `forEachChild` is
+  exported, so a syntax-level check — which is what `notExported` is — cannot be written.
+- **Walking the resolved type graph instead answers the wrong question.** It reports **0** findings
+  against typedoc's 10 allowances, because an alias resolves away: `BaseRenderContext` simply becomes
+  `ModalRenderArgs`. A `notExported` built that way is a no-op that reads as a clean codebase.
+- **The server panics rather than throwing.** `getTypeArguments` on a non-reference type takes the
+  process down with a Go stack trace, so preconditions must be guarded — a `try/catch` cannot save a
+  session whose server is already gone.
+
+A validator was written and **not shipped**, because its `notExported` half was seen not to fire:
+removing each of the eleven known allowances in turn produced no finding, eleven times. A gate that
+cannot be seen to fail keeps nothing, and this repo has spent the week finding out what that costs.
+
+So the useful correction to the earlier plan is that **the `/api` model is the nearer half of this, not
+the validator** — the printing and extraction it needs are the parts that work. The compatibility
+matrix's `~ nothing in the repo still needs TypeScript 6` cell carries all of it.
+
 ### Docs — the agent files put on a budget, and the routing rule that makes it payable
 
 The four `CLAUDE.md` files had reached **15 328 words**, by growing a little at a time with each
