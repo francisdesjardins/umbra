@@ -3,9 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 import { UmbraMoon } from './UmbraMoon';
 
 /**
- * The playground's easter egg: Umbra's moon slides in from an edge, peeks for a couple of
- * minutes with the occasional giggle, waves, and slides back out — returning every few minutes
- * from the other edge.
+ * The playground's easter egg: Umbra's moon slides in from the right, peeks for a couple of
+ * minutes with the occasional giggle, waves, and slides back out — returning every few minutes at
+ * a different height.
+ *
+ * **The right edge, and only the right.** Never the bottom: a mascot entering there crosses the
+ * reading column and lands over content. Never the left either, and that one is not symmetry —
+ * the sidebar owns the left edge above 900px, so a moon peeking in from it either covers the
+ * navigation or hides behind it, and both are worse than the same joke told from the other side.
+ * Height is what varies between visits instead.
  *
  * It is **shy**: bring the pointer near and it ducks back out of sight, then comes back later.
  * That is the joke, and it is also why the mascot can never be in your way — reaching for
@@ -19,11 +25,10 @@ import { UmbraMoon } from './UmbraMoon';
  * like one family.
  */
 
-type Side = 'right' | 'bottom';
 type Phase = 'peek' | 'shy' | 'eclipse';
 
 type Config = {
-  readonly side: Side;
+  /** Where it rests vertically, in px from the top of the viewport. */
   readonly offset: number;
   readonly key: number;
 };
@@ -49,13 +54,10 @@ const SHY_RADIUS = 45;
 const SETTLE_MS = 2200;
 
 /** How much of the moon clears the edge it leans against. */
-const VISIBILITY_RATIO: Readonly<Record<Side, number>> = { right: 0.7, bottom: 0.8 };
+const VISIBILITY_RATIO = 0.7;
 
 /** When each giggle beat fires. Generated into keyframes below rather than written ten times. */
 const GIGGLE_AT = [10_000, 21_000, 33_000, 45_000, 57_000, 69_000, 81_000, 93_000, 107_000];
-
-/** Width of the persistent sidebar, which the mascot must never sit on top of. */
-const SIDEBAR_PX = 260;
 
 const pct = (ms: number) => {
   return `${((ms / ANIM_MS) * 100).toFixed(3)}%`;
@@ -74,26 +76,18 @@ const responsiveSize = (viewportWidth: number) => {
   return 180;
 };
 
-const computeOffset = (side: Side, size: number) => {
-  if (side === 'right') {
-    return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
-  }
-  // Along the bottom, start past the sidebar — otherwise it lands on the navigation and
-  // swallows clicks meant for it. Below the sidebar's breakpoint there is nothing to avoid.
-  const from = window.innerWidth > 900 ? SIDEBAR_PX : 20;
-  return from + Math.random() * Math.max(1, window.innerWidth - from - size * 1.2);
+/**
+ * Where it comes to rest, vertically — the only thing that changes between visits.
+ *
+ * Bounded away from both ends of the viewport so it never arrives clipped by an edge it is not
+ * leaning against, which reads as a layout bug rather than a mascot.
+ */
+const computeOffset = (size: number) => {
+  return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
 };
 
 const makeConfig = (prev: Config | undefined, size: number): Config => {
-  const sides: readonly Side[] = ['right', 'bottom'];
-  // Never the same edge twice running — the reappearance should feel like a new visit.
-  const pool = prev
-    ? sides.filter((s) => {
-        return s !== prev.side;
-      })
-    : sides;
-  const side = pool[Math.floor(Math.random() * pool.length)] ?? 'bottom';
-  return { side, offset: computeOffset(side, size), key: (prev?.key ?? 0) + 1 };
+  return { offset: computeOffset(size), key: (prev?.key ?? 0) + 1 };
 };
 
 /** Shortest distance from a point to a rectangle; 0 when the point is inside it. */
@@ -132,8 +126,8 @@ export const PeekingMoon = () => {
 
   /**
    * @param soon - after a startled exit, not a natural one. Being scared off and then staying
-   *   away for four minutes reads as broken rather than shy; it should peek back from the other
-   *   edge while you still remember chasing it.
+   *   away for four minutes reads as broken rather than shy; it should peek back at a new height
+   *   while you still remember chasing it.
    */
   const scheduleNext = (prev?: Config, soon = false) => {
     if (dismissedRef.current) {
@@ -162,7 +156,7 @@ export const PeekingMoon = () => {
       sizeRef.current = next;
       setSize(next);
       setConfig((prev) => {
-        return prev ? { ...prev, offset: computeOffset(prev.side, next) } : prev;
+        return prev ? { ...prev, offset: computeOffset(next) } : prev;
       });
     };
 
@@ -207,18 +201,17 @@ export const PeekingMoon = () => {
     return null;
   }
 
-  const { side, offset, key } = config;
-  const visible = Math.round(size * VISIBILITY_RATIO[side]);
+  const { offset, key } = config;
+  const visible = Math.round(size * VISIBILITY_RATIO);
   const hidden = size - visible;
 
   const animName = `um-${phase}-${key.toString()}`;
 
-  const tilt = side === 'right' ? ' rotate(-18deg)' : '';
+  /** Leaning into the page, so the face looks at the content rather than off its own edge. */
+  const tilt = ' rotate(-18deg)';
 
   const off = (px: number) => {
-    return side === 'right'
-      ? `translateX(${px.toString()}px)${tilt}`
-      : `translateY(${px.toString()}px)${tilt}`;
+    return `translateX(${px.toString()}px)${tilt}`;
   };
 
   // Generous on purpose. The artwork is painted well past its own box — the glow is a circle of
@@ -228,7 +221,7 @@ export const PeekingMoon = () => {
   const tHide = off(size * 1.6);
   const tPeek = off(hidden);
 
-  const position = side === 'right' ? { right: 0, top: offset } : { bottom: 0, left: offset };
+  const position = { right: 0, top: offset };
 
   // Alternate the giggle direction per visit so it never looks looped.
   const sway = key % 2 === 0 ? 1 : -1;
@@ -322,8 +315,8 @@ export const PeekingMoon = () => {
         if (phase === 'eclipse') {
           setGone(true);
         } else {
-          // Either way it comes back, and `makeConfig` drops the edge it just used — so a
-          // startled moon always reappears on the opposite side.
+          // Either way it comes back, and `makeConfig` draws a fresh height — so a startled moon
+          // returns somewhere else down the edge rather than exactly where you reached for it.
           scheduleNext(config, phase === 'shy');
         }
       }}

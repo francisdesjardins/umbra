@@ -123,7 +123,7 @@ export const HomePage = () => {
           }}
         >
           <Box sx={{ width: '78%', aspectRatio: '1' }}>
-            <UmbraMoon isDark={isDark} />
+            <UmbraMoon isDark={isDark} breathing />
           </Box>
         </Box>
 
