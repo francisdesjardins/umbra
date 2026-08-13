@@ -40,6 +40,7 @@ import {
   DanglingLabelHarness,
   LateTitleHarness,
   OutletLabelHarness,
+  VolatileKeyDownHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -763,6 +764,40 @@ test.describe('focus survives a failed action', () => {
 
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('retry-attempts')).toHaveText('2');
+  });
+
+  test('an option changing identity mid-action does not cost the restore', async ({
+    mount,
+    page,
+  }) => {
+    // **The gate on the director's granularity.** The focus step's attachment is what remembers
+    // that an action is running; rebuild it while one does and the settle goes unrecognised. A
+    // director keyed on the union of every step's inputs would do exactly that here, because
+    // `onKeyDown` is an inline arrow and an action starting is itself a render. See
+    // `core/modal-director.ts`.
+    await mount(<VolatileKeyDownHarness />);
+    await page.getByRole('button', { name: 'Open Volatile' }).click();
+    await expect(page.getByTestId('volatile-is-visible')).toHaveText('open');
+
+    const save = page.getByTestId('volatile-save');
+    await expect(save).toBeFocused();
+    await save.click();
+    // The action's own completion, not its busy state: a 20ms action can settle between two polls
+    // and `data-loading` is never observed — which is a flake in the test rather than a finding.
+    await expect(page.getByTestId('volatile-settled')).toHaveText('1');
+    // …and it re-rendered while it ran, which is what hands `useModal` a new `onKeyDown`.
+    await expect(page.getByTestId('volatile-renders')).toHaveText('1');
+
+    // **On the button, not merely inside the dialog** — and that is the whole discrimination. The
+    // broken variant leaves focus on the `<dialog>` itself, which a `contains` check accepts. The
+    // restore is deferred a frame on purpose, so this polls rather than reads once.
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          return document.activeElement?.getAttribute('data-testid') ?? null;
+        });
+      }, 'focus did not return to the button that ran the action')
+      .toBe('volatile-save');
   });
 });
 
