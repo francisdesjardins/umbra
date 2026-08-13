@@ -89,11 +89,11 @@ folders lie: `useSlideModal` was exported from `./solid` for a week from inside 
 template hooks are built _on_ `useModal`, not peers of it, and the framework-free half of them
 already lives in `src/templates/`.
 
-React's effects are **not** split into per-concern hook files. Their whole content is a dependency
-array, and a `react/hooks/` folder holding `use-click-outside.ts` reads as a feature list that
-Solid is missing — which is exactly how it was read. Both bindings now wire the same `attach*`
-functions inline in their own `use-modal`, in the same order, and the diff between them is
-scheduling.
+React's effects are **not** split into per-concern hook files. A `react/hooks/` folder holding
+`use-click-outside.ts` reads as a feature list that Solid is missing — which is exactly how it was
+read. Both hook bindings run the whole lifecycle through **one** deps-free call into
+[core/modal-director.ts](core/modal-director.ts), so the order is not theirs to write and the diff
+between them is scheduling.
 
 **A test lives next to what it tests, whatever framework its harness uses.** `apply-style.ct.tsx`
 tests a core function through a React harness and belongs in `core/__tests__/`; so do the manager's
@@ -118,8 +118,8 @@ The short list, and it is the measure of whether the core is doing its job. A bi
 
 1. builds a `<dialog>` element and puts the shared attributes on it (`core/dialog-props.ts`),
 2. subscribes to `createModalStore` and `createActionEngine` the way its framework subscribes,
-3. runs the `attach*` functions below from whatever it calls an effect, tearing down with
-   whatever it calls a cleanup,
+3. calls `director.sync(pass)` from whatever it calls an effect and `director.destroy()` from
+   whatever it calls a cleanup — the `attach*` functions and their order are the director's,
 4. writes the computed style (`getDialogAnimationStyles`) onto the element,
 5. calls `render` inside `engine.beginRender()` / `engine.endRender()`,
 6. registers with the manager and unregisters on teardown.
@@ -214,8 +214,9 @@ belongs here is only which file to open.
   [actions/types.ts](actions/types.ts).
 
 **The DOM wiring is `attach*` functions, not hooks** — `(ctx: ModalDomContext, options)`, returning a
-teardown (or `undefined` when nothing was attached). React calls them from `useEffect`, Solid from
-`createEffect` + `onCleanup`, in the same order:
+teardown (or `undefined` when nothing was attached). **Who calls them, in what order, and on which
+pass is [core/modal-director.ts](core/modal-director.ts)'s**, whose JSDoc is where that reasoning
+lives — including why each step declares its own inputs rather than sharing one key:
 
 - `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) —
   the native lifecycle, driven by phase, with a `finalized` flag guarding the ESC cancel race
@@ -225,7 +226,8 @@ teardown (or `undefined` when nothing was attached). React calls them from `useE
 - `attachFocusContainment` ([core/attach-focus-containment.ts](core/attach-focus-containment.ts)) —
   the Tab wrap `show()` does not give a dialog, opt-in through `containFocus`
 - `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator, because
-  where the opening focus landed has to outlive one attachment
+  where the opening focus landed has to outlive one attachment. Owned by the director; no binding
+  builds one
 - `createActionFactory` ([core/action-factory.ts](core/action-factory.ts))
 - `dialogAttributes` / `setDialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE`
   ([core/dialog-props.ts](core/dialog-props.ts))
@@ -525,7 +527,7 @@ expect more of that shape wherever code was written while it was silently off.
 
 ## Code Organization
 
-1. Side effects → an `attach*` function in `core/` (framework-free, returns its teardown), called inline from each binding's `use-modal` — `useEffect` for React, `createEffect` + `onCleanup` for Solid. A new one goes in the core even if only one binding needs it today — the second binding is the reason the first is written that way
+1. Side effects → an `attach*` function in `core/` (framework-free, returns its teardown), plus a step in `MODAL_LIFECYCLE_STEPS` saying where in the sequence it runs and what it reads. Adding it to a binding instead is the mistake the director exists to prevent, and `wiring-order.test.ts` fails on it. A new one goes in the core even if only one binding needs it today — the second binding is the reason the first is written that way
 2. Pure functions → `utils/`
 3. Compiler ref complaints → inline the handler
 4. State → the `store/` module ([store/CLAUDE.md](store/CLAUDE.md)) — hand-rolled reactive cell, zero runtime deps

@@ -11,6 +11,76 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Changed — the order the lifecycle is wired in is a decision the core makes now
+
+**The core shipped decisions and not direction.** `canDismiss`, `orderStack`, `chooseActionRunner`,
+`shouldDismissOnBackdropClick` — each named, documented, tested. The _sequence_ those decisions are
+asked in was the one thing written three times and asserted nowhere: it existed only as the order of
+statements in three binding files. That is the same shape as the WebKit focus bug one layer down, an
+ordering nobody named and nothing could test.
+
+It is [core/modal-director.ts](src/core/modal-director.ts) now. Both hook bindings run the whole
+lifecycle through **one deps-free call** and one teardown; `MODAL_LIFECYCLE_SEQUENCE` is _derived_
+from the table that runs the steps, so there is no second statement of the order to drift from the
+first. React's `useModal` lost six dependency arrays and the focus coordinator it used to build.
+
+**Arrived at through two corrections, and both are the reason it is worth reading.**
+
+The first: a single ordered pass keyed on `[phase, isPreparing, …options]` would capture `prepare` at
+the last key change and hold a stale closure. React's opening effect has no dependency array
+deliberately, and the comment saying why was already in the file.
+
+The second killed the two-tier design that replaced it, and is the sharper one. `focus.sync` carries
+state across its own attachment — `wasRunning` is how it recognises an action settling and hands
+focus back to the button that ran it. Any shared key contains `onKeyDown`, which callers pass as an
+inline arrow, and an action starting _is_ a render: the key moves mid-action, the step is rebuilt
+with `wasRunning` back to `false`, and focus is never restored. **So the granularity in React's six
+dependency arrays was not redundant** — one of the distinctions was load-bearing, and a measurement
+that counted the arrays concluded the opposite.
+
+The design that survives both is vanilla's `attachedFor` generalised from one key to **one key per
+step**: React's dependency array, made framework-free. Each step declares what it reads, and only
+the steps whose own inputs moved are rebuilt. Granularity is a property of the core now rather than
+something each binding remembers.
+
+**Both halves of that are gated, and both were seen to fail.** `modal-director.test.ts` asserts
+`focus.sync` reads the phase and nothing else, and a component test drives a modal whose `onKeyDown`
+is an inline arrow through an action that re-renders while it runs. Adding `onKeyDown` to that one
+step's inputs fails the unit test and fails the component test on **all three engines**, with focus
+left on the `<dialog>` — where a `contains` check would have accepted it, which is why the assertion
+names the button.
+
+`umbra/vanilla` stays on its own `sync()`. Adopting the director there moves `syncOpenSequence` from
+last to first, which is a change measured green on three engines and deliberately not taken: "no
+test noticed" is enough to close a contract question between two bindings that owe each other a
+mirror, and not enough to move shipped behaviour that owes nobody one. `wiring-order.test.ts` records
+the divergence and now asserts the thing that matters instead — that no hook binding wires a step
+behind the director's back.
+
+### Fixed — `chooseActionRunner`, and two conventions that were held by memory
+
+Three things the director's groundwork turned up, each shipped on its own.
+
+**The three-read narrowing that decides who ran an action was a `??` chain inside a scheduling
+function.** `captureActionRunner(...) ?? lastActivated ?? lastFocusInside` _is_ the policy — who has
+focus, else who was pressed, else who had focus last — and a wrong truthy answer from the first read
+silently disables the other two, which is exactly what the WebKit bug was. It is
+`chooseActionRunner` in `focus-policy.ts` now, with the ordering unit-tested directly; the file came
+off the coverage exclude list with it.
+
+**Per-test manager isolation was three different habits and no gate.** React harnesses get a
+`DialogManagerProvider` from `playwright/index.tsx`; Solid harnesses wrap themselves; vanilla ones
+pass `manager: createDialogManager()`. A new Solid or vanilla harness that forgets does not fail — it
+registers with the module-level singleton and leaks across the run. `harness-isolation.test.ts` is
+the grep that holds it. Mutation-checking it found a hole in the gate itself: the first version was
+satisfied by a _comment_ mentioning `createDialogManager`, so it strips comments before judging.
+
+**Solid asked the lifecycle in a different order from React**, settling focus after focus containment
+and click-outside where React settles it before. Nothing can observe either order — both bindings
+flush their effects in declaration order within one task — but the hook pair is the same modal
+written twice, and an unexplained difference in _when_ it asks is a defect against that contract
+whether or not anything can see it.
+
 ### CI — one component job per engine
 
 The component suite is the pipeline's long pole: **951 tests on one worker, 7 min 52 s**, while every
