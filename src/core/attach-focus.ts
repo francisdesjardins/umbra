@@ -2,6 +2,7 @@ import { isOwnEventTarget } from '../utils/dialog-scope.js';
 import {
   activeWithin,
   captureActionRunner,
+  chooseActionRunner,
   preferredRestoreTarget,
   reclaimFocus,
   restoreFocus,
@@ -140,7 +141,11 @@ export function createFocusCoordinator(
             // one that survives WebKit refusing to. `lastFocusInside` is the floor for an action
             // that nothing pressed — a hotkey on a control already focused, or a programmatic
             // start. See both declarations.
-            runner = captureActionRunner(getDialog()) ?? lastActivated ?? lastFocusInside;
+            runner = chooseActionRunner(
+              captureActionRunner(getDialog()),
+              lastActivated,
+              lastFocusInside
+            );
           }
           wasRunning = true;
           return;

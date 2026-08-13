@@ -132,3 +132,36 @@ export function preferredRestoreTarget(
 ): HTMLElement | null {
   return runner?.isConnected === true ? runner : openingFocus;
 }
+
+/**
+ * Who ran the action, chosen from the candidates in order of how specific each answer is.
+ *
+ * **This ordering is the policy, and it lives here because it is a decision.** It spent its life
+ * as a `??` chain inside the scheduler, which is why the bug it now prevents was invisible: a
+ * candidate that is wrong but *truthy* silently disables every fallback behind it, and no test
+ * could see the ordering because the ordering was not a thing. It took an engine that disagrees —
+ * WebKit, which does not focus a `<button>` on click — to surface it as a failure.
+ *
+ * Callers pass, in order: who holds focus, who was last activated, who held focus last. The first
+ * two can each be absent on a given engine and the third is the floor.
+ *
+ * **A disconnected candidate is skipped rather than accepted**, which is the second thing the `??`
+ * chain got wrong. `preferredRestoreTarget` checked `isConnected` on the winner only, so a runner
+ * whose button had been re-rendered away fell straight through to the opening focus — past a
+ * live candidate that was sitting right behind it.
+ *
+ * Generic over `{ isConnected }` rather than `HTMLElement` so the ordering is a unit test rather
+ * than a browser one; the DOM type in the signature was never a DOM dependency.
+ *
+ * @internal
+ */
+export function chooseActionRunner<T extends { isConnected: boolean }>(
+  ...candidates: readonly (T | null | undefined)[]
+): T | null {
+  for (const candidate of candidates) {
+    if (candidate != null && candidate.isConnected) {
+      return candidate;
+    }
+  }
+  return null;
+}

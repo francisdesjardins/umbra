@@ -23,7 +23,6 @@
     "src/core/attach-keydown.ts",
     "src/core/attach-lifecycle.ts",
     "src/core/dialog-lifecycle.ts",
-    "src/core/focus-policy.ts",
     "src/utils/dialog-scope.ts"
   ],
   "reporter": ["text-summary", "html", "lcov", "json"],
