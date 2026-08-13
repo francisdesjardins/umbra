@@ -157,7 +157,7 @@ export const AdvancedPage = () => {
           />
           <ExampleCard
             title="Cosmic Override — everything you see is yours"
-            description="The library contributes a <dialog>, a phase to animate on, a place to put it and a typed way out. Nothing else. This one overrides all of it: a restyled ::backdrop, custom entrance and exit transforms, a contained non-modal dialog answering to a sector of the page instead of the viewport (placed by dialogPlacement, read here as data), an Enter hotkey declared on the action, and an action error rendered in your own markup."
+            description="The library contributes a <dialog>, a phase to animate on, a place to put it and a typed way out. Nothing else. This one overrides all of it: a restyled ::backdrop, custom entrance and exit transforms, a contained non-modal dialog answering to a sector of the page instead of the viewport (placed by dialogPlacement, read here as data), an Enter hotkey declared on the action, and an action error rendered in your own markup. It also opts into containFocus — a non-modal dialog gets no Tab trap from the platform, so without it the keyboard walks off Close and into the page behind."
             codeKey="cosmic-override"
             modalId={COSMIC_GATE_ID}
             tryLabel="Open the gate"

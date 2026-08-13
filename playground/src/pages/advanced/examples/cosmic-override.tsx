@@ -270,6 +270,16 @@ export function CosmicOverrideExample() {
     // A non-modal lets clicks through, so click-outside would dismiss the gate the moment you
     // reach for anything else on the page — including the code viewer for this very example.
     dismissOnClickOutside: false,
+    /**
+     * Wrap Tab inside the gate, which a non-modal dialog does not get for free.
+     *
+     * `showModal()` makes everything behind the dialog inert and the browser's own trap follows;
+     * `show()` does neither, so Tab walks off the last control and out into the page — which is
+     * what this panel did, past Engage and Close and into the sector behind it. Off by default
+     * because the commonest non-modal surface is a toast or a popover, where trapping the keyboard
+     * is the defect rather than the fix. A panel with its own actions is the case where it is not.
+     */
+    containFocus: true,
     animation: GATE_ANIMATION,
     /**
      * Fill the sector, rather than sit centred in it at content size.
