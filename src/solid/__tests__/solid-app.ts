@@ -841,3 +841,96 @@ export const SolidPortalApp = (): JSX.Element => {
 export const SolidContainedApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, ContainedApp));
 };
+
+/**
+ * `prioritize` through Solid — two modal dialogs and a policy that outranks open order.
+ *
+ * The feature is core and all three bindings inherit it without a line of their own, which is
+ * precisely why nothing would fail if one of them stopped reaching it: `binding-parity.test.ts`
+ * compares export *names*, and `prioritize` is a method on `DialogManager` reached through the
+ * wholesale re-export. So this is the only thing that would notice.
+ *
+ * `withPolicy` is a parameter of the *factory* rather than a prop, because the React story's channel
+ * is the app itself — `SolidRoot` takes a component, not props. The `false` half is the baseline, and
+ * it is not padding: a reorder that never happened and a reorder that was not needed look identical
+ * from outside.
+ *
+ * Two details that would silently break this. The policy is installed at **setup**, not in an
+ * effect — a Solid component body runs once, so `onCleanup` is where the disposer goes. And the sizes
+ * are **strings**: Solid's style is written verbatim through `applyStyle`, so a bare `300` copied from
+ * the React harness type-checks and emits an invalid declaration, the two dialogs stop overlapping,
+ * and `elementFromPoint` at the centre answers about neither.
+ */
+function stackPriorityApp(withPolicy: boolean): () => Built {
+  return () => {
+    const panel = useModal<void, 'close'>({
+      id: 'solid-sp-panel',
+      template: 'slide',
+      style: { width: '300px', height: '300px' },
+      render: () => {
+        return el(h('div', null, h('p', null, 'Panel')));
+      },
+    });
+
+    const warning = useModal<void, 'close'>({
+      id: 'solid-sp-warning',
+      template: 'alert',
+      style: { width: '300px', height: '300px' },
+      render: () => {
+        return el(
+          h(
+            'div',
+            null,
+            h('p', null, 'Warning'),
+            // Inside the render callback, because a `showModal()` dialog owns the top layer and
+            // swallows every click outside itself — the same rule every other harness here follows.
+            h(
+              'button',
+              {
+                'data-testid': 'solid-sp-open-panel',
+                onClick: () => {
+                  warning.dialogManager.open('solid-sp-panel');
+                },
+              },
+              'Open the panel'
+            )
+          )
+        );
+      },
+    });
+
+    if (withPolicy) {
+      // Setup, not an effect: the body of a Solid component runs once, so there is no pass to gate.
+      onCleanup(
+        warning.dialogManager.prioritize((modal) => {
+          return modal.template === 'alert' ? 100 : 0;
+        })
+      );
+    }
+
+    return h(
+      'div',
+      null,
+      h(
+        'button',
+        {
+          'data-testid': 'solid-sp-open-warning',
+          onClick: () => {
+            void warning.open();
+          },
+        },
+        'Open the warning'
+      ),
+      warning.Modal,
+      panel.Modal
+    );
+  };
+}
+
+export const SolidStackPriorityApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, stackPriorityApp(true)));
+};
+
+export const SolidOpenOrderApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, stackPriorityApp(false)));
+};

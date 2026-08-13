@@ -1,5 +1,6 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
+import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   VanillaBasicHarness,
   VanillaBusyHarness,
@@ -12,6 +13,7 @@ import {
   VanillaLabellingHarness,
   VanillaRestoreOnUnbindHarness,
   VanillaShadowRootHarness,
+  VanillaShadowStackHarness,
   VanillaUnbindHarness,
 } from './bind-dialog.story';
 
@@ -477,5 +479,123 @@ test.describe('bindDialog — the labelling diagnostic', () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('no accessible name');
+  });
+});
+
+test.describe('a shadow-root dialog in a stack', () => {
+  /**
+   * The front dialog, asked through the shadow root as well as the document.
+   *
+   * `document.elementFromPoint` stops at a shadow host — it hands back the host, not what is inside —
+   * so the shared probe cannot see a dialog in one. Piercing here rather than in the shared helper,
+   * because this is the only suite with a shadow root in it and the helper says so.
+   */
+  async function frontDialogIdDeep(page: Page): Promise<string | null> {
+    return page.evaluate(() => {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2;
+      let element = document.elementFromPoint(x, y);
+      while (element?.shadowRoot) {
+        const inner = element.shadowRoot.elementFromPoint(x, y);
+        if (inner === null || inner === element) {
+          break;
+        }
+        element = inner;
+      }
+      return element?.closest('dialog')?.getAttribute('data-modal-id') ?? null;
+    });
+  }
+
+  /** What holds focus inside the shadow root, by id. */
+  async function focusedInShadow(page: Page): Promise<string | null> {
+    return page.evaluate(() => {
+      const root = document.querySelector('[data-testid="shadow-stack-host"]')?.shadowRoot;
+      return root?.activeElement?.id ?? null;
+    });
+  }
+
+  test('the policy puts it in front of a light-DOM dialog opened later', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<VanillaShadowStackHarness />);
+    await component.getByTestId('toggle-policy').click();
+    await expect(component.getByTestId('policy')).toHaveText('on');
+
+    await component.getByTestId('open-shadow-front').click();
+    // Dispatched rather than clicked: the shadow dialog is modal and in the top layer, so the page
+    // behind it — this button included — is under its backdrop.
+    await component.getByTestId('open-light-over').dispatchEvent('click');
+    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+
+    // `prioritize` lives on the manager and every binding inherits it without a line of its own,
+    // which is exactly why nothing would fail if one of them stopped reaching it: the parity test
+    // compares export names, and this is a method.
+    expect(await frontDialogIdDeep(page)).toBe('vanilla-shadow-front');
+    expect(await frontDialogId(page)).not.toBe('vanilla-light-over');
+  });
+
+  test('keeps the keyboard when something opens over it', async ({ mount, page }) => {
+    const component = await mount(<VanillaShadowStackHarness />);
+    await component.getByTestId('toggle-policy').click();
+    await component.getByTestId('open-shadow-front').click();
+    expect(await focusedInShadow(page)).toBe('shadow-confirm');
+
+    await page.locator('#shadow-note').click();
+    expect(await focusedInShadow(page)).toBe('shadow-note');
+
+    await component.getByTestId('open-light-over').dispatchEvent('click');
+    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+
+    // The claim: the dialog in front still has the keyboard, from inside a shadow root — where
+    // `document.activeElement` answers with the host and a document-scoped check would read "focus
+    // left" forever.
+    //
+    // **The position is not preserved here, and that is a known limit rather than an oversight.** The
+    // newcomer's `showModal()` takes the focus first, so the raise cannot see where it was inside this
+    // dialog; the coordinator remembers, but the raise's own `showModal()` fires a `focusin` that
+    // overwrites the memory before the reclaim runs. So focus lands on the first focusable rather than
+    // back in the field. Fixing it means teaching the `focusin` bookkeeping to ignore focus the
+    // library itself moves during a raise — see the guard in `core/attach-focus.ts`. The late-install
+    // case below *does* preserve it, because there no newcomer steals the focus first.
+    expect(await focusedInShadow(page)).toBe('shadow-confirm');
+  });
+
+  test('a policy installed over it keeps the caret where it was', async ({ mount, page }) => {
+    const component = await mount(<VanillaShadowStackHarness />);
+    await component.getByTestId('open-shadow-front').click();
+    await page.locator('#shadow-note').click();
+    await page.locator('#shadow-note').fill('typed in a shadow root');
+    expect(await focusedInShadow(page)).toBe('shadow-note');
+
+    // The late install: nothing is tracked yet, so the first plan lifts everything bottom-first —
+    // this dialog, while it holds the keyboard. That is the one arrangement reaching `raiseDialog`'s
+    // focus restore, and here it also drives the walk into the shadow root, since
+    // `document.activeElement` is the host and the real answer is one tree down.
+    await component.getByTestId('toggle-policy').dispatchEvent('click');
+    await expect(component.getByTestId('policy')).toHaveText('on');
+
+    expect(await focusedInShadow(page)).toBe('shadow-note');
+    await expect(page.locator('#shadow-note')).toHaveValue('typed in a shadow root');
+  });
+
+  test('a raise fires the native close event, with the dialog already open again', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<VanillaShadowStackHarness />);
+    await component.getByTestId('toggle-policy').click();
+    await component.getByTestId('open-shadow-front').click();
+    await expect(component.getByTestId('native-closes')).toHaveText('0');
+
+    await component.getByTestId('open-light-over').dispatchEvent('click');
+    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+
+    // Moving a modal dialog is `close()` + `showModal()`, so the element emits a `close` nobody asked
+    // for. `close()` *queues* it, which is what leaves `dialog.open` back at `true` by the time a
+    // listener runs — the only way a listener can tell a raise from a real close. This matters here
+    // and nowhere else: the `<dialog>` and this listener are the caller's.
+    await expect(component.getByTestId('native-closes')).toHaveText('1');
+    await expect(component.getByTestId('open-when-closed')).toHaveText('still-open');
   });
 });

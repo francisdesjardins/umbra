@@ -10,9 +10,11 @@ import {
   SolidDisposalApp,
   SolidLiveStateApp,
   SolidMessageApp,
+  SolidOpenOrderApp,
   SolidOutletApp,
   SolidOutletDisposalApp,
   SolidPortalApp,
+  SolidStackPriorityApp,
   SolidSlideApp,
 } from './solid-app.js';
 
@@ -90,4 +92,12 @@ export function SolidContainedHarness() {
 
 export function SolidLiveStateHarness() {
   return <SolidRoot app={SolidLiveStateApp} />;
+}
+
+export function SolidStackPriorityHarness() {
+  return <SolidRoot app={SolidStackPriorityApp} />;
+}
+
+export function SolidOpenOrderHarness() {
+  return <SolidRoot app={SolidOpenOrderApp} />;
 }

@@ -473,6 +473,13 @@ export type DialogManager = {
    * order is the modality rule above followed by the order the opens arrived in. Calling it again
    * replaces the policy — it is one project-wide rule, not a stack of them.
    *
+   * **Being dormant has a cost on the way in**, and it is the one case where a reorder is not
+   * minimal: the top layer is only tracked once a policy exists, so installing one over dialogs that
+   * are already open compares the desired order against nothing and re-shows **every** open modal
+   * dialog, bottom-first — each of those a native `close` event and a re-run of any CSS keyed on
+   * `[open]`. Installing at start-up, before anything opens, costs nothing at all. Seeding the
+   * tracking from the snapshot at install time would make this minimal too and is not done yet.
+   *
    * @returns A disposer that puts the order back to what it would be with no policy — within each
    *   family, since the modality rule is not the policy's to begin with — and reorders what is on
    *   screen to match. It does nothing if a later `prioritize` already replaced the policy.

@@ -11,6 +11,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Tests — the four gaps that were named rather than closed, and a prediction that was wrong again
+
+The previous entry left four things stated instead of tested. Instrumenting them was supposed to
+delete two of them as dead code. **The measurement said otherwise, and it is worth recording how.**
+
+`raiseDialog` is internal and has one caller, and that caller both filters on `element.open` and
+ignores the return value — so the reasoning concluded that its `!dialog.open` guard _and_ its focus
+restore were unreachable, and that the two shadow-walking helpers they use could go with them. The
+guard's half of that is right: `0 / 16` across the whole suite. The focus restore's half is **wrong**:
+`1 / 15`, taken once.
+
+The path the argument missed is a policy installed **late**. Until `prioritize` is called the top
+layer is not tracked at all, so the first plan compares the desired order against _nothing_ and lifts
+every open modal dialog, bottom-first — and the bottom one is the one that has been up longest, which
+is frequently the one being typed in. So a raise really does happen to the dialog holding the
+keyboard, and the restore is what makes a caret survive it. Removing it puts focus on the dialog's
+first focusable instead; that is now a test, and it fails without the restore.
+
+This is the second time a reachability argument about this file has been wrong. The lesson is in the
+JSDoc now, next to the branch.
+
+That same path is the one case where a reorder is **not** minimal, which `API.md` was promising
+unconditionally: installing a policy over dialogs that are already open re-shows all of them, each a
+native `close` event and a re-run of any CSS keyed on `[open]`. Installing at start-up costs nothing.
+Seeding the tracking from the snapshot at install time would make it minimal too and is named as the
+follow-up rather than done here — it would also make the restore above dead, which is a decision, not
+a tidy-up.
+
+**What the four gaps became.** Two of them close in one vanilla harness — a modal `<dialog>` in a
+shadow root and a light-DOM one on a shared manager, which is the composition of two harnesses that
+already existed. It asserts the policy is inherited by a binding that is not React, and that a raise
+fires the element's native `close` with `dialog.open` already back to `true`: the only way a listener
+the caller wrote can tell a raise from a real close, and until now the contract was documented and
+unverified. The shadow root also drives `deepActiveElement`'s walk, which was at zero.
+
+`prioritize` through Solid is the third, in the three-file pattern that folder already uses, with the
+`false` baseline as a second exported app since `SolidRoot` takes a component rather than props. The
+two page probes both suites needed are extracted to `src/__tests__/stack-probe.ts` rather than copied
+a third time.
+
+**One known limit is now pinned as one** rather than left to be rediscovered. When a dialog opens over
+the front one, the front one takes the focus back — but not to the exact element, because the
+newcomer's `showModal()` takes focus first, so the raise cannot see where it was, and the raise's own
+`showModal()` fires a `focusin` that overwrites the coordinator's memory before the reclaim runs. The
+late-install case does preserve the position, since nothing steals focus there. Fixing the first case
+means ignoring focus the library itself moves during a raise; the guard that would need it says so.
+
+Still not covered, and stated rather than implied: `containsAcrossRoots`'s host hop, which needs a
+shadow root nested _inside_ a dialog rather than a dialog inside one.
+
 ### Fixed — `/api` answered 500, and every gate was green
 
 `isOwnEventTarget` was exported from the root and never added to `CATEGORIES`, so `buildModel` threw

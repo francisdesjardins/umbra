@@ -1,5 +1,6 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
+import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
   SolidBusyHarness,
@@ -11,8 +12,10 @@ import {
   SolidPortalHarness,
   SolidDeclarationHarness,
   SolidMessageHarness,
+  SolidOpenOrderHarness,
   SolidOutletHarness,
   SolidSlideHarness,
+  SolidStackPriorityHarness,
 } from './solid-modal.story';
 
 /**
@@ -408,5 +411,34 @@ test.describe('the labelling diagnostic (Solid)', () => {
     await page.waitForTimeout(300);
 
     expect(labelling(warnings)).toEqual([]);
+  });
+});
+
+test.describe('prioritize (Solid)', () => {
+  test('without a policy the dialog that opened last is in front', async ({ mount, page }) => {
+    // The baseline, and it is what makes the next test mean something: a reorder that never happened
+    // and a reorder that was not needed are indistinguishable from outside.
+    await mount(<SolidOpenOrderHarness />);
+    await page.getByTestId('solid-sp-open-warning').click();
+    await page.getByTestId('solid-sp-open-panel').click();
+    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toBeVisible();
+
+    expect(await frontDialogId(page)).toBe('solid-sp-panel');
+  });
+
+  test('the policy is inherited by this binding too', async ({ mount, page }) => {
+    await mount(<SolidStackPriorityHarness />);
+    await page.getByTestId('solid-sp-open-warning').click();
+    await page.getByTestId('solid-sp-open-panel').click();
+    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toBeVisible();
+
+    // Nothing in `src/solid/` implements any of this — the policy lives on the manager and the
+    // binding reaches it through `useModal`'s returned instance. Which is why nothing else would
+    // notice if it stopped: `binding-parity.test.ts` compares export names, and this is a method.
+    expect(await frontDialogId(page)).toBe('solid-sp-warning');
+    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toHaveAttribute(
+      'open',
+      ''
+    );
   });
 });

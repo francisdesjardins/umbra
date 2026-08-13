@@ -212,6 +212,14 @@ export function createFocusCoordinator(
             return;
           }
           if (dialog.contains(activeWithin(dialog))) {
+            // Focus is already ours, so there is nothing to take back — but note that "ours" is not
+            // "where the user was". A `prioritize` raise re-shows this dialog, and `showModal()` then
+            // puts focus on its first focusable, *inside* it; that satisfies this guard, so a position
+            // moved by a raise is not corrected and a caret is lost. The memory below would be the
+            // right answer, except the raise's own `showModal()` fires a `focusin` that overwrites it
+            // first. Fixing it means ignoring focus the library itself moves during a raise, which
+            // needs a window `raiseDialog` can publish and this can read. Pinned as a known limit by
+            // "keeps the keyboard when something opens over it" in `vanilla/__tests__/bind-dialog.ct.tsx`.
             return;
           }
           openingFocus = reclaimFocus(dialog, lastFocusInside) ?? openingFocus;

@@ -1282,6 +1282,10 @@ mechanism, so a reorder has three visible consequences:
 Reorders are minimal — a swap lifts one dialog, not both — and nothing is re-shown or re-stamped
 until `prioritize` is called.
 
+**With one exception, on the way in.** The top layer is only tracked once a policy exists, so
+installing one over dialogs that are _already open_ has nothing to compare against and re-shows every
+open modal dialog, bottom-first. Installing at start-up, before anything opens, costs nothing.
+
 ### A policy orders each family, never across them
 
 **Every non-modal dialog sits under every modal one**, and that is settled before the policy is

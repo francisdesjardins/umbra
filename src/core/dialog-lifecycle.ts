@@ -130,9 +130,14 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
  *   listener that has to tell a raise from a real close. The library's own close reporting is
  *   driven by the store and is not involved. It matters most in `umbra/vanilla`, where the
  *   `<dialog>` and any listener on it are the caller's.
- * - **Focus is restored only when this dialog had it.** `showModal()` runs the focusing steps and
- *   would otherwise steal focus from the dialog above; when the raise is part of a reorder, the
- *   dialog that ends up on top is the one that should hold focus, and it is raised last.
+ * - **Focus is restored only when this dialog had it**, and that case is narrower than it looks —
+ *   worth knowing, because reasoning it away is a mistake already made once here. A raise usually
+ *   happens to a dialog that does *not* hold the keyboard: the newcomer's own `showModal()` has
+ *   already taken it. The exception is a policy installed **late**, over dialogs that are already up:
+ *   the top layer is not tracked until then, so that first plan compares against nothing and lifts
+ *   every dialog bottom-first — and the bottom one is the one that has been up longest, which is
+ *   frequently the one being typed in. Restoring is what makes a caret survive that, and
+ *   `stack-priority.ct.tsx` pins it.
  * - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
  *   `dialog[open] { animation }`. The library's own entrance is driven by phase rather than by
  *   `[open]`, so it is unaffected.

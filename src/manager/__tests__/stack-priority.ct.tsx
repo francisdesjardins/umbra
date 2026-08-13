@@ -1,6 +1,10 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import type { Page } from '@playwright/test';
-import { MultiRaiseHarness, StackPriorityHarness } from './stack-priority.story.js';
+import { focusedDialogId, frontDialogId, paintedStackOrder } from '../../__tests__/stack-probe.js';
+import {
+  LatePolicyFocusHarness,
+  MultiRaiseHarness,
+  StackPriorityHarness,
+} from './stack-priority.story.js';
 
 /**
  * `prioritize` in a real top layer, which is the only place the claim can be checked.
@@ -15,14 +19,6 @@ import { MultiRaiseHarness, StackPriorityHarness } from './stack-priority.story.
  * `elementFromPoint` at the centre is the question asked, because it is the same question the mouse
  * asks.
  */
-
-/** Which dialog is really in front, asked the way a click asks it. */
-async function frontDialogId(page: Page): Promise<string | null> {
-  return page.evaluate(() => {
-    const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-    return hit?.closest('dialog')?.dataset['modalId'] ?? null;
-  });
-}
 
 test('without a policy the dialog that opened last is in front', async ({ mount, page }) => {
   const component = await mount(<StackPriorityHarness withPolicy={false} />);
@@ -78,33 +74,10 @@ test('the raise leaves focus in the dialog it put in front', async ({ mount, pag
   // `showModal()` runs the focusing steps on every show, so a reorder that ignored focus would
   // leave the keyboard in the dialog underneath — visibly stuck, since only the topmost modal
   // dialog is not inert.
-  const focusedIn = await page.evaluate(() => {
-    return document.activeElement?.closest('dialog')?.dataset['modalId'] ?? null;
-  });
-
-  expect(focusedIn).toBe('sp-warning');
+  expect(await focusedDialogId(page)).toBe('sp-warning');
 });
 
 test.describe('three dialogs, and a policy that arrives late', () => {
-  /** The stack the manager reports, bottom first. */
-  async function stackOrder(page: Page): Promise<string[]> {
-    return page.evaluate(() => {
-      return [...document.querySelectorAll('dialog[open]')]
-        .map((dialog) => {
-          return {
-            id: (dialog as HTMLElement).dataset['modalId'] ?? '',
-            z: Number((dialog as HTMLElement).dataset['modalZ'] ?? '0'),
-          };
-        })
-        .sort((a, b) => {
-          return a.z - b.z;
-        })
-        .map((entry) => {
-          return entry.id;
-        });
-    });
-  }
-
   test('a newcomer that belongs at the bottom lifts everything above it', async ({
     mount,
     page,
@@ -119,7 +92,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     // `mr-low` arrived last and ranks lowest, so the plan is two raises — `mr-mid` then `mr-high` —
     // and this is the only place that loop runs with more than one entry in it.
     expect(await frontDialogId(page)).toBe('mr-high');
-    expect(await stackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+    expect(await paintedStackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
 
     // Raises are re-shows, so nothing closed on the way.
     await expect(page.locator('dialog[open]')).toHaveCount(3);
@@ -139,7 +112,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     // snapshot assertion cannot see, since in Node this path stops at the `document` guard.
     await expect(page.locator('dialog[data-modal-id="mr-high"]')).toBeVisible();
     expect(await frontDialogId(page)).toBe('mr-high');
-    expect(await stackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+    expect(await paintedStackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
   });
 
   test('and removing it puts the paint order back', async ({ mount, page }) => {
@@ -156,6 +129,29 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     // `syncStackOrder` awake for one sync after the policy is gone.
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
     expect(await frontDialogId(page)).toBe('mr-low');
-    expect(await stackOrder(page)).toEqual(['mr-high', 'mr-mid', 'mr-low']);
+    expect(await paintedStackOrder(page)).toEqual(['mr-high', 'mr-mid', 'mr-low']);
+  });
+});
+
+test.describe('a policy installed under an open dialog', () => {
+  test('does not move the caret out of the field it was in', async ({ mount, page }) => {
+    const component = await mount(<LatePolicyFocusHarness />);
+    await component.getByTestId('lp-open').click();
+    await expect(page.locator('dialog[data-modal-id="lp-only"]')).toBeVisible();
+
+    await page.getByTestId('lp-input').click();
+    await page.getByTestId('lp-input').fill('mid-sentence');
+    await expect(page.getByTestId('lp-input')).toBeFocused();
+
+    // The dialog is re-shown here, and this is the one arrangement that does it to a dialog holding
+    // focus: until `prioritize` is called the top layer is not tracked, so the first plan compares
+    // against nothing and lifts everything, bottom-most first — which is this dialog.
+    await component.getByTestId('lp-toggle-policy').dispatchEvent('click');
+    await expect(component.getByTestId('lp-policy')).toHaveText('on');
+
+    // `showModal()` would otherwise hand the focus to the first focusable in the dialog.
+    await expect(page.getByTestId('lp-first')).not.toBeFocused();
+    await expect(page.getByTestId('lp-input')).toBeFocused();
+    await expect(page.getByTestId('lp-input')).toHaveValue('mid-sentence');
   });
 });

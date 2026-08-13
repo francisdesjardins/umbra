@@ -195,3 +195,73 @@ export function MultiRaiseHarness() {
     </div>
   );
 }
+
+/**
+ * One dialog, already up with a caret in it, and a policy arriving late.
+ *
+ * The smallest arrangement that reaches `raiseDialog`'s focus restore — and the reasoning that said
+ * nothing could reach it was wrong, which is why this exists. The path is the *late* install: until
+ * `prioritize` is called the manager never tracks the top layer, so the first sync compares the
+ * desired order against an empty one and the plan lifts **everything**, starting from the bottom.
+ * The bottom dialog is the one that has been up longest, and here it is also the one holding the
+ * keyboard.
+ *
+ * So a raise really can happen to the dialog that has focus, and what the restore buys is exactly
+ * this: the caret survives a policy being installed under it. Without it, `showModal()` picks the
+ * dialog's first focusable and the position is gone.
+ */
+export function LatePolicyFocusHarness() {
+  const [policyOn, setPolicyOn] = useState(false);
+
+  const only = useModal<void, 'close'>({
+    id: 'lp-only',
+    style: { width: 280, height: 280 },
+    render: () => {
+      return (
+        <div style={dialogStyle}>
+          <p>Already up</p>
+          <button data-testid="lp-first">First focusable</button>
+          <input data-testid="lp-input" aria-label="Notes" />
+        </div>
+      );
+    },
+  });
+
+  const { dialogManager } = only;
+
+  useEffect(() => {
+    if (!policyOn) {
+      return undefined;
+    }
+    return dialogManager.prioritize(() => {
+      return 0;
+    });
+  }, [policyOn, dialogManager]);
+
+  return (
+    <div>
+      <button
+        data-testid="lp-open"
+        onClick={() => {
+          void only.open();
+        }}
+        type="button"
+      >
+        Open it
+      </button>
+      <button
+        data-testid="lp-toggle-policy"
+        onClick={() => {
+          setPolicyOn((previous) => {
+            return !previous;
+          });
+        }}
+        type="button"
+      >
+        Install the policy
+      </button>
+      <span data-testid="lp-policy">{policyOn ? 'on' : 'off'}</span>
+      {only.Modal}
+    </div>
+  );
+}

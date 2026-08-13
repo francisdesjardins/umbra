@@ -989,3 +989,158 @@ export function VanillaLabellingHarness() {
     </>
   );
 }
+
+/**
+ * A shadow-root dialog and a light-DOM one, one manager, one stack policy.
+ *
+ * The composition of two harnesses above, and it exists to reach three things nothing else does.
+ *
+ * **The reclaim across a shadow boundary.** When something opens over the front dialog, that dialog
+ * takes the focus back itself — and the only shadow-aware question in that path is `activeWithin`,
+ * which asks the dialog's *own* root rather than the document. A dialog in a shadow root is where a
+ * document-scoped answer would silently be "focus left" forever, and the microfrontend demo has one.
+ *
+ * **The native `close` event a raise fires.** Moving a modal dialog is `close()` + `showModal()`, so
+ * the element emits a `close` nobody asked for. `close()` *queues* it, so it arrives with
+ * `dialog.open` already back to `true` — which is the only way a listener can tell a raise from a
+ * real close, and the counter below records both halves. It matters here and nowhere else: in
+ * `umbra/vanilla` the `<dialog>` and every listener on it are the caller's.
+ *
+ * **`prioritize` through a binding that is not React.** The policy is core and all three bindings
+ * inherit it without a line of their own, which is exactly why nothing would fail if one of them
+ * stopped reaching it — `binding-parity.test.ts` compares export names, and `prioritize` is a method
+ * on `DialogManager`.
+ *
+ * The manager is hoisted into a variable rather than constructed inline, because two controllers have
+ * to share it. The policy toggle sits on the page and the tests dispatch its click directly: under
+ * the policy the light-DOM dialog is the one underneath, so a real press would land on a backdrop.
+ */
+export function VanillaShadowStackHarness() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const overRef = useRef<HTMLDialogElement>(null);
+  const [controllers, setControllers] = useState<{
+    readonly shadow: Bound<'confirm'>;
+    readonly over: Bound<'close'>;
+  } | null>(null);
+  const [policyOn, setPolicyOn] = useState(false);
+  const [manager, setManager] = useState<ReturnType<typeof createDialogManager> | null>(null);
+  /** How many native `close` events the shadow dialog has emitted, and whether it was open then. */
+  const [closes, setCloses] = useState('0');
+  const [openWhenClosed, setOpenWhenClosed] = useState('n/a');
+
+  useEffect(() => {
+    const host = hostRef.current;
+    const over = overRef.current;
+    if (!host || !over) {
+      return;
+    }
+
+    const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    root.innerHTML = `
+      <dialog data-testid="shadow-stack-dialog">
+        <p>In front, in a shadow root</p>
+        <button id="shadow-confirm">Confirm</button>
+        <!-- A second focusable, and the tests turn on it: with only one, "handed back where focus
+             was" and "showModal picked the first focusable" are the same element, so an assertion
+             cannot tell the two apart. Verified — the reclaim could be removed entirely and the
+             one-button version still passed. -->
+        <input id="shadow-note" aria-label="Notes" />
+      </dialog>
+    `;
+
+    const dialog = root.querySelector('dialog');
+    const confirm = root.getElementById('shadow-confirm');
+    if (!(dialog instanceof HTMLDialogElement) || !(confirm instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    // A listener the *caller* owns, which is the situation the contract is written for.
+    let seen = 0;
+    const handleNativeClose = () => {
+      seen += 1;
+      setCloses(String(seen));
+      // Read inside the listener, because that is when the answer is load-bearing: a raise has
+      // already re-shown the dialog by the time this runs, and this is what tells the two apart.
+      setOpenWhenClosed(dialog.open ? 'still-open' : 'really-closed');
+    };
+    dialog.addEventListener('close', handleNativeClose);
+
+    const instance = createDialogManager();
+    const shadow = bindDialog<void, 'confirm'>({
+      id: 'vanilla-shadow-front',
+      dialog,
+      ariaLabel: 'In front, in a shadow root',
+      manager: instance,
+      style: { width: '260px', height: '260px' },
+    });
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-light-over',
+      dialog: over,
+      ariaLabel: 'Opened over it, in the light DOM',
+      manager: instance,
+      style: { width: '260px', height: '260px' },
+    });
+
+    const unbindConfirm = shadow.bindAction(confirm, 'confirm', { focusOnOpen: true });
+
+    setControllers({ shadow, over: bound });
+    setManager(instance);
+
+    return () => {
+      dialog.removeEventListener('close', handleNativeClose);
+      unbindConfirm();
+      shadow.destroy();
+      bound.destroy();
+      setControllers(null);
+      setManager(null);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!policyOn || !manager) {
+      return undefined;
+    }
+    // The shadow dialog outranks the one that opens over it.
+    return manager.prioritize((modal) => {
+      return modal.id === 'vanilla-shadow-front' ? 10 : 0;
+    });
+  }, [policyOn, manager]);
+
+  return (
+    <>
+      <button
+        data-testid="open-shadow-front"
+        onClick={() => {
+          void controllers?.shadow.open();
+        }}
+      >
+        Open the shadow one
+      </button>
+      <button
+        data-testid="open-light-over"
+        onClick={() => {
+          void controllers?.over.open();
+        }}
+      >
+        Open the light one over it
+      </button>
+      <button
+        data-testid="toggle-policy"
+        onClick={() => {
+          setPolicyOn((previous) => {
+            return !previous;
+          });
+        }}
+      >
+        Toggle the policy
+      </button>
+      <span data-testid="policy">{policyOn ? 'on' : 'off'}</span>
+      <span data-testid="native-closes">{closes}</span>
+      <span data-testid="open-when-closed">{openWhenClosed}</span>
+      <div ref={hostRef} data-testid="shadow-stack-host" />
+      <dialog ref={overRef} data-testid="light-over-dialog">
+        <p>Over it</p>
+      </dialog>
+    </>
+  );
+}
