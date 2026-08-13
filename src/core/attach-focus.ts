@@ -124,6 +124,21 @@ export function createFocusCoordinator(
           if (!dialog?.open) {
             return;
           }
+          // **Not while something else is in front**, which is the same rule the reclaim below
+          // states and for the same reason: the user is looking at the dialog on top, and an action
+          // settling *underneath* it has no claim on their keyboard. A save started before a second
+          // modal opened lands a frame later and would otherwise pull focus out of whatever they
+          // have since typed into.
+          //
+          // It is a guard rather than an assumption because the platform only *sometimes* makes it
+          // one. A modal dialog in the top layer renders everything behind it inert, so in Chromium
+          // this `focus()` is a silent no-op and the rule looks like it holds for free. WebKit lets
+          // it through, and the focus really moves — which is how CI found this: the same assertion,
+          // green on one engine and red on another, because the library was relying on an
+          // inertness it never asked for.
+          if (!manager.lookup().isForeground(modalId)) {
+            return;
+          }
           restoreFocus(dialog, preferredRestoreTarget(runner, openingFocus));
         });
       };

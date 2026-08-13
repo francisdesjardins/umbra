@@ -682,7 +682,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'a raise keeps the caret where the user left it',
     state: 'partial',
-    why: 'Restored for the dialog that **held** the keyboard — the case a late policy install hits. One that did not is re-shown by `showModal()`, which focuses its own first focusable. Fixing it needs a window `raiseDialog` can publish and the focus coordinator can read.',
+    why: 'Restored for the dialog that **held** the keyboard — the case a late policy install hits. One that did not is re-shown by `showModal()`, and where focus lands then is **the engine’s answer, not the library’s**: Chromium puts it on the dialog’s first focusable, WebKit preserves the field. So the guarantee is that the dialog in front keeps the keyboard; the position is not one, and a test that pinned a control was pinning one engine. Fixing it for real means teaching the `focusin` bookkeeping to ignore focus the library itself moves during a raise, which needs a window `raiseDialog` can publish and the coordinator can read.',
     reference: {
       file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
       title: 'a policy installed over it keeps the caret where it was',

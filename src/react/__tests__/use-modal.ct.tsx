@@ -6,6 +6,7 @@ import {
   BusyWhilePreparingHarness,
   EscAnsweredByNobodyHarness,
   ReconcileOpenHarness,
+  RestoreNotInFrontHarness,
   EscWithoutFocusHarness,
   KeyPassthroughHarness,
   TransitionToggleHarness,
@@ -1092,6 +1093,25 @@ test.describe('focus while another modal is in front', () => {
     // user is in the modal in front, and that is not its focus to move.
     await expect(page.getByTestId('under-done')).toHaveText('1');
     await expect(page.getByTestId('over-field')).toBeFocused();
+  });
+
+  test('and the guard is the library’s, not the top layer’s', async ({ mount, page }) => {
+    // The same claim between two **non-modal** panels, which is what makes it answerable here.
+    // Above, the modal in front renders the one underneath inert, so Chromium turns the restore's
+    // `focus()` into a silent no-op and that test passes whether or not the library checks anything —
+    // WebKit does not, and CI found the missing check as an engine difference. Nothing is inert here,
+    // so a restore that forgot to ask whether it is in front really does steal the keyboard, on every
+    // engine.
+    await mount(<RestoreNotInFrontHarness />);
+    await page.getByTestId('open-behind').click();
+
+    await page.getByTestId('behind-save').click();
+    await page.getByTestId('open-front').click();
+    await page.getByTestId('front-field').focus();
+    await expect(page.getByTestId('front-field')).toBeFocused();
+
+    await expect(page.getByTestId('settled')).toHaveText('1');
+    await expect(page.getByTestId('front-field')).toBeFocused();
   });
 });
 

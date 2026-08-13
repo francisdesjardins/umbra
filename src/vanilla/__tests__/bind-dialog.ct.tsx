@@ -580,6 +580,20 @@ test.describe('a shadow-root dialog in a stack', () => {
     });
   }
 
+  /**
+   * Which dialog holds the keyboard, asked from inside the shadow root.
+   *
+   * The coarser question, and the one the library actually answers. *Which control* inside that dialog
+   * is focused after a raise is engine-dependent — see the test below — so a probe that returns an
+   * element id can only be used where the position is the claim.
+   */
+  async function focusedDialogInShadow(page: Page): Promise<string | null> {
+    return page.evaluate(() => {
+      const root = document.querySelector('[data-testid="shadow-stack-host"]')?.shadowRoot;
+      return root?.activeElement?.closest('dialog')?.getAttribute('data-modal-id') ?? null;
+    });
+  }
+
   test('the policy puts it in front of a light-DOM dialog opened later', async ({
     mount,
     page,
@@ -613,18 +627,21 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
 
-    // The claim: the dialog in front still has the keyboard, from inside a shadow root — where
-    // `document.activeElement` answers with the host and a document-scoped check would read "focus
-    // left" forever.
-    //
-    // **The position is not preserved here, and that is a known limit rather than an oversight.** The
-    // newcomer's `showModal()` takes the focus first, so the raise cannot see where it was inside this
-    // dialog; the coordinator remembers, but the raise's own `showModal()` fires a `focusin` that
-    // overwrites the memory before the reclaim runs. So focus lands on the first focusable rather than
-    // back in the field. Fixing it means teaching the `focusin` bookkeeping to ignore focus the
-    // library itself moves during a raise — see the guard in `core/attach-focus.ts`. The late-install
-    // case below *does* preserve it, because there no newcomer steals the focus first.
-    expect(await focusedInShadow(page)).toBe('shadow-confirm');
+    // The claim, and it is about the **dialog** rather than the control: the one in front still has
+    // the keyboard, from inside a shadow root — where `document.activeElement` answers with the host
+    // and a document-scoped check would read "focus left" forever.
+    expect(await focusedDialogInShadow(page)).toBe('vanilla-shadow-front');
+
+    // **Which control it lands on is the engine's, not the library's, and asserting one of them is
+    // what broke CI.** Chromium puts focus on the dialog's first focusable: the newcomer's
+    // `showModal()` takes the keyboard first, so the raise cannot see where it was, and the raise's
+    // own `showModal()` fires a `focusin` that overwrites the coordinator's memory before the reclaim
+    // reads it. WebKit preserves the field. Neither is wrong — the library guarantees the dialog keeps
+    // the keyboard and documents the position as a known limit, so a test that pinned `shadow-confirm`
+    // was pinning one engine's version of a limit. Fixing the limit itself means teaching the
+    // `focusin` bookkeeping to ignore focus the library moves during a raise; see the guard in
+    // `core/attach-focus.ts`, and the matrix cell that carries it.
+    expect(['shadow-confirm', 'shadow-note']).toContain(await focusedInShadow(page));
   });
 
   test('a policy installed over it keeps the caret where it was', async ({ mount, page }) => {

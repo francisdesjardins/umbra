@@ -11,6 +11,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Fix — the focus restore was relying on Chromium's inertness, and WebKit said so
+
+CI went red on one assertion and flaky on another, both WebKit, both about focus. **One was a test
+pinning an engine; the other was a real missing guard.**
+
+**The guard.** `scheduleRestore` — the frame-delayed focus restore after an action settles — never
+asked whether its dialog was still the one in front. The rule is stated a few lines below it, on the
+reclaim: the user is looking at the dialog on top, and an action settling _underneath_ has no claim on
+their keyboard. A save started before a second modal opened lands a frame later and pulls focus out of
+whatever they have since typed. **Chromium hides it**: a modal dialog renders everything behind it
+inert, so the `focus()` is a silent no-op and the rule looks like it holds for free. WebKit lets it
+through. The library was relying on an inertness it never asked for, and the check is explicit now.
+
+**And the new test proves it where Chromium can answer.** The existing one puts a modal in front, so it
+passes on Chromium whether or not the library checks anything — which is exactly why it took a second
+engine to find this. A sibling test uses **two non-modal panels**: nothing is inert, so a restore that
+forgets to ask really does steal the keyboard, on every engine. Seen to fail without the guard and pass
+with it.
+
+**The test that was pinning an engine** is `keeps the keyboard when something opens over it`. Its claim
+is in its title — the dialog in front keeps the keyboard — but it asserted _which control_ had it, and
+that is the engine's answer rather than the library's: after a raise, Chromium focuses the dialog's
+first focusable while **WebKit preserves the field**. The position is documented as a known limit, so
+pinning `shadow-confirm` was pinning one engine's version of a limit. It asserts the dialog now, with
+the split recorded, and the matrix's caret cell carries it.
+
 ### Docs — `yarn todo`, and the open question a `✓` was hiding
 
 "Is there anything else to validate" had a real answer and no way to ask it: the matrix's worklist was
