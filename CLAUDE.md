@@ -95,8 +95,11 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Currently 92.99% statements over
-48 files, against the unit project's 97.81% over the framework-free half.
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-13: **91.95%
+statements over 50 files**, against the unit project's **93.83%** over the framework-free half. The
+two are not halves of one number and must never be added — each measures what the other cannot
+reach. Re-measure both in the same sitting or neither: they drifted four points apart while only one
+was being quoted.
 
 **So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.** Two
 moves have paid off repeatedly and are the first thing to try:
