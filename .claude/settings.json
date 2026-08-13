@@ -18,9 +18,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx eslint --max-warnings=0 src",
-            "timeout": 60,
-            "statusMessage": "Running ESLint check"
+            "command": "npx oxlint --type-aware --deny-warnings src",
+            "timeout": 120,
+            "statusMessage": "Running oxlint (type-aware)"
           }
         ]
       }
