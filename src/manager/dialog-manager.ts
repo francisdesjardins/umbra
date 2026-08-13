@@ -610,6 +610,23 @@ export function createDialogManager(): DialogManager {
   /** Identity this instance claims the global body scroll lock under — see `scroll-lock.ts`. */
   const lockOwner = {};
 
+  /**
+   * Where the stack starts, and it decides nothing for a **modal** dialog.
+   *
+   * `showModal()` puts the element in the top layer, which paints above ordinary content in the
+   * order elements were added and ignores `z-index` between the two — so the number stamped on a
+   * modal dialog is debugging output (`data-modal-z`) and no more. It is **non-modal** panels this
+   * actually orders, because those stay in normal flow.
+   *
+   * 1300 is the layer most component libraries reserve for a modal — MUI's `zIndex.modal`
+   * exactly, with its drawer at 1200 and its app bar at 1100. So a panel lands above the app
+   * chrome it is meant to cover and below the snackbars and tooltips meant to cover it, in the
+   * scale a consumer is most likely to already be using.
+   *
+   * **It is stamped inline**, so a consumer moving it needs `!important` on their own rule — the
+   * base is not an option today, and making it one is a decision rather than an oversight: the
+   * value only ever matters for non-modal dialogs, and no report has needed it.
+   */
   const Z_INDEX_BASE = 1300;
 
   const registry = new Map<string, RegistryEntry>();

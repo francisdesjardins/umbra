@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=JSON.parse(d).tool_input.file_path;require('child_process').execSync('npx prettier --write --ignore-unknown '+JSON.stringify(f),{stdio:'inherit'})})\"",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=JSON.parse(d).tool_input.file_path;require('child_process').execSync('yarn prettier --write --ignore-unknown '+JSON.stringify(f),{stdio:'inherit'})})\"",
             "timeout": 30,
             "statusMessage": "Formatting with Prettier"
           }
@@ -18,9 +18,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx oxlint --type-aware --deny-warnings src",
+            "command": "node node_modules/typescript-7/bin/tsc --noEmit -p tsconfig.json",
+            "timeout": 120,
+            "statusMessage": "Type-checking (TS 7)"
+          },
+          {
+            "type": "command",
+            "command": "yarn lint --deny-warnings",
             "timeout": 120,
             "statusMessage": "Running oxlint (type-aware)"
+          },
+          {
+            "type": "command",
+            "command": "yarn playwright test -c playwright.config.ts --project=unit --grep \"the agent instructions have a budget\"",
+            "timeout": 120,
+            "statusMessage": "Checking the CLAUDE.md word budget"
           }
         ]
       }
