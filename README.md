@@ -94,7 +94,14 @@ installed; `react` / `react-dom` (`^19.0.0`) are needed only by `umbra/react`, a
 does — a plain page, an Astro island, a web component, a server-rendered app with a sprinkle of
 JavaScript.
 
-**Requirements:** Node >= 24.0.0 | Chrome 138+ (native `<dialog>`)
+**Requirements:** Chrome/Edge 110+ · Safari 16.4+ · Firefox 115+
+
+That floor is what the code actually uses, measured rather than picked: constructed
+`CSSStyleSheet` + `adoptedStyleSheets` sets the Safari bound, `Array.prototype.toSorted` the
+Chrome and Firefox ones, and native `<dialog>` — the headline requirement — has been the widest
+of the three since Firefox 98. Node >= 24 is a **contributor** requirement — see Development
+below; the package is browser code with zero runtime dependencies, so nothing about it cares what
+a consumer builds with.
 
 ## <img src="docs/brand/moon-full.svg" width="18" height="18" alt="" /> Quick Start
 

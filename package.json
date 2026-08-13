@@ -62,7 +62,10 @@
     "node": ">=24"
   },
   "browserslist": [
-    "Chrome >= 138"
+    "Chrome >= 110",
+    "Edge >= 110",
+    "Safari >= 16.4",
+    "Firefox >= 115"
   ],
   "scripts": {
     "dev": "yarn workspace umbra-playground dev",
