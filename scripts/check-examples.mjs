@@ -12,7 +12,9 @@
 //           into the doc comment it came from.
 //   types   `tsc -p scripts/examples/tsconfig.json` — see that file for why the snippet
 //           allowances (unused locals, implicit any) are the only thing it relaxes.
-//   lint    eslint's own scope for the generated directory.
+//   lint    oxlint's own scope for the generated directory, type-aware pass included. The
+//           directory is deliberately not gitignored: oxlint honours .gitignore with no way to
+//           override it, so an ignored path is one it reports zero files for and passes.
 //
 // An example assumes an application around it (`store`, `fetchUser`, `api`). Rather than
 // demanding that every snippet declare its world, the type pass runs twice: the first run
@@ -36,7 +38,7 @@ const EXAMPLES_DIR = join(ROOT, 'scripts', 'examples');
 const GENERATED = join(EXAMPLES_DIR, 'generated');
 
 const FIX = process.argv.includes('--fix');
-const KEEP = process.argv.includes('--keep') || FIX;
+const KEEP = process.argv.includes('--keep');
 
 // ── Collection ───────────────────────────────────────────────────────────────
 
@@ -361,26 +363,44 @@ function typeCheck() {
   ]);
 }
 
-/** Lint the generated modules, as structured results rather than a report to re-parse. */
+/**
+ * Lint the generated modules, as structured results rather than a report to re-parse.
+ *
+ * `--type-aware` matters here rather than being a copied flag: the two rules this scope keeps on
+ * for their own sake — `no-floating-promises` and `await-thenable` — are type-aware, so without it
+ * the pass would run and report the syntax half only, silently. `--no-ignore` because the generated
+ * directory is gitignored, which is the whole point of it.
+ */
 function lint() {
-  const output = run(process.execPath, [
-    join(ROOT, 'node_modules', 'eslint', 'bin', 'eslint.js'),
+  const output = run(join(ROOT, 'node_modules', '.bin', 'oxlint'), [
     relative(ROOT, GENERATED).replaceAll('\\', '/'),
-    '--no-warn-ignored',
-    '--format',
+    '--type-aware',
+    '-f',
     'json',
   ]);
-  const start = output.indexOf('[{');
+  const start = output.indexOf('{');
   if (start === -1) {
     return [];
   }
-  return JSON.parse(output.slice(start)).flatMap((file) => {
-    return file.messages.map((message) => {
-      return {
-        module: /generated[/\\]([^(:]+)\.tsx/.exec(file.filePath)?.[1],
-        text: `${message.ruleId ?? 'parse error'}: ${message.message} (line ${String(message.line)})`,
-      };
-    });
+  const { diagnostics = [], number_of_files: linted } = JSON.parse(output.slice(start));
+  // The one way this pass fails without saying so, and it happened: oxlint reports zero files and
+  // exits clean for a path git ignores, which `generated/` was. Nothing about "lint: clean"
+  // distinguishes that from a clean lint, so the count is checked rather than trusted.
+  if (linted === 0) {
+    console.error(
+      `check-examples: oxlint linted 0 files under ${relative(ROOT, GENERATED)} — the lint gate is not running.\n` +
+        'Most likely the directory has become ignored again (oxlint honours .gitignore unconditionally).'
+    );
+    process.exit(1);
+  }
+  return diagnostics.map((diagnostic) => {
+    const line = diagnostic.labels?.[0]?.span?.line;
+    return {
+      module: /generated[/\\]([^(:]+)\.tsx/.exec(diagnostic.filename ?? '')?.[1],
+      text: `${diagnostic.code ?? 'parse error'}: ${diagnostic.message}${
+        line === undefined ? '' : ` (line ${String(line)})`
+      }`,
+    };
   });
 }
 

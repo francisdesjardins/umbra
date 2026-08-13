@@ -451,7 +451,9 @@ test.describe('the props an action spreads onto a button', () => {
   test('are all valid DOM attributes', async ({ mount, page }) => {
     const warnings: string[] = [];
     page.on('console', (m) => {
-      if (m.type() === 'error' || m.type() === 'warning') warnings.push(m.text());
+      if (m.type() === 'error' || m.type() === 'warning') {
+        warnings.push(m.text());
+      }
     });
     await mount(<SpreadContractHarness />);
     await page.getByRole('button', { name: 'Open Spread' }).click();
@@ -499,7 +501,9 @@ test.describe('the props an action spreads onto a button', () => {
   }) => {
     const warnings: string[] = [];
     page.on('console', (m) => {
-      if (m.type() === 'error' || m.type() === 'warning') warnings.push(m.text());
+      if (m.type() === 'error' || m.type() === 'warning') {
+        warnings.push(m.text());
+      }
     });
     await mount(<DomSafeSpreadHarness />);
     await page.getByRole('button', { name: 'Open Dom Spread' }).click();

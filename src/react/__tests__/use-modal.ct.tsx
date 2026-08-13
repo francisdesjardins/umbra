@@ -685,7 +685,9 @@ test.describe('ESC does not depend on where focus is', () => {
     // in the content is focusable, and content that swaps after opening (a loading panel
     // giving way to the real thing) drops whatever held it. Reproduced directly here.
     await page.evaluate(() => {
-      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
     });
     expect(
       await page.evaluate(() => {
@@ -710,7 +712,9 @@ test.describe('ESC does not depend on where focus is', () => {
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
     await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
     await page.evaluate(() => {
-      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
     });
 
     await page.keyboard.press('Escape');

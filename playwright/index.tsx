@@ -11,7 +11,7 @@ import { DialogManagerProvider } from '../src/react/dialog-manager-context.js';
  * Extend this wrapper when additional providers are needed (e.g. theme,
  * router, or other context providers required by test harnesses).
  */
-beforeMount(async ({ App }) => {
+beforeMount(({ App }) => {
   return (
     <DialogManagerProvider>
       <App />

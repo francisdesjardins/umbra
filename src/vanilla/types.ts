@@ -39,7 +39,7 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
      * Which **placement** a non-modal panel gets — and, unlike the hook bindings, nothing else.
      *
      * `portal: true` still means viewport-anchored (`position: fixed; inset: 0`) and `false` still
-     * means contained (`absolute` against {@link BindDialogOptions.host}). What it does *not* do
+     * means contained (`absolute` against the `host` below). What it does *not* do
      * here is move the element: React portals its dialog into `document.body` and Solid mounts its
      * own there, but this binding was handed markup the caller wrote, and relocating that is the
      * one thing a controller refuses — a `<dialog>` reparented out of the section it documents

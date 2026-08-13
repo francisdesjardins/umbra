@@ -90,7 +90,7 @@ These are hard constraints — never violate them when generating code:
 - Generics default to `void`: `<TData = void>` — `CloseResult<TData>` stays a **plain** object (a conditional there would force a cast at every boundary the result crosses); with `TData = void`, `data` is an unusable `void | undefined`
 - Go-style error tuples: `const [err, result] = await openAndWait()` (`AwaitedClose`) — never throws. There is no `waitForClose`: a close resolver answers the _next_ close, so registering one after the open can miss a close that landed during `prepare`, and `openAndWait` registers first. To observe a close you are not causing, use `onClose`
 - Catch clauses: `catch (err: unknown)` → `normalizeError(err)` immediately
-- No `any` without `eslint-disable` comment explaining why
+- No `any` without an `oxlint-disable` comment explaining why
 
 ### Error Handling
 

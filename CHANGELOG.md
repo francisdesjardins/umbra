@@ -11,6 +11,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Tooling — one linter, on the same compiler as `tsc`, and three rules that were never running
+
+**ESLint and typescript-eslint are gone.** `yarn lint` is `oxlint --type-aware`, whose type-aware half
+runs through **tsgolint** — built on the TypeScript 7 compiler, so the linter and `tsc` are the same
+compiler generation for the first time. `eslint.config.js` is deleted; `@eslint/js`, `eslint`,
+`eslint-config-prettier`, `eslint-plugin-oxlint`, `eslint-plugin-react-hooks`,
+`eslint-plugin-react-refresh`, `globals` and `typescript-eslint` are out of the manifest.
+
+The side-by-side note this file inherited said typescript-eslint was the _binding_ constraint, and it
+was: as of today 8.67.0 still peers `typescript-estree` at `>=4.8.4 <6.1.0`. So the way out was not to
+wait for it. **`typescript@6.0.3` now exists for typedoc alone** — and TS 7 does ship a JS API
+(`typescript/unstable/sync`, `/async`, `/ast`: a client over the Go binary with `getExportsOfModule`,
+`getSymbolAtLocation`, `JSDocTagInfo`), so what blocks typedoc is that it uses the _previous_ shape of
+that API, not the absence of one. Replacing it is what collapses the pair to one TypeScript.
+
+**Coverage was measured, not assumed.** All **72** rules of typescript-eslint's `strictTypeChecked` set
+exist in oxlint's catalogue, and they are **enumerated** in `.oxlintrc.json` rather than inherited from
+a preset — a rule that silently stops existing then shows up in a diff. Categories were tried and
+rejected: `-D suspicious` alone reports 2 725 findings from rules nobody chose. Two rules are not
+carried over, both deliberately: `no-restricted-syntax` (its one use was a glob whose own comment says
+it never matched) and `arrow-parens` (prettier's job). Each surviving gate was then **proved to fire**
+against planted violations — `no-floating-promises`, `no-misused-promises` in argument position,
+`await-thenable`, `no-unnecessary-condition`, `switch-exhaustiveness-check`, `consistent-type-imports`,
+`no-explicit-any`, `arrow-body-style`, `react-hooks/rules-of-hooks` — because a linter that reports
+nothing looks exactly like a codebase that is clean.
+
+**Which is how three rules were found to have been doing nothing.**
+
+- **`curly` was dead everywhere.** `eslint-config-prettier` sets it to `0`, and it sits last in the
+  flat config, so a rule the repo declared as `['error', 'all']` was switched off in every scope. It is
+  live now, and the four sites it had been ignoring in `src/` are fixed.
+- **The `@example` lint pass linted zero files.** oxlint honours `.gitignore` **unconditionally** —
+  `--no-ignore` does not reach it, nor an `ignorePatterns` negation, nor running from inside the
+  directory — and `scripts/examples/generated/` was gitignored. The pass ran, reported nothing and
+  printed "lint: clean", which is indistinguishable from a clean lint. The directory is no longer
+  ignored (`check-examples.mjs` removes it unless you pass `--keep`, and `--fix` no longer implies
+  keeping it), and the script now **fails if the pass ever sees zero files again** — seen to fail, with
+  the ignore rule put back.
+- **`no-restricted-syntax`'s only selector** was already known to match nothing; it is not replaced.
+
+Two real defects the new linter caught that the old one could not:
+
+- **`vite.config.esm.ts` was passing `rollupOptions`**, deprecated under Vite 8 on rolldown, now
+  `rolldownOptions` — found by `no-deprecated`, which is in `strictTypeChecked` but not in the
+  `recommendedTypeChecked` that config's scope used.
+- **`playwright/index.tsx` was in no ESLint scope at all** and had an `async` `beforeMount` with
+  nothing to await.
+
+**The untyped-JavaScript scopes keep the syntax rules and drop the type-aware ones, and that is a
+statement about honesty rather than noise.** `.claude/**`, `scripts/**/*.mjs` and the microfrontend
+demo carry no annotations and are in no tsconfig, so tsgolint infers nothing: it types their values as
+the `error` type and then judges them, producing 1 528 `no-unsafe-*` findings that say "this file is
+untyped" — plus a handful of confident claims ("value is always nullish") drawn from the same absence.
+A finding built on a failed inference reads exactly like a real one, which makes it worse than none.
+
+Unchanged and verified after the swap: the React Compiler still runs (`use-modal.js` opens with `c(78)`
+and imports `react/compiler-runtime`), the Solid binding still imports no React, `verify:all` reports
+`PACKAGE OK`, and 745 tests pass.
+
 ### Docs — seven defects an inventory found before it wrote a single row
 
 The intent was a compatibility matrix: one place where "X with Y" has one answer, because the facts

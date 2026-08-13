@@ -23,7 +23,6 @@
     "vite.config.ts",
     "vite.config.esm.ts",
     "playwright.config.ts",
-    "eslint.config.js",
     "playground/vite.config.ts"
   ]
 }

@@ -58,6 +58,8 @@ jobs:
           echo "Playwright $version"
 
   # ── Lint & Format ────────────────────────────────────────────────────────────
+  # `yarn lint` is `oxlint --type-aware`: the type-aware half runs through tsgolint, which is
+  # built on the TypeScript 7 compiler, so the linter and `tsc` are the same compiler generation.
   lint:
     name: Lint & Format
     needs: install
@@ -238,7 +240,7 @@ jobs:
   # ── Docs ─────────────────────────────────────────────────────────────────────
   # `docs:check` runs typedoc with treatWarningsAsErrors — a broken {@link} or a public
   # signature naming an unexported type fails here. `docs:examples` extracts every JSDoc
-  # @example to a real module and runs prettier, tsc and eslint over it.
+  # @example to a real module and runs prettier, tsc and oxlint over it.
   docs:
     name: Docs
     needs: install

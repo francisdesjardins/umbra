@@ -595,14 +595,20 @@ broken `{@link}` or a public signature referencing an unexported type fails the 
   materialised, so a link out of the Solid chapter lands in the Solid chapter.
 
 **`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier,
-`tsc`, eslint — by extracting each one to a real module under `scripts/examples/generated/`
-(gitignored) and running the three over it. It is part of `yarn check`;
+`tsc`, oxlint — by extracting each one to a real module under `scripts/examples/generated/`
+and running the three over it. That directory is deliberately **not** gitignored: oxlint honours
+`.gitignore` with no override, so an ignored path is one it reports zero files for and passes —
+which is what it silently did. The script removes the directory unless you pass `--keep`, and
+fails if the lint pass ever sees no files again. It is part of `yarn check`;
 `yarn docs:examples:fix` writes the formatted example back into the doc comment it came from.
 
 - The examples get [their own tsconfig](../scripts/examples/tsconfig.json): a snippet shows a
   call and stops, so unused locals and implicit `any` are allowed, while everything that decides
   whether it would compile in a user's app — `strict`, `exactOptionalPropertyTypes`, the DOM
-  lib — is kept. The eslint scope is the same bargain (scope 3c in `eslint.config.js`).
+  lib — is kept. The lint scope is the same bargain (the `scripts/examples/generated/**` override
+  in `.oxlintrc.json`), and what it turns off is named there: the rules that report the _harness_
+  (the `export {}` for module detection, the `async` wrapper hosting an awaited call) rather than
+  the example.
 - Free identifiers (`store`, `fetchUser`, `api`) are declared as `any` by a second pass, so what
   remains is the example using _this_ library wrongly. That is the class of error worth failing
   a build over — the two examples that were wrong when written would both have been caught.

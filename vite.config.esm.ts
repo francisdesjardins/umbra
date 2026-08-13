@@ -57,7 +57,7 @@ export default defineConfig({
       formats: ['es'],
     },
 
-    rollupOptions: {
+    rolldownOptions: {
       // Every optional peer stays external — bundling one would put a second copy of a
       // framework in a consumer's app, which for both React and Solid means two module-level
       // runtimes and nothing working.
