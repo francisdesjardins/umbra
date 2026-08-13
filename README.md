@@ -10,8 +10,8 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
-[![Unit coverage](https://img.shields.io/badge/unit_coverage-98%25-3fb950?style=flat-square)](#development)
-[![Component coverage](https://img.shields.io/badge/component_coverage-93%25-3fb950?style=flat-square)](#development)
+[![Unit coverage](https://img.shields.io/badge/unit_coverage-93%25-3fb950?style=flat-square)](#development)
+[![Component coverage](https://img.shields.io/badge/component_coverage-92%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -34,7 +34,7 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 | `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`) and `setLogLevel`. **No framework.** |
 | `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                    |
 | `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                                                                |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — and `bindAction` for its buttons. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                                                                    |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — whose `bindAction` is a **member of the controller it returns**, not a second export. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                |
 
 The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding
@@ -42,10 +42,11 @@ reaches its own framework and only its own, so installing one is never a conditi
 other. All of that is enforced by tests that walk the real import graphs — and re-checked against
 the built package — not by convention.
 
-**The two hook bindings share a surface deliberately.** Two differences, and both are the
+**The two hook bindings share a surface deliberately.** Three differences, and all three are the
 renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are
-getters over signals, so read them through the object rather than destructuring it; and
-`portal: true` mounts the dialog for you, leaving `Modal` as `null`.
+getters over signals, so read them through the object rather than destructuring it; `useLookup`
+returns an accessor rather than an object, because a discriminated union cannot survive being
+spread into getters; and `portal: true` mounts the dialog for you, leaving `Modal` as `null`.
 
 **`umbra/vanilla` is a different kind on purpose.** It renders nothing — a binding that did would
 mean shipping a renderer, which this library refuses to do — so the element and its contents stay
@@ -65,6 +66,8 @@ yours and outlives the controller.
 - **Which action is running, not just that one is** — `action.isRunning('publish')` is the per-action state anywhere the button's own `data-loading` cannot reach: a header, a locked field, a status line. `hasRunningAction` stays the aggregate
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
+- **Who is in front is a decision, not a race** — `dialogManager.prioritize((modal) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
+- **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns the dismiss key into a report to the owner, with every gate above it — which key, an action claiming it, `prepare`, which dialog is in front — still the library's
 - **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the modal closes, so a dialog dismissed while it loads drops the work it started
 - **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
 - **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
@@ -231,6 +234,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, and reading state without a renderer
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close, and the `lookup` query API
+- `prioritize` — who is in front, as one project-wide rule, and the three costs of reordering a modal dialog
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
@@ -286,12 +290,14 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — 97% statements —
-and its exclude list is the statement of what a Node process can reach, not a way to flatter the
-number. `yarn test:component:coverage` measures what that list leaves out: the three bindings and
-the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs ~45% of the
-run) — 90% statements. The badges above are hand-set from those two commands, so treat them as
-what they are: a snapshot, not a gate.
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **93.2%**
+statements — and its exclude list is the statement of what a Node process can reach, not a way to
+flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
+bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
+~45% of the run) — **92.0%** statements over 51 files. Both measured 2026-08-13, and re-measured
+together or not at all: one number moved without the other is two projects being compared across
+different days. The badges above are hand-set from those two commands, so treat them as what they
+are: a snapshot, not a gate.
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> How this repo is run
 
