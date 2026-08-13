@@ -3,20 +3,8 @@ import { createPortal } from 'react-dom';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
-import { attachClickOutside } from '../core/attach-click-outside.js';
-import { attachFocusContainment } from '../core/attach-focus-containment.js';
-import { createFocusCoordinator } from '../core/attach-focus.js';
-import {
-  attachDialogCancel,
-  attachDialogKeydown,
-  attachWindowDismissKey,
-} from '../core/attach-keydown.js';
-import {
-  syncOpenSequence,
-  syncCloseSequence,
-  syncLabellingDiagnostics,
-} from '../core/attach-lifecycle.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
+import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
@@ -30,7 +18,6 @@ import {
 } from '../utils/animation-utils.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { useModalOutletContext } from './modal-outlet.js';
-import type { ModalDomContext } from '../core/attach-types.js';
 import type { GetDialog } from '../core/types.js';
 import type { OpenRequestDispatch } from '../manager/dialog-manager.js';
 import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js';
@@ -47,10 +34,9 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  *
  * **What is React's here is the scheduling and nothing else.** Every decision — the option
  * defaults, the state machine, the DOM lifecycle, the dismissal rules, focus, the backdrop test,
- * the teardown — is a call into `core/`, which is why `umbra/solid`'s `useModal` makes the same
- * calls in the same order from `createEffect`. The effects below are deliberately not extracted
- * into per-concern hook files: their whole content is a dependency array, and a folder of them
- * reads as a list of features the other binding is missing.
+ * the teardown — is a call into `core/`, and so is the *order* they are asked in: the lifecycle
+ * below is one deps-free call into `core/modal-director.ts`, which re-attaches only the steps
+ * whose own inputs moved. What is left of React in it is the word `useEffect`.
  *
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
  * @typeParam TReason - The reasons this modal closes with. Left at `string` any reason is
@@ -120,10 +106,10 @@ export function useModal<TData = void, TReason extends string = string>(
   });
   const { store, engine, getDialog, open, openAndWait, handle } = init;
 
-  // Kept across renders for the same reason, in its own cell: where the opening focus landed has
-  // to outlive a phase — it is read when an action settles, several phases later.
-  const [focus] = useState(() => {
-    return createFocusCoordinator({ getDialog, modalId, manager }, { engine });
+  // Kept across renders for the same reason, in its own cell: the director remembers what each
+  // step is attached for, and where the opening focus landed — both of which outlive a phase.
+  const [director] = useState(() => {
+    return createModalDirector({ store, getDialog, modalId, manager, engine });
   });
 
   const snap = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -150,8 +136,6 @@ export function useModal<TData = void, TReason extends string = string>(
   // waits on and the duration it times out against always match it.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  const domContext: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
-
   // Intentionally no deps array — runs every render to always capture the latest onClose
   // reference without needing a ref. The attach functions and the teardown read it via the store.
   useEffect(() => {
@@ -160,103 +144,33 @@ export function useModal<TData = void, TReason extends string = string>(
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
   //
-  // No deps array on the opening pass either, so `prepare` is always the latest closure. The
-  // phase guard and the `dialog.open` check inside `syncOpenSequence` are what stop the work
-  // happening twice, rather than a dependency list.
+  // One pass, no deps array, no cleanup — and each of the three is load-bearing. No deps, so
+  // `prepare` and `onKeyDown` are never a render behind; no cleanup, because a cleanup would tear
+  // the whole sequence down before every re-run and the director's per-step diffing would be
+  // pointless. What re-attaches, and what does not, is `core/modal-director.ts`'s decision.
   useEffect(() => {
-    syncOpenSequence(domContext, { prepare, nonModal: isNonModal });
+    director.sync({
+      phase: snap.phase,
+      isPreparing: snap.isPreparing,
+      prepare,
+      onKeyDown,
+      nonModal: isNonModal,
+      primaryProperty,
+      exitDuration,
+      dismissKey,
+      dismissWhilePreparing,
+      containFocus,
+      dismissOnClickOutside,
+    });
   });
 
-  // Deliberately listing `isPreparing`: the diagnostic asks its question once the content is
-  // final, and a phase-only dependency would never bring it back when `prepare` settles.
+  // Declared above the registration effect on purpose: React runs cleanups in declaration order,
+  // so this is what keeps the listeners coming off before the modal is unregistered and finalized.
   useEffect(() => {
-    syncLabellingDiagnostics(
-      { store, getDialog, modalId, phase: snap.phase, manager },
-      { isPreparing: snap.isPreparing }
-    );
-  }, [snap.phase, snap.isPreparing, store, getDialog, modalId, manager]);
-
-  // Explicit deps: only re-runs when the phase or the resolved animation changes. The context is
-  // rebuilt inside rather than listed, because a fresh object per render would re-attach the exit
-  // listeners on every render.
-  useEffect(() => {
-    return syncCloseSequence(
-      { store, getDialog, modalId, phase: snap.phase, manager },
-      { nonModal: isNonModal, primaryProperty, exitDuration }
-    );
-  }, [snap.phase, primaryProperty, exitDuration, modalId, store, getDialog, manager, isNonModal]);
-
-  // ── Dismiss key ─────────────────────────────────────────────────────────
-  //
-  // Three listeners: on the dialog, on its native `cancel`, and — for a non-modal panel only —
-  // on the window, so the key works wherever focus is. One effect, because they share a
-  // dependency list to the letter, and because that is the shape Solid's binding has too.
-  useEffect(() => {
-    const ctx: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
-    const keydownOptions = {
-      isPreparing: snap.isPreparing,
-      onKeyDown,
-      dismissKey,
-      engine,
-      nonModal: isNonModal,
-      dismissWhilePreparing,
-    };
-    const teardowns = [
-      attachDialogKeydown(ctx, keydownOptions),
-      attachDialogCancel(ctx, keydownOptions),
-      attachWindowDismissKey(ctx, keydownOptions),
-    ];
     return () => {
-      for (const teardown of teardowns) {
-        teardown?.();
-      }
+      director.destroy();
     };
-  }, [
-    snap.phase,
-    snap.isPreparing,
-    onKeyDown,
-    dismissKey,
-    dismissWhilePreparing,
-    engine,
-    isNonModal,
-    modalId,
-    store,
-    getDialog,
-    manager,
-  ]);
-
-  // ── Focus ───────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    return focus.sync(snap.phase);
-  }, [focus, snap.phase]);
-
-  // ── Focus containment (opt-in) ──────────────────────────────────────────
-
-  useEffect(() => {
-    return attachFocusContainment(
-      { store, getDialog, modalId, phase: snap.phase, manager },
-      { containFocus }
-    );
-  }, [snap.phase, containFocus, modalId, store, getDialog, manager]);
-
-  // ── Click outside (non-modal only) ──────────────────────────────────────
-
-  useEffect(() => {
-    return attachClickOutside(
-      { store, getDialog, modalId, phase: snap.phase, manager },
-      { dismissOnClickOutside, dismissWhilePreparing, engine }
-    );
-  }, [
-    snap.phase,
-    dismissOnClickOutside,
-    dismissWhilePreparing,
-    engine,
-    modalId,
-    store,
-    getDialog,
-    manager,
-  ]);
+  }, [director]);
 
   // ── Registry registration + teardown ────────────────────────────────────
   // Re-runs when the reported flags (`template` / `nonModal`) change, because those

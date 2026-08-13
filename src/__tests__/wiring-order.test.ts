@@ -2,11 +2,10 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-lifecycle-sequence.js';
+import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-director.js';
 
 /**
- * The order each binding wires the shared lifecycle in, recorded so that changing it is a
- * decision rather than an accident.
+ * The order the shared lifecycle is wired in, and who is allowed to write it down.
  *
  * **Why this exists.** Every framework-free piece of this library is a decision — `canDismiss`,
  * `orderStack`, `chooseActionRunner` — and each is tested. The *sequence* those decisions are
@@ -15,92 +14,99 @@ import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-lifecycle-sequence.js';
  * statements someone happened to write, with no name and no test, wrong for two years on an engine
  * nobody ran.
  *
- * **The hook pair must match; the controller need not.** React and Solid are the same modal
- * written twice — `binding-parity.test.ts` holds them to the same exports from the same paths —
- * so an unexplained difference in *when* they ask the shared lifecycle is a defect on its own
- * terms, whether or not anything can observe it. That one is asserted. `umbra/vanilla` is a
- * different kind of binding with no mirror to keep, so its order is *recorded* rather than
- * required, and the difference is carried in `UNRECONCILED` with the question that would settle
- * it — the way the compatibility matrix carries a `~`.
+ * **Most of what this file used to check is now the compiler's job.** The hook bindings do not
+ * wire the steps any more — `core/modal-director.ts` does, once, and `MODAL_LIFECYCLE_SEQUENCE` is
+ * *derived* from the table that runs them, so there is no second statement of the order to drift
+ * from the first. What is left here is the part a type cannot hold:
  *
- * Both divergences were tested by moving the step and running three engines; neither changed a
- * result, and neither is observable in principle, because every one of these runs inside a single
- * synchronous flush and no event can be dispatched between two statements in one task. That is
- * the evidence for sharing the sequence, and it is why only the pair-mirroring half is enforced:
- * "no test noticed" is enough to close a contract question and not enough to move shipped
- * behaviour that owes nobody a mirror.
+ * 1. the sequence is what this file records, so reordering the director is a deliberate edit;
+ * 2. no hook binding wires a step behind the director's back;
+ * 3. `umbra/vanilla` — which deliberately does **not** use the director — still wires all nine,
+ *    and still wires them in the order recorded below.
+ *
+ * **The controller is a different kind of binding and is held to a different thing.** React and
+ * Solid are the same modal written twice, so they share one executor. `umbra/vanilla` runs
+ * `syncOpenSequence` **last** where the hook pair runs it first; moving it was measured green on
+ * three engines and deliberately not taken, because "no test noticed" is enough to close a
+ * contract question between two bindings that owe each other a mirror and not enough to move
+ * shipped behaviour that owes nobody one. That divergence is carried in `UNRECONCILED` with the
+ * question that would settle it, the way the compatibility matrix carries a `~`.
  *
  * **Only effect-time steps are compared, and that exclusion is load-bearing.** Source order is a
- * usable proxy for run order among React's `useEffect`s and Solid's `createEffect`s (both run in
- * declaration order) and inside vanilla's single `sync()` body. It is *not* comparable for steps
- * that run during render: React calls `getDialogAnimationStyles` in its render body, so it runs
- * before every effect while appearing last in the file. Including it produced a table that read
- * "React styles first, vanilla styles second" from evidence that said the opposite.
+ * usable proxy for run order inside vanilla's single `sync()` body. It is *not* comparable for
+ * steps that run during render: React calls `getDialogAnimationStyles` in its render body, so it
+ * runs before every effect while appearing last in the file. Including it produced a table that
+ * read "React styles first, vanilla styles second" from evidence that said the opposite.
  */
 
 const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * Steps that run from an effect — or, in vanilla, from the store subscription that stands in.
- *
- * The set comes from the core's own declaration, so a step added there and wired into no binding
- * fails here rather than being quietly unchecked.
- */
-const EFFECT_STEPS = MODAL_LIFECYCLE_SEQUENCE;
-
-const BINDINGS = {
+/** The two bindings the director now wires, and the one that still wires itself. */
+const DIRECTED = {
   react: 'react/use-modal.tsx',
   solid: 'solid/use-modal.ts',
-  vanilla: 'vanilla/bind-dialog.ts',
 } as const;
+const CONTROLLER = 'vanilla/bind-dialog.ts';
 
 /**
- * The order as it stands, 2026-08-13. Not an aspiration — a record.
+ * The sequence as it stands, 2026-08-13. Not an aspiration — a record.
  *
- * Updating one of these lists is the point at which someone has to say why the order moved, in
- * the commit. A binding whose order changes silently is what this prevents.
+ * Updating this is the point at which someone has to say why the order moved, in the commit.
  */
-const RECORDED: Readonly<Record<keyof typeof BINDINGS, readonly string[]>> = {
-  // Both hook bindings follow the core's declared sequence. Not copied here — referenced, so the
-  // core is the single statement of it and this file cannot drift from what it checks against.
-  react: MODAL_LIFECYCLE_SEQUENCE,
-  solid: MODAL_LIFECYCLE_SEQUENCE,
-  vanilla: [
-    'attachDialogKeydown',
-    'attachDialogCancel',
-    'attachWindowDismissKey',
-    'attachClickOutside',
-    'attachFocusContainment',
-    'syncCloseSequence',
-    'focus.sync',
-    'syncOpenSequence',
-    'syncLabellingDiagnostics',
-  ],
-};
+const RECORDED_SEQUENCE: readonly string[] = [
+  'syncOpenSequence',
+  'syncLabellingDiagnostics',
+  'syncCloseSequence',
+  'attachDialogKeydown',
+  'attachDialogCancel',
+  'attachWindowDismissKey',
+  'focus.sync',
+  'attachFocusContainment',
+  'attachClickOutside',
+];
+
+/** The controller's own order, recorded for the same reason and required of nobody else. */
+const RECORDED_CONTROLLER: readonly string[] = [
+  'attachDialogKeydown',
+  'attachDialogCancel',
+  'attachWindowDismissKey',
+  'attachClickOutside',
+  'attachFocusContainment',
+  'syncCloseSequence',
+  'focus.sync',
+  'syncOpenSequence',
+  'syncLabellingDiagnostics',
+];
 
 /**
- * The divergences, each with the question it leaves open.
+ * The divergence, with the question it leaves open.
  *
- * A `reason` here is not a justification — none of these has one yet. It is a statement of what
- * would have to be established to close the cell, which is the honest thing to write while the
- * answer is unknown.
+ * A `reason` here is not a justification — there is not one yet. It is a statement of what would
+ * have to be established to close the cell, which is the honest thing to write while the answer is
+ * unknown.
  */
 const UNRECONCILED: readonly { readonly what: string; readonly question: string }[] = [
   {
-    what: 'syncOpenSequence runs first in the hook bindings and last in vanilla',
+    what: 'syncOpenSequence runs first in the director and last in the controller',
     question:
-      'showModal() before or after the listeners are attached. If it matters, one of the two is wrong today; if it does not, the sequence can be shared. Nothing establishes which.',
+      'showModal() before or after the listeners are attached. Moving the controller onto the director was run green on three engines, so nothing establishes that it matters — and nothing establishes that it does not.',
   },
 ];
 
-function orderIn(file: string): string[] {
-  const source = readFileSync(resolve(srcRoot, file), 'utf8')
-    .replaceAll(/\/\*[\s\S]*?\*\//g, ' ')
-    .replaceAll(/\/\/[^\n]*/g, ' ')
-    // Imports name every step and would swamp the real call sites.
-    .replaceAll(/^import[\s\S]*?from\s+'[^']+';$/gm, ' ');
+function sourceOf(file: string): string {
+  return (
+    readFileSync(resolve(srcRoot, file), 'utf8')
+      .replaceAll(/\/\*[\s\S]*?\*\//g, ' ')
+      .replaceAll(/\/\/[^\n]*/g, ' ')
+      // Imports name every step and would swamp the real call sites.
+      .replaceAll(/^import[\s\S]*?from\s+'[^']+';$/gm, ' ')
+  );
+}
 
-  return EFFECT_STEPS.map((step) => {
+function orderIn(file: string): string[] {
+  const source = sourceOf(file);
+
+  return MODAL_LIFECYCLE_SEQUENCE.map((step) => {
     return [source.indexOf(`${step}(`), step] as const;
   })
     .filter(([at]) => {
@@ -115,48 +121,50 @@ function orderIn(file: string): string[] {
 }
 
 test.describe('wiring order', () => {
-  for (const [binding, file] of Object.entries(BINDINGS)) {
-    test(`${binding} wires the lifecycle in the order this file records`, () => {
-      expect(
-        orderIn(file),
-        `${file} changed the order it wires the shared lifecycle in. That is a decision about when showModal() runs relative to the listeners and the focus policy — update RECORDED and say why in the commit.`
-      ).toEqual(RECORDED[binding as keyof typeof BINDINGS]);
-    });
-  }
+  test('the director runs the lifecycle in the order this file records', () => {
+    expect(
+      [...MODAL_LIFECYCLE_SEQUENCE],
+      'core/modal-director.ts changed the order it runs the shared lifecycle in. That is a decision about when showModal() runs relative to the listeners and the focus policy — update RECORDED_SEQUENCE and say why in the commit.'
+    ).toEqual(RECORDED_SEQUENCE);
+  });
 
-  test('every binding wires every effect-time step', () => {
-    // The comparison above is vacuous for a step a binding never calls, and a step dropped from
-    // one binding is exactly the regression that would hide there.
-    for (const [binding, file] of Object.entries(BINDINGS)) {
-      expect(orderIn(file).length, `${binding} is missing an effect-time step`).toBe(
-        EFFECT_STEPS.length
-      );
+  test('no hook binding wires a lifecycle step itself', () => {
+    // The regression this replaces the old order-diff with. A binding that reaches past the
+    // director for one step has taken back the scheduling decision the director exists to own —
+    // and it would do it silently, because the modal would still work.
+    for (const [binding, file] of Object.entries(DIRECTED)) {
+      const source = sourceOf(file);
+      const wired = MODAL_LIFECYCLE_SEQUENCE.filter((step) => {
+        return source.includes(`${step}(`);
+      });
+      expect(
+        wired,
+        `${binding} calls a lifecycle step directly. The order is core/modal-director.ts's to decide — add the step there, or say in the commit why this binding has to be the exception.`
+      ).toEqual([]);
     }
   });
 
-  test('the hook pair follows the sequence the core declares', () => {
-    // `binding-parity.test.ts` asserts the two hook bindings export the same names from the same
-    // paths. This is the same contract one level down, and it is now held against the core rather
-    // than against each other: `MODAL_LIFECYCLE_SEQUENCE` is the director's specification, and a
-    // hook binding that stops following it has diverged from the library, not merely from its
-    // twin.
-    expect(RECORDED.react).toEqual([...MODAL_LIFECYCLE_SEQUENCE]);
-    expect(RECORDED.solid).toEqual([...MODAL_LIFECYCLE_SEQUENCE]);
+  test('the controller wires every step, in the order this file records', () => {
+    // Recorded rather than required: see the divergence above. The count matters as much as the
+    // order — the comparison is vacuous for a step the controller never calls, and a step dropped
+    // from it is exactly the regression that would hide there.
+    expect(orderIn(CONTROLLER)).toEqual(RECORDED_CONTROLLER);
+    expect(RECORDED_CONTROLLER.length, 'the controller is missing an effect-time step').toBe(
+      MODAL_LIFECYCLE_SEQUENCE.length
+    );
   });
 
-  test('the recorded divergences are the ones that actually exist', () => {
-    // Two distinct orders now: the hook pair, and the controller. Three would mean the pair has
-    // split again; one would mean the controller has converged and the sequence is ready to be
-    // shared outright.
-    const distinct = new Set(
-      Object.values(RECORDED).map((order) => {
-        return order.join(' → ');
-      })
-    );
+  test('the recorded divergence is the one that actually exists', () => {
+    // One order for the hook pair and one for the controller. If they ever match, the controller
+    // has adopted the director and the divergence is closed; if a third appears, a hook binding
+    // has gone its own way and the test above should have caught it first.
+    const same =
+      RECORDED_CONTROLLER.join(' → ') === [...MODAL_LIFECYCLE_SEQUENCE].join(' → ') &&
+      orderIn(CONTROLLER).join(' → ') === [...MODAL_LIFECYCLE_SEQUENCE].join(' → ');
     expect(
-      distinct.size,
-      'The bindings agree in a new way, or disagree in a new way. Either is worth noticing — update UNRECONCILED.'
-    ).toBe(2);
+      same,
+      "The controller now runs the director's order. That closes UNRECONCILED — say so there, or move it onto the director outright."
+    ).toBe(false);
     expect(UNRECONCILED.length).toBeGreaterThan(0);
   });
 });

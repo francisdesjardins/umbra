@@ -4,24 +4,12 @@ import type { JSX } from 'solid-js';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
-import { attachClickOutside } from '../core/attach-click-outside.js';
-import { attachFocusContainment } from '../core/attach-focus-containment.js';
-import { createFocusCoordinator } from '../core/attach-focus.js';
-import {
-  attachDialogCancel,
-  attachDialogKeydown,
-  attachWindowDismissKey,
-} from '../core/attach-keydown.js';
-import {
-  syncOpenSequence,
-  syncCloseSequence,
-  syncLabellingDiagnostics,
-} from '../core/attach-lifecycle.js';
 import {
   DIALOG_CONTENT_STYLE,
   dialogAttributes,
   setDialogAttributes,
 } from '../core/dialog-props.js';
+import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
@@ -37,7 +25,6 @@ import {
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
 import { useModalOutletContext } from './modal-outlet.js';
-import type { ModalDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, ModalRenderArgs } from '../core/types.js';
 import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js';
@@ -240,81 +227,33 @@ export function useModal<TData = void, TReason extends string = string>(
   });
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
-
-  const domContext = (): ModalDomContext => {
-    return { store, getDialog, modalId, phase: snapshot().phase, manager };
-  };
-
-  createEffect(() => {
-    syncOpenSequence(domContext(), { prepare: options.prepare, nonModal: isNonModal });
-  });
-
-  // Reading `isPreparing` here is what subscribes this effect to it — the effect above tracks the
-  // phase alone, so a guard hidden inside the function would never bring the check back when
-  // `prepare` settles.
-  createEffect(() => {
-    syncLabellingDiagnostics(domContext(), { isPreparing: snapshot().isPreparing });
-  });
+  //
+  // One effect, and **no `onCleanup` inside it**: Solid runs an effect's cleanups before every
+  // re-run, which would tear the whole sequence down each pass and leave the director nothing to
+  // diff. Everything it attached comes off in `destroy()` below.
+  //
+  // What the effect tracks is what the body reads — the snapshot, and the option fields, which
+  // Solid props deliver as getters. That is Solid's half of "never a pass behind"; React gets the
+  // same property by having no dependency array at all.
 
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
-  createEffect(() => {
-    const teardown = syncCloseSequence(domContext(), {
-      nonModal: isNonModal,
-      primaryProperty,
-      exitDuration,
-    });
-    if (teardown) {
-      onCleanup(teardown);
-    }
-  });
+  const director = createModalDirector({ store, getDialog, modalId, manager, engine });
 
   createEffect(() => {
     const snap = snapshot();
-    const dom: ModalDomContext = { store, getDialog, modalId, phase: snap.phase, manager };
-    const keydownOptions = {
+    director.sync({
+      phase: snap.phase,
       isPreparing: snap.isPreparing,
+      prepare: options.prepare,
       onKeyDown: options.onKeyDown,
-      dismissKey,
-      engine,
       nonModal: isNonModal,
+      primaryProperty,
+      exitDuration,
+      dismissKey,
       dismissWhilePreparing,
-    };
-    const teardowns = [
-      attachDialogKeydown(dom, keydownOptions),
-      attachDialogCancel(dom, keydownOptions),
-      attachWindowDismissKey(dom, keydownOptions),
-    ];
-    onCleanup(() => {
-      for (const teardown of teardowns) {
-        teardown?.();
-      }
-    });
-  });
-
-  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
-  createEffect(() => {
-    const teardown = focus.sync(snapshot().phase);
-    if (teardown) {
-      onCleanup(teardown);
-    }
-  });
-
-  createEffect(() => {
-    const teardown = attachFocusContainment(domContext(), { containFocus });
-    if (teardown) {
-      onCleanup(teardown);
-    }
-  });
-
-  createEffect(() => {
-    const teardown = attachClickOutside(domContext(), {
+      containFocus,
       dismissOnClickOutside,
-      dismissWhilePreparing,
-      engine,
     });
-    if (teardown) {
-      onCleanup(teardown);
-    }
   });
 
   // ── Registration + teardown ─────────────────────────────────────────────────
@@ -347,6 +286,11 @@ export function useModal<TData = void, TReason extends string = string>(
   });
 
   onCleanup(() => {
+    // Both in one cleanup, in this order, rather than in two: Solid runs an owner's cleanups in
+    // reverse registration order, so two of them would read as the opposite of what they do. The
+    // detachments come off before the modal is unregistered and finalized, which is the order
+    // React's declaration-ordered cleanups give.
+    director.destroy();
     teardownModal(store, manager, modalId, getDialog());
   });
 
