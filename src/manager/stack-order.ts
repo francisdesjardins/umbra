@@ -77,20 +77,25 @@ function rankOf(candidate: StackCandidate, priority: StackPriority): number {
 }
 
 /**
- * Order open dialogs bottom-first — by priority, then by the order they opened.
+ * Order open dialogs bottom-first — by modality, then by priority, then by the order they opened.
+ *
+ * **Modality is the primary key and it is not a preference**: every non-modal dialog sorts under
+ * every modal one, before the policy is consulted at all, because the platform has already settled
+ * that and an order claiming otherwise would be false rather than opinionated. See the comparator.
  *
  * Generic in the candidate so the manager can hand its own records through and get them back
- * ordered; only the three policy fields and `openSequence` are read. With no policy this is exactly
- * the sort the manager has always done, which is what makes `prioritize` opt-in rather than a new
- * default.
+ * ordered; only the three policy fields and `openSequence` are read. With no policy the ranks are
+ * all equal and only the first and third keys do anything — which is what makes `prioritize` opt-in,
+ * though not what makes it a no-op: the modality key applies either way.
  */
 export function orderStack<T extends StackCandidate>(
   candidates: readonly T[],
   priority: StackPriority | undefined
 ): T[] {
   // Ranked once, up front: a comparator calling the policy would call it O(n log n) times, and a
-  // policy is allowed to be a lookup rather than arithmetic. With no policy every rank is the same
-  // and the sort falls through to open order, which is what makes `prioritize` opt-in.
+  // policy is allowed to be a lookup rather than arithmetic. With no policy every rank is the same,
+  // so the comparator falls through to the two keys that are not the policy's — modality, then open
+  // order.
   const ranked = candidates.map((candidate) => {
     return { candidate, rank: priority ? rankOf(candidate, priority) : 0 };
   });

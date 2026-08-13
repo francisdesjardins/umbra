@@ -11,7 +11,10 @@ const log = createLogger('modal:click-outside');
  * A document-level `pointerdown` listener (covers mouse and touch), attached only while
  * `dismissOnClickOutside` is `true` and the dialog is open. Suppressed while an action is
  * running, and — unless `dismissWhilePreparing` — while `prepare` is still preparing. Only the
- * topmost non-modal in a stack responds.
+ * dialog **in front** responds, which is a stricter test than "the topmost non-modal": no non-modal
+ * dialog is in front while a modal one is open, so a panel under a modal dialog answers no
+ * click-outside. Harmless in practice — the modal's own backdrop swallows the pointer first — and
+ * worth stating, because the sentence it replaces described a different rule.
  *
  * Only meaningful for non-modal dialogs; a modal one has a backdrop, and the backdrop click is
  * a different path with a different question (did the pointer land outside the box).

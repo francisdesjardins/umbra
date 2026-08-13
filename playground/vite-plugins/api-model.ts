@@ -57,7 +57,7 @@ const KIND: Record<number, ApiSymbol['kind']> = {
  * Every exported symbol must appear exactly once — `buildModel` throws otherwise, because a
  * new export that silently belongs to no page is an export nobody can find.
  */
-const CATEGORIES: readonly CategoryDef[] = [
+export const CATEGORIES: readonly CategoryDef[] = [
   {
     id: 'manager',
     label: 'Dialog manager',
@@ -158,6 +158,7 @@ const CATEGORIES: readonly CategoryDef[] = [
       'formatAriaKeyshortcuts',
       'matchesHotkey',
       'isKeyClaimedByPopup',
+      'isOwnEventTarget',
     ],
   },
   {

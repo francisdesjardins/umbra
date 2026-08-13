@@ -190,6 +190,58 @@ test.describe('prioritize', () => {
     expect(stackOf(manager)).toEqual(['second', 'third', 'first']);
   });
 
+  test('a non-modal dialog is under every modal one, whatever the policy asks for', () => {
+    const manager = createDialogManager();
+    manager.register('modal', createFakeStore(), { template: 'alert' });
+    manager.register('panel', createFakeStore(), { template: 'slide', nonModal: true });
+    // A policy shouting for the panel. It orders the panel against the other panels and moves it no
+    // nearer the user — the platform paints top-layer elements above ordinary ones and no `z-index`
+    // reaches between them, so an order claiming otherwise would be false rather than debatable.
+    manager.prioritize((modal) => {
+      return modal.nonModal ? 1000 : 0;
+    });
+
+    manager.open('modal');
+    manager.open('panel');
+
+    expect(stackOf(manager)).toEqual(['panel', 'modal']);
+    expect(manager.getSnapshot().foreground?.id).toBe('modal');
+    // The consequence that made this a defect rather than a cosmetic ordering: `isForeground` is what
+    // decides who answers the dismiss key, so naming the panel sent Escape to the dialog underneath
+    // while the user was looking at the one above it.
+    expect(manager.lookup().isForeground('panel')).toBe(false);
+    expect(manager.getZIndex('panel')).toBe(manager.Z_INDEX_BASE);
+    expect(manager.getZIndex('modal')).toBe(manager.Z_INDEX_BASE + 1);
+  });
+
+  test('and it holds with no policy at all, which is the default that changed', () => {
+    const manager = createDialogManager();
+    manager.register('modal', createFakeStore());
+    manager.register('panel', createFakeStore(), { nonModal: true });
+
+    // The panel opens *later*, so open order alone would put it in front.
+    manager.open('modal');
+    manager.open('panel');
+
+    expect(stackOf(manager)).toEqual(['panel', 'modal']);
+    expect(manager.getSnapshot().foreground?.id).toBe('modal');
+  });
+
+  test('within one family the policy still decides', () => {
+    const manager = createDialogManager();
+    manager.register('first-panel', createFakeStore(), { nonModal: true });
+    manager.register('second-panel', createFakeStore(), { nonModal: true });
+    manager.prioritize((modal) => {
+      return modal.id === 'first-panel' ? 5 : 0;
+    });
+
+    manager.open('first-panel');
+    manager.open('second-panel');
+
+    // Both non-modal, so the modality key is a tie and the rank is what is left to break it.
+    expect(stackOf(manager)).toEqual(['second-panel', 'first-panel']);
+  });
+
   test('syncStackOrder is safe to call at any time, policy or not', () => {
     const manager = createDialogManager();
     manager.register('a', createFakeStore());

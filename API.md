@@ -404,7 +404,7 @@ Everything above, plus:
 | `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                                                                                                                                                                     |
 | `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                                                                                                                                                                   |
 | `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.                                                                                                                                                       |
-| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the topmost non-modal responds. Default: `false`.                                                                                                                                                 |
+| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the dialog in front responds, and no non-modal dialog is in front while a modal one is open. Default: `false`.                                                                                    |
 | `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                                                                                                                                                                      |
 | `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                                                                                                                                                           |
 | `portal?`                 | `boolean`                                                        | Render via `createPortal(node, document.body)`. Default: `false`. For non-modal dialogs, `true` = viewport-anchored (`fixed`); `false` = contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way.                                                                                                                                           |
@@ -439,7 +439,7 @@ const panel = useSlideModal({
 | Backdrop       | Native `::backdrop` blocks clicks                                            | No backdrop — clicks pass through                                                               |
 | Top layer      | Browser top layer                                                            | Normal document flow with computed `z-index`                                                    |
 | Body scroll    | Locked (`data-dialog-open` on body), scrollbar width compensated — see below | Not locked                                                                                      |
-| Z-index        | Managed by browser                                                           | `1300 + stack position` (from `openedAt` sorting)                                               |
+| Z-index        | Managed by browser                                                           | `1300 + stack position` — see [prioritize](#prioritize--deciding-the-stack-order)               |
 | Data attribute | `data-modal-z` set for debugging                                             | `data-modal-z` set for debugging                                                                |
 | Dismiss key    | `dismissKey` (default `Key.Escape`), requires focus                          | `dismissKey` (default `Key.Escape`), window-capture — no focus needed                           |
 | Backdrop click | Configurable via `dismissOnBackdropClick`                                    | No effect (no backdrop exists)                                                                  |
@@ -1124,7 +1124,7 @@ Overloaded method for querying modal state. No optional chaining needed — `loo
 const info = dialogManager.lookup('my-modal');
 info.exists; // true if registered, false otherwise
 info.isVisible; // true if phase !== 'closed'
-info.isForeground; // true if topmost open modal
+info.isForeground; // true if this is the dialog in front — see below
 info.phase; // 'closed' | 'opening' | 'open' | 'closing'
 info.isPreparing; // true while its prepare is still running
 info.openedAt; // timestamp (0 for unregistered)
@@ -1142,7 +1142,7 @@ all.getRegisteredCount(); // total registered modals
 all.get('my-modal'); // same as lookup('my-modal')
 all.exists('my-modal'); // true if registered
 all.isVisible('my-modal'); // true if open
-all.isForeground('my-modal'); // true if topmost
+all.isForeground('my-modal'); // true if this is the dialog in front
 
 // Counts and existence checks derive from the arrays:
 all.getOpen().length; // open count
@@ -1161,7 +1161,7 @@ A union discriminated by `exists`: `RegisteredModalInfo | UnregisteredModalInfo`
 | `phase`        | `ModalPhase` | `'closed'` \| `'opening'` \| `'open'` \| `'closing'`      |
 | `isVisible`    | `boolean`    | On screen, exit animation included (`phase !== 'closed'`) |
 | `isPreparing`  | `boolean`    | Whether its `prepare` is still running (see below)        |
-| `isForeground` | `boolean`    | Whether this is the topmost open modal                    |
+| `isForeground` | `boolean`    | Whether this is the dialog in front — see the note below  |
 | `openedAt`     | `number`     | `Date.now()` at open start (0 if unregistered)            |
 
 `isPreparing` is the field an observer usually wants. `phase` describes the `<dialog>` element and
@@ -1194,12 +1194,27 @@ modals, so they are typed `RegisteredModalInfo` and need no narrowing at all.
 | ---------------------- | ------------------------ | ----------------------------------------------------------- |
 | `get(id)`              | `ModalInfo`              | Same as `lookup(id)` — null-object default for unregistered |
 | `exists(id)`           | `boolean`                | Whether the modal is registered                             |
-| `getForeground()`      | `ModalInfo \| undefined` | Topmost open modal, or undefined                            |
+| `getForeground()`      | `ModalInfo \| undefined` | The dialog in front, or undefined                           |
 | `getOpen(filter?)`     | `ModalInfo[]`            | Open modals in stack order; filter `'modal'`/`'non-modal'`  |
 | `isVisible(id)`        | `boolean`                | Whether a specific dialog is on screen                      |
-| `isForeground(id)`     | `boolean`                | Whether a specific modal is topmost                         |
+| `isForeground(id)`     | `boolean`                | Whether a specific dialog is the one in front               |
 | `getClosed()`          | `ModalInfo[]`            | All registered but closed modals                            |
 | `getRegisteredCount()` | `number`                 | Total registered modals                                     |
+
+### What "in front" means
+
+`isForeground` is not only a paint order — **it is what decides which dialog answers the dismiss key
+and which one owns a click outside**, so it is worth knowing exactly how it is settled. Three keys,
+bottom of the stack first:
+
+1. **Modality.** Every non-modal dialog sits under every modal one. The platform paints top-layer
+   elements above ordinary ones and no `z-index` reaches between them, so a panel opened half a
+   second after an interruption is still behind it — and reporting it as the foreground would be
+   false rather than debatable. A non-modal dialog is therefore never `isForeground` while any modal
+   one is open.
+2. **A policy**, if [`prioritize`](#prioritize--deciding-the-stack-order) installed one. Opt-in;
+   without it this key does nothing.
+3. **Open order** — the dialog whose `showModal()` landed last wins the tie.
 
 ---
 
@@ -1260,23 +1275,41 @@ mechanism, so a reorder has three visible consequences:
   `dialog[open] { animation: … }`. The library's own entrance is driven by phase rather than by
   `[open]`, so it is unaffected.
 - Focus is put back where it was **only for the dialog that ends up in front**, which is the one
-  that should hold it: only the topmost modal dialog is not inert.
+  that should hold it: only the topmost modal dialog is not inert. A dialog that opens _underneath_
+  another declines its opening focus, and the dialog in front takes the focus back to the exact
+  element that had it.
 
-Reorders are minimal — a swap lifts one dialog, not both — and the whole feature is dormant until
-`prioritize` is called, so an app that never calls it pays nothing and behaves exactly as before.
+Reorders are minimal — a swap lifts one dialog, not both — and nothing is re-shown or re-stamped
+until `prioritize` is called.
+
+### A policy orders each family, never across them
+
+**Every non-modal dialog sits under every modal one**, and that is settled before the policy is
+asked. The platform paints top-layer elements above ordinary ones and no `z-index` reaches between
+them, so an order claiming otherwise would not be an opinion the library is entitled to hold — it
+would be false, and `isForeground` is what decides who answers the dismiss key. Returning a huge
+number for a panel therefore ranks it against the other panels and moves it no nearer the user.
+
+This is a rule the library **enforces**, not a caveat you have to honour yourself. Two consequences
+worth knowing, because neither is a policy you asked for:
+
+- A non-modal panel is never the foreground while a modal dialog is open, so it stands down from the
+  dismiss key even when the modal in front has `dismissKey: false` or is still preparing. Escape can
+  then be answered by nobody. Before, the last-opened dialog took it.
+- With **no** policy installed nothing re-stamps `z-index`, so after a close a dialog's
+  `data-modal-z` and its index in `openDialogs` can disagree numerically. Nothing reads the stamp
+  back and the relative order they describe is the same; do not treat `data-modal-z` as the stack
+  position.
 
 ### The one thing it cannot do
 
-A **modal dialog always paints above a non-modal one**, whatever the policy says. That is the
-platform's rule about the top layer, not a policy this library can overrule. Order modal dialogs
-against each other, and non-modal ones against each other.
-
-And it orders the dialogs of **one manager**. Two copies of this library in one page — two
+It orders the dialogs of **one manager**. Two copies of this library in one page — two
 microfrontends bundling their own — have two registries and two independent stacks; the
 `modal:open` / `modal:close` document events are the only channel that crosses that line. In one
 app, where features are uncoordinated but the manager is shared, it is the whole answer.
 
-`stopPrioritizing()` restores plain open order, reordering what is on screen to match. Calling
+`stopPrioritizing()` puts the order back to what it would be with no policy — within each family,
+since the modality rule was never the policy's — and reorders what is on screen to match. Calling
 `prioritize` again **replaces** the policy — it is one project-wide rule, not a stack of them — and
 the replaced policy's disposer becomes a no-op.
 
@@ -1385,14 +1418,14 @@ function ModalOverlay() {
 | Property      | Type                     | Description                                                               |
 | ------------- | ------------------------ | ------------------------------------------------------------------------- |
 | `openDialogs` | `readonly ModalInfo[]`   | Open modals (modal and nonModal), in stack order — index = stack position |
-| `foreground`  | `ModalInfo \| undefined` | The one in front — most recently opened, or whatever the policy put there |
+| `foreground`  | `ModalInfo \| undefined` | The dialog in front — see the note under ModalLookup                      |
 
 Everything else derives from `openDialogs`: counts via `.length`, modal vs
 non-modal via `ModalInfo.nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
 and stack position via array index.
 
-The stack order is open order unless [`prioritize`](#prioritize--deciding-the-stack-order) installed
-a policy that says otherwise.
+Ordered by modality first (every non-modal dialog under every modal one), then by whatever
+[`prioritize`](#prioritize--deciding-the-stack-order) installed, then by open order.
 
 ---
 

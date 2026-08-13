@@ -1,5 +1,8 @@
-import { expect, test } from '@playwright/experimental-ct-react';
-import { OpeningFocusForegroundHarness } from './opening-focus-foreground.story.js';
+import { expect, test } from '../../__tests__/ct-coverage.js';
+import {
+  OpeningFocusForegroundHarness,
+  ReclaimFocusHarness,
+} from './opening-focus-foreground.story.js';
 
 /**
  * The opening focus defers to the foreground.
@@ -49,4 +52,81 @@ test('the same panel takes its opening focus when nothing is in front', async ({
   await expect(page.locator('dialog[data-modal-id="off-panel"]')).toBeVisible();
 
   await expect(page.getByTestId('off-panel-button')).toBeFocused();
+});
+
+test.describe('taking the focus back', () => {
+  test('it goes where focus actually was, not to the focusOnOpen claim', async ({
+    mount,
+    page,
+  }) => {
+    // A non-modal panel arriving underneath: the platform keeps it there, nothing is re-shown, so
+    // the reclaim is the only thing that can put the focus back.
+    const component = await mount(<ReclaimFocusHarness behindIsModal={false} />);
+    await component.getByTestId('rf-open-front').click();
+    // Its own claim, honoured on the opening — the state the reclaim must not simply repeat.
+    await expect(page.getByTestId('rf-front-claimed')).toBeFocused();
+
+    await page.getByTestId('rf-schedule').click();
+    await page.getByTestId('rf-front-input').click();
+    await page.getByTestId('rf-front-input').fill('half a sentence');
+    await expect(page.getByTestId('rf-front-input')).toBeFocused();
+
+    // The stack moves under it: the panel opens behind and the platform's focusing steps take the
+    // keyboard away.
+    await expect(page.locator('dialog[data-modal-id="rf-behind"]')).toBeVisible();
+
+    // Handed back to the field, with what was typed still in it. A reclaim that re-honoured the
+    // claim would put the ring on "Done" and lose the caret — which is what the first
+    // implementation did, and what its own test could not see.
+    await expect(page.getByTestId('rf-front-input')).toBeFocused();
+    await expect(page.getByTestId('rf-front-input')).toHaveValue('half a sentence');
+  });
+
+  test('the modal left behind by a close ends up with the keyboard', async ({ mount, page }) => {
+    // Two modal dialogs with a policy keeping one underneath — the arrangement `prioritize` and the
+    // opening-focus rule produce together.
+    //
+    // **This one characterises rather than fixes**, and the distinction is worth writing down because
+    // the reasoning that predicted a defect here was wrong. Reading the code says the dialog left
+    // behind declined its opening focus and nothing ever offers it again. What the code does not show
+    // is that a raise *re-records* the platform's previously-focused element: `raiseDialog` re-shows
+    // the front dialog at a moment when the newcomer holds the focus, so the front dialog's native
+    // close hands the keyboard back into the dialog behind it. Measured, not deduced — this test
+    // passes against the implementation that predates the reclaim.
+    //
+    // It stays because nothing asserted it, the chain it depends on is three indirections long, and
+    // any change to when a raise happens would break it silently.
+    const component = await mount(<ReclaimFocusHarness behindIsModal={true} />);
+    await component.getByTestId('rf-open-front').click();
+    await page.getByTestId('rf-schedule').click();
+    await expect(page.locator('dialog[data-modal-id="rf-behind"]')).toBeVisible();
+
+    // It declined its opening focus, correctly — the policy put it underneath.
+    await expect(page.getByTestId('rf-behind-claimed')).not.toBeFocused();
+
+    await page.getByTestId('rf-close-front').click();
+    await expect(page.locator('dialog[data-modal-id="rf-front"]')).not.toBeVisible();
+
+    // Now it is the one in front, so the focus is its own — and its `focusOnOpen` is the floor,
+    // since nothing ever held focus inside it. Without this the dialog is left focusless: the native
+    // close hands the keyboard to whatever was focused before the *front* dialog opened, which is
+    // outside this one.
+    await expect(page.getByTestId('rf-behind-claimed')).toBeFocused();
+  });
+
+  test('and its hotkeys work, which is what the focus is for', async ({ mount, page }) => {
+    const component = await mount(<ReclaimFocusHarness behindIsModal={true} />);
+    await component.getByTestId('rf-open-front').click();
+    await page.getByTestId('rf-schedule').click();
+    await expect(page.locator('dialog[data-modal-id="rf-behind"]')).toBeVisible();
+    await page.getByTestId('rf-close-front').click();
+    await expect(page.locator('dialog[data-modal-id="rf-front"]')).not.toBeVisible();
+
+    // Why the focus matters at all, and the reason the assertion above is not cosmetic: a dialog with
+    // no focus inside it hears no keydown, so every hotkey it declares except Escape is dead —
+    // Escape survives on the native `cancel`, which is focus-independent, and nothing else does.
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('dialog[data-modal-id="rf-behind"]')).not.toBeVisible();
+  });
 });

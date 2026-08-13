@@ -9,6 +9,108 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-13
+
+### Fixed — `/api` answered 500, and every gate was green
+
+`isOwnEventTarget` was exported from the root and never added to `CATEGORIES`, so `buildModel` threw
+on an uncategorised export exactly as designed — and nothing ran it. `type-check`, `lint`,
+`docs:check`, `verify:package` and the whole test suite passed while the reference route was dead and
+`yarn playground:build` failed outright, because the model is generated at serve time and at build
+time and nowhere else.
+
+The note added two commits earlier telling the next author to remember this step is evidence that the
+note is not the fix: the very next commit forgot. `api-categories.test.ts` compares the names parsed
+out of `src/index.ts` against the table, three ways — nothing uncategorised, nothing listed twice,
+nothing listed that is no longer exported — and needs neither typedoc nor a browser to do it.
+
+### Fixed — five component tests contributed nothing to the coverage report
+
+`ct-coverage.ts` is the fixture that reads `window.__coverage__` off the page before it closes; its
+own doc says the price is that every CT file has to import `test` from there. Five of sixteen did
+not, so they ran, passed, and were invisible — and they were the wrong five. `raiseDialog`,
+`stampZIndex`, `reclaimFocus` and the whole opening-focus decision sit on `.c8rc.json`'s exclude list
+too, which means the component report was their only possible measurement and it never saw them. The
+number that came out was not low, it was wrong, and it read as "untested" for code that was and
+"covered" for code that was not.
+
+`ct-coverage-wiring.test.ts` walks `src/**/*.ct.tsx` and fails on any file importing `test` from the
+runner. It asserts a floor on the count too, because a glob that stopped matching would leave the
+check passing over nothing — the same failure shape it exists to prevent.
+
+Running it afterwards is what turned four of the gaps below from arguments into measurements: with
+the fixture wired, `raiseDialog`'s focus-restore branch reports `0/3`, the two shadow-root hops
+report `0`, and `reclaimFocus` landed on the bare `<dialog>` four times out of four.
+
+### Changed — the dialog that needs the focus is the one that asks for it
+
+The reclaim added yesterday worked from the wrong side. A dialog opening _underneath_ another reached
+across, asked the manager who was in front, found that dialog **with a
+`document.querySelector('dialog[data-modal-id=…]')`**, and settled the focus onto it. Three things
+were wrong with that, and they are one root cause — a dialog answering for a dialog it does not own:
+
+- **The lookup is the one this library documents as broken.** `ModalOpenEventDetail.element` exists
+  precisely because that query finds nothing when the dialog lives in a shadow root, and this library
+  supports one; it can also resolve another manager's dialog of the same id, and two managers on a
+  page is a supported arrangement. The contrast was three lines away: `activeWithin`, in the same
+  subsystem, was written because `document.activeElement` is the wrong question inside a shadow root.
+- **It re-honoured `focusOnOpen` instead of where focus was.** The dialog in front had focus
+  _somewhere_ — a caret in a field, the button just pressed — and handing it back to the primary
+  button is a second theft dressed as a repair. Measured, and the old test could not see it: it
+  asserted "focus is inside the interruption", which was true of the bare `<dialog>` element too.
+- **It only ran on an opening**, so every other way the stack moves had nobody in it.
+
+Each dialog now watches the manager and takes the focus back itself when it is in front and has none.
+It has its own element, its own memory of where focus was (`lastFocusInside`, which was already
+there), and it hears every way the stack can move rather than the one another dialog noticed. The
+snapshot changes on dialog transitions and nothing else, which is what makes it safe to act on: a
+user clicking the page behind a panel never reaches it.
+
+**Modal dialogs only**, and that is a rule rather than a shortcut. A non-modal dialog does not own the
+page's focus and never did — the page under it is live — and it does not need to: its dismiss key
+comes from `attachWindowDismissKey`, which answers wherever focus is. A modal dialog has no such
+listener, so for that one focus _is_ the keyboard.
+
+**One prediction this replaces was wrong, and it is worth recording as wrong.** The reasoning said a
+dialog left behind by a close would never be given focus, since it declined its opening focus and
+nothing offered again. The tests written for it passed against the old code. What the reading missed
+is that a raise re-records the platform's previously-focused element: `raiseDialog` re-shows the front
+dialog while the newcomer holds focus, so that dialog's native close hands the keyboard back into the
+one behind it. The tests stay as characterisation — nothing asserted it, and the chain is three
+indirections long — but they are not regression tests, and they say so.
+
+### Fixed — the playground smoke test could pass over nothing
+
+Routes are discovered from the running app's sidebar, and the query ran before React had committed
+it: `networkidle` is not hydration, and a cold dev server is still regenerating the API model for the
+better part of ten seconds. The route loop then walked an empty list and every assertion inside it
+passed vacuously — including the one that reports a route answering 500. Measured on this very run:
+green against a playground whose `/api` was broken. It waits for the sidebar now, and the existing
+"discovered N routes" assertion is the second half of the guard.
+
+### Docs — the modality rule is enforced, and the prose still said it could not be
+
+Separating the two families said in its own commit message that it "turns the rule `prioritize`
+documents into one it enforces". It updated the `CHANGELOG` and the two type-level docs, and nothing
+else — so `API.md` kept a section titled **"The one thing it cannot do"** describing the thing the
+library now does, kept telling authors to order the families themselves, and kept an explicit
+"behaves exactly as before" promise that the same commit contradicted in bold. `stack-order.ts`
+disagreed with itself eight lines apart; `dialog-manager.ts` said "without a policy the open order
+_is_ the stack order" four lines under the paragraph that had just been corrected.
+
+Every present-tense statement of the old rule is now the new one, in `API.md`, both `CLAUDE.md`
+files, and the JSDoc on `DialogManagerSnapshot`, `getForeground`, `getOpen`, `isForeground`,
+`getZIndex`, `computeSnapshot` and `orderStack`. The `CHANGELOG`'s own older entries are left alone,
+for the reason at the top of this file.
+
+Two consequences of that rule were documented nowhere and now are, because neither is a policy
+anybody asked for: a non-modal panel stands down from the dismiss key even when the modal in front has
+`dismissKey: false`, so Escape can be answered by nobody; and with no policy installed nothing
+re-stamps `z-index`, so `data-modal-z` and a dialog's index in `openDialogs` can disagree numerically
+after a close. Also corrected: a z-index row in `API.md` crediting `openedAt` for a sort it has never
+performed, three copies of "only the topmost non-modal responds" where the code asks for the global
+foreground, and a showcase comment calling a modal panel non-modal.
+
 ## 2026-08-12
 
 ### Fixed — a dialog opening underneath another does not take its focus

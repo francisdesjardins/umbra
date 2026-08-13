@@ -23,7 +23,10 @@ type ModalInfoBase = {
    * in the app is really asking about.
    */
   readonly isPreparing: boolean;
-  /** Whether this is the topmost open modal. */
+  /**
+   * Whether this is the dialog in front — and so the one that answers the dismiss key and owns a
+   * click outside. `false` for every non-modal dialog while any modal one is open.
+   */
   readonly isForeground: boolean;
   /** Timestamp when the modal entered the opening phase. `0` for unregistered or never-opened. */
   readonly openedAt: number;
@@ -86,13 +89,18 @@ export type ModalLookup = {
   get(id: string): ModalInfo;
   /** Check if a modal is registered. */
   exists(id: string): boolean;
-  /** Get the open modal in front — the most recently opened, or the one a policy put there. */
+  /**
+   * Get the open dialog in front — the most recently opened **modal** one, or whichever a
+   * `dialogManager.prioritize` policy put there. A non-modal dialog is never in front of a modal one,
+   * however much later it opened.
+   */
   getForeground(): RegisteredModalInfo | undefined;
   /**
    * Get currently open modals in stack order, bottom first — so the index is the stack position.
-   * Open order, unless a `dialogManager.prioritize` policy says otherwise. Optionally filter to `'modal'` (`showModal()`) or `'non-modal'`
-   * (`dialog.show()`) dialogs — the same two words as the `nonModal` option and the
-   * `data-modal-type` attribute, so one distinction has one vocabulary.
+   * Non-modal dialogs first (the platform's rule, not a policy's), then whatever
+   * `dialogManager.prioritize` installed, then open order. Optionally filter to `'modal'`
+   * (`showModal()`) or `'non-modal'` (`dialog.show()`) dialogs — the same two words as the
+   * `nonModal` option and the `data-modal-type` attribute, so one distinction has one vocabulary.
    */
   getOpen(filter?: 'modal' | 'non-modal'): RegisteredModalInfo[];
 

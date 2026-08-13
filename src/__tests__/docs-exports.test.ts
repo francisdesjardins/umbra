@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { collectExports } from './collect-exports.js';
 
 /**
  * The docs claim specific symbols come from specific entry points. This checks that they do.
@@ -22,54 +23,6 @@ const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(SRC_ROOT, '..');
 
 const DOCS = ['README.md', 'API.md'] as const;
-
-/**
- * Names an entry point re-exports, read statically.
- *
- * Static rather than `import * as ns`: the unit project runs in plain Node, and importing
- * `src/react.ts` pulls `.tsx` modules it cannot transform. Parsing also means this works with
- * React uninstalled, which is the state the root is supposed to support.
- *
- * Only the forms the two entry files actually use are handled — `export { … } from`,
- * `export type { … } from`, and `export * from` — and an unhandled form would show up as a
- * missing symbol, i.e. a loud failure rather than a silent pass.
- */
-const collectExports = (entryFile: string): string[] => {
-  const source = readFileSync(resolve(SRC_ROOT, entryFile), 'utf8');
-  const names: string[] = [];
-
-  const named = /export\s+(?:type\s+)?\{([^}]*)\}\s*from\s*'[^']+';/g;
-  let match = named.exec(source);
-  while (match !== null) {
-    for (const raw of (match[1] ?? '').split(',')) {
-      // `export { A as B }` publishes B.
-      const name = raw
-        .trim()
-        .split(/\s+as\s+/)
-        .at(-1)
-        ?.trim();
-      if (name !== undefined && name !== '') {
-        names.push(name);
-      }
-    }
-    match = named.exec(source);
-  }
-
-  const star = /export\s+\*\s+from\s*'([^']+)';/g;
-  let starMatch = star.exec(source);
-  while (starMatch !== null) {
-    const target = starMatch[1] ?? '';
-    if (target.startsWith('.')) {
-      // Entry points write `./index.js` (see the comment in react.ts); map the ESM
-      // specifier back to the source file.
-      const file = target.replace(/^\.\//, '').replace(/\.js$/, '');
-      names.push(...collectExports(`${file}.ts`));
-    }
-    starMatch = star.exec(source);
-  }
-
-  return names;
-};
 
 /** `import { a, type B } from '<specifier>';` — captures the type-only marker and the names. */
 const IMPORT_PATTERN = /import(\s+type)?\s*\{([^}]*)\}\s*from\s*'(umbra(?:\/react)?)';/g;

@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/experimental-ct-react';
+import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { StackPriorityHarness } from './stack-priority.story.js';
+import { MultiRaiseHarness, StackPriorityHarness } from './stack-priority.story.js';
 
 /**
  * `prioritize` in a real top layer, which is the only place the claim can be checked.
@@ -83,4 +83,79 @@ test('the raise leaves focus in the dialog it put in front', async ({ mount, pag
   });
 
   expect(focusedIn).toBe('sp-warning');
+});
+
+test.describe('three dialogs, and a policy that arrives late', () => {
+  /** The stack the manager reports, bottom first. */
+  async function stackOrder(page: Page): Promise<string[]> {
+    return page.evaluate(() => {
+      return [...document.querySelectorAll('dialog[open]')]
+        .map((dialog) => {
+          return {
+            id: (dialog as HTMLElement).dataset['modalId'] ?? '',
+            z: Number((dialog as HTMLElement).dataset['modalZ'] ?? '0'),
+          };
+        })
+        .sort((a, b) => {
+          return a.z - b.z;
+        })
+        .map((entry) => {
+          return entry.id;
+        });
+    });
+  }
+
+  test('a newcomer that belongs at the bottom lifts everything above it', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<MultiRaiseHarness />);
+    await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
+    await expect(component.getByTestId('mr-policy')).toHaveText('on');
+
+    await component.getByTestId('mr-open-all').click();
+    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+
+    // `mr-low` arrived last and ranks lowest, so the plan is two raises — `mr-mid` then `mr-high` —
+    // and this is the only place that loop runs with more than one entry in it.
+    expect(await frontDialogId(page)).toBe('mr-high');
+    expect(await stackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+
+    // Raises are re-shows, so nothing closed on the way.
+    await expect(page.locator('dialog[open]')).toHaveCount(3);
+  });
+
+  test('installing the policy reorders what is already on screen', async ({ mount, page }) => {
+    const component = await mount(<MultiRaiseHarness />);
+
+    // Opened with no policy at all, so the last one in is in front — `mr-low`.
+    await component.getByTestId('mr-open-all').click();
+    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    expect(await frontDialogId(page)).toBe('mr-low');
+
+    await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
+
+    // The paint order moved under three dialogs that were already up — the half of `prioritize` a
+    // snapshot assertion cannot see, since in Node this path stops at the `document` guard.
+    await expect(page.locator('dialog[data-modal-id="mr-high"]')).toBeVisible();
+    expect(await frontDialogId(page)).toBe('mr-high');
+    expect(await stackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+  });
+
+  test('and removing it puts the paint order back', async ({ mount, page }) => {
+    const component = await mount(<MultiRaiseHarness />);
+    await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
+    await component.getByTestId('mr-open-all').click();
+    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    expect(await frontDialogId(page)).toBe('mr-high');
+
+    await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
+    await expect(component.getByTestId('mr-policy')).toHaveText('off');
+
+    // Back to open order — and this is the only thing that exercises the clause keeping
+    // `syncStackOrder` awake for one sync after the policy is gone.
+    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    expect(await frontDialogId(page)).toBe('mr-low');
+    expect(await stackOrder(page)).toEqual(['mr-high', 'mr-mid', 'mr-low']);
+  });
 });

@@ -58,7 +58,7 @@ export const AdvancedPage = () => {
           />
           <ExampleCard
             title="Who is in front is a decision, not a race"
-            description="A session warning is up when a deep link raises a panel. The panel's showModal() lands last, so the platform paints it in front and the warning ends up under its backdrop — inert, dimmed, and lost, while the user carries on with the thing the app was interrupting. Nothing threw. dialogManager.prioritize() installs one project-wide rule that says which kind of dialog outranks which; flip the switch while both are open and the warning comes back without the panel closing. Moving a modal dialog means closing and re-showing it, since the top layer paints in the order elements were added and ignores z-index between them."
+            description="A session warning is up when a deep link raises a panel. The panel's showModal() lands last, so the platform paints it in front and the warning ends up under its backdrop — inert, dimmed, and lost, while the user carries on with the thing the app was interrupting. Nothing threw. dialogManager.prioritize() installs one project-wide rule that says which kind of dialog outranks which; flip the switch while both are open and the warning comes back without the panel closing. Moving a modal dialog means closing and re-showing it, since the top layer paints in the order elements were added and ignores z-index between them. Both dialogs here are modal, which is what makes the order a decision at all — between a modal dialog and a non-modal one the platform has already settled it, and no policy reaches across that line."
             codeKey="stack-priority"
             modalId={STACK_PRIORITY_WARNING_ID}
             tryLabel="Session warning fires"

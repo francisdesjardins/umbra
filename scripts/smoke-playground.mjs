@@ -367,6 +367,19 @@ if (THEME === 'dark' || THEME === 'light') {
 }
 
 // Discover routes from the sidebar rather than hardcoding them.
+//
+// Waited for rather than read straight away, and the reason is that the alternative fails *quietly*:
+// `networkidle` is not hydration, so on a cold dev server — one still regenerating the API model,
+// which takes typedoc the better part of ten seconds — the query runs before React has committed the
+// sidebar and comes back empty. The route loop then walks nothing, and every assertion inside it
+// passes vacuously, including the one that reports a route answering 500. Measured: this script was
+// green against a playground whose `/api` was broken.
+//
+// `report` below still fails on an empty list, which is the second half of the same guard.
+await page.waitForSelector('nav a[href]', { timeout: 15_000 }).catch(() => {
+  // Let the assertion below do the reporting rather than throwing here — a failure that names what
+  // was expected is worth more than a stack trace out of a helper.
+});
 const routes = await page.$$eval('nav a[href]', (links) => {
   return [
     ...new Set(

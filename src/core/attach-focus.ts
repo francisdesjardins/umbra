@@ -78,33 +78,14 @@ export function createFocusCoordinator(
       // Asked of the manager rather than of the DOM, because the question is which dialog is in
       // front rather than which element is where, and the manager is the one that knows — modal
       // before non-modal, then whatever policy is installed.
+      //
+      // Declining is all this does. Putting the focus back is the front dialog's own business, and
+      // the watcher below is where it does it.
       if (phase === 'open' && !settled) {
         const dialog = getDialog();
         if (dialog) {
           settled = true;
-          if (manager.lookup().isForeground(modalId)) {
-            openingFocus = settleOpeningFocus(dialog);
-          } else {
-            // Not only declined but *returned*. `show()` runs the platform's focusing steps
-            // before any of this code, so opening underneath has already pulled the keyboard off
-            // the dialog in front — whether it landed here or fell to `<body>`, it is no longer
-            // where the user is looking. The front dialog's own coordinator will not re-run, so the
-            // focus is settled back onto it here, through the same call it used on its own
-            // opening — which re-honours its `focusOnOpen`. Unconditional rather than guarded on
-            // "did we steal it": the theft is what opening a dialog *is*, and re-reading
-            // `activeElement` to confirm only reintroduces the subscriber-order bet documented
-            // above.
-            openingFocus = null;
-            const front = manager.lookup().getForeground();
-            if (front !== undefined) {
-              const frontElement = dialog.ownerDocument.querySelector<HTMLDialogElement>(
-                `dialog[data-modal-id="${CSS.escape(front.id)}"]`
-              );
-              if (frontElement !== null) {
-                reclaimFocus(frontElement);
-              }
-            }
-          }
+          openingFocus = manager.lookup().isForeground(modalId) ? settleOpeningFocus(dialog) : null;
         }
       }
 
@@ -190,9 +171,58 @@ export function createFocusCoordinator(
         };
       }
 
+      // ── Taking the focus back when the stack moves ────────────────────────
+      //
+      // **Every dialog answers for its own focus.** The alternative was tried: the dialog *opening
+      // underneath* reached across and settled the focus back onto whichever dialog the manager
+      // named as the front one. Three things were wrong with it, and they are the three findings
+      // this replaces. It had to find that dialog's element with a
+      // `document.querySelector('dialog[data-modal-id=…]')` — the one lookup this library documents
+      // as broken, because it finds nothing inside a shadow root and can hit another manager's
+      // dialog of the same id. It re-honoured the front dialog's `focusOnOpen` rather than the
+      // position focus was actually in, so a caret in a text field became a ring on the primary
+      // button. And it only ran on an *opening*, so the mirror case had nobody in it at all: when
+      // the front dialog closed, the dialog left behind had declined its opening focus, was now the
+      // one in front, and nothing ever gave it the keyboard.
+      //
+      // Watching the manager answers all three at once. The dialog that needs the focus is the one
+      // asking for it, so it has its own element and its own memory of where focus was, and it
+      // hears *every* way the stack can move — an open, a close, a `prioritize` raise — rather than
+      // only the one the other dialog happened to notice.
+      //
+      // The snapshot changes on dialog transitions and on nothing else, which is what makes this
+      // safe to act on: a user clicking the page behind a panel does not reach here, so the focus is
+      // only ever taken back when the stack really did move under it.
+      let stopWatchingStack: (() => void) | undefined;
+      if (phase === 'open') {
+        const reclaimIfInFront = () => {
+          const dialog = getDialog();
+          if (!dialog?.open) {
+            return;
+          }
+          const info = manager.lookup(modalId);
+          if (!info.isForeground || (info.exists && info.nonModal)) {
+            // **Modal only, and that is a rule rather than a shortcut.** A non-modal dialog does not
+            // own the page's focus and never did — the page underneath it is live, and a panel that
+            // yanked the keyboard back every time some other dialog opened or closed would be taking
+            // something the page did not agree to give. It does not need to: its dismiss key comes
+            // from `attachWindowDismissKey`, which answers wherever focus is. A modal dialog has no
+            // such listener — its keydown is scoped to itself and only Escape survives focus being
+            // elsewhere, through the native `cancel` — so for that one, focus is the keyboard.
+            return;
+          }
+          if (dialog.contains(activeWithin(dialog))) {
+            return;
+          }
+          openingFocus = reclaimFocus(dialog, lastFocusInside) ?? openingFocus;
+        };
+        stopWatchingStack = manager.subscribeSnapshot(reclaimIfInFront);
+      }
+
       return () => {
         cancelAnimationFrame(frame);
         stopRemembering?.();
+        stopWatchingStack?.();
         unsubscribe();
       };
     },

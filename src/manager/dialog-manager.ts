@@ -320,12 +320,19 @@ export type DialogManagerSnapshot = {
   /**
    * Open modals (modal and nonModal), bottom of the stack first — index = stack position.
    *
-   * Open order, unless {@link DialogManager.prioritize} installed a policy that says otherwise.
+   * Two keys, in this order, and only the second is a preference: **every non-modal dialog sits
+   * under every modal one**, because the platform paints top-layer elements above ordinary ones and
+   * no `z-index` reaches between them; then whatever {@link DialogManager.prioritize} installed, if
+   * anything; then the order the opens arrived in.
    */
   readonly openDialogs: readonly RegisteredModalInfo[];
   /**
-   * The one in front — the most recently opened modal, or whichever a
-   * {@link DialogManager.prioritize} policy put there. `undefined` if none are open.
+   * The one in front. `undefined` if none are open.
+   *
+   * The most recently opened **modal** dialog — or the one a {@link DialogManager.prioritize} policy
+   * put there. A non-modal dialog is never the foreground while a modal one is open, however much
+   * later it opened, and that is worth knowing beyond paint order: `isForeground` is what decides
+   * which dialog answers the dismiss key and which one owns a click outside.
    */
   readonly foreground: RegisteredModalInfo | undefined;
 };
@@ -462,12 +469,13 @@ export type DialogManager = {
    * huge number for a panel therefore ranks it against the other panels and moves it no nearer the
    * user.
    *
-   * Opt-in, and dormant until called: without a policy the open order *is* the stack order and this
-   * costs nothing. Calling it again replaces the policy — it is one project-wide rule, not a stack
-   * of them.
+   * Opt-in, and dormant until called: with no policy nothing is ever re-shown or re-stamped, and the
+   * order is the modality rule above followed by the order the opens arrived in. Calling it again
+   * replaces the policy — it is one project-wide rule, not a stack of them.
    *
-   * @returns A disposer that restores plain open order, reordering what is on screen to match. It
-   *   does nothing if a later `prioritize` already replaced the policy.
+   * @returns A disposer that puts the order back to what it would be with no policy — within each
+   *   family, since the modality rule is not the policy's to begin with — and reorders what is on
+   *   screen to match. It does nothing if a later `prioritize` already replaced the policy.
    *
    * @example
    * // Once, at start-up. The warning outranks anything a route or a panel raises.
@@ -502,14 +510,17 @@ export type DialogManager = {
   /**
    * The computed z-index for a modal: `Z_INDEX_BASE` + its position in the open stack.
    *
-   * A modal that is not open has no stack position, so it gets the base — the same value the
-   * bottom-most open modal would get. That is the useful answer for the only caller that
-   * matters: the dialog is stamped at `show()` time, when it is already in the stack, and a
-   * closed dialog's stale z-index is never consulted.
+   * A dialog that is not open has no stack position, so it gets the base — the same value the
+   * bottom-most open one would get. That is the useful answer, because a closed dialog's stale
+   * z-index is never consulted.
    *
-   * With a policy from {@link DialogManager.prioritize} the position is the policy's, and the stamp
-   * outlives the show — `syncStackOrder` rewrites it on every dialog whenever the order changes,
-   * because a dialog can move long after it opened.
+   * **Position in the stack, not in the open order**: the bottom of that stack is a non-modal dialog
+   * whenever one is open, since the modality rule sorts before everything else. And the stamp
+   * outlives the show — `showDialog` writes the value that was current when *that* dialog opened,
+   * and `syncStackOrder` rewrites it on every open dialog whenever the order changes, which is the
+   * whole of what moving a non-modal dialog means. With no policy installed nothing rewrites it, so
+   * a stamp and this number can disagree numerically after a close; nothing reads the stamp back, and
+   * the relative order they describe is the same.
    */
   getZIndex(id: string): number;
 
@@ -720,9 +731,9 @@ export function createDialogManager(): DialogManager {
    * Build an immutable snapshot from the current registry state.
    *
    * `openDialogs` is sorted bottom of the stack first, so the array index doubles as the stack
-   * position and the last element is the foreground modal. The order is `openSequence` — not
-   * `openedAt`, see `RegistryEntry.openSequence` for why a wall clock cannot order this — unless
-   * `prioritize` installed a policy, which `orderStack` applies with `openSequence` as its tiebreak.
+   * position and the last element is the dialog in front. `orderStack` owns the three keys —
+   * modality, then the policy if one is installed, then `openSequence`. Not `openedAt`: see
+   * `RegistryEntry.openSequence` for why a wall clock cannot order this.
    *
    * `topId` is read off the ordered list rather than computed first: with a policy the foreground is
    * whatever the policy put in front, so asking "which is topmost" before ordering would answer with
@@ -1158,7 +1169,7 @@ export function createDialogManager(): DialogManager {
     Z_INDEX_BASE,
 
     getZIndex(id: string): number {
-      // openDialogs is sorted by open order — the index is the stack position.
+      // openDialogs is already in stack order — the index *is* the stack position.
       const index = snapshotStore.getSnapshot().openDialogs.findIndex((d) => {
         return d.id === id;
       });

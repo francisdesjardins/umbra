@@ -200,7 +200,8 @@ export type ModalVariant =
        * Whether clicking outside the dialog dismisses it.
        * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
        * `prepare` is still preparing.
-       * Only the topmost non-modal in a stack responds to click-outside.
+       * Only the dialog in front responds — and no non-modal dialog is in front while a modal one
+       * is open.
        * @default false
        */
       readonly dismissOnClickOutside?: boolean | undefined;
