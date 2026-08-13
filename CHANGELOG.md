@@ -288,6 +288,44 @@ Unchanged and verified after the swap: the React Compiler still runs (`use-modal
 and imports `react/compiler-runtime`), the Solid binding still imports no React, `verify:all` reports
 `PACKAGE OK`, and 745 tests pass.
 
+### Tooling — the editor was still wired to the linter that was removed
+
+The swap above changed the gates and left the editor behind: `.vscode/` was not in that commit. So the
+workspace still asked for `dbaeumer.vscode-eslint`, still declared `eslint.validate` and
+`eslint.useFlatConfig`, and still ran `source.fixAll.eslint` on every save — a code action contributed
+by an extension with nothing left to lint, which is a save-fix that silently does nothing rather than
+one that fails. Those are now `oxc.oxc-vscode` and `source.fixAll.oxc`, and the two `eslint.*` keys
+are gone.
+
+**And the editor was running half the rules.** `--type-aware` was passed by every CLI invocation and by
+nothing else; the language server defaults to the syntax half, so the 72 enumerated `strictTypeChecked`
+rules — the entire reason the config is 285 lines — reported nothing in the IDE. A file with
+`n == 1` and an unawaited promise showed one error where the CLI showed three. `options.typeAware` is
+set in `.oxlintrc.json` now, which oxlint's own schema calls the equivalent of the flag and the oxc
+extension names as the preferred route over its own `oxc.typeAware` setting — and the config reaches
+CI and any other editor, which a VS Code setting does not. Bare `oxlint` on that same file now reports
+the promise, in `src/` **and** in `playground/`, where tsgolint resolves the nested tsconfig; the
+server and the terminal are finally looking at one rule set. No CLI behaviour changes — every call
+already passed the flag — and `yarn lint` and `check-examples.mjs` (45 examples from 27 files) stay
+clean.
+
+**oxc's formatter is declined, explicitly.** The extension enables oxfmt by default, and prettier is
+this repo's formatter with `yarn format:check` as the gate — so a second formatter in the editor could
+only disagree with the gate, over the JS/TS half of what prettier already does for md, json, yaml and
+css. `oxc.enable.oxfmt: false` states in the workspace what `.oxlintrc.json` states in prose.
+
+The diagnosis was not the obvious one. "No red in the editor" reads as a dead language server, and it
+was not dead: `oxlint --lsp` was running against this workspace the whole time. Checking for the
+process before rewriting configuration is what separated "the half that was missing" from "the thing
+that never started".
+
+**`typescript@6.0.3` is not quite typedoc's alone**, which the section above claimed. `typescript-7/lib`
+ships `tsc.js` and no `tsserver.js`, so `js/ts.tsdk.path` has nowhere else to point and IntelliSense
+runs a compiler generation behind the gates that judge the same file. That is the remaining gap, and
+type-aware oxlint in the editor is what covers most of what it costs. `typescript.tsdk` and
+`typescript.enablePromptUseWorkspaceTsdk` are deprecated as of VS Code 1.133 in favour of
+`js/ts.tsdk.path` and `js/ts.tsdk.promptToUseWorkspaceVersion`; the workspace uses the new names.
+
 ### Docs — seven defects an inventory found before it wrote a single row
 
 The intent was a compatibility matrix: one place where "X with Y" has one answer, because the facts

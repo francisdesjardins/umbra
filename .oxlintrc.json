@@ -14,6 +14,13 @@
   // `arrow-body-style` and `curly` stay because they change what the code *means* to read, not how
   // it is spaced.
   "plugins": ["react", "typescript", "unicorn"],
+  // Type-aware lives here rather than only on the CLI, because the editor never sees the CLI.
+  // Every invocation in this repo already passes `--type-aware`, so this changes nothing for a
+  // terminal; what it changes is the language server, which runs the syntax half by default and
+  // would otherwise leave the 72 rules below — the entire point of the config — silent in the IDE.
+  "options": {
+    "typeAware": true
+  },
   "env": {
     "browser": true,
     "es2024": true

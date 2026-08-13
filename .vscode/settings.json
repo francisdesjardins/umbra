@@ -9,7 +9,7 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
+    "source.fixAll.oxc": "explicit",
     "source.organizeImports": "explicit"
   },
   "editor.tabSize": 2,
@@ -17,10 +17,13 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "eslint.useFlatConfig": true,
+  // oxlint only. oxc ships a formatter too and enables it by default, but prettier is this repo's
+  // formatter and `yarn format:check` is the gate — a second formatter in the editor can only
+  // disagree with it, and it would cover the JS/TS half of what prettier already does for md,
+  // json, yaml and css.
+  "oxc.enable.oxfmt": false,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,

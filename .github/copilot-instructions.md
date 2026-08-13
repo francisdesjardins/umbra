@@ -9,7 +9,7 @@ yarn install                 # Install dependencies
 yarn dev                 # Playground dev server (port 3000)
 yarn build               # Library build: ESM (dist/esm/)
 yarn type-check          # tsc --noEmit
-yarn lint:fix            # ESLint with auto-fix
+yarn lint:fix            # oxlint (type-aware) with auto-fix
 yarn format              # Code formatting
 yarn verify:all          # Full validation: lint → type-check → build → package checks
 yarn test                    # Run all tests (unit + component)

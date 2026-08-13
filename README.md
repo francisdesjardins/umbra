@@ -272,7 +272,7 @@ yarn dev             # Start playground
 yarn build           # Build library (ESM bundle + .d.ts via tsc)
 yarn type-check      # TypeScript strict check
 yarn test            # Unit + component tests
-yarn lint            # oxlint + ESLint
+yarn lint            # oxlint (type-aware)
 yarn format          # Prettier
 yarn check           # type-check + lint + format + docs, the pre-commit gate
 yarn verify:all      # lint + type-check + build + package checks, against the built artifact
