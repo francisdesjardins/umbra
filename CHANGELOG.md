@@ -13,10 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### CI — one component job per engine
 
-The component suite is the pipeline's long pole: **951 tests on one worker, about eight minutes**,
-while every other job finishes between thirty seconds and two minutes. It is three jobs now — one per
-engine — so the wall clock is roughly a third of that, and the runners are independent, which is the
-part that makes it free of the shared-state risk that raising `workers` would carry.
+The component suite is the pipeline's long pole: **951 tests on one worker, 7 min 52 s**, while every
+other job finishes between twenty seconds and two and a half minutes. It is three jobs now — one per
+engine — on independent runners, which is the part that makes it free of the shared-state risk raising
+`workers` would carry.
+
+**Measured on the first run of it**, test step per leg: Chromium 2 min 22 s, WebKit 2 min 40 s, Gecko
+3 min 00 s. The whole pipeline went from **9 min 11 s to 4 min 34 s** — the slowest leg is no longer
+what the run waits on, `Playground Smoke` and the Gecko leg now finish within a minute of each other.
 
 **The second reason is the one this week paid for.** The engines genuinely disagree: a focus assertion
 was green on Chromium and red on WebKit, and in a single job that is one line buried in a 951-test log.

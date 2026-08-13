@@ -122,8 +122,9 @@ jobs:
   # the container with it.
   #
   # **One job per engine**, and the split buys two different things. The suite is the long pole of
-  # this pipeline — 951 tests on one worker, about eight minutes serial — so three runners take it to
-  # roughly three. And the engines genuinely disagree: a focus assertion has already been green on
+  # this pipeline — 951 tests on one worker, 7 min 52 s serial — so three runners take it to three
+  # (measured: Chromium 2:22, WebKit 2:40, Gecko 3:00), and the whole run from 9:11 to 4:34. And the
+  # engines genuinely disagree: a focus assertion has already been green on
   # Chromium and red on WebKit, which in a single job is one line buried in a 951-test log and here is
   # a job name.
   #
