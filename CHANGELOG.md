@@ -11,6 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Fix — `docs:matrix` renders through prettier, so a no-op run is a no-op
+
+The script wrote raw markdown while prettier owns the layout of this repository's markdown, so **every
+run left `API.md` dirty** and `yarn format` had to follow it. That is not a tidiness point: reaching
+for the script to merely _print the worklist_ rewrote the document as a side effect, and the commit
+that followed had to be caught by a hook. It formats through prettier before comparing now, so the
+first run reports "up to date", and there is a `--list` mode that reads and writes nothing.
+
+**The gate got stricter as a result.** Its comparison was a whitespace normaliser — a workaround for
+the unformatted output, and one that would have passed a table whose columns had been re-padded by
+hand. It is a byte comparison against what the script produces now, so a passing test means running
+`docs:matrix` changes nothing. Seen to fail on a padding-only hand edit, which the normaliser would
+have let through.
+
 ### Tooling — typedoc's rendering half deleted, and the TS 7 replacement scouted rather than shipped
 
 **`yarn docs:api` is gone, and so is typedoc's whole HTML output.** It wrote `docs/api`, which is

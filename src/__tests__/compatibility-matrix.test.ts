@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
+import * as prettier from 'prettier';
 import {
   BINDING_ROWS,
   OPTION_ROWS,
@@ -37,29 +38,23 @@ const BEGIN = '<!-- BEGIN COMPATIBILITY MATRIX -->';
 const END = '<!-- END COMPATIBILITY MATRIX -->';
 
 /**
- * Compare a markdown table by what it says, not by how it is spaced.
+ * The rendered block, formatted exactly as `yarn docs:matrix` would write it.
  *
- * Prettier pads every column to the width of its widest cell and stretches the separator row to
- * match, and prettier owns the layout of this repository's markdown — so a byte comparison against a
- * freshly rendered table reports a difference on every run and says "diverged" when nothing did. Cell
- * text, and the number and order of rows, is what the gate is actually about.
+ * Through prettier rather than compared raw, because prettier owns the layout of this repository's
+ * markdown — it pads every column to its widest cell and normalises `*em*` to `_em_`. The script does
+ * the same before writing, so this is a byte comparison against what the script produces: if it
+ * passes, running `docs:matrix` changes nothing.
+ *
+ * It used to be a whitespace normaliser instead, which was a workaround for the script writing
+ * unformatted output — a arrangement that left `API.md` dirty after every run, and rewrote the
+ * document as a side effect of merely *listing* the worklist.
  */
-function normalizeTable(markdown: string): string {
-  return markdown
-    .trim()
-    .split('\n')
-    .map((line) => {
-      if (!line.startsWith('|')) {
-        return line.trim();
-      }
-      return line
-        .split('|')
-        .map((cell) => {
-          return /^-+$/.test(cell.trim()) ? '---' : cell.trim();
-        })
-        .join('|');
-    })
-    .join('\n');
+async function renderedBlock(): Promise<string> {
+  const formatted = await prettier.format(`${BEGIN}\n\n${renderMatrix().trim()}\n\n${END}\n`, {
+    ...(await prettier.resolveConfig(resolve(REPO_ROOT, 'API.md'))),
+    filepath: 'API.md',
+  });
+  return formatted.slice(BEGIN.length, formatted.lastIndexOf(END)).trim();
 }
 
 test.describe('the compatibility matrix', () => {
@@ -171,7 +166,7 @@ test.describe('the compatibility matrix', () => {
     ).toEqual([]);
   });
 
-  test('API.md carries the rendered matrix', () => {
+  test('API.md carries the rendered matrix', async () => {
     const doc = readFileSync(resolve(REPO_ROOT, 'API.md'), 'utf8');
     const start = doc.indexOf(BEGIN);
     const end = doc.indexOf(END);
@@ -181,9 +176,9 @@ test.describe('the compatibility matrix', () => {
 
     const embedded = doc.slice(start + BEGIN.length, end).trim();
     expect(
-      normalizeTable(embedded),
+      embedded,
       'API.md and the table have diverged. Run `yarn docs:matrix` to re-render it.'
-    ).toBe(normalizeTable(renderMatrix()));
+    ).toBe(await renderedBlock());
   });
 
   test('the open cells are the worklist', () => {
