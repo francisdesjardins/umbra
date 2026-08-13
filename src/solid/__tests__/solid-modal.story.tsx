@@ -10,6 +10,7 @@ import {
   SolidDisposalApp,
   SolidLiveStateApp,
   SolidMessageApp,
+  SolidNonModalOptionsApp,
   SolidOpenOrderApp,
   SolidOutletApp,
   SolidOutletDisposalApp,
@@ -100,4 +101,8 @@ export function SolidStackPriorityHarness() {
 
 export function SolidOpenOrderHarness() {
   return <SolidRoot app={SolidOpenOrderApp} />;
+}
+
+export function SolidNonModalOptionsHarness() {
+  return <SolidRoot app={SolidNonModalOptionsApp} />;
 }

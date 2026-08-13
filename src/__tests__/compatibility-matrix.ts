@@ -488,7 +488,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'onOpenRequest',
     react: { state: 'works' },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'onOpenRequest can refuse, and the refusal carries its reason',
+      },
+    },
     vanilla: {
       state: 'works',
       reference: {
@@ -500,13 +506,25 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'containFocus',
     react: { state: 'works' },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'containFocus wraps Tab inside a non-modal panel',
+      },
+    },
     vanilla: { state: 'works-untested' },
   },
   {
     capability: 'dismissOnClickOutside',
     react: { state: 'works' },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'dismissOnClickOutside closes it on a click in the page',
+      },
+    },
     vanilla: { state: 'works-untested' },
   },
   {
@@ -531,13 +549,25 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'a custom dismissKey',
     react: { state: 'works' },
-    solid: { state: 'works-untested', note: 'Escape is exercised; a non-default key is not.' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'a custom dismissKey closes it, and Escape does not',
+      },
+    },
     vanilla: { state: 'works-untested' },
   },
   {
     capability: 'prepare aborted by a close',
     react: { state: 'works' },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'a close aborts the prepare it was waiting on',
+      },
+    },
     vanilla: {
       state: 'works',
       reference: {

@@ -11,6 +11,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Tests — the dismiss key nobody answers was not a bug, and five options Solid had never exercised
+
+**Two items off the worklist, and the first one was mis-named by me.** "Escape can be answered by
+nobody" was on the list as a latent bug: put a modal with `dismissKey: false` in front of a non-modal
+panel and nothing closes. It is not a bug. The modal was told not to listen and the panel is no longer
+the foreground; falling through to the panel would close the one thing the user cannot see. The
+composition of two deliberate decisions is the right answer, and the cell moves from `✓ untested` —
+where it read as a hazard — to `✗ by design` with the reasoning.
+
+What makes it acceptable rather than a dead keyboard is a **different** question, and that is what the
+test measures: the press is not swallowed, so the application can still handle it, while a press the
+panel _does_ claim is stopped at the capture phase and never reaches the page. The counter asserts both
+directions, because one that only went up would be consistent with a library that swallows nothing and
+with one that swallows everything. Checked to discriminate first: with the front modal listening again,
+Escape closes it.
+
+**Then the five options only React's suite had exercised**, now run through `umbra/solid`:
+`containFocus`, `dismissOnClickOutside`, a custom `dismissKey`, `prepare` aborted by its own close, and
+`onOpenRequest` refusing with a reason. None is new behaviour — every one is a shared `attach*`
+function — which is exactly why the absence mattered: the claim this binding makes is that it reaches
+the same code from its own effects, and until something pressed the keys that claim rested on reading
+the source.
+
+**And one of those tests was silently vacuous when written, which is the finding worth keeping.** With
+the default 200 ms exit animation a panel that _is_ closing still reports `isVisible` for that window,
+so "still open just after the press" matched during a close — the test passed, and so did its exact
+opposite when tried. The harness animates instantly now and the assertion reads the close _reason_,
+which cannot hold for a panel that closed. Each of the five was then proved to discriminate: three by
+removing the option under test, and the `prepare` one by suppressing the library's own
+`prepareController.abort()` — the only mutation that could distinguish "the signal is aborted" from "the
+callback happened to notice", since `signal.aborted` stays true either way.
+
 ### Fix — `docs:matrix` renders through prettier, so a no-op run is a no-op
 
 The script wrote raw markdown while prettier owns the layout of this repository's markdown, so **every

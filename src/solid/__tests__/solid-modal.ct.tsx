@@ -12,6 +12,7 @@ import {
   SolidPortalHarness,
   SolidDeclarationHarness,
   SolidMessageHarness,
+  SolidNonModalOptionsHarness,
   SolidOpenOrderHarness,
   SolidOutletHarness,
   SolidSlideHarness,
@@ -440,5 +441,88 @@ test.describe('prioritize (Solid)', () => {
       'open',
       ''
     );
+  });
+});
+
+/**
+ * The five options React's suite exercised and this one did not.
+ *
+ * They are not new behaviour — every one is a shared `attach*` function — which is exactly why the
+ * absence mattered: the claim this binding makes is that it reaches the same code from its own
+ * effects, and until something presses the keys, that claim rests on reading the source.
+ */
+test.describe('umbra/solid — the options only React had exercised', () => {
+  test('containFocus wraps Tab inside a non-modal panel', async ({ mount, page }) => {
+    await mount(<SolidNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // A non-modal dialog is not inert-guarded by the top layer, so without `containFocus` Tab walks
+    // straight out into the page. Three focusables, so wrapping is distinguishable from "focus stayed
+    // on the same element".
+    await page.getByTestId('first').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('second')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('third')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('first')).toBeFocused();
+
+    // And backwards, because a wrap that only worked forwards would leave Shift+Tab escaping.
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByTestId('third')).toBeFocused();
+  });
+
+  test('a custom dismissKey closes it, and Escape does not', async ({ mount, page }) => {
+    await mount(<SolidNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // Escape first: a non-modal dialog never gets the native `cancel` that a modal one does, so a
+    // panel closing on Escape here could only mean the declared key was ignored.
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+    // And the reason, which is the assertion that cannot pass on a panel that closed: `isVisible`
+    // alone stays true through the exit animation, so on its own it matches either outcome.
+    await expect(page.getByTestId('last-reason')).toHaveText('none');
+
+    await page.keyboard.press('Delete');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
+    await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
+  });
+
+  test('dismissOnClickOutside closes it on a click in the page', async ({ mount, page }) => {
+    await mount(<SolidNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // Inside first — the assertion that this is click-*outside* and not click-anywhere.
+    await page.getByTestId('third').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    await page.getByTestId('outside').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
+    await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
+  });
+
+  test('a close aborts the prepare it was waiting on', async ({ mount, page }) => {
+    await mount(<SolidNonModalOptionsHarness />);
+    await page.getByTestId('open-held').click();
+    await expect(page.getByTestId('prepare-outcome')).toHaveText('running');
+
+    await page.getByTestId('close-mid-prepare').click();
+
+    // `aborted`, not `settled`: the signal handed to `prepare` is aborted by the close, which is what
+    // lets a caller cancel the fetch behind a loading modal instead of finishing it into a closed one.
+    await expect(page.getByTestId('prepare-outcome')).toHaveText('aborted');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
+  });
+
+  test('onOpenRequest can refuse, and the refusal carries its reason', async ({ mount, page }) => {
+    await mount(<SolidNonModalOptionsHarness />);
+    await page.getByTestId('request').click();
+
+    await expect(page.getByTestId('request-outcome')).toHaveText('refused: solid said no');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
   });
 });

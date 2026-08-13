@@ -1,6 +1,7 @@
 import { createSignal, onCleanup } from 'solid-js';
 import h from 'solid-js/h';
 import type { JSX } from 'solid-js';
+import { createOpenRequest } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { DialogManagerProvider } from '../dialog-manager-context.js';
 import { ModalOutlet } from '../modal-outlet.js';
@@ -933,4 +934,150 @@ export const SolidStackPriorityApp = (): JSX.Element => {
 
 export const SolidOpenOrderApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, stackPriorityApp(false)));
+};
+
+/**
+ * The options only React's suite had exercised: `containFocus`, `dismissOnClickOutside`, a custom
+ * `dismissKey`, `prepare` aborted by its own close, and `onOpenRequest`.
+ *
+ * One app rather than five, because they are all the same claim — that these reach the shared
+ * `attach*` functions from this binding's effects too — and five Solid roots would be five copies of
+ * the wiring under test with nothing else different. Each is asserted through its own probe.
+ *
+ * **Non-modal on purpose.** `containFocus` is the Tab wrap `show()` does not give a dialog and is
+ * inert for a modal one, and `dismissOnClickOutside` belongs to the same variant — the discriminated
+ * union would reject the pair on a modal dialog, which is the one type-level constraint in the model.
+ */
+function NonModalOptionsApp(): Built {
+  const [lastReason, setLastReason] = createSignal('none');
+  const [prepareOutcome, setPrepareOutcome] = createSignal('idle');
+  const [requestOutcome, setRequestOutcome] = createSignal('none');
+  const [holdPrepare, setHoldPrepare] = createSignal(false);
+  const [refuse, setRefuse] = createSignal(false);
+
+  const modal = useModal<void, 'inside'>({
+    id: 'solid-non-modal-options',
+    ariaLabel: 'Solid non-modal options',
+    nonModal: true,
+    // Instant, and load-bearing for the tests rather than cosmetic: with the default 200 ms exit, a
+    // panel that *is* closing still reads `isVisible` for that window, so "still open just after the
+    // press" would match during a close and the assertion would hold either way. Measured — an
+    // earlier version of this harness passed both an assertion and its opposite.
+    animation: {
+      entrance: { opacity: '1' },
+      exit: { opacity: '0' },
+      duration: 0,
+      exitDuration: 0,
+      transitionProperty: 'opacity',
+    },
+    containFocus: true,
+    dismissOnClickOutside: true,
+    // Not Escape, so a press that closed it would have to have gone through the declared key rather
+    // than through the native path a modal dialog gets for free.
+    dismissKey: 'Delete',
+    // Not Escape, so a press that closed it would have to have gone through the declared key rather
+    // than through the native path a modal dialog gets for free.
+    prepare: async (signal) => {
+      if (!holdPrepare()) {
+        return;
+      }
+      setPrepareOutcome('running');
+      await new Promise((resolve) => {
+        const timer = setTimeout(resolve, 400);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timer);
+          resolve(undefined);
+        });
+      });
+      setPrepareOutcome(signal.aborted ? 'aborted' : 'settled');
+    },
+    // Two parameters: what the caller sent, then the way to say no. Acceptance is the default —
+    // the manager cannot infer it, because an open is asynchronous on every binding.
+    onOpenRequest: (_payload, request) => {
+      if (refuse()) {
+        request.refuse('solid said no');
+      }
+    },
+    onClose: (result) => {
+      setLastReason(result.reason);
+    },
+    render: ({ action }) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Solid non-modal options'),
+          h('button', { 'data-testid': 'first', ...action('inside') }, 'First'),
+          h('button', { 'data-testid': 'second' }, 'Second'),
+          h('button', { 'data-testid': 'third' }, 'Third')
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'open-held',
+        onClick: () => {
+          setHoldPrepare(true);
+          void modal.open();
+        },
+      },
+      'Open with a slow prepare'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'close-mid-prepare',
+        onClick: () => {
+          modal.handle.close('inside');
+        },
+      },
+      'Close while preparing'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'request',
+        onClick: () => {
+          setRefuse(true);
+          void modal.dialogManager
+            .requestOpenAndWait('solid-non-modal-options', createOpenRequest())
+            .then((outcome) => {
+              // `reason` is required on the refused branch — the union is what makes that so, and
+              // a `??` fallback here is what the type-aware linter calls out as unreachable.
+              setRequestOutcome(outcome.accepted ? 'accepted' : `refused: ${outcome.reason}`);
+            });
+        },
+      },
+      'Ask, and be refused'
+    ),
+    // Deliberately outside the panel, and wide, so a click on it is a click outside.
+    h('button', { 'data-testid': 'outside', style: 'width: 120px' }, 'Outside'),
+    text(() => {
+      return modal.isVisible ? 'open' : 'closed';
+    }, 'is-visible'),
+    text(lastReason, 'last-reason'),
+    text(prepareOutcome, 'prepare-outcome'),
+    text(requestOutcome, 'request-outcome'),
+    modal.Modal
+  );
+}
+
+export const SolidNonModalOptionsApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, NonModalOptionsApp));
 };
