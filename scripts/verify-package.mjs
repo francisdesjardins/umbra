@@ -334,5 +334,39 @@ report(
   `${vanilla.seen.size} modules${vanilla.leaks.length > 0 ? ` — LEAKS: ${describe(vanilla)}` : ''}`
 );
 
+// ── The React Compiler actually ran ─────────────────────────────────────────
+//
+// Nothing asserted this, and the repo records what it costs: the wiring that looks right
+// (`react({ babel: … })`) is accepted under this Vite and transforms *nothing*, so the bundle shipped
+// uncompiled while the source was written — and documented — as if it were not. `verify:package`
+// already catches the opposite mistake, the compiler leaking into the Solid binding, which made the
+// silence here look like coverage.
+//
+// The evidence is the same one grep the docs point at: a compiled hook module imports React's
+// `compiler-runtime` and opens with a `c(n)` memo-cache call. Both, because the import alone would
+// survive a build that compiled one trivial function and bailed on `useModal`.
+const compiled = readFileSync(join(DIST, 'esm', 'react', 'use-modal.js'), 'utf8');
+const hasRuntime = compiled.includes('react/compiler-runtime');
+const hasMemoCache = /\bc\(\d+\)/.test(compiled);
+report(
+  hasRuntime && hasMemoCache,
+  'the React binding is compiled — compiler-runtime imported and a memo cache allocated',
+  // Only on failure, and it says which half is missing: an import with no `c(n)` means the plugin ran
+  // and bailed on this hook, which is a different problem from the plugin not running at all.
+  hasRuntime && hasMemoCache
+    ? ''
+    : hasRuntime
+      ? 'no `c(n)` allocation, so the hook itself was not lowered'
+      : 'no `react/compiler-runtime` import at all — the plugin did not run'
+);
+
+// And the other half of the same fact: the Solid binding must not be. The compiler decides what a
+// hook is by name, and `umbra/solid` exports `useModal` too.
+const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-modal.js'), 'utf8');
+report(
+  !solidSource.includes('compiler-runtime'),
+  'the Solid binding is not compiled — no compiler-runtime in it'
+);
+
 console.log(failures === 0 ? '\nPACKAGE OK' : `\n${failures} PACKAGE CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

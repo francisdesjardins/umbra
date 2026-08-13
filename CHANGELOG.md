@@ -11,6 +11,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Tests — the worklist worked through, a real Solid defect, and the compiler finally asserted
+
+**Twenty open cells down to seven.** What the pass closed, and what it turned up.
+
+`containFocus`, `dismissOnClickOutside` and a custom `dismissKey` now run through **`umbra/vanilla`**
+as well as Solid — each proved to discriminate by removing the option under test. `reconcileOpen`, which
+had a unit test over its decision table and **no binding exercising it at all**, is driven through the
+controlled-panel pattern its own documentation shows, on all three.
+
+**The `reconcileOpen` tests took two corrections worth recording.** The first version used a modal
+dialog, so the buttons driving the prop sat behind the top layer and could not be clicked. The second
+passed while deciding on `isVisible` instead of `phase` — the exact mistake the helper's doc warns
+about — because `onClose` runs when the exit _finishes_, so a call site that only lowers the prop there
+never lands inside the window where the two disagree. A third scenario closes and lowers in one
+handler, which does land there, and it fails when the decision is moved to `isVisible`. On the
+controller that last discrimination does **not** reproduce and why is unexplained; the cell says so
+rather than implying the claim is covered everywhere.
+
+**And the volet found a real defect rather than a missing test.** On Solid, focus after a failed action
+lands on the `<dialog>` instead of on the button that ran it — measured, not inferred. It is the race
+`attach-focus.ts` documents for `umbra/vanilla` reaching a second binding: Solid writes the action
+props' `disabled` getter synchronously when the engine reports running, so the button is blurred before
+`captureActionRunner` reads `activeElement`, and the `lastFocusInside` floor that catches this for the
+controller does not catch it here. **No test asserts the current behaviour**, because that would
+enshrine the defect. The cell is `~` with the diagnosis, and the harness stays because a fix needs it.
+
+**The React Compiler is finally asserted.** `verify:package` checks both halves of the one grep the
+docs point at — the built `react/use-modal.js` imports React's `compiler-runtime` _and_ opens with a
+`c(n)` memo-cache allocation, since the import alone would survive a build that compiled one trivial
+function and bailed on the hook — plus the complement, that the Solid binding contains no
+`compiler-runtime`. Seen to fail by restoring the pre-rolldown `react({ babel: … })` wiring, which is
+accepted and transforms nothing. That was the gap the repo had already been burned by twice.
+
+Still open from the test half: **a dialog inside a shadow root under React and Solid.** Only the
+controller covers it, and a React or Solid root inside a shadow root is a harness of its own rather
+than an option to pass — left named instead of rushed.
+
 ### Tests — the dismiss key nobody answers was not a bug, and five options Solid had never exercised
 
 **Two items off the worklist, and the first one was mis-named by me.** "Escape can be answered by

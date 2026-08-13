@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { reconcileOpen } from '../../core/reconcile-open.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { bindDialog } from '../bind-dialog.js';
+import type { ModalPhase } from '../../core/types.js';
 import type { DialogController } from '../types.js';
 
 /**
@@ -1311,6 +1313,127 @@ export function VanillaNonModalOptionsHarness() {
         <button data-testid="first">First</button>
         <button data-testid="second">Second</button>
         <button data-testid="third">Third</button>
+      </dialog>
+    </>
+  );
+}
+
+/**
+ * `reconcileOpen` driven from the controller's own snapshot.
+ *
+ * The other two bindings read `phase` through `useLookup`; here it is on the snapshot the controller
+ * already publishes — which is why `phase` is exposed on this binding and on neither of the others.
+ * There is no render pass to be the clock, so the snapshot is the only one there is.
+ *
+ * The exit is 120 ms on purpose: the window where `phase` is `'closing'` and `isVisible` is still true
+ * is the whole of what deciding on `phase` buys, and a zero-duration exit closes it.
+ */
+export function VanillaReconcileHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [controller, setController] = useState<Bound<'close'> | null>(null);
+  const [wanted, setWanted] = useState(false);
+  const [phase, setPhase] = useState<ModalPhase>('closed');
+  const [openCount, setOpenCount] = useState(0);
+  const [asked, setAsked] = useState<string[]>([]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-reconcile',
+      dialog,
+      ariaLabel: 'Vanilla reconcile',
+      nonModal: true,
+      portal: true,
+      animation: {
+        entrance: { opacity: '1' },
+        exit: { opacity: '0' },
+        duration: 0,
+        exitDuration: 120,
+        transitionProperty: 'opacity',
+      },
+      manager: createDialogManager(),
+      onClose: () => {
+        setWanted(false);
+      },
+    });
+    const stop = bound.subscribe(() => {
+      setPhase(bound.getSnapshot().phase);
+    });
+    setController(bound);
+    return () => {
+      stop();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!controller) {
+      return;
+    }
+    const next = reconcileOpen(phase, wanted);
+    if (next !== 'none') {
+      setAsked((seen) => {
+        return [...seen, next];
+      });
+    }
+    if (next === 'open') {
+      setOpenCount((count) => {
+        return count + 1;
+      });
+      void controller.open();
+    } else if (next === 'close') {
+      controller.handle.close('close');
+    }
+  }, [controller, phase, wanted]);
+
+  return (
+    <>
+      <span data-testid="phase">{phase}</span>
+      <span data-testid="wanted">{wanted ? 'true' : 'false'}</span>
+      <span data-testid="open-count">{openCount}</span>
+      <span data-testid="asked">{asked.join(',')}</span>
+      <button
+        data-testid="raise"
+        onClick={() => {
+          setWanted(true);
+        }}
+      >
+        Raise
+      </button>
+      <button
+        data-testid="lower"
+        onClick={() => {
+          setWanted(false);
+        }}
+      >
+        Lower
+      </button>
+      <button
+        data-testid="open-behind-its-back"
+        onClick={() => {
+          controller?.dialogManager.open('vanilla-reconcile');
+        }}
+      >
+        Open imperatively
+      </button>
+
+      <dialog ref={dialogRef}>
+        <p>Vanilla reconcile</p>
+        <button
+          data-testid="close-and-lower"
+          onClick={() => {
+            // Both at once: the only way into the window where `phase` and `isVisible` disagree,
+            // because `onClose` runs when the exit finishes.
+            controller?.handle.close('close');
+            setWanted(false);
+          }}
+        >
+          Close and lower
+        </button>
       </dialog>
     </>
   );

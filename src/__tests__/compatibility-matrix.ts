@@ -613,7 +613,14 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         title: 'the signal drives the dialog, and stays authoritative over an imperative open',
       },
     },
-    vanilla: { state: 'works-untested' },
+    vanilla: {
+      state: 'works',
+      note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others. The `phase`-versus-`isVisible` half is proven on React only: moving the decision to `isVisible` fails there and does not here, and why it does not is unexplained rather than accounted for.',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'the flag drives the dialog, and stays authoritative over an imperative open',
+      },
+    },
   },
   {
     capability: 'a dialog inside a shadow root',
@@ -744,8 +751,8 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'the React Compiler is verified to have run',
-    state: 'works-untested',
-    why: '`verify:package` catches only the leak into the Solid binding. The repo records that both the bundle and the component suite were uncompiled while the source was written — and documented — as if they were not: `react({ babel: … })` is accepted under this Vite and transforms nothing. One grep tells you which state you are in; nothing fails.',
+    state: 'works',
+    why: '`verify:package` asserts both halves of the one grep the docs point at: the built `react/use-modal.js` imports React’s `compiler-runtime` **and** opens with a `c(n)` memo-cache allocation — the import alone would survive a build that compiled one trivial function and bailed on the hook. The complement is asserted too: the Solid binding must contain no `compiler-runtime`, since the compiler decides what a hook is by name and `umbra/solid` exports `useModal` as well. Seen to fail by restoring the pre-rolldown `react({ babel: … })` wiring, which is accepted and transforms nothing.',
   },
   {
     fact: 'nothing in the repo still needs TypeScript 6',

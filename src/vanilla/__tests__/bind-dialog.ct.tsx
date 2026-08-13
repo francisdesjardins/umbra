@@ -12,6 +12,7 @@ import {
   VanillaNonModalOptionsHarness,
   VanillaOpenRequestHarness,
   VanillaPortalHarness,
+  VanillaReconcileHarness,
   VanillaLabellingHarness,
   VanillaRestoreOnUnbindHarness,
   VanillaShadowRootHarness,
@@ -719,5 +720,48 @@ test.describe('bindDialog — the options only React had exercised', () => {
     await page.getByTestId('outside').click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
+  });
+});
+
+/**
+ * `reconcileOpen`, from the controller's own snapshot.
+ *
+ * The other two bindings read `phase` through `useLookup`; here it comes off the snapshot the
+ * controller publishes, which is why `phase` is on this binding's surface and on neither of the
+ * others — with no render pass, it is the only clock a caller has.
+ */
+test.describe('bindDialog — reconcileOpen from the snapshot', () => {
+  test('the flag drives the dialog, and stays authoritative over an imperative open', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<VanillaReconcileHarness />);
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    await page.getByTestId('raise').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
+
+    await page.getByTestId('lower').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    await page.getByTestId('open-behind-its-back').click();
+    await expect(page.getByTestId('wanted')).toHaveText('false');
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+    await expect(page.getByTestId('asked')).toContainText('close');
+  });
+
+  test('lowering the flag during the exit asks for nothing', async ({ mount, page }) => {
+    await mount(<VanillaReconcileHarness />);
+    await page.getByTestId('raise').click();
+    await expect(page.getByTestId('asked')).toHaveText('open');
+
+    await page.getByTestId('close-and-lower').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    // Deciding on `isVisible` would read "flag says closed, dialog says open" across the 120 ms exit
+    // and ask for a second close on a dialog already leaving.
+    await expect(page.getByTestId('asked')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });
