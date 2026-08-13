@@ -203,6 +203,16 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
           root: { '&.Mui-focused': { color: accent } },
         },
       },
+      // MUI pulls the root 11px left so a Checkbox's ripple squares up with text above and below
+      // it. A Switch is padded differently, so the pull does not align anything — it just hangs
+      // the control outside whatever contains it, measurably: 330px against a content edge at
+      // 341px, on cards and inside dialogs alike. Zeroed here rather than with an `ml: 0` at each
+      // call site, for the same reason the focus ring is declared once.
+      MuiFormControlLabel: {
+        styleOverrides: {
+          root: { marginLeft: 0 },
+        },
+      },
       MuiCssBaseline: {
         styleOverrides: (theme: Theme) => {
           return {
