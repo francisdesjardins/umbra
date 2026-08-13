@@ -4,6 +4,7 @@ import {
   ActionErrorHotkeyRetryHarness,
   BackdropHitTestHarness,
   BusyWhilePreparingHarness,
+  EscAnsweredByNobodyHarness,
   EscWithoutFocusHarness,
   KeyPassthroughHarness,
   TransitionToggleHarness,
@@ -1190,5 +1191,61 @@ test.describe('the labelling diagnostic', () => {
         return line.includes('Dialog labelling');
       })
     ).toEqual([]);
+  });
+});
+
+/**
+ * The intersection two well-covered halves leave open: a stack in which **nothing** answers the
+ * dismiss key.
+ *
+ * Its own describe because it is not a test of either half — both are already pinned — but of what
+ * their composition does, which is the class of gap the compatibility matrix exists to surface.
+ */
+test.describe('useModal — the dismiss key answered by nobody', () => {
+  test('a deaf modal in front leaves the panel behind alone, and the press reaches the page', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<EscAnsweredByNobodyHarness />);
+    await page.getByTestId('open-panel').click();
+    await expect(page.getByTestId('panel-visible')).toHaveText('open');
+
+    // Opened from inside the panel's own render, which is the only place a button stays clickable
+    // once a `showModal()` dialog is up.
+    await page.getByTestId('open-modal').click();
+    await expect(page.getByTestId('modal-visible')).toHaveText('open');
+
+    await page.keyboard.press('Escape');
+
+    // **Neither closes, and that is the right answer.** The modal in front was told not to listen,
+    // and the panel behind is no longer the foreground — dismissing it instead would close the one
+    // thing the user cannot see. A library that fell through to it would be guessing.
+    await expect(page.getByTestId('modal-visible')).toHaveText('open');
+    await expect(page.getByTestId('panel-visible')).toHaveText('open');
+    await expect(page.getByTestId('panel-reason')).toHaveText('');
+    await expect(page.getByTestId('modal-reason')).toHaveText('');
+
+    // **And the press is still the page's to handle**, which is the assertion that makes "nobody
+    // answered" acceptable rather than a dead keyboard: the panel's window listener captures, so if
+    // it swallowed a press it had already declined, this bubble-phase counter would never move.
+    await expect(page.getByTestId('presses-seen')).toHaveText('1');
+
+    // The modal still closes the way it was given to: `dismissKey: false` turns off the key, not
+    // the dialog.
+    await page.getByTestId('close-modal').click();
+    await expect(page.getByTestId('modal-visible')).toHaveText('closed');
+    await expect(page.getByTestId('modal-reason')).toHaveText('confirm');
+
+    // And with the front dialog gone the panel is the foreground again, so its own Escape works —
+    // the stand-down was for the duration of the stack, not a state it got stuck in.
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('panel-visible')).toHaveText('closed');
+    await expect(page.getByTestId('panel-reason')).toHaveText('dismiss');
+
+    // **Still 1**, and this is what makes the counter mean something in both directions: the press
+    // that the panel *did* claim was stopped at the capture phase and never reached the page, while
+    // the one nobody claimed did. A counter that only ever went up would have been consistent with a
+    // library that swallows nothing and with one that swallows everything.
+    await expect(page.getByTestId('presses-seen')).toHaveText('1');
   });
 });

@@ -11,6 +11,7 @@ export { StylingSurfaceHarness } from './use-modal/styling-surface.story';
 export { OpenAndWaitHarness } from './use-modal/open-and-wait.story';
 export { OpenAndWaitOrderingHarness } from './use-modal/open-and-wait-ordering.story';
 export { NonModalHarness } from './use-modal/non-modal.story';
+export { EscAnsweredByNobodyHarness } from './use-modal/esc-answered-by-nobody.story';
 export { NonModalEscIsolationHarness } from './use-modal/non-modal-esc-isolation.story';
 export { NonModalStackHarness } from './use-modal/non-modal-stack.story';
 export { CustomDismissKeyHarness } from './use-modal/custom-dismiss-key.story';
