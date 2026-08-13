@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
 import { reactCompiler } from './scripts/vite-plugin-react-compiler.mjs';
 
@@ -82,6 +83,18 @@ export default defineConfig({
       // Keep pre-bundled deps in a dedicated dir separate from the dev-server cache.
       // CI pipelines can cache node_modules/.vite-ct between runs for faster startup.
       cacheDir: withCoverage ? 'node_modules/.vite-ct-coverage' : 'node_modules/.vite-ct',
+      // The playground's harnesses reach the library the way a user does — `umbra/react`, per
+      // its own rule against deep relative climbs into `src/` — and this build is the only one
+      // that has to resolve that without the playground's Vite config. There is no
+      // `node_modules/umbra`: the root workspace is not linked under its own name, and
+      // `import.meta.resolve('umbra/react')` from `playground/` answers ERR_MODULE_NOT_FOUND.
+      // It resolved anyway, through Vite's own lookup, and a green suite resting on that is a
+      // green suite one resolver change from disappearing — it went red here once already and a
+      // `yarn install` put it back with nothing to point at. Stated now, matching the alias
+      // `playground/vite.config.ts` has always had.
+      resolve: {
+        alias: { umbra: resolve(import.meta.dirname, 'src') },
+      },
       optimizeDeps: {
         // Explicitly pre-bundle React so it is processed once and cached rather
         // than re-transformed on every cold start.
