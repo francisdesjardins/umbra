@@ -68,6 +68,10 @@ import type { GetDialog, ModalPhase } from './types.js';
  * in one line: **React's dependency array, made framework-free** — so a binding inherits the
  * granularity instead of transcribing it.
  *
+ * Only `syncOpenSequence` runs on every pass. `syncLabellingDiagnostics` is idempotent and could,
+ * but it is keyed instead, because keying is what React did and a step that changes how often it
+ * runs is a behaviour change wearing a refactor's clothes.
+ *
  * ## What is not here
  *
  * Steps that run during **render** rather than from an effect — `setDialogAttributes` and
@@ -87,7 +91,16 @@ import type { GetDialog, ModalPhase } from './types.js';
 
 // ── What the director is handed ──────────────────────────────────────────────
 
-/** The modal being directed — fixed for its whole lifetime, so no step lists any of it. */
+/**
+ * The modal being directed — fixed for its whole lifetime, so no step lists any of it.
+ *
+ * **`modalId` included, and that is a statement rather than an omission.** The store, the action
+ * engine and the focus coordinator all take the id when they are built and never look again, so a
+ * modal's identity is settled at mount; a step re-reading it would be the only part of the
+ * lifecycle pretending otherwise. React's registration effect lists it as a dependency, which is
+ * what makes a changed `id` re-register under the new name while everything else keeps the
+ * original — see the `id` option's own doc, which says so from the caller's side.
+ */
 export type ModalDirectorContext = {
   readonly store: ModalStore;
   readonly getDialog: GetDialog;

@@ -223,7 +223,14 @@ export type UseModalBaseOptions<
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
 > = {
-  /** Unique modal identifier */
+  /**
+   * Unique modal identifier — **read once, when the modal is built**.
+   *
+   * The store, the action engine and the lifecycle director all take it at construction and never
+   * look again, so changing it is not a rename: the modal re-registers with the manager under the
+   * new name and keeps answering to the old one everywhere else. Give a modal one id for its
+   * lifetime, and mount a different modal if you need a different name.
+   */
   readonly id: string;
   /** Render function for modal content. Receives modal state as arguments. */
   readonly render: (args: ModalRenderArgs<TData, TReason>) => TNode;
