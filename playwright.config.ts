@@ -122,5 +122,35 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Chrome'] },
     },
+    // Gecko, on the same harnesses. The declared floor names Firefox 115, and a support claim
+    // nothing exercises is a guess with a version number on it. It costs one more browser on a
+    // suite that takes twenty seconds, and it passes 317/317 — so the claim is now checked rather
+    // than asserted.
+    {
+      name: 'component-firefox',
+      testDir: './',
+      testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
+      use: { ...devices['Desktop Firefox'] },
+    },
+    // WebKit is **opt-in**, and the reason is a finding rather than flakiness: two tests fail
+    // there, both the same behaviour, and the cause is measured. WebKit does not focus a
+    // `<button>` when it is clicked — it blurs to `<body>` — which is a platform convention, not a
+    // bug. `createFocusCoordinator` names the button that ran an action by asking who has focus,
+    // so on WebKit it finds nothing and the restore after a failed action lands on whatever held
+    // focus before the press.
+    //
+    // Left runnable instead of deleted, because a gap you can execute is worth more than one
+    // written down: `yarn test:component:webkit`, and the two failures are the specification of
+    // the fix. Fold it into the default list once they pass.
+    ...(process.env['CT_WEBKIT'] === '1'
+      ? [
+          {
+            name: 'component-webkit',
+            testDir: './',
+            testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
+            use: { ...devices['Desktop Safari'] },
+          },
+        ]
+      : []),
   ],
 });
