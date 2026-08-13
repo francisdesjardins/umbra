@@ -84,97 +84,51 @@ yarn test:component:coverage # Component tests with coverage (istanbul, see belo
 
 ### What coverage measures
 
-`yarn test:unit:coverage` measures the **unit** project, which is Node with no DOM — so the
-exclude list in `.c8rc.json` is not a way to make a number look better, it is the statement of
-what that project can reach. Three groups, and the reason each is there:
+Two reports, because one project cannot reach the whole library.
 
-- **Type-only modules** (`core/types.ts`, `actions/types.ts`, the two bindings' `types.ts`, …) —
-  no runtime at all, so they report 0% forever and drag the number with them.
-- **Every binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`) and the entry barrels —
-  component-tested, and measured by the _other_ report rather than not at all: see
-  [The component project measures itself](#the-component-project-measures-itself). A glob, because
-  a new file there is component-test territory too.
-- **The DOM-only modules** (`attach-*`, `dialog-lifecycle`, `focus-policy`, `dialog-styles`,
-  `utils/dialog-scope`) — listed **one by one**, deliberately. A new module is not silently
-  excluded: it shows up as a gap until someone decides which kind it is. The line is _zero_
-  reachable runtime in Node — `dialog-styles` needs `CSSStyleSheet` and `adoptedStyleSheets`,
-  `dialog-scope` needs `Element` and `closest`. A file with a testable half stays visible and
-  partially covered (`manager/scroll-lock`, `core/style`), because excluding it would hide the
-  half that is a real gap.
+`yarn test:unit:coverage` measures the **unit** project — Node, no DOM — so the exclude list in
+`.c8rc.json` is not a way to make a number look better, it is the statement of what that project can
+reach. Three groups, and each entry says which: type-only modules (no runtime at all), **every
+binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`, globbed, because a new file there is
+component-test territory), and the DOM-only core modules — listed **one by one**, so a new module
+shows up as a gap until someone decides which kind it is. The line is _zero_ reachable runtime in
+Node; a file with a testable half stays visible and partially covered.
 
-### The component project measures itself
+`yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Currently 92.99% statements over
+48 files, against the unit project's 97.81% over the framework-free half.
 
-`yarn test:component:coverage` is the other half, and it exists because the first list above is
-only honest if what it excludes is measured somewhere. It is opt-in (`CT_COVERAGE=1`) because
-instrumentation costs about 45% of the run, and it reports the bindings and the DOM-only core
-modules that c8 cannot reach — currently 92.99% statements over 48 files, against the unit
-project's 97.81% over the framework-free half.
+**So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.** Two
+moves have paid off repeatedly and are the first thing to try:
 
-**Coverage is a local command, not a CI job, and that is deliberate.** GitHub's code-coverage
-upload (`actions/upload-code-coverage`, Cobertura only) was wired up and reverted the same day: it
-returns **HTTP 404** here because Code Quality is gated on an enterprise owner allowing it, and
-this is a personal repository — "Code quality" does not appear under Settings → Security at all.
-Running the coverage variants in CI to publish an artifact nobody opens costs the component job
-roughly 45% more runtime for a number nothing displays. Do not re-add it unless the repo moves
-under an enterprise **and** something actually renders the result.
+- **A DOM type in a signature is not a DOM dependency.** `isBackdropClick`,
+  `shouldDismissOnBackdropClick` and `finalizeModalClose` each asked for an `HTMLDialogElement` while
+  reading one or two members; narrowed to what they use (`BackdropDialog`,
+  `Pick<HTMLDialogElement, 'open' | 'close'>`) they became ordinary unit tests and no call site
+  changed. `applyStyle` did the same with `StyleTarget`.
+- **A DOM function among pure ones is a file in the wrong place.** `clickHotkeyButton` kept the whole
+  of `utils/hotkey-utils.ts` out of the unit project's reach; it lives in `core/attach-keydown.ts` now
+  — its only caller, already DOM-only — and the module it left is fully covered.
 
-**Every way this has failed so far has failed quietly**, which is why the list is three items long
-and why `ct-coverage-report.mjs` prints all three when it finds nothing. An empty `.nyc_output`
-does not say which stage produced nothing, and reading it as "the flag was not set" is the
-expensive mistake:
+**If something is hard to unit-test because it is tangled with a renderer, that is the finding**:
+extract the framework-free half into `core/` and test it there.
 
-- **Instrumentation is `enforce: 'pre'`** ([scripts/vite-plugin-ct-coverage.mjs](scripts/vite-plugin-ct-coverage.mjs)),
-  on the file as written. `vite-plugin-istanbul` is the obvious tool and it instruments _stripped_
-  output, remapping through a source map that looks healthy and is not: every counter below a
-  file's JSDoc block lands sixteen lines early, attributing statements to prose.
-- **There are two CT build caches.** Playwright keys its bundle on versions and a hash of the
-  sources, not on the plugin list, so a single cache makes toggling `CT_COVERAGE` a coin toss —
-  and the failure is silent, an empty `.nyc_output` rather than an error. `use.ctCacheDir` splits
-  them. Editing the instrumenter itself invalidates neither; delete `playwright/.cache-coverage/`
-  by hand for that one.
-- **The path filter is separator-normalised.** Vite hands module ids with forward slashes and
-  `path.relative` answers in the platform's, so on Windows the filter compared `src\core\style.ts`
-  against a `src/` prefix and matched nothing — the whole feature a no-op, presenting as the same
-  empty `.nyc_output`. Any path predicate in this repo that a Windows machine will run gets the
-  same `.replaceAll('\\', '/')`.
-- **`.nyc_output/` is emptied per run** by a `globalSetup` ([scripts/ct-coverage-reset.mjs](scripts/ct-coverage-reset.mjs)),
-  not by the yarn script, because the invocation that gets this wrong is the ad-hoc
-  `CT_COVERAGE=1 playwright test --grep …`: it writes three files where the last full run left
-  twenty-one, and the report sums all twenty-four without a word. It cannot be the fixture's job —
-  workers are separate processes and each would delete the others' output mid-run.
+**Coverage is a local command, not a CI job, and that is deliberate.** GitHub's code-coverage upload is
+Cobertura-only and returns HTTP 404 here, because Code Quality is gated on an enterprise owner
+allowing it and this is a personal repository. Running the coverage variants in CI to publish an
+artifact nobody opens costs the component job roughly 45% more runtime. Do not re-add it unless the
+repo moves under an enterprise **and** something renders the result.
 
-**A DOM type in a signature is not the same as a DOM dependency**, and telling them apart is
-worth doing before reaching for the exclude list. `isBackdropClick`, `shouldDismissOnBackdropClick`
-and `finalizeModalClose` each asked for an `HTMLDialogElement` while reading one or two members of
-it; narrowed to what they use (`BackdropDialog`, `Pick<HTMLDialogElement, 'open' | 'close'>`) they
-became ordinary unit tests, and no call site changed. The same move `BackdropClickEvent` already
-made for the event, and `applyStyle` after them — it writes through `setProperty` and
-`removeProperty` and nothing else, so `StyleTarget` is those two.
-
-**And a DOM function among pure ones is a file in the wrong place.** `clickHotkeyButton` was the
-only thing in `utils/hotkey-utils.ts` that needed a document, and hosting it kept the whole module
-out of the unit project's reach. It lives in `core/attach-keydown.ts` now — its only caller, already
-DOM-only — and the module it left is fully covered.
-
-So a partially-covered file in the report is either a genuine gap or a DOM branch, and both are
-worth looking at. **If something is hard to unit-test because it is tangled with a renderer, that
-is the finding** — extract the framework-free half into `core/` and test it there, the way the
-action factory, the option resolution and the slide geometry were.
-
-**The Solid binding is tested through a React CT harness that hosts a real Solid root**
-([src/solid/\_\_tests\_\_/](src/solid/__tests__/)): the story renders a `<div>`, calls Solid's
-`render` into it from an effect, and returns the disposer as the cleanup. Playwright's
-`@playwright/experimental-ct-solid` stopped at 1.48 and does not track this version, and a second
-CT project is not worth its own Vite config — this way both bindings are asserted against the same
-browser, the same real `<dialog>` and the same top layer. The Solid harnesses use `h`
-(`solid-js/h`) rather than JSX, so no Solid compiler enters the build; hyperscript detects the
-getters an action's props carry and tracks them, so nothing about the reactivity is faked.
-
-Colocated in `__tests__/` next to the file under test, named to match. The `unit` project is
-rooted at the repo, so `playground/src/**/__tests__/*.test.ts` runs with the library's — a
-helper is a helper wherever it ships.
-
-**Every change to `src/` must ship with tests:** utils → `*.test.ts`, hooks → `*.ct.tsx` + `*.story.tsx`, bug fixes → regression test.
+**Every way the CT report has failed so far has failed quietly**, which is why the reasoning lives with
+the machinery rather than here — four failure modes, each documented where it can bite: instrumentation
+must be `enforce: 'pre'` on the file as written ([scripts/vite-plugin-ct-coverage.mjs](scripts/vite-plugin-ct-coverage.mjs)),
+there are **two** CT build caches keyed on sources rather than on the plugin list
+([playwright.config.ts](playwright.config.ts)'s `use.ctCacheDir`), path predicates are
+separator-normalised or they no-op on Windows, and `.nyc_output/` is emptied by a `globalSetup`
+([scripts/ct-coverage-reset.mjs](scripts/ct-coverage-reset.mjs)) rather than by the yarn script, because
+the invocation that gets it wrong is an ad-hoc `--grep`. `ct-coverage-report.mjs` prints all four when
+it finds nothing. Editing the instrumenter invalidates neither cache — delete
+`playwright/.cache-coverage/` by hand for that one.
 
 ### Top-layer rule
 
@@ -201,7 +155,7 @@ helper is a helper wherever it ships.
 - **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): No `useMemo`/`useCallback`/`React.memo`. No ref writes during render. No property assignment on `useState` values. See [src/CLAUDE.md](src/CLAUDE.md#react-compiler) for full rules.
 - **TypeScript strict**: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature`
 - **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward `aria-keyshortcuts`** (and `data-focus-on-open`, which `action('cancel', { focusOnOpen: true })` sets to claim the modal's opening focus). See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
-- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — every non-modal dialog sits under every modal one, because the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. The policy is opt-in, once per project, higher is nearer the user, ties keep open order; it exists because "last `showModal()` wins" is a race between features that know nothing about each other, and losing it puts an interruption behind a panel. Reordering a **modal** dialog means `close()` + `showModal()` (the top layer ignores `z-index` — measured), so a raise fires the element's native `close` event and re-runs CSS keyed on `[open]`; a **non-modal** one is just a restamped `z-index`. `isForeground` moves with all of it, which is why it matters beyond paint: it decides who answers the dismiss key. A policy orders one manager's dialogs, not two copies of the library in one page. See [manager/stack-order.ts](src/manager/stack-order.ts) and `raiseDialog` in [core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts).
+- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. The policy is opt-in, once per project, higher is nearer the user, ties keep open order; it exists because "last `showModal()` wins" is a race between features that know nothing about each other. Reordering a **modal** dialog means `close()` + `showModal()` and nothing cheaper, with three unavoidable costs; a **non-modal** one is a restamped `z-index`. `isForeground` moves with all of it, which is why it matters beyond paint: it decides who answers the dismiss key. See [manager/stack-order.ts](src/manager/stack-order.ts) and `raiseDialog` in [core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts) for the costs, and the compatibility matrix for what a policy cannot do.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
 - **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.

@@ -172,246 +172,181 @@ shared by every binding; layers 2 and 3 exist once per binding and are thin.
 
 ### Layer 1: Core Primitive
 
-- **`useModal`** ([react/use-modal.tsx](react/use-modal.tsx) for React, [solid/use-modal.ts](solid/use-modal.ts) for Solid) — a binding each; the state machine lives in [core/modal-store.ts](core/modal-store.ts) (`createModalStore`, framework-free, exports the `ModalStore` type consumed by `core/attach-types.ts` and `finalize-close.ts`). Each method is a complete transition rather than a plumbing primitive: `beginOpen(onOpened?)` (owns the start / join-in-flight / resolve-now decision), `scheduleOpenTransition()` (owns its own animation frame — the handle is never exposed, and `close()` cancels it), `finishPreparing()` (`prepare` has settled — clears `isPreparing` and releases the `open()` promises), `close`, `finalize`, `abandon`, `prepareSignal()` (the `AbortSignal` handed to `prepare`, aborted by the close), `addCloseResolver`, `setOnClose`/`runOnClose`. The close reason is read off `getSnapshot().closeResult`, not a dedicated getter. The store _runs_ `onClose` rather than handing it back — see the note in `modal-store.ts`; returning it would make `ModalStore<TData>` unassignable to `ModalStore`. Renders `<dialog>` inline (React portals with `createPortal` when `portal: true`; Solid owns the element and mounts it itself, so its `Modal` is `null` on that branch). Returns `{ open, openAndWait, isVisible, Modal, handle, dialogManager }` — `handle` = `{ close }` (the modal itself; its buttons come from the `action` factory in the render args). `openAndWait` registers the close resolver _before_ requesting the open, and that is why `addCloseResolver` is **not** public: a resolver answers the _next_ close, so one added after a close has landed waits forever, and the surface never lets a caller choose the order. The `dialogManager` property is context-aware — use it for imperative cross-modal operations instead of the static singleton.
-  - `<dialog>` uses `display: flex; flex-direction: column`. Sizing is user-land — the `style` prop is the public lever for the box itself (the same one the template hooks pull), and styles for what is inside belong in `render`.
-- **`dialogManager`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) — Factory-based with module-level singleton. Immutable `RegistryEntry` records. Imperative `open(id)`/`close(id)`, plus the asking door: `requestOpen(id, request)` fires and forgets, `requestOpenAndWait(id, request)` returns an `OpenRequestOutcome` — refusal is explicit through `request.refuse(reason)`, acceptance is the default (the manager cannot infer it: the React binding's open is asynchronous), and the accepted branch carries the close. `RegisteredStore` gained `addCloseResolver` for that, erased at `unknown` because a callback in a parameter position is contravariant. Body scroll lock (modal only) via [manager/scroll-lock.ts](manager/scroll-lock.ts), claimed **per manager instance** so a second manager cannot release a lock it never took, `getZIndex(id)` = `1300 + stack position`. Snapshot is `{ openDialogs, foreground }` — `openDialogs` sorted by modality, then the policy `prioritize` installed (if any), then `openSequence` (index = stack position); counts and the modal/non-modal split derive from it (`ModalInfo.nonModal`). Lookup queries read the snapshot, which recomputes synchronously on every store transition.
-- **The stack order** ([manager/stack-order.ts](manager/stack-order.ts)) — `prioritize(priority)` installs one policy per manager and returns the disposer that removes it; `orderStack` is what `computeSnapshot` sorts through, on **three** keys: modality (non-modal under modal — the platform's rule, applied before the policy is consulted and not the policy's to overrule), then the rank, then `openSequence`. With no policy the ranks are equal and the other two keys still apply, so `prioritize` is opt-in without the modality key being optional. `planRaises` answers the second question — _what has to move_ — because moving a modal dialog inside the top layer is `close()` + `showModal()` and nothing cheaper (`z-index` does not apply between top-layer elements; measured). Its plan is the longest **prefix of the desired order that is a subsequence of the current one**, so a swap lifts one dialog rather than two. The DOM half is `raiseDialog` in [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts), which documents the three unavoidable costs (the element's native `close` event, CSS keyed on `[open]`, and focus). `syncStackOrder(shownId?)` is on the manager's public type for a timing reason, not a convenience one: the manager observes stores, and a store at `'opening'` has not been shown — so `syncOpenSequence` calls it in the same task as its `showModal()`, which both lands the reorder before paint and is what lets the manager track the real top-layer order instead of guessing it.
-- **`DialogManagerProvider`** ([react/dialog-manager-context.tsx](react/dialog-manager-context.tsx)) — Injects isolated instance. **Test stories only.** Without it, hooks fall back to static singleton.
-- **`useDialogManager`** ([react/use-dialog-manager.ts](react/use-dialog-manager.ts)) — Reactive hook via `useSyncExternalStore`. Returns `DialogManagerSnapshot` from nearest context or singleton.
-- **Types**: [core/types.ts](core/types.ts) — `ModalAnimation`, `ModalHandle`, `ModalRenderArgs`, `UseModalOptions`, `UseModalReturn`, `ModalPhase`, `ModalStoreSnapshot`, `GetDialog`. Also [manager/types.ts](manager/types.ts) — `LookupSnapshot`, `UseLookupOptions`. And [actions/types.ts](actions/types.ts) — `HotkeyDef`, `ActionDefinition`, `ActionButtonProps`, etc.
+An index of where each concern lives. The reasoning for each is in its own file's doc comment; what
+belongs here is only which file to open.
 
-**The DOM wiring is `attach*` functions, not hooks** — 2-param convention: `(ctx: ModalDomContext, options)`, returning a teardown (or `undefined` when nothing was attached). Context in [core/attach-types.ts](core/attach-types.ts): `{ store, getDialog, modalId, phase, manager }`. React calls them from `useEffect` inside `react/use-modal.tsx`; Solid calls the same functions from `createEffect` + `onCleanup`. The bodies moved unchanged, which is why the component suite was the proof that the extraction was behaviour-preserving.
+- **`useModal`** — [react/use-modal.tsx](react/use-modal.tsx),
+  [solid/use-modal.ts](solid/use-modal.ts). Returns
+  `{ open, openAndWait, isVisible, Modal, handle, dialogManager }`; `handle` is `{ close }`, and the
+  buttons come from the `action` factory in the render args. Use the returned `dialogManager` for
+  cross-modal calls, not the static singleton — it is context-aware. `<dialog>` is
+  `display: flex; flex-direction: column`, and sizing is user-land through `style`.
+- **The state machine** — [core/modal-store.ts](core/modal-store.ts), framework-free. Each method is a
+  complete transition rather than a plumbing primitive: `beginOpen`, `scheduleOpenTransition`,
+  `finishPreparing`, `close`, `finalize`, `abandon`, `prepareSignal`, `setOnClose` / `runOnClose`. The
+  close reason is read off `getSnapshot().closeResult`. **`addCloseResolver` is not public**: a
+  resolver answers the _next_ close, so one added after a close has landed waits forever — which is
+  why `openAndWait` registers it before requesting the open and the surface never lets a caller choose
+  the order.
+- **`dialogManager`** — [manager/dialog-manager.ts](manager/dialog-manager.ts). Factory plus a
+  module-level singleton, immutable `RegistryEntry` records, `open(id)` / `close(id)`, and the asking
+  door: `requestOpen` fires and forgets while `requestOpenAndWait` returns an `OpenRequestOutcome`
+  (refusal is explicit through `request.refuse(reason)`; acceptance is the default, because the
+  manager cannot infer it from an asynchronous open). Snapshot is `{ openDialogs, foreground }` and
+  recomputes synchronously on every store transition; `getZIndex(id)` is `1300 + stack position`.
+- **The stack order** — [manager/stack-order.ts](manager/stack-order.ts). `prioritize(priority)`
+  installs one policy per manager and returns its disposer. `orderStack` sorts on **three** keys:
+  modality (non-modal under modal — the platform's rule, not the policy's to overrule), then the rank,
+  then `openSequence`. `planRaises` answers _what has to move_, because moving a modal dialog inside
+  the top layer is `close()` + `showModal()` and nothing cheaper. The DOM half is `raiseDialog` in
+  [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts), whose doc lists the three unavoidable costs.
+  `syncStackOrder(shownId?)` is public for a timing reason: the manager observes stores, and a store at
+  `'opening'` has not been shown yet.
+- **Body scroll lock** — [manager/scroll-lock.ts](manager/scroll-lock.ts), modal only, claimed **per
+  manager instance** so a second manager cannot release a lock it never took. It compensates the width
+  the lock _actually reclaims_, not the current scrollbar width, and publishes it as
+  `--dialog-scrollbar-width`.
+- **`DialogManagerProvider`** ([react/dialog-manager-context.tsx](react/dialog-manager-context.tsx)) —
+  an isolated instance, for **test stories**. Without it, hooks fall back to the singleton.
+- **`useDialogManager`** ([react/use-dialog-manager.ts](react/use-dialog-manager.ts)) — reactive via
+  `useSyncExternalStore`.
+- **Types** — [core/types.ts](core/types.ts), [manager/types.ts](manager/types.ts),
+  [actions/types.ts](actions/types.ts).
 
-- `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts))
-- `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey` ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes, hence three functions
+**The DOM wiring is `attach*` functions, not hooks** — `(ctx: ModalDomContext, options)`, returning a
+teardown (or `undefined` when nothing was attached). React calls them from `useEffect`, Solid from
+`createEffect` + `onCleanup`, in the same order:
+
+- `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) —
+  the native lifecycle, driven by phase, with a `finalized` flag guarding the ESC cancel race
+- `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey`
+  ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes
 - `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
-- `attachFocusContainment` ([core/attach-focus-containment.ts](core/attach-focus-containment.ts)) — the Tab wrap `show()` does not give a dialog, opt-in through `containFocus`
-- `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator rather than a bare function, because where the opening focus landed has to outlive one attachment
-- `createActionFactory` ([core/action-factory.ts](core/action-factory.ts)) — see below
-- `dialogAttributes` / `setDialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE` ([core/dialog-props.ts](core/dialog-props.ts))
-
-- `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) — the native `<dialog>` DOM lifecycle, driven by phase: (1) opening — `showDialog()`, `store.scheduleOpenTransition()`, `prepare`/`finishPreparing`, guarded on `phase === 'opening'` and `!dialog.open` so it is safe to call on every pass; (2) `'open'` — `refreshTransitionsDisabled` per open, not per element (the `<dialog>` outlives every cycle and its transition config can change between them); (3) `'closing'` — disabled-transition short-circuit → `runDialogExit()` (WAAPI backdrop + `transitionend` + fallback timeout) → `finalizeModalClose` (`dialog.close()`, `onClose`, `store.finalize()`). A `finalized` flag guards the ESC cancel race. React runs these from two effects; Solid runs them from two `createEffect`s.
-- **`manager/scroll-lock.ts`** ([manager/scroll-lock.ts](manager/scroll-lock.ts)) — React-free body scroll lock used when any _modal_ dialog is open. Claimed per owner (`lockBodyScroll(owner)`) and released when the last claim goes — the lock target is one global `<body>` shared by every manager instance, and a shared boolean would make it last-writer-wins. Sets `data-dialog-open` on `<body>` (the injected stylesheet keys `overflow: hidden` off it) and compensates the width the lock **actually reclaims** — `computeScrollCompensation(before, after)`, not the current scrollbar width. That distinction is the whole point: a page with `scrollbar-gutter: stable` keeps its gutter through `overflow: hidden`, so padding by the scrollbar width would shift content inward instead of holding it still. Publishes the amount as `--dialog-scrollbar-width` on `:root` so user-land `position: fixed` elements can compensate too — the library never walks the consumer's DOM looking for them.
+- `attachFocusContainment` ([core/attach-focus-containment.ts](core/attach-focus-containment.ts)) —
+  the Tab wrap `show()` does not give a dialog, opt-in through `containFocus`
+- `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator, because
+  where the opening focus landed has to outlive one attachment
+- `createActionFactory` ([core/action-factory.ts](core/action-factory.ts))
+- `dialogAttributes` / `setDialogAttributes` / `isBackdropClick` / `DIALOG_CONTENT_STYLE`
+  ([core/dialog-props.ts](core/dialog-props.ts))
+- `dialogPlacement` ([core/placement.ts](core/placement.ts)) — the positioning contract as data, and
+  public from the root, so a hand-written host places a dialog identically
+- `canDismiss` ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — the one predicate every dismissal
+  path shares; each path layers its own check on top and nothing re-implements the chain
+- `resolveAnimation` ([utils/animation-utils.ts](utils/animation-utils.ts)) — read by both the inline
+  `transition` and the `transitionend` wait, so the two cannot disagree
 
 ### The styling surface
 
-**A hairline flush to the dialog's edge is a trap, and it is worth knowing why before debugging
-one.** A `<dialog>` keeps the UA's `fit-content`, so its box lands on a fraction of a pixel, and
-`margin: auto` puts both edges off-pixel. A 1px border on content that reaches that edge therefore
-occupies the box's last fractional pixel, and how much of it the compositor keeps is not the
-author's to decide. Measured on the microfrontend demo: three dialogs at 154.844px, 243.094px and
-252.266px wide kept 16%, 91% and 73% of their right border — the first read as plainly missing
-while the other two looked fine, from identical markup and identical computed styles. Every
-binding is affected equally; the fix is user-land (inset the border a pixel, size the dialog in
-whole pixels, or move the border inward) and the `style` option's doc says so.
+Everything a consumer needs to style a dialog, and nothing that requires knowing how the tree is
+built:
 
-The symptom is worth recognising too, because it misleads: the border is correct on the first
-draw and gone after, and toggling _any_ property in devtools brings it back — both of which read
-as a CSS problem and are neither. A second sighting sharpened it: a panel whose left and right
-edges landed on whole pixels (41.000, 334.000) and whose top and bottom did not (222.4375,
-567.875) lost **exactly those two edges**. A translucent border loses twice, because each half of
-the split carries half the alpha — at `0.45` each half arrives near `0.25` and reads as absent.
+- **`--dialog-backdrop`** — the library's one visual opinion, read by its single `dialog::backdrop`
+  rule, default `rgba(0, 0, 0, 0.7)`. Inherited, so setting it anywhere is a declaration rather than
+  a specificity fight. **The sheet is adopted per _root_, not per document** — see
+  [core/dialog-styles.ts](core/dialog-styles.ts) and `showDialog`.
+- **`data-modal-id`** and **`data-modal-type`** (`'modal'` / `'non-modal'`) on the `<dialog>` — how
+  CSS reaches one dialog or every non-modal one. `data-testid` is for tests and is **not** a styling
+  contract.
+- **`style`** — the size of the `<dialog>` box, which the library never decides. The same lever the
+  template hooks pull; a template's structural styles merge _under_ a caller's.
+- **`data-loading`** on an action's button props — the running state, and the only form the library
+  ships it in. A core agnostic of the UI cannot name the busy flag for one component library (MUI
+  says `loading`, another `busy`, a headless one has none), so a wrapper maps it in the one place
+  that knows. The playground's `MuiButton` and `VanillaButton` are that seam.
 
-**Two more UA rules apply to `dialog:modal` and to nothing else**, and both reach a consumer's
-own box rather than the library's:
+**Three platform traps live on the `style` option's doc in [core/types.ts](core/types.ts)**, because
+that is where a caller meets them, and each reaches the consumer's own box rather than the library's:
+a hairline flush to the dialog's edge draws partially (`fit-content` + `margin: auto` put the box on
+a fractional pixel); `dialog:modal` gets a UA `max-width: calc(100% - 6px - 2em)` that cuts a
+`min(600px, 92vw)` panel on a phone; and `dialog:modal` is `overflow: auto`, so it clips a focus ring
+drawn outside a control's box and needs `scroll-padding` rather than padding. A **non-modal** dialog
+gets none of the three, so `nonModal: true` silently changes what a caller's sizing means.
 
-- **`max-width`/`max-height: calc(100% - 6px - 2em)`** — 337px on a 375px phone. So a panel
-  sized `min(600px, 92vw)` asks for 345 and is cut by eight pixels on the right, rounded corner
-  included. Above roughly 475px the two agree and nothing shows, which is why it survives every
-  desktop review. Four of the playground's own panels were written this way.
-- **`overflow: auto`** — so a modal dialog is a scroll container and clips whatever a control
-  inside it draws outside its own box: a focus ring at `outline-offset`, a glow. And because it
-  scrolls, `scroll-padding` is the property that keeps a tabbed-to control off its own edge;
-  padding alone does not, since scroll-into-view parks it flush.
-
-A **non-modal** dialog gets neither, so `nonModal: true` silently changes what a caller's own
-sizing means. The `style` option's doc carries both, since that is where a caller meets them.
-
-Everything a consumer needs to style a dialog, and nothing that requires knowing how the tree
-is built:
-
-- **`--dialog-backdrop`** — the library's one visual opinion, read by its single
-  `dialog::backdrop` rule and defaulted to `rgba(0, 0, 0, 0.7)`. Inherited, so setting it on
-  `:root`, a theme class or the dialog itself is a declaration rather than a specificity fight
-  against an adopted stylesheet.
-
-  **The sheet is adopted per _root_, not per document** ([core/dialog-styles.ts](core/dialog-styles.ts)),
-  and that is not an optimisation. `adoptedStyleSheets` does not cross a shadow boundary, so a
-  `<dialog>` inside a web component gets the UA's backdrop — measured `rgba(0, 0, 0, 0.1)` — while
-  the custom property it is supposed to read inherits in perfectly well. The rule has to follow the
-  element. `showDialog` adopts into `dialog.getRootNode()` on every open, idempotent per root,
-  because it is the one place that knows which tree a given dialog is in.
-
-- **`data-modal-id`** (the modal's id) and **`data-modal-type`** (`'modal'` / `'non-modal'`) on
-  the `<dialog>` — how CSS reaches one dialog or every non-modal one. `data-testid` is for
-  tests; it is not a styling contract and must not be documented as one.
-- **`style`** — the size of the `<dialog>` box, which the library never decides: a `<dialog>`
-  keeps the UA's `fit-content` unless told otherwise. Public, and the same lever the template
-  hooks pull; a template's own structural styles are merged _under_ a caller's, so a drawer can
-  be told to be 380px wide without rebuilding the hook.
-- **`data-loading`** on an action's button props — the running state, and **the only form the
-  library ships it in**. Every field of `ActionButtonProps` is a DOM prop: a core agnostic of the
-  UI put into it cannot name the busy flag for one family of component libraries (MUI and Mantine
-  say `loading`, another says `busy`, a headless one has none). A plain `<button>` styles on
-  `[data-loading='true']`; a wrapper reads the boolean and maps it to its own prop, one line, in
-  the only place that knows the answer. The playground's `MuiButton` and `VanillaButton` are that
-  seam.
+A **closed** dialog is `display: none`. The UA says so, but the library's inline `display: flex`
+outranks it — and a contained dialog is `inset: 0`, so without this it stays an invisible,
+full-region click blocker. `getDialogAnimationStyles` takes the phase for exactly that.
 
 ### Naming a dialog
 
-`ariaLabel` / `ariaLabelledBy` / `ariaDescribedBy` and `role: 'dialog' | 'alertdialog'` reach
-the `<dialog>` element. A dialog with no accessible name is announced as just "dialog" — the
-commonest defect in a dialog implementation — and the library cannot invent one, so it takes
-the caller's and **omits the attribute entirely when absent**: `aria-label=""` would hide the
-omission from an audit.
+`ariaLabel` / `ariaLabelledBy` / `ariaDescribedBy` and `role: 'dialog' | 'alertdialog'` reach the
+`<dialog>`. A dialog with no accessible name is announced as just "dialog", and the library cannot
+invent one — so it takes the caller's and **omits the attribute entirely when absent**, because
+`aria-label=""` would hide the omission from an audit.
 
-`role` is deliberately not the whole ARIA surface. A `<dialog>` _is_ a dialog; a surface that is
-not one — a toast, a popover — wants a live region **inside** it, not a role contradicting its
-own element. The corner-toast example in the playground is written that way and says why.
+`role` is deliberately not the whole ARIA surface: a `<dialog>` _is_ a dialog, and a surface that is
+not one — a toast, a popover — wants a live region **inside** it rather than a role contradicting its
+element. **`role: 'alertdialog'` does not require `ariaDescribedBy`**, and making it a type error was
+considered and rejected — the reasoning (the APG says to omit a description when the content has
+semantic structure, and `umbra/vanilla` would contradict the rule outright) is on the rule itself in
+[core/dialog-labelling.ts](core/dialog-labelling.ts).
 
-**`role: 'alertdialog'` does not require `ariaDescribedBy`, and making it a type error was
-considered and rejected.** The two live in the same options object, so unlike `ariaLabelledBy` and
-the `id` it points at, the constraint _is_ expressible — `ModalVariant` is the precedent. Two
-things stop it. The APG says to **omit** the description when the content has semantic structure
-(lists, tables, several paragraphs), since it would be announced as one unbroken string; a type
-would turn a conditional recommendation into an absolute rule, against the spec's own advice. And
-`umbra/vanilla` would contradict it outright: there the body text is the caller's markup, and
-`setDialogAttributes` skips `undefined` precisely so an `aria-describedby` already in the HTML
-survives — requiring the option would force restating what is already written. A constraint that
-cannot be uniform across the three bindings does not belong in the model.
+**The diagnostic that _is_ shipped** is `syncLabellingDiagnostics`
+([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) over that rule. It reports two unambiguous
+things — an `aria-labelledby` / `aria-describedby` whose ids resolve to nothing, and a dialog with no
+accessible name — and, like every warning here, is **silent until `setLogLevel`**. Three details are
+load-bearing and written next to the code: it reads the **element**, not the options (in
+`umbra/vanilla` the markup is the caller's); it stays quiet until `prepare` settles (a name may point
+at a heading not rendered yet); and it allows one frame of slack.
 
-**The diagnostic that _is_ shipped** is `syncLabellingDiagnostics` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)),
-over the pure rule in [core/dialog-labelling.ts](core/dialog-labelling.ts). It reports two things,
-both unambiguous: an `aria-labelledby` / `aria-describedby` whose ids resolve to nothing, and a
-dialog that ends up with no accessible name. **It says nothing about an `alertdialog` without a
-description**, for the reason above — warning there would push people toward the pattern the spec
-tells them to avoid.
-
-Three details are load-bearing, and two of them are about not crying wolf:
-
-- **It reads the element, not the options.** In `umbra/vanilla` the markup is the caller's, so
-  `options.ariaLabelledBy` would report a perfectly named dialog as anonymous and miss the ones
-  that are not. `aria-labelledby` also takes **space-delimited IDREFS**, checked element-wise.
-- **Not before `prepare` settles.** A name may legitimately point at a heading the caller has not
-  been able to render yet — the loading modal is the documented normal case. `isPreparing` is
-  passed in rather than read behind the function, which is what subscribes Solid's effect to it;
-  a hidden guard would never bring the check back. A CT test on both bindings pins the silence.
-- **One frame of slack**, as insurance rather than as a fix: `ModalOutlet` was the suspect, since
-  it registers its node one commit late, and measuring says the lag never reaches the check — the
-  phase gets to `'open'` on its own frame. Kept for the renderers not enumerated.
-
-Like every other warning here it goes through the gated logger, so it is **silent until
-`setLogLevel`**. That is the library's uniform policy, not an oversight: this is for someone
-already asking why their screen reader says "dialog", and it hands them the answer in one line.
-
-**`aria-busy` is the one attribute in that table the library owns rather than relays**, and the
-only one that toggles: `phase: 'open'` with `isPreparing: true` is the normal state of a loading
-modal — on screen, content not there yet — and nothing else in the DOM said so. It is therefore
-always written, `'false'` included, because `setDialogAttributes` skips `undefined` rather than
-removing, so the off half could otherwise never be reached and a dialog that finished loading
-would keep `aria-busy="true"` welded on. `isPreparing` is **required** on `DialogAttributeOptions`
-for the same reason: a binding that forgot it would ship a permanent lie, silently.
-
-`setDialogAttributes` is the write loop Solid and vanilla both need (React spreads in JSX, which
-drops `undefined` for free). Its skip-on-undefined is a contract, not an optimisation — in
-`umbra/vanilla` the element is the caller's markup, and an `aria-labelledby` they wrote must
-survive an option they never passed. `bindAction` has the same asymmetry from the other side: it
-writes onto a button it did not create, so its unbind **restores** what it found rather than
-clearing, or a button the caller had disabled comes back switched on.
-
-A **closed** dialog is `display: none`. The UA already says so (`dialog:not([open])`), but the
-library's own inline `display: flex` outranks it — and a contained dialog is `inset: 0`, so
-without this it stays an invisible, full-region click blocker over whatever it was placed in
-front of. `getDialogAnimationStyles` takes the phase for exactly this reason.
-
-- **`core/placement.ts`** ([core/placement.ts](core/placement.ts)) — `dialogPlacement({ nonModal, portal, clip })` → `{ host, dialog }`, the positioning contract as data. Public, from the root: a `showModal()` dialog is placed by the top layer and needs nothing; a portaled non-modal one is `fixed` against the viewport; a contained one is `absolute` against a library-owned host, because inline `fixed` resolves against the nearest transformed ancestor and jumps. `useModal` renders the `host` styles on its wrapper and `getDialogAnimationStyles` merges the `dialog` half, so there is one table rather than a style literal in the JSX and another in a util — and a second binding (or a hand-written host) places a dialog identically.
-- **`core/dialog-lifecycle.ts`** ([core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)) — Pure, React-free native-`<dialog>` DOM operations used by the hook above: `showDialog()` (show/showModal + z-index), `refreshTransitionsDisabled()` / `checkTransitionsDisabled()` (WeakMap-cached, re-measured per open), `runDialogExit()` (backdrop WAAPI + `transitionend`/timeout, returns a teardown). Kept out of the hook so the DOM logic is testable in isolation and reusable outside React.
-- **`utils/dismiss-gate.ts`** ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — `canDismiss({ phase, isPreparing, dismissWhilePreparing, hasRunningAction })`, the one predicate every dismissal path shares (dialog-level keydown, non-modal window keydown, click-outside, backdrop click). Each path layers its own check on top (backdrop opt-in, hotkey suppression, foreground, hit testing); nothing else re-implements the shared chain.
-- **`utils/animation-utils.ts` → `resolveAnimation()`** — resolves a `ModalAnimation`'s optional fields (`DEFAULT_DURATION` 200, `DEFAULT_TRANSITION_PROPERTY` `'opacity'`) once. Both the inline `transition` on the `<dialog>` and `syncCloseSequence`'s `transitionend` wait read it, so the declared transition and the listener waiting on it cannot disagree.
-- `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey` ([core/attach-keydown.ts](core/attach-keydown.ts)) — dismiss key, native cancel cascade guard on stacked dialogs, and the window-level listener a non-modal panel needs
-- `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — opening-focus capture, clear on close, restore after a failed action
+**`aria-busy` is the one attribute the library owns rather than relays**, and the only one that
+toggles — so it is always written, `'false'` included, and `isPreparing` is **required** on
+`DialogAttributeOptions`. `setDialogAttributes` skips `undefined` rather than removing, which is a
+contract and not an optimisation: in `umbra/vanilla` an `aria-labelledby` the caller wrote must
+survive an option they never passed. `bindAction` has the same asymmetry from the other side — its
+unbind **restores** what it found, or a button the caller had disabled comes back switched on. See
+[core/dialog-props.ts](core/dialog-props.ts).
 
 ### Layer 2: Template Hooks
 
-Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`, `buildModalOptions`), and the slide panel's geometry — its transforms and its positioning — in [templates/slide-geometry.ts](templates/slide-geometry.ts), which is framework-free and read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates.ts](solid/templates.ts) and are the same three lines each.
+Each wraps `useModal` with template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts) (`TemplateCommonOptions`, `TemplateBaseOptions`, `BaseRenderContext`, `DEFAULT_FADE_ANIMATION`, `buildModalOptions`), and the slide panel's geometry — its transforms and its positioning — in [templates/slide-geometry.ts](templates/slide-geometry.ts), which is framework-free and read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates/](solid/templates/) and are the same three lines each.
 
 `buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
-- `useMessageModal<TData>` ([react/use-message-modal.tsx](react/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `template: 'message'`
-- `useSlideModal` ([react/use-slide-modal.tsx](react/use-slide-modal.tsx)) — Direction-based animation, reports `template: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
+- `useMessageModal<TData>` ([react/templates/use-message-modal.tsx](react/templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `template: 'message'`
+- `useSlideModal` ([react/templates/use-slide-modal.tsx](react/templates/use-slide-modal.tsx)) — Direction-based animation, reports `template: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
 
-Actions are **declared by being rendered**. `render` is handed an `action` factory; calling it
-names the reason, binds the handler and returns the props to spread. There is no config object,
-no second hook, and nothing to pass into `useModal`.
+Actions are **declared by being rendered**. `render` is handed an `action` factory; calling it names
+the reason, binds the handler and returns the props to spread. There is no config object, no second
+hook, and nothing to pass into `useModal`.
 
-- Types in [actions/types.ts](actions/types.ts): `ActionFactory`, `ActionOptions`,
-  `ActionButtonProps`, `ActionClickEvent`, `ActionCloseFn`, `HotkeyDef`, `ActionState`.
 - **The reason is the action's identity** — it names the action _and_ is the close reason.
-  `action('confirm')` closes with `reason: 'confirm'`; nothing restates it. The handler is
-  optional: omit it to auto-close with that reason.
-- **Declare the reasons on the hook**: `useModal<TData, 'save' | 'cancel'>`. Do this at every
-  call site. The `TReason = string` default accepts anything, which costs the three properties
-  the design exists for — a mistyped `action('savee')` rejected, autocomplete, and an exhaustive
-  `switch (result.reason)` in `onClose`. `'dismiss'` is always in the union: the library produces
-  it on Escape, backdrop click and teardown — and it is the one reason **no action may be named**,
-  which is a fourth thing declaring buys, since `Exclude` has nothing to remove from `string`.
-- **Close payload** is `useModal<Result>` — there is nothing else to carry it, so the modal declares
-  what it closes with.
-- **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state,
-  framework-free. `useModal` builds one alongside the store and binds it straight to `close`,
-  which is why there is no bridge: nothing is handed _in_, so nothing needs bridging.
-- **[core/action-factory.ts](core/action-factory.ts)** builds the `action` function itself, and it
-  is shared. **Its three live fields are getters** (`disabled`, `data-loading`, `aria-busy`) —
-  that is what lets one factory serve both bindings: a virtual-DOM renderer spreads the object
-  during render and reads them once, which is the snapshot it wanted, while a fine-grained one
-  spreads it inside a tracking scope and subscribes each attribute individually. The engine state
-  is read through a `readState` callback the binding supplies, not from the engine's own getters,
-  because only the binding knows what "reactively" means for it.
-- **Declaration window**: `useModal` wraps the `render` call in `beginRender()`/`endRender()`, so
-  the engine knows which actions the pass drew. Re-declaring per pass rather than accumulating is
-  what stops a hotkey outliving its button and going on suppressing the dismiss key.
-- **`undeclare` is the fine-grained half of that.** A pass is a React concept: Solid never re-runs
-  the parent, so a button removed by its own `<Show>` has to retire its own declaration, which the
-  Solid factory does from `onCleanup`. It is not only a stale hotkey — `hasActions()` decides
-  whether a backdrop click dismisses, so without it a modal that has drawn its last action stays
-  silently opt-in. Pinned by a Solid component test.
-- The `attach*` functions take the engine (as the payload-free `ActionGate`) and read it lazily —
-  `ownsHotkey` at keydown, not captured at render, because actions do not exist until render has
-  run.
-- Aggregated `hasRunningAction` / `error` are pre-computed at write time and reach both the render args
-  and the hook's return, so a trigger button outside the dialog can read them.
-- **`action.isRunning(reason)` is the per-action half**, and it hangs on the factory rather than
-  joining `ModalRenderArgs` for two reasons that are the same reason: the argument already says
-  whose state is being asked for (which is why `ActionState.isRunning` is one word and the
-  aggregate has to name its scope), and the factory is where actions live. It is built in
-  `core/action-factory.ts` over the same `readState` the live props use, so **neither hook binding
-  contributes a line** — except Solid's, which re-wraps the factory to attach `undeclare` and must
-  therefore re-attach the property. Dropping it does not compile (`ActionFactory` is an object
-  type with a call signature, so a bare arrow is missing a required property); what the checker
-  cannot say is that it stays _live_ through the wrapper, and that is what the Solid component
-  test pins. `./vanilla` has no factory, so the controller carries the noun:
+  `action('confirm')` closes with `reason: 'confirm'`; the handler is optional, and omitting it
+  auto-closes with that reason.
+- **Declare the reasons on the hook**: `useModal<TData, 'save' | 'cancel'>`, at every call site. The
+  `TReason = string` default accepts anything, which costs the three things the design exists for — a
+  mistyped `action('savee')` rejected, autocomplete, and an exhaustive `switch` in `onClose`.
+- **Close payload** is `useModal<Result>`: nothing else carries it, so the modal declares it.
+- **`'dismiss'` is reserved, and the reservation is a type**
+  ([core/dismiss-reason.ts](core/dismiss-reason.ts)). Actions take
+  `ActionReason<TReason> = Exclude<TReason, DismissReason>`, so no action may be _named_ it — and the
+  type only half-delivers, because `Exclude<string, 'dismiss'>` is `string`. `engine.declare` warns
+  for that case. `handle.close('dismiss')` stays legal: reporting a dismissal is not declaring an
+  action.
+- **[actions/action-engine.ts](actions/action-engine.ts)** holds execution and state, framework-free.
+  `useModal` builds one alongside the store and binds it straight to `close`, so nothing is handed
+  _in_ and nothing needs bridging.
+- **[core/action-factory.ts](core/action-factory.ts)** builds the `action` function, shared, and
+  **its three live fields are getters** (`disabled`, `data-loading`, `aria-busy`) — which is what lets
+  one factory serve a virtual-DOM renderer that reads them once and a fine-grained one that
+  subscribes each. `action.isRunning(reason)` is built there over the same `readState`, so neither
+  hook binding contributes a line; `./vanilla` has no factory, so the controller carries the noun as
   `isActionRunning(reason)`.
-- **`'dismiss'` is reserved, and the reservation is a type.** [core/dismiss-reason.ts](core/dismiss-reason.ts)
-  holds `DISMISS_REASON` and `DismissReason` — the constant for the two places a literal would sit
-  unchecked (the manager's DOM event details type `reason` as `string`), the type for everything
-  else: every producer takes `TReason | DismissReason`, so editing that one line stops the whole
-  library compiling rather than leaving one path spelling it the old way. Actions take
-  `ActionReason<TReason>` = `Exclude<TReason, DismissReason>`, so no action may be _named_ it —
-  `Exclude` rather than a comment because a caller may legitimately declare `'dismiss'` in their
-  own union and would otherwise get an action they can name. **The type only half-delivers**:
-  `Exclude<string, 'dismiss'>` is `string`, so the modal that left `TReason` at its default — the
-  one most likely to do this by accident — gets no error, and `engine.declare` warns once for it.
-  Narrowing the type instead is not available: anything strict enough to reject `'dismiss'` out of
-  a bare `string` rejects every other reason too. `handle.close('dismiss')` stays
-  legal: reporting a dismissal is not declaring an action. What a "dismiss action" would have
-  bought already has two unambiguous spellings — `hotkey: Key.Escape` on a named action for the
-  key, and `onClose` for every dismissal path including the two that cannot run a handler.
+- **The declaration window** is `beginRender()` / `endRender()` around `render`, so the engine knows
+  which actions the pass drew. Re-declaring per pass rather than accumulating is what stops a hotkey
+  outliving its button. **`undeclare` is the fine-grained half**: Solid never re-runs the parent, so a
+  button removed by its own `<Show>` retires its own declaration from `onCleanup` — and it is not only
+  a stale hotkey, since `hasActions()` decides whether a backdrop click dismisses.
+- The `attach*` functions take the engine as the payload-free `ActionGate` and read it lazily —
+  `ownsHotkey` at keydown, not at render, because actions do not exist until render has run.
+- Aggregated `hasRunningAction` / `error` are pre-computed at write time and reach both the render
+  args and the hook's return, so a trigger button outside the dialog can read them.
 
 ### Hotkey System
 
-Declared at the action level, automatically wired — no `useHotkey` needed.
+Declared at the action level, wired automatically — there is no `useHotkey`.
 
 ```typescript
 render: ({ action }) => (
@@ -420,36 +355,26 @@ render: ({ action }) => (
     <button {...action('confirm', { hotkey: Key.Enter, onAction: submit })}>OK</button>
   </>
 );
-
 ```
 
-**Flow:** `action(reason, { hotkey })` records it on the engine during render → `attachDialogKeydown` asks the engine to match the event → finds the button by `aria-keyshortcuts` → `click()` runs the same path a real click does.
+**Flow:** `action(reason, { hotkey })` records it on the engine during render → `attachDialogKeydown`
+asks the engine to match the event → the button is found by `aria-keyshortcuts` → `click()` runs the
+same path a real click does.
 
-**The attribute is not the label.** `aria-keyshortcuts` takes `KeyboardEvent.key` values, so the
-Control modifier is `Control` and the spacebar is `Space` — a literal space cannot sit in a
-space-delimited list. `formatAriaKeyshortcuts` produces that form and `formatHotkeyLabel` produces
-the one a person reads (`Ctrl+Enter`); the input spelling stays `Ctrl+`, and `parse()` deliberately
-does not learn the second one, or the runtime surface would be wider than the closed `HotkeyDef`
-union. The lookup is selector-based, so the attribute, the selector in `attach-keydown` and
-`engine.ownsHotkey` all read the same function — a spelling that drifted between them would leave
-every modified hotkey silently dead, which is why they move together and why the end-to-end test
-asserts the attribute _and_ the dispatch in one go.
+**`aria-keyshortcuts` forwarding**: a custom button wrapper **must** forward the prop to the
+`<button>`, or its hotkeys silently fail. Same for `data-focus-on-open`.
 
-**`aria-keyshortcuts` forwarding**: Custom button wrappers **must** forward this prop to the `<button>` element or hotkeys silently fail.
-
-```tsx
-// ✅ <button aria-keyshortcuts={props['aria-keyshortcuts']} ... />
-// ❌ <button ... /> — hotkeys won't fire
-```
-
-Utilities: `matchesHotkey()` + `formatHotkeyLabel()` + `formatAriaKeyshortcuts()` ([utils/hotkey-utils.ts](utils/hotkey-utils.ts)), `Key` constants ([utils/keys.ts](utils/keys.ts)).
+**The attribute is not the label**, and the three spellings agree by construction rather than by
+convention: `formatAriaKeyshortcuts` produces the `KeyboardEvent.key` form that reaches the DOM, the
+dispatch selector is built from it, and `engine.ownsHotkey` compares it — a spelling that drifted
+between them would leave every modified hotkey dead. `formatHotkeyLabel` produces the human form
+(`Ctrl+Enter`), and both share one `serialize` so their modifier ordering cannot diverge. Letter case
+is not significant; the details are in [utils/hotkey-utils.ts](utils/hotkey-utils.ts).
 
 **Scoped to the declaring dialog** ([utils/dialog-scope.ts](utils/dialog-scope.ts)). A modal opened
-from inside another renders its `<dialog>` in that one's subtree — the documented way to stack,
-since the top layer swallows outside clicks — so its events bubble through every modal underneath.
-`isOwnEventTarget` drops those at the keydown listener and `queryOwn` keeps dispatch off a nested
-dialog's buttons. Without them one Escape unwinds the whole stack and a key two modals both
-declare fires at every level it passes.
+from inside another renders its `<dialog>` in that subtree, so its events bubble through every modal
+underneath: `isOwnEventTarget` drops those at the keydown listener and `queryOwn` keeps dispatch off a
+nested dialog's buttons. Without them one Escape unwinds the whole stack.
 
 ### Opening focus
 
@@ -502,158 +427,101 @@ the `'opening'` phase) that would otherwise be written out three times and drift
 
 ### The payload flows
 
-`TData` is not just a label on the hook — it is threaded through every hop of the close path, so
-the payload a modal declares is the only payload any of its doors accepts:
+`TData` is threaded through every hop of the close path, so the payload a modal declares is the only
+one any of its doors accepts:
 
 ```
 useModal<TData, TReason>
 ├── ModalHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
 ├── ActionFactory<TData, TReason>      ← the `action` in the render args
 ├── createModalStore<TData, TReason>   → ModalStoreSnapshot.closeResult: CloseResult<TData, TReason>
-│                                      → setOnClose / runOnClose / addCloseResolver
 └── onClose(result: CloseResult<TData, TReason>)  ·  openAndWait(): [Error, null] | [null, CloseResult]
 ```
 
-`TReason` defaults to `string`, but **declare it at every call site**
-(`useModal<Result, 'save' | 'cancel'>`). It is what rejects `action('savee')`, autocompletes the
-reason, constrains `handle.close`, and makes a `switch` on `result.reason` exhaustive.
-`'dismiss'` is unioned in throughout — the library produces it on Escape, backdrop click and
-teardown.
+Three design choices make that work without a single assertion, and each is a trap if reversed:
 
-Three design choices make that possible without a single assertion:
+- **`CloseResult<TData>` is a plain object, not a conditional.** Nothing can be assigned to a deferred
+  conditional while `TData` is a parameter, so a conditional would force a cast at every boundary the
+  result crosses. With `TData = void`, `data` is an unusable `void | undefined` — the same strictness,
+  visible to the checker.
+- **The store _runs_ `onClose` (`runOnClose`) instead of returning it.** A callback in an output
+  position is checked contravariantly, which would make `ModalStore<TData>` unassignable to the plain
+  `ModalStore` non-generic consumers declare.
+- **The hooks take `ActionGate`, not `ActionEngine<TData>`** — none of them closes _with data_, so none
+  has to become generic.
 
-- **`CloseResult<TData>` is a plain object, not a conditional.** Nothing can be assigned to a
-  deferred conditional while `TData` is still a parameter, so a conditional here would force a
-  cast at every boundary the result crosses. With `TData = void`, `data` is an unusable
-  `void | undefined` — the same practical strictness, visible to the checker.
-- **The store runs `onClose` (`runOnClose`) instead of returning it.** A `(result: CloseResult<TData>) => …`
-  in an output position is checked contravariantly, which would make `ModalStore<TData>`
-  unassignable to the plain `ModalStore` that non-generic consumers declare.
-- **The hooks take `ActionGate`, not `ActionEngine<TData>`** — the payload-free half of the
-  engine. They gate dismissal and dispatch hotkeys; none of them closes _with data_, so none of
-  them has to become generic.
+Two deliberate non-derivations. **`RegisteredStore`** is a _port_ — the manager declaring what it
+needs, not a `Pick<ModalStore, …>` — because a future binding supplies its own store; contrast
+[core/finalize-close.ts](core/finalize-close.ts), which is handed the real store and narrows with
+`Pick`. And **`ModalVariant`**'s two branches each re-declare `nonModal`, because TypeScript cannot
+share a doc comment across union members.
 
 Pinned by [core/\_\_tests\_\_/type-model.test.ts](core/__tests__/type-model.test.ts) — compile-time
-assertions that the derivations still hold, plus `@ts-expect-error` checks that `ModalVariant`'s
-mutual exclusion, the payload rejection, and the action/modal payload match are all real.
-Flattening a derived type back into an equivalent-looking literal fails type-check there.
+assertions that the derivations hold, plus `@ts-expect-error` checks that `ModalVariant`'s mutual
+exclusion and the payload rejection are real. Flattening a derived type into an equivalent-looking
+literal fails there, and `verify:package` re-checks the same guarantees against the published `.d.ts`.
 
-**Declare the payload and the reasons on the hook.** With actions declared by use, nothing else
-carries either, so `useModal<Result, 'save' | 'cancel'>` states both once, at the call.
-`type-model.test.ts` asserts what that buys — a mistyped reason rejected, the handle
-constrained, `onClose` exhaustive — against the hooks' real signatures via type-only imports
-(the file is a unit test; it must not pull React in at runtime), and `verify:package` re-checks
-the same guarantees against the published `.d.ts`.
-
-Two deliberate non-derivations:
-
-- **`RegisteredStore`** ([manager/dialog-manager.ts](manager/dialog-manager.ts)) is a _port_ — the
-  manager declaring what it needs, not a `Pick<ModalStore, …>` — because the manager is the
-  framework-agnostic side of the boundary and a future binding supplies its own store. Its
-  snapshot, being shared vocabulary, _is_ `ModalStoreSnapshot`. Contrast
-  [core/finalize-close.ts](core/finalize-close.ts), which is handed the real store and so narrows
-  it with `Pick`.
-- **`ModalVariant`**'s two branches each re-declare `nonModal`, because TypeScript has no way to
-  share a doc comment across union members. The prose lives on the union itself; the branches
-  summarise and link to it.
-
-- `CloseResult<TData>` — `{ reason, data?: TData }`; `TData = void` makes `data` unassignable
-- `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`); the
-  `[Error, null]` branch is produced by `store.abandon()`
-- `TReason` — the action names **and** the close reasons, since the reason is the identity
-- No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening
+- `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`); the `[Error, null]`
+  branch is produced by `store.abandon()`
+- No `as` casts — `Extract<Source, Target>` to narrow, `satisfies` to prevent widening
 
 ## Generated docs
 
-`yarn docs:check` runs typedoc with `treatWarningsAsErrors` and is part of `yarn check`, so a
-broken `{@link}` or a public signature referencing an unexported type fails the gate.
+`yarn docs:check` runs typedoc with `treatWarningsAsErrors` and is part of `yarn check`, so a broken
+`{@link}` or a public signature naming an unexported type fails the gate. The validation choices and
+the `intentionallyNotExported` list are in [typedoc.json](../typedoc.json) with their reasons; two
+are worth knowing before editing anything:
 
-- `notExported` and `invalidLink` are **on**. A type that a public signature mentions but the
-  entry point does not export is a real gap — it is how `ActionOptions` was found: a parameter
-  type users were asked to pass and could not name.
-- `intentionallyNotExported` lists the internal helpers that legitimately appear in a public
-  signature's _structure_ without a user ever naming them (`ModalInfoBase`, `RegisteredStore`,
-  `BaseRenderContext` …). Adding to it is a decision; check first whether the type should just be
-  exported.
-- `notDocumented` is **off**. Turning it on flags exactly 67 things, all of them `Key`'s
-  constants (`A: 'a'`, `Digit0`, `F12` …), whose names are their documentation. Nothing else in
-  the public surface is undocumented — run `yarn docs:check --validation.notDocumented` before
-  assuming that is still true.
-- `disableSources` is `false`: the repository exists (`github.com/francisdesjardins/umbra`), so typedoc's "view source" links resolve.
-- All four entry points are in `entryPoints`, and the four core option/return types are listed in
-  `intentionallyNotExported` **by qualified name** (`umbra/src/core/types.ts:UseModalOptions`) —
-  the plain name would also silence the two bindings' exported ones, which is exactly the warning
-  worth keeping.
-- **The playground's `/api` reference covers all four entry points**, and its projection keys
-  every declaration by `specifier#name` — because a bare name is not an identity here: three
-  bindings export `useModal`, and a bare-name map keeps whichever entry point typedoc walked
-  last. Two consequences worth knowing before editing it. A type the bindings _share_
-  (`ModalHandle`, `ActionOptions`, anything from `core/types.ts`) is **one** reflection, which
-  typedoc materialises under the first entry that names it and references from the rest — so the
-  model falls back to that single declaration, and only when exactly one exists. And a
-  cross-reference resolves against the **category table**, not against where the declaration was
-  materialised, so a link out of the Solid chapter lands in the Solid chapter.
+- `notExported` and `invalidLink` are **on**. A type a public signature mentions but the entry point
+  does not export is a real gap — it is how `ActionOptions` was found. Adding to
+  `intentionallyNotExported` is a decision, so check first whether the type should just be exported.
+- `notDocumented` is **off** because it flags exactly 67 things, all `Key` constants whose names are
+  their documentation. Run `yarn docs:check --validation.notDocumented` before assuming that holds.
 
-**`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier,
-`tsc`, oxlint — by extracting each one to a real module under `scripts/examples/generated/`
-and running the three over it. That directory is deliberately **not** gitignored: oxlint honours
-`.gitignore` with no override, so an ignored path is one it reports zero files for and passes —
-which is what it silently did. The script removes the directory unless you pass `--keep`, and
-fails if the lint pass ever sees no files again. It is part of `yarn check`;
-`yarn docs:examples:fix` writes the formatted example back into the doc comment it came from.
+**The playground's `/api` reference covers all four entry points**, and its projection keys every
+declaration by `specifier#name` — a bare name is not an identity when three bindings export
+`useModal`. Two consequences live with the model in
+[playground/vite-plugins/api-model.ts](../playground/vite-plugins/api-model.ts): a type the bindings
+_share_ is one reflection, materialised under the first entry that names it; and a cross-reference
+resolves against the **category table** rather than against where it was materialised. A root export
+missing from `CATEGORIES` makes `/api` answer 500 and is caught by
+[playground/src/\_\_tests\_\_/api-categories.test.ts](../playground/src/__tests__/api-categories.test.ts).
 
-- The examples get [their own tsconfig](../scripts/examples/tsconfig.json): a snippet shows a
-  call and stops, so unused locals and implicit `any` are allowed, while everything that decides
-  whether it would compile in a user's app — `strict`, `exactOptionalPropertyTypes`, the DOM
-  lib — is kept. The lint scope is the same bargain (the `scripts/examples/generated/**` override
-  in `.oxlintrc.json`), and what it turns off is named there: the rules that report the _harness_
-  (the `export {}` for module detection, the `async` wrapper hosting an awaited call) rather than
-  the example.
-- Free identifiers (`store`, `fetchUser`, `api`) are declared as `any` by a second pass, so what
-  remains is the example using _this_ library wrongly. That is the class of error worth failing
-  a build over — the two examples that were wrong when written would both have been caught.
-- An example that cannot parse standalone (an elliptical `useModal({ ... })`) is reported and
-  still type-checked, not silently skipped.
+**`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier, `tsc`,
+oxlint — by extracting each to a real module under `scripts/examples/generated/`. Two things about it
+are not obvious and both are written in [the script](../scripts/check-examples.mjs): that directory is
+deliberately **not** gitignored, because oxlint honours `.gitignore` with no override and an ignored
+path is one it reports zero files for and passes; and the type pass runs twice, so free identifiers
+(`store`, `fetchUser`, `api`) become `declare`d `any` and what remains is the example using _this_
+library wrongly. The snippet allowances are in
+[their own tsconfig](../scripts/examples/tsconfig.json) and the lint scope in `.oxlintrc.json`.
 
 ## React Compiler
 
-`babel-plugin-react-compiler` target `'19'`, and **it has to be wired by hand in all three
-places**, because the wiring that looks right does nothing. `react({ babel: { plugins: [...] } })`
-is the pre-rolldown form: under this project's Vite it is accepted and transforms _nothing_, which
-is how the shipped bundle and the component suite both came to be uncompiled while the source was
-written — and documented — as if they were not. The library build and the playground go through
-`@rolldown/plugin-babel`; the component bundle cannot, because Playwright's runner bundles a Vite
-of its own, so it uses [scripts/vite-plugin-react-compiler.mjs](../scripts/vite-plugin-react-compiler.mjs).
-One grep tells you which state you are in: a compiled `use-modal.js` opens with `c(76)` and
-imports `react/compiler-runtime`.
+`babel-plugin-react-compiler`, target `'19'`, **scoped to `src/react/`**. Four rules to write by:
 
-**Scoped to `src/react/`, and that is load-bearing.** The compiler decides what a hook is by name,
-and `umbra/solid` exports `useModal`, `useLookup` and two template hooks — unscoped it compiles
-Solid's and writes `import { c } from "react/compiler-runtime"` into the Solid binding, the one
-thing this package promises never to do. Measured, not feared: it did exactly that, and
-`verify:package` failed on it.
+- **No `useMemo` / `useCallback` / `React.memo`** — the compiler handles memoisation.
+- **No ref writes during render** — use `useEffect`. Store objects with DOM methods taint as
+  ref-like, so reach for the `GetDialog` getter pattern.
+- **No property assignment on `useState` values** — `st.x = value` is forbidden everywhere. Use
+  closure mutations or `Map.set()` (method calls are exempt).
+- `open()`, `openAndWait()` and `handle` close over the store alone, so they are built once in
+  `useModal`'s `useState` initialiser and are reference-stable — the compiler treats the store as
+  opaque and cannot memoise them, and hoisting is what makes them usable as effect deps.
 
-**`react/compiler-runtime` must be external in the library build.** It is React's own subpath, so
-bundling it would inline React internals into this package; a bare `id === 'react'` check misses
-it, which is why the externals predicate names it.
+**The wiring is by hand in three places, and the obvious form does nothing** — `react({ babel: … })`
+is accepted under this Vite and transforms nothing. The reasoning, the `src/react/` scoping (unscoped,
+it writes `react/compiler-runtime` into the Solid binding) and the externals predicate are documented
+where they are configured: [vite.config.esm.ts](../vite.config.esm.ts) and
+[scripts/vite-plugin-react-compiler.mjs](../scripts/vite-plugin-react-compiler.mjs). **One grep tells
+you which state you are in**: a compiled `use-modal.js` opens with `c(…)` and imports
+`react/compiler-runtime`. Nothing asserts it — that is a named gap in the compatibility matrix.
 
-Two consequences of turning it on that are worth knowing before turning it off again:
-
-- **`runDeclarationWindow` exists because of it.** The compiler cannot lower a `try` with no
-  `catch`, and it bails per function — so the four lines wrapping `render()` in `beginRender()` /
-  `endRender()` left the whole of `useModal` uncompiled. Both hook bindings had the same four
-  lines, so extracting them was the mechanical rule's answer anyway; the compiler just made the
-  cost visible.
-- **It found a real staleness bug in `useLookup`**, where the closed branch answers from
-  `manager.lookup(id)` — a read of mutable state the compiler cannot see into, memoised on
-  `manager` and `id`, neither of which changes when a modal registers. Uncompiled it re-read every
-  render and looked fine. The snapshot is passed explicitly now. Expect more of this shape if the
-  compiler ever reaches code that was written while it was silently off.
-
-- **No `useMemo`/`useCallback`/`React.memo`** — compiler handles memoization
-- **No ref writes during render** — use `useEffect`. Store objects with DOM methods taint as ref-like → use `GetDialog` getter pattern. (`createModalStore` lives in its own module — verified compiler-neutral: `useModal` compiles to the same memo slots imported or colocated.)
-- **No property assignment on `useState` values** — `st.x = value` forbidden everywhere. Use closure mutations or `Map.set()` (method calls exempt).
-- `open()`, `openAndWait()` and `handle` close over the store alone, so they are built once in `useModal`'s `useState` initializer and are reference-stable — the compiler cannot memoize them for us (it treats the store as opaque), so hoisting is what makes them usable as effect deps. Everything else the hook returns is derived per render.
+Two consequences worth knowing before turning it off again. `runDeclarationWindow` exists because the
+compiler cannot lower a `try` with no `catch`, and bails per function — the four lines wrapping
+`render()` left the whole of `useModal` uncompiled. And it found a real staleness bug in `useLookup`,
+where a read of mutable state was memoised on inputs that do not change when a modal registers;
+expect more of that shape wherever code was written while it was silently off.
 
 ## Code Organization
 

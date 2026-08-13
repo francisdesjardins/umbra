@@ -11,6 +11,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Docs — the agent files put on a budget, and the routing rule that makes it payable
+
+The four `CLAUDE.md` files had reached **15 328 words**, by growing a little at a time with each
+addition obviously worth it on its own. They load in full into every session, so that cost is paid on
+every task and is invisible at the moment of writing — the shape of failure a gate is for. They are
+**12 198 words** now, and `src/CLAUDE.md` alone went from 8 604 to 5 732.
+
+**Almost nothing was deleted.** The rule that made the pass mechanical rather than a matter of taste is
+that a fact belongs where it can be checked, in this order: a **test or gate** (it cannot drift), the
+**JSDoc of the thing it constrains** (the "why" travels with the code and appears in an editor when it
+is needed), and only then `CLAUDE.md` — for what is attached to no single file: the folder rule, the
+vocabulary, the commands, and pointers to the first two.
+
+Every passage cut was verified to exist at its owner first. The long narratives about
+`scrollbar-gutter`, `adoptedStyleSheets` per root, the UA's `max-width` on `dialog:modal`, the
+fractional-pixel hairline and space-delimited IDREFS were each already written on the code that
+implements them. The React Compiler section was a **third** copy — the same reasoning is in
+`vite.config.esm.ts` and `scripts/vite-plugin-react-compiler.mjs`, where it is configured — so it
+collapsed to the four rules an agent writes by, plus the one grep that says which state you are in. And
+the historical narration went to the CHANGELOG, which owned it already: the repo's own convention is
+that comments never narrate the past, and these files had been exempting themselves from it.
+
+**The budget is a test** ([src/\_\_tests\_\_/doc-budget.test.ts](src/__tests__/doc-budget.test.ts)) —
+per-file word limits and a total, with the routing rule in its doc comment so the failure message has
+somewhere to point. Raising a limit is a decision to state in the commit that raises it, not a way to
+make a failing test pass. Seen to fail on a paragraph over budget and on a **new** `CLAUDE.md` smuggled
+in without one, which is why the file list is discovered by walking the repo rather than declared.
+
+**And replacing prose with a pointer trades one failure mode for another**, so the same test checks that
+every path these files name exists. It found three broken on the first run —
+`react/use-message-modal.tsx` and two siblings, stale since the template hooks moved into
+`templates/`. Also seen to fail, on a pointer bent by hand.
+
 ### Docs — a compatibility matrix, and the twenty open cells it publishes
 
 **What works with what now has one home**, as data:
