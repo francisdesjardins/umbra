@@ -159,7 +159,7 @@ export function chooseActionRunner<T extends { isConnected: boolean }>(
   ...candidates: readonly (T | null | undefined)[]
 ): T | null {
   for (const candidate of candidates) {
-    if (candidate != null && candidate.isConnected) {
+    if (candidate !== null && candidate !== undefined && candidate.isConnected) {
       return candidate;
     }
   }
