@@ -304,6 +304,12 @@ export type UseModalBaseOptions<
    * travelling. Anything else — including returning nothing — means the request was taken. Use it
    * for a condition only the caller can know, such as another framework's modal being on top.
    *
+   * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings, because
+   * `TemplateCommonOptions` excludes only the five options a template owns. That is not incidental
+   * here: a controlled surface is usually a *panel*, so the template hook is where the option is
+   * most often passed — see `/advanced` → "When the open is a prop" in the playground, which is a
+   * `useSlideModal` drawer driven entirely this way.
+   *
    * @example
    * ```ts
    * useModal({
