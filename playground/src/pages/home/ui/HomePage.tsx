@@ -113,7 +113,7 @@ export const HomePage = () => {
             and the flames have the remaining margin to burn into. */}
         <Box
           sx={{
-            width: { xs: 148, md: 196 },
+            width: { xs: 176, md: 220 },
             aspectRatio: '1',
             flexShrink: 0,
             overflow: 'hidden',
