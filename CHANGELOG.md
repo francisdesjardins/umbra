@@ -11,6 +11,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### CI — one component job per engine
+
+The component suite is the pipeline's long pole: **951 tests on one worker, about eight minutes**,
+while every other job finishes between thirty seconds and two minutes. It is three jobs now — one per
+engine — so the wall clock is roughly a third of that, and the runners are independent, which is the
+part that makes it free of the shared-state risk that raising `workers` would carry.
+
+**The second reason is the one this week paid for.** The engines genuinely disagree: a focus assertion
+was green on Chromium and red on WebKit, and in a single job that is one line buried in a 951-test log.
+It is a job name now. `fail-fast: false` for the same reason — cancelling the other two legs the moment
+one goes red throws away exactly the comparison that makes a cross-engine run worth paying for, since
+"which engines disagree" is the question and a cancelled leg cannot answer it.
+
+Raising `workers` above 1 is **not** part of this and should be measured on its own: the tests that
+just went flaky are focus and timing tests, which is precisely what a busier machine degrades.
+
 ### Fix — the focus restore was relying on Chromium's inertness, and WebKit said so
 
 CI went red on one assertion and flaky on another, both WebKit, both about focus. **One was a test

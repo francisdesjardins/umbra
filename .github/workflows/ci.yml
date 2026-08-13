@@ -120,10 +120,24 @@ jobs:
   # Runs inside the official Playwright image — browsers are pre-installed. The tag is derived
   # from `@playwright/test` in package.json by the install job, so bumping the dependency moves
   # the container with it.
+  #
+  # **One job per engine**, and the split buys two different things. The suite is the long pole of
+  # this pipeline — 951 tests on one worker, about eight minutes serial — so three runners take it to
+  # roughly three. And the engines genuinely disagree: a focus assertion has already been green on
+  # Chromium and red on WebKit, which in a single job is one line buried in a 951-test log and here is
+  # a job name.
+  #
+  # `fail-fast: false` for the same reason. Cancelling the other two the moment one goes red would
+  # throw away exactly the comparison that makes a cross-engine run worth paying for — "which engines
+  # disagree" is the question, and a cancelled leg cannot answer it.
   test-component:
-    name: Component Tests
+    name: Component Tests (${{ matrix.browser }})
     needs: install
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     container:
       image: mcr.microsoft.com/playwright:v${{ needs.install.outputs.playwright-version }}-noble
       options: --user 1001
@@ -146,7 +160,7 @@ jobs:
           echo "bin=$bin" >> "$GITHUB_OUTPUT"
           echo "Yarn at $bin"
       - run: node ${{ steps.yarn.outputs.bin }} install --immutable
-      - run: node ${{ steps.yarn.outputs.bin }} test:component
+      - run: node ${{ steps.yarn.outputs.bin }} test:component:${{ matrix.browser }}
       # Only when something failed. The report earns its keep on a red run — it carries the trace
       # `on-first-retry` recorded, which is the difference between reading a failure and
       # reproducing it — and on a green one it is an artifact nobody opens.
@@ -154,7 +168,8 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: component-test-report
+          # Per engine, or the three legs collide on one artifact name and the upload fails.
+          name: component-test-report-${{ matrix.browser }}
           path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7
