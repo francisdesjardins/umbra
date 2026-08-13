@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-lifecycle-sequence.js';
 
 /**
  * The order each binding wires the shared lifecycle in, recorded so that changing it is a
@@ -39,18 +40,13 @@ import { fileURLToPath } from 'node:url';
 
 const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Steps that run from an effect — or, in vanilla, from the store subscription that stands in. */
-const EFFECT_STEPS = [
-  'syncOpenSequence',
-  'syncLabellingDiagnostics',
-  'syncCloseSequence',
-  'attachDialogKeydown',
-  'attachDialogCancel',
-  'attachWindowDismissKey',
-  'attachClickOutside',
-  'attachFocusContainment',
-  'focus.sync',
-] as const;
+/**
+ * Steps that run from an effect — or, in vanilla, from the store subscription that stands in.
+ *
+ * The set comes from the core's own declaration, so a step added there and wired into no binding
+ * fails here rather than being quietly unchecked.
+ */
+const EFFECT_STEPS = MODAL_LIFECYCLE_SEQUENCE;
 
 const BINDINGS = {
   react: 'react/use-modal.tsx',
@@ -65,29 +61,10 @@ const BINDINGS = {
  * the commit. A binding whose order changes silently is what this prevents.
  */
 const RECORDED: Readonly<Record<keyof typeof BINDINGS, readonly string[]>> = {
-  react: [
-    'syncOpenSequence',
-    'syncLabellingDiagnostics',
-    'syncCloseSequence',
-    'attachDialogKeydown',
-    'attachDialogCancel',
-    'attachWindowDismissKey',
-    'focus.sync',
-    'attachFocusContainment',
-    'attachClickOutside',
-  ],
-  // Identical to React's, deliberately — see the note on the hook pair below.
-  solid: [
-    'syncOpenSequence',
-    'syncLabellingDiagnostics',
-    'syncCloseSequence',
-    'attachDialogKeydown',
-    'attachDialogCancel',
-    'attachWindowDismissKey',
-    'focus.sync',
-    'attachFocusContainment',
-    'attachClickOutside',
-  ],
+  // Both hook bindings follow the core's declared sequence. Not copied here — referenced, so the
+  // core is the single statement of it and this file cannot drift from what it checks against.
+  react: MODAL_LIFECYCLE_SEQUENCE,
+  solid: MODAL_LIFECYCLE_SEQUENCE,
   vanilla: [
     'attachDialogKeydown',
     'attachDialogCancel',
@@ -157,13 +134,14 @@ test.describe('wiring order', () => {
     }
   });
 
-  test('the hook pair mirrors in time, not only in file names', () => {
+  test('the hook pair follows the sequence the core declares', () => {
     // `binding-parity.test.ts` asserts the two hook bindings export the same names from the same
-    // paths. This is the same contract one level down: a pair that is meant to be the same modal
-    // written twice should not ask the shared lifecycle in two different orders.
-    expect(RECORDED.solid, 'the hook bindings have diverged in wiring order').toEqual(
-      RECORDED.react
-    );
+    // paths. This is the same contract one level down, and it is now held against the core rather
+    // than against each other: `MODAL_LIFECYCLE_SEQUENCE` is the director's specification, and a
+    // hook binding that stops following it has diverged from the library, not merely from its
+    // twin.
+    expect(RECORDED.react).toEqual([...MODAL_LIFECYCLE_SEQUENCE]);
+    expect(RECORDED.solid).toEqual([...MODAL_LIFECYCLE_SEQUENCE]);
   });
 
   test('the recorded divergences are the ones that actually exist', () => {
