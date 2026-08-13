@@ -11,6 +11,8 @@ import {
   SolidLiveStateApp,
   SolidMessageApp,
   SolidNonModalOptionsApp,
+  SolidFailedActionApp,
+  SolidReconcileApp,
   SolidOpenOrderApp,
   SolidOutletApp,
   SolidOutletDisposalApp,
@@ -105,4 +107,12 @@ export function SolidOpenOrderHarness() {
 
 export function SolidNonModalOptionsHarness() {
   return <SolidRoot app={SolidNonModalOptionsApp} />;
+}
+
+export function SolidReconcileHarness() {
+  return <SolidRoot app={SolidReconcileApp} />;
+}
+
+export function SolidFailedActionHarness() {
+  return <SolidRoot app={SolidFailedActionApp} />;
 }

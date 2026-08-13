@@ -5,6 +5,7 @@ import {
   BackdropHitTestHarness,
   BusyWhilePreparingHarness,
   EscAnsweredByNobodyHarness,
+  ReconcileOpenHarness,
   EscWithoutFocusHarness,
   KeyPassthroughHarness,
   TransitionToggleHarness,
@@ -1247,5 +1248,84 @@ test.describe('useModal — the dismiss key answered by nobody', () => {
     // the one nobody claimed did. A counter that only ever went up would have been consistent with a
     // library that swallows nothing and with one that swallows everything.
     await expect(page.getByTestId('presses-seen')).toHaveText('1');
+  });
+});
+
+/**
+ * `reconcileOpen`, through the pattern it documents.
+ *
+ * The helper had a unit test over its decision table and no binding exercising it, so what nothing
+ * checked was the thing it exists for: a controlled `<Panel open={…} />` on a real `<dialog>`.
+ */
+test.describe('reconcileOpen — a controlled panel', () => {
+  test('the prop drives the dialog, and stays authoritative over an imperative open', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<ReconcileOpenHarness />);
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    await page.getByTestId('raise-prop').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
+
+    await page.getByTestId('lower-prop').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    // Opened by id with the prop still false — the case the doc calls "a dialog opened from somewhere
+    // else". The reconciliation has to put it back, or the call site is left believing a dialog on
+    // screen is closed and has no way to close it.
+    await page.getByTestId('open-behind-its-back').click();
+    await expect(page.getByTestId('prop')).toHaveText('false');
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+    await expect(page.getByTestId('reconciliations')).toContainText('close');
+  });
+
+  test('a dismissal from inside settles once, and does not reopen', async ({ mount, page }) => {
+    await mount(<ReconcileOpenHarness />);
+    await page.getByTestId('raise-prop').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
+
+    // The dialog closes itself, `onClose` lowers the prop, and the reconciliation runs across the
+    // exit — the window in which `isVisible` and `phase` disagree, which is the whole point of the
+    // helper deciding on `phase`.
+    await page.getByTestId('close-from-inside').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+    await expect(page.getByTestId('prop')).toHaveText('false');
+
+    // **Still 1.** A reconciliation reading `isVisible` would have seen "prop false, dialog open"
+    // during the 120 ms exit and closed a dialog already leaving; one racing the other way would have
+    // re-opened it. Either shows up here.
+    await expect(page.getByTestId('open-count')).toHaveText('1');
+
+    // And it is still usable afterwards: the prop opens it again, which a stuck reconciliation would
+    // not.
+    await page.getByTestId('raise-prop').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('2');
+  });
+
+  test('lowering the prop during the exit asks for nothing, which is what deciding on phase buys', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<ReconcileOpenHarness />);
+    await page.getByTestId('raise-prop').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('reconciliations')).toHaveText('open');
+
+    // Closes *and* lowers the prop in one handler, which is the only way to land inside the window
+    // where `phase` is `'closing'` and `isVisible` is still true — `onClose` runs when the exit
+    // finishes, so a call site that only lowers the prop there never gets there.
+    await page.getByTestId('close-and-lower').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    // **Still just the one `open`.** A reconciliation deciding on `isVisible` reads "prop says closed,
+    // dialog says open" during those 120 ms and asks for a `close` — a second close on a dialog
+    // already leaving, which is the cut animation the helper's doc describes. Deciding on `phase`
+    // answers `'none'` because `'closing'` is neither open nor closed, so nothing is recorded here.
+    await expect(page.getByTestId('reconciliations')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });

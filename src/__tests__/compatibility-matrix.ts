@@ -457,7 +457,10 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'focus restored after a failed action',
     react: { state: 'works' },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'partial',
+      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action — **measured**, and it is the race `attach-focus.ts` documents for `umbra/vanilla` reaching a second binding. Solid writes the action props’ `disabled` getter synchronously when the engine reports running, so the button is blurred before `captureActionRunner` reads `activeElement`; the `lastFocusInside` floor that catches this for the controller does not catch it here. Diagnosed, not fixed — a fix belongs with the coordinator rather than with a test.',
+    },
     vanilla: {
       state: 'works',
       note: 'Reads `focusin` rather than `activeElement`, because this binding’s own `bindAction` disables the button synchronously first.',
@@ -513,7 +516,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         title: 'containFocus wraps Tab inside a non-modal panel',
       },
     },
-    vanilla: { state: 'works-untested' },
+    vanilla: {
+      state: 'works',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'containFocus wraps Tab inside the panel',
+      },
+    },
   },
   {
     capability: 'dismissOnClickOutside',
@@ -525,7 +534,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         title: 'dismissOnClickOutside closes it on a click in the page',
       },
     },
-    vanilla: { state: 'works-untested' },
+    vanilla: {
+      state: 'works',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'dismissOnClickOutside closes it on a click in the page',
+      },
+    },
   },
   {
     capability: 'dismissOnBackdropClick',
@@ -556,7 +571,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         title: 'a custom dismissKey closes it, and Escape does not',
       },
     },
-    vanilla: { state: 'works-untested' },
+    vanilla: {
+      state: 'works',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a custom dismissKey closes it, and Escape does not',
+      },
+    },
   },
   {
     capability: 'prepare aborted by a close',
@@ -579,10 +600,19 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'reconcileOpen',
     react: {
-      state: 'works-untested',
-      note: 'Exported from the root with a unit test over the decision, and exercised by no binding at all — it is the helper a caller uses to drive a modal from their own boolean.',
+      state: 'works',
+      reference: {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'the prop drives the dialog, and stays authoritative over an imperative open',
+      },
     },
-    solid: { state: 'works-untested' },
+    solid: {
+      state: 'works',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'the signal drives the dialog, and stays authoritative over an imperative open',
+      },
+    },
     vanilla: { state: 'works-untested' },
   },
   {

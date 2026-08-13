@@ -9,6 +9,7 @@ import {
   VanillaExplicitHostHarness,
   VanillaFailingActionHarness,
   VanillaNoHostHarness,
+  VanillaNonModalOptionsHarness,
   VanillaOpenRequestHarness,
   VanillaPortalHarness,
   VanillaLabellingHarness,
@@ -661,5 +662,62 @@ test.describe('a shadow-root dialog in a stack', () => {
     // and nowhere else: the `<dialog>` and this listener are the caller's.
     await expect(component.getByTestId('native-closes')).toHaveText('1');
     await expect(component.getByTestId('open-when-closed')).toHaveText('still-open');
+  });
+});
+
+/**
+ * The three options React's suite exercised and this one did not.
+ *
+ * Its own describe because they are not controller-specific behaviour — each is a shared `attach*`
+ * function — and the point is that a binding with no render pass reaches them the same way.
+ */
+test.describe('bindDialog — the options only React had exercised', () => {
+  test('containFocus wraps Tab inside the panel', async ({ mount, page }) => {
+    await mount(<VanillaNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // Three focusables, so a wrap is distinguishable from "focus never moved".
+    await page.getByTestId('first').focus();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('second')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('third')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByTestId('first')).toBeFocused();
+
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByTestId('third')).toBeFocused();
+  });
+
+  test('a custom dismissKey closes it, and Escape does not', async ({ mount, page }) => {
+    await mount(<VanillaNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+    // The reason, not just visibility: `isVisible` alone stays true through an exit animation, so on
+    // its own it would match a panel that closed as well as one that did not.
+    await expect(page.getByTestId('last-reason')).toHaveText('none');
+
+    await page.keyboard.press('Delete');
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
+    await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
+  });
+
+  test('dismissOnClickOutside closes it on a click in the page', async ({ mount, page }) => {
+    await mount(<VanillaNonModalOptionsHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // Inside first — this is click-outside, not click-anywhere.
+    await page.getByTestId('third').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+    await expect(page.getByTestId('last-reason')).toHaveText('none');
+
+    await page.getByTestId('outside').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('closed');
+    await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 });

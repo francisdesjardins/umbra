@@ -13,6 +13,7 @@ import {
   SolidDeclarationHarness,
   SolidMessageHarness,
   SolidNonModalOptionsHarness,
+  SolidReconcileHarness,
   SolidOpenOrderHarness,
   SolidOutletHarness,
   SolidSlideHarness,
@@ -524,5 +525,49 @@ test.describe('umbra/solid — the options only React had exercised', () => {
 
     await expect(page.getByTestId('request-outcome')).toHaveText('refused: solid said no');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
+  });
+});
+
+/**
+ * `reconcileOpen` from a Solid signal, and the focus restored after a failed action.
+ *
+ * Both were exercised on React and on nothing else. The reconciliation is the same three lines, in
+ * `createEffect` instead of `useEffect` — which is the claim: the helper is framework-free and the
+ * binding is the only thing that changes.
+ */
+test.describe('umbra/solid — reconcileOpen and the failed-action restore', () => {
+  test('the signal drives the dialog, and stays authoritative over an imperative open', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<SolidReconcileHarness />);
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    await page.getByTestId('raise').click();
+    await expect(page.getByTestId('phase')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
+
+    await page.getByTestId('lower').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+
+    // Opened by id with the signal still false: the reconciliation puts it back, or the call site is
+    // left believing a dialog on screen is closed.
+    await page.getByTestId('open-behind-its-back').click();
+    await expect(page.getByTestId('signal')).toHaveText('false');
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+    await expect(page.getByTestId('asked')).toContainText('close');
+  });
+
+  test('lowering the signal during the exit asks for nothing', async ({ mount, page }) => {
+    await mount(<SolidReconcileHarness />);
+    await page.getByTestId('raise').click();
+    await expect(page.getByTestId('asked')).toHaveText('open');
+
+    // Inside the 120 ms window where `phase` is `'closing'` and `isVisible` is still true. Deciding on
+    // `isVisible` would ask for a second close on a dialog already leaving.
+    await page.getByTestId('close-and-lower').click();
+    await expect(page.getByTestId('phase')).toHaveText('closed');
+    await expect(page.getByTestId('asked')).toHaveText('open');
+    await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });

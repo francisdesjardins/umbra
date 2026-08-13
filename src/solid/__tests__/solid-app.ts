@@ -1,6 +1,7 @@
-import { createSignal, onCleanup } from 'solid-js';
+import { createEffect, createSignal, onCleanup } from 'solid-js';
 import h from 'solid-js/h';
 import type { JSX } from 'solid-js';
+import { reconcileOpen } from '../../core/reconcile-open.js';
 import { createOpenRequest } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { DialogManagerProvider } from '../dialog-manager-context.js';
@@ -1080,4 +1081,217 @@ function NonModalOptionsApp(): Built {
 
 export const SolidNonModalOptionsApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, NonModalOptionsApp));
+};
+
+/**
+ * `reconcileOpen` driven from a Solid signal, and the focus restored after a failed action.
+ *
+ * Together because both are about what happens *after* something settles, and both were exercised on
+ * React and on nothing else. The signal is the Solid equivalent of a controlled `open` prop, and
+ * `createEffect` is where the reconciliation runs — the same three lines React writes in `useEffect`.
+ *
+ * Non-modal, so the buttons that drive the signal stay reachable: a `showModal()` dialog puts every
+ * click outside itself out of reach.
+ */
+function ReconcileApp(): Built {
+  const [open, setOpen] = createSignal(false);
+  const [openCount, setOpenCount] = createSignal(0);
+  const [asked, setAsked] = createSignal<string[]>([]);
+
+  const modal = useModal<void, 'close'>({
+    id: 'solid-reconcile',
+    ariaLabel: 'Solid reconcile',
+    nonModal: true,
+    portal: true,
+    animation: {
+      entrance: { opacity: '1' },
+      exit: { opacity: '0' },
+      duration: 0,
+      // Long enough that `phase` and `isVisible` disagree for a measurable window, which is the whole
+      // of what deciding on `phase` buys.
+      exitDuration: 120,
+      transitionProperty: 'opacity',
+    },
+    onClose: () => {
+      setOpen(false);
+    },
+    render: ({ handle }) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Solid reconcile'),
+          h(
+            'button',
+            {
+              'data-testid': 'close-and-lower',
+              onClick: () => {
+                // Both in one handler: `onClose` runs when the exit finishes, so a call site that only
+                // lowers the signal there never lands inside the disagreement window.
+                handle.close('close');
+                setOpen(false);
+              },
+            },
+            'Close and lower'
+          )
+        )
+      );
+    },
+  });
+
+  const lookup = useLookup('solid-reconcile');
+
+  createEffect(() => {
+    const info = lookup();
+    const next = reconcileOpen(info.exists ? info.phase : 'closed', open());
+    if (next !== 'none') {
+      setAsked((seen) => {
+        return [...seen, next];
+      });
+    }
+    if (next === 'open') {
+      setOpenCount((n) => {
+        return n + 1;
+      });
+      void modal.open();
+    } else if (next === 'close') {
+      modal.handle.close('close');
+    }
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'raise',
+        onClick: () => {
+          setOpen(true);
+        },
+      },
+      'Raise'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'lower',
+        onClick: () => {
+          setOpen(false);
+        },
+      },
+      'Lower'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'open-behind-its-back',
+        onClick: () => {
+          modal.dialogManager.open('solid-reconcile');
+        },
+      },
+      'Open imperatively'
+    ),
+    text(() => {
+      const info = lookup();
+      return info.exists ? info.phase : 'closed';
+    }, 'phase'),
+    text(() => {
+      return open() ? 'true' : 'false';
+    }, 'signal'),
+    text(() => {
+      return String(openCount());
+    }, 'open-count'),
+    text(() => {
+      return asked().join(',');
+    }, 'asked'),
+    modal.Modal
+  );
+}
+
+export const SolidReconcileApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, ReconcileApp));
+};
+
+/**
+ * The focus restored after a failed action, on a **modal** dialog with two focusables in it.
+ *
+ * Modal and two buttons for the same reason: the restore target is whoever held focus when the action
+ * started, so a harness with one focusable cannot tell a restore from focus never having moved, and a
+ * non-modal one lets focus sit outside the dialog entirely.
+ *
+ * The action is async and rejects, which is the shape that escapes: focus can legitimately be
+ * elsewhere by the time it settles, and the retry belongs to the button that was pressed.
+ *
+ * **No test asserts it yet, deliberately.** Measured through this harness, focus lands on the
+ * `<dialog>` instead of on the button — the race `attach-focus.ts` documents for `umbra/vanilla`,
+ * reaching a second binding: Solid writes the action props' `disabled` getter synchronously when the
+ * engine reports running, so the button is blurred before `captureActionRunner` reads `activeElement`,
+ * and the `lastFocusInside` floor does not catch it here. Shipping a test that asserted the dialog
+ * would enshrine the defect; the harness stays because a fix needs it.
+ */
+function FailedActionApp(): Built {
+  const [failures, setFailures] = createSignal(0);
+
+  const modal = useModal<void, 'boom'>({
+    id: 'solid-failed-action',
+    ariaLabel: 'Solid failed action',
+    render: ({ action }) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Solid failed action'),
+          h('button', { 'data-testid': 'other' }, 'Other'),
+          h(
+            'button',
+            {
+              'data-testid': 'fail',
+              ...action('boom', {
+                onAction: async () => {
+                  await new Promise((resolve) => {
+                    setTimeout(resolve, 60);
+                  });
+                  setFailures((n) => {
+                    return n + 1;
+                  });
+                  throw new Error('solid action failed');
+                },
+              }),
+            },
+            'Fail'
+          )
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    text(() => {
+      return modal.isVisible ? 'open' : 'closed';
+    }, 'is-visible'),
+    text(() => {
+      return String(failures());
+    }, 'failures'),
+    text(() => {
+      return modal.error?.message ?? 'none';
+    }, 'error'),
+    modal.Modal
+  );
+}
+
+export const SolidFailedActionApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, FailedActionApp));
 };

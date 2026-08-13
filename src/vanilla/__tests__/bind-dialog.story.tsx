@@ -1228,3 +1228,90 @@ export function VanillaPortalHarness() {
     </>
   );
 }
+
+/**
+ * The three options React's suite exercised and this binding's did not: `containFocus`,
+ * `dismissOnClickOutside` and a custom `dismissKey`.
+ *
+ * Non-modal, because that is the variant all three belong to — `containFocus` is the Tab wrap
+ * `show()` does not give a dialog, and the discriminated union would reject the dismissal option on a
+ * modal one. The dialog is `portal: true` so it needs no host, which keeps the harness about the three
+ * options and nothing else.
+ *
+ * The instant animation is load-bearing rather than cosmetic: with the default 200 ms exit a panel that
+ * *is* closing still reports `isVisible` for that window, so "still open just after the press" would
+ * match during a close and an assertion could hold either way.
+ */
+export function VanillaNonModalOptionsHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [controller, setController] = useState<Bound<'inside'> | null>(null);
+  const [visible, setVisible] = useState('closed');
+  const [reason, setReason] = useState('none');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'inside'>({
+      id: 'vanilla-non-modal-options',
+      dialog,
+      ariaLabel: 'Vanilla non-modal options',
+      nonModal: true,
+      portal: true,
+      containFocus: true,
+      dismissOnClickOutside: true,
+      // Not Escape: a non-modal dialog gets no native `cancel`, so a panel closing on Escape here
+      // could only mean the declared key was ignored.
+      dismissKey: 'Delete',
+      animation: {
+        entrance: { opacity: '1' },
+        exit: { opacity: '0' },
+        duration: 0,
+        exitDuration: 0,
+        transitionProperty: 'opacity',
+      },
+      manager: createDialogManager(),
+      onClose: (result) => {
+        setReason(result.reason);
+      },
+    });
+
+    const stop = bound.subscribe(() => {
+      setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
+    });
+    setController(bound);
+
+    return () => {
+      stop();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="is-visible">{visible}</span>
+      <span data-testid="last-reason">{reason}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+      <button data-testid="outside" style={{ width: 120 }}>
+        Outside
+      </button>
+
+      <dialog ref={dialogRef}>
+        <p>Vanilla non-modal options</p>
+        <button data-testid="first">First</button>
+        <button data-testid="second">Second</button>
+        <button data-testid="third">Third</button>
+      </dialog>
+    </>
+  );
+}
