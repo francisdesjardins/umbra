@@ -48,6 +48,8 @@ export type DialogKeydownOptions = {
   readonly engine: ActionGate;
   readonly nonModal: boolean;
   readonly dismissWhilePreparing: boolean;
+  /** Controlled surfaces only: report the press instead of closing. See `ModalOptions`. */
+  readonly onDismissRequest: (() => boolean | void) | undefined;
 };
 
 /** Options for the Tab-wrapping listener a non-modal dialog needs. */

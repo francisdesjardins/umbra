@@ -79,6 +79,7 @@ export function useModal<TData = void, TReason extends string = string>(
     prepare,
     onOpenRequest,
     onClose,
+    onDismissRequest,
     ariaLabel,
     ariaLabelledBy,
     ariaDescribedBy,
@@ -200,6 +201,7 @@ export function useModal<TData = void, TReason extends string = string>(
       engine,
       nonModal: isNonModal,
       dismissWhilePreparing,
+      onDismissRequest,
     };
     const teardowns = [
       attachDialogKeydown(ctx, keydownOptions),
@@ -217,6 +219,7 @@ export function useModal<TData = void, TReason extends string = string>(
     onKeyDown,
     dismissKey,
     dismissWhilePreparing,
+    onDismissRequest,
     engine,
     isNonModal,
     modalId,

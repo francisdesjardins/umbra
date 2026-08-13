@@ -142,6 +142,16 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     },
   },
   {
+    option: 'onDismissRequest',
+    dependsOn: ['dismissKey'],
+    enforcement: 'RUNTIME',
+    note: 'Replaces the *last* step of the dismiss key and nothing before it — which key, whether an action claimed it, whether a popup answers it first, whether a `prepare` or a running action forbids it, and which dialog is in front are all still the library’s. `dismissKey: false` turns the key off, so nothing is requested either. Returning `false` declines the press, which only the non-modal listener acts on: it captures, so a press it takes is one the page never sees.',
+    reference: {
+      file: 'src/core/__tests__/dismiss-request.ct.tsx',
+      title: 'a declined press is left travelling',
+    },
+  },
+  {
     option: 'dismissWhilePreparing',
     dependsOn: ['prepare'],
     enforcement: 'RUNTIME',

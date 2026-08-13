@@ -278,6 +278,7 @@ export function useModal<TData = void, TReason extends string = string>(
       engine,
       nonModal: isNonModal,
       dismissWhilePreparing,
+      onDismissRequest: options.onDismissRequest,
     };
     const teardowns = [
       attachDialogKeydown(dom, keydownOptions),

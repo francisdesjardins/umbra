@@ -11,6 +11,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### `onDismissRequest` — the dismiss key handed to the owner
+
+A surface whose `open` is a prop cannot let its dialog close itself. The boolean upstream would
+still be `true`, the next render would put the dialog back, and in between the modal is gone while
+its call site believes it is up. The only correct answer to the dismiss key there is to _report_ it
+and let the owner lower the prop.
+
+Everything needed to decide **whether** that press counts was already here and is unchanged: which
+key, whether an action claimed it, whether a popup inside the dialog answers it first, whether a
+`prepare` or a running action forbids it, and — for a non-modal panel — which dialog is actually in
+front. What a controlled surface was re-implementing is the last step, and only the last step. So
+that is what this option replaces: `store.close(DISMISS_REASON)` becomes a call to the owner.
+
+**Why it belongs here rather than in each wrapper.** Written outside, it is written three times and
+differently, because the three cases are not alike. A modal dialog hears the press through its own
+`keydown` and through the native `cancel`; a non-modal panel hears it through neither — it is
+outside the top layer, so focus is ordinary, and the press is routinely made somewhere else on the
+page entirely. That third listener is the one nobody gets right by hand, and it already existed.
+
+**Returning `false` declines the press.** Only the non-modal listener acts on it, and it has to: it
+captures at the window, so a press it takes is a press the page never sees. An owner that decided
+not to act must not cost the page its keyboard — the same rule the dismissal gate already follows
+when it stands down.
+
+## 2026-08-13
+
 ### CI — one component job per engine
 
 The component suite is the pipeline's long pole: **951 tests on one worker, 7 min 52 s**, while every
