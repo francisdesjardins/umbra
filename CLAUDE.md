@@ -199,8 +199,14 @@ Two things the vocabulary buys, and both are the reason to use it rather than a 
 - **The two kinds of ✗ are different facts.** `✗ platform` is a browser law no implementation would
   change; `✗ by design` is a refusal that owes a reason. Neither is a to-do, and without the split a
   list of everything that does not work fills up with items nobody can act on.
-- **`✓ untested` and `~` are declared states, so they enumerate.** `yarn docs:matrix` prints them, and
-  that list _is_ the backlog — currently 20 cells.
+- **`✓ untested` and `~` are declared states, so they enumerate.** **`yarn todo`** prints them, and that
+  list _is_ the backlog — there is one place to ask "is anything still open", and it is generated from
+  the same data the document is rather than kept beside it. A `TODO.md` would be a second answer that
+  drifts from the first.
+- **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and not
+  the others, a discrimination that does not reproduce. Written into the note instead, it would reach a
+  reader of the table and not the backlog, because the _state_ is what the enumeration reads and the
+  state says done. `yarn todo` lists caveats separately, prefixed `?`.
 
 The gate checks that every option has a row, that no row names an option that no longer exists, and
 that every test a cell cites resolves to a real file and a real title. It **cannot** check that the

@@ -98,7 +98,8 @@
     "type-check:watch": "node node_modules/typescript-7/bin/tsc --noEmit --watch",
     "type-check": "node node_modules/typescript-7/bin/tsc --noEmit && node node_modules/typescript-7/bin/tsc -p playground/tsconfig.json --noEmit",
     "docs:matrix": "node scripts/render-matrix.mjs",
-    "docs:matrix:check": "node scripts/render-matrix.mjs --check"
+    "docs:matrix:check": "node scripts/render-matrix.mjs --check",
+    "todo": "node scripts/render-matrix.mjs --list"
   },
   "peerDependencies": {
     "react": "^19.0.0",

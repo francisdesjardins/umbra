@@ -11,6 +11,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Docs — `yarn todo`, and the open question a `✓` was hiding
+
+"Is there anything else to validate" had a real answer and no way to ask it: the matrix's worklist was
+printed as a side effect of `docs:matrix`. It is **`yarn todo`** now — one command, generated from the
+same data the document is. **A `TODO.md` was considered and rejected**: it would be a second answer to a
+question that already has one, and this week was spent removing exactly that.
+
+**Auditing it found a hole in the mechanism itself.** A `✓` cell can be true and still carry an open
+question — a claim proven on one binding and not the others, a discrimination that does not reproduce.
+Written into the cell's note, as the `reconcileOpen` one was, it reaches a reader of the table and
+**not** the backlog, because the enumeration reads the _state_ and the state says done. So it was a
+to-do nothing listed. Cells and platform rows take a `caveat` now: rendered into `API.md` as **Still
+open**, and printed by `yarn todo` under a `?` prefix with the cell's state in brackets. Seen to work by
+putting a caveat on a passing cell — the count went from 8 to 9 and the entry appeared.
+
+That is the whole answer to the discoverability question: **one command, and a `✓` can no longer bury a
+caveat.**
+
 ### Tests — the worklist worked through, a real Solid defect, and the compiler finally asserted
 
 **Twenty open cells down to seven.** What the pass closed, and what it turned up.

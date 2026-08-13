@@ -55,6 +55,15 @@ export type Cell = {
   readonly state: CellState;
   readonly note?: string;
   readonly reference?: TestReference;
+  /**
+   * An open question this cell carries **despite** its state, and the reason the field exists.
+   *
+   * A `✓` can be true and still have a hole in it — a claim proven on one binding and not the others, a
+   * discrimination that does not reproduce and is unexplained. Written into `note`, that reaches a
+   * reader of the table and **not** the worklist, so it is a to-do nothing enumerates: the state is
+   * what `worklist()` reads, and the state says "done". This is how such a thing gets listed.
+   */
+  readonly caveat?: string;
 };
 
 /** One option, and what it does and does not combine with. */
@@ -84,6 +93,8 @@ export type PlatformRow = {
   readonly state: CellState;
   readonly why: string;
   readonly reference?: TestReference;
+  /** An open question this row carries despite its state — see {@link Cell.caveat}. */
+  readonly caveat?: string;
 };
 
 // ── Axis A — option × option ──────────────────────────────────────────────────
@@ -615,7 +626,9 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'works',
-      note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others. The `phase`-versus-`isVisible` half is proven on React only: moving the decision to `isVisible` fails there and does not here, and why it does not is unexplained rather than accounted for.',
+      note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others.',
+      caveat:
+        'The `phase`-versus-`isVisible` half is proven on React only: moving the decision to `isVisible` fails there and does not here, and why it does not is unexplained rather than accounted for.',
       reference: {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'the flag drives the dialog, and stays authoritative over an imperative open',
@@ -781,7 +794,10 @@ const escapeCell = (text: string): string => {
 
 const cell = (value: Cell): string => {
   const note = value.note === undefined ? '' : ` — ${value.note}`;
-  return escapeCell(`${SYMBOL[value.state]}${note}`);
+  // The caveat is rendered too, or the document would hide what `yarn todo` prints — and a reader of
+  // the table is exactly who needs to know a ✓ has a hole in it.
+  const caveat = value.caveat === undefined ? '' : ` **Still open:** ${value.caveat}`;
+  return escapeCell(`${SYMBOL[value.state]}${note}${caveat}`);
 };
 
 const list = (label: string, values: readonly string[] | undefined): string => {
@@ -854,7 +870,14 @@ export function renderMatrix(): string {
   return lines.join('\n');
 }
 
-/** The `✓ untested` and `~` cells, flattened — the backlog the matrix produces rather than states. */
+/**
+ * Everything the table leaves open — the backlog it produces rather than describes.
+ *
+ * Two kinds, and the second is the one a state-only reading misses: a cell whose **state** is open
+ * (`✓ untested`, `~`), and a cell that is otherwise done but carries a `caveat`. Both are printed by
+ * `yarn todo`, which is the answer to "is there anything else to validate" — there is one place to ask,
+ * and it is generated from the same data the document is.
+ */
 export function worklist(): string[] {
   const open = (state: CellState): boolean => {
     return OPEN_STATES.includes(state);
@@ -879,6 +902,27 @@ export function worklist(): string[] {
       return open(row.state);
     }).map((row) => {
       return `${SYMBOL[row.state]}  ${row.fact}`;
+    }),
+    // The caveats, whatever their cell's state — including the ones whose state says "done".
+    ...BINDING_ROWS.flatMap((row) => {
+      return (
+        [
+          ['umbra/react', row.react],
+          ['umbra/solid', row.solid],
+          ['umbra/vanilla', row.vanilla],
+        ] as const
+      )
+        .filter(([, value]) => {
+          return value.caveat !== undefined;
+        })
+        .map(([binding, value]) => {
+          return `? (${SYMBOL[value.state]})  ${row.capability} — ${binding}: ${value.caveat ?? ''}`;
+        });
+    }),
+    ...PLATFORM_ROWS.filter((row) => {
+      return row.caveat !== undefined;
+    }).map((row) => {
+      return `? (${SYMBOL[row.state]})  ${row.fact}: ${row.caveat ?? ''}`;
     }),
   ];
 }
