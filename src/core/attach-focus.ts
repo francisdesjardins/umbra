@@ -48,6 +48,20 @@ export function createFocusCoordinator(
    * `focusin` cannot lose that race: it fires when focus arrives, which is before any of it.
    */
   let lastFocusInside: HTMLElement | null = null;
+  /**
+   * The last control inside the dialog to be *activated*, which is a different question from
+   * which was last focused, and on WebKit the only one with a useful answer.
+   *
+   * **WebKit does not focus a `<button>` when it is clicked.** Measured across all three engines:
+   * click a button while another holds focus and `document.activeElement` is the button on
+   * Chromium and Firefox, and `<body>` — or, inside a modal, the `<dialog>` — on WebKit. That is a
+   * platform convention rather than a bug, and it leaves neither of the other two reads able to
+   * name the button that ran an action: `activeElement` never held it and `focusin` never fired,
+   * so both answer with whatever had focus *before* the press.
+   *
+   * A `click` names it on every engine, which is why this sits between them.
+   */
+  let lastActivated: HTMLElement | null = null;
 
   return {
     /**
@@ -61,6 +75,7 @@ export function createFocusCoordinator(
         openingFocus = null;
         settled = false;
         lastFocusInside = null;
+        lastActivated = null;
         return undefined;
       }
 
@@ -120,10 +135,12 @@ export function createFocusCoordinator(
         const { hasRunningAction } = engine.aggregated();
         if (hasRunningAction) {
           if (!wasRunning) {
-            // The live read first — it is the most specific answer and it is what the hook
-            // bindings give. `lastFocusInside` is the floor for the binding that has already
-            // disabled the button by now; see its declaration.
-            runner = captureActionRunner(getDialog()) ?? lastFocusInside;
+            // Three reads, narrowing. The live one is the most specific and is what the hook
+            // bindings give on an engine that focuses what it clicks. The activation is the only
+            // one that survives WebKit refusing to. `lastFocusInside` is the floor for an action
+            // that nothing pressed — a hotkey on a control already focused, or a programmatic
+            // start. See both declarations.
+            runner = captureActionRunner(getDialog()) ?? lastActivated ?? lastFocusInside;
           }
           wasRunning = true;
           return;
@@ -165,9 +182,27 @@ export function createFocusCoordinator(
             lastFocusInside = target;
           }
         };
+        // Same scoping, same reason. `closest` because the press often lands on a label or an
+        // icon inside the control; a click on nothing activatable clears this, which is correct
+        // rather than careless.
+        //
+        // **Capture**, and that is load-bearing. The action runs from the button's own handler
+        // and the engine notifies synchronously, so a bubbling listener on the dialog would not
+        // hear the click until after the restore target had been chosen. Capture runs downwards,
+        // ahead of the target — which covers `umbra/vanilla` binding natively to the button, and
+        // React dispatching from the root container above the dialog.
+        const rememberActivation = (event: Event) => {
+          const { target } = event;
+          lastActivated =
+            target instanceof HTMLElement && target !== watched && isOwnEventTarget(watched, target)
+              ? target.closest<HTMLElement>('button, [role="button"]')
+              : null;
+        };
         watched.addEventListener('focusin', remember);
+        watched.addEventListener('click', rememberActivation, true);
         stopRemembering = () => {
           watched.removeEventListener('focusin', remember);
+          watched.removeEventListener('click', rememberActivation, true);
         };
       }
 

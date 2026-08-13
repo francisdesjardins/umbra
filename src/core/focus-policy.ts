@@ -92,7 +92,16 @@ export function reclaimFocus(
  */
 export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLElement | null {
   const active = dialog === null ? null : activeWithin(dialog);
-  return active instanceof HTMLElement && dialog?.contains(active) === true ? active : null;
+  return active instanceof HTMLElement &&
+    // `contains` is reflexive, and the dialog is the one element inside itself that can never be
+    // standing on an action. Letting it through is not a near-miss: it is a *truthy* wrong answer,
+    // so every fallback below is skipped and the restore puts focus back on the dialog — which is
+    // where it already was. WebKit is where this surfaces, because it focuses the dialog rather
+    // than the button when a button is clicked; the same read is correct by luck elsewhere.
+    active !== dialog &&
+    dialog?.contains(active) === true
+    ? active
+    : null;
 }
 
 /**
