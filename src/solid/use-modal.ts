@@ -291,6 +291,14 @@ export function useModal<TData = void, TReason extends string = string>(
     });
   });
 
+  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
+  createEffect(() => {
+    const teardown = focus.sync(snapshot().phase);
+    if (teardown) {
+      onCleanup(teardown);
+    }
+  });
+
   createEffect(() => {
     const teardown = attachFocusContainment(domContext(), { containFocus });
     if (teardown) {
@@ -304,14 +312,6 @@ export function useModal<TData = void, TReason extends string = string>(
       dismissWhilePreparing,
       engine,
     });
-    if (teardown) {
-      onCleanup(teardown);
-    }
-  });
-
-  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
-  createEffect(() => {
-    const teardown = focus.sync(snapshot().phase);
     if (teardown) {
       onCleanup(teardown);
     }

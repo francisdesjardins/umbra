@@ -14,11 +14,20 @@ import { fileURLToPath } from 'node:url';
  * statements someone happened to write, with no name and no test, wrong for two years on an engine
  * nobody ran.
  *
- * **This file does not claim the orders should match.** They do not, and the differences are
- * recorded below rather than resolved, because resolving them without knowing whether the order
- * matters would be guessing. What it does is make any *change* to a binding's order fail until
- * someone updates the record — and count what is still unreconciled, the way the compatibility
- * matrix counts its open cells.
+ * **The hook pair must match; the controller need not.** React and Solid are the same modal
+ * written twice — `binding-parity.test.ts` holds them to the same exports from the same paths —
+ * so an unexplained difference in *when* they ask the shared lifecycle is a defect on its own
+ * terms, whether or not anything can observe it. That one is asserted. `umbra/vanilla` is a
+ * different kind of binding with no mirror to keep, so its order is *recorded* rather than
+ * required, and the difference is carried in `UNRECONCILED` with the question that would settle
+ * it — the way the compatibility matrix carries a `~`.
+ *
+ * Both divergences were tested by moving the step and running three engines; neither changed a
+ * result, and neither is observable in principle, because every one of these runs inside a single
+ * synchronous flush and no event can be dispatched between two statements in one task. That is
+ * the evidence for sharing the sequence, and it is why only the pair-mirroring half is enforced:
+ * "no test noticed" is enough to close a contract question and not enough to move shipped
+ * behaviour that owes nobody a mirror.
  *
  * **Only effect-time steps are compared, and that exclusion is load-bearing.** Source order is a
  * usable proxy for run order among React's `useEffect`s and Solid's `createEffect`s (both run in
@@ -67,6 +76,7 @@ const RECORDED: Readonly<Record<keyof typeof BINDINGS, readonly string[]>> = {
     'attachFocusContainment',
     'attachClickOutside',
   ],
+  // Identical to React's, deliberately — see the note on the hook pair below.
   solid: [
     'syncOpenSequence',
     'syncLabellingDiagnostics',
@@ -74,9 +84,9 @@ const RECORDED: Readonly<Record<keyof typeof BINDINGS, readonly string[]>> = {
     'attachDialogKeydown',
     'attachDialogCancel',
     'attachWindowDismissKey',
+    'focus.sync',
     'attachFocusContainment',
     'attachClickOutside',
-    'focus.sync',
   ],
   vanilla: [
     'attachDialogKeydown',
@@ -103,11 +113,6 @@ const UNRECONCILED: readonly { readonly what: string; readonly question: string 
     what: 'syncOpenSequence runs first in the hook bindings and last in vanilla',
     question:
       'showModal() before or after the listeners are attached. If it matters, one of the two is wrong today; if it does not, the sequence can be shared. Nothing establishes which.',
-  },
-  {
-    what: 'focus.sync runs before focus containment and click-outside in React, after both in Solid',
-    question:
-      'Whether the opening focus is settled before or after the Tab wrap is installed. The hook pair is meant to mirror file-for-file and here it does not mirror in time.',
   },
 ];
 
@@ -152,8 +157,19 @@ test.describe('wiring order', () => {
     }
   });
 
+  test('the hook pair mirrors in time, not only in file names', () => {
+    // `binding-parity.test.ts` asserts the two hook bindings export the same names from the same
+    // paths. This is the same contract one level down: a pair that is meant to be the same modal
+    // written twice should not ask the shared lifecycle in two different orders.
+    expect(RECORDED.solid, 'the hook bindings have diverged in wiring order').toEqual(
+      RECORDED.react
+    );
+  });
+
   test('the recorded divergences are the ones that actually exist', () => {
-    // Two orders differing is the finding; this keeps the count honest as the orders change.
+    // Two distinct orders now: the hook pair, and the controller. Three would mean the pair has
+    // split again; one would mean the controller has converged and the sequence is ready to be
+    // shared outright.
     const distinct = new Set(
       Object.values(RECORDED).map((order) => {
         return order.join(' → ');
@@ -161,8 +177,8 @@ test.describe('wiring order', () => {
     );
     expect(
       distinct.size,
-      'The bindings agree on the order now, or disagree in a new way. Either is worth noticing: update UNRECONCILED, and if they all agree the sequence is ready to be shared.'
-    ).toBe(3);
+      'The bindings agree in a new way, or disagree in a new way. Either is worth noticing — update UNRECONCILED.'
+    ).toBe(2);
     expect(UNRECONCILED.length).toBeGreaterThan(0);
   });
 });
