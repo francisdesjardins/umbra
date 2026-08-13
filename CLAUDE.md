@@ -227,6 +227,31 @@ helper is a helper wherever it ships.
 - **No abstraction leakage**: templates must not expose core internals
 - **Bring your own everything**: animations, styling, layout are user-land
 
+## What works with what
+
+**Before writing a sentence about one feature meeting another, look in
+[src/\_\_tests\_\_/compatibility-matrix.ts](src/__tests__/compatibility-matrix.ts).** It is the table
+of options against options, capabilities against the three bindings, and features against the
+platform — as data, rendered into `API.md`'s _Compatibility_ chapter by `yarn docs:matrix`, with a
+test that fails when the document and the table disagree.
+
+It exists because these facts were spread over this file, `src/CLAUDE.md`, `API.md`, the CHANGELOG and
+a hundred JSDoc blocks, and prose in five places disagrees with itself in five places: **inventorying
+the rows produced seven defects before a single cell was written.** So a new compatibility fact goes
+in the table, not in prose here — and if it is about one module, it goes in that module's JSDoc.
+
+Two things the vocabulary buys, and both are the reason to use it rather than a paragraph:
+
+- **The two kinds of ✗ are different facts.** `✗ platform` is a browser law no implementation would
+  change; `✗ by design` is a refusal that owes a reason. Neither is a to-do, and without the split a
+  list of everything that does not work fills up with items nobody can act on.
+- **`✓ untested` and `~` are declared states, so they enumerate.** `yarn docs:matrix` prints them, and
+  that list _is_ the backlog — currently 20 cells.
+
+The gate checks that every option has a row, that no row names an option that no longer exists, and
+that every test a cell cites resolves to a real file and a real title. It **cannot** check that the
+cited test proves the cell; that part stays human, and the JSDoc says so.
+
 ## Deeper Context
 
 - **`src/`**: [src/CLAUDE.md](src/CLAUDE.md) — architecture, internal hooks, React Compiler rules, code organization

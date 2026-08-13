@@ -11,6 +11,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Docs — a compatibility matrix, and the twenty open cells it publishes
+
+**What works with what now has one home**, as data:
+[src/\_\_tests\_\_/compatibility-matrix.ts](src/__tests__/compatibility-matrix.ts), rendered into
+`API.md`'s new _Compatibility_ chapter by `yarn docs:matrix`. Three axes — every option against every
+other, every capability against the three bindings, and the platform facts — with six states rather
+than two, because **`✗ platform` and `✗ by design` are not the same fact**: one is a browser law no
+implementation would change, the other is a refusal that owes a reason, and neither is a to-do. Without
+that split a list of everything that does not work fills up with items nobody can act on.
+
+The gate does three things and says which one it cannot do. It fails when an option in
+`UseModalBaseOptions` or `ModalVariant` has no row, when a row names an option that no longer exists,
+when a test a cell cites does not resolve to a real file and a real title, and when `API.md` and the
+table disagree. It **cannot** check that the cited test proves the cell — that stays human, and the
+JSDoc says so rather than letting the green tick imply more than it earns.
+
+**Seen to fail three ways before being trusted**, which is this week's rule: a row deleted from the
+table (`Add a row … for: containFocus`), a cited test renamed (`has no test titled …`), and `API.md`
+edited by hand (`diverged — run yarn docs:matrix`). It earned its keep during construction too:
+**eleven of the test titles written into the first draft did not exist**, and the reference check named
+every one.
+
+**And the open cells are the point, so here they are.** `✓ untested` and `~` are declared states
+precisely so they enumerate; `yarn docs:matrix` prints the list, and it is the backlog:
+
+- **`~` `portal: true` in `umbra/vanilla`** — places without relocating; the caller owns whether
+  `fixed` reaches the viewport.
+- **`~` a raise keeps the caret** — restored only for the dialog that held the keyboard. Needs a window
+  `raiseDialog` can publish and the focus coordinator can read.
+- **`~` installing a policy over dialogs already open re-shows all of them** — seeding the top-layer
+  tracking at install time fixes it, and makes the focus restore above dead. A decision, not a tidy-up.
+- **`~` one TypeScript** — typedoc is the last thing needing the 6.x compiler API.
+- **`✓ untested` on `umbra/solid`**: the focus restore after a failed action, `onOpenRequest`,
+  `containFocus`, `dismissOnClickOutside`, a custom `dismissKey`, `prepare` aborted by a close. Fifteen
+  capabilities are proven on React and on nothing else.
+- **`✓ untested` on `umbra/vanilla`**: `containFocus`, `dismissOnClickOutside`, a custom `dismissKey`.
+- **`✓ untested` `reconcileOpen`, on every binding** — exported from the root with a unit test over the
+  decision and exercised by no binding at all.
+- **`✓ untested` a dialog in a shadow root under React and Solid** — only the controller covers it.
+- **`✓ untested` Escape is always answered by someone** — each half is tested; the intersection (a
+  non-modal panel standing down while the modal in front has `dismissKey: false`) is not, and in it
+  nobody answers.
+- **`✓ untested` the React Compiler is verified to have run** — `verify:package` catches only the leak
+  into the Solid binding, and the repo already records both the bundle and the component suite being
+  uncompiled while the source was documented as if they were not.
+
 ### Tooling — one linter, on the same compiler as `tsc`, and three rules that were never running
 
 **ESLint and typescript-eslint are gone.** `yarn lint` is `oxlint --type-aware`, whose type-aware half

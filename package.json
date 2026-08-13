@@ -97,7 +97,9 @@
     "test:component:ui": "playwright test -c playwright.config.ts --project=component --ui",
     "test:component:coverage": "cross-env CT_COVERAGE=1 playwright test -c playwright.config.ts --project=component && node scripts/ct-coverage-report.mjs",
     "type-check:watch": "node node_modules/typescript-7/bin/tsc --noEmit --watch",
-    "type-check": "node node_modules/typescript-7/bin/tsc --noEmit && node node_modules/typescript-7/bin/tsc -p playground/tsconfig.json --noEmit"
+    "type-check": "node node_modules/typescript-7/bin/tsc --noEmit && node node_modules/typescript-7/bin/tsc -p playground/tsconfig.json --noEmit",
+    "docs:matrix": "node scripts/render-matrix.mjs",
+    "docs:matrix:check": "node scripts/render-matrix.mjs --check"
   },
   "peerDependencies": {
     "react": "^19.0.0",
