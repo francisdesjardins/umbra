@@ -3,6 +3,10 @@ import {
   GATE_ID as COSMIC_GATE_ID,
   CosmicOverrideExample,
 } from '@/pages/advanced/examples/cosmic-override';
+import {
+  PANEL_ID as CONTROLLED_PANEL_ID,
+  ControlledPanelExample,
+} from '@/pages/advanced/examples/controlled-panel';
 import { DomEventsExample } from '@/pages/advanced/examples/dom-events';
 import {
   LIST_ID as GROCERY_LIST_ID,
@@ -84,6 +88,14 @@ export const AdvancedPage = () => {
             description="requestOpen() asks instead of instructing. The request carries an unknown payload and a caller-declared source — both crossed an ownership boundary, so the dialog validates them and decides. A refusal moves nothing: no flash, no open/close pair for anything watching. That matters for a controlled dialog, whose open prop belongs to the component that renders it and would put an instruction straight back. The second button uses open(), which does not ask."
             codeKey="open-request"
             example={<OpenRequestExample />}
+          />
+          <ExampleCard
+            title="When the open is a prop"
+            description="The shape most component-library call sites take, and the one where a dialog must not close itself: the boolean above it would still be true and the next render would put it straight back. The switch is the only truth here — Escape reports through onDismissRequest instead of closing, the footer action asks the same way, and reconcileOpen puts the dialog wherever the switch says, which is why an instruction from outside is undone. Non-modal is a requirement rather than a preference: a modal dialog's backdrop would put the switch out of reach."
+            codeKey="controlled-panel"
+            modalId={CONTROLLED_PANEL_ID}
+            tryLabel="Open the panel"
+            example={<ControlledPanelExample />}
           />
           <ExampleCard
             title="Service Layer — the React half"

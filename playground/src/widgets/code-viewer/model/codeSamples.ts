@@ -1,5 +1,6 @@
 // ── Playground examples ──────────────────────────────────────────────────────
 import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw';
+import controlledPanelSrc from '@/pages/advanced/examples/controlled-panel.tsx?raw';
 import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
 import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
@@ -238,6 +239,7 @@ export const codeSamples: Record<string, string> = {
   'mui-panel': muiPanelSrc,
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
+  'controlled-panel': controlledPanelSrc,
   'modal-outlet': modalOutletSrc,
   'mfe-host-frame': mfeHostFrameSrc,
   'mfe-host-html': mfeHostSrc,

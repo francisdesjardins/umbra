@@ -105,6 +105,16 @@ captures at the window, so a press it takes is a press the page never sees. An o
 not to act must not cost the page its keyboard — the same rule the dismissal gate already follows
 when it stands down.
 
+**The playground gains the pair it completes.** `/advanced` → _When the open is a prop_ is a
+controlled panel where a switch is the only truth: `onDismissRequest` reports Escape, an action
+that never calls `close` reports the button, and `reconcileOpen` — which had no demo at all, only
+tests — puts the dialog wherever the switch says, so an instruction from outside is undone in front
+of the reader. It is **non-modal by necessity** rather than by taste, since a modal dialog's
+backdrop would put its own switch out of reach, and that is the constraint a controlled surface
+runs into first. Driven in a browser rather than reasoned about: the switch, an Escape pressed with
+focus outside the panel, the outside instruction being reverted, the action, and the computed
+accessible name.
+
 **It landed on the director, having been written before one existed**, and the meeting is worth a
 line because it is the first evidence either way. Three bindings threading an option into three
 `keydownOptions` became one field on `ModalLifecyclePass` and one entry in the keydown step's
