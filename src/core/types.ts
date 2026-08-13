@@ -411,8 +411,12 @@ export type UseModalBaseOptions<
    */
   readonly role?: 'dialog' | 'alertdialog' | undefined;
   /**
-   * Which template built this dialog — a free-form label the library carries and never reads.
+   * Which template built this dialog — a free-form label the library carries and never interprets.
    * See `ModalInfo.template`.
+   *
+   * One library path *reads* it, without deciding anything: it is on the `StackModal` handed to a
+   * {@link DialogManager.prioritize} policy, which is the point — "every drawer under every
+   * alert" is a rule about kinds of dialog, and `template` is the only thing that names a kind.
    *
    * The shipped templates name themselves (`useMessageModal` reports `'message'`, `useSlideModal`
    * `'slide'`) and one you write should too, rather than inheriting the default. It exists so a
@@ -445,9 +449,10 @@ export type UseModalBaseOptions<
    * Non-modal dialogs never enter the top layer, so positioning depends on placement:
    * - **`portal: true`** — portaled to `document.body`, anchored to the viewport
    *   (`position: fixed`). Use this for viewport-edge / centered non-modal panels.
-   * - **`portal: false`** — "contained": the dialog renders inside a library-owned
-   *   `position: relative` wrapper and is positioned `absolute` against it, so it fills
-   *   (and slides from) its nearest sized ancestor rather than the viewport. This is
+   * - **`portal: false`** — "contained": the dialog renders inside a library-owned wrapper
+   *   that is itself `position: absolute; inset: 0` over your nearest sized, positioned
+   *   ancestor, and is positioned `absolute` against that wrapper — so it fills
+   *   (and slides from) that region rather than the viewport. This is
    *   immune to a transformed/`will-change` ancestor hijacking the containing block —
    *   the failure mode a `fixed` inline dialog would hit — but it requires that host
    *   region to be sized. It is an *inline contained panel*, not a viewport overlay.

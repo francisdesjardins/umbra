@@ -24,8 +24,17 @@ const REPO_ROOT = resolve(SRC_ROOT, '..');
 
 const DOCS = ['README.md', 'API.md'] as const;
 
-/** `import { a, type B } from '<specifier>';` — captures the type-only marker and the names. */
-const IMPORT_PATTERN = /import(\s+type)?\s*\{([^}]*)\}\s*from\s*'(umbra(?:\/react)?)';/g;
+/**
+ * `import { a, type B } from '<specifier>';` — captures the type-only marker and the names.
+ *
+ * **All four entry points**, and the alternation is not padding: matching only the two most-used
+ * ones left every `umbra/solid` and `umbra/vanilla` snippet checked by nothing, which is how
+ * `bindAction` came to be documented as an export of `./vanilla` when it is a member of the
+ * controller. An unknown specifier is a failure rather than a skip, so a fifth binding cannot
+ * arrive with its snippets silently unguarded.
+ */
+const IMPORT_PATTERN =
+  /import(\s+type)?\s*\{([^}]*)\}\s*from\s*'(umbra(?:\/(?:react|solid|vanilla))?)';/g;
 
 type DocumentedImport = {
   readonly doc: string;
@@ -72,6 +81,8 @@ const collectDocumentedImports = (): DocumentedImport[] => {
 
 const rootExports = collectExports('index.ts');
 const reactExports = collectExports('react.ts');
+const solidExports = collectExports('solid.ts');
+const vanillaExports = collectExports('vanilla.ts');
 
 test.describe('documented imports', () => {
   test('every value symbol the docs import is exported by the stated entry point', () => {
@@ -83,6 +94,8 @@ test.describe('documented imports', () => {
     const exportsBySpecifier: Record<string, readonly string[]> = {
       umbra: rootExports,
       'umbra/react': reactExports,
+      'umbra/solid': solidExports,
+      'umbra/vanilla': vanillaExports,
     };
 
     const missing: string[] = [];
@@ -104,11 +117,23 @@ test.describe('documented imports', () => {
     expect(missing).toEqual([]);
   });
 
-  test('the React binding re-exports the whole root', () => {
-    // The docs tell React consumers they can use one import path for everything. That promise
-    // is what lets every root-specifier snippet in API.md also be valid from './react'.
-    const missingFromBinding = rootExports.filter((name) => {
-      return !reactExports.includes(name);
+  test('every binding re-exports the whole root', () => {
+    // The docs tell each binding's consumers they can use one import path for everything. That
+    // promise is what lets every root-specifier snippet in API.md also be valid from './react',
+    // './solid' and './vanilla' — so it is asserted for all three rather than for the one whose
+    // snippets happen to outnumber the others.
+    const missingFromBinding = Object.entries({
+      'umbra/react': reactExports,
+      'umbra/solid': solidExports,
+      'umbra/vanilla': vanillaExports,
+    }).flatMap(([specifier, names]) => {
+      return rootExports
+        .filter((name) => {
+          return !names.includes(name);
+        })
+        .map((name) => {
+          return `${specifier} is missing '${name}'`;
+        });
     });
     expect(missingFromBinding).toEqual([]);
   });

@@ -42,10 +42,10 @@ export type RegisteredModalInfo = ModalInfoBase & {
   /**
    * Which template built it, as its creator named it at registration.
    *
-   * Any string, and purely informational — nothing in the library reads it. It exists so an
-   * application can tell one kind of dialog from another across a cross-cutting listener
-   * (analytics, a handler that only cares about drawers) without keeping its own id-to-kind
-   * table. `useModal` defaults to `'modal'`, `useSlideModal` reports `'slide'`, and a template
+   * Any string, and the library never interprets it. It exists so an application can tell one
+   * kind of dialog from another across a cross-cutting listener (analytics, a handler that only
+   * cares about drawers) without keeping its own id-to-kind table — and so a
+   * `prioritize` policy can order by kind, which is the one library path that reads it. `useModal` defaults to `'modal'`, `useSlideModal` reports `'slide'`, and a template
    * you write should name itself too.
    *
    * Distinct from `nonModal` below, which is the library's own two-valued distinction and

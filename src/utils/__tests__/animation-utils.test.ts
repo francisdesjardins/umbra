@@ -181,7 +181,7 @@ test.describe('getDialogAnimationStyles', () => {
     expect(getDialogAnimationStyles('closing', baseAnimation).display).toBe('flex');
   });
 
-  test('a custom style still loses to the placement it would fight', () => {
+  test('a custom style wins over the placement it would fight', () => {
     // Template styles are merged after the placement on purpose: a template that wants to
     // place the dialog itself (a slide panel pinning one edge) has to be able to.
     const styles = getDialogAnimationStyles(

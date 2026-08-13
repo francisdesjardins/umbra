@@ -13,16 +13,18 @@ are the optional layer.
 | `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`, `setLogLevel`. No framework. |
 | `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.                                              |
 | `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                                                    |
-| `umbra/vanilla` | `bindDialog` and `bindAction` — a _controller_ for a `<dialog>` you wrote yourself. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                                                                                |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
 _Hook_ bindings — `./react` and `./solid` — **render**: a `render` callback returns the content and
 the binding returns a `Modal` to place. They share a surface on purpose, down to the file names, so
-a team running both writes the same modal twice with the same words. Two differences, and both are
-the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are
-getters over signals rather than re-rendered values — so **do not destructure the render args** —
-and `portal: true` mounts the dialog itself, leaving `Modal` as `null`.
+a team running both writes the same modal twice with the same words. Three differences, and all
+three are the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`,
+`error`) are getters over signals rather than re-rendered values — so **do not destructure the
+render args** — `useLookup` returns an accessor rather than an object (a discriminated union cannot
+survive being spread into getters), and `portal: true` mounts the dialog itself, leaving `Modal` as
+`null`.
 
 The _controller_ binding — `./vanilla` — **does not render**, and could not without the library
 shipping a renderer, which is the one thing it refuses to do. The `<dialog>` and its contents are
@@ -181,7 +183,7 @@ helper is a helper wherever it ships.
 **Non-modal dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
 
 - `nonModal: true, portal: true` → portaled to `document.body`, viewport-anchored (`position: fixed`). Use for viewport-edge/centered non-modal panels.
-- `nonModal: true, portal: false` → **contained**: rendered inside a library-owned `position: relative` wrapper and positioned `absolute` against it. Immune to a transformed/`will-change` ancestor hijacking the containing block (the jump/flicker a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) in this mode.
+- `nonModal: true, portal: false` → **contained**: rendered inside a library-owned wrapper that is itself `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and positioned `absolute` against that wrapper. Absolute rather than an in-flow `relative` block because a `height: 100%` block is laid out _after_ the content it is meant to cover, pushing it out of a clipped region — see `CONTAINED_HOST` in [core/placement.ts](src/core/placement.ts). Immune to a transformed/`will-change` ancestor hijacking the containing block (the jump/flicker a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) in this mode.
 
 ## Conventions
 

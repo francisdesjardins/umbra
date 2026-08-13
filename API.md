@@ -477,7 +477,7 @@ Non-modal dialogs never lock scrolling.
 A non-modal dialog never enters the top layer, so where it anchors depends on `portal`:
 
 - **`portal: true`** — portaled to `document.body` and anchored to the viewport (`position: fixed`). Use this for viewport-edge or centered non-modal panels.
-- **`portal: false` (default) — "contained"** — the dialog renders inside a library-owned `position: relative` wrapper and is positioned `absolute` against it. This is **immune to a transformed / `will-change` ancestor** hijacking the containing block (a `fixed` inline dialog would otherwise jump to that ancestor and flicker as the transform toggles). In return, it fills — and slides from — its nearest **sized** ancestor, so give it a sized, positioned host region; otherwise the panel collapses. It is an _inline contained panel_, not a viewport overlay. Slide templates size to `100%` (not `100dvw`/`100dvh`) in this mode.
+- **`portal: false` (default) — "contained"** — the dialog renders inside a library-owned wrapper that is itself `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and is positioned `absolute` against that wrapper. (Absolute rather than an in-flow `relative` block on purpose: a `height: 100%` block is laid out _after_ the content it is meant to cover and pushes it out of a clipped region. Overlaying is what "contained" means; displacing is not.) This is **immune to a transformed / `will-change` ancestor** hijacking the containing block (a `fixed` inline dialog would otherwise jump to that ancestor and flicker as the transform toggles). In return, it fills — and slides from — its nearest **sized** ancestor, so give it a sized, positioned host region; otherwise the panel collapses. It is an _inline contained panel_, not a viewport overlay. Slide templates size to `100%` (not `100dvw`/`100dvh`) in this mode.
 
 ---
 
@@ -939,7 +939,12 @@ the entrance/exit animation, `prepare` with its `AbortSignal`, the dismiss key o
 its native `cancel` and at the window for a non-modal panel, click-outside, backdrop hit-testing,
 opening focus and restoration after a failed action, the registration that makes it addressable by
 id from another microfrontend, and the typed close. Every option documented under
-[useModal](#usemodal-base-primitive) applies, minus `render`.
+[useModal](#usemodal-base-primitive) applies, minus `render` — with **one that means less here than
+it does there**: `portal` selects the placement (`fixed` rather than contained) and does not move
+the element, because the `<dialog>` is markup you wrote and relocating it would take its ids, its
+stylesheet scope and its listeners with it. So `fixed` anchors to the viewport only if you placed
+the element outside any transformed or `will-change` ancestor yourself. Pinned by _portal places
+without relocating_ in `src/vanilla/__tests__/bind-dialog.ct.tsx`.
 
 ### `bindDialog(options)`
 
@@ -1274,10 +1279,15 @@ mechanism, so a reorder has three visible consequences:
 - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
   `dialog[open] { animation: … }`. The library's own entrance is driven by phase rather than by
   `[open]`, so it is unaffected.
-- Focus is put back where it was **only for the dialog that ends up in front**, which is the one
-  that should hold it: only the topmost modal dialog is not inert. A dialog that opens _underneath_
-  another declines its opening focus, and the dialog in front takes the focus back to the exact
-  element that had it.
+- **Focus follows the dialog that ends up in front**, which is the one that should hold it: only
+  the topmost modal dialog is not inert. A dialog that opens _underneath_ another declines its
+  opening focus, so nothing is taken from what the user is looking at. A raise restores the exact
+  element **for the dialog that held the keyboard** — the caret survives a policy installed over a
+  form being typed in. A dialog that did _not_ hold it is re-shown by `showModal()`, which focuses
+  its own first focusable rather than wherever the caret was, and that is a known limit rather
+  than a decision: see the guard in
+  [core/attach-focus.ts](src/core/attach-focus.ts), pinned by _keeps the keyboard when something
+  opens over it_ in `src/vanilla/__tests__/bind-dialog.ct.tsx`.
 
 Reorders are minimal — a swap lifts one dialog, not both — and nothing is re-shown or re-stamped
 until `prioritize` is called.

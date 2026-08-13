@@ -11,6 +11,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-13
 
+### Docs — seven defects an inventory found before it wrote a single row
+
+The intent was a compatibility matrix: one place where "X with Y" has one answer, because the facts
+are currently spread across `API.md`, two `CLAUDE.md` files, this changelog and a hundred JSDoc
+blocks. **Listing the rows found seven defects before any row was written**, which is the argument for
+the matrix better than the matrix will make it. Five were documentation contradicting the code; two
+were gates that could not have caught them.
+
+- **`API.md` promised the opposite of a limit written the same week** — "the dialog in front takes
+  the focus back to the exact element that had it". A raise restores the exact element only for the
+  dialog that _held_ the keyboard; one that did not is re-shown by `showModal()`, which focuses its
+  own first focusable. The other docs were corrected when the limit was found; the reference one was
+  not, so it was left promising an accessibility behaviour the suite already refuted.
+- **`portal: true` means less in `umbra/vanilla` than the type suggests.** It selects the placement
+  (`fixed` rather than contained) and does **not** move the element — a controller was handed markup
+  the caller wrote, and relocating that would take its ids, its stylesheet scope and its listeners
+  with it. So `fixed` reaches the viewport only if the caller placed the `<dialog>` outside any
+  transformed ancestor. Now documented on the option and pinned by a test that measures the panel
+  landing centred in a `translateZ(0)` ancestor rather than in the viewport.
+- **Three docs described an implementation the code refused**: the contained wrapper called
+  `position: relative` when `CONTAINED_HOST` is `absolute` — and `placement.ts` explains why absolute
+  is mandatory rather than incidental (an in-flow `height: 100%` block is laid out _after_ the content
+  it should cover and pushes it out of a clipped region).
+- **`bindAction` was documented as an export of `./vanilla`** in `CLAUDE.md`; it is a member of the
+  returned controller. `API.md` had it right.
+- **`template` was documented "carried and never read"**, false since `prioritize` — a policy reads it,
+  which is the point: "every drawer under every alert" is a rule about kinds of dialog, and `template`
+  is the only thing that names a kind.
+- **The count of Solid's differences disagreed with itself** across three files — two subsets of
+  {getters, the `useLookup` accessor, `portal` leaving `Modal` null}. It is three.
+- **A test title said the opposite of its assertion** (a caller's style "loses to" the placement; the
+  assertion is that it wins, which is what the option promises).
+
+The gate that should have caught `bindAction` matched `'umbra'` and `'umbra/react'` only, so every
+`umbra/solid` and `umbra/vanilla` snippet in the docs was checked by nothing — and the promise that
+each binding re-exports the root wholesale was asserted for React alone. Both widened to all four
+specifiers, and an unknown specifier is a failure rather than a skip, so a fifth binding cannot arrive
+with its snippets unguarded. Seen to fail on both shapes before being trusted: a typo'd
+`umbra/solid` import, and the original `bindAction` defect re-introduced.
+
 ### Tests — the four gaps that were named rather than closed, and a prediction that was wrong again
 
 The previous entry left four things stated instead of tested. Instrumenting them was supposed to

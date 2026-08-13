@@ -8,22 +8,21 @@
  * cashed a second time.
  *
  * **The surface is React's**, deliberately, so a team running both frameworks writes the same
- * modal twice with the same words. Two differences, and both are the renderer's rather than a
- * choice:
+ * modal twice with the same words. **Three** differences, and all three are the renderer's rather
+ * than a choice:
  *
  * - Live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are **getters** over
  *   signals. `modal.isVisible` reads the same way it does in React; inside JSX it subscribes that
  *   one expression instead of re-rendering a component.
  * - {@link useLookup} returns an accessor, because `ModalInfo` is a discriminated union and an
  *   object of getters cannot be one without losing the narrowing.
+ * - `portal: true` leaves `Modal` as `null`: React's `createPortal` returns a node you still have
+ *   to render, while a Solid modal owns its element, so the binding mounts it into
+ *   `document.body` itself and there is nothing left for the caller to place.
  *
  * Because they are getters, **do not destructure the render args** — `render: ({ isPreparing })`
  * reads the value once and freezes it, exactly as destructuring props does anywhere in Solid.
  * Take the context and read through it: `render: (ctx) => <Show when={ctx.isPreparing}>…`.
- *
- * `portal: true` is the one place the two bindings' surfaces differ, and it is the renderer's
- * difference: React's `createPortal` returns a node you still have to render, while a Solid modal
- * owns its element, so the binding mounts it into `document.body` itself and `Modal` is `null`.
  *
  * The root is re-exported wholesale below, so a Solid app imports from this one path.
  *

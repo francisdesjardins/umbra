@@ -36,6 +36,23 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
      */
     readonly dialog: HTMLDialogElement;
     /**
+     * Which **placement** a non-modal panel gets — and, unlike the hook bindings, nothing else.
+     *
+     * `portal: true` still means viewport-anchored (`position: fixed; inset: 0`) and `false` still
+     * means contained (`absolute` against {@link BindDialogOptions.host}). What it does *not* do
+     * here is move the element: React portals its dialog into `document.body` and Solid mounts its
+     * own there, but this binding was handed markup the caller wrote, and relocating that is the
+     * one thing a controller refuses — a `<dialog>` reparented out of the section it documents
+     * takes its ids, its stylesheet scope and its event listeners with it.
+     *
+     * So `fixed` means the viewport only if the element is not inside a transformed or
+     * `will-change` ancestor, which is a containing block `fixed` resolves against instead. Place
+     * the `<dialog>` at the top level of the document yourself, or use the contained variant, which
+     * is immune to it by construction. Pinned by *portal places without relocating* in
+     * `__tests__/bind-dialog.ct.tsx`.
+     */
+    readonly portal?: boolean | undefined;
+    /**
      * The element a *contained* non-modal panel is positioned against
      * (`nonModal: true` without `portal`). Defaults to the dialog's parent.
      *

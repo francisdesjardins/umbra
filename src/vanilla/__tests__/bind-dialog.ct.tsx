@@ -10,6 +10,7 @@ import {
   VanillaFailingActionHarness,
   VanillaNoHostHarness,
   VanillaOpenRequestHarness,
+  VanillaPortalHarness,
   VanillaLabellingHarness,
   VanillaRestoreOnUnbindHarness,
   VanillaShadowRootHarness,
@@ -318,6 +319,69 @@ test.describe('bindDialog — contained placement', () => {
     // And it styled nothing on the way past — a binding that fell back to `document.body` would
     // position an unrelated element and be far worse than the warning it logs instead.
     await expect(page.locator('[data-modal-container]')).toHaveCount(0);
+  });
+
+  test('portal places without relocating', async ({ mount, page }) => {
+    // The one option whose meaning is *narrower* here than in the hook bindings, and the reason it
+    // needs a test rather than a sentence: the type accepts it, the placement half arrives, and
+    // nothing in the code path would have told you the other half does not. React portals its
+    // dialog into `document.body` and Solid mounts its own there; this binding was handed markup
+    // the caller wrote, and moving that would take its ids, its stylesheet scope and its listeners
+    // with it. So `portal: true` selects `fixed` and leaves the element alone — which means the
+    // caller, not the library, owns whether `fixed` reaches the viewport.
+    await mount(<VanillaPortalHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    // No host is styled: the portaled variant has none, so a `data-modal-container` here would mean
+    // the contained branch had been taken instead.
+    await expect(page.locator('[data-modal-container]')).toHaveCount(0);
+
+    const measured = await page.evaluate(() => {
+      const dialog = document.querySelector('dialog[data-modal-id="vanilla-portal"]');
+      const transformed = document.querySelector('[data-testid="transformed"]');
+      if (!(dialog instanceof HTMLElement) || !(transformed instanceof HTMLElement)) {
+        return null;
+      }
+      const box = dialog.getBoundingClientRect();
+      const ancestor = transformed.getBoundingClientRect();
+      return {
+        position: getComputedStyle(dialog).position,
+        // Where it lives, not where it is painted: the assertion that the element was not moved.
+        parentTestId: dialog.parentElement?.dataset['testid'] ?? null,
+        inBody: dialog.parentElement === document.body,
+        inTopLayer: dialog.matches(':modal'),
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        ancestor: { x: ancestor.x, y: ancestor.y, width: ancestor.width, height: ancestor.height },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      };
+    });
+
+    expect(measured).not.toBeNull();
+    expect(measured?.position).toBe('fixed');
+    expect(measured?.parentTestId).toBe('wrapper');
+    expect(measured?.inBody).toBe(false);
+    expect(measured?.inTopLayer).toBe(false);
+
+    // And the consequence, measured rather than asserted in prose: the containing block `fixed`
+    // resolved against is the **transformed ancestor**, not the viewport. Read through the centres,
+    // because `inset: 0` does not stretch a `<dialog>` — the UA keeps `width: fit-content` and
+    // `margin: auto`, so the panel is content-sized and centred in whatever block won. This is why
+    // the option's doc tells a vanilla caller to place the `<dialog>` outside such an ancestor
+    // themselves: the library cannot, and a test that only checked `position: fixed` would report
+    // this arrangement as working.
+    const box = measured?.box;
+    const ancestor = measured?.ancestor;
+    const viewport = measured?.viewport;
+    expect(box && ancestor && viewport).toBeTruthy();
+    if (!box || !ancestor || !viewport) {
+      return;
+    }
+    expect(box.x + box.width / 2).toBeCloseTo(ancestor.x + ancestor.width / 2, 1);
+    expect(box.y + box.height / 2).toBeCloseTo(ancestor.y + ancestor.height / 2, 1);
+    // Guards the guard: the two centres have to disagree, or the assertion above would pass on a
+    // panel that was viewport-anchored after all.
+    expect(Math.abs(ancestor.x + ancestor.width / 2 - viewport.width / 2)).toBeGreaterThan(50);
   });
 });
 

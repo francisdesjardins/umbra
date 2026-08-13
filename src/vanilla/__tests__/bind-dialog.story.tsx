@@ -1144,3 +1144,87 @@ export function VanillaShadowStackHarness() {
     </>
   );
 }
+
+/**
+ * `nonModal: true, portal: true` — the placement without the relocation.
+ *
+ * The other two bindings answer this option by *moving* the dialog to `document.body`; a controller
+ * cannot, because the element is markup the caller wrote. So the option is a placement here and the
+ * harness is built to prove which half arrived: the `<dialog>` sits inside a marked wrapper, and
+ * that wrapper is inside a `transform`ed ancestor — which is the containing block `fixed` resolves
+ * against instead of the viewport, and therefore the visible consequence a caller has to know about.
+ */
+export function VanillaPortalHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const [controller, setController] = useState<Bound<'close'> | null>(null);
+  const [visible, setVisible] = useState('closed');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const close = closeRef.current;
+    if (!dialog || !close) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-portal',
+      dialog,
+      ariaLabel: 'Vanilla portal',
+      nonModal: true,
+      portal: true,
+      manager: createDialogManager(),
+    });
+
+    const unbindClose = bound.bindAction(close, 'close');
+    const stop = bound.subscribe(() => {
+      setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
+    });
+
+    setController(bound);
+
+    return () => {
+      stop();
+      unbindClose();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="is-visible">{visible}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      {/* The ancestor that hijacks a `fixed` containing block. Sized and offset so a panel
+          resolving against it is unmistakably not resolving against the viewport. */}
+      <div
+        data-testid="transformed"
+        style={{
+          transform: 'translateZ(0)',
+          position: 'absolute',
+          top: 40,
+          left: 60,
+          width: 320,
+          height: 240,
+        }}
+      >
+        <div data-testid="wrapper">
+          <dialog ref={dialogRef}>
+            <p>Portaled in name only</p>
+            <button ref={closeRef} data-testid="close">
+              Close
+            </button>
+          </dialog>
+        </div>
+      </div>
+    </>
+  );
+}
