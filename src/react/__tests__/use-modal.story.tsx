@@ -42,3 +42,4 @@ export { NestedHotkeyScopeHarness } from './use-modal/nested-hotkey-scope.story.
 export { FocusUnderAnotherModalHarness } from './use-modal/focus-under-another-modal.story.js';
 export { ContainedOverlayHarness } from './use-modal/contained-overlay.story.js';
 export { VolatileKeyDownHarness } from './use-modal/volatile-keydown.story.js';
+export { ShadowRootHarness } from './use-modal/shadow-root.story.js';

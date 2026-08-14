@@ -41,6 +41,7 @@ import {
   LateTitleHarness,
   OutletLabelHarness,
   VolatileKeyDownHarness,
+  ShadowRootHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -1382,5 +1383,35 @@ test.describe('reconcileOpen — a controlled panel', () => {
     // answers `'none'` because `'closing'` is neither open nor closed, so nothing is recorded here.
     await expect(page.getByTestId('reconciliations')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
+  });
+});
+
+test.describe('a dialog inside a shadow root', () => {
+  test('gets the library backdrop and its opening focus', async ({ mount, page }) => {
+    // Two things a shadow boundary breaks, and both fail quietly rather than throwing:
+    // `adoptedStyleSheets` does not cross it, so the dialog would show the UA backdrop; and
+    // `document.activeElement` answers with the *host*, so a focus policy reading it concludes
+    // focus left the dialog on every check. The core asks `getRootNode()` for both — and this is
+    // React's half of that claim, which until now rested on `umbra/vanilla`'s test alone.
+    await mount(<ShadowRootHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+
+    const measured = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="shadow-host"]')?.shadowRoot;
+      const dialog = root?.querySelector('dialog');
+      return {
+        found: dialog !== null && dialog !== undefined,
+        inTopLayer: dialog?.matches(':modal') ?? false,
+        backdrop: dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : null,
+        focused: root?.activeElement?.id ?? null,
+      };
+    });
+
+    expect(measured.found, 'the dialog was not portaled into the shadow root').toBe(true);
+    expect(measured.inTopLayer).toBe(true);
+    // The library's own sheet, adopted into *this* root. The UA default measures rgba(0, 0, 0, 0.1).
+    expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
+    expect(measured.focused).toBe('shadow-confirm');
   });
 });

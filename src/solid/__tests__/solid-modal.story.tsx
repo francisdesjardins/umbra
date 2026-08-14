@@ -49,6 +49,40 @@ function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
   return <div ref={hostRef} data-testid="solid-root" />;
 }
 
+/**
+ * The same Solid root, mounted **inside a shadow root**.
+ *
+ * A separate component rather than a prop on `SolidRoot`, because the mount target is the whole
+ * subject: a Solid app rendered into a shadow root is how a widget keeps the host page's CSS out,
+ * and it is the case that breaks the two things a shadow boundary breaks — `adoptedStyleSheets`
+ * does not cross it, and `document.activeElement` answers with the host.
+ */
+function SolidShadowRoot({ app }: { readonly app: () => JSX.Element }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) {
+      return;
+    }
+    // Reused across a StrictMode remount — `attachShadow` throws on a host that already has one.
+    const shadow = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    shadow.append(mount);
+    const dispose = render(app, mount);
+    return () => {
+      dispose();
+      mount.remove();
+    };
+  }, [app]);
+
+  return <div ref={hostRef} data-testid="solid-shadow-host" />;
+}
+
+export function SolidShadowRootHarness() {
+  return <SolidShadowRoot app={SolidBasicApp} />;
+}
+
 export function SolidBasicHarness() {
   return <SolidRoot app={SolidBasicApp} />;
 }

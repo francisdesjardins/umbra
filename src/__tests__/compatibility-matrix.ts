@@ -667,8 +667,22 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'a dialog inside a shadow root',
-    react: { state: 'works-untested' },
-    solid: { state: 'works-untested' },
+    react: {
+      state: 'works',
+      note: 'Portaled into the root with `createPortal`, which is the shape a web component hosting a React tree takes.',
+      reference: {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'gets the library backdrop and its opening focus',
+      },
+    },
+    solid: {
+      state: 'works',
+      note: 'The whole Solid app rendered into the root, which is how a widget keeps the host page’s CSS out.',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'gets the library backdrop and its opening focus',
+      },
+    },
     vanilla: {
       state: 'works',
       reference: {

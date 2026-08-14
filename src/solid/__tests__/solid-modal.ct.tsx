@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
+  SolidShadowRootHarness,
   SolidBusyHarness,
   SolidContainedHarness,
   SolidLabellingHarness,
@@ -569,5 +570,39 @@ test.describe('umbra/solid — reconcileOpen and the failed-action restore', () 
     await expect(page.getByTestId('phase')).toHaveText('closed');
     await expect(page.getByTestId('asked')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
+  });
+});
+
+test.describe('a dialog inside a shadow root (Solid)', () => {
+  test('gets the library backdrop and its opening focus', async ({ mount, page }) => {
+    // The whole Solid app is rendered into a shadow root, which is how a widget keeps the host
+    // page's CSS out of it. Two things break there and both fail quietly: `adoptedStyleSheets`
+    // does not cross the boundary, so the dialog falls back to the UA backdrop; and
+    // `document.activeElement` answers with the host, so a focus policy reading it concludes
+    // focus has left the dialog on every check. The core asks `getRootNode()` for both.
+    await mount(<SolidShadowRootHarness />);
+    await page.getByTestId('open').click();
+
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          const root = document.querySelector('[data-testid="solid-shadow-host"]')?.shadowRoot;
+          return root?.querySelector('dialog')?.matches(':modal') ?? false;
+        });
+      })
+      .toBe(true);
+
+    const measured = await page.evaluate(() => {
+      const root = document.querySelector('[data-testid="solid-shadow-host"]')?.shadowRoot;
+      const dialog = root?.querySelector('dialog');
+      return {
+        backdrop: dialog ? getComputedStyle(dialog, '::backdrop').backgroundColor : null,
+        focusIsInside: dialog?.contains(root?.activeElement ?? null) ?? false,
+      };
+    });
+
+    // The library's own sheet, adopted into *this* root. The UA default measures rgba(0, 0, 0, 0.1).
+    expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
+    expect(measured.focusIsInside, 'focus did not settle inside the shadowed dialog').toBe(true);
   });
 });
