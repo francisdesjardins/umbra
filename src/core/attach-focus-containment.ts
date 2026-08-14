@@ -66,7 +66,8 @@ const FOCUSABLE = [
 const GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
 
 /**
- * Move focus to the first candidate that actually takes it, scanning in the given direction.
+ * Move focus to the first candidate that actually takes it, scanning from whichever end the
+ * caller names.
  *
  * **Asked rather than computed**, which is the other half of not predicting the tab order: a
  * candidate that matches the selector but cannot hold focus — a container whose child is the real

@@ -1298,7 +1298,7 @@ test.describe('useModal — the dismiss key answered by nobody', () => {
     await expect(page.getByTestId('panel-visible')).toHaveText('closed');
     await expect(page.getByTestId('panel-reason')).toHaveText('dismiss');
 
-    // **Still 1**, and this is what makes the counter mean something in both directions: the press
+    // **Still 1**, and this is what makes the counter mean something both ways: the press
     // that the panel *did* claim was stopped at the capture phase and never reached the page, while
     // the one nobody claimed did. A counter that only ever went up would have been consistent with a
     // library that swallows nothing and with one that swallows everything.

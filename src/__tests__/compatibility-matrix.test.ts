@@ -61,7 +61,7 @@ test.describe('the compatibility matrix', () => {
   test('every option a caller can pass has exactly one row', () => {
     const options = collectOptionNames();
 
-    // Guards the guard: a parser that stopped matching would make both directions below pass on an
+    // Guards the guard: a parser that stopped matching would make both checks below pass on an
     // empty list, which is the exact silent failure this file exists to prevent.
     expect(options.length).toBeGreaterThan(15);
 

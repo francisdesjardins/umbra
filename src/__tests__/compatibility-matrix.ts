@@ -737,7 +737,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'Escape is always answered by someone',
     state: 'no-by-design',
-    why: 'Put a modal with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the modal was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both directions of that are asserted.',
+    why: 'Put a modal with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the modal was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both halves of that are asserted.',
     reference: {
       file: 'src/react/__tests__/use-modal.ct.tsx',
       title: 'a deaf modal in front leaves the panel behind alone, and the press reaches the page',

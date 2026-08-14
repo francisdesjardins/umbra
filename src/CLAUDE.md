@@ -27,16 +27,24 @@ core model instantiated per binding.
 
 ### The vocabulary
 
-One act, one word. Four distinctions carry most of the naming weight, and each has exactly one
-spelling — a synonym for any of them is a bug report, not a style preference.
+One act, one word. Five distinctions carry most of the naming weight, and each has exactly one
+spelling — a synonym for any of them is a bug report, not a style preference. **The rule binds
+prose as much as identifiers**: the last row was found by a reader noticing the word did not mean
+what it usually means here, in a comment.
 
-| Concept                       | The word                      | Not                                        |
-| ----------------------------- | ----------------------------- | ------------------------------------------ |
-| `showModal()` vs `show()`     | **modal / non-modal**         | blocking / non-blocking                    |
-| Which template built a dialog | **`template`**                | `modalType`, kind, category                |
-| An unconditional transition   | **`beginOpen`**               | `requestOpen` (that one asks and may fail) |
-| Closed with nobody acting     | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`   |
-| The work gating an open       | **`prepare` / `isPreparing`** | `onOpen` (a notification, not a gate)      |
+| Concept                        | The word                      | Not                                        |
+| ------------------------------ | ----------------------------- | ------------------------------------------ |
+| `showModal()` vs `show()`      | **modal / non-modal**         | blocking / non-blocking                    |
+| Which template built a dialog  | **`template`**                | `modalType`, kind, category                |
+| An unconditional transition    | **`beginOpen`**               | `requestOpen` (that one asks and may fail) |
+| Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`   |
+| The work gating an open        | **`prepare` / `isPreparing`** | `onOpen` (a notification, not a gate)      |
+| Which edge a panel slides from | **`direction`**               | anything else calling itself a direction   |
+
+**`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
+edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; the positive and
+negative cases of an assertion are its **halves**, not its directions — that second sense had spread
+to six comments and is the reason the row exists.
 
 Two more that are easy to blur:
 

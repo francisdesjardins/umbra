@@ -27,7 +27,7 @@ test.describe('dialogAttributes', () => {
     ).toBe('non-modal');
   });
 
-  test('says whether the dialog is still loading, in both directions', () => {
+  test('says whether the dialog is still loading, and says it both ways', () => {
     // The one attribute here the library owns outright, and the one that toggles: a dialog on
     // screen while `prepare` runs is the normal state of a loading modal, and so is the state it
     // leaves. `'false'` is written rather than omitted because `setDialogAttributes` skips

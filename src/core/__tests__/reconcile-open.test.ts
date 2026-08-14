@@ -22,7 +22,7 @@ const CASES: readonly (readonly [ModalPhase, boolean, 'open' | 'close' | 'none']
   ['open', true, 'none'],
   ['open', false, 'close'],
 
-  // Closing is left alone in both directions. Closing it again would cut the exit; opening it now
+  // Closing is left alone whichever way the prop moves. Closing it again would cut the exit; opening it now
   // would race the close that is still finalizing — the phase changes when it lands, and this runs
   // again on that.
   //

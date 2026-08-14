@@ -63,7 +63,7 @@ test.describe('a non-modal panel whose Escape is a request', () => {
 
   test('a declined press is left travelling', async ({ mount, page }) => {
     // The negative half, and the reason the return value exists at all: the window listener
-    // captures, so a press it takes is a press the page never sees. Both directions are asserted
+    // captures, so a press it takes is a press the page never sees. Both halves are asserted
     // from the same harness — one press claimed, the next declined — or "the page saw it" would
     // pass on a listener that never claimed anything.
     const component = await mount(<ControlledPanelHarness />);
