@@ -84,6 +84,91 @@ async function gotoRoute(page, route) {
 }
 
 const flows = {
+  /**
+   * A dialog that arrived open in server-rendered HTML, adopted by `umbra/vanilla`.
+   *
+   * **Real server rendering, and the only place this repo can do it.** The playground ships as a
+   * static bundle — `build:file` is `vite build` — so there is no server in the deployed artifact
+   * and a demo panel claiming SSR would be a claim the deployment contradicts. A test has no such
+   * problem: the document below is built **in Node** and delivered as an HTTP response the browser
+   * parses before it has fetched a single module. That is what SSR hands a client, produced the
+   * way SSR produces it.
+   *
+   * What it proves that the component test cannot: the page has **no framework in it at all** —
+   * an import map and one module, the same mechanism `/microfrontends` uses — and the binding
+   * still adopts a dialog it did not create and did not open.
+   */
+  async ssr(page) {
+    const checks = [];
+
+    // The server's job: produce the bytes. `<dialog open>` is in them, so the browser paints it
+    // before any script exists — which is the condition the whole flow is about.
+    const document_ = `<!doctype html>
+<html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}<\/script>
+</head><body>
+<dialog id="ssr-dialog" open><p>Rendered before any script ran.</p><button id="ssr-close">Close</button></dialog>
+<span id="pre-hydration"></span><span id="phase"></span>
+<script type="module">
+  // Read the pre-hydration truth first — this is the only moment it is observable.
+  document.getElementById('pre-hydration').textContent = String(document.getElementById('ssr-dialog').open);
+  const { bindDialog } = await import('umbra/vanilla');
+  const { createDialogManager } = await import('umbra');
+  const bound = bindDialog({
+    id: 'ssr:panel',
+    dialog: document.getElementById('ssr-dialog'),
+    nonModal: true,
+    ariaLabel: 'Server rendered',
+    manager: createDialogManager(),
+  });
+  bound.bindAction(document.getElementById('ssr-close'), 'closed');
+  // Written on every transition, not once: adoption enters at 'opening' and settles on 'open' a
+  // frame later, exactly as an ordinary open does. Reading it synchronously would be reading the
+  // first of the two and calling it the answer.
+  const showPhase = () => { document.getElementById('phase').textContent = bound.getSnapshot().phase; };
+  bound.subscribe(showPhase);
+  showPhase();
+<\/script>
+</body></html>`;
+
+    await page.route('**/__ssr-fixture', (route) => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/html; charset=utf-8',
+        body: document_,
+      });
+    });
+    await page.goto(`${BASE}/__ssr-fixture`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(400);
+
+    checks.push([
+      (await page.locator('#pre-hydration').textContent()) === 'true',
+      'the dialog was open before any module loaded',
+    ]);
+    checks.push([
+      (await page.locator('#phase').textContent()) === 'open',
+      'the binding adopted it rather than starting from closed',
+    ]);
+    // The defect this guards: the store used to start at `closed` and the first pass wrote
+    // `display: none` over an element that was still reporting `open`.
+    const shown = await page.evaluate(() => {
+      const d = document.getElementById('ssr-dialog');
+      return d instanceof HTMLDialogElement && d.open && d.getBoundingClientRect().height > 0;
+    });
+    checks.push([shown, 'and it is still on screen, with the DOM and the store agreeing']);
+
+    // Once adopted it is an ordinary registered dialog: its bound action closes it.
+    await page.locator('#ssr-close').click();
+    await page.waitForTimeout(500);
+    checks.push([
+      (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false,
+      'a bound action closes the adopted dialog',
+    ]);
+
+    await page.unroute('**/__ssr-fixture');
+    return checks;
+  },
+
   /** A modal opens from a card and Escape dismisses it. */
   async modal(page) {
     const checks = [];

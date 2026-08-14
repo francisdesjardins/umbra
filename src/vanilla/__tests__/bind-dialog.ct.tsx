@@ -18,6 +18,7 @@ import {
   VanillaShadowRootHarness,
   VanillaShadowStackHarness,
   VanillaUnbindHarness,
+  VanillaServerOpenHarness,
 } from './bind-dialog.story';
 
 /**
@@ -780,5 +781,43 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     // and ask for a second close on a dialog already leaving.
     await expect(page.getByTestId('asked')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
+  });
+});
+
+test.describe('bindDialog — a dialog the server rendered open', () => {
+  const DIALOG = 'dialog[data-modal-id="vanilla-server-open"]';
+
+  /** What the three sources of truth say, which is the whole point: they must agree. */
+  const state = async (page: Page) => {
+    return page.evaluate((sel) => {
+      const d = document.querySelector(sel);
+      if (!(d instanceof HTMLDialogElement)) {
+        return 'no dialog';
+      }
+      return `open=${String(d.open)} shown=${String(d.getBoundingClientRect().height > 0)}`;
+    }, DIALOG);
+  };
+
+  test('a non-modal one is adopted where it stands', async ({ mount, page }) => {
+    // The store used to start at `closed` against an element that was open, and the first pass
+    // wrote `display: none` over it — so the DOM said open, the store said closed, and the user
+    // saw nothing. Adoption is what makes the three agree.
+    const component = await mount(<VanillaServerOpenHarness nonModal />);
+
+    await expect(component.getByTestId('phase')).toHaveText('open');
+    expect(await state(page)).toBe('open=true shown=true');
+  });
+
+  test('a modal one is closed instead, because the top layer is not enterable from HTML', async ({
+    mount,
+    page,
+  }) => {
+    // Not a refusal to implement: `showModal()` from script is the only way into the top layer, so
+    // an `open` attribute in served HTML is by definition a *non-modal* open. Adopting it as modal
+    // would claim a backdrop and an inert page that the element does not have.
+    const component = await mount(<VanillaServerOpenHarness nonModal={false} />);
+
+    await expect(component.getByTestId('phase')).toHaveText('closed');
+    expect(await state(page)).toBe('open=false shown=false');
   });
 });

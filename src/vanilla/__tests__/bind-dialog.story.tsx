@@ -1438,3 +1438,62 @@ export function VanillaReconcileHarness() {
     </>
   );
 }
+
+/**
+ * A `<dialog open>` the server sent, adopted by `bindDialog` after the fact.
+ *
+ * The hydration gap an SSR page actually has: the markup is on screen before any script runs, and
+ * the binding arrives to a dialog that is already open. `nonModal` is the harness's prop because
+ * the two answers are different and both are correct — a non-modal dialog is adopted where it
+ * stands, a modal one cannot be, since the top layer is only enterable from script.
+ */
+export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: boolean }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [phase, setPhase] = useState('?');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+    // What the server sent: an open dialog, before any binding existed.
+    dialog.setAttribute('open', '');
+
+    const bound = nonModal
+      ? bindDialog<void, 'close'>({
+          id: 'vanilla-server-open',
+          dialog,
+          nonModal: true,
+          ariaLabel: 'Server rendered',
+          manager: createDialogManager(),
+        })
+      : bindDialog<void, 'close'>({
+          id: 'vanilla-server-open',
+          dialog,
+          nonModal: false,
+          ariaLabel: 'Server rendered',
+          manager: createDialogManager(),
+        });
+
+    const stop = bound.subscribe(() => {
+      setPhase(bound.getSnapshot().phase);
+    });
+    setPhase(bound.getSnapshot().phase);
+    return () => {
+      stop();
+      bound.destroy();
+    };
+  }, [nonModal]);
+
+  return (
+    <div>
+      <span data-testid="phase">{phase}</span>
+      <dialog ref={dialogRef}>
+        <p>Rendered by the server</p>
+        <button type="button" data-testid="inside">
+          Inside
+        </button>
+      </dialog>
+    </div>
+  );
+}

@@ -484,7 +484,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'partial',
-      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Re-measured 2026-08-13, after `chooseActionRunner` and the `lastActivated` click read shipped**: it still reproduces, and on **all three engines**, so it is not the engine-specific race it was first read as. The stated cause was also wrong — at restore time the button is `disabled=false` and takes `focus()` when asked, so nothing is being blurred out from under the coordinator. Whatever is failing is upstream of the restore, in whether the running -> idle transition is seen at all. Diagnosed further, still not fixed; the next step is instrumenting the coordinator with a `console` listener attached, since browser logs are invisible to a CT run without it.',
+      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Diagnosed 2026-08-14, and the cause is not what this cell used to say.** It is not the disabled-button race, and not engine-specific — it reproduces on all three. Traced with the coordinator instrumented: at restore time `lastActivated` and `lastFocusInside` both still name the right button and **both report `isConnected === false`**. Solid replaces the element when the action state changes, so the coordinator is holding two references to a button that has left the document; `chooseActionRunner` skips a disconnected candidate — correctly — and there is nothing left to restore to. **The fix is to stop remembering elements**: the reason survives a re-render where the node does not, so the coordinator would have to remember the action and re-query its button at restore time. Not attempted — it is a design change, not a patch.',
     },
     vanilla: {
       state: 'works',
@@ -528,6 +528,22 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       reference: {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'an accepted request opens the dialog',
+      },
+    },
+  },
+  {
+    capability: 'adopting a dialog that arrived open',
+    react: {
+      state: 'n-a',
+      note: 'The binding creates the element, so there is never one to adopt.',
+    },
+    solid: { state: 'n-a', note: 'Same — `umbra/solid` builds its own `<dialog>`.' },
+    vanilla: {
+      state: 'works',
+      note: 'The element is the caller’s, so it can arrive open — from server-rendered HTML, or from a page that opened it before the binding existed. Adopted for a non-modal dialog, closed for a modal one. Before this the store started at `closed` against an open element and the first pass wrote `display: none` over it: the DOM said open, the store said closed, the user saw nothing, and nothing warned.',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a non-modal one is adopted where it stands',
       },
     },
   },
@@ -691,6 +707,15 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     reference: {
       file: 'src/core/__tests__/focus-containment.ct.tsx',
       title: 'a dead-space click leaves the keyboard reachable without containFocus',
+    },
+  },
+  {
+    fact: 'a server-rendered `<dialog open>` can be modal',
+    state: 'no-platform',
+    why: 'The top layer is enterable only through `showModal()` from script, so an `open` attribute in served HTML is **by definition** a non-modal open — no backdrop, nothing inert. It is the one thing SSR cannot hand a dialog. `bindDialog` adopts such a dialog when the caller asked for `nonModal`, and closes it otherwise rather than claiming a containment the element does not have.',
+    reference: {
+      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+      title: 'a modal one is closed instead, because the top layer is not enterable from HTML',
     },
   },
   {

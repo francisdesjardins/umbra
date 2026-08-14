@@ -242,6 +242,38 @@ export function bindDialog<TData = void, TReason extends string = string>(
     });
   };
 
+  // ── Adopting a dialog that is already open ──────────────────────────────────
+  //
+  // **The hydration gap, and the one case the first `sync()` used to answer wrongly.** A page can
+  // arrive with `<dialog open>` in the served HTML — that is what server-rendering a panel means —
+  // and `bindDialog` then meets an element that is open while its brand-new store says `closed`.
+  // Left alone, the first pass writes `display: none` and the three sources disagree in the worst
+  // possible arrangement: the DOM reports `open`, the store reports `closed`, the user sees
+  // nothing, and no warning is raised.
+  //
+  // **Adoption is only honest for a non-modal dialog**, and that is a platform law rather than a
+  // choice here: the top layer is enterable only through `showModal()` from script, so an `open`
+  // attribute in HTML is *by definition* a non-modal open — no backdrop, nothing inert. Adopting
+  // it as a modal one would claim a containment the element does not have.
+  //
+  // So a non-modal dialog is adopted where it stands, and a modal one is closed: the caller asked
+  // for the top layer, and the only way in is to open it again from script.
+  if (dialog.open) {
+    if (resolved.isNonModal) {
+      log('Adopting a dialog that was already open', { id: modalId });
+      store.beginOpen();
+      store.scheduleOpenTransition();
+      store.finishPreparing();
+    } else {
+      log.warn(
+        'A modal dialog cannot be adopted open — the top layer is only enterable from script, so ' +
+          'this one was closed. Render it closed and call open().',
+        { id: modalId }
+      );
+      dialog.close();
+    }
+  }
+
   const unsubscribe = store.subscribe(sync);
   // Once up front, so a closed dialog carries `display: none` before anything can see it.
   sync();
