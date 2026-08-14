@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { TextField } from '@mui/material';

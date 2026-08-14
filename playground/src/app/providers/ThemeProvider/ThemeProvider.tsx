@@ -2,7 +2,7 @@ import { createAppTheme } from '@/app/providers/ThemeProvider/theme';
 import { colors } from '@/entities/modal-template/ui/shared/tokens';
 import { CssBaseline, ThemeProvider as MuiThemeProvider, useMediaQuery } from '@mui/material';
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { ThemeContext } from './ThemeContext';
+import { ThemeContext } from '@/shared/lib/theme-context';
 
 // Seed the modal surface CSS vars on :root before first paint so dialogs (which inherit
 // custom properties from :root through the DOM, top layer included) theme correctly on mount.

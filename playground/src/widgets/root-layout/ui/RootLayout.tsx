@@ -1,10 +1,8 @@
-import { CodePaneProvider } from '@/app/providers/CodePaneProvider/CodePaneProvider';
 import { PeekingMoon } from '@/shared/ui/PeekingMoon/PeekingMoon';
-import { ThemeProvider } from '@/app/providers/ThemeProvider/ThemeProvider';
-import { useCodeModal } from '@/widgets/code-viewer/model/useCodeModal';
-import { useCodePane } from '@/widgets/code-viewer/model/useCodePane';
-import { Sidebar } from '@/widgets/sidebar/ui/Sidebar';
-import { TopBar } from '@/widgets/top-bar/ui/TopBar';
+import { useCodeModal } from '@/widgets/code-viewer';
+import { useCodePane } from '@/shared/lib/code-pane-context';
+import { Sidebar } from '@/widgets/sidebar';
+import { TopBar } from '@/widgets/top-bar';
 import { Box, Toolbar, useMediaQuery, useTheme } from '@mui/material';
 import { Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
@@ -100,14 +98,15 @@ export const RootLayout = () => {
     },
   });
 
+  // The providers that used to wrap this are composed in `app/router.tsx` now — deciding what
+  // surrounds the application is `app`'s job, and a widget reaching up into it for two of them
+  // was the layer order inverted. This renders the shell and nothing above it.
   return (
-    <ThemeProvider>
-      <CodePaneProvider>
-        <ResponsiveShell />
-        {/* Sits at z-index 1200, below the 1300+ the manager assigns dialogs, so the mascot
-            never covers a panel it is meant to be charming next to. */}
-        {!onHome && <PeekingMoon />}
-      </CodePaneProvider>
-    </ThemeProvider>
+    <>
+      <ResponsiveShell />
+      {/* Sits at z-index 1200, below the 1300+ the manager assigns dialogs, so the mascot
+          never covers a panel it is meant to be charming next to. */}
+      {!onHome && <PeekingMoon />}
+    </>
   );
 };

@@ -64,6 +64,23 @@ playground/src/
 Use the `@/<layer>/<slice>` path alias for cross-slice imports — never reach into `ui/`/`model/`
 segments. Imports flow downward only: app → pages → widgets → entities → shared.
 
+**Both halves are a gate now** ([\_\_tests\_\_/fsd-layers.test.ts](src/__tests__/fsd-layers.test.ts)),
+because as prose neither held: a sweep found `shared/ui` reaching up into `app` for a provider, a
+widget doing the same for two, and thirty cross-slice imports going straight at a `ui/` file whose
+barrel already exported the name. **A context two layers both read belongs in `shared/lib`** —
+`theme-context` and `code-pane-context` are there for exactly that, with their providers left in
+`app` where composing them is the job.
+
+Two exemptions, each a decision rather than a leak:
+
+- **`?raw` imports are asset reads.** `codeSamples.ts` names every example's source _as text_; it
+  calls and renders nothing. The alternative is a generated registry to regenerate on every
+  example added.
+- **`entities/modal-template` has no public entry on purpose** — its own barrel says so and
+  re-exports nothing. The templates are a directory tree because that is the shape they are copied
+  out in, and `import * as MessageModal from '…/mui/message-modal'` is the form that names the
+  flavour. A barrel would flatten the distinction the slice exists to make.
+
 **Reach into the library through `umbra/…`, never through `../../../../../src/…`.** The `/stories`
 page renders the library's own CT harnesses and the code viewer shows their source, so two files
 here import from `src/**/__tests__/`. Both go through the alias — a deep relative climb is a

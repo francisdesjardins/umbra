@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as VanillaSlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';

@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { Stack, Typography } from '@mui/material';

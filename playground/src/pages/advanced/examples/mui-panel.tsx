@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import * as PanelModal from '@/entities/modal-template/ui/mui/panel-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';

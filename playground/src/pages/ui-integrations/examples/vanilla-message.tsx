@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import * as VanillaMessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';

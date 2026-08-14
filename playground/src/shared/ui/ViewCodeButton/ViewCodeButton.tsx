@@ -1,7 +1,7 @@
 import CodeIcon from '@mui/icons-material/Code';
 import { IconButton } from '@mui/material';
 import type { ReactNode } from 'react';
-import { useCodePane } from '@/widgets/code-viewer/model/useCodePane';
+import { useCodePane } from '@/shared/lib/code-pane-context';
 
 type ViewCodeButtonProps = {
   readonly codeKey: string;

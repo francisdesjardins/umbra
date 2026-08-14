@@ -1,4 +1,4 @@
-import { useTheme } from '@/app/providers/ThemeProvider/ThemeContext';
+import { useTheme } from '@/shared/lib/theme-context';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 

@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
 import { useEffect, useState } from 'react';
-import { useCodePane } from '@/widgets/code-viewer/model/useCodePane';
+import { useCodePane } from '@/shared/lib/code-pane-context';
 import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModal';
 
 /** Declared once and passed both ways, since the heading and the reference are in two files. */

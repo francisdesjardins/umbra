@@ -1,4 +1,4 @@
-import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
+import { ExampleLayout } from '@/entities/example';
 import * as VanillaFormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { Button } from '@mui/material';

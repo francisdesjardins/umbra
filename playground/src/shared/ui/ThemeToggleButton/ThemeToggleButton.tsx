@@ -1,7 +1,7 @@
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { IconButton, type SxProps } from '@mui/material';
-import { useTheme } from '@/app/providers/ThemeProvider/ThemeContext';
+import { useTheme } from '@/shared/lib/theme-context';
 
 export type ThemeToggleButtonProps = {
   readonly sx?: SxProps | undefined;
