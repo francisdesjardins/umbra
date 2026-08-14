@@ -36,11 +36,6 @@ first, then reported that nothing had taken it.
 fails on Chromium and passes on WebKit and Firefox, which is why nothing caught it — the shadow-root
 tests the three bindings carry all claim `focusOnOpen`, so none of them ever reached the scan.
 
-There is a second consequence, and it is read off the code rather than measured — said so here rather
-than asserted as if it had been. `attachFocusContainment` uses the same report to decide whether to
-swallow a Tab pressed on the dialog element, and `false` means it does not: in a shadow root that
-recovery moved focus and then let the browser move it again from wherever the scan had left it.
-
 `focusFirstAvailable` lives in [core/focus-policy.ts](src/core/focus-policy.ts) now rather than in the
 containment it was written for. That is the fix rather than a tidy-up: the module's whole subject is
 who holds focus, `activeWithin` is the one way it asks, and a focus function in another file is that

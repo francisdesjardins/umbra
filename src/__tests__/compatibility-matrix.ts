@@ -759,7 +759,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
       title: 'a panel opening underneath does not leave focus on the body',
     },
     caveat:
-      'Proven on React only. The repair is core — `reclaimFocus` is reached through the director on every binding — so there is nothing binding-shaped to suspect, but nothing measured either.',
+      'Two, and neither is a defect anyone has reproduced. **Proven on React only** — the repair is core, `reclaimFocus` is reached through the director on every binding, so there is nothing binding-shaped to suspect but nothing measured either. And **the floor’s scan is not scoped to the dialog’s own subtree** the way every other lookup in `focus-policy.ts` is: `reclaimFocus` finds the `focusOnOpen` claim with `queryOwn` and then falls through to a plain `querySelectorAll`, which a modal opened from inside this one — the documented shape, and the reason `queryOwn` exists — would be reachable through. No arrangement producing it has been built, so it is written here rather than fixed.',
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',
