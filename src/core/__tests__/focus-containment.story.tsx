@@ -12,10 +12,16 @@ import { useModal } from '../../react.js';
  * has somewhere to go that is not the address bar — otherwise "focus left the dialog" and "focus
  * left the page" look the same to `document.activeElement`.
  */
-export function FocusContainmentHarness({ containFocus }: { readonly containFocus: boolean }) {
+export function FocusContainmentHarness({
+  containFocus,
+  nonModal = true,
+}: {
+  readonly containFocus: boolean;
+  readonly nonModal?: boolean;
+}) {
   const modal = useModal({
     id: 'focus-containment',
-    nonModal: true,
+    ...(nonModal ? { nonModal: true as const } : { nonModal: false as const }),
     containFocus,
     ariaLabel: 'Contained panel',
     render: () => {

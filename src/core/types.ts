@@ -339,6 +339,12 @@ export type UseModalBaseOptions<
    * a popover and wrong for a panel that behaves like a modal in everything but its stacking, so
    * it is asked for rather than assumed.
    *
+   * **Worth setting on a modal dialog too**, which the name does not suggest. Clicking a panel's
+   * empty space focuses the `<dialog>` element itself, and from there **WebKit does not move Tab
+   * into the content** — it swallows the press and the keyboard is stuck on the element until the
+   * mouse rescues it. Chromium and Firefox descend; measured on all three. The wrap is what a
+   * modal dialog does not need; this is what it does.
+   *
    * **It answers Tab; it does not trap focus.** The listener sits on the dialog and fires only
    * when focus is already inside it and already at one of the two ends. Focus moved by a click,
    * or by another dialog opening, is left alone — which is what makes this safe in a page where

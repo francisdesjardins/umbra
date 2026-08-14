@@ -9,6 +9,12 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * that behaves like a modal in everything but its stacking — which is why this is off by default
  * and asked for with `containFocus`.
  *
+ * **It is not a non-modal-only option, and reading it as one is the mistake.** The *wrap* is
+ * redundant on a modal dialog, but the `keydown` below is not: a click on a panel's empty space
+ * focuses the `<dialog>` itself, and from there WebKit does not move Tab into the content — it
+ * swallows the press and the keyboard is stuck on the element, mouse-only, modal or otherwise.
+ * Measured on all three engines; see the modal case in `focus-containment.ct.tsx`.
+ *
  * **Two focusable markers, not a computed boundary.** The obvious implementation answers `Tab` on
  * the dialog and compares the focused element against the last of its tab stops. It is wrong twice
  * over, and both were measured against a real application rather than reasoned about:

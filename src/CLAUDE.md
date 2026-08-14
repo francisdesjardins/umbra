@@ -204,7 +204,8 @@ lives — including why each step declares its own inputs rather than sharing on
   ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes
 - `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
 - `attachFocusContainment` ([core/attach-focus-containment.ts](core/attach-focus-containment.ts)) —
-  the Tab wrap `show()` does not give a dialog, opt-in through `containFocus`
+  the Tab wrap `show()` does not give a dialog, opt-in through `containFocus` — and **not
+  non-modal-only**, since the same attachment recovers a Tab that WebKit swallows on any dialog
 - `createFocusCoordinator` ([core/attach-focus.ts](core/attach-focus.ts)) — a coordinator, because
   where the opening focus landed has to outlive one attachment. Owned by the director; no binding
   builds one

@@ -159,9 +159,12 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   },
   {
     option: 'containFocus',
-    ignoredBy: ['nonModal: false'],
-    enforcement: 'PROSE',
-    note: 'The Tab wrap `show()` does not give a dialog. A modal one is already trapped by the top layer, so the option is inert there — accepted, and nothing says so but a sentence.',
+    enforcement: 'RUNTIME',
+    note: 'Applies to **both** variants, and the row previously said otherwise. The Tab *wrap* is what `show()` does not give a dialog, and a modal one is contained by the top layer without it — but the same attachment answers a Tab pressed while focus is on the `<dialog>` element itself, which a click on a panel’s empty space produces. Chromium and Firefox descend into the subtree from there; **WebKit does not**, and swallows the press. So on a modal dialog this is the difference between a dead-space click costing nothing and costing the keyboard.',
+    reference: {
+      file: 'src/core/__tests__/focus-containment.ct.tsx',
+      title: 'recovers the keyboard from a dead-space click, which WebKit otherwise loses',
+    },
   },
   {
     option: 'onOpenRequest',
@@ -678,6 +681,15 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     reference: {
       file: 'src/manager/__tests__/stack-order.test.ts',
       title: 'a policy cannot lift a non-modal dialog over a modal one',
+    },
+  },
+  {
+    fact: 'Tab descends into a dialog"s own subtree when the dialog itself has focus',
+    state: 'partial',
+    why: 'The engines disagree and the difference is a dead keyboard, not a nicety. Clicking a dialog’s empty space focuses the `<dialog>` element — it is click-focusable while open, though it takes no `tabindex` and refuses `focus()` from script. Chromium and Firefox then move Tab into the content; **WebKit swallows the press and leaves focus on the element**, with no way back but the mouse. `containFocus` answers it for both variants, which is why that option is not the non-modal-only one it reads as. **The open decision**: `containFocus` bundles two behaviours with different risk. The Tab *wrap* is the debatable half — on a toast it is the defect rather than the fix, which is why the option is off by default. The dead-space *recovery* is not debatable and is off by default only because it shares the flag. Splitting them would make the recovery unconditional and leave the wrap opt-in.',
+    reference: {
+      file: 'src/core/__tests__/focus-containment.ct.tsx',
+      title: 'recovers the keyboard from a dead-space click, which WebKit otherwise loses',
     },
   },
   {
