@@ -9,11 +9,14 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * that behaves like a modal in everything but its stacking — which is why this is off by default
  * and asked for with `containFocus`.
  *
- * **It is not a non-modal-only option, and reading it as one is the mistake.** The *wrap* is
- * redundant on a modal dialog, but the `keydown` below is not: a click on a panel's empty space
- * focuses the `<dialog>` itself, and from there WebKit does not move Tab into the content — it
- * swallows the press and the keyboard is stuck on the element, mouse-only, modal or otherwise.
- * Measured on all three engines; see the modal case in `focus-containment.ct.tsx`.
+ * **Two behaviours, and only one of them is optional.** The *wrap* is what `containFocus` asks
+ * for. The `keydown` that recovers a Tab pressed while focus is on the `<dialog>` element itself
+ * is **unconditional**: a click on a panel's empty space produces exactly that, and from there
+ * WebKit does not move Tab into the content — it swallows the press and the keyboard is stuck on
+ * the element, mouse-only, modal or otherwise. Chromium and Firefox descend. Behind the flag, an
+ * ordinary click cost the keyboard on WebKit in every dialog that had not opted into an option
+ * that reads as being about something else. Measured on all three engines; see
+ * `focus-containment.ct.tsx`.
  *
  * **Two focusable markers, not a computed boundary.** The obvious implementation answers `Tab` on
  * the dialog and compares the focused element against the last of its tab stops. It is wrong twice
@@ -69,8 +72,12 @@ const GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
  * candidate that matches the selector but cannot hold focus — a container whose child is the real
  * stop, an element the browser skips — simply fails to become `activeElement`, and the scan moves
  * on. So a wrong guess costs a step instead of losing the keyboard.
+ *
+ * @returns Whether anything took it. The caller needs the answer before it swallows a key: a
+ *   dialog with nothing focusable in it would otherwise be a `preventDefault` and no move, which
+ *   is a Tab that does nothing for as long as the dialog is open.
  */
-function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): void {
+function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
   const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
     (element) => {
       return element.getAttribute(GUARD_ATTRIBUTE) === null;
@@ -83,9 +90,10 @@ function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): void {
   for (const candidate of candidates) {
     candidate.focus();
     if (dialog.ownerDocument.activeElement === candidate) {
-      return;
+      return true;
     }
   }
+  return false;
 }
 
 /** A focusable marker that occupies nothing and shows nothing. */
@@ -112,8 +120,46 @@ export function attachFocusContainment(
   const { containFocus } = options;
 
   const dialog = getDialog();
-  if (!containFocus || dialog === null || phase === 'closed') {
+  if (dialog === null || phase === 'closed') {
     return undefined;
+  }
+
+  // ── Always: the press the markers cannot see ────────────────────────────────
+  //
+  // Clicking a panel's empty space — the area under the last button, a paragraph, a footer's
+  // leftover room — focuses the nearest *click-focusable* ancestor, and an open `<dialog>` is one
+  // even though it takes no `tabindex` and refuses `focus()` from script. From there the engines
+  // disagree: Chromium and Firefox descend into the subtree, **WebKit does not** and swallows the
+  // press, leaving the keyboard on the element with nothing but the mouse to recover it.
+  //
+  // **Unconditional, and that is the point.** This used to sit behind `containFocus`, which made
+  // an ordinary click cost the keyboard on WebKit in every dialog that had not opted in — modal
+  // ones included, where the option looks irrelevant. Nothing here traps anybody: it answers a
+  // press that two engines already answer this way, so what it removes is a disagreement rather
+  // than a choice.
+  const handleDialogTab = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || event.target !== dialog) {
+      return;
+    }
+    // Swallowed only if something took it. A dialog with nothing focusable in it would otherwise
+    // get a Tab that does nothing at all, which is worse than the platform's own answer.
+    if (focusFirstAvailable(dialog, event.shiftKey)) {
+      event.preventDefault();
+    }
+  };
+
+  dialog.addEventListener('keydown', handleDialogTab);
+
+  // ── Opt-in: the wrap ────────────────────────────────────────────────────────
+  //
+  // This half is what `containFocus` buys, and it is the half worth choosing: on a toast or a
+  // popover, keeping Tab inside is the defect rather than the fix. A modal dialog is wrapped by
+  // the top layer already, so the markers are redundant there — harmless, and not what the option
+  // is for.
+  if (!containFocus) {
+    return () => {
+      dialog.removeEventListener('keydown', handleDialogTab);
+    };
   }
 
   const start = createGuard(dialog, 'start');
@@ -126,20 +172,6 @@ export function attachFocusContainment(
     focusFirstAvailable(dialog, cameFromInside ? guard === 'start' : guard === 'end');
   };
 
-  // Clicking a panel's empty space — the area under the last button, a paragraph, a footer's
-  // leftover room — focuses the nearest *click-focusable* ancestor, and an open `<dialog>` is one
-  // even though it takes no `tabindex` and refuses `focus()` from script. From there the markers
-  // are unreachable: browsers disagree on whether Tab descends into the dialog's own subtree, and
-  // where it does not the keyboard is in the page behind before a marker is ever visited. So the
-  // one press the markers cannot see is answered directly.
-  const handleDialogTab = (event: KeyboardEvent): void => {
-    if (event.key !== 'Tab' || event.target !== dialog) {
-      return;
-    }
-    event.preventDefault();
-    focusFirstAvailable(dialog, event.shiftKey);
-  };
-
   const onStart = (event: FocusEvent): void => {
     handleGuardFocus(event, 'start');
   };
@@ -149,7 +181,6 @@ export function attachFocusContainment(
 
   start.addEventListener('focus', onStart);
   end.addEventListener('focus', onEnd);
-  dialog.addEventListener('keydown', handleDialogTab);
   dialog.prepend(start);
   dialog.append(end);
 

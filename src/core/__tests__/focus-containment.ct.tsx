@@ -170,20 +170,27 @@ test.describe('what counts as a stop', () => {
   });
 });
 
-test.describe('a modal dialog with containFocus on', () => {
-  test('recovers the keyboard from a dead-space click, which WebKit otherwise loses', async ({
+test.describe('the dead-space click, whatever containFocus says', () => {
+  // **The recovery is unconditional and this is the pair that holds it there.** Clicking a
+  // panel's empty space focuses the `<dialog>` element itself; from there Chromium and Firefox
+  // move Tab into the content and **WebKit swallows the press**, leaving the keyboard on the
+  // element with nothing but the mouse to get it back. Behind `containFocus` that cost the
+  // keyboard in every dialog that had not opted into an option about something else — modal ones
+  // especially, where the wrap it also buys is redundant and the option reads as irrelevant.
+  //
+  // Run for both variants and both flag values on purpose: the flag must make no difference here,
+  // and a test that only covered the `true` case would pass on the day someone puts it back.
+  // Cited by the matrix, and spelled out rather than generated: the gate matches a cell's test
+  // title verbatim in the source, so a title built from a template literal is one it cannot find.
+  // This is the discriminating case of the sweep below — the one that fails the moment the
+  // recovery goes back behind the flag.
+  test('a dead-space click leaves the keyboard reachable without containFocus', async ({
     mount,
     page,
   }) => {
-    // **`containFocus` is not a non-modal option, and this is the case that proves it.** The top
-    // layer contains a modal dialog, so the wrap the markers provide really is redundant there —
-    // but the `keydown` handler beside them is not. Clicking a panel's empty space focuses the
-    // `<dialog>` itself, and from there the browsers disagree about whether Tab descends into the
-    // subtree: Chromium and Firefox do, **WebKit does not**, and the press is swallowed with focus
-    // still on the element. Measured on all three; without the option WebKit answers
-    // `modal-focus-containment` here, which is a modal dialog with a dead keyboard and no way back
-    // except the mouse.
-    const component = await mount(<FocusContainmentHarness containFocus nonModal={false} />);
+    const component = await mount(
+      <FocusContainmentHarness containFocus={false} nonModal={false} />
+    );
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -195,14 +202,37 @@ test.describe('a modal dialog with containFocus on', () => {
     expect(await focused(page)).toBe('inside-first');
   });
 
-  test('sends Shift+Tab to the far end from that same click', async ({ mount, page }) => {
-    const component = await mount(<FocusContainmentHarness containFocus nonModal={false} />);
-    await component.getByTestId('open').click();
-    await expect(page.locator(PANEL)).toBeVisible();
+  for (const nonModal of [false, true]) {
+    for (const containFocus of [false, true]) {
+      const shape = `${nonModal ? 'non-modal' : 'modal'}, containFocus=${String(containFocus)}`;
 
-    await page.getByTestId('dead-space').click();
-    await page.keyboard.press('Shift+Tab');
+      test(`Tab reaches the content — ${shape}`, async ({ mount, page }) => {
+        const component = await mount(
+          <FocusContainmentHarness containFocus={containFocus} nonModal={nonModal} />
+        );
+        await component.getByTestId('open').click();
+        await expect(page.locator(PANEL)).toBeVisible();
 
-    expect(await focused(page)).toBe('inside-last');
-  });
+        await page.getByTestId('dead-space').click();
+        expect(await focused(page)).toBe('modal-focus-containment');
+
+        await page.keyboard.press('Tab');
+
+        expect(await focused(page)).toBe('inside-first');
+      });
+
+      test(`Shift+Tab reaches the far end — ${shape}`, async ({ mount, page }) => {
+        const component = await mount(
+          <FocusContainmentHarness containFocus={containFocus} nonModal={nonModal} />
+        );
+        await component.getByTestId('open').click();
+        await expect(page.locator(PANEL)).toBeVisible();
+
+        await page.getByTestId('dead-space').click();
+        await page.keyboard.press('Shift+Tab');
+
+        expect(await focused(page)).toBe('inside-last');
+      });
+    }
+  }
 });
