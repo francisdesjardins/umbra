@@ -1224,11 +1224,11 @@ export const SolidReconcileApp = (): JSX.Element => {
  * elsewhere by the time it settles, and the retry belongs to the button that was pressed.
  *
  * **No test asserts it yet, deliberately.** Measured through this harness, focus lands on the
- * `<dialog>` instead of on the button — the race `attach-focus.ts` documents for `umbra/vanilla`,
- * reaching a second binding: Solid writes the action props' `disabled` getter synchronously when the
- * engine reports running, so the button is blurred before `captureActionRunner` reads `activeElement`,
- * and the `lastFocusInside` floor does not catch it here. Shipping a test that asserted the dialog
- * would enshrine the defect; the harness stays because a fix needs it.
+ * `<dialog>` instead of on the button — on all three engines, so it is not engine-specific. The
+ * disabled-button race this was first attributed to is **not** the cause: at restore time the
+ * button reports `disabled=false` and takes `focus()` when asked, so nothing is being blurred out
+ * from under the coordinator. Shipping a test that asserted the dialog would enshrine the defect;
+ * the harness stays because a fix needs it.
  */
 function FailedActionApp(): Built {
   const [failures, setFailures] = createSignal(0);

@@ -484,7 +484,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'partial',
-      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action — **measured**, and it is the race `attach-focus.ts` documents for `umbra/vanilla` reaching a second binding. Solid writes the action props’ `disabled` getter synchronously when the engine reports running, so the button is blurred before `captureActionRunner` reads `activeElement`; the `lastFocusInside` floor that catches this for the controller does not catch it here. Diagnosed, not fixed — a fix belongs with the coordinator rather than with a test.',
+      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Re-measured 2026-08-13, after `chooseActionRunner` and the `lastActivated` click read shipped**: it still reproduces, and on **all three engines**, so it is not the engine-specific race it was first read as. The stated cause was also wrong — at restore time the button is `disabled=false` and takes `focus()` when asked, so nothing is being blurred out from under the coordinator. Whatever is failing is upstream of the restore, in whether the running -> idle transition is seen at all. Diagnosed further, still not fixed; the next step is instrumenting the coordinator with a `console` listener attached, since browser logs are invisible to a CT run without it.',
     },
     vanilla: {
       state: 'works',
