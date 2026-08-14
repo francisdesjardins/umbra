@@ -684,7 +684,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     },
   },
   {
-    fact: 'Tab descends into a dialog"s own subtree when the dialog itself has focus',
+    fact: 'Tab descends into a dialog’s own subtree when the dialog itself has focus',
     state: 'partial',
     why: 'The engines disagree and the difference is a dead keyboard, not a nicety. Clicking a dialog’s empty space focuses the `<dialog>` element — it is click-focusable while open, though it takes no `tabindex` and refuses `focus()` from script. Chromium and Firefox then move Tab into the content; **WebKit swallows the press and leaves focus on the element**, with no way back but the mouse. `containFocus` answers it for both variants, which is why that option is not the non-modal-only one it reads as. **The open decision**: `containFocus` bundles two behaviours with different risk. The Tab *wrap* is the debatable half — on a toast it is the defect rather than the fix, which is why the option is off by default. The dead-space *recovery* is not debatable and is off by default only because it shares the flag. Splitting them would make the recovery unconditional and leave the wrap opt-in.',
     reference: {
