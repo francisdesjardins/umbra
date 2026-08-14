@@ -300,11 +300,20 @@ that suffix, so renaming it silently downgrades a stylesheet to TSX highlighting
 - `ExampleCard` / `ExampleGrid` / `ExampleLayout` / `ExampleSection` / `StoryCard` — `@/entities/example`
 - `PageLayout` (`@/shared/ui/PageLayout`), `SectionNav` (`@/shared/ui/SectionNav`)
 - `simulateApiCall` — mock async helper (`@/shared/lib/simulate-api-call`)
-- `asyncState` / `safeAwait` / `createMutex` / `createSingleFlight` (`@/shared/lib/…`) — async
-  coordination patterns a user copies, deliberately not shipped by the library
+- `asyncState` / `safeAwait` / `createMutex` / `createSingleFlight` / `useQuery` / `useForm`
+  (`@/shared/lib/…`) — patterns a user copies, deliberately not shipped by the library. `useForm`
+  is the one the two `/ui-integrations` form cards share, which is what makes that pair's claim —
+  same hook, two markups — literally true rather than two implementations that agree.
 - `CodePaneProvider` (`@/app/providers/CodePaneProvider/CodePaneProvider`) + `useCodePane` (`@/widgets/code-viewer`)
 
 ## Testing
 
-Playground code does **not** require tests. Tests are for library source only — see root
-[CLAUDE.md](../CLAUDE.md#testing).
+**Pages and examples do not need tests; `shared/lib/` does.** The exemption is for the demo — a
+card that renders a modal is covered by the library's own suite and by `yarn smoke`. A helper in
+`shared/lib/` is different in kind: it is written to be **copied into someone else's project**,
+which is a claim that it works, and thirteen of them already carry tests beside them in
+`shared/lib/__tests__/`.
+
+A pure helper gets a `*.test.ts` in the unit project; a hook gets a `*.ct.tsx` with a story
+beside it, the way `use-store` and `use-form` do. Anything under `pages/` is out of scope — see
+root [CLAUDE.md](../CLAUDE.md#testing) for the library's own split.

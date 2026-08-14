@@ -27,6 +27,17 @@ test.describe('when a message is allowed to appear', () => {
     await expect(c.getByTestId('email-error')).toHaveText('Invalid email');
   });
 
+  test('says nothing about a field the user never touched', async ({ mount, page }) => {
+    // Reported from the playground: pressing any button blurs whatever the dialog autofocused, so
+    // a blur-on-leave rule complains about a field nobody typed in. Focus and leave without
+    // typing — the field is empty and invalid, and it stays quiet until the submit.
+    const c = await mount(<UseFormHarness />);
+    await page.getByTestId('name').focus();
+    await page.getByTestId('name').blur();
+
+    await expect(c.getByTestId('name-error')).toHaveText('');
+  });
+
   test('a blurred field says nothing when it is valid', async ({ mount, page }) => {
     const c = await mount(<UseFormHarness />);
     await page.getByTestId('email').fill('a@b.co');

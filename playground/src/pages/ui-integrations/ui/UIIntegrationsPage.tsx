@@ -74,7 +74,7 @@ export const UIIntegrationsPage = () => {
 
       <ExampleSection
         title="Form"
-        description="Submit-and-validate flows, where the action's own isRunning and error carry the async state."
+        description="The same useForm hook wearing two UIs — validation, error messages and the typed payload out are shared, and only the markup below differs. That is this page's claim, and this is the pair where it is literally true: the two files import one hook and disagree about nothing else."
       >
         <ExampleGrid>
           <ExampleCard

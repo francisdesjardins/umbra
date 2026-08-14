@@ -49,7 +49,7 @@ export const AdvancedPage = () => {
       <ExampleSection
         id="stacking"
         title="Stacking, keyboard and focus"
-        description="Stacked modals manage their own z-index — and their own keyboard. A modal opened from inside another renders its <dialog> in that one's subtree, so every event bubbles through the modal underneath; the library scopes them back, which is what makes one Escape close one modal and a shared hotkey fire at one level only."
+        description="Who is in front, and who owns the keyboard. A modal opened from inside another renders its <dialog> in that one's subtree, so every event bubbles through the modal underneath; the library scopes them back, which is what makes one Escape close one modal and a shared hotkey fire at one level only. Order is the other half, and it is not a z-index question — the top layer paints in the order elements were added and no z-index reaches between them, so deciding who is in front is a policy rather than a number."
       >
         <ExampleGrid columns={1}>
           <ExampleCard

@@ -73,9 +73,12 @@ export type Form<TValues> = {
   /**
    * The messages to render, which is **not** everything `validate` returned.
    *
-   * A field's message appears once it has been blurred or once a submit has been attempted, and
-   * not before: telling someone their email is invalid while they are still on the third
-   * character is technically true and useless. `validate` is pure and unaware of any of this.
+   * A field's message appears once it has been **changed and then blurred**, or once a submit has
+   * been attempted. Two rules, and each answers a different way of being annoying: telling someone
+   * their email is invalid on the third character is true and useless, and telling them a field is
+   * required when they never touched it — because pressing a button blurred whatever the dialog
+   * autofocused — is a complaint about the form's own behaviour. `validate` is pure and unaware of
+   * both.
    */
   readonly errors: FieldErrors<TValues>;
   /** The props for one text field, ready to spread. Not available on other value types. */
@@ -123,31 +126,38 @@ export function useForm<TValues extends Record<string, unknown>>({
   // Per call rather than at module scope, which is the difference from the stores these examples
   // used to carry: two forms on one page are two forms, not one shared draft.
   const [store] = useState(() => {
-    return createStore({ values: initialValues, shown: new Set<string>() }, ({ set }) => {
-      return {
-        change(name: string, value: unknown) {
-          set((s) => {
-            return { ...s, values: { ...s.values, [name]: value } };
-          });
-        },
-        /** Let these fields show their message from now on. */
-        reveal(names: readonly string[]) {
-          set((s) => {
-            const shown = new Set(s.shown);
-            for (const name of names) {
-              shown.add(name);
-            }
-            return { ...s, shown };
-          });
-        },
-        clear() {
-          set({ values: initialValues, shown: new Set() });
-        },
-      };
-    });
+    return createStore(
+      { values: initialValues, shown: new Set<string>(), changed: new Set<string>() },
+      ({ set }) => {
+        return {
+          change(name: string, value: unknown) {
+            set((s) => {
+              return {
+                ...s,
+                values: { ...s.values, [name]: value },
+                changed: new Set(s.changed).add(name),
+              };
+            });
+          },
+          /** Let these fields show their message from now on. */
+          reveal(names: readonly string[]) {
+            set((s) => {
+              const shown = new Set(s.shown);
+              for (const name of names) {
+                shown.add(name);
+              }
+              return { ...s, shown };
+            });
+          },
+          clear() {
+            set({ values: initialValues, shown: new Set(), changed: new Set() });
+          },
+        };
+      }
+    );
   });
 
-  const { values, shown } = useStore(store);
+  const { values, shown, changed } = useStore(store);
 
   const found = validate(values);
   // Built by copying rather than by `Object.fromEntries` + a cast: the keys come from the
@@ -185,7 +195,12 @@ export function useForm<TValues extends Record<string, unknown>>({
           store.change(name, event.target.value);
         },
         onBlur: () => {
-          store.reveal([name]);
+          // Only once they have actually typed something. Leaving an untouched field — which is
+          // what pressing any button does to the one the dialog autofocused — is not a mistake to
+          // report; the submit is where an empty required field gets named.
+          if (changed.has(name)) {
+            store.reveal([name]);
+          }
         },
         'aria-invalid': message !== undefined,
         // Omitted rather than empty when the field is clean: a describedby pointing at an element

@@ -35,7 +35,7 @@ export const SlideModalPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Corner toast"
-            description="align: 'start' pins a content-sized panel to the top of the cross axis; non-modal + portal keeps the page interactive. The countdown pauses while the pointer is over it — which is both a courtesy and the proof that the panel really does receive the pointer. Nothing here names the dialog: a toast is a status message, and role='status' with aria-live announces it without moving anyone."
+            description="align: 'start' pins a content-sized panel to the top of the cross axis; non-modal + portal keeps the page interactive. The countdown pauses while the pointer is over it — which is both a courtesy and the proof that the panel really does receive the pointer. It is still named, and the two facts do not fight: role='status' with aria-live is what announces the toast without moving anyone, while the accessible name is for the other way in — the element stays in the accessibility tree, so a screen reader's virtual cursor can land on it minutes later, and an unnamed one is announced there as just a dialog."
             codeKey="slide-corner-toast"
             modalId={SLIDE_CORNER_TOAST_ID}
             tryLabel="Show the toast"
