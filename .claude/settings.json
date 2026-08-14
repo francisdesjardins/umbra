@@ -37,5 +37,29 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git rebase:*)",
+      "Bash(git switch:*)",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)",
+      "Bash(docker system prune:*)",
+      "Bash(npm publish:*)",
+      "Bash(yarn npm publish:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)"
+    ]
   }
 }
