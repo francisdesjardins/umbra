@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import { FormHelperText, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useForm } from '@/shared/lib/use-form';
 import { useModal } from 'umbra/react';
@@ -46,6 +46,11 @@ export function MuiFormExample() {
     },
   });
 
+  // MUI wires the input's `aria-describedby` from `helperText`, so ours is dropped rather than
+  // spread onto a wrapper where it would name an element nobody renders.
+  const { 'aria-describedby': _nameDescribedBy, ...nameField } = form.field('name');
+  const { 'aria-describedby': _emailDescribedBy, ...emailField } = form.field('email');
+
   // The payload and the reasons are declared here, once: `action('submmit')` would not compile,
   // and the `switch` in `onClose` is exhaustive.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
@@ -70,33 +75,28 @@ export function MuiFormExample() {
           </FormModal.Header>
 
           <FormModal.Content>
+            {/* **`helperText`, not our own element, and this is the flavour difference the page
+                exists to show.** MUI owns `aria-describedby` on the input it renders and ignores
+                one handed to the wrapper — measured: our id reached the root and the input
+                announced nothing. So the association is MUI's to make here, and ours to make by
+                hand in the vanilla card. `describedBy` is dropped from the spread for that reason;
+                left in, it would sit on the `FormControl` pointing at an element nobody renders. */}
             <TextField
               fullWidth
               label="Name"
-              {...form.field('name')}
+              {...nameField}
               error={form.errors.name !== undefined}
+              helperText={form.errors.name ?? ''}
             />
-            {/* Rendered under the id `field()` pointed `aria-describedby` at, so the message is
-                announced rather than merely shown. MUI's own `helperText` would render its own id
-                and the reference would resolve to nothing. */}
-            {form.errors.name !== undefined && (
-              <FormHelperText error id={form.errorId('name')}>
-                {form.errors.name}
-              </FormHelperText>
-            )}
 
             <TextField
               fullWidth
               label="Email"
               type="email"
-              {...form.field('email')}
+              {...emailField}
               error={form.errors.email !== undefined}
+              helperText={form.errors.email ?? ''}
             />
-            {form.errors.email !== undefined && (
-              <FormHelperText error id={form.errorId('email')}>
-                {form.errors.email}
-              </FormHelperText>
-            )}
           </FormModal.Content>
 
           <FormModal.Footer>

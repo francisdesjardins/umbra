@@ -1,33 +1,31 @@
-import type { ChangeEvent } from 'react';
+import type { InputHTMLAttributes } from 'react';
 import styles from '@/entities/modal-template/ui/vanilla/form-modal/styles.module.css';
 
-type VanillaInputProps = {
-  readonly id?: string | undefined;
-  readonly type?: 'text' | 'email' | 'password' | undefined;
-  readonly value: string;
-  readonly onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+/**
+ * Everything an `<input>` takes, plus the one thing this template adds.
+ *
+ * **Spread, not enumerated, and that is the whole lesson of this file.** It used to declare
+ * `id`/`type`/`value`/`onChange`/`error`/`placeholder` and drop the rest on the floor — so
+ * `onBlur`, `name`, `aria-invalid` and `aria-describedby` never reached the element, and the
+ * card lost its blur-time validation and its error association with no error anywhere. The
+ * library's README gives the same warning about custom *button* wrappers and
+ * `aria-keyshortcuts`: a wrapper that spreads `...rest` forwards what it never thought of, and
+ * one that lists props forwards only what its author remembered.
+ */
+type VanillaInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  /** Paints the error boundary. Not `aria-invalid` — the caller sets that, and it is forwarded. */
   readonly error?: boolean | undefined;
-  readonly placeholder?: string | undefined;
 };
 
 export function VanillaInput({
-  id,
   type = 'text',
-  value,
-  onChange,
   error = false,
-  placeholder,
+  className,
+  ...rest
 }: VanillaInputProps) {
-  const className = [styles['input'], error ? styles['error'] : ''].filter(Boolean).join(' ');
+  const classes = [styles['input'], error ? styles['error'] : '', className ?? '']
+    .filter(Boolean)
+    .join(' ');
 
-  return (
-    <input
-      id={id}
-      type={type}
-      value={value}
-      onChange={onChange}
-      className={className}
-      placeholder={placeholder}
-    />
-  );
+  return <input type={type} className={classes} {...rest} />;
 }
