@@ -51,6 +51,35 @@ const log = createLogger('modal');
  * calls `umbra/react` and `umbra/solid` make in the same order — which is the claim the
  * architecture rests on, tested here by a consumer that is not a framework at all.
  *
+ * ## Server-rendered markup
+ *
+ * **This is the binding for it, and the only one that can be.** The other two build their own
+ * `<dialog>`; here the element is yours, so it can already be in the document when the script
+ * arrives — which is what server-rendering a dialog means.
+ *
+ * A dialog that **arrives open** is adopted: the store starts at `open` rather than at `closed`,
+ * so the DOM, the library and the screen agree from the first pass. Without that the store would
+ * start closed against an open element and the first style write would hide it — the element still
+ * reporting `open`, nothing visible, and no warning.
+ *
+ * **A server cannot render a *modal* dialog, and no library can change that.** The top layer is
+ * enterable only through `showModal()` from script, so an `open` attribute in HTML is by
+ * definition a non-modal open: no backdrop, nothing inert. Pass `nonModal: true` and the dialog is
+ * adopted where it stands. Leave it modal and it is **closed** on binding, with a warning under
+ * `setLogLevel` — because the alternative is claiming a containment the element does not have.
+ *
+ * So the pattern for a server-rendered page is: render the panel open if it should be open,
+ * declare it `nonModal`, and bind. For a modal, render it closed and call `open()`.
+ *
+ * ```html
+ * <!-- Sent by the server, on screen before this script is fetched. -->
+ * <dialog id="filters" open>…</dialog>
+ * ```
+ *
+ * ```ts
+ * bindDialog({ id: 'filters', dialog: document.getElementById('filters'), nonModal: true });
+ * ```
+ *
  * @example
  * const confirm = bindDialog<{ id: string }, 'approve' | 'decline'>({
  *   id: 'billing:confirm',

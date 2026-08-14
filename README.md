@@ -75,6 +75,7 @@ yours and outlives the controller.
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
 - **Shadow DOM** — a `<dialog>` inside a web component gets the library's backdrop (the sheet is adopted per root, since `adoptedStyleSheets` does not cross the boundary) and its focus policy asks that root rather than the document
 - **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `modal:open` / `modal:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
+- **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _modal_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
 - **Zero runtime dependencies** — `react` / `react-dom` and `solid-js` are _optional_ peers, each needed only by its own binding; `./vanilla` and the root need neither
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
@@ -231,7 +232,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `dialogPlacement` / `ModalAnimation` — where a non-modal dialog sits, and how any of them animates
 - `ModalOutlet` — render registered modals from one place instead of placing `{modal.Modal}`
 - `umbra/solid` — the three differences from the React chapter, all of them the renderer's, plus `fromStore`
-- `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, and reading state without a renderer
+- `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, reading state without a renderer, and what happens to a `<dialog>` the server sent already open
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close, and the `lookup` query API
 - `prioritize` — who is in front, as one project-wide rule, and the three costs of reordering a modal dialog
