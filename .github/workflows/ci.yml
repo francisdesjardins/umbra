@@ -100,9 +100,15 @@ jobs:
   # Pure Node — no browser launched. PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD keeps the
   # install from fetching browser binaries here.
   test-unit:
-    name: Unit Tests
+    name: Unit Tests (${{ matrix.shard }})
     needs: install
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/3', '2/3', '3/3']
+    env:
+      PLAYWRIGHT_SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v6
       - run: corepack enable
@@ -114,7 +120,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('yarn.lock') }}
-      - run: yarn test:unit
+      - run: yarn test:unit:shard
 
   # ── Component Tests ──────────────────────────────────────────────────────────
   # Runs inside the official Playwright image — browsers are pre-installed. The tag is derived
@@ -132,13 +138,16 @@ jobs:
   # throw away exactly the comparison that makes a cross-engine run worth paying for — "which engines
   # disagree" is the question, and a cancelled leg cannot answer it.
   test-component:
-    name: Component Tests (${{ matrix.browser }})
+    name: Component Tests (${{ matrix.browser }} / shard ${{ matrix.shard }})
     needs: install
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
+        shard: ['1/3', '2/3', '3/3']
+    env:
+      PLAYWRIGHT_SHARD: ${{ matrix.shard }}
     container:
       image: mcr.microsoft.com/playwright:v${{ needs.install.outputs.playwright-version }}-noble
       options: --user 1001
@@ -161,7 +170,7 @@ jobs:
           echo "bin=$bin" >> "$GITHUB_OUTPUT"
           echo "Yarn at $bin"
       - run: node ${{ steps.yarn.outputs.bin }} install --immutable
-      - run: node ${{ steps.yarn.outputs.bin }} test:component:${{ matrix.browser }}
+      - run: node ${{ steps.yarn.outputs.bin }} test:component:shard -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
       # Only when something failed. The report earns its keep on a red run — it carries the trace
       # `on-first-retry` recorded, which is the difference between reading a failure and
       # reproducing it — and on a green one it is an artifact nobody opens.
