@@ -512,10 +512,10 @@ export type DialogManager = {
   syncStackOrder(shownId?: string): void;
 
   /** Base z-index for dialog stacking. */
-  readonly Z_INDEX_BASE: number;
+  readonly zIndexBase: number;
 
   /**
-   * The computed z-index for a modal: `Z_INDEX_BASE` + its position in the open stack.
+   * The computed z-index for a modal: `zIndexBase` + its position in the open stack.
    *
    * A dialog that is not open has no stack position, so it gets the base — the same value the
    * bottom-most open one would get. That is the useful answer, because a closed dialog's stale
@@ -627,7 +627,7 @@ export function createDialogManager(): DialogManager {
    * base is not an option today, and making it one is a decision rather than an oversight: the
    * value only ever matters for non-modal dialogs, and no report has needed it.
    */
-  const Z_INDEX_BASE = 1300;
+  const zIndexBase = 1300;
 
   const registry = new Map<string, RegistryEntry>();
   const listeners = new Set<DialogManagerSubscriber>();
@@ -814,7 +814,7 @@ export function createDialogManager(): DialogManager {
     open.forEach((info, index) => {
       const element = registry.get(info.id)?.getDialog?.();
       if (element) {
-        stampZIndex(element, Z_INDEX_BASE + index);
+        stampZIndex(element, zIndexBase + index);
       }
     });
 
@@ -1190,14 +1190,14 @@ export function createDialogManager(): DialogManager {
     prioritize,
     syncStackOrder,
 
-    Z_INDEX_BASE,
+    zIndexBase,
 
     getZIndex(id: string): number {
       // openDialogs is already in stack order — the index *is* the stack position.
       const index = snapshotStore.getSnapshot().openDialogs.findIndex((d) => {
         return d.id === id;
       });
-      return Z_INDEX_BASE + (index >= 0 ? index : 0);
+      return zIndexBase + (index >= 0 ? index : 0);
     },
 
     subscribe(callback: DialogManagerSubscriber): () => void {

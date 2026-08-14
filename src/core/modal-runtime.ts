@@ -43,7 +43,7 @@ export type UnresolvedModalOptions = ModalVariant & {
 /** Every option a binding needs resolved before it can render or wire anything. */
 export type ResolvedModalOptions = {
   readonly isNonModal: boolean;
-  readonly shouldPortal: boolean;
+  readonly isPortaled: boolean;
   /** Modal variant only; `undefined` means "decide from whether any action was drawn". */
   readonly dismissOnBackdropClick: boolean | undefined;
   /** Non-modal variant only. */
@@ -69,11 +69,11 @@ export type ResolvedModalOptions = {
  */
 export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedModalOptions {
   const isNonModal = options.nonModal ?? false;
-  const shouldPortal = options.portal ?? false;
+  const isPortaled = options.portal ?? false;
 
   return {
     isNonModal,
-    shouldPortal,
+    isPortaled,
     dismissOnBackdropClick: options.nonModal !== true ? options.dismissOnBackdropClick : undefined,
     dismissOnClickOutside:
       options.nonModal === true ? (options.dismissOnClickOutside ?? false) : false,
@@ -89,7 +89,7 @@ export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedMo
     // rules — and why a contained dialog needs a host at all — live in `core/placement.ts`.
     placement: dialogPlacement({
       nonModal: isNonModal,
-      portal: shouldPortal,
+      portal: isPortaled,
       clip: options.clipContainer ?? false,
     }),
   };

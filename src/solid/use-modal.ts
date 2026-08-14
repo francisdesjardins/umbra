@@ -59,7 +59,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // The defaults and the variant narrowing, from the one place both bindings read them.
   const {
     isNonModal,
-    shouldPortal,
+    isPortaled,
     dismissOnBackdropClick,
     dismissOnClickOutside,
     dismissWhilePreparing,
@@ -301,7 +301,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   let Modal: JSX.Element = placed;
 
-  if (shouldPortal) {
+  if (isPortaled) {
     // **The one place the surface differs from React's, and it is the renderer's difference.**
     // React's `createPortal` produces a node the caller still has to render; a Solid modal owns
     // its element, so the binding mounts it here and `Modal` is `null`. Placing it anyway is

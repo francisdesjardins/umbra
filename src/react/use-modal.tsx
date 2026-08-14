@@ -75,7 +75,7 @@ export function useModal<TData = void, TReason extends string = string>(
   // The defaults and the variant narrowing, from the one place both bindings read them.
   const {
     isNonModal,
-    shouldPortal,
+    isPortaled,
     dismissOnBackdropClick,
     dismissOnClickOutside,
     dismissWhilePreparing,
@@ -210,10 +210,10 @@ export function useModal<TData = void, TReason extends string = string>(
     return () => {
       teardownModal(store, manager, modalId, getDialog());
     };
-    // `shouldPortal` is a dep (though unused in the body) because it, like `nonModal`,
+    // `isPortaled` is a dep (though unused in the body) because it, like `nonModal`,
     // changes the rendered structure — so toggling it while open must tear the modal down
     // too, otherwise the remounted-into-a-new-structure <dialog> is left stuck open.
-  }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, shouldPortal, store]);
+  }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, isPortaled, store]);
 
   // ── Backdrop click ──────────────────────────────────────────────────────
 
@@ -283,7 +283,7 @@ export function useModal<TData = void, TReason extends string = string>(
 
   let dialogNode: ReactNode;
 
-  if (shouldPortal) {
+  if (isPortaled) {
     dialogNode = createPortal(dialogElement, document.body);
   } else if (placement.host) {
     // The host `dialogPlacement` asked for: the dialog's `absolute` positioning resolves

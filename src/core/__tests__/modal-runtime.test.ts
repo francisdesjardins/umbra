@@ -32,7 +32,7 @@ test.describe('resolveModalOptions', () => {
   test('applies the defaults a bare modal relies on', () => {
     expect(resolveModalOptions({})).toMatchObject({
       isNonModal: false,
-      shouldPortal: false,
+      isPortaled: false,
       dismissWhilePreparing: true,
       dismissKey: 'Escape',
       template: 'modal',

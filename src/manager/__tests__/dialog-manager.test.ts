@@ -253,8 +253,8 @@ test.describe('createDialogManager', () => {
         return d.id;
       })
     ).toEqual(['a', 'b']);
-    expect(dm.getZIndex('a')).toBe(dm.Z_INDEX_BASE);
-    expect(dm.getZIndex('b')).toBe(dm.Z_INDEX_BASE + 1);
+    expect(dm.getZIndex('a')).toBe(dm.zIndexBase);
+    expect(dm.getZIndex('b')).toBe(dm.zIndexBase + 1);
 
     dm.close('b');
     b.transition('closed');

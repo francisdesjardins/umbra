@@ -95,8 +95,8 @@ test.describe('prioritize', () => {
     manager.open('panel');
 
     // It is what orders a *non-modal* dialog, which is never in the top layer.
-    expect(manager.getZIndex('panel')).toBe(manager.Z_INDEX_BASE);
-    expect(manager.getZIndex('warning')).toBe(manager.Z_INDEX_BASE + 1);
+    expect(manager.getZIndex('panel')).toBe(manager.zIndexBase);
+    expect(manager.getZIndex('warning')).toBe(manager.zIndexBase + 1);
   });
 
   test('it applies to dialogs already open, not only to the ones opened after', () => {
@@ -170,8 +170,8 @@ test.describe('prioritize', () => {
     manager.close('panel');
 
     expect(stackOf(manager)).toEqual(['other', 'warning']);
-    expect(manager.getZIndex('other')).toBe(manager.Z_INDEX_BASE);
-    expect(manager.getZIndex('warning')).toBe(manager.Z_INDEX_BASE + 1);
+    expect(manager.getZIndex('other')).toBe(manager.zIndexBase);
+    expect(manager.getZIndex('warning')).toBe(manager.zIndexBase + 1);
   });
 
   test('an id nobody prioritised keeps open order among its equals', () => {
@@ -210,8 +210,8 @@ test.describe('prioritize', () => {
     // decides who answers the dismiss key, so naming the panel sent Escape to the dialog underneath
     // while the user was looking at the one above it.
     expect(manager.lookup().isForeground('panel')).toBe(false);
-    expect(manager.getZIndex('panel')).toBe(manager.Z_INDEX_BASE);
-    expect(manager.getZIndex('modal')).toBe(manager.Z_INDEX_BASE + 1);
+    expect(manager.getZIndex('panel')).toBe(manager.zIndexBase);
+    expect(manager.getZIndex('modal')).toBe(manager.zIndexBase + 1);
   });
 
   test('and it holds with no policy at all, which is the default that changed', () => {
