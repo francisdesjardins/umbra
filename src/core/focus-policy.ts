@@ -1,5 +1,4 @@
 import { queryOwn } from '../utils/dialog-scope.js';
-import { focusFirstAvailable } from './attach-focus-containment.js';
 
 /**
  * Where a dialog's focus goes, as plain DOM functions.
@@ -8,10 +7,73 @@ import { focusFirstAvailable } from './attach-focus-containment.js';
  * opening focus, where focus landed, who was standing on the action that just ran, and how to
  * put focus back. A binding decides *when* to ask them; the answers are the same in every
  * framework, and a second binding that re-derived them would drift from this one.
+ *
+ * **Every read of who holds focus goes through {@link activeWithin}**, and that is the whole of
+ * why the scan below lives here rather than beside the containment it was written for: asking the
+ * `document` is wrong inside a shadow root, and a focus function in another file is a copy of that
+ * question waiting to be asked the wrong way.
  */
 
 /** The marker an action sets with `focusOnOpen` — see `ActionButtonProps`. */
 const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
+
+/** Everything Tab can stop on, in document order — the same set the browser walks. */
+const FOCUSABLE = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'iframe',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+/**
+ * Marks the containment markers, so they are never mistaken for content to send focus to. Set by
+ * `attach-focus-containment.ts` and read by the scan below, which is the only reason it is here.
+ *
+ * @internal
+ */
+export const FOCUS_GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
+
+/**
+ * Move focus to the first candidate that actually takes it, scanning from whichever end the
+ * caller names.
+ *
+ * **Asked rather than computed**, which is the other half of not predicting the tab order: a
+ * candidate that matches the selector but cannot hold focus — a container whose child is the real
+ * stop, an element the browser skips — simply fails to take focus, and the scan moves on. So a
+ * wrong guess costs a step instead of losing the keyboard.
+ *
+ * **The confirmation is `activeWithin`, not the document.** A shadow root answers the document
+ * with its *host*, so a candidate that took focus perfectly well failed the check: the scan walked
+ * the whole list, left the dialog on its **last** control instead of its first, and reported that
+ * nothing had taken it — which the Tab recovery reads as "do not swallow the key", so the press
+ * was then processed from wherever the scan had dumped focus.
+ *
+ * @returns Whether anything took it. The caller needs the answer before it swallows a key: a
+ *   dialog with nothing focusable in it would otherwise be a `preventDefault` and no move, which
+ *   is a Tab that does nothing for as long as the dialog is open.
+ * @internal
+ */
+export function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
+  const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (element) => {
+      return element.getAttribute(FOCUS_GUARD_ATTRIBUTE) === null;
+    }
+  );
+  if (fromEnd) {
+    candidates.reverse();
+  }
+
+  for (const candidate of candidates) {
+    candidate.focus();
+    if (activeWithin(dialog) === candidate) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Who holds focus, **as this dialog's own tree sees it**.
@@ -32,6 +94,24 @@ export function activeWithin(dialog: HTMLElement): Element | null {
 }
 
 /**
+ * Who holds focus **inside** the dialog's content, which is the question every caller here was
+ * spelling out for itself.
+ *
+ * `contains` is reflexive, so the dialog element is the one member of its own subtree that has to
+ * be excluded by hand — and a truthy wrong answer there is worse than a miss, because it satisfies
+ * every check the caller makes next. Stated once so the exclusion cannot be remembered in two
+ * places and forgotten in a third.
+ *
+ * @internal
+ */
+function focusInside(dialog: HTMLElement): HTMLElement | null {
+  const active = activeWithin(dialog);
+  return active instanceof HTMLElement && active !== dialog && dialog.contains(active)
+    ? active
+    : null;
+}
+
+/**
  * Hand the opening focus to the action that asked for it, and report where focus actually is.
  *
  * Scoped to the dialog's own content: a modal opened from inside this one renders its
@@ -45,10 +125,7 @@ export function activeWithin(dialog: HTMLElement): Element | null {
 export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | null {
   const claimed = queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR);
   claimed?.focus();
-  const active = activeWithin(dialog);
-  return active instanceof HTMLElement && active !== dialog && dialog.contains(active)
-    ? active
-    : null;
+  return focusInside(dialog);
 }
 
 /**
@@ -79,23 +156,17 @@ export function reclaimFocus(
 
   // **The floor, and it belongs to this path alone.** `restoreFocus` ends at `dialog.focus()`,
   // which an open `<dialog>` refuses — so a dialog with nothing to prefer and no `focusOnOpen`
-  // claim was left with the keyboard on `<body>`, on screen and unreachable. `contains` is
-  // reflexive, so a check for "focus is inside" answers *true* on the dialog element itself: the
-  // same trap `captureActionRunner` names, met from the other side.
+  // claim was left with the keyboard on `<body>`, on screen and unreachable.
   //
   // Not in `restoreFocus`, which also serves the restore after an action. There, focus landing on
   // the dialog is an outcome WebKit produces on purpose — it focuses the dialog rather than the
   // button on a click — and moving it to the first focusable would take the keyboard off the
   // button the user just pressed, which is the one place the retry belongs.
-  const landed = activeWithin(dialog);
-  if (landed === null || landed === dialog || !dialog.contains(landed)) {
+  if (focusInside(dialog) === null) {
     focusFirstAvailable(dialog, false);
   }
 
-  const active = activeWithin(dialog);
-  return active instanceof HTMLElement && active !== dialog && dialog.contains(active)
-    ? active
-    : null;
+  return focusInside(dialog);
 }
 
 /**
@@ -108,17 +179,13 @@ export function reclaimFocus(
  * @internal
  */
 export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLElement | null {
-  const active = dialog === null ? null : activeWithin(dialog);
-  return active instanceof HTMLElement &&
-    // `contains` is reflexive, and the dialog is the one element inside itself that can never be
-    // standing on an action. Letting it through is not a near-miss: it is a *truthy* wrong answer,
-    // so every fallback below is skipped and the restore puts focus back on the dialog — which is
-    // where it already was. WebKit is where this surfaces, because it focuses the dialog rather
-    // than the button when a button is clicked; the same read is correct by luck elsewhere.
-    active !== dialog &&
-    dialog?.contains(active) === true
-    ? active
-    : null;
+  // The dialog itself is the one element inside its own subtree that can never be standing on an
+  // action, and letting it through is not a near-miss: it is a *truthy* wrong answer, so every
+  // fallback behind it is skipped and the restore puts focus back on the dialog — which is where
+  // it already was. WebKit is where this surfaces, because it focuses the dialog rather than the
+  // button when a button is clicked; the same read is correct by luck elsewhere. `focusInside`
+  // owns that exclusion.
+  return dialog === null ? null : focusInside(dialog);
 }
 
 /**

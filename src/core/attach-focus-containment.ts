@@ -1,3 +1,4 @@
+import { FOCUS_GUARD_ATTRIBUTE, focusFirstAvailable } from './focus-policy.js';
 import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js';
 
 /**
@@ -51,61 +52,10 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * @internal Not part of the public API.
  */
 
-/** Everything Tab can stop on, in document order — the same set the browser walks. */
-const FOCUSABLE = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  'iframe',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',');
-
-/** Marks the two markers, so they are never mistaken for content to send focus to. */
-const GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
-
-/**
- * Move focus to the first candidate that actually takes it, scanning from whichever end the
- * caller names.
- *
- * **Asked rather than computed**, which is the other half of not predicting the tab order: a
- * candidate that matches the selector but cannot hold focus — a container whose child is the real
- * stop, an element the browser skips — simply fails to become `activeElement`, and the scan moves
- * on. So a wrong guess costs a step instead of losing the keyboard.
- *
- * @returns Whether anything took it. The caller needs the answer before it swallows a key: a
- *   dialog with nothing focusable in it would otherwise be a `preventDefault` and no move, which
- *   is a Tab that does nothing for as long as the dialog is open.
- *
- * Exported for `focus-policy.ts`, which needs the same scan for a different reason: an open
- * `<dialog>` refuses focus from script, so "put the keyboard back in this dialog" cannot end at
- * the element and has to end at the first thing inside it that will take it.
- * @internal
- */
-export function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
-  const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (element) => {
-      return element.getAttribute(GUARD_ATTRIBUTE) === null;
-    }
-  );
-  if (fromEnd) {
-    candidates.reverse();
-  }
-
-  for (const candidate of candidates) {
-    candidate.focus();
-    if (dialog.ownerDocument.activeElement === candidate) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /** A focusable marker that occupies nothing and shows nothing. */
 function createGuard(dialog: HTMLElement, position: 'start' | 'end'): HTMLElement {
   const guard = dialog.ownerDocument.createElement('div');
-  guard.setAttribute(GUARD_ATTRIBUTE, position);
+  guard.setAttribute(FOCUS_GUARD_ATTRIBUTE, position);
   guard.tabIndex = 0;
   // Zero-sized rather than hidden: `visibility: hidden` and `display: none` both take an element
   // out of the tab order, which is the one thing this must stay in.

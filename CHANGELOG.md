@@ -9,6 +9,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-14
+
+### Fixed — a raised dialog that claimed no opening focus gets a real floor under it
+
+A panel opening underneath a modal runs the platform's focusing steps and takes the keyboard from the
+dialog in front; `reclaimFocus` exists to undo that. With a `focusOnOpen` claim there is something to
+aim at and the repair worked. **Without one there was nothing**, and the fallback was `dialog.focus()`
+— which an open `<dialog>` refuses. So the modal stayed on screen with focus on `<body>`, where its
+keydown listener hears nothing and every hotkey but Escape is dead. The floor is the dialog's **first
+focusable** now.
+
+The arrangement is a microfrontend shell's, not a contrived one: a blocking "agent not detected"
+warning is already up and a route settles a non-modal panel beneath it.
+
+### Fixed — that floor asked the document who had focus, and a shadow root answers with the host
+
+The scan focuses a candidate and then asks who holds it, which is what lets a wrong guess cost a step
+instead of the keyboard. It asked `ownerDocument.activeElement` — the **one** raw read of that left in
+`src/`, every other focus check having moved to `activeWithin` when the core learned about roots. In a
+shadow tree the document answers with the _host_, so a candidate that took focus perfectly well failed
+the check: the scan walked the whole list and left the dialog on its **last** control instead of its
+first, then reported that nothing had taken it.
+
+**The wrong element is measured**, by a shadow-rooted copy of the harness the floor arrived with: it
+fails on Chromium and passes on WebKit and Firefox, which is why nothing caught it — the shadow-root
+tests the three bindings carry all claim `focusOnOpen`, so none of them ever reached the scan.
+
+There is a second consequence, and it is read off the code rather than measured — said so here rather
+than asserted as if it had been. `attachFocusContainment` uses the same report to decide whether to
+swallow a Tab pressed on the dialog element, and `false` means it does not: in a shadow root that
+recovery moved focus and then let the browser move it again from wherever the scan had left it.
+
+`focusFirstAvailable` lives in [core/focus-policy.ts](src/core/focus-policy.ts) now rather than in the
+containment it was written for. That is the fix rather than a tidy-up: the module's whole subject is
+who holds focus, `activeWithin` is the one way it asks, and a focus function in another file is that
+question waiting to be asked the wrong way again. It also keeps the dependency edge one-way, which
+importing `activeWithin` the other direction would not have.
+
+`focusInside` replaces the same predicate written out three times — the reflexive-`contains` exclusion
+that `captureActionRunner` documents as a _truthy_ wrong answer, and which the new floor had just
+become the fourth copy of.
+
 ## 2026-08-13
 
 ### Changed — the order the lifecycle is wired in is a decision the core makes now

@@ -3,6 +3,7 @@ import {
   OpeningFocusForegroundHarness,
   ReclaimFocusHarness,
   ReclaimWithoutClaimHarness,
+  ShadowReclaimWithoutClaimHarness,
 } from './opening-focus-foreground.story.js';
 
 /**
@@ -150,5 +151,29 @@ test.describe('a dialog that claimed no opening focus still gets its keyboard ba
       )
     ).toHaveCount(0);
     await expect(page.locator('dialog[data-modal-id="reclaim-no-claim"] :focus')).toHaveCount(1);
+  });
+
+  test('and it is the first control, not the last, inside a shadow root', async ({
+    mount,
+    page,
+  }) => {
+    // The floor focuses a candidate and then asks who holds it. Asked of the `document`, a shadow
+    // root answers with the *host*, so the confirmation fails on a candidate that took focus and
+    // the scan walks the whole list — leaving the dialog on its last control. Read through the
+    // root's own `activeElement`, which is the only place the true answer lives.
+    const component = await mount(<ShadowReclaimWithoutClaimHarness />);
+    await component.getByTestId('shadow-open-both').click();
+
+    await expect(page.locator('dialog[data-modal-id="shadow-reclaim-no-claim"]')).toBeVisible();
+    await expect(page.locator('dialog[data-modal-id="shadow-reclaim-panel"]')).toBeVisible();
+
+    await expect
+      .poll(async () => {
+        return page.evaluate(() => {
+          const host = document.querySelector('[data-testid="shadow-reclaim-host"]');
+          return host?.shadowRoot?.activeElement?.getAttribute('data-testid') ?? null;
+        });
+      })
+      .toBe('shadow-claimless-cancel');
   });
 });

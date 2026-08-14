@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Key, useModal } from '../../react.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
@@ -250,5 +251,79 @@ export function ReclaimWithoutClaimHarness() {
       {modal.Modal}
       {panel.Modal}
     </>
+  );
+}
+
+/**
+ * The same arrangement, in a **shadow root** — which is where the shell that produced it lives.
+ *
+ * The floor under the reclaim is "the first thing inside the dialog that will take focus", and it
+ * is reached by focusing a candidate and then asking who holds it. Asking `document` is the wrong
+ * question here — it answers with the *host* — so the confirmation fails on a candidate that took
+ * focus perfectly well, the scan walks on, and the dialog ends up on its **last** control instead
+ * of its first. Two focusable buttons is the smallest arrangement that can tell those apart.
+ */
+export function ShadowReclaimWithoutClaimHarness() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [shadow, setShadow] = useState<ShadowRoot | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null || host.shadowRoot !== null) {
+      return;
+    }
+    setShadow(host.attachShadow({ mode: 'open' }));
+  }, []);
+
+  const modal = useModal({
+    id: 'shadow-reclaim-no-claim',
+    ariaLabel: 'A modal in a shadow root that claims no opening focus',
+    render: ({ action }) => {
+      return (
+        <div style={dialogStyle}>
+          <button {...action('cancel')} data-testid="shadow-claimless-cancel" type="button">
+            Cancel
+          </button>
+          <button {...action('confirm')} data-testid="shadow-claimless-confirm" type="button">
+            Confirm
+          </button>
+        </div>
+      );
+    },
+  });
+
+  const panel = useModal({
+    id: 'shadow-reclaim-panel',
+    nonModal: true,
+    ariaLabel: 'A panel opening underneath, in the same root',
+    render: () => {
+      return (
+        <button data-testid="shadow-panel-button" type="button">
+          In the panel
+        </button>
+      );
+    },
+  });
+
+  return (
+    <div>
+      <button
+        data-testid="shadow-open-both"
+        onClick={() => {
+          void modal.open().then(() => {
+            return panel.open();
+          });
+        }}
+        type="button"
+      >
+        Open the modal, then the panel underneath
+      </button>
+      <div data-testid="shadow-reclaim-host" ref={hostRef} />
+      {/* Both dialogs share one root, which is the shape a widget mounted into a shadow root
+          takes: the panel's `show()` steals the keyboard from inside the same tree the modal's
+          reclaim has to search. */}
+      {shadow !== null && createPortal(modal.Modal, shadow)}
+      {shadow !== null && createPortal(panel.Modal, shadow)}
+    </div>
   );
 }

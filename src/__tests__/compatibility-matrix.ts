@@ -751,6 +751,17 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     },
   },
   {
+    fact: 'a raise hands the keyboard back to a dialog that claimed no `focusOnOpen`',
+    state: 'works',
+    why: 'A panel opening underneath runs the platform’s focusing steps and takes the keyboard from the dialog in front. `reclaimFocus` undoes it, and with a claim there is something to aim at — **without one there was not**: the fallback was `dialog.focus()`, which an open `<dialog>` refuses, so the modal stayed on screen with focus on `<body>` and every hotkey but Escape dead. The floor is the dialog’s **first focusable** instead. Which one that is depends on how the confirmation is read: focusing a candidate and asking the `document` who holds it is wrong inside a shadow root — it answers with the *host*, so the scan walks past a candidate that took focus and the dialog ends on its **last** control. `focusFirstAvailable` asks the dialog’s own root, which is the same read the rest of `focus-policy.ts` makes.',
+    reference: {
+      file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
+      title: 'a panel opening underneath does not leave focus on the body',
+    },
+    caveat:
+      'Proven on React only. The repair is core — `reclaimFocus` is reached through the director on every binding — so there is nothing binding-shaped to suspect, but nothing measured either.',
+  },
+  {
     fact: 'installing a policy over dialogs already open is minimal',
     state: 'partial',
     why: 'The top layer is not tracked until a policy exists, so the first plan compares against nothing and re-shows every open modal dialog, bottom-first. Seeding the tracking at install time would fix it — and would also make the focus restore above dead, which is a decision rather than a tidy-up. Installing at start-up costs nothing.',
