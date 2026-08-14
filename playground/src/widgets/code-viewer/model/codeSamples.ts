@@ -26,6 +26,7 @@ import mfeAuditSrc from '../../../../public/mfe/mfa4.js?raw';
 import mfeDistributionSrc from '../../../../vite-plugins/mfe-umbra.ts?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
+import sharedLibUseFormSrc from '@/shared/lib/use-form.ts?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
 import sharedLibSafeAwaitSrc from '@/shared/lib/safe-await.ts?raw';
 import sharedLibMutexSrc from '@/shared/lib/mutex.ts?raw';
@@ -431,6 +432,7 @@ export const codeSamples: Record<string, string> = {
   'shared-component-view-code-button': sharedComponentViewCodeButtonSrc,
   'shared-component-loading-button': sharedComponentLoadingButtonSrc,
   'shared-lib-use-query': sharedLibUseQuerySrc,
+  'shared-lib-use-form': sharedLibUseFormSrc,
   'shared-lib-async-state': sharedLibAsyncStateSrc,
   'shared-lib-safe-await': sharedLibSafeAwaitSrc,
   'shared-lib-mutex': sharedLibMutexSrc,

@@ -1,8 +1,9 @@
 import { ExampleLayout } from '@/entities/example/ui/ExampleLayout';
 import * as VanillaFormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import { createImmerStore } from '@/shared/lib/immer-store';
 import { Button } from '@mui/material';
+import { createResultStore } from '@/shared/lib/createResultStore';
+import { useForm } from '@/shared/lib/use-form';
 import { useModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -10,55 +11,42 @@ export const MODAL_ID = 'vanilla-form-example';
 
 type FormValues = { name: string; email: string };
 
-type FormState = {
-  result: string | null;
-  values: FormValues;
-  errors: Partial<FormValues>;
-};
+const resultStore = createResultStore();
 
-const INITIAL_STATE: FormState = {
-  result: null,
-  values: { name: '', email: '' },
-  errors: {},
-};
-
-const store = createImmerStore(INITIAL_STATE, (api) => {
-  return {
-    setValue(key: keyof FormValues, value: string) {
-      api.update((d) => {
-        d.values = { ...d.values, [key]: value };
-        if (d.errors[key] !== undefined) {
-          const { [key]: _removed, ...rest } = d.errors;
-          d.errors = rest;
-        }
-      });
-    },
-    setErrors(errors: Partial<FormValues>) {
-      api.update((d) => {
-        d.errors = errors;
-      });
-    },
-    resetForm() {
-      api.reset();
-    },
-    setResult(result: string | null) {
-      api.update((d) => {
-        d.result = result;
-      });
-    },
-  };
-});
-
+/**
+ * The same form as the MUI card, and the diff between the two files is the page's whole subject.
+ *
+ * Open both in the code viewer side by side: the `useForm` call is identical down to the
+ * validator, the `useModal` call is identical, and everything that differs is markup —
+ * `VanillaFormModal.Input` where the other has `TextField`, a `FieldError` where the other has
+ * `FormHelperText`. `field('email')` hands back plain DOM props, so a bare `<input>` takes them
+ * spread with no adapter, exactly as MUI's control does.
+ */
 export function VanillaFormExample() {
-  const { result, values, errors } = useStore(store);
+  const { result } = useStore(resultStore);
 
-  // Same two type arguments as the MUI version above — the hooks are identical, only the markup
-  // below differs. That is the whole point of this page.
+  const form = useForm<FormValues>({
+    id: MODAL_ID,
+    initialValues: { name: '', email: '' },
+    validate: (values) => {
+      return {
+        name: values.name ? undefined : 'Name is required',
+        email: !values.email
+          ? 'Email is required'
+          : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)
+            ? undefined
+            : 'Invalid email format',
+      };
+    },
+  });
+
+  // Same two type arguments as the MUI version — the hooks are identical, only the markup below
+  // differs. That is the whole point of this page.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {
-      store.resetForm();
+      form.reset();
     },
     render: ({ action, error }) => {
       return (
@@ -76,34 +64,34 @@ export function VanillaFormExample() {
           </VanillaFormModal.Header>
           <VanillaFormModal.Content>
             <VanillaFormModal.FieldGroup>
-              <VanillaFormModal.Label htmlFor="name">Name</VanillaFormModal.Label>
+              <VanillaFormModal.Label htmlFor={`${MODAL_ID}-name`}>Name</VanillaFormModal.Label>
               <VanillaFormModal.Input
-                id="name"
+                id={`${MODAL_ID}-name`}
                 type="text"
-                value={values.name}
-                onChange={(e) => {
-                  store.setValue('name', e.target.value);
-                }}
-                error={!!errors.name}
+                {...form.field('name')}
+                error={form.errors.name !== undefined}
               />
-              {errors.name && (
-                <VanillaFormModal.FieldError>{errors.name}</VanillaFormModal.FieldError>
+              {/* The id `field()` pointed `aria-describedby` at — rendered, or the reference
+                  resolves to nothing and a screen reader announces an error it cannot read. */}
+              {form.errors.name !== undefined && (
+                <VanillaFormModal.FieldError id={form.errorId('name')}>
+                  {form.errors.name}
+                </VanillaFormModal.FieldError>
               )}
             </VanillaFormModal.FieldGroup>
 
             <VanillaFormModal.FieldGroup>
-              <VanillaFormModal.Label htmlFor="email">Email</VanillaFormModal.Label>
+              <VanillaFormModal.Label htmlFor={`${MODAL_ID}-email`}>Email</VanillaFormModal.Label>
               <VanillaFormModal.Input
-                id="email"
+                id={`${MODAL_ID}-email`}
                 type="email"
-                value={values.email}
-                onChange={(e) => {
-                  store.setValue('email', e.target.value);
-                }}
-                error={!!errors.email}
+                {...form.field('email')}
+                error={form.errors.email !== undefined}
               />
-              {errors.email && (
-                <VanillaFormModal.FieldError>{errors.email}</VanillaFormModal.FieldError>
+              {form.errors.email !== undefined && (
+                <VanillaFormModal.FieldError id={form.errorId('email')}>
+                  {form.errors.email}
+                </VanillaFormModal.FieldError>
               )}
             </VanillaFormModal.FieldGroup>
           </VanillaFormModal.Content>
@@ -112,29 +100,12 @@ export function VanillaFormExample() {
             <Shared.Button
               variant="primary"
               {...action('submit', async (close) => {
-                const snap = store.getSnapshot();
-                const newErrors: Partial<FormValues> = {};
-                if (!snap.values.name) {
-                  newErrors.name = 'Name is required';
-                }
-                if (!snap.values.email) {
-                  newErrors.email = 'Email is required';
-                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(snap.values.email)) {
-                  newErrors.email = 'Invalid email format';
-                }
-
-                if (Object.keys(newErrors).length > 0) {
-                  store.setErrors(newErrors);
-                  return;
-                }
-
-                // Deterministic: this page's subject is the same hooks wearing two different
-                // UIs, and a submit that fails a third of the time makes that comparison a
-                // coin toss. The error states are demonstrated on the Modal Actions page.
-                await new Promise((resolve) => {
-                  setTimeout(resolve, 700);
+                await form.submit(async (values) => {
+                  await new Promise((resolve) => {
+                    setTimeout(resolve, 700);
+                  });
+                  close(values);
                 });
-                close(snap.values);
               })}
             >
               Create User
@@ -144,11 +115,11 @@ export function VanillaFormExample() {
       );
     },
     onClose: (closeResult) => {
-      if (closeResult.reason === 'submit' && closeResult.data) {
-        store.setResult(`User created: ${closeResult.data.name} (${closeResult.data.email})`);
-      } else {
-        store.setResult(`Form closed with reason: ${closeResult.reason}`);
-      }
+      resultStore.setResult(
+        closeResult.reason === 'submit' && closeResult.data
+          ? `User created: ${closeResult.data.name} (${closeResult.data.email})`
+          : `Form closed with reason: ${closeResult.reason}`
+      );
     },
   });
 

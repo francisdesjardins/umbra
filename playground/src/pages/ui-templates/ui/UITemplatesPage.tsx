@@ -178,6 +178,7 @@ const PATTERNS_GROUP: TemplateGroup = {
     { name: 'createSingleFlight', codeKey: 'shared-lib-single-flight' },
     { name: 'createImmerStore', codeKey: 'shared-lib-immer-store' },
     { name: 'useQuery (stand-in)', codeKey: 'shared-lib-use-query' },
+    { name: 'useForm (stand-in)', codeKey: 'shared-lib-use-form' },
   ],
 };
 
