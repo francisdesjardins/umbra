@@ -105,7 +105,7 @@ const flows = {
     // before any script exists — which is the condition the whole flow is about.
     const document_ = `<!doctype html>
 <html><head><meta charset="utf-8">
-<script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}<\/script>
+<script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}</script>
 </head><body>
 <dialog id="ssr-dialog" open><p>Rendered before any script ran.</p><button id="ssr-close">Close</button></dialog>
 <span id="pre-hydration"></span><span id="phase"></span>
@@ -128,7 +128,7 @@ const flows = {
   const showPhase = () => { document.getElementById('phase').textContent = bound.getSnapshot().phase; };
   bound.subscribe(showPhase);
   showPhase();
-<\/script>
+</script>
 </body></html>`;
 
     await page.route('**/__ssr-fixture', (route) => {

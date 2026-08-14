@@ -1,6 +1,4 @@
-import { CodePaneProvider } from '@/app/providers/CodePaneProvider/CodePaneProvider';
-import { ThemeProvider } from '@/app/providers/ThemeProvider/ThemeProvider';
-import { RootLayout } from '@/widgets/root-layout';
+import { AppRoot } from '@/app/AppRoot';
 import {
   createHashHistory,
   createRootRoute,
@@ -8,23 +6,6 @@ import {
   createRouter,
   lazyRouteComponent,
 } from '@tanstack/react-router';
-
-/**
- * The providers are composed here, not inside the layout.
- *
- * Composing the application's providers is `app`'s job by definition, and `RootLayout` is a
- * widget: a widget wrapping itself in two things it had to reach up into `app` for is the layer
- * order inverted. The shell renders the shell; this decides what surrounds it.
- */
-const AppRoot = () => {
-  return (
-    <ThemeProvider>
-      <CodePaneProvider>
-        <RootLayout />
-      </CodePaneProvider>
-    </ThemeProvider>
-  );
-};
 
 const rootRoute = createRootRoute({
   component: AppRoot,
