@@ -1,4 +1,5 @@
 import { queryOwn } from '../utils/dialog-scope.js';
+import { focusFirstAvailable } from './attach-focus-containment.js';
 
 /**
  * Where a dialog's focus goes, as plain DOM functions.
@@ -63,8 +64,8 @@ export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | nul
  * button the user just pressed — and re-honouring `focusOnOpen` instead would be a second theft
  * dressed as a repair. So the caller passes what it remembers (`lastFocusInside`), the
  * `focusOnOpen` claim is the floor under it — which is what a dialog that never held focus at all
- * gets, the case a dialog declining its opening focus leaves behind — and the dialog itself is the
- * floor under that, enough for its own keydown listener to hear a press.
+ * gets, the case a dialog declining its opening focus leaves behind — and the dialog's first
+ * focusable is the floor under that, enough for its own keydown listener to hear a press.
  *
  * @returns the element now holding focus inside the dialog, or `null` if focus is elsewhere — the
  *   same contract as {@link settleOpeningFocus}, so a caller can record it the same way.
@@ -75,6 +76,22 @@ export function reclaimFocus(
   preferred: HTMLElement | null
 ): HTMLElement | null {
   restoreFocus(dialog, preferredRestoreTarget(preferred, queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR)));
+
+  // **The floor, and it belongs to this path alone.** `restoreFocus` ends at `dialog.focus()`,
+  // which an open `<dialog>` refuses — so a dialog with nothing to prefer and no `focusOnOpen`
+  // claim was left with the keyboard on `<body>`, on screen and unreachable. `contains` is
+  // reflexive, so a check for "focus is inside" answers *true* on the dialog element itself: the
+  // same trap `captureActionRunner` names, met from the other side.
+  //
+  // Not in `restoreFocus`, which also serves the restore after an action. There, focus landing on
+  // the dialog is an outcome WebKit produces on purpose — it focuses the dialog rather than the
+  // button on a click — and moving it to the first focusable would take the keyboard off the
+  // button the user just pressed, which is the one place the retry belongs.
+  const landed = activeWithin(dialog);
+  if (landed === null || landed === dialog || !dialog.contains(landed)) {
+    focusFirstAvailable(dialog, false);
+  }
+
   const active = activeWithin(dialog);
   return active instanceof HTMLElement && active !== dialog && dialog.contains(active)
     ? active
@@ -109,7 +126,8 @@ export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLEleme
  *
  * Focusing a `disabled` element is a silent no-op, and focus left on `<body>` is a modal with no
  * keyboard — the dialog's keydown listener only hears keys raised inside it, so its hotkeys go
- * dead. So the preferred target is tried, then checked, and the dialog itself is the floor.
+ * dead. So the preferred target is tried, then checked, and the dialog itself is the floor —
+ * which is where WebKit puts it after a click anyway, and where the action restore wants it.
  *
  * @internal
  */

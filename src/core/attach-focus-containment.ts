@@ -77,8 +77,13 @@ const GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
  * @returns Whether anything took it. The caller needs the answer before it swallows a key: a
  *   dialog with nothing focusable in it would otherwise be a `preventDefault` and no move, which
  *   is a Tab that does nothing for as long as the dialog is open.
+ *
+ * Exported for `focus-policy.ts`, which needs the same scan for a different reason: an open
+ * `<dialog>` refuses focus from script, so "put the keyboard back in this dialog" cannot end at
+ * the element and has to end at the first thing inside it that will take it.
+ * @internal
  */
-function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
+export function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
   const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
     (element) => {
       return element.getAttribute(GUARD_ATTRIBUTE) === null;

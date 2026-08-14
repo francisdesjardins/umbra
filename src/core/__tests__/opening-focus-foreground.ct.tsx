@@ -2,6 +2,7 @@ import { expect, test } from '../../__tests__/ct-coverage.js';
 import {
   OpeningFocusForegroundHarness,
   ReclaimFocusHarness,
+  ReclaimWithoutClaimHarness,
 } from './opening-focus-foreground.story.js';
 
 /**
@@ -128,5 +129,26 @@ test.describe('taking the focus back', () => {
     await page.keyboard.press('Enter');
 
     await expect(page.locator('dialog[data-modal-id="rf-behind"]')).not.toBeVisible();
+  });
+});
+
+test.describe('a dialog that claimed no opening focus still gets its keyboard back', () => {
+  test('a panel opening underneath does not leave focus on the body', async ({ mount, page }) => {
+    // The defect this pins: `reclaimFocus` aimed only at a `focusOnOpen` marker and then fell
+    // through to `dialog.focus()`, which an open `<dialog>` refuses. A modal with no claim was
+    // left on screen with the keyboard on `<body>` — and from there Tab reaches nothing.
+    const component = await mount(<ReclaimWithoutClaimHarness />);
+    await component.getByTestId('open-both').click();
+
+    await expect(page.locator('dialog[data-modal-id="reclaim-no-claim"]')).toBeVisible();
+    await expect(page.locator('dialog[data-modal-id="reclaim-panel"]')).toBeVisible();
+
+    // Asserted as "nothing outside the modal holds it", which stays true wherever inside it landed.
+    await expect(
+      page.locator(
+        ':focus:not(dialog[data-modal-id="reclaim-no-claim"], dialog[data-modal-id="reclaim-no-claim"] *)'
+      )
+    ).toHaveCount(0);
+    await expect(page.locator('dialog[data-modal-id="reclaim-no-claim"] :focus')).toHaveCount(1);
   });
 });

@@ -190,3 +190,65 @@ export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean 
     </div>
   );
 }
+
+/**
+ * A modal that claims nothing, with a non-modal panel opening underneath it.
+ *
+ * The arrangement a microfrontend shell produces and no example did: a blocking dialog is already
+ * up — the shell's own "agent not detected" warning — and a route opening beneath it raises a
+ * non-modal panel. The panel's `show()` runs the platform's focusing steps and takes the keyboard
+ * from the modal, which is exactly what `reclaimFocus` exists to undo.
+ *
+ * **Neither button claims `focusOnOpen`, and that is the point.** With a claim there is something
+ * to aim at and the repair works; without one the reclaim used to fall through to `dialog.focus()`,
+ * which an open `<dialog>` refuses — so the keyboard was left on `<body>` with the modal on screen.
+ */
+export function ReclaimWithoutClaimHarness() {
+  const modal = useModal({
+    id: 'reclaim-no-claim',
+    ariaLabel: 'A modal that claims no opening focus',
+    render: ({ action }) => {
+      return (
+        <>
+          <button {...action('cancel')} data-testid="claimless-cancel" type="button">
+            Cancel
+          </button>
+          <button {...action('confirm')} data-testid="claimless-confirm" type="button">
+            Confirm
+          </button>
+        </>
+      );
+    },
+  });
+
+  const panel = useModal({
+    id: 'reclaim-panel',
+    nonModal: true,
+    ariaLabel: 'A panel opening underneath',
+    render: () => {
+      return (
+        <button data-testid="panel-button" type="button">
+          In the panel
+        </button>
+      );
+    },
+  });
+
+  return (
+    <>
+      <button
+        data-testid="open-both"
+        onClick={() => {
+          void modal.open().then(() => {
+            return panel.open();
+          });
+        }}
+        type="button"
+      >
+        Open the modal, then the panel underneath
+      </button>
+      {modal.Modal}
+      {panel.Modal}
+    </>
+  );
+}
