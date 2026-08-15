@@ -147,6 +147,88 @@ importing `activeWithin` the other direction would not have.
 that `captureActionRunner` documents as a _truthy_ wrong answer, and which the new floor had just
 become the fourth copy of.
 
+### Added — `bindDialog` adopts a dialog the server sent already open
+
+A page can arrive with `<dialog open>` in served HTML — that is what server-rendering a panel means
+— and `bindDialog` then met an element that was open while its brand-new store said `closed`.
+Measured on all three engines before anything was touched: `open=true`, `phase=closed`,
+`display=none`. The DOM reported open, the store reported closed, the user saw nothing, and nothing
+warned.
+
+**Adoption is only honest for a non-modal dialog, and that is a platform law rather than a policy.**
+The top layer is enterable only through `showModal()` from script, so an `open` attribute in HTML is
+by definition a non-modal open — no backdrop, nothing inert. It is the one thing SSR cannot hand a
+dialog. A non-modal one is adopted where it stands; a modal one is closed with a warning, because
+the caller asked for the top layer and the only way in is to open it again from script.
+
+Stated on `bindDialog`'s own JSDoc, which is what reaches `/api`, and in the README — "can I
+server-render this" is asked before installing rather than after. It is `umbra/vanilla`'s alone and
+can only be: the other two bindings build their own element.
+
+### Added — shadow-root tests for React and Solid, which had been claiming it on vanilla's
+
+`yarn todo` listed `✓ untested` against both hook bindings for "a dialog inside a shadow root" — the
+matrix's word for a cell that says yes with nothing behind it. `umbra/vanilla` had carried the test
+since a microfrontend frame found the problem, and the other two rested on it.
+
+Each now has its own, in the shape that binding actually meets the case: React portals the dialog
+into the root with `createPortal`, Solid renders the whole app into it. Both assert the two things a
+shadow boundary breaks, and **both fail quietly rather than throwing**, which is why claiming them
+untested was worse than claiming them broken — `adoptedStyleSheets` does not cross the boundary, so
+the dialog falls back to the UA backdrop (measured `rgba(0, 0, 0, 0.1)` against the library's
+`0.7`), and `document.activeElement` answers with the _host_, so a focus policy reading it concludes
+focus has left the dialog on every check.
+
+### Changed — the playground's layer rule is a gate now, because prose was not holding it
+
+`playground/CLAUDE.md` states that imports run downward only and that a slice is entered through its
+public entry. Measured across 222 files, neither was true.
+
+Four imports ran upward, three with the same cause: a context defined in `app/providers/*` that a
+lower layer needed. Those contracts move to `shared/lib/{theme-context,code-pane-context}` and the
+providers stay in `app`, where owning the MUI theme object and the persistence belongs. The fourth
+was `RootLayout` — a _widget_ — wrapping the application in both providers, which it had to reach
+into `app` to get; composing the application's providers is `app`'s job by definition, so
+`router.tsx` does it and the shell renders the shell.
+
+Thirty cross-slice imports went straight at a `ui/` file whose barrel already exported the name —
+`@/entities/example/ui/ExampleLayout` twenty-five times, against an `index.ts` that had exported it
+all along. Rewritten to the public entry, no barrel added. `useCodePane` is deliberately **not**
+re-exported from the code-viewer barrel after its move: two doors onto one hook is how the upward
+import gets back in through the second one.
+
+Both halves are `playground/src/__tests__/fsd-layers.test.ts` now, with its two exemptions written
+down as decisions rather than left as silence.
+
+### Changed — the CI matrix shards the unit suite and stops sharding the component one
+
+The component matrix was cut three ways by shard _and_ three ways by engine — nine jobs, each paying
+for its own Playwright container and its own `yarn install --immutable`, to parallelise a suite
+whose slowest engine already finishes in about three minutes.
+
+The engine split is the one worth having: "which engines disagree" is the question, and `fail-fast:
+false` is what protects it. Sharding on top buys wall-clock the setup cost gives straight back, and
+triples the number of legs that can flake independently — on a suite whose flake that week was
+load-induced. So it is one job per browser again. The unit suite keeps its three shards: one Node
+process against pure functions splits into equal thirds and pays nothing but startup.
+
+`test:component:shard` stays in `package.json`. It is the right tool locally, where the full
+three-engine run is the long pole and there is no container to build.
+
+### Fixed — `yarn check` did not deny lint warnings, so three had accumulated invisibly
+
+The Stop hook denied them and `yarn check` did not — and the documented pre-commit gate is the one
+people run. `check` and `verify:all` deny them now; `lint` stays permissive for interactive use.
+
+The three that had slipped through: two `no-useless-escape` on `<\/script>` in a smoke flow, where
+the string is an HTTP response body rather than HTML embedded in a script tag, so the backslash
+bought nothing; and `only-export-components` on `router.tsx`, where a module exporting a component
+_and_ something else costs Fast Refresh the whole file — `AppRoot` moved to `app/AppRoot.tsx`.
+
+Two non-findings recorded so they are not re-investigated: the three `eslint-disable` comments are
+load-bearing rather than dead (removing one makes `typescript(only-throw-error)` fire, so oxlint
+honours the eslint-style name), and the stray `eslint*.ps1` shims at the root no longer exist.
+
 ## 2026-08-13
 
 ### Changed — the order the lifecycle is wired in is a decision the core makes now
