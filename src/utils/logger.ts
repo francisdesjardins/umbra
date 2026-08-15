@@ -187,6 +187,14 @@ function matches(namespace: string): boolean {
 
 // ── Logger type ─────────────────────────────────────────────────────────────
 
+/**
+ * The structured half of a log line — an object, or a thunk that builds one.
+ *
+ * **The thunk is only worth writing because it is not called when the namespace is off**, which is
+ * the state a shipped application is always in: logging is opt-in through `localStorage`. So a
+ * detail that costs something to assemble — a snapshot read, a list of open ids, anything walked
+ * out of the DOM — is written at the call site and paid for only by the person debugging.
+ */
 export type LogData = Record<string, unknown> | (() => Record<string, unknown>);
 
 export type Logger = {
@@ -199,6 +207,22 @@ export type Logger = {
 };
 
 // ── Factory ─────────────────────────────────────────────────────────────────
+
+/**
+ * The badge colour for a namespace: its own, or the nearest ancestor's.
+ *
+ * Nearest rather than first: `modal:lifecycle:deep` takes `modal:lifecycle`'s colour, so a family
+ * that has split its own hue out keeps it down the whole branch.
+ */
+function resolveColor(namespace: string): string {
+  if (colors[namespace]) {
+    return colors[namespace];
+  }
+  const idx = namespace.lastIndexOf(':');
+  // The unknown-namespace fallback is a badge like the rest, so it takes the same ink: `#999`
+  // reached only 4.36:1 against it where every named colour clears 5.
+  return idx !== -1 ? resolveColor(namespace.slice(0, idx)) : '#B0B0B0';
+}
 
 /**
  * Create a namespaced logger instance.
@@ -214,16 +238,6 @@ export type Logger = {
  *
  * @internal
  */
-function resolveColor(namespace: string): string {
-  if (colors[namespace]) {
-    return colors[namespace];
-  }
-  const idx = namespace.lastIndexOf(':');
-  // The unknown-namespace fallback is a badge like the rest, so it takes the same ink: `#999`
-  // reached only 4.36:1 against it where every named colour clears 5.
-  return idx !== -1 ? resolveColor(namespace.slice(0, idx)) : '#B0B0B0';
-}
-
 export function createLogger(namespace: string): Logger {
   const color = resolveColor(namespace);
   const prefix = `dialog:${namespace}`;
