@@ -13,6 +13,9 @@ import type { ModalAnimation, ModalPhase } from '../core/types.js';
  * getPrimaryTransitionProperty('transform'); // "transform"
  */
 export function getPrimaryTransitionProperty(transitionProp: string): string {
+  // `split` never answers an empty array, so `[0]` is always there: the optional chain and the
+  // fallback are `noUncheckedIndexedAccess` tax rather than cases, and are why this line is not
+  // fully covered.
   return transitionProp.split(',')[0]?.trim() ?? transitionProp;
 }
 

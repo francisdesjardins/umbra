@@ -16,6 +16,8 @@ function parse(def: HotkeyDef): {
   readonly meta: boolean;
 } {
   const parts = def.split('+');
+  // `split` never answers an empty array, so `pop` never answers `undefined`: the fallback is
+  // `noUncheckedIndexedAccess` tax rather than a case, and is why this line is not fully covered.
   const key = parts.pop() ?? def;
   const mods = new Set(
     parts.map((p) => {
