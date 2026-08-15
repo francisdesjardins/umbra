@@ -20,6 +20,7 @@
  */
 
 import { BODY_LOCK_ATTR } from '../core/dialog-styles.js';
+import { createLockLedger } from './lock-ledger.js';
 
 /**
  * Custom property published on `:root` while the lock is held, holding the width the lock
@@ -35,18 +36,11 @@ export const SCROLLBAR_WIDTH_VAR = '--dialog-scrollbar-width';
 export { BODY_LOCK_ATTR };
 
 /**
- * Who currently wants the body locked.
- *
- * Module-level because the lock target (`document.body`) is global — two manager instances
- * share one body. A shared *boolean* is not enough, though: each manager calls
- * `unlockBodyScroll()` whenever it observes a transition and finds no modal dialog open, and
- * with last-writer-wins that releases a lock another manager is still holding. A page with a
- * provider-scoped manager next to the singleton would then scroll behind an open modal.
- *
- * So the lock is claimed per owner and released only when the last claim goes. Claims are
- * idempotent, which is also what keeps stacked modals within one manager from double-padding.
+ * Who currently wants the body locked — module-level, because the lock target is: `document.body`
+ * is one body however many managers a page builds. The ownership rule and what it prevents are
+ * {@link createLockLedger}'s.
  */
-const owners = new Set<object>();
+const ledger = createLockLedger();
 /** Body's own inline `padding-right` before we touched it (`null` when we didn't). */
 let restorePaddingRight: string | null = null;
 
@@ -93,12 +87,10 @@ export function computeScrollCompensation(gutterBefore: number, gutterAfter: num
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */
 export function lockBodyScroll(owner: object): void {
-  if (typeof document === 'undefined' || owners.has(owner)) {
-    return;
-  }
-  const wasUnlocked = owners.size === 0;
-  owners.add(owner);
-  if (!wasUnlocked) {
+  // The document guard comes first, so a server render cannot seed the ledger with a claim that
+  // applied nothing — which is what would keep the first real lock in a hydrated page from ever
+  // taking effect.
+  if (typeof document === 'undefined' || !ledger.claim(owner)) {
     return;
   }
 
@@ -134,7 +126,7 @@ export function lockBodyScroll(owner: object): void {
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */
 export function unlockBodyScroll(owner: object): void {
-  if (typeof document === 'undefined' || !owners.delete(owner) || owners.size > 0) {
+  if (typeof document === 'undefined' || !ledger.release(owner)) {
     return;
   }
 

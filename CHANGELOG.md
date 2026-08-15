@@ -11,6 +11,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Changed — the scroll lock's ownership is a decision now, so the rule it protects can fail a test
+
+`lockBodyScroll` held an eleven-line comment about a `Set` and no test of what the comment says.
+Every line of the rule — a claim is idempotent, the lock applies on the first claim only, it is let
+go when the last claim goes, an owner that never claimed releases nothing — sat behind
+`typeof document === 'undefined'`, which is the branch the unit project always takes. The only
+thing that could reach it was a component test standing up two managers at once, and that test
+proves the composite behaviour rather than the rule.
+
+`createLockLedger` (`manager/lock-ledger.ts`) is the rule, beside `stack-order.ts` and for the same
+reason: a decision the manager makes, extracted from the DOM that acts on it. It answers one
+question — _is this call the edge?_ — because a caller handed the `Set` has to restate the
+transition rule to read an answer out of it, and the restatement is what drifts.
+
+Both entry points read the same afterwards and the `wasUnlocked` dance is gone:
+`if (typeof document === 'undefined' || !ledger.claim(owner)) return;`. The document guard stays
+ahead of the claim, which is a contract of its own — a server render that seeded the ledger would
+leave the first real lock in a hydrated page unable to apply.
+
+Twelve tests, including the two that had nowhere to live before: a second owner's release is not
+the edge (the last-writer-wins defect the ledger exists for), and owners are identity, so two
+manager tokens that are both `{}` are two claimants rather than one.
+
+`manager/scroll-lock.ts` 71.05% → 72.92%, `lock-ledger.ts` at 100%, unit coverage 94.88% → 95.02%.
+The file it left is still mostly the DOM half, and that is the honest shape: what moved out is the
+part that was never about a document.
+
 ### Fixed — the Tab recovery could hand focus to a control belonging to a nested dialog
 
 Left open this morning as "argued from the code, not measured", with the one arrangement to build
