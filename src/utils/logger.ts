@@ -49,6 +49,8 @@
  * capture `console` output.
  */
 
+import { createSafeStorage } from './safe-storage.js';
+
 const storageKey = 'dialog:log';
 
 // ── Namespace colors (visible in browser devtools) ──────────────────────────
@@ -116,51 +118,23 @@ function nextLogId(): string {
 let sessionOverride: string | null | undefined;
 
 /**
- * Whether this environment has a usable `localStorage`, probed once.
+ * Where a persisted pattern lives, with every way of failing to reach it already answered by
+ * {@link createSafeStorage} — which is also what makes the probe happen once rather than on every
+ * log call.
  *
- * `undefined` until asked; `null` once we know it has none — and caching *that* is the point.
- * Reading the pattern on every log call is deliberate (setting the key in devtools takes effect
- * without a reload), but the `globalThis.localStorage` property access is not free everywhere:
- * Node defines it as a getter that returns `undefined` and emits a process warning unless the
- * process was started with `--localstorage-file`. Nothing throws, so a `try`/`catch` cannot
- * quiet it — only not looking again can. A worker, an SSR render and the unit suite all land
- * here, and a dialog manager has no business printing warnings in any of them.
+ * The environment question is the part that belongs here: `localStorage` is a `Window` API, so ask
+ * whether there is a window, and ask it in a way that never touches the getter. Touching it is the
+ * thing that warns — Node exposes it as a getter that emits a process warning unless the process
+ * was started with `--localstorage-file`, and a dialog manager has no business printing that in a
+ * worker, an SSR render or a test run.
  */
-let storage: Storage | null | undefined;
-
-function getStorage(): Storage | null {
-  if (storage !== undefined) {
-    return storage;
-  }
-
-  // `localStorage` is a `Window` API, so the question is whether there is a window — asked in a
-  // way that never touches the getter, because touching it is the thing that warns.
-  if (typeof globalThis.window === 'undefined') {
-    storage = null;
-    return storage;
-  }
-
-  try {
-    // Non-null once a window exists — and where it is not, the access throws rather than
-    // answering `undefined`, which is what the catch is for.
-    storage = globalThis.localStorage;
-  } catch {
-    // A browser can refuse outright — a sandboxed iframe, or storage blocked entirely.
-    storage = null;
-  }
-  return storage;
-}
+const storage = createSafeStorage(() => {
+  return typeof globalThis.window === 'undefined' ? null : globalThis.localStorage;
+});
 
 function getPattern(): string | null {
-  if (sessionOverride !== undefined) {
-    return sessionOverride;
-  }
-  try {
-    return getStorage()?.getItem(storageKey) ?? null;
-  } catch {
-    // Reading can still fail after the probe succeeded — storage quota or permission changes.
-    return null;
-  }
+  // Read on every call on purpose: setting the key in devtools then takes effect without a reload.
+  return sessionOverride === undefined ? storage.read(storageKey) : sessionOverride;
 }
 
 const namespacePrefix = 'dialog:';
@@ -294,20 +268,12 @@ export function setLogLevel(pattern: string | false, persist = false): void {
   if (pattern === false) {
     sessionOverride = null;
     if (persist) {
-      try {
-        getStorage()?.removeItem(storageKey);
-      } catch {
-        /* Storage present but refusing the write. */
-      }
+      storage.remove(storageKey);
     }
   } else {
     sessionOverride = pattern;
     if (persist) {
-      try {
-        getStorage()?.setItem(storageKey, pattern);
-      } catch {
-        /* Storage present but refusing the write — a full quota, or private mode. */
-      }
+      storage.write(storageKey, pattern);
     }
   }
 }

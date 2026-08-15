@@ -11,6 +11,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — the storage probe re-ran forever in the one environment it was written for
+
+`getStorage()` memoised into `let storage: Storage | null | undefined`, where `undefined` meant
+"not asked yet" — and the probe assigned `globalThis.localStorage` straight into it. The DOM lib
+types that as a non-optional `Storage`, so nothing complained; at runtime a `window` with no
+storage on it answers `undefined`, which the memo then read as "not asked yet" and probed again.
+On every log call, forever.
+
+That is precisely the cost the memo exists to prevent, and its own comment says so: Node exposes
+`localStorage` as a getter that emits a process warning unless the process was started with
+`--localstorage-file`, "nothing throws, so a `try`/`catch` cannot quiet it — only not looking again
+can". A jsdom without storage, a WebView, a partial SSR global: each one looks again. The sentinel
+and the value were the same variable, and remembering _absence_ is the case that mattered most.
+
+### Changed — Web Storage failure is a decision now, with all three of its failures reachable
+
+`createSafeStorage` (`utils/safe-storage.ts`) takes a probe and returns three methods that cannot
+fail: a read answers `null`, a write and a remove are no-ops. The probe is called at most once —
+a separate `probed` flag, which is what makes the fix above structural rather than a patch — and is
+allowed to throw or to answer nothing, all remembered alike.
+
+It is an extraction for the reason the scroll lock's ledger was one: the rule was welded to
+`globalThis`, so **neither project could reach it**. The unit project is Node, so the probe answered
+`null` before touching anything and every path behind it was dead; the component project has a
+browser, where storage always works, so a storage that _refuses_ cannot be arranged there either.
+Between them, three documented real failures had no test and could not have one — a sandboxed
+`<iframe>` raising `SecurityError` on the property access, a quota exceeded on write, a permission
+revoked between two reads.
+
+Eleven tests, including the regression for the sentinel and the two that say why the write must
+stay silent: `setLogLevel('*', true)` has already set the session override by the time the write
+happens, so logging is on either way and only its survival across a reload is at stake.
+
+`utils/logger.ts` 94.9% → 100% statements and 78.8% → 97.3% branches; the branch left is the
+`typeof globalThis.window` question itself, which is the environment-specific two lines that stayed
+behind. Unit coverage 95.30% → 95.63%, branches 94.48% → 96.19%.
+
 ### Fixed — `createLogger`'s documentation was on the private helper above it
 
 The block naming the function, its parameter, its return and its four-line `@example` sat on
