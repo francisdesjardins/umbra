@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { keyboardEvent } from '../../__tests__/fake-events.js';
 import { setLogLevel } from '../../utils/logger.js';
-import { createActionEngine } from '../action-engine.js';
+import { createActionEngine, runDeclarationWindow } from '../action-engine.js';
 
 /**
  * The action engine, on its own.
@@ -141,6 +141,95 @@ test.describe('the declaration window', () => {
     engine.declare('ok', undefined);
     expect(engine.hasActions()).toBe(true);
     expect(engine.matchHotkey(keyboardEvent('Enter'))).toBeNull();
+  });
+});
+
+/**
+ * `runDeclarationWindow` — four lines with two reasons to exist, and neither had an assertion.
+ *
+ * Both hook bindings wrap their `render` in it, so it is the shape of every declaration pass the
+ * library performs; the whole of what it adds over calling `beginRender` and `endRender` in a row
+ * is what happens when the call between them throws.
+ */
+test.describe('the declaration window as a wrapper', () => {
+  test('hands the render’s value back, having opened and closed the window around it', () => {
+    const engine = createActionEngine<void, 'save'>('wrap');
+    const seen: string[] = [];
+
+    const content = runDeclarationWindow(
+      {
+        beginRender() {
+          seen.push('begin');
+          engine.beginRender();
+        },
+        endRender() {
+          seen.push('end');
+          engine.endRender();
+        },
+      },
+      () => {
+        seen.push('render');
+        engine.declare('save', 'Enter');
+        return 'the rendered node';
+      }
+    );
+
+    expect(content).toBe('the rendered node');
+    expect(seen).toEqual(['begin', 'render', 'end']);
+    expect(engine.ownsHotkey('Enter')).toBe(true);
+  });
+
+  test('a render that throws still closes the window, and the throw is not swallowed', () => {
+    // The `finally` is the whole point. A binding whose `render` throws is a binding whose error
+    // boundary is about to take over — and it must not inherit an engine left mid-pass.
+    const engine = createActionEngine<void, 'save'>('throwing');
+    let closed = false;
+
+    expect(() => {
+      runDeclarationWindow(
+        {
+          beginRender() {
+            engine.beginRender();
+          },
+          endRender() {
+            closed = true;
+            engine.endRender();
+          },
+        },
+        (): string => {
+          engine.declare('save', 'Enter');
+          throw new Error('render blew up');
+        }
+      );
+    }).toThrow('render blew up');
+
+    expect(closed).toBe(true);
+  });
+
+  test('the pass a throw abandoned does not leave a half-built table behind', () => {
+    // The observable cost of a window that never closed: `endRender` is what swaps the pending
+    // table in, so without it every later `hasActions()` — the backdrop-click opt-in — answers
+    // from a pass that never finished.
+    const engine = createActionEngine<void, 'save' | 'cancel'>('abandoned');
+
+    runDeclarationWindow(engine, () => {
+      engine.declare('save', 'Enter');
+      engine.declare('cancel', 'Escape');
+    });
+    expect(engine.ownsHotkey('Escape')).toBe(true);
+
+    expect(() => {
+      runDeclarationWindow(engine, (): void => {
+        engine.declare('save', 'Enter');
+        throw new Error('half a pass');
+      });
+    }).toThrow('half a pass');
+
+    // The interrupted pass declared `save` and nothing else, and that is exactly what is live:
+    // the swap happened, so `cancel` is retired rather than surviving on a stale table.
+    expect(engine.ownsHotkey('Enter')).toBe(true);
+    expect(engine.ownsHotkey('Escape')).toBe(false);
+    expect(engine.hasActions()).toBe(true);
   });
 });
 
