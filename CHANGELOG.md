@@ -11,6 +11,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `createLogger`'s documentation was on the private helper above it
+
+The block naming the function, its parameter, its return and its four-line `@example` sat on
+`resolveColor`, which is a colour lookup that happens to take a `namespace: string` too — which is
+how it went unread. `createLogger` itself had no doc at all. Moved onto the function it describes,
+and `resolveColor` given the one sentence it actually needs: nearest ancestor, not first, which is
+what keeps `modal:lifecycle:deep` on its parent's hue.
+
+### Added — the lazy `LogData` thunk, whose only reason to exist is not being called
+
+`LogData` has accepted a thunk since it was written, `Logger` documents it on all three channels,
+and nothing had ever passed one — no call site in the library, and no test. The half worth pinning
+is the negative one: a thunk must not run while the namespace is off, which is the state a shipped
+application is always in, since logging is opt-in through `localStorage`. A thunk that ran anyway
+would assemble a detail on every transition for a line nobody prints — strictly worse than passing
+the object.
+
+Three tests: the thunk's result is the data argument, it reaches `warn` and `error` as well as
+`debug`, and it is not called when the namespace is silent — including when an _unrelated_
+namespace is enabled, since it is `matches(namespace)` and not the presence of a pattern that
+decides.
+
+The form is kept rather than removed on the strength of that contract; it is still worth knowing
+that nothing in `src/` uses it today.
+
 ### Added — eight of the fourteen shapes `HotkeyDef` names had never reached `parseHotkey`
 
 `parseHotkey`'s `switch` is a second writing of the union, one arm per modifier arrangement, each
