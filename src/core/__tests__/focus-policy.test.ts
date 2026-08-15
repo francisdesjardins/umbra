@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseActionRunner } from '../focus-policy.js';
+import { chooseActionRunner, preferredRestoreTarget } from '../focus-policy.js';
 
 /**
  * The ordering that decides who a settled action hands focus back to.
@@ -71,5 +71,46 @@ test.describe('chooseActionRunner', () => {
     const focused = live('focused');
     const result = chooseActionRunner(focused, live('activated'), live('lastFocused'));
     expect(result?.name).toBe('focused');
+  });
+});
+
+/**
+ * The other half of the restore decision, and the sibling `chooseActionRunner` names.
+ *
+ * Its `HTMLElement` signature was never a DOM dependency — `isConnected` is the whole of what it
+ * reads — so it sat in a browser-only file with no unit test while the function directly beneath it
+ * had nine. The two are asked in sequence at every restore: this one picks between a runner and the
+ * opening focus, `chooseActionRunner` decides which candidate is the runner in the first place.
+ */
+test.describe('preferredRestoreTarget', () => {
+  test('a connected runner wins over the opening focus', () => {
+    const runner = { isConnected: true };
+    const opening = { isConnected: true };
+    expect(preferredRestoreTarget(runner, opening)).toBe(runner);
+  });
+
+  test('a disconnected runner falls through to the opening focus', () => {
+    // The button re-rendered away while its action ran — the case `chooseActionRunner`'s doc
+    // records as the second thing the old `??` chain got wrong.
+    const opening = { isConnected: true };
+    expect(preferredRestoreTarget({ isConnected: false }, opening)).toBe(opening);
+  });
+
+  test('no runner falls through to the opening focus', () => {
+    const opening = { isConnected: true };
+    expect(preferredRestoreTarget(null, opening)).toBe(opening);
+  });
+
+  test('the opening focus is the floor, and it may be nothing', () => {
+    expect(preferredRestoreTarget(null, null)).toBeNull();
+    expect(preferredRestoreTarget({ isConnected: false }, null)).toBeNull();
+  });
+
+  test('the fallback is not itself checked for being connected', () => {
+    // Deliberate, and worth pinning rather than discovering: `restoreFocus` verifies where focus
+    // actually landed and drops back to the dialog, so a stale opening focus costs a no-op rather
+    // than a wrong answer. A check here would be a second guard for one hazard.
+    const opening = { isConnected: false };
+    expect(preferredRestoreTarget(null, opening)).toBe(opening);
   });
 });

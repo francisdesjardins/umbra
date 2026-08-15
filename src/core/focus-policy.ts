@@ -209,12 +209,17 @@ export function restoreFocus(dialog: HTMLDialogElement, preferred: HTMLElement |
  * The target a settled action should return focus to: whoever ran it, or the opening focus as
  * the floor. A runner that has left the DOM (its button re-rendered away) is not a target.
  *
+ * Generic over `{ isConnected }` rather than `HTMLElement`, for the reason
+ * {@link chooseActionRunner} gives below and by the same right: those two members are the whole of
+ * what it reads, so the DOM type in the signature was never a DOM dependency — it was the thing
+ * keeping a two-line decision behind a browser. No call site changes.
+ *
  * @internal
  */
-export function preferredRestoreTarget(
-  runner: HTMLElement | null,
-  openingFocus: HTMLElement | null
-): HTMLElement | null {
+export function preferredRestoreTarget<T extends { isConnected: boolean }>(
+  runner: T | null,
+  openingFocus: T | null
+): T | null {
   return runner?.isConnected === true ? runner : openingFocus;
 }
 

@@ -11,6 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Changed — `preferredRestoreTarget` asks for what it reads, and is a unit test now
+
+`isConnected` is the whole of what it looks at, and it asked for two `HTMLElement`s — so a two-line
+decision sat in a browser-only file with no test, three lines above the function whose own doc names
+it as the thing that got this wrong. `chooseActionRunner` had already taken this exact turn, with the
+sentence "the DOM type in the signature was never a DOM dependency" written above it; its sibling
+just never followed. Generic over `{ isConnected }` now, no call site changed, five tests — including
+the one that pins what it deliberately does _not_ check, so the next reader does not add a second
+guard for a hazard `restoreFocus` already answers.
+
+### Removed — `isNullish`, which existed twice and was called nowhere
+
+`src/utils/is-nullish.ts` and `playground/src/shared/lib/is-nullish.ts`, both from the initial
+commit, both with no importer in either package. The library copy was not exported from the root
+either, so it was not even reachable by a consumer — it was reachable only by its own test, which is
+the shape a helper takes when it is kept alive by the thing that was meant to check it. The
+playground copy had no test at all, against the rule that `shared/lib` ships tested.
+
+Neither `src/` nor the playground uses a truthiness helper today: strict null checks and a concrete
+`X | null` make `=== null` the clearer read at every site that would have wanted one.
+
 ### Changed — the lifecycle executor is its own decision, so its two invariants can fail a test
 
 Every framework-free piece of this library is a named function with a test. The one that ran the
