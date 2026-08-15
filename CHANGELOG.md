@@ -11,6 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Added — eight of the fourteen shapes `HotkeyDef` names had never reached `parseHotkey`
+
+`parseHotkey`'s `switch` is a second writing of the union, one arm per modifier arrangement, each
+rebuilding a distinct literal from pieces. Six arms were exercised; the other eight — `Alt`,
+`Shift`, `Meta`, `Ctrl+Alt`, `Ctrl+Meta`, `Alt+Shift`, `Alt+Meta`, `Shift+Meta` — were strings
+nobody had ever read back. A transposed prefix there (`Alt+Meta` answering `Meta+Alt+`) is still a
+`HotkeyDef`, so the type accepts it and it fails nowhere: it fails at a keyboard, as a shortcut
+matching no button.
+
+The table is **derived from the union rather than listed beside it**. Pinning the key to `a` makes
+the set finite, and `Extract<HotkeyDef, \`${string}+a\`>`then names exactly the arrangements the
+union carries — so a fifteenth shape added to`HotkeyDef` is a compile error in this file until it
+is covered, rather than a silently untested arm.
+
+Per shape: it comes back as itself, and so do its all-lower and all-upper spellings — the half that
+catches an arm answering with a _differently_ wrong shape rather than a malformed one. Plus one
+aggregate, that the fourteen answers are fourteen distinct hotkeys, which is what rules out two arms
+having swapped literals.
+
+`utils/hotkey-utils.ts` 96.7% → 100% statements.
+
 ### Added — `runDeclarationWindow` is the shape of every render pass, and nothing ran it
 
 Four lines with two documented reasons to exist and no assertion under either. Both hook bindings
