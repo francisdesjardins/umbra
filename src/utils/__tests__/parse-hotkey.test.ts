@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { formatAriaKeyshortcuts, formatHotkeyLabel, parseHotkey } from '../hotkey-utils.js';
+import type { HotkeyDef } from '../../actions/types.js';
 
 /**
  * `parseHotkey` — text back into a `HotkeyDef`, or nothing.
@@ -69,4 +70,74 @@ test('what it returns is what the formatters accept', () => {
   expect(parsed).toBeDefined();
   expect(formatHotkeyLabel(parsed!)).toBe('Ctrl+Enter');
   expect(formatAriaKeyshortcuts(parsed!)).toBe('Control+Enter');
+});
+
+/**
+ * Every modifier arrangement the union names, checked against the `switch` that restates it.
+ *
+ * `HotkeyDef` is the specification and `parseHotkey`'s fourteen-arm `switch` is a second writing of
+ * it, each arm rebuilding a distinct literal from pieces. Spot-checking a few leaves the rest as
+ * strings nobody has ever read back: a transposed prefix (`Alt+Meta` answering `Meta+Alt+`) is a
+ * `HotkeyDef` the type accepts, so it fails nowhere — it fails at a keyboard, as a shortcut that
+ * matches no button.
+ *
+ * The set is derived rather than listed. Pinning the key to `a` makes it finite, and `${string}+a`
+ * then matches exactly the arrangements the union carries — so `_everyShapeIsCovered` below is a
+ * compile error the day the union grows a fifteenth and this table does not.
+ */
+type ShapeOfA = Extract<HotkeyDef, `${string}+a`> | 'a';
+
+const SHAPES = [
+  'a',
+  'Ctrl+a',
+  'Alt+a',
+  'Shift+a',
+  'Meta+a',
+  'Ctrl+Shift+a',
+  'Ctrl+Alt+a',
+  'Ctrl+Meta+a',
+  'Alt+Shift+a',
+  'Alt+Meta+a',
+  'Shift+Meta+a',
+  'Ctrl+Alt+Shift+a',
+  'Ctrl+Alt+Meta+a',
+  'Ctrl+Shift+Meta+a',
+] as const satisfies readonly ShapeOfA[];
+
+/** Compile error unless `A` and `B` are mutually assignable, i.e. the same type. */
+type Equals<A extends B, B extends C, C = A> = A;
+
+/** Compile error if the union names a shape the table above leaves out, or the other way round. */
+export type _everyShapeIsCovered = Equals<ShapeOfA, (typeof SHAPES)[number]>;
+
+test.describe('every shape the union names round-trips', () => {
+  for (const shape of SHAPES) {
+    test(`${shape} comes back as itself, in any case it was written`, () => {
+      expect(parseHotkey(shape)).toBe(shape);
+      // Case is not significant on the way in and the canonical spelling comes out — which is the
+      // half that catches an arm returning a *differently* wrong shape rather than a malformed one.
+      expect(parseHotkey(shape.toLowerCase())).toBe(shape);
+      expect(parseHotkey(shape.toUpperCase())).toBe(shape);
+    });
+  }
+
+  test('no two arrangements answer with the same hotkey', () => {
+    // The round trips above would each pass if two arms swapped their literals only when both
+    // inputs were written the other arm's way. Fourteen distinct answers is what rules that out.
+    const parsed = SHAPES.map((shape) => {
+      return parseHotkey(shape);
+    });
+
+    expect(new Set(parsed).size).toBe(SHAPES.length);
+  });
+
+  test('the modifiers reach both formatters, in each one’s own spelling', () => {
+    // `Ctrl` is the keycap and `Control` is the `KeyboardEvent.key` value, and every arm carrying
+    // the modifier has to survive into both — the label a person reads and the attribute hotkey
+    // dispatch queries the DOM by.
+    expect(formatHotkeyLabel('Ctrl+Alt+Meta+a')).toBe('Ctrl+Alt+Meta+A');
+    expect(formatAriaKeyshortcuts('Ctrl+Alt+Meta+a')).toBe('Control+Alt+Meta+A');
+    expect(formatHotkeyLabel('Shift+Meta+a')).toBe('Shift+Meta+A');
+    expect(formatAriaKeyshortcuts('Shift+Meta+a')).toBe('Shift+Meta+A');
+  });
 });
