@@ -98,4 +98,29 @@ test.describe('applyStyle', () => {
 
     expect(target.calls).toEqual(['set opacity=1']);
   });
+
+  test('a custom property goes through untouched, both writing and clearing', () => {
+    // `--dialog-backdrop` is the one styling lever the library documents, and `umbra/vanilla` is
+    // used from plain JavaScript, where nothing narrows the object on the way in. A
+    // `Record<string, string>` is that situation written in TypeScript: `DialogStyle` is a mapped
+    // type over `CSSStyleDeclaration`'s keys, so a custom property is not one of them and an
+    // object *literal* carrying one is rejected — but the record is assignable, and it is what a
+    // caller assembling a style at runtime actually holds.
+    //
+    // The hyphenation must not touch it: `--dialog-backdrop` is already the name `setProperty`
+    // wants, and the camelCase rule would leave it alone only by accident.
+    const target = spyTarget();
+    const custom: Record<string, string> = { '--dialog-backdrop': 'rgba(0, 0, 0, 0.7)' };
+
+    const applied = applyStyle(target, custom);
+    // And clearing reaches the same branch, which is the half that would strand a backdrop colour
+    // on the element after the style that set it stopped naming it.
+    applyStyle(target, { opacity: 1 }, applied);
+
+    expect(target.calls).toEqual([
+      'set --dialog-backdrop=rgba(0, 0, 0, 0.7)',
+      'remove --dialog-backdrop',
+      'set opacity=1',
+    ]);
+  });
 });
