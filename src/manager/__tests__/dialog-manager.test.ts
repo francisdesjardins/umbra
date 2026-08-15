@@ -262,6 +262,29 @@ test.describe('createDialogManager', () => {
     expect(dm.lookup().isForeground('a')).toBe(true);
   });
 
+  test('the lookup answers for a dialog that is not open, rather than for nothing', () => {
+    // The empty-state half of the same two questions, and the one a consumer hits first: a
+    // component asks `isForeground` before anything has opened, and asks `getZIndex` to style a
+    // dialog it is about to show. Neither may answer `undefined` — one feeds a boolean prop and
+    // the other a CSS value, and `z-index: undefined` is a dialog with no stacking at all.
+    const dm = createDialogManager();
+    const registered = createFakeStore();
+    dm.register('registered', registered);
+
+    // Nothing open at all: there is no foreground, and the question still has an answer.
+    expect(dm.getSnapshot().foreground).toBeUndefined();
+    expect(dm.lookup().isForeground('registered')).toBe(false);
+    expect(dm.lookup().isForeground('never-registered')).toBe(false);
+
+    // A closed dialog sits at the base rather than off the bottom of the stack, so a dialog
+    // styled from this before it opens does not jump when it does.
+    expect(dm.getZIndex('registered')).toBe(dm.zIndexBase);
+    expect(dm.getZIndex('never-registered')).toBe(dm.zIndexBase);
+
+    openFully(registered);
+    expect(dm.lookup().isForeground('registered')).toBe(true);
+  });
+
   test('modal and non-modal dialogs are counted separately', () => {
     const dm = createDialogManager();
     const modal = createFakeStore();

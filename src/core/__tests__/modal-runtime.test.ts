@@ -43,6 +43,26 @@ test.describe('resolveModalOptions', () => {
     });
   });
 
+  test('a value the caller passed wins over every default', () => {
+    // The defaults above were the only thing asserted, and a resolver that ignored its argument
+    // entirely — returning the table verbatim — passed all of it. These four are the arms with a
+    // `??` behind them, which is exactly where an option gets silently dropped: the failure is not
+    // an error anywhere, it is `containFocus: true` doing nothing at a keyboard.
+    expect(
+      resolveModalOptions({
+        dismissWhilePreparing: false,
+        dismissKey: 'Enter',
+        containFocus: true,
+        template: 'slide',
+      })
+    ).toMatchObject({
+      dismissWhilePreparing: false,
+      dismissKey: 'Enter',
+      containFocus: true,
+      template: 'slide',
+    });
+  });
+
   test('reads dismissOnBackdropClick only on the modal branch', () => {
     expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(true);
 
