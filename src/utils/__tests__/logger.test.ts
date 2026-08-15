@@ -121,6 +121,58 @@ test.describe('createLogger / setLogLevel', () => {
     expect(debugCalls[0]).toHaveLength(5);
   });
 
+  test('a thunk is resolved, and what it built is the data argument', () => {
+    setLogLevel('*');
+    createLogger('modal')('msg', () => {
+      return { id: 'confirm' };
+    });
+
+    expect(debugCalls[0]).toHaveLength(6);
+    expect(debugCalls[0]?.[5]).toEqual({ id: 'confirm' });
+  });
+
+  test('a thunk is not called while the namespace is off', () => {
+    // The whole of why the form exists. Logging is opt-in through `localStorage`, so *off* is the
+    // state a shipped application is always in — and a thunk that ran anyway would be a detail
+    // assembled on every transition for a line nobody prints, which is worse than passing the
+    // object directly.
+    let built = 0;
+    const data = () => {
+      built += 1;
+      return { id: 'confirm' };
+    };
+
+    const log = createLogger('modal');
+    log('silent', data);
+    log.warn('silent', data);
+    log.error('silent', data);
+    expect(built).toBe(0);
+
+    // And it is the namespace that decides, not the presence of any pattern: an unrelated one
+    // enabled must not start paying for this one's data.
+    setLogLevel('action');
+    log('still silent', data);
+    expect(built).toBe(0);
+
+    setLogLevel('modal');
+    log('now', data);
+    expect(built).toBe(1);
+  });
+
+  test('a thunk reaches warn and error too, not just the debug channel', () => {
+    setLogLevel('*');
+    const log = createLogger('modal');
+    log.warn('w', () => {
+      return { level: 'warn' };
+    });
+    log.error('e', () => {
+      return { level: 'error' };
+    });
+
+    expect(warnCalls[0]?.[5]).toEqual({ level: 'warn' });
+    expect(errorCalls[0]?.[5]).toEqual({ level: 'error' });
+  });
+
   test('each emitted log carries a monotonic #id', () => {
     setLogLevel('*');
     const log = createLogger('modal');
