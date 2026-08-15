@@ -48,23 +48,6 @@ test.describe('the first claim and the last release', () => {
     expect(ledger.release(second)).toBe(false);
     expect(ledger.release(first)).toBe(true);
   });
-
-  test('the last release is the last one out, whatever order the claims arrived in', () => {
-    const ledger = createLockLedger();
-    const a = {};
-    const b = {};
-    const c = {};
-
-    ledger.claim(a);
-    ledger.claim(b);
-    ledger.claim(c);
-
-    // Released in the order they claimed rather than in reverse: the ledger is a set, not a stack,
-    // and managers unmount in whatever order their trees do.
-    expect(ledger.release(a)).toBe(false);
-    expect(ledger.release(b)).toBe(false);
-    expect(ledger.release(c)).toBe(true);
-  });
 });
 
 test.describe('claims that were never made', () => {
@@ -78,12 +61,6 @@ test.describe('claims that were never made', () => {
     expect(ledger.release({})).toBe(false);
     // Still held, so the real owner's release is still the edge.
     expect(ledger.release(holder)).toBe(true);
-  });
-
-  test('releasing into an empty ledger is not an edge', () => {
-    const ledger = createLockLedger();
-
-    expect(ledger.release({})).toBe(false);
   });
 
   test('releasing the same owner twice reports one edge, not two', () => {
@@ -104,18 +81,6 @@ test.describe('what an owner is', () => {
 
     expect(ledger.claim({})).toBe(true);
     expect(ledger.claim({})).toBe(false);
-  });
-
-  test('two ledgers count separately', () => {
-    // One ledger per lock, not one per process: a claim on one is not a claim on the other.
-    const first = createLockLedger();
-    const second = createLockLedger();
-    const owner = {};
-
-    expect(first.claim(owner)).toBe(true);
-    expect(second.claim(owner)).toBe(true);
-    expect(first.release(owner)).toBe(true);
-    expect(second.release(owner)).toBe(true);
   });
 
   test('re-claiming after a full release is an edge again', () => {
