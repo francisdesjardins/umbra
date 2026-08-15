@@ -11,6 +11,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `applyStyle`'s custom-property branch was called unreachable, and is not
+
+The doc said "unreachable from TypeScript, deliberately kept … it is why this function is not fully
+covered", and the second half followed from the first. The first half is too strong: an object
+_literal_ carrying `--dialog-backdrop` is rejected, because `DialogStyle` is a mapped type over
+`CSSStyleDeclaration`'s keys — but a `Record<string, string>` is assignable, and that is what a
+style assembled at runtime actually is. It is also what `umbra/vanilla` hands over from plain
+JavaScript, which is the caller the branch was kept for in the first place.
+
+So the one styling lever the library documents now has a test, both halves of it: the name survives
+the hyphenation untouched (`--dialog-backdrop` is already the spelling `setProperty` wants, and the
+camelCase rule would leave it alone only by accident), and the clearing pass finds it again — the
+half that would otherwise strand a backdrop colour on the element after the style that set it
+stopped naming it.
+
+`core/style.ts` 98.4% → 100% statements, 91.7% → 100% branches.
+
 ### Fixed — the storage probe re-ran forever in the one environment it was written for
 
 `getStorage()` memoised into `let storage: Storage | null | undefined`, where `undefined` meant
