@@ -184,16 +184,16 @@ Which file to open, and nothing else. **Every one of these carries its reasoning
 comment** — the transition rules, the asking door, the three sort keys, the lock's ownership — so
 restating any of it here is how the two drift.
 
-| Concern                | File                                                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `useModal`             | [react/use-modal.tsx](react/use-modal.tsx), [solid/use-modal.ts](solid/use-modal.ts)                                     |
-| The state machine      | [core/modal-store.ts](core/modal-store.ts) — one method per transition, framework-free                                   |
-| The lifecycle sequence | [core/modal-director.ts](core/modal-director.ts) — who asks the `attach*` functions, in what order                       |
-| The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, `open`/`close`, and the asking door                   |
-| The stack order        | [manager/stack-order.ts](manager/stack-order.ts) + `raiseDialog` in [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts) |
-| Body scroll lock       | [manager/scroll-lock.ts](manager/scroll-lock.ts) — modal only, claimed per manager instance                              |
-| Provider / reactive    | `{react,solid}/dialog-manager-context`, `{react,solid}/use-dialog-manager`                                               |
-| Types                  | [core/types.ts](core/types.ts), [manager/types.ts](manager/types.ts), [actions/types.ts](actions/types.ts)               |
+| Concern                | File                                                                                                                                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useModal`             | [react/use-modal.tsx](react/use-modal.tsx), [solid/use-modal.ts](solid/use-modal.ts)                                                                                                     |
+| The state machine      | [core/modal-store.ts](core/modal-store.ts) — one method per transition, framework-free                                                                                                   |
+| The lifecycle sequence | [core/modal-director.ts](core/modal-director.ts) — who asks the `attach*` functions, in what order                                                                                       |
+| The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, `open`/`close`, and the asking door                                                                                   |
+| The stack order        | [manager/stack-order.ts](manager/stack-order.ts) + `raiseDialog` in [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)                                                                 |
+| Body scroll lock       | [manager/scroll-lock.ts](manager/scroll-lock.ts) — modal only + [manager/lock-ledger.ts](manager/lock-ledger.ts), whose claim-per-owner rule is what makes two managers on one page safe |
+| Provider / reactive    | `{react,solid}/dialog-manager-context`, `{react,solid}/use-dialog-manager`                                                                                                               |
+| Types                  | [core/types.ts](core/types.ts), [manager/types.ts](manager/types.ts), [actions/types.ts](actions/types.ts)                                                                               |
 
 Two rules that belong to no single file, so they live here:
 
