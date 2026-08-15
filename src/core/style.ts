@@ -48,13 +48,17 @@ export type DialogStyle = {
  * `setProperty` is the only cast-free way to write a computed key onto a `CSSStyleDeclaration`,
  * and it speaks the hyphenated form.
  *
- * **The `--` branch is unreachable from TypeScript, deliberately kept, and worth explaining once.**
- * `DialogStyle` is a mapped type over `CSSStyleDeclaration`'s own keys, so a custom property is not
- * one of them; adding a `` `--${string}` `` index would make React's `CSSProperties` — which has no
- * such index — stop satisfying `DialogStyle`, and that assignability is what lets
- * `getDialogAnimationStyles` take a binding's own style type. The branch stays for the callers the
- * type does not reach: `umbra/vanilla` is used from plain JavaScript, and `--dialog-backdrop` is
- * the one lever the library documents. It is why this function is not fully covered.
+ * **The `--` branch is unreachable from an object *literal*, deliberately, and worth explaining
+ * once.** `DialogStyle` is a mapped type over `CSSStyleDeclaration`'s own keys, so a custom property
+ * is not one of them and a literal carrying one is rejected; adding a `` `--${string}` `` index would
+ * make React's `CSSProperties` — which has no such index — stop satisfying `DialogStyle`, and that
+ * assignability is what lets `getDialogAnimationStyles` take a binding's own style type.
+ *
+ * The branch is still **reached**, and by the callers it was kept for. A `Record<string, string>` is
+ * assignable to `DialogStyle`, which is what a style assembled at runtime actually is — and what
+ * `umbra/vanilla` hands over from plain JavaScript, where nothing narrows it on the way in.
+ * `--dialog-backdrop` is the one styling lever the library documents, so both halves are asserted:
+ * the name goes through the hyphenation untouched, and the clearing pass finds it again.
  */
 const toCssName = (key: string): string => {
   if (key.startsWith('--')) {
