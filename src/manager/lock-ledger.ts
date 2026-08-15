@@ -37,16 +37,8 @@ export type LockLedger = {
 };
 
 /**
- * Build an empty ledger.
- *
- * One per lock, not one per claimant: the whole point is that every claimant of a given lock counts
- * against the same set.
- *
- * @example
- * const lock = createLockLedger();
- * if (lock.claim(owner)) {
- *   // …first claim: apply the lock
- * }
+ * Build an empty ledger — one per lock, not one per claimant, since counting every claimant of a
+ * given lock against the same set is the whole of what it does.
  */
 export function createLockLedger(): LockLedger {
   const owners = new Set<object>();
