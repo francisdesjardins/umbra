@@ -19,6 +19,7 @@
     "src/vanilla/**",
     "src/core/dialog-styles.ts",
     "src/core/attach-click-outside.ts",
+    "src/core/attach-focus-containment.ts",
     "src/core/attach-focus.ts",
     "src/core/attach-keydown.ts",
     "src/core/attach-lifecycle.ts",

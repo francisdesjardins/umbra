@@ -11,12 +11,14 @@ import {
   syncLabellingDiagnostics,
   syncOpenSequence,
 } from './attach-lifecycle.js';
+import { createStepRunner } from './step-runner.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { FocusCoordinator } from './attach-focus.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
 import type { ModalStore } from './modal-store.js';
+import type { StepInputs, StepTeardown } from './step-runner.js';
 import type { GetDialog, ModalPhase } from './types.js';
 
 /**
@@ -146,9 +148,6 @@ type StepParts = {
   readonly focus: FocusCoordinator;
 };
 
-/** A step's inputs, compared with `Object.is` the way React compares a dependency array. */
-type StepInputs = readonly unknown[];
-
 /**
  * One step of the lifecycle: what it is called, what it reads, and how to run it.
  *
@@ -160,11 +159,7 @@ type StepInputs = readonly unknown[];
 type ModalLifecycleStepSpec = {
   readonly step: string;
   readonly inputs: ((pass: ModalLifecyclePass) => StepInputs) | null;
-  readonly run: (
-    dom: ModalDomContext,
-    pass: ModalLifecyclePass,
-    parts: StepParts
-  ) => (() => void) | undefined | void;
+  readonly run: (dom: ModalDomContext, pass: ModalLifecyclePass, parts: StepParts) => StepTeardown;
 };
 
 // ── The sequence ─────────────────────────────────────────────────────────────
@@ -325,28 +320,17 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly ModalLifecycleStep[] = MODAL_LIF
 // ── The executor ─────────────────────────────────────────────────────────────
 
 /**
- * Whether a step's inputs are unchanged, by the same rule React applies to a dependency array:
- * same length, and `Object.is` on every element.
- *
- * A missing previous entry is *not* unchanged — that is the first pass, and the first pass has to
- * attach everything.
- *
- * @internal
- */
-export function sameInputs(previous: StepInputs | undefined, next: StepInputs): boolean {
-  if (previous === undefined || previous.length !== next.length) {
-    return false;
-  }
-  return previous.every((value, index) => {
-    return Object.is(value, next[index]);
-  });
-}
-
-/**
  * Build the director for one modal.
  *
  * It owns the focus coordinator, because that is per-modal state the sequence reads and no
  * binding has another use for it.
+ *
+ * **The diffing is `createStepRunner`'s and nothing here restates it.** That split is not
+ * bookkeeping: the table above is DOM to the last line, which is what kept the rule *reading* it
+ * out of the unit project's reach — so "detach everything stale before attaching any of it" and
+ * "`destroy` clears the keys as well as running them" were carried by two paragraphs and by
+ * nothing that fails. What is left here is the part that is genuinely about modals: which steps
+ * there are, what each reads, and the DOM context they share.
  */
 export function createModalDirector(ctx: ModalDirectorContext) {
   const { store, getDialog, modalId, manager, engine } = ctx;
@@ -356,9 +340,22 @@ export function createModalDirector(ctx: ModalDirectorContext) {
     focus: createFocusCoordinator({ getDialog, modalId, manager }, { engine }),
   };
 
-  /** Per step, by index into {@link MODAL_LIFECYCLE_STEPS}. Cleared by `destroy`, not just run. */
-  const attachedFor: (StepInputs | undefined)[] = [];
-  const teardowns: ((() => void) | undefined)[] = [];
+  const runner = createStepRunner<ModalLifecyclePass, ModalDomContext>(
+    MODAL_LIFECYCLE_STEPS.map((spec) => {
+      return {
+        inputs: spec.inputs,
+        run: (dom, pass) => {
+          return spec.run(dom, pass, parts);
+        },
+      };
+    }),
+    // Once per pass, so every step of a pass sees the same object — the phase is the only field
+    // that moves, and a step reading a different one than its neighbour would be a bug with no
+    // symptom until two steps disagreed about it.
+    (pass) => {
+      return { store, getDialog, modalId, phase: pass.phase, manager };
+    }
+  );
 
   return {
     /**
@@ -368,52 +365,12 @@ export function createModalDirector(ctx: ModalDirectorContext) {
      * list of its own, so `prepare` and `onKeyDown` are never a render behind.
      */
     sync(pass: ModalLifecyclePass): void {
-      const dom: ModalDomContext = { store, getDialog, modalId, phase: pass.phase, manager };
-
-      const stale = new Set<number>();
-      for (const [index, spec] of MODAL_LIFECYCLE_STEPS.entries()) {
-        if (spec.inputs === null) {
-          continue;
-        }
-        const inputs = spec.inputs(pass);
-        if (sameInputs(attachedFor[index], inputs)) {
-          continue;
-        }
-        attachedFor[index] = inputs;
-        stale.add(index);
-      }
-
-      // Detach everything stale before attaching anything, rather than rebuilding each step in
-      // place. React tears down every effect of a commit before it runs any of them, and listener
-      // dispatch order follows the order they were added — interleaving would quietly reorder the
-      // ones that survived.
-      for (const index of stale) {
-        teardowns[index]?.();
-        teardowns[index] = undefined;
-      }
-
-      for (const [index, spec] of MODAL_LIFECYCLE_STEPS.entries()) {
-        if (spec.inputs !== null && !stale.has(index)) {
-          continue;
-        }
-        teardowns[index] = spec.run(dom, pass, parts) ?? undefined;
-      }
+      runner.sync(pass);
     },
 
-    /**
-     * Tear the whole sequence down, in the order it was wired.
-     *
-     * **Clearing the keys is half the job.** A director that only ran its teardowns would still
-     * believe every step was attached, so the next `sync` would rebuild nothing — which is a
-     * modal that works on mount and is inert after a remount, the failure that passes in one
-     * React mode and breaks in the other.
-     */
+    /** Tear the whole sequence down, in the order it was wired. */
     destroy(): void {
-      for (const teardown of teardowns) {
-        teardown?.();
-      }
-      teardowns.length = 0;
-      attachedFor.length = 0;
+      runner.destroy();
     },
   };
 }

@@ -11,6 +11,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Changed — the lifecycle executor is its own decision, so its two invariants can fail a test
+
+Every framework-free piece of this library is a named function with a test. The one that ran the
+lifecycle was not: `createModalDirector` held the diffing loop inline, and the only step table it
+could be handed was the real one — DOM to the last line. So the executor was reachable only through
+a browser, and its two load-bearing rules were carried by paragraphs describing failures no test
+could produce:
+
+- **Detach everything stale before attaching any of it.** Rebuilding each step in place interleaves,
+  and listener dispatch follows the order listeners were added — so the steps that survived a pass
+  would quietly change places with the ones that did not.
+- **`destroy` clears the keys, not just the teardowns.** Otherwise the runner still believes every
+  step is attached, the next `sync` rebuilds nothing, and the modal works on mount and is inert
+  after a remount — which passes in one React mode.
+
+`createStepRunner` ([core/step-runner.ts](src/core/step-runner.ts)) is that rule, generic over the
+pass and the per-pass context, with no idea what a step does. The director composes it and keeps
+what is genuinely about modals: which steps there are, what each reads, and the DOM context they
+share. Behaviour is unchanged — the table, the order and the `inputs: null` path are the same lines.
+
+A third contract came out of writing the tests and is now stated on `SyncStep`: an `inputs: null`
+step must not **return** a teardown, because there is no pass on which the runner would call it. The
+real table's only such step returns `void`, so nothing would have noticed the day one did.
+
+`sameInputs` moved with the rule it belongs to and is tested once instead of twice.
+
+Unit coverage 92.75% → **94.75%**, and `attach-focus-containment.ts` joins the one-by-one exclude
+list in `.c8rc.json`: with the focus scan gone to `focus-policy.ts` it has no Node-reachable runtime
+left, which is the decision that list exists to record.
+
 ### Added — the reclaim floor, measured on Solid and on vanilla instead of inferred from the core
 
 The repair is core and every binding reaches it through `createFocusCoordinator`, so the caveat on

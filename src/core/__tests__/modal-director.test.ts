@@ -2,17 +2,17 @@ import { expect, test } from '@playwright/test';
 import {
   MODAL_LIFECYCLE_SEQUENCE,
   MODAL_LIFECYCLE_STEPS,
-  sameInputs,
   type ModalLifecyclePass,
   type ModalLifecycleStep,
 } from '../modal-director.js';
+import { sameInputs } from '../step-runner.js';
 
 /**
  * The director's framework-free half: which step reads what, and what counts as unchanged.
  *
- * The executor itself needs a `<dialog>` and is covered by every component test in the suite —
- * both hook bindings run their whole lifecycle through it. What is testable here is the part that
- * decides *whether a step is rebuilt*, and that part is where the design's one real hazard lives.
+ * The executor is `step-runner.ts`'s and is tested there, against a table of its own — what is
+ * left here is the part that is about modals: which step reads what, which is where the design's
+ * one real hazard lives.
  */
 
 const BASE: ModalLifecyclePass = {
@@ -50,45 +50,6 @@ function rebuilds(step: ModalLifecycleStep, next: Partial<ModalLifecyclePass>): 
   }
   return !sameInputs(before, inputsOf(step, { ...BASE, ...next }) ?? []);
 }
-
-test.describe('sameInputs', () => {
-  test('the first pass is never unchanged', () => {
-    // No previous entry means nothing is attached yet, and the whole sequence has to run.
-    expect(sameInputs(undefined, [])).toBe(false);
-    expect(sameInputs(undefined, ['open'])).toBe(false);
-  });
-
-  test('same length and Object.is on every element', () => {
-    const fn = () => {
-      return undefined;
-    };
-    expect(sameInputs(['open', false, fn], ['open', false, fn])).toBe(true);
-    expect(sameInputs(['open', false, fn], ['open', true, fn])).toBe(false);
-    expect(
-      sameInputs(
-        ['open', false, fn],
-        [
-          'open',
-          false,
-          () => {
-            return undefined;
-          },
-        ]
-      )
-    ).toBe(false);
-  });
-
-  test('length alone can differ', () => {
-    expect(sameInputs(['open'], ['open', false])).toBe(false);
-    expect(sameInputs([], [])).toBe(true);
-  });
-
-  test('NaN is unchanged, +0 and -0 are not', () => {
-    // `Object.is`, not `===`, and the difference is visible on exactly these two — same as React.
-    expect(sameInputs([Number.NaN], [Number.NaN])).toBe(true);
-    expect(sameInputs([0], [-0])).toBe(false);
-  });
-});
 
 test.describe('what each step reads', () => {
   test('syncOpenSequence runs on every pass', () => {
