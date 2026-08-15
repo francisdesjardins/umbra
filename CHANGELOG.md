@@ -11,6 +11,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — the Tab recovery could hand focus to a control belonging to a nested dialog
+
+Left open this morning as "argued from the code, not measured", with the one arrangement to build
+written into the caveat. Built, and it reproduces on all three engines.
+
+`focusFirstAvailable` — the scan answering a Tab pressed while focus sits on the `<dialog>` element
+— walked a plain `querySelectorAll` where every other lookup in `focus-policy.ts` goes through
+`queryOwn`. A modal opened from inside another renders its `<dialog>` in that subtree, which is the
+documented shape rather than an exotic one, so the scan collected the nested dialog's controls too.
+
+**Invisible forward, plain in reverse**, which is why it survived: this dialog's own first control is
+first in document order either way, so `Tab` was right by accident. `Shift+Tab` scans from the end
+and reached a nested non-modal panel's button — focus handed to a dialog that did not ask for it and
+does not answer for it.
+
+`queryAllOwn` is `queryOwn`'s plural, added to `utils/dialog-scope.ts` rather than written as a
+filter at the call site: the rule is _which elements are this dialog's_, and a second copy of it is
+how the two drift.
+
+The arrangement is also why the nested panel in the harness is non-modal. A nested **modal** one puts
+the top layer over this dialog's dead space, so the click that puts focus on the `<dialog>` element
+— the only press this recovery exists for — cannot be made at all.
+
 ### Changed — `preferredRestoreTarget` asks for what it reads, and is a unit test now
 
 `isConnected` is the whole of what it looks at, and it asked for two `HTMLElement`s — so a two-line

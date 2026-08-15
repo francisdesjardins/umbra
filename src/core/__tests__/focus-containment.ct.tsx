@@ -4,6 +4,7 @@ import {
   FocusContainmentHarness,
   FramedContentHarness,
   HiddenStopHarness,
+  NestedPanelScanHarness,
   RovingToolbarHarness,
 } from './focus-containment.story.js';
 
@@ -235,4 +236,37 @@ test.describe('the dead-space click, whatever containFocus says', () => {
       });
     }
   }
+});
+
+/**
+ * Whether the Tab recovery's scan stays inside the dialog it belongs to.
+ *
+ * The open question the compatibility matrix carries against the reclaim floor, asked of the other
+ * caller that shares the scan. It is written as a measurement rather than a claim in either
+ * direction: `focusFirstAvailable` walks a plain `querySelectorAll` where every other lookup in
+ * `focus-policy.ts` uses `queryOwn`, and whether that is reachable is the whole question.
+ */
+test.describe('the recovery scan and a dialog nested inside this one', () => {
+  test('Shift+Tab from the dialog element stays on this dialog’s own last stop', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<NestedPanelScanHarness />);
+    await component.getByTestId('open-outer').click();
+    await expect(page.locator('dialog[data-modal-id="nested-scan-outer"]')).toBeVisible();
+
+    await page.getByTestId('outer-open-panel').click();
+    await expect(page.locator('dialog[data-modal-id="nested-scan-panel"]')).toBeVisible();
+
+    // Low in the dead space, clear of the panel overlaying the top of the region. This is the
+    // ordinary way focus lands on a `<dialog>` element, and the only press the markers cannot see.
+    await page.getByTestId('outer-dead-space').click({ position: { x: 200, y: 230 } });
+    expect(await focused(page)).toBe('modal-nested-scan-outer');
+
+    await page.keyboard.press('Shift+Tab');
+
+    // Reversed, the scan reaches the panel's button before any of the outer's own — so this is the
+    // assertion that can tell a scoped scan from an unscoped one.
+    expect(await focused(page)).toBe('outer-last');
+  });
 });

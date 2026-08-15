@@ -1,4 +1,4 @@
-import { queryOwn } from '../utils/dialog-scope.js';
+import { queryAllOwn, queryOwn } from '../utils/dialog-scope.js';
 
 /**
  * Where a dialog's focus goes, as plain DOM functions.
@@ -51,17 +51,21 @@ export const FOCUS_GUARD_ATTRIBUTE = 'data-dialog-focus-guard';
  * nothing had taken it — which the Tab recovery reads as "do not swallow the key", so the press
  * was then processed from wherever the scan had dumped focus.
  *
+ * **The candidates are `queryAllOwn`'s, not a plain `querySelectorAll`'s.** A modal opened from
+ * inside this one renders its `<dialog>` in this subtree — the documented shape, since the top
+ * layer leaves no other way to open a second dialog — so an unscoped scan collects that dialog's
+ * controls too. Reversed, they come *first*: measured on all three engines, `Shift+Tab` on this
+ * dialog's element handed focus to a button belonging to a panel nested inside it.
+ *
  * @returns Whether anything took it. The caller needs the answer before it swallows a key: a
  *   dialog with nothing focusable in it would otherwise be a `preventDefault` and no move, which
  *   is a Tab that does nothing for as long as the dialog is open.
  * @internal
  */
-export function focusFirstAvailable(dialog: HTMLElement, fromEnd: boolean): boolean {
-  const candidates = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (element) => {
-      return element.getAttribute(FOCUS_GUARD_ATTRIBUTE) === null;
-    }
-  );
+export function focusFirstAvailable(dialog: HTMLDialogElement, fromEnd: boolean): boolean {
+  const candidates = queryAllOwn(dialog, FOCUSABLE).filter((element) => {
+    return element.getAttribute(FOCUS_GUARD_ATTRIBUTE) === null;
+  });
   if (fromEnd) {
     candidates.reverse();
   }

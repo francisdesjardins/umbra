@@ -245,3 +245,86 @@ export function HiddenStopHarness() {
     </>
   );
 }
+
+/**
+ * A modal with a **non-modal panel opened inside it**, which is where the Tab recovery's scan can
+ * meet a dialog that is not its own.
+ *
+ * `focusFirstAvailable` walks `dialog.querySelectorAll(FOCUSABLE)` — every other lookup in
+ * `focus-policy.ts` goes through `queryOwn`, which drops elements belonging to a dialog nested
+ * inside this one. Nesting is the documented shape here, not an exotic one: a modal owns the top
+ * layer, so the only way to open a second dialog is from inside the first one's `render`, and its
+ * element lands in this subtree.
+ *
+ * **The panel is non-modal deliberately, and so is the direction the test presses.** A nested
+ * *modal* panel would put the top layer over this dialog's dead space, so the click that starts the
+ * whole thing could not be made. And a forward Tab is answered correctly by accident — the outer
+ * dialog's own button is first in document order either way. Only `Shift+Tab`, which scans from the
+ * end, can tell "this dialog's last stop" from "the last stop anywhere underneath it".
+ */
+export function NestedPanelScanHarness() {
+  const panel = useModal({
+    id: 'nested-scan-panel',
+    nonModal: true,
+    ariaLabel: 'Panel inside the modal',
+    // Sized and contained, so it overlays the top of the modal's region and leaves the dead space
+    // below it clickable — the click is what puts focus on the `<dialog>` element in the first
+    // place, and a full-region panel would swallow it.
+    style: { width: '120px', height: '90px' },
+    render: () => {
+      return (
+        <button data-testid="nested-panel-button" type="button">
+          Panel stop
+        </button>
+      );
+    },
+  });
+
+  const outer = useModal({
+    id: 'nested-scan-outer',
+    ariaLabel: 'Outer modal',
+    style: { width: '420px', height: '420px' },
+    render: () => {
+      return (
+        <>
+          <button data-testid="outer-first" type="button">
+            Outer first
+          </button>
+          <button
+            data-testid="outer-open-panel"
+            onClick={() => {
+              void panel.open();
+            }}
+            type="button"
+          >
+            Open the panel inside
+          </button>
+          <button data-testid="outer-last" type="button">
+            Outer last
+          </button>
+          <p data-testid="outer-dead-space" style={{ height: 260 }}>
+            Nothing to focus here.
+          </p>
+          {/* After the outer's own stops in document order, which is what makes the reversed scan
+              reach it first. */}
+          {panel.Modal}
+        </>
+      );
+    },
+  });
+
+  return (
+    <>
+      <button
+        data-testid="open-outer"
+        onClick={() => {
+          void outer.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      {outer.Modal}
+    </>
+  );
+}

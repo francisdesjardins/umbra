@@ -24,6 +24,22 @@ export function queryOwn(dialog: HTMLElement, selector: string): HTMLElement | n
 }
 
 /**
+ * Every element matching `selector` that belongs to `dialog` itself, in document order.
+ *
+ * {@link queryOwn}'s plural, for the caller that needs the whole set rather than the first of it —
+ * the focus scan, which walks candidates until one takes focus. Written here rather than as a
+ * filter at that call site because the rule is *which elements are this dialog's*, and a second
+ * copy of it is how the two drift.
+ *
+ * @internal
+ */
+export function queryAllOwn(dialog: HTMLElement, selector: string): HTMLElement[] {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(selector)).filter((element) => {
+    return element.closest('dialog') === dialog;
+  });
+}
+
+/**
  * Whether an event raised at `target` belongs to `dialog` rather than to a dialog nested inside
  * it. A keydown in a nested dialog bubbles through its ancestors, so without this the modal
  * underneath answers to keys pressed in the modal above it.
