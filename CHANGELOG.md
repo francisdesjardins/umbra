@@ -19,22 +19,22 @@ how it went unread. `createLogger` itself had no doc at all. Moved onto the func
 and `resolveColor` given the one sentence it actually needs: nearest ancestor, not first, which is
 what keeps `modal:lifecycle:deep` on its parent's hue.
 
-### Added — the lazy `LogData` thunk, whose only reason to exist is not being called
+### Removed — the lazy `LogData` thunk, which nothing has ever passed
 
-`LogData` has accepted a thunk since it was written, `Logger` documents it on all three channels,
-and nothing had ever passed one — no call site in the library, and no test. The half worth pinning
-is the negative one: a thunk must not run while the namespace is off, which is the state a shipped
-application is always in, since logging is opt-in through `localStorage`. A thunk that ran anyway
-would assemble a detail on every transition for a line nobody prints — strictly worse than passing
-the object.
+`LogData` had accepted `() => Record<string, unknown>` since it was written and `Logger` advertised
+it on all three channels. No call site in `src/`, none in the playground, and no test — and
+`createLogger` is `@internal`, so no consumer could reach it either.
 
-Three tests: the thunk's result is the data argument, it reaches `warn` and `error` as well as
-`debug`, and it is not called when the namespace is silent — including when an _unrelated_
-namespace is enabled, since it is `matches(namespace)` and not the presence of a pattern that
-decides.
+Adding a test for it was the wrong move and was reverted in the same sitting. `isNullish` came out
+yesterday with the reason written down — "it was reachable only by its own test, which is the shape
+a helper takes when it is kept alive by the thing that was meant to check it" — and a test here
+would have made this exactly that.
 
-The form is kept rather than removed on the strength of that contract; it is still worth knowing
-that nothing in `src/` uses it today.
+The saving it exists for is real in general and not real here: every call site passes a small object
+literal, so deferring one costs a ternary on the emit path to avoid nothing. If a detail worth
+deferring ever turns up, the thunk is two lines and arrives with the call site that wants it.
+
+`LogData` is `Record<string, unknown>` now and `emit` prints its argument.
 
 ### Added — eight of the fourteen shapes `HotkeyDef` names had never reached `parseHotkey`
 
@@ -45,15 +45,15 @@ nobody had ever read back. A transposed prefix there (`Alt+Meta` answering `Meta
 `HotkeyDef`, so the type accepts it and it fails nowhere: it fails at a keyboard, as a shortcut
 matching no button.
 
-The table is **derived from the union rather than listed beside it**. Pinning the key to `a` makes
-the set finite, and `Extract<HotkeyDef, \`${string}+a\`>`then names exactly the arrangements the
-union carries — so a fifteenth shape added to`HotkeyDef` is a compile error in this file until it
-is covered, rather than a silently untested arm.
+The table is **derived from the union rather than listed beside it**. Pinning the key to a single
+letter makes the set finite, and an `Extract` over it names exactly the arrangements the union
+carries — so a fifteenth shape added to `HotkeyDef` is a compile error in this file until it is
+covered, rather than a silently untested arm. Verified by deleting an entry and watching
+`type-check` fail.
 
-Per shape: it comes back as itself, and so do its all-lower and all-upper spellings — the half that
-catches an arm answering with a _differently_ wrong shape rather than a malformed one. Plus one
-aggregate, that the fourteen answers are fourteen distinct hotkeys, which is what rules out two arms
-having swapped literals.
+One assertion per shape, and it is the whole contract: the arm rebuilds the exact arrangement it was
+handed. An arm answering with a _different_ valid shape fails that too, so there is no separate
+distinctness check — and the spot-check of the three-modifier shapes it replaces has gone with it.
 
 `utils/hotkey-utils.ts` 96.7% → 100% statements.
 
@@ -64,12 +64,11 @@ wrap their `render` in it, so it is how every declaration pass in the library is
 the whole of what it adds over calling `beginRender` and `endRender` in a row is what happens when
 the call between them throws.
 
-Three tests: the value comes back and the window opened and closed around it in that order; a
-`render` that throws still closes the window and the throw reaches the caller; and the part that is
-about the engine rather than about `try`/`finally` — the interrupted pass's table is swapped in, so
-an action the abandoned pass did not redeclare is retired rather than surviving. Without the
-`finally` that last one is a modal whose backdrop click stays opt-in from a pass that never
-finished.
+Two tests. The value comes back and the window opened and closed around it in that order; and a
+`render` that throws closes the window anyway — asserted through what a missed close costs rather
+than through a flag, since `endRender` is the swap: the interrupted pass's table goes live, so an
+action it did not redeclare is retired instead of surviving into a modal whose backdrop click stays
+opt-in from a pass that never finished.
 
 ### Changed — the scroll lock's ownership is a decision now, so the rule it protects can fail a test
 
@@ -90,9 +89,9 @@ Both entry points read the same afterwards and the `wasUnlocked` dance is gone:
 ahead of the claim, which is a contract of its own — a server render that seeded the ledger would
 leave the first real lock in a hydrated page unable to apply.
 
-Twelve tests, including the two that had nowhere to live before: a second owner's release is not
-the edge (the last-writer-wins defect the ledger exists for), and owners are identity, so two
-manager tokens that are both `{}` are two claimants rather than one.
+Eight tests, including the two that had nowhere to live before: a second owner's release is not the
+edge (the last-writer-wins defect the ledger exists for), and owners are identity, so two manager
+tokens that are both `{}` are two claimants rather than one.
 
 `manager/scroll-lock.ts` 71.05% → 72.92%, `lock-ledger.ts` at 100%, unit coverage 94.88% → 95.02%.
 The file it left is still mostly the DOM half, and that is the honest shape: what moved out is the

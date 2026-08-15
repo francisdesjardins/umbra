@@ -187,22 +187,15 @@ function matches(namespace: string): boolean {
 
 // ── Logger type ─────────────────────────────────────────────────────────────
 
-/**
- * The structured half of a log line — an object, or a thunk that builds one.
- *
- * **The thunk is only worth writing because it is not called when the namespace is off**, which is
- * the state a shipped application is always in: logging is opt-in through `localStorage`. So a
- * detail that costs something to assemble — a snapshot read, a list of open ids, anything walked
- * out of the DOM — is written at the call site and paid for only by the person debugging.
- */
-export type LogData = Record<string, unknown> | (() => Record<string, unknown>);
+/** The structured half of a log line, printed as the console's own last argument. */
+export type LogData = Record<string, unknown>;
 
 export type Logger = {
-  /** Log a debug-level message with optional structured data (or a lazy thunk). */
+  /** Log a debug-level message with optional structured data. */
   (message: string, data?: LogData): void;
-  /** Log a warning with optional structured data (or a lazy thunk). */
+  /** Log a warning with optional structured data. */
   warn(message: string, data?: LogData): void;
-  /** Log an error with optional structured data (or a lazy thunk). */
+  /** Log an error with optional structured data. */
   error(message: string, data?: LogData): void;
 };
 
@@ -246,16 +239,15 @@ export function createLogger(namespace: string): Logger {
     if (!matches(namespace)) {
       return;
     }
-    const resolved = typeof data === 'function' ? data() : data;
     const id = nextLogId();
-    if (resolved !== undefined) {
+    if (data !== undefined) {
       console[method](
         `%c${prefix}%c %c${id}%c ${message}`,
         labelStyle(color),
         resetStyle,
         idStyle,
         resetStyle,
-        resolved
+        data
       );
     } else {
       console[method](

@@ -179,37 +179,10 @@ test.describe('the declaration window as a wrapper', () => {
     expect(engine.ownsHotkey('Enter')).toBe(true);
   });
 
-  test('a render that throws still closes the window, and the throw is not swallowed', () => {
-    // The `finally` is the whole point. A binding whose `render` throws is a binding whose error
-    // boundary is about to take over — and it must not inherit an engine left mid-pass.
-    const engine = createActionEngine<void, 'save'>('throwing');
-    let closed = false;
-
-    expect(() => {
-      runDeclarationWindow(
-        {
-          beginRender() {
-            engine.beginRender();
-          },
-          endRender() {
-            closed = true;
-            engine.endRender();
-          },
-        },
-        (): string => {
-          engine.declare('save', 'Enter');
-          throw new Error('render blew up');
-        }
-      );
-    }).toThrow('render blew up');
-
-    expect(closed).toBe(true);
-  });
-
-  test('the pass a throw abandoned does not leave a half-built table behind', () => {
-    // The observable cost of a window that never closed: `endRender` is what swaps the pending
-    // table in, so without it every later `hasActions()` — the backdrop-click opt-in — answers
-    // from a pass that never finished.
+  test('a render that throws closes the window anyway, and the throw is not swallowed', () => {
+    // The `finally` is the whole point, asserted through what it costs rather than through a flag:
+    // `endRender` is what swaps the pending table in, so a window left open means every later
+    // `hasActions()` — the backdrop-click opt-in — answers from a pass that never finished.
     const engine = createActionEngine<void, 'save' | 'cancel'>('abandoned');
 
     runDeclarationWindow(engine, () => {
