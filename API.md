@@ -228,7 +228,7 @@ wins and dismissal defers.
 
 The value it matches on is the ARIA spelling, not the one you declared: `hotkey: 'Ctrl+s'` reaches
 the DOM as `aria-keyshortcuts="Control+S"`, because every token of that attribute must be a
-`KeyboardEvent.key` value — see [formatAriaKeyshortcuts](#key-formathotkeylabel-formatariakeyshortcuts-matcheshotkey).
+`KeyboardEvent.key` value — see [formatAriaKeyshortcuts](#key-formathotkeylabel-formatariakeyshortcuts-matcheshotkey-parsehotkey).
 
 > **Custom button wrappers must forward `aria-keyshortcuts`** onto the real `<button>`, or the
 > hotkey has nothing to find.
@@ -1621,7 +1621,7 @@ Logging is **opt-in, debug-only, and console-only** — nothing is persisted or 
 
 ---
 
-## Key, formatHotkeyLabel, formatAriaKeyshortcuts, matchesHotkey
+## Key, formatHotkeyLabel, formatAriaKeyshortcuts, matchesHotkey, parseHotkey
 
 A `HotkeyDef` is a string: a key, optionally prefixed with modifiers (`'Enter'`, `'Ctrl+Enter'`,
 `'Ctrl+Shift+Delete'`). `Key` is the const object of key names — `Key.Enter`, `Key.Escape`,
@@ -1660,6 +1660,38 @@ takes `Ctrl+`, and `'Control+Enter'` is not one.
 Shift — but the browser reports `'S'` while Shift is held, so single-character keys are compared
 case-insensitively and the modifier list does the discriminating. `'Shift+s'` and `'Shift+S'` are
 one hotkey, and CapsLock cannot change which one fires.
+
+### parseHotkey — text back into a `HotkeyDef`
+
+The three above turn a `HotkeyDef` into something else. `parseHotkey` is the crossing in the other
+direction, and it exists for the moment a shortcut arrives as **data** rather than as source: a
+configuration file, a user preference, a value from your server, a string handed over by a library
+whose own type is `string`. Without it the only crossings are an unchecked cast — which throws the
+union's guarantee away exactly where the input is least trustworthy — or a hand-rolled validator per
+call site.
+
+```typescript
+import { parseHotkey } from 'umbra';
+
+parseHotkey('Ctrl+S'); // → 'Ctrl+s'   — canonical spelling comes back out
+parseHotkey('escape'); // → 'Escape'
+parseHotkey('Shift+Ctrl+Enter'); // → 'Ctrl+Shift+Enter' — the type's modifier order, not yours
+
+parseHotkey('Escpae'); // → undefined  — not a key in the table
+parseHotkey('Ctrl+Ctrl+a'); // → undefined  — a repeat is a typo, not an intent
+parseHotkey('Alt+Shift+Meta+a'); // → undefined  — a combination HotkeyDef does not name
+
+const configured = parseHotkey(settings.saveShortcut);
+if (configured) {
+  // `configured` is a `HotkeyDef` here — no cast, and every hotkey API takes it.
+  action('save', { hotkey: configured, onAction: save });
+}
+```
+
+**It returns a member of the union or admits it cannot.** Nothing is asserted: the key is _found_ in
+`Key`, so it carries that table's type out with it, and each modifier arrangement is rebuilt from
+literal pieces. `HotkeyDef` names fourteen shapes and not every subset of the four modifiers, so a
+combination it does not name is refused rather than invented.
 
 ---
 

@@ -10,7 +10,7 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
-[![Unit coverage](https://img.shields.io/badge/unit_coverage-93%25-3fb950?style=flat-square)](#development)
+[![Unit coverage](https://img.shields.io/badge/unit_coverage-96%25-3fb950?style=flat-square)](#development)
 [![Component coverage](https://img.shields.io/badge/component_coverage-92%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
@@ -291,14 +291,18 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **93.2%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **95.67%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **92.0%** statements over 51 files. Both measured 2026-08-13, and re-measured
+~45% of the run) — **92.18%** statements over 54 files. Both measured 2026-08-15, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. The badges above are hand-set from those two commands, so treat them as what they
 are: a snapshot, not a gate.
+
+The same pair is quoted in [CLAUDE.md](CLAUDE.md#what-coverage-measures), which is the other half of
+"together": this file drifted two points behind it by moving one copy and not the other, which is the
+document-level version of the mistake the paragraph above warns about.
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> How this repo is run
 

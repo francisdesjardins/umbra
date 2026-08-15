@@ -11,6 +11,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `parseHotkey` was undocumented in the chapter that names its four siblings
+
+API.md's hotkey chapter is titled `Key, formatHotkeyLabel, formatAriaKeyshortcuts, matchesHotkey`,
+and `parseHotkey` appeared nowhere in the file — nor in CLAUDE.md's root-export summary, which lists
+the other three hotkey functions in a row. A reader of either would conclude the crossing does not
+exist and write the unchecked cast `parseHotkey` was added to prevent, which is the same failure
+`src/CLAUDE.md` records for `useSlideModal`: a surface can be complete while the documentation says
+otherwise, and the honest reading of the omission is "there isn't one".
+
+The chapter now has a `parseHotkey` section — what it is for (a shortcut arriving as _data_: a config
+file, a user preference, a value from a server), what it refuses, and the fact that it returns a
+member of the union or admits it cannot. Both the heading and the one internal link to it were
+updated together.
+
+**Nothing gates this**, which is why it happened: `yarn docs:matrix:check` covers only the
+Compatibility chapter, typedoc catches an unexported type in a public signature, and
+`api-categories.test.ts` catches a missing playground category — none of them notices a root export
+API.md never mentions. Around twenty are in that position, mostly types. Recorded in `HANDOFF.md`
+rather than gated, because a gate needs a decision about what it should demand.
+
+### Fixed — the coverage pair is quoted in two documents, and only one was being moved
+
+README.md carried its own copy — 93.2% unit, 92.0% component over 51 files, dated 2026-08-13 — while
+CLAUDE.md carried 95.67% / 92.18% over 54, and two README badges are hand-set from the same numbers.
+The README's own paragraph says the two numbers must be "re-measured together or not at all: one
+number moved without the other is two projects being compared across different days" — and that is
+exactly what had happened to it, one document at a time rather than one project at a time.
+
+Both copies now say the same thing, the badges with them, and each names the other so the next
+re-measurement has somewhere to look.
+
 ### Fixed — `applyStyle`'s custom-property branch was called unreachable, and is not
 
 The doc said "unreachable from TypeScript, deliberately kept … it is why this function is not fully

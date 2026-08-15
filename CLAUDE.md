@@ -8,12 +8,12 @@ over it. No UI components exported; users bring their own.
 The package root is plain TypeScript and **must resolve with no framework installed**. Bindings
 are the optional layer.
 
-| Specifier       | Contents                                                                                                                                                                                                                                                       |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`, `setLogLevel`. No framework. |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.                                              |
-| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                                                    |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                |
+| Specifier       | Contents                                                                                                                                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`, `parseHotkey`, `setLogLevel`. No framework. |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.                                                             |
+| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                                                                   |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                               |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
@@ -96,7 +96,9 @@ Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
 (`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-15: **92.18%
-over 54 files**, against unit's **95.67%**. Never add them; re-measure both or neither.
+over 54 files**, against unit's **95.67%**. Never add them; re-measure both or neither — **and the
+pair is quoted twice**, here and in [README.md](README.md#development), which also hand-sets two
+badges from it. Moving one copy is how the README came to be two points and three files behind.
 
 **So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.** Two
 moves have paid off repeatedly and are the first thing to try:
