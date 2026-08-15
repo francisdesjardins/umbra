@@ -4,6 +4,7 @@ import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   VanillaBasicHarness,
   VanillaBusyHarness,
+  VanillaClaimlessReclaimHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
   VanillaExplicitHostHarness,
@@ -819,5 +820,33 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
 
     await expect(component.getByTestId('phase')).toHaveText('closed');
     expect(await state(page)).toBe('open=false shown=false');
+  });
+});
+
+/**
+ * The floor under the reclaim, on a binding that renders nothing.
+ *
+ * `reclaimFocus` is core and every binding reaches it through `createFocusCoordinator` — which the
+ * director builds for the hook pair and which `bindDialog` builds for itself, at a different point
+ * in its own sync. That second route is the reason this is worth measuring rather than inferring:
+ * the shared function is shared, the scheduling around it is not.
+ */
+test.describe('bindDialog — a dialog that claimed no opening focus', () => {
+  test('gets the keyboard back when a panel opens underneath', async ({ mount, page }) => {
+    const component = await mount(<VanillaClaimlessReclaimHarness />);
+    await component.getByTestId('open-both').click();
+
+    await expect(page.locator('dialog[data-modal-id="vanilla-claimless"]')).toBeVisible();
+    await expect(page.locator('dialog[data-modal-id="vanilla-claimless-panel"]')).toBeVisible();
+
+    // Nothing outside the modal holds it, which is the guarantee — the modal is in the top layer
+    // and a keyboard on `<body>` there is a dialog nobody can reach.
+    await expect(
+      page.locator(
+        ':focus:not(dialog[data-modal-id="vanilla-claimless"], dialog[data-modal-id="vanilla-claimless"] *)'
+      )
+    ).toHaveCount(0);
+    // And it is the *first* focusable, not the last — the half that only two buttons can show.
+    await expect(page.getByTestId('vanilla-claimless-cancel')).toBeFocused();
   });
 });

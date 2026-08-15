@@ -1295,3 +1295,79 @@ function FailedActionApp(): Built {
 export const SolidFailedActionApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, FailedActionApp));
 };
+
+/**
+ * A modal claiming no opening focus, with a non-modal panel opening underneath it.
+ *
+ * The floor under `reclaimFocus`, on the second hook binding. Every binding reaches the repair
+ * through `createFocusCoordinator`, so the function is shared — but *when* each binding syncs it is
+ * not, and Solid's component body runs once where React's re-runs, which is the difference worth a
+ * measurement rather than an inference.
+ *
+ * **Neither action claims `focusOnOpen`, and that is what puts this on the floor's path.** With a
+ * claim there is a marker to aim at and the reclaim never reaches past it; `lastFocusInside` is
+ * empty too, because the coordinator's `focusin` listener is attached after `showModal()` has
+ * already placed the opening focus. So both candidates are absent and the floor is the only thing
+ * left — which is exactly the arrangement that used to end at `dialog.focus()`.
+ *
+ * Two focusable actions, because with one "handed to the first focusable" and "focus never moved"
+ * are the same element.
+ */
+function ClaimlessReclaimApp(): Built {
+  const modal = useModal<void, 'confirm' | 'cancel'>({
+    id: 'solid-claimless',
+    ariaLabel: 'Solid modal claiming no opening focus',
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'Claims nothing'),
+          h('button', ctx.action('cancel'), 'Cancel'),
+          h('button', ctx.action('confirm'), 'Confirm')
+        )
+      );
+    },
+  });
+
+  const panel = useModal<void, 'close'>({
+    id: 'solid-claimless-panel',
+    nonModal: true,
+    // Viewport-anchored rather than contained: the contained path lays a library-owned `inset: 0`
+    // wrapper over the nearest sized ancestor, and the trigger below would end up beneath it.
+    portal: true,
+    ariaLabel: 'Panel opening underneath',
+    render: () => {
+      return el(
+        h('div', null, h('button', { 'data-testid': 'solid-panel-button' }, 'In the panel'))
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'solid-open-both',
+        onClick: () => {
+          // Chained rather than two clicks: once the modal is up it owns the top layer and this
+          // button is under its backdrop, so the second open has to be arranged before the first.
+          void modal.open().then(() => {
+            return panel.open();
+          });
+        },
+      },
+      'Open the modal, then the panel underneath'
+    ),
+    modal.Modal,
+    // `null` under `portal: true` — the binding mounts the dialog itself. Kept for the symmetry
+    // with the React harness, where it is the node that places the panel.
+    panel.Modal
+  );
+}
+
+export const SolidClaimlessReclaimApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, ClaimlessReclaimApp));
+};

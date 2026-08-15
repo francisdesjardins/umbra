@@ -9,6 +9,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-15
+
+### Added — the reclaim floor, measured on Solid and on vanilla instead of inferred from the core
+
+The repair is core and every binding reaches it through `createFocusCoordinator`, so the caveat on
+the matrix row said there was nothing binding-shaped to suspect. Measuring anyway turned up two
+things that inference had got wrong, and one of them is a difference the repo had already decided
+was invisible.
+
+**The theft is Chromium's.** On Firefox and WebKit a non-modal `show()` underneath does not take the
+keyboard from a modal in the top layer — disable both repair paths and those two engines stay green.
+So what the reclaim fixes is one engine's reading of the focusing steps, not a universal law.
+
+**And on `umbra/vanilla` the floor is not the path that delivers it.** `bind-dialog.ts` runs
+`focus.sync` _before_ `syncOpenSequence`, where the director runs it after. That is a known
+difference — `wiring-order.test.ts` records it and `modal-director.ts` describes adopting the
+director as "measured green on three engines and deliberately not taken, because no test noticed".
+Something notices now: arming the coordinator's `focusin` listener a beat earlier means it hears the
+opening focus `showModal()` places, so vanilla remembers a `lastFocusInside` the hook bindings leave
+empty and the reclaim takes its `preferred` path instead of falling to the floor. Both deliver the
+same guarantee, which is why nothing failed. The director's doc says so now, so the next reading of
+that decision starts from the measurement.
+
+Established by disabling each path alone (green) and both together (red) rather than by reading the
+code — which is what turned up the fact that the tests as first written passed on vanilla with the
+floor removed entirely.
+
 ## 2026-08-14
 
 ### Fixed — a raised dialog that claimed no opening focus gets a real floor under it

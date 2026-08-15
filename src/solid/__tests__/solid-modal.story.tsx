@@ -17,6 +17,7 @@ import {
   SolidOutletApp,
   SolidOutletDisposalApp,
   SolidPortalApp,
+  SolidClaimlessReclaimApp,
   SolidStackPriorityApp,
   SolidSlideApp,
 } from './solid-app.js';
@@ -149,4 +150,14 @@ export function SolidReconcileHarness() {
 
 export function SolidFailedActionHarness() {
   return <SolidRoot app={SolidFailedActionApp} />;
+}
+
+/**
+ * A modal that claims no opening focus, with a panel opening underneath it.
+ *
+ * The Solid half of the reclaim floor — see the app for why an absent claim is what puts it on
+ * that path rather than on the marker above it.
+ */
+export function SolidClaimlessReclaimHarness() {
+  return <SolidRoot app={SolidClaimlessReclaimApp} />;
 }

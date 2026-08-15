@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
+  SolidClaimlessReclaimHarness,
   SolidShadowRootHarness,
   SolidBusyHarness,
   SolidContainedHarness,
@@ -604,5 +605,32 @@ test.describe('a dialog inside a shadow root (Solid)', () => {
     // The library's own sheet, adopted into *this* root. The UA default measures rgba(0, 0, 0, 0.1).
     expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
     expect(measured.focusIsInside, 'focus did not settle inside the shadowed dialog').toBe(true);
+  });
+});
+
+/**
+ * The floor under the reclaim, on the second hook binding.
+ *
+ * The repair is core and reached through `createFocusCoordinator`, but the scheduling around it is
+ * each binding's own — Solid's component body runs once where React's re-runs — so this is measured
+ * rather than inferred from the shared function.
+ */
+test.describe('a dialog that claimed no opening focus (Solid)', () => {
+  test('gets the keyboard back when a panel opens underneath', async ({ mount, page }) => {
+    const component = await mount(<SolidClaimlessReclaimHarness />);
+    await component.getByTestId('solid-open-both').click();
+
+    await expect(page.locator('dialog[data-modal-id="solid-claimless"]')).toBeVisible();
+    await expect(page.locator('dialog[data-modal-id="solid-claimless-panel"]')).toBeVisible();
+
+    // Nothing outside the modal holds it: it is in the top layer, and a keyboard on `<body>` there
+    // is a dialog whose own keydown listener hears nothing.
+    await expect(
+      page.locator(
+        ':focus:not(dialog[data-modal-id="solid-claimless"], dialog[data-modal-id="solid-claimless"] *)'
+      )
+    ).toHaveCount(0);
+    // And it is the *first* action, not the last — the half two buttons are there to show.
+    await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
   });
 });

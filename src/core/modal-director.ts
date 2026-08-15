@@ -86,6 +86,14 @@ import type { GetDialog, ModalPhase } from './types.js';
  * contract question between two bindings that owe each other a mirror and not enough to move
  * shipped behaviour that owes nobody one. `wiring-order.test.ts` records the difference.
  *
+ * **One thing does notice it, and it is worth knowing before that change is reconsidered.** The
+ * focus coordinator's `focusin` bookkeeping is armed by `focus.sync`, so running that step before
+ * `syncOpenSequence` means it hears the opening focus `showModal()` places and running it after
+ * means it does not. So `umbra/vanilla` remembers a `lastFocusInside` the hook bindings leave
+ * empty, and a later `reclaimFocus` takes its `preferred` path there while the hook bindings fall
+ * to the floor beneath it. Both deliver the same guarantee, which is why nothing failed; the
+ * compatibility matrix carries the measurement, on the raise-hands-the-keyboard-back row.
+ *
  * @internal Not part of the public API. A binding is the only caller.
  */
 

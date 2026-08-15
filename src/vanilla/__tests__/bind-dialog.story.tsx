@@ -1497,3 +1497,103 @@ export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: bool
     </div>
   );
 }
+
+/**
+ * A modal that claims no opening focus, with a non-modal panel opening underneath it.
+ *
+ * The claimless half of {@link VanillaShadowStackHarness}, and the distinction is the whole point:
+ * that one binds `focusOnOpen` to its confirm button, so the reclaim has a marker to aim at and
+ * never reaches the floor beneath it. Most dialogs claim nothing — including the shell warning the
+ * arrangement came from — and for those the reclaim used to end at `dialog.focus()`, which an open
+ * `<dialog>` refuses.
+ *
+ * Two focusable buttons, because with one "handed back to the first focusable" and "focus never
+ * moved" are the same element and no assertion can tell them apart.
+ */
+export function VanillaClaimlessReclaimHarness() {
+  const modalRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const [controllers, setControllers] = useState<{
+    readonly modal: Bound<'confirm' | 'cancel'>;
+    readonly panel: Bound<'close'>;
+  } | null>(null);
+
+  useEffect(() => {
+    const modalEl = modalRef.current;
+    const panelEl = panelRef.current;
+    const cancel = cancelRef.current;
+    const confirm = confirmRef.current;
+    if (!modalEl || !panelEl || !cancel || !confirm) {
+      return;
+    }
+
+    const instance = createDialogManager();
+    const modal = bindDialog<void, 'confirm' | 'cancel'>({
+      id: 'vanilla-claimless',
+      dialog: modalEl,
+      ariaLabel: 'Vanilla modal claiming no opening focus',
+      manager: instance,
+      style: { width: '260px', height: '200px' },
+    });
+    const panel = bindDialog<void, 'close'>({
+      id: 'vanilla-claimless-panel',
+      dialog: panelEl,
+      ariaLabel: 'Panel opening underneath',
+      nonModal: true,
+      // Viewport-anchored rather than contained: the contained path puts a library-owned
+      // `inset: 0` wrapper over the nearest sized ancestor, which here is the page, and the
+      // harness's own trigger ends up underneath it.
+      portal: true,
+      manager: instance,
+      style: { width: '200px', height: '160px' },
+    });
+
+    // Bound without `focusOnOpen` on either, which is what puts this harness on the floor's path.
+    const unbindCancel = modal.bindAction(cancel, 'cancel');
+    const unbindConfirm = modal.bindAction(confirm, 'confirm');
+
+    setControllers({ modal, panel });
+
+    return () => {
+      unbindCancel();
+      unbindConfirm();
+      modal.destroy();
+      panel.destroy();
+      setControllers(null);
+    };
+  }, []);
+
+  return (
+    <div>
+      <button
+        data-testid="open-both"
+        onClick={() => {
+          void controllers?.modal.open().then(() => {
+            return controllers.panel.open();
+          });
+        }}
+        type="button"
+      >
+        Open the modal, then the panel underneath
+      </button>
+
+      <dialog ref={modalRef} data-testid="vanilla-claimless-dialog">
+        <p>Claims nothing</p>
+        <button data-testid="vanilla-claimless-cancel" ref={cancelRef} type="button">
+          Cancel
+        </button>
+        <button data-testid="vanilla-claimless-confirm" ref={confirmRef} type="button">
+          Confirm
+        </button>
+      </dialog>
+
+      <dialog ref={panelRef} data-testid="vanilla-claimless-panel-dialog">
+        <button data-testid="vanilla-panel-button" type="button">
+          In the panel
+        </button>
+      </dialog>
+    </div>
+  );
+}
