@@ -11,6 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Added — `runDeclarationWindow` is the shape of every render pass, and nothing ran it
+
+Four lines with two documented reasons to exist and no assertion under either. Both hook bindings
+wrap their `render` in it, so it is how every declaration pass in the library is performed — and
+the whole of what it adds over calling `beginRender` and `endRender` in a row is what happens when
+the call between them throws.
+
+Three tests: the value comes back and the window opened and closed around it in that order; a
+`render` that throws still closes the window and the throw reaches the caller; and the part that is
+about the engine rather than about `try`/`finally` — the interrupted pass's table is swapped in, so
+an action the abandoned pass did not redeclare is retired rather than surviving. Without the
+`finally` that last one is a modal whose backdrop click stays opt-in from a pass that never
+finished.
+
 ### Changed — the scroll lock's ownership is a decision now, so the rule it protects can fail a test
 
 `lockBodyScroll` held an eleven-line comment about a `Set` and no test of what the comment says.
