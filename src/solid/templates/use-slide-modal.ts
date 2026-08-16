@@ -93,7 +93,7 @@ export function useSlideModal<TData = void, TReason extends string = string>(
       JSX.Element
     >(options, {
       animation: slideAnimation(options.direction, align),
-      style: slideDialogStyle(options.direction, contained, align),
+      style: slideDialogStyle({ direction: options.direction, contained, align }),
       template: 'slide',
     }),
     // A slide enters/exits by translating past its container edge; clip the contained wrapper so

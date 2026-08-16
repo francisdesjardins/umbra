@@ -128,31 +128,33 @@ export function useForm<TValues extends Record<string, unknown>>({
   const [store] = useState(() => {
     return createStore(
       { values: initialValues, shown: new Set<string>(), changed: new Set<string>() },
-      ({ set }) => {
-        return {
-          change(name: string, value: unknown) {
-            set((s) => {
-              return {
-                ...s,
-                values: { ...s.values, [name]: value },
-                changed: new Set(s.changed).add(name),
-              };
-            });
-          },
-          /** Let these fields show their message from now on. */
-          reveal(names: readonly string[]) {
-            set((s) => {
-              const shown = new Set(s.shown);
-              for (const name of names) {
-                shown.add(name);
-              }
-              return { ...s, shown };
-            });
-          },
-          clear() {
-            set({ values: initialValues, shown: new Set(), changed: new Set() });
-          },
-        };
+      {
+        builder: ({ set }) => {
+          return {
+            change(name: string, value: unknown) {
+              set((s) => {
+                return {
+                  ...s,
+                  values: { ...s.values, [name]: value },
+                  changed: new Set(s.changed).add(name),
+                };
+              });
+            },
+            /** Let these fields show their message from now on. */
+            reveal(names: readonly string[]) {
+              set((s) => {
+                const shown = new Set(s.shown);
+                for (const name of names) {
+                  shown.add(name);
+                }
+                return { ...s, shown };
+              });
+            },
+            clear() {
+              set({ values: initialValues, shown: new Set(), changed: new Set() });
+            },
+          };
+        },
       }
     );
   });

@@ -87,7 +87,8 @@ const log = createLogger('modal');
  *   onClose: (result) => report(result.reason),
  * });
  *
- * const unbind = confirm.bindAction(approveButton, 'approve', {
+ * const unbind = confirm.bindAction(approveButton, {
+ *   reason: 'approve',
  *   hotkey: 'Enter',
  *   onAction: async (close) => {
  *     close(await charge());
@@ -144,7 +145,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     const host = options.host ?? dialog.parentElement;
     if (host) {
       host.setAttribute('data-modal-container', modalId);
-      applyStyle(host, resolved.placement.host);
+      applyStyle(host, { next: resolved.placement.host });
     } else {
       log.warn('Contained dialog has no host to position against', { id: modalId });
     }
@@ -156,7 +157,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  manager.register(modalId, store, {
+  manager.register(modalId, {
+    store,
     template: resolved.template,
     nonModal: resolved.isNonModal,
     getDialog,
@@ -176,7 +178,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   const handleDialogClick = (event: MouseEvent) => {
     if (
-      shouldDismissOnBackdropClick(event, dialog, {
+      shouldDismissOnBackdropClick(event, {
+        dialog,
         store,
         engine,
         isNonModal: resolved.isNonModal,
@@ -214,11 +217,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
     writeAttributes();
 
     // Styles first, so the exit/entrance state is on the element before `syncOpenSequence` shows it.
-    appliedStyle = applyStyle(
-      dialog,
-      getDialogAnimationStyles(snapshot.phase, animation, options.style, resolved.placement),
-      appliedStyle
-    );
+    appliedStyle = applyStyle(dialog, {
+      next: getDialogAnimationStyles(snapshot.phase, {
+        animation,
+        customStyle: options.style,
+        placement: resolved.placement,
+      }),
+      previous: appliedStyle,
+    });
 
     const key = `${snapshot.phase}:${String(snapshot.isPreparing)}`;
     if (key !== attachedFor) {
@@ -316,11 +322,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
   // is the job a renderer does in the other two bindings.
   const action = createActionFactory<TData, TReason>(engine, engine.getSnapshot);
 
-  const bindAction: DialogController<TData, TReason>['bindAction'] = (
-    button,
-    reason,
-    actionOptions
-  ) => {
+  const bindAction: DialogController<TData, TReason>['bindAction'] = (button, binding) => {
+    const { reason, ...actionOptions } = binding;
     const props = action(reason, actionOptions);
 
     // Everything below writes onto a button this binding did not create, so retiring the action

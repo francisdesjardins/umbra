@@ -21,37 +21,39 @@ const INITIAL_STATE: ReactiveState = {
   severity: 'info',
 };
 
-const reactiveStore = createImmerStore(INITIAL_STATE, (api) => {
-  return {
-    reset() {
-      api.reset();
-    },
-    setCount(count: number) {
-      api.update((draft) => {
-        draft.count = count;
-      });
-    },
-    incrementCount() {
-      api.update((draft) => {
-        draft.count += 1;
-      });
-    },
-    decrementCount() {
-      api.update((draft) => {
-        draft.count -= 1;
-      });
-    },
-    setMessage(message: string) {
-      api.update((draft) => {
-        draft.message = message;
-      });
-    },
-    setSeverity(severity: 'info' | 'warning' | 'error') {
-      api.update((draft) => {
-        draft.severity = severity;
-      });
-    },
-  };
+const reactiveStore = createImmerStore(INITIAL_STATE, {
+  builder: (api) => {
+    return {
+      reset() {
+        api.reset();
+      },
+      setCount(count: number) {
+        api.update((draft) => {
+          draft.count = count;
+        });
+      },
+      incrementCount() {
+        api.update((draft) => {
+          draft.count += 1;
+        });
+      },
+      decrementCount() {
+        api.update((draft) => {
+          draft.count -= 1;
+        });
+      },
+      setMessage(message: string) {
+        api.update((draft) => {
+          draft.message = message;
+        });
+      },
+      setSeverity(severity: 'info' | 'warning' | 'error') {
+        api.update((draft) => {
+          draft.severity = severity;
+        });
+      },
+    };
+  },
 });
 
 // ── Result store — separate from reactiveStore to avoid re-rendering LiveControls ──

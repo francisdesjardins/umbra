@@ -12,6 +12,7 @@
 
 export { createStore } from './create-store.js';
 export type {
+  CreateDomainStoreOptions,
   CreateStoreOptions,
   GenericStore,
   Store,

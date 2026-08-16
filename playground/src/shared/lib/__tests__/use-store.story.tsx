@@ -8,25 +8,30 @@ import { useStore } from '../use-store';
 // component tests stay isolated without cross-test state bleed.
 
 function createCounterStore() {
-  return createStore({ count: 0, label: 'idle', other: 0 }, ({ set }) => {
-    return {
-      increment() {
-        set((s) => {
-          return { ...s, count: s.count + 1 };
-        });
+  return createStore(
+    { count: 0, label: 'idle', other: 0 },
+    {
+      builder: ({ set }) => {
+        return {
+          increment() {
+            set((s) => {
+              return { ...s, count: s.count + 1 };
+            });
+          },
+          setLabel(label: string) {
+            set((s) => {
+              return { ...s, label };
+            });
+          },
+          bumpOther() {
+            set((s) => {
+              return { ...s, other: s.other + 1 };
+            });
+          },
+        };
       },
-      setLabel(label: string) {
-        set((s) => {
-          return { ...s, label };
-        });
-      },
-      bumpOther() {
-        set((s) => {
-          return { ...s, other: s.other + 1 };
-        });
-      },
-    };
-  });
+    }
+  );
 }
 
 /**

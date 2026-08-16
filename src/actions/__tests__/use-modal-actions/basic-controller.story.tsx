@@ -3,20 +3,25 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 import { useModal } from '../../../react/use-modal.js';
 import { createStore } from '../../../store/index.js';
 
-const countStore = createStore({ count: 0 }, ({ set, reset }) => {
-  return {
-    actions: {
-      increment() {
-        set((s) => {
-          return { ...s, count: s.count + 1 };
-        });
-      },
-      reset() {
-        reset();
-      },
+const countStore = createStore(
+  { count: 0 },
+  {
+    builder: ({ set, reset }) => {
+      return {
+        actions: {
+          increment() {
+            set((s) => {
+              return { ...s, count: s.count + 1 };
+            });
+          },
+          reset() {
+            reset();
+          },
+        },
+      };
     },
-  };
-});
+  }
+);
 
 /**
  * Tests action close reasons, standalone store state, and store snapshot after close.

@@ -6,7 +6,12 @@
 const MARKS = { out: '→', in: '←', yes: '✓', no: '✗', bus: '~', note: '·' };
 
 /**
- * Put a line at the top of a microfrontend's log panel, newest **first**.
+ * A log function bound to one microfrontend's panel — its id is the only thing that varies.
+ *
+ * Bound once per script rather than passed on every line: four panels' worth of calls read as
+ * `log('yes', '…')`, which is the shape a log line wants.
+ *
+ * Lines go at the top of the panel, newest **first**.
  *
  * Newest-last is the transcript order and it is the wrong one here: four panels fill at once, and
  * the line that explains what just happened was the one below the fold. So the box is a fixed
@@ -23,16 +28,17 @@ const MARKS = { out: '→', in: '←', yes: '✓', no: '✗', bus: '~', note: '�
  * would: the argument is better made by a binding you can install than by one you must copy.
  *
  * @param {string} elementId
- * @param {'out'|'in'|'yes'|'no'|'bus'|'note'} kind
- * @param {string} message
+ * @returns {(kind: 'out'|'in'|'yes'|'no'|'bus'|'note', message: string) => void}
  */
-export function logTo(elementId, kind, message) {
-  const box = document.getElementById(elementId);
-  if (!box) {
-    return;
-  }
-  const line = document.createElement('div');
-  line.className = kind;
-  line.textContent = `${MARKS[kind]} ${message}`;
-  box.prepend(line);
+export function createLog(elementId) {
+  return (kind, message) => {
+    const box = document.getElementById(elementId);
+    if (!box) {
+      return;
+    }
+    const line = document.createElement('div');
+    line.className = kind;
+    line.textContent = `${MARKS[kind]} ${message}`;
+    box.prepend(line);
+  };
 }

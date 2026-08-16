@@ -83,11 +83,11 @@ test.describe('registering the same id twice', () => {
     const first = createFakeStore();
     const second = createFakeStore();
 
-    dm.register('dupe', first);
+    dm.register('dupe', { store: first });
     expect(first.subscriberCount()).toBe(1);
 
     // Two components mounting with the same modal id — a routine user mistake.
-    dm.register('dupe', second);
+    dm.register('dupe', { store: second });
 
     // Without an explicit release the first subscription outlives its registry entry:
     // `unregister('dupe')` can only ever reach the second one, so the first leaks for the
@@ -101,8 +101,8 @@ test.describe('registering the same id twice', () => {
     const first = createFakeStore();
     const second = createFakeStore();
 
-    dm.register('dupe', first);
-    dm.register('dupe', second);
+    dm.register('dupe', { store: first });
+    dm.register('dupe', { store: second });
 
     const events: DialogManagerEvent[] = [];
     dm.subscribe((event) => {
@@ -124,8 +124,8 @@ test.describe('registering the same id twice', () => {
     const first = createFakeStore();
     const second = createFakeStore();
 
-    dm.register('dupe', first);
-    dm.register('dupe', second);
+    dm.register('dupe', { store: first });
+    dm.register('dupe', { store: second });
     dm.unregister('dupe');
 
     expect(first.subscriberCount()).toBe(0);
@@ -140,7 +140,7 @@ test.describe('event emission', () => {
   test('a listener added while an event is dispatching does not receive that event', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('m', store);
+    dm.register('m', { store });
 
     const lateEvents: DialogManagerEvent[] = [];
     dm.subscribe(() => {
@@ -165,7 +165,7 @@ test.describe('event emission', () => {
   test('a listener may unsubscribe itself mid-dispatch', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('m', store);
+    dm.register('m', { store });
 
     const seen: DialogManagerEvent[] = [];
     const unsubscribe = dm.subscribe((event) => {
@@ -192,8 +192,8 @@ test.describe('stack ordering', () => {
     // one synchronous block — a confirm raised from inside another modal — routinely lands
     // both in the same millisecond, at which point a `Date.now()` timestamp cannot separate
     // them and the sort falls back to registry insertion order.
-    dm.register('top', top);
-    dm.register('bottom', bottom);
+    dm.register('top', { store: top });
+    dm.register('bottom', { store: bottom });
 
     bottom.beginOpen();
     top.beginOpen();
@@ -215,8 +215,8 @@ test.describe('stack ordering', () => {
     const dm = createDialogManager();
     const a = createFakeStore();
     const b = createFakeStore();
-    dm.register('a', a);
-    dm.register('b', b);
+    dm.register('a', { store: a });
+    dm.register('b', { store: b });
 
     a.beginOpen();
     b.beginOpen();

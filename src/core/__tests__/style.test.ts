@@ -36,7 +36,7 @@ test.describe('applyStyle', () => {
   test('writes each property through, hyphenating as it goes', () => {
     const target = spyTarget();
 
-    applyStyle(target, { opacity: 1, maxHeight: '100dvh' });
+    applyStyle(target, { next: { opacity: 1, maxHeight: '100dvh' } });
 
     expect(target.calls).toEqual(['set opacity=1', 'set max-height=100dvh']);
   });
@@ -46,7 +46,7 @@ test.describe('applyStyle', () => {
     // `-webkit-line-clamp` is. The leading dash is the whole of the special case.
     const target = spyTarget();
 
-    applyStyle(target, { webkitLineClamp: '2' });
+    applyStyle(target, { next: { webkitLineClamp: '2' } });
 
     expect(target.calls).toEqual(['set -webkit-line-clamp=2']);
   });
@@ -55,20 +55,20 @@ test.describe('applyStyle', () => {
     // The reason this exists rather than an `Object.assign`: the exit keyframe does not mention
     // `transform`, so the entrance's has to go — otherwise the dialog leaves scaled.
     const target = spyTarget();
-    const entrance = applyStyle(target, { opacity: 1, transform: 'scale(1)' });
+    const entrance = applyStyle(target, { next: { opacity: 1, transform: 'scale(1)' } });
     target.calls.length = 0;
 
-    applyStyle(target, { opacity: 0 }, entrance);
+    applyStyle(target, { next: { opacity: 0 }, previous: entrance });
 
     expect(target.calls).toEqual(['remove transform', 'set opacity=0']);
   });
 
   test('keeps a property both styles name, without removing it first', () => {
     const target = spyTarget();
-    const previous = applyStyle(target, { opacity: 1 });
+    const previous = applyStyle(target, { next: { opacity: 1 } });
     target.calls.length = 0;
 
-    applyStyle(target, { opacity: 0 }, previous);
+    applyStyle(target, { next: { opacity: 0 }, previous });
 
     expect(target.calls).toEqual(['set opacity=0']);
   });
@@ -78,23 +78,23 @@ test.describe('applyStyle', () => {
     // and `String(undefined)` would set the literal text "undefined" on the element.
     const target = spyTarget();
 
-    applyStyle(target, { opacity: 1, transform: undefined });
+    applyStyle(target, { next: { opacity: 1, transform: undefined } });
 
     expect(target.calls).toEqual(['set opacity=1', 'remove transform']);
   });
 
   test('returns `next`, so a caller can thread it into the following call', () => {
-    // The signature that lets a binding keep one variable: `applied = applyStyle(el, s, applied)`.
+    // The signature that lets a binding keep one variable: `applied = applyStyle(el, { next, previous: applied })`.
     const target = spyTarget();
     const next = { opacity: 1 };
 
-    expect(applyStyle(target, next)).toBe(next);
+    expect(applyStyle(target, { next })).toBe(next);
   });
 
   test('nothing to clear on the first application', () => {
     const target = spyTarget();
 
-    applyStyle(target, { opacity: 1 });
+    applyStyle(target, { next: { opacity: 1 } });
 
     expect(target.calls).toEqual(['set opacity=1']);
   });
@@ -112,10 +112,10 @@ test.describe('applyStyle', () => {
     const target = spyTarget();
     const custom: Record<string, string> = { '--dialog-backdrop': 'rgba(0, 0, 0, 0.7)' };
 
-    const applied = applyStyle(target, custom);
+    const applied = applyStyle(target, { next: custom });
     // And clearing reaches the same branch, which is the half that would strand a backdrop colour
     // on the element after the style that set it stopped naming it.
-    applyStyle(target, { opacity: 1 }, applied);
+    applyStyle(target, { next: { opacity: 1 }, previous: applied });
 
     expect(target.calls).toEqual([
       'set --dialog-backdrop=rgba(0, 0, 0, 0.7)',

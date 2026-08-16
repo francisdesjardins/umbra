@@ -129,8 +129,8 @@ test.describe('createDialogManager', () => {
     const a = createFakeStore();
     const b = createFakeStore();
 
-    dm.register('a', a);
-    dm.register('b', b);
+    dm.register('a', { store: a });
+    dm.register('b', { store: b });
 
     expect(dm.lookup().exists('a')).toBe(true);
     expect(dm.lookup().getRegisteredCount()).toBe(2);
@@ -145,7 +145,7 @@ test.describe('createDialogManager', () => {
   test('snapshot tracks every phase transition, including closing', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('m', store);
+    dm.register('m', { store });
 
     dm.open('m');
     expect(dm.getSnapshot().openDialogs).toHaveLength(1);
@@ -171,7 +171,7 @@ test.describe('createDialogManager', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
-    dm.register('m', store);
+    dm.register('m', { store });
     dm.subscribe((event) => {
       events.push(event);
     });
@@ -196,7 +196,7 @@ test.describe('createDialogManager', () => {
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
 
-    dm.register('m', store);
+    dm.register('m', { store });
     dm.subscribe((event) => {
       events.push(event);
     });
@@ -220,7 +220,7 @@ test.describe('createDialogManager', () => {
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
 
-    dm.register('m', store);
+    dm.register('m', { store });
     dm.subscribe((event) => {
       events.push(event);
     });
@@ -238,8 +238,8 @@ test.describe('createDialogManager', () => {
     const dm = createDialogManager();
     const a = createFakeStore();
     const b = createFakeStore();
-    dm.register('a', a);
-    dm.register('b', b);
+    dm.register('a', { store: a });
+    dm.register('b', { store: b });
 
     openFully(a);
     openFully(b);
@@ -269,7 +269,7 @@ test.describe('createDialogManager', () => {
     // the other a CSS value, and `z-index: undefined` is a dialog with no stacking at all.
     const dm = createDialogManager();
     const registered = createFakeStore();
-    dm.register('registered', registered);
+    dm.register('registered', { store: registered });
 
     // Nothing open at all: there is no foreground, and the question still has an answer.
     expect(dm.getSnapshot().foreground).toBeUndefined();
@@ -289,8 +289,8 @@ test.describe('createDialogManager', () => {
     const dm = createDialogManager();
     const modal = createFakeStore();
     const nonModal = createFakeStore();
-    dm.register('modal', modal, { template: 'modal', nonModal: false });
-    dm.register('non-modal', nonModal, { template: 'modal', nonModal: true });
+    dm.register('modal', { store: modal, template: 'modal', nonModal: false });
+    dm.register('non-modal', { store: nonModal, template: 'modal', nonModal: true });
 
     openFully(modal);
     openFully(nonModal);
@@ -333,7 +333,7 @@ test.describe('createDialogManager', () => {
   test('lookup(id) on a registered-but-closed modal reports closed state', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('idle', store);
+    dm.register('idle', { store });
 
     const info = dm.lookup('idle');
     expect(info.exists).toBe(true);
@@ -380,8 +380,8 @@ test.describe('createDialogManager', () => {
     const dm = createDialogManager();
     const open = createFakeStore();
     const idle = createFakeStore();
-    dm.register('open', open);
-    dm.register('idle', idle);
+    dm.register('open', { store: open });
+    dm.register('idle', { store: idle });
 
     openFully(open);
 
@@ -403,7 +403,7 @@ test.describe('createDialogManager', () => {
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
 
-    dm.register('m', store);
+    dm.register('m', { store });
     dm.subscribe((event) => {
       events.push(event);
     });

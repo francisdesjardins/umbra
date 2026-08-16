@@ -43,7 +43,8 @@ const WAIST = R / 2;
  * left. `bulge` is whether the terminator swells away from the lit side (gibbous, more than half
  * lit) or back into it (crescent, less than half).
  */
-const litPath = (lightFromRight, rx, bulge) => {
+const litPath = (rx, lit) => {
+  const { lightFromRight, bulge } = lit;
   const limbSweep = lightFromRight ? 1 : 0;
   const top = `${String(C)} ${String(C - R)}`;
   const bottom = `${String(C)} ${String(C + R)}`;
@@ -76,7 +77,7 @@ const svg = (phase) => {
       ? `  <circle cx="${String(C)}" cy="${String(C)}" r="${String(FULL_R)}" fill="${AMBER}" />`
       : [
           `  <circle cx="${String(C)}" cy="${String(C)}" r="${String(R)}" fill="none" stroke="${AMBER}" stroke-width="${String(STROKE)}" />`,
-          `  <path d="${litPath(phase.right, phase.rx, phase.bulge)}" fill="${AMBER}" />`,
+          `  <path d="${litPath(phase.rx, { lightFromRight: phase.right, bulge: phase.bulge })}" fill="${AMBER}" />`,
         ].join('\n');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${String(SIZE)} ${String(SIZE)}" role="img" aria-label="${phase.name.replaceAll('-', ' ')} moon">

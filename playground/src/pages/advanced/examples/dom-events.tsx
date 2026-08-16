@@ -8,15 +8,20 @@ import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { useEffect } from 'react';
 
-const store = createImmerStore({ eventLog: [] as string[] }, ({ update }) => {
-  return {
-    addEvent(entry: string) {
-      update((d) => {
-        d.eventLog = [entry, ...d.eventLog.slice(0, 9)];
-      });
+const store = createImmerStore(
+  { eventLog: [] as string[] },
+  {
+    builder: ({ update }) => {
+      return {
+        addEvent(entry: string) {
+          update((d) => {
+            d.eventLog = [entry, ...d.eventLog.slice(0, 9)];
+          });
+        },
+      };
     },
-  };
-});
+  }
+);
 
 const ALERT_ID = 'dom-events-alert';
 const PANEL_ID = 'dom-events-panel';

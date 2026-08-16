@@ -118,8 +118,7 @@ export type DialogController<TData = void, TReason extends string = string> = {
    */
   readonly bindAction: (
     button: HTMLButtonElement,
-    reason: ActionReason<TReason>,
-    options?: ActionOptions<TData>
+    action: ActionOptions<TData> & { readonly reason: ActionReason<TReason> }
   ) => () => void;
   /**
    * Whether **that** action is running.

@@ -91,9 +91,9 @@ const makeConfig = (prev: Config | undefined, size: number): Config => {
 };
 
 /** Shortest distance from a point to a rectangle; 0 when the point is inside it. */
-const distanceToRect = (rect: DOMRect, x: number, y: number) => {
-  const dx = Math.max(rect.left - x, 0, x - rect.right);
-  const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+const distanceToRect = (rect: DOMRect, point: { readonly x: number; readonly y: number }) => {
+  const dx = Math.max(rect.left - point.x, 0, point.x - rect.right);
+  const dy = Math.max(rect.top - point.y, 0, point.y - rect.bottom);
   return Math.hypot(dx, dy);
 };
 
@@ -174,7 +174,8 @@ export const PeekingMoon = () => {
         return;
       }
       if (
-        distanceToRect(node.getBoundingClientRect(), event.clientX, event.clientY) <= SHY_RADIUS
+        distanceToRect(node.getBoundingClientRect(), { x: event.clientX, y: event.clientY }) <=
+        SHY_RADIUS
       ) {
         setPhase('shy');
       }

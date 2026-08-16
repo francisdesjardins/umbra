@@ -17,12 +17,17 @@ import { createStore } from 'umbra/react';
  * }
  */
 export function createResultStore() {
-  const store = createStore({ result: null as string | null }, ({ set }) => {
-    return {
-      setResult(result: string | null) {
-        set({ result });
+  const store = createStore(
+    { result: null as string | null },
+    {
+      builder: ({ set }) => {
+        return {
+          setResult(result: string | null) {
+            set({ result });
+          },
+        };
       },
-    };
-  });
+    }
+  );
   return store;
 }

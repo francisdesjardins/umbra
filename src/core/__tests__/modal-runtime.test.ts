@@ -178,7 +178,7 @@ test.describe('teardownModal', () => {
   test('closes an open modal and reports it through onClose', () => {
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-open');
-    dm.register('teardown-open', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-open', { store, template: 'modal', nonModal: false });
     store.beginOpen();
 
     const reasons: string[] = [];
@@ -201,7 +201,7 @@ test.describe('teardownModal', () => {
   test('a modal torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
     const { store, openAndWait } = createModalRuntime('teardown-waiting');
-    dm.register('teardown-waiting', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-waiting', { store, template: 'modal', nonModal: false });
 
     const closed = openAndWait();
     store.finishPreparing();
@@ -227,7 +227,7 @@ test.describe('teardownModal', () => {
     // alive while the awaiting code silently never resumes.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-closed');
-    dm.register('teardown-closed', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-closed', { store, template: 'modal', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
       store.addCloseResolver(resolve);
@@ -282,7 +282,8 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('a non-modal dialog has no backdrop to click', () => {
     const { store } = createModalRuntime('backdrop-non-modal');
     expect(
-      shouldDismissOnBackdropClick(onBackdrop, boxed, {
+      shouldDismissOnBackdropClick(onBackdrop, {
+        dialog: boxed,
         store,
         engine: gate({ hasActions: false }),
         isNonModal: true,
@@ -311,14 +312,16 @@ test.describe('shouldDismissOnBackdropClick', () => {
       };
 
       expect(
-        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        shouldDismissOnBackdropClick(onBackdrop, {
+          dialog: boxed,
           ...options,
           engine: gate({ hasActions: false }),
         })
       ).toBe(true);
 
       expect(
-        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        shouldDismissOnBackdropClick(onBackdrop, {
+          dialog: boxed,
           ...options,
           engine: gate({ hasActions: true }),
         })
@@ -338,7 +341,8 @@ test.describe('shouldDismissOnBackdropClick', () => {
       store.finishPreparing();
 
       expect(
-        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        shouldDismissOnBackdropClick(onBackdrop, {
+          dialog: boxed,
           store,
           engine: gate({ hasActions: true }),
           isNonModal: false,
@@ -363,7 +367,8 @@ test.describe('shouldDismissOnBackdropClick', () => {
       store.finishPreparing();
 
       expect(
-        shouldDismissOnBackdropClick(onBackdrop, boxed, {
+        shouldDismissOnBackdropClick(onBackdrop, {
+          dialog: boxed,
           store,
           engine: gate({ hasActions: false, hasRunningAction: true }),
           isNonModal: false,
@@ -380,7 +385,8 @@ test.describe('shouldDismissOnBackdropClick', () => {
     const { store } = createModalRuntime('backdrop-closed');
     expect(store.getSnapshot().phase).toBe('closed');
     expect(
-      shouldDismissOnBackdropClick(onBackdrop, boxed, {
+      shouldDismissOnBackdropClick(onBackdrop, {
+        dialog: boxed,
         store,
         engine: gate({ hasActions: false }),
         isNonModal: false,
@@ -411,8 +417,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
       expect(
         shouldDismissOnBackdropClick(
           { target: surface, currentTarget: surface, clientX: 200, clientY: 150 },
-          boxed,
-          options
+          { dialog: boxed, ...options }
         )
       ).toBe(false);
 
@@ -420,8 +425,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
       expect(
         shouldDismissOnBackdropClick(
           { target: new EventTarget(), currentTarget: surface, clientX: 0, clientY: 0 },
-          boxed,
-          options
+          { dialog: boxed, ...options }
         )
       ).toBe(false);
     } finally {
@@ -437,7 +441,7 @@ test.describe('teardownModal reports a failing onClose', () => {
     // unhandled rejection in whatever unmounted the modal.
     const dm = createDialogManager();
     const { store } = createModalRuntime<void, 'save'>('teardown-throws');
-    dm.register('teardown-throws', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-throws', { store, template: 'modal', nonModal: false });
 
     store.setOnClose(() => {
       throw new Error('cleanup exploded');
@@ -482,7 +486,7 @@ test.describe('teardownModal reports through onError', () => {
     // modal happened to end. A modal unmounted while open is the ordinary React case, not an edge.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-on-error');
-    dm.register('teardown-on-error', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-on-error', { store, template: 'modal', nonModal: false });
     store.beginOpen();
     store.setOnClose(() => {
       throw new Error('cleanup exploded');
@@ -509,7 +513,7 @@ test.describe('teardownModal reports through onError', () => {
     // for every modal that unmounts normally.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-quiet');
-    dm.register('teardown-quiet', store, { template: 'modal', nonModal: false });
+    dm.register('teardown-quiet', { store, template: 'modal', nonModal: false });
     store.beginOpen();
 
     const failures: unknown[] = [];

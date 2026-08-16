@@ -16,7 +16,7 @@ export type ImmerStoreApi<TSnapshot, TContext = never> = StoreApi<TSnapshot, TCo
 };
 
 /**
- * Like `createStore(initial, builder, options)`, but the builder receives an
+ * Like `createStore(initial, { builder })`, but the builder receives an
  * extra `update(recipe)` that mutates an immer draft.
  */
 export function createImmerStore<
@@ -25,12 +25,14 @@ export function createImmerStore<
   TContext = never,
 >(
   initialSnapshot: TSnapshot,
-  builder: (api: ImmerStoreApi<TSnapshot, TContext>) => TMethods,
-  options?: CreateStoreOptions<TSnapshot, TContext>
+  options: CreateStoreOptions<TSnapshot, TContext> & {
+    readonly builder: (api: ImmerStoreApi<TSnapshot, TContext>) => TMethods;
+  }
 ): Store<TSnapshot, TMethods> {
-  return createStore<TSnapshot, TMethods, TContext>(
-    initialSnapshot,
-    (api) => {
+  const { builder, ...rest } = options;
+  return createStore<TSnapshot, TMethods, TContext>(initialSnapshot, {
+    ...rest,
+    builder: (api) => {
       return builder({
         ...api,
         update: (recipe) => {
@@ -40,6 +42,5 @@ export function createImmerStore<
         },
       });
     },
-    options
-  );
+  });
 }

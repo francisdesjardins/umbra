@@ -79,6 +79,20 @@ export type CreateStoreOptions<TSnapshot, TContext = never> = {
   readonly context?: TContext | undefined;
 };
 
+/**
+ * The **domain** form's options: the builder, plus everything the generic form takes.
+ *
+ * `builder` is required, and that is what tells the two forms apart — see the overloads on
+ * {@link createStore}.
+ */
+export type CreateDomainStoreOptions<TSnapshot, TMethods, TContext = never> = CreateStoreOptions<
+  TSnapshot,
+  TContext
+> & {
+  /** Returns the store's methods; they merge flat at the root, zustand-style. */
+  readonly builder: (api: StoreApi<TSnapshot, TContext>) => TMethods;
+};
+
 // ── Reactive cell ─────────────────────────────────────────────────────────────
 
 /** The minimal observable state holder that backs every store. */
@@ -115,43 +129,45 @@ function createCell<TSnapshot>(initial: TSnapshot): Cell<TSnapshot> {
 /**
  * Creates a reactive store.
  *
- * Two modes:
+ * Two modes, told apart by whether the options carry a `builder`:
  * - **Generic** — `createStore(initial)` exposes the built-in mutators
  *   (`set`, `reset`) directly on the instance. Use for a plain reactive cell.
- * - **Domain** — `createStore(initial, builder)` exposes only the methods your
- *   builder returns (merged flat at the root, zustand-style). The built-in
+ * - **Domain** — `createStore(initial, { builder })` exposes only the methods
+ *   your builder returns (merged flat at the root, zustand-style). The built-in
  *   mutators are reachable through the builder's `api` argument
  *   (`{ get, set, reset, getContext }`); to expose `reset` on the instance,
  *   define one: `reset() { api.reset(); }`.
  *
  * @example
- * const counter = createStore({ count: 0 }, ({ set }) => ({
- *   increment() {
- *     set((s) => ({ ...s, count: s.count + 1 }));
- *   },
- * }));
+ * const counter = createStore(
+ *   { count: 0 },
+ *   {
+ *     builder: ({ set }) => ({
+ *       increment() {
+ *         set((s) => ({ ...s, count: s.count + 1 }));
+ *       },
+ *     }),
+ *   }
+ * );
  *
  * counter.increment();
  * counter.getSnapshot(); // { count: 1 }
  */
+export function createStore<TSnapshot, TMethods extends Record<string, unknown>, TContext = never>(
+  initialSnapshot: TSnapshot,
+  options: CreateDomainStoreOptions<TSnapshot, TMethods, TContext>
+): Store<TSnapshot, TMethods>;
 export function createStore<TSnapshot>(
   initialSnapshot: TSnapshot,
   options?: Omit<CreateStoreOptions<TSnapshot>, 'context'>
 ): GenericStore<TSnapshot>;
-export function createStore<TSnapshot, TMethods extends Record<string, unknown>, TContext = never>(
-  initialSnapshot: TSnapshot,
-  builder: (api: StoreApi<TSnapshot, TContext>) => TMethods,
-  options?: CreateStoreOptions<TSnapshot, TContext>
-): Store<TSnapshot, TMethods>;
 export function createStore<TSnapshot, TContext = never>(
   initialSnapshot: TSnapshot,
-  builderOrOptions?:
-    | ((api: StoreApi<TSnapshot, TContext>) => Record<string, unknown>)
-    | CreateStoreOptions<TSnapshot, TContext>,
-  maybeOptions?: CreateStoreOptions<TSnapshot, TContext>
+  options?:
+    | CreateStoreOptions<TSnapshot, TContext>
+    | CreateDomainStoreOptions<TSnapshot, Record<string, unknown>, TContext>
 ): unknown {
-  const builder = typeof builderOrOptions === 'function' ? builderOrOptions : undefined;
-  const options = typeof builderOrOptions === 'function' ? maybeOptions : builderOrOptions;
+  const builder = options !== undefined && 'builder' in options ? options.builder : undefined;
   const equals = options?.equals ?? Object.is;
 
   const cell = createCell(initialSnapshot);

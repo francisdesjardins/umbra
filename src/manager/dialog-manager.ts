@@ -181,8 +181,10 @@ export type OpenRequestOutcome =
       readonly reason: string;
     };
 
-/** What a binding may tell the registry about a dialog beyond its store. */
+/** The store a binding registers, and what else it may tell the registry about that dialog. */
 export type RegisterOptions = {
+  /** The state this dialog is driven by — the one field the registry cannot default. */
+  readonly store: RegisteredStore;
   /**
    * Which template built this dialog — free-form, carried on the DOM events, never read here.
    * Defaults to `'modal'`. See `ModalInfo.template`.
@@ -351,7 +353,7 @@ const emptySnapshot: DialogManagerSnapshot = {
  */
 export type DialogManager = {
   /** Register a modal store. Called internally by useModal. */
-  register(id: string, store: RegisteredStore, options?: RegisterOptions): void;
+  register(id: string, options: RegisterOptions): void;
 
   /** Unregister a modal store. Called internally by useModal. */
   unregister(id: string): void;
@@ -663,13 +665,14 @@ export function createDialogManager(): DialogManager {
   /**
    * Convert a registry entry to a public ModalInfo.
    * Accepts a pre-computed `topId` to avoid redundant registry iterations
-   * when called in a batch (e.g. inside `computeSnapshot`).
+   * when called in a batch (e.g. inside `computeSnapshot`); omitting it says
+   * "this one cannot be the foreground", which is what every single-entry read means.
    */
   function toModalInfo(
     id: string,
-    entry: RegistryEntry,
-    topId: string | undefined
+    source: { readonly entry: RegistryEntry; readonly topId?: string | undefined }
   ): RegisteredModalInfo {
+    const { entry, topId } = source;
     const { phase, isPreparing } = entry.store.getSnapshot();
     return {
       id,
@@ -779,7 +782,7 @@ export function createDialogManager(): DialogManager {
     const topId = openEntries.at(-1)?.id;
 
     const openDialogs = openEntries.map(({ id, entry }) => {
-      return toModalInfo(id, entry, topId);
+      return toModalInfo(id, { entry, topId });
     });
 
     return {
@@ -884,8 +887,8 @@ export function createDialogManager(): DialogManager {
    * Subscribes to the store's snapshot changes to track open/close transitions
    * and emit events to external listeners.
    */
-  function register(id: string, store: RegisteredStore, options: RegisterOptions = {}) {
-    const { template = 'modal', nonModal = false, onOpenRequest, getDialog } = options;
+  function register(id: string, options: RegisterOptions) {
+    const { store, template = 'modal', nonModal = false, onOpenRequest, getDialog } = options;
     const initial = store.getSnapshot();
     let prevPhase = initial.phase;
     let prevIsPreparing = initial.isPreparing;
@@ -1031,8 +1034,8 @@ export function createDialogManager(): DialogManager {
         return open;
       }
       const entry = registry.get(id);
-      // A registered-but-closed modal is never the foreground — topId undefined.
-      return entry ? toModalInfo(id, entry, undefined) : toUnregisteredModalInfo(id);
+      // A registered-but-closed modal is never the foreground — no `topId`.
+      return entry ? toModalInfo(id, { entry }) : toUnregisteredModalInfo(id);
     },
 
     exists(id: string): boolean {
@@ -1076,7 +1079,7 @@ export function createDialogManager(): DialogManager {
       const result: RegisteredModalInfo[] = [];
       for (const [id, entry] of registry) {
         if (entry.store.getSnapshot().phase === 'closed') {
-          result.push(toModalInfo(id, entry, undefined));
+          result.push(toModalInfo(id, { entry }));
         }
       }
       return result;

@@ -210,7 +210,8 @@ function moduleName(example, index) {
   return `${file}--${example.symbol}-${index}`;
 }
 
-function buildModule(example, exportsBySpecifier, stubs) {
+function buildModule(example, from) {
+  const { exportsBySpecifier, stubs } = from;
   const specifier = specifierFor(example.file);
   const exported = exportsBySpecifier.get(specifier) ?? new Map();
   const code = normalise(example.code);
@@ -296,13 +297,17 @@ function publicExports(binding) {
   return exported;
 }
 
-function writeModules(examples, exported, stubsByModule) {
+function writeModules(examples, from) {
+  const { exported, stubsByModule } = from;
   rmSync(GENERATED, { recursive: true, force: true });
   mkdirSync(GENERATED, { recursive: true });
   for (const example of examples) {
     writeFileSync(
       join(GENERATED, `${example.module}.tsx`),
-      buildModule(example, exported, stubsByModule[example.module] ?? [])
+      buildModule(example, {
+        exportsBySpecifier: exported,
+        stubs: stubsByModule[example.module] ?? [],
+      })
     );
   }
 }
@@ -495,9 +500,9 @@ if (FIX) {
 // problem it is rather than as N confusing TS2307s attributed to individual examples.
 assertSpecifiersMapped();
 
-writeModules(examples, exported, {});
+writeModules(examples, { exported, stubsByModule: {} });
 const stubs = collectStubs(typeCheck());
-writeModules(examples, exported, stubs);
+writeModules(examples, { exported, stubsByModule: stubs });
 
 const typeErrors = attributeTypes(typeCheck(), byModule);
 const lintErrors = attributeLint(lint(), byModule);

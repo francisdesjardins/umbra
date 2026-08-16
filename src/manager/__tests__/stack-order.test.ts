@@ -10,8 +10,8 @@ import { orderStack, planRaises, type StackCandidate, type StackPriority } from 
  * plan one item longer than necessary is a visible cost, not a wasted cycle.
  */
 
-function candidate(id: string, openSequence: number, extra: Partial<StackCandidate> = {}) {
-  return { id, template: 'modal', nonModal: false, openSequence, ...extra };
+function candidate(id: string, over: Partial<StackCandidate> & { openSequence: number }) {
+  return { id, template: 'modal', nonModal: false, ...over };
 }
 
 function ids(candidates: readonly StackCandidate[]): string[] {
@@ -25,7 +25,11 @@ function ids(candidates: readonly StackCandidate[]): string[] {
 test.describe('orderStack', () => {
   test('with no policy it is the open order, whatever order the registry iterates in', () => {
     const ordered = orderStack(
-      [candidate('c', 3), candidate('a', 1), candidate('b', 2)],
+      [
+        candidate('c', { openSequence: 3 }),
+        candidate('a', { openSequence: 1 }),
+        candidate('b', { openSequence: 2 }),
+      ],
       undefined
     );
 
@@ -39,7 +43,10 @@ test.describe('orderStack', () => {
     // interruption raised over a side panel read as the foreground while Escape went to the panel,
     // because the panel had opened half a second later.
     const ordered = orderStack(
-      [candidate('panel', 2, { nonModal: true }), candidate('alert', 1)],
+      [
+        candidate('panel', { openSequence: 2, nonModal: true }),
+        candidate('alert', { openSequence: 1 }),
+      ],
       undefined
     );
 
@@ -51,7 +58,10 @@ test.describe('orderStack', () => {
     // wrong to *want* it — it is asking for something the top layer will not perform, and
     // `planRaises` would otherwise plan a lift that cannot happen.
     const ordered = orderStack(
-      [candidate('panel', 1, { nonModal: true }), candidate('alert', 2)],
+      [
+        candidate('panel', { openSequence: 1, nonModal: true }),
+        candidate('alert', { openSequence: 2 }),
+      ],
       (modal) => {
         return modal.nonModal ? 100 : 0;
       }
@@ -64,10 +74,10 @@ test.describe('orderStack', () => {
     // What is left to it, and it is the whole of what the platform leaves open.
     const ordered = orderStack(
       [
-        candidate('panel-a', 1, { nonModal: true }),
-        candidate('panel-b', 2, { nonModal: true }),
-        candidate('alert', 3),
-        candidate('confirm', 4),
+        candidate('panel-a', { openSequence: 1, nonModal: true }),
+        candidate('panel-b', { openSequence: 2, nonModal: true }),
+        candidate('alert', { openSequence: 3 }),
+        candidate('confirm', { openSequence: 4 }),
       ],
       (modal) => {
         return modal.id === 'panel-b' || modal.id === 'alert' ? -10 : 0;
@@ -83,7 +93,10 @@ test.describe('orderStack', () => {
     };
 
     // The warning opened first and would be at the bottom on open order alone.
-    const ordered = orderStack([candidate('warning', 1), candidate('slide', 2)], priority);
+    const ordered = orderStack(
+      [candidate('warning', { openSequence: 1 }), candidate('slide', { openSequence: 2 })],
+      priority
+    );
 
     expect(ids(ordered)).toEqual(['slide', 'warning']);
   });
@@ -94,7 +107,11 @@ test.describe('orderStack', () => {
     };
 
     const ordered = orderStack(
-      [candidate('slide', 1, { template: 'slide' }), candidate('first', 2), candidate('second', 3)],
+      [
+        candidate('slide', { openSequence: 1, template: 'slide' }),
+        candidate('first', { openSequence: 2 }),
+        candidate('second', { openSequence: 3 }),
+      ],
       priority
     );
 
@@ -110,9 +127,9 @@ test.describe('orderStack', () => {
 
     orderStack(
       [
-        candidate('a', 1, { template: 'slide' }),
-        candidate('b', 2, { nonModal: true }),
-        candidate('c', 3),
+        candidate('a', { openSequence: 1, template: 'slide' }),
+        candidate('b', { openSequence: 2, nonModal: true }),
+        candidate('c', { openSequence: 3 }),
       ],
       priority
     );
@@ -133,7 +150,11 @@ test.describe('orderStack', () => {
     // The alternative is the registry's snapshot recomputation throwing, on every transition of
     // every dialog, for a dialog that has nothing wrong with it.
     const ordered = orderStack(
-      [candidate('boom', 1), candidate('top', 2), candidate('plain', 3)],
+      [
+        candidate('boom', { openSequence: 1 }),
+        candidate('top', { openSequence: 2 }),
+        candidate('plain', { openSequence: 3 }),
+      ],
       priority
     );
 
@@ -146,7 +167,11 @@ test.describe('orderStack', () => {
     };
 
     const ordered = orderStack(
-      [candidate('bad', 2), candidate('a', 1), candidate('b', 3)],
+      [
+        candidate('bad', { openSequence: 2 }),
+        candidate('a', { openSequence: 1 }),
+        candidate('b', { openSequence: 3 }),
+      ],
       priority
     );
 

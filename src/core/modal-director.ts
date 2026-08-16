@@ -150,6 +150,18 @@ type StepParts = {
 };
 
 /**
+ * Everything a step's `run` reads that is not the DOM context.
+ *
+ * One object rather than two arguments because the pair travels together everywhere and only the
+ * director ever assembles it — a step declaring `parts` it does not touch costs nothing, and the
+ * table below stays a table.
+ */
+type ModalLifecycleStepArgs = {
+  readonly pass: ModalLifecyclePass;
+  readonly parts: StepParts;
+};
+
+/**
  * One step of the lifecycle: what it is called, what it reads, and how to run it.
  *
  * `inputs: null` means *run on every pass and never tear down* — the only step that needs it is
@@ -160,7 +172,7 @@ type StepParts = {
 type ModalLifecycleStepSpec = {
   readonly step: string;
   readonly inputs: ((pass: ModalLifecyclePass) => StepInputs) | null;
-  readonly run: (dom: ModalDomContext, pass: ModalLifecyclePass, parts: StepParts) => StepTeardown;
+  readonly run: (dom: ModalDomContext, args: ModalLifecycleStepArgs) => StepTeardown;
 };
 
 // ── The sequence ─────────────────────────────────────────────────────────────
@@ -202,7 +214,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** Advance the native lifecycle — the `showModal()` / `show()` that puts the dialog on screen. */
     step: 'syncOpenSequence',
     inputs: null,
-    run: (dom, pass) => {
+    run: (dom, { pass }) => {
       syncOpenSequence(dom, {
         prepare: pass.prepare,
         nonModal: pass.nonModal,
@@ -218,7 +230,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     inputs: (pass) => {
       return [pass.phase, pass.isPreparing];
     },
-    run: (dom, pass) => {
+    run: (dom, { pass }) => {
       syncLabellingDiagnostics(dom, { isPreparing: pass.isPreparing });
     },
   },
@@ -228,7 +240,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     inputs: (pass) => {
       return [pass.phase, pass.nonModal, pass.primaryProperty, pass.exitDuration, pass.onError];
     },
-    run: (dom, pass) => {
+    run: (dom, { pass }) => {
       return syncCloseSequence(dom, {
         onError: pass.onError,
         nonModal: pass.nonModal,
@@ -241,7 +253,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** Hotkeys and the dismiss key, scoped to this dialog's own subtree. */
     step: 'attachDialogKeydown',
     inputs: keydownInputs,
-    run: (dom, pass, parts) => {
+    run: (dom, { pass, parts }) => {
       return attachDialogKeydown(dom, keydownOptions(pass, parts.engine));
     },
   },
@@ -249,7 +261,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** The platform's own cancel, which Escape raises before any listener of ours sees it. */
     step: 'attachDialogCancel',
     inputs: keydownInputs,
-    run: (dom, pass, parts) => {
+    run: (dom, { pass, parts }) => {
       return attachDialogCancel(dom, keydownOptions(pass, parts.engine));
     },
   },
@@ -257,7 +269,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** The dismiss key for a non-modal dialog, which the window has to answer for. */
     step: 'attachWindowDismissKey',
     inputs: keydownInputs,
-    run: (dom, pass, parts) => {
+    run: (dom, { pass, parts }) => {
       return attachWindowDismissKey(dom, keydownOptions(pass, parts.engine));
     },
   },
@@ -279,7 +291,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     inputs: (pass) => {
       return [pass.phase];
     },
-    run: (_dom, pass, parts) => {
+    run: (_dom, { pass, parts }) => {
       return parts.focus.sync(pass.phase);
     },
   },
@@ -289,7 +301,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     inputs: (pass) => {
       return [pass.phase, pass.containFocus];
     },
-    run: (dom, pass) => {
+    run: (dom, { pass }) => {
       return attachFocusContainment(dom, { containFocus: pass.containFocus });
     },
   },
@@ -299,7 +311,7 @@ export const MODAL_LIFECYCLE_STEPS = [
     inputs: (pass) => {
       return [pass.phase, pass.dismissOnClickOutside, pass.dismissWhilePreparing];
     },
-    run: (dom, pass, parts) => {
+    run: (dom, { pass, parts }) => {
       return attachClickOutside(dom, {
         dismissOnClickOutside: pass.dismissOnClickOutside,
         dismissWhilePreparing: pass.dismissWhilePreparing,
@@ -351,7 +363,7 @@ export function createModalDirector(ctx: ModalDirectorContext) {
       return {
         inputs: spec.inputs,
         run: (dom, pass) => {
-          return spec.run(dom, pass, parts);
+          return spec.run(dom, { pass, parts });
         },
       };
     }),

@@ -27,6 +27,26 @@ export type SlideDirection = 'left' | 'right' | 'top' | 'bottom';
  */
 export type SlideAlign = 'stretch' | 'start' | 'center' | 'end';
 
+/**
+ * Everything the panel's position is derived from: which edge, how it sits across it, and what it
+ * is measured against.
+ *
+ * One shape rather than three arguments because the two style functions read exactly the same
+ * three answers, and a caller passing them in different orders was the failure the type removes.
+ */
+export type SlideGeometry = {
+  /** Edge the panel enters from. */
+  readonly direction: SlideDirection;
+  /** Cross-axis alignment. */
+  readonly align: SlideAlign;
+  /**
+   * `true` for a non-modal, inline (non-portaled) dialog. It anchors to the library's positioned
+   * wrapper via `absolute` and sizes to that container (`100%`) instead of the viewport
+   * (`100dvw`/`100dvh`) — see `useModal`'s contained mode.
+   */
+  readonly contained: boolean;
+};
+
 /** The full cross-axis size: the container's in contained mode, the viewport's otherwise. */
 type CrossSize = '100%' | '100dvh' | '100dvw';
 
@@ -110,11 +130,8 @@ export function slideAnimation(
  * element would be overwritten. Instead `center` uses `top: 50%` plus a `translateY(-50%)`
  * folded into every keyframe (see {@link slideAnimation}).
  */
-function crossAxisStyle(
-  direction: SlideDirection,
-  align: SlideAlign,
-  contained: boolean
-): SlideDialogStyle {
+function crossAxisStyle(geometry: SlideGeometry): SlideDialogStyle {
+  const { direction, align, contained } = geometry;
   const horizontal = isHorizontal(direction);
   const fullCross: CrossSize = contained ? '100%' : horizontal ? '100dvh' : '100dvw';
 
@@ -146,17 +163,10 @@ function crossAxisStyle(
  * the near/far edge (not the far edge via `left/top: 100%`) also keeps the available size full,
  * so `auto` never collapses to zero.
  *
- * @param direction - Edge the panel enters from.
- * @param contained - `true` for a non-modal, inline (non-portaled) dialog. It anchors to the
- *   library's positioned wrapper via `absolute` and sizes to that container (`100%`) instead of
- *   the viewport (`100dvw`/`100dvh`) — see `useModal`'s contained mode.
- * @param align - Cross-axis alignment.
+ * @param geometry - Which edge, how it sits across it, and what it is measured against.
  */
-export function slideDialogStyle(
-  direction: SlideDirection,
-  contained: boolean,
-  align: SlideAlign
-): SlideDialogStyle {
+export function slideDialogStyle(geometry: SlideGeometry): SlideDialogStyle {
+  const { direction, contained } = geometry;
   return {
     position: contained ? 'absolute' : 'fixed',
     margin: 0,
@@ -167,6 +177,6 @@ export function slideDialogStyle(
     bottom: 'auto',
     left: 'auto',
     ...MAIN_AXIS[direction],
-    ...crossAxisStyle(direction, align, contained),
+    ...crossAxisStyle(geometry),
   };
 }

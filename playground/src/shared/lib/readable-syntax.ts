@@ -19,7 +19,7 @@ export const readableSyntaxStyle = (style: PrismStyle, background: string): Pris
   for (const [selector, rules] of Object.entries(style)) {
     const { color } = rules;
     out[selector] =
-      color === undefined ? rules : { ...rules, color: readableHsl(color, background) };
+      color === undefined ? rules : { ...rules, color: readableHsl(color, { background }) };
   }
   return out;
 };

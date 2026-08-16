@@ -50,8 +50,9 @@ export function VanillaBasicHarness() {
     });
 
     const unbind = [
-      bound.bindAction(cancel, 'cancel', { hotkey: 'Escape' }),
-      bound.bindAction(confirm, 'confirm', {
+      bound.bindAction(cancel, { reason: 'cancel', hotkey: 'Escape' }),
+      bound.bindAction(confirm, {
+        reason: 'confirm',
         hotkey: 'Enter',
         focusOnOpen: true,
         onAction: async (close) => {
@@ -145,7 +146,7 @@ export function VanillaUnbindHarness() {
       manager: createDialogManager(),
     });
 
-    let unbindConfirm: (() => void) | null = bound.bindAction(confirm, 'confirm');
+    let unbindConfirm: (() => void) | null = bound.bindAction(confirm, { reason: 'confirm' });
 
     // Inside the dialog, because a `showModal()` dialog owns the top layer — the same rule the
     // React and Solid stories follow. A plain listener, not an action.
@@ -231,8 +232,9 @@ export function VanillaFailingActionHarness() {
 
     // `focusOnOpen` on the *other* button, so "focus went back to the runner" cannot be confused
     // with "focus never moved": the opening focus is Cancel and the runner is Submit.
-    const unbindCancel = bound.bindAction(cancel, 'cancel', { focusOnOpen: true });
-    const unbindFail = bound.bindAction(fail, 'submit', {
+    const unbindCancel = bound.bindAction(cancel, { reason: 'cancel', focusOnOpen: true });
+    const unbindFail = bound.bindAction(fail, {
+      reason: 'submit',
       onAction: () => {
         throw new Error('submit failed');
       },
@@ -310,7 +312,7 @@ export function VanillaContainedHarness() {
       manager: createDialogManager(),
     });
 
-    const unbindClose = bound.bindAction(close, 'close');
+    const unbindClose = bound.bindAction(close, { reason: 'close' });
     const stop = bound.subscribe(() => {
       setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
     });
@@ -711,7 +713,7 @@ export function VanillaShadowRootHarness() {
       manager: createDialogManager(),
     });
 
-    const unbindConfirm = bound.bindAction(confirm, 'confirm', { focusOnOpen: true });
+    const unbindConfirm = bound.bindAction(confirm, { reason: 'confirm', focusOnOpen: true });
     const stop = bound.subscribe(() => {
       setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
     });
@@ -777,7 +779,8 @@ export function VanillaRestoreOnUnbindHarness() {
 
     // Never resolves: the action stays running so the unbind lands mid-flight, which is the state
     // that used to weld `disabled` and `aria-busy` onto the caller's button for good.
-    const unbindSlow = bound.bindAction(slow, 'save', {
+    const unbindSlow = bound.bindAction(slow, {
+      reason: 'save',
       hotkey: 'Ctrl+s',
       onAction: async () => {
         await new Promise(() => {
@@ -785,7 +788,7 @@ export function VanillaRestoreOnUnbindHarness() {
         });
       },
     });
-    const unbindOther = bound.bindAction(alreadyOff, 'other');
+    const unbindOther = bound.bindAction(alreadyOff, { reason: 'other' });
 
     const handleUnbind = () => {
       unbindSlow();
@@ -1083,7 +1086,7 @@ export function VanillaShadowStackHarness() {
       style: { width: '260px', height: '260px' },
     });
 
-    const unbindConfirm = shadow.bindAction(confirm, 'confirm', { focusOnOpen: true });
+    const unbindConfirm = shadow.bindAction(confirm, { reason: 'confirm', focusOnOpen: true });
 
     setControllers({ shadow, over: bound });
     setManager(instance);
@@ -1178,7 +1181,7 @@ export function VanillaPortalHarness() {
       manager: createDialogManager(),
     });
 
-    const unbindClose = bound.bindAction(close, 'close');
+    const unbindClose = bound.bindAction(close, { reason: 'close' });
     const stop = bound.subscribe(() => {
       setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
     });
@@ -1551,8 +1554,8 @@ export function VanillaClaimlessReclaimHarness() {
     });
 
     // Bound without `focusOnOpen` on either, which is what puts this harness on the floor's path.
-    const unbindCancel = modal.bindAction(cancel, 'cancel');
-    const unbindConfirm = modal.bindAction(confirm, 'confirm');
+    const unbindCancel = modal.bindAction(cancel, { reason: 'cancel' });
+    const unbindConfirm = modal.bindAction(confirm, { reason: 'confirm' });
 
     setControllers({ modal, panel });
 

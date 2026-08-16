@@ -529,15 +529,20 @@ State management lives in [store/](store/) — a hand-rolled reactive cell (a `S
 ```ts
 import { createStore } from '../store';
 
-const counter = createStore({ count: 0 }, ({ set }) => ({
-  increment() {
-    set((s) => ({ ...s, count: s.count + 1 }));
-  },
-}));
+const counter = createStore(
+  { count: 0 },
+  {
+    builder: ({ set }) => ({
+      increment() {
+        set((s) => ({ ...s, count: s.count + 1 }));
+      },
+    }),
+  }
+);
 counter.increment(); // methods merge at the root, zustand-style — no `actions` wrapper
 ```
 
-**Two modes:** generic (`createStore(initial)` → `set`/`reset` on the instance) vs domain (with a builder → only your methods; built-ins live on `api`). No reserved keys. **Mutation** is `set(next | (prev) => next)` and `reset()` — there is no draft engine; for nested updates compose immer at the call site (`set(s => produce(s, recipe))`). **Derived state** is computed at the read — `useSyncExternalStore(store.subscribe, () => derive(store.getSnapshot()))` — there is no `createDerivedStore`. See [store/CLAUDE.md](store/CLAUDE.md).
+**Two modes:** generic (`createStore(initial)` → `set`/`reset` on the instance) vs domain (`createStore(initial, { builder })` → only your methods; built-ins live on `api`). Both forms take one options object, and `builder` is what tells them apart. No reserved keys. **Mutation** is `set(next | (prev) => next)` and `reset()` — there is no draft engine; for nested updates compose immer at the call site (`set(s => produce(s, recipe))`). **Derived state** is computed at the read — `useSyncExternalStore(store.subscribe, () => derive(store.getSnapshot()))` — there is no `createDerivedStore`. See [store/CLAUDE.md](store/CLAUDE.md).
 
 ## Debug Logging
 

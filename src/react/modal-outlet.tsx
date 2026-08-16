@@ -72,26 +72,28 @@ function createOutletStore() {
   // exactly two type arguments match `createStore`'s generic overload by arity.
   const initial: OutletSnapshot = { modals: new Map() };
 
-  return createStore(initial, ({ set }): OutletStoreMethods => {
-    const modals = new Map<string, ReactNode>();
+  return createStore(initial, {
+    builder: ({ set }): OutletStoreMethods => {
+      const modals = new Map<string, ReactNode>();
 
-    return {
-      register(id: string, node: ReactNode): void {
-        const isNew = !modals.has(id);
-        if (isNew) {
-          log('Registering modal', { id });
-        }
-        modals.set(id, node);
-        set({ modals: new Map(modals) });
-      },
-
-      unregister(id: string): void {
-        if (modals.delete(id)) {
-          log('Unregistering modal', { id });
+      return {
+        register(id: string, node: ReactNode): void {
+          const isNew = !modals.has(id);
+          if (isNew) {
+            log('Registering modal', { id });
+          }
+          modals.set(id, node);
           set({ modals: new Map(modals) });
-        }
-      },
-    };
+        },
+
+        unregister(id: string): void {
+          if (modals.delete(id)) {
+            log('Unregistering modal', { id });
+            set({ modals: new Map(modals) });
+          }
+        },
+      };
+    },
   });
 }
 

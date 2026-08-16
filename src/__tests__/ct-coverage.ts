@@ -37,6 +37,8 @@ let written = 0;
 
 export const test = base.extend<{ coverage: void }>({
   coverage: [
+    // Playwright's fixture signature, not ours — the three parameters are the shape `extend` calls.
+    // oxlint-disable-next-line max-params
     async ({ page }, use, testInfo) => {
       await use();
 

@@ -12,9 +12,10 @@
 // data-loading in step itself.
 import { createOpenRequest, dialogManager } from 'umbra';
 import { bindDialog } from 'umbra/vanilla';
-import { logTo } from './log.js';
+import { createLog } from './log.js';
 
 const LOG = 'mfa2-log';
+const log = createLog(LOG);
 
 /** Above this, the request is refused. Shown on the panel, so the rule is not a hidden one. */
 const APPROVAL_LIMIT = 500;
@@ -36,27 +37,23 @@ const billing = bindDialog({
         ? payload.amount
         : null;
 
-    logTo(
-      LOG,
-      'in',
-      `${from} asked to charge ${amount === null ? 'nothing usable' : `${amount}$`}`
-    );
+    log('in', `${from} asked to charge ${amount === null ? 'nothing usable' : `${amount}$`}`);
 
     // `refuse` is the answer channel: returning would refuse too, but silently — and a caller
     // across an ownership boundary that never hears why cannot tell its user anything.
     if (amount === null) {
-      logTo(LOG, 'no', 'refused — the payload carries no amount');
+      log('no', 'refused — the payload carries no amount');
       request.refuse('no-amount');
       return;
     }
     if (amount > APPROVAL_LIMIT) {
-      logTo(LOG, 'no', `refused — over the ${APPROVAL_LIMIT}$ limit`);
+      log('no', `refused — over the ${APPROVAL_LIMIT}$ limit`);
       request.refuse(`over-limit:${APPROVAL_LIMIT}`);
       // A refusal the customer is owed an explanation for. Billing does not own that
       // conversation, so it hands it on rather than growing a dialog of its own — the same
       // `requestOpen` door Checkout used to get here, one hop further, into a third framework
       // this file knows nothing about.
-      logTo(LOG, 'out', 'asked support:ticket to pick it up');
+      log('out', 'asked support:ticket to pick it up');
       void dialogManager
         .requestOpenAndWait(
           'support:ticket',
@@ -64,11 +61,11 @@ const billing = bindDialog({
         )
         .then(async (outcome) => {
           if (!outcome.accepted) {
-            logTo(LOG, 'no', `support refused — ${outcome.reason}`);
+            log('no', `support refused — ${outcome.reason}`);
             return;
           }
           const [, result] = await outcome.closed;
-          logTo(LOG, 'yes', `support answered — "${result?.reason ?? 'inconnu'}"`);
+          log('yes', `support answered — "${result?.reason ?? 'inconnu'}"`);
         });
       return;
     }
@@ -76,12 +73,12 @@ const billing = bindDialog({
     pending = { amount, from };
     document.getElementById('mfa2-amount').textContent = `${amount}$`;
     document.getElementById('mfa2-from').textContent = from;
-    logTo(LOG, 'yes', 'accepted — opening billing:confirm');
+    log('yes', 'accepted — opening billing:confirm');
     billing.open();
   },
 
   onClose: (result) => {
-    logTo(LOG, 'note', `billing:confirm closed — "${result.reason}"`);
+    log('note', `billing:confirm closed — "${result.reason}"`);
     pending = null;
   },
 });
@@ -90,7 +87,7 @@ document.getElementById('mfa2-limit').textContent = `${APPROVAL_LIMIT}$`;
 
 // The traffic runs both ways: Billing asks Checkout for a dialog it does not own either.
 document.getElementById('mfa2-ask').addEventListener('click', () => {
-  logTo(LOG, 'out', 'asked checkout:receipt to open');
+  log('out', 'asked checkout:receipt to open');
   void dialogManager
     .requestOpenAndWait(
       'checkout:receipt',
@@ -98,22 +95,23 @@ document.getElementById('mfa2-ask').addEventListener('click', () => {
     )
     .then(async (outcome) => {
       if (!outcome.accepted) {
-        logTo(LOG, 'no', `checkout refused — ${outcome.reason}`);
+        log('no', `checkout refused — ${outcome.reason}`);
         return;
       }
       const [, result] = await outcome.closed;
-      logTo(LOG, 'yes', `checkout answered — "${result.reason}"`);
+      log('yes', `checkout answered — "${result.reason}"`);
     });
 });
 
 // Approve and Decline are the dialog's *actions*, bound rather than rendered. `bindAction` gives
 // each button the close path, the hotkey and the disabled/loading sync a hook binding would get
 // from spreading `action(reason)` — on markup that was already on the page.
-billing.bindAction(document.getElementById('mfa2-approve'), 'approved', {
+billing.bindAction(document.getElementById('mfa2-approve'), {
+  reason: 'approved',
   hotkey: 'Enter',
   focusOnOpen: true,
   onAction: (close) => {
-    logTo(LOG, 'note', `approved ${pending?.amount ?? 0}$`);
+    log('note', `approved ${pending?.amount ?? 0}$`);
     // The answer travels back the way the request came: a payload, not just a word. `close(id,
     // reason)` on the manager cannot carry one — the registry is keyed by string and knows no
     // modal's payload type — which is why a binding's own close is the door that can.
@@ -127,13 +125,13 @@ billing.bindAction(document.getElementById('mfa2-approve'), 'approved', {
 // "Decline" here is the *user* turning down a charge, and it is deliberately not the same word as
 // `request.refuse` above — that one is this dialog refusing to open at all. Two acts, two verbs,
 // and collapsing them would hide the difference the demo exists to show.
-billing.bindAction(document.getElementById('mfa2-decline'), 'declined');
+billing.bindAction(document.getElementById('mfa2-decline'), { reason: 'declined' });
 
 // Anything on the page can watch the manager, because there is only one of it here.
 dialogManager.subscribe((event) => {
   if (event.id !== 'billing:confirm') {
-    logTo(LOG, 'bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
+    log('bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
   }
 });
 
-logTo(LOG, 'note', 'ready — vanilla binding, owns "billing:confirm"');
+log('note', 'ready — vanilla binding, owns "billing:confirm"');

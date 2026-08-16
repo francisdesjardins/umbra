@@ -29,7 +29,7 @@ survive being spread into getters), and `portal: true` mounts the dialog itself,
 The _controller_ binding — `./vanilla` — **does not render**, and could not without the library
 shipping a renderer, which is the one thing it refuses to do. The `<dialog>` and its contents are
 markup the caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`,
-no `Modal` and no outlet, and it gains `bindAction(button, reason)` — which attaches the handler
+no `Modal` and no outlet, and it gains `bindAction(button, { reason })` — which attaches the handler
 _and_ keeps `disabled` / `data-loading` / `aria-busy` in step, the half a renderer does elsewhere.
 Asserting it mirrored the hook bindings would be asserting the wrong thing; `binding-parity.test.ts`
 knows the difference and records what it must and must not have.

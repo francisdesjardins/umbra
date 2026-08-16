@@ -14,17 +14,19 @@ export const MODAL_ID = 'delete-item-modal';
 
 const deleteItemStore = createImmerStore(
   { deleted: false, itemId: null as string | null, itemName: '' },
-  ({ set, update }) => {
-    return {
-      prepareForItem(id: string, name: string) {
-        set({ deleted: false, itemId: id, itemName: name });
-      },
-      markDeleted() {
-        update((draft) => {
-          draft.deleted = true;
-        });
-      },
-    };
+  {
+    builder: ({ set, update }) => {
+      return {
+        prepareForItem(id: string, name: string) {
+          set({ deleted: false, itemId: id, itemName: name });
+        },
+        markDeleted() {
+          update((draft) => {
+            draft.deleted = true;
+          });
+        },
+      };
+    },
   }
 );
 
