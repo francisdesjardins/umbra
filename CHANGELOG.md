@@ -11,6 +11,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Changed — "about 200 lines each" now says which 200 lines, because it was read two ways
+
+Flagged an hour earlier as a claim the code contradicts, on a count of the whole binding folder —
+`react/` 442 code lines, `solid/` 492, `vanilla/` 306. That was the wrong count. The paragraph is
+the tail of _What a binding actually does_, whose six items are all things one file does, and by
+that reading the claim is close to right: `react/use-modal.tsx` is 204, `solid/use-modal.ts` 221,
+`vanilla/bind-dialog.ts` 264.
+
+So the defect was never the number, it was that the sentence did not say what it counted — and a
+number that can be read two ways gets checked against the wrong one, which is what happened here.
+It names the file now, and names the difference too: on the hook bindings the outlet, the provider,
+`useLookup` and the two template hooks roughly double it and are surface rather than lifecycle, and
+`umbra/vanilla` has none of them, which is why its one file is the largest and its folder the
+smallest.
+
+The neighbouring claim — that the two hook bindings "mirror each other file for file" — was checked
+at the same time and is sound, though not in the way a line count would show: a whitespace-insensitive
+diff of the two `use-modal` files is ~457 differing lines, because the mirror is of export names and
+module paths, and that is what `binding-parity.test.ts` gates.
+
 ### Fixed — `parseHotkey` was undocumented in the chapter that names its four siblings
 
 API.md's hotkey chapter is titled `Key, formatHotkeyLabel, formatAriaKeyshortcuts, matchesHotkey`,
