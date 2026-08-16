@@ -7,6 +7,7 @@ import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import HubIcon from '@mui/icons-material/Hub';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import {
   Box,
   Drawer,
@@ -63,7 +64,11 @@ const NAV_GROUPS: readonly NavGroup[] = [
   },
   {
     label: 'Testing',
-    items: [{ path: '/stories', label: 'Test Harnesses', icon: ScienceIcon }],
+    items: [
+      { path: '/stories', label: 'Test Harnesses', icon: ScienceIcon },
+      // Deliberately last and deliberately empty — a scratch surface, not a tenth demonstration.
+      { path: '/warzone', label: 'Warzone', icon: LocalFireDepartmentIcon },
+    ],
   },
 ];
 

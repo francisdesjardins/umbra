@@ -106,6 +106,20 @@ Grouped in the sidebar; the order is the intended reading order.
 | Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |
 | Testing   | `/stories`         | Live `*.story.tsx` harnesses from the component test suite |
+| Testing   | `/warzone`         | Scratch surface — empty on purpose, see below              |
+
+## `/warzone` is empty, and stays empty
+
+A scratch surface for building a flow against the core and watching it behave — a reproduction, a
+stacking arrangement nobody has tried, something being shown before it is worth a card. It is not a
+tenth demonstration, and it starts to become one the moment it explains itself, so what lands there
+is temporary by construction: prove the point, then take it apart. Anything worth keeping graduates
+to a real route with a card and a `codeSamples` entry.
+
+It renders the still `UmbraMoon` the landing page uses as its hero, so **`RootLayout` suppresses
+`PeekingMoon` on this route** for the same reason it does on `/` — a mascot whose joke is that it
+is hiding cannot share a screen with a full-size twin. A second route needing that exemption is why
+the flag there is named for the condition rather than for the homepage.
 
 ## The API reference is generated
 
