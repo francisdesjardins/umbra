@@ -32,15 +32,15 @@ spelling — a synonym for any of them is a bug report, not a style preference. 
 prose as much as identifiers**: the last row was found by a reader noticing the word did not mean
 what it usually means here, in a comment.
 
-| Concept                        | The word                      | Not                                        |
-| ------------------------------ | ----------------------------- | ------------------------------------------ |
-| `showModal()` vs `show()`      | **modal / non-modal**         | blocking / non-blocking                    |
-| Which template built a dialog  | **`template`**                | `modalType`, kind, category                |
-| An unconditional transition    | **`beginOpen`**               | `requestOpen` (that one asks and may fail) |
-| Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`   |
-| The work gating an open        | **`prepare` / `isPreparing`** | `onOpen` (a notification, not a gate)      |
-| A caller who may refuse        | **`on…Request`**              | a plain `on…` that reads a return value    |
-| Which edge a panel slides from | **`direction`**               | anything else calling itself a direction   |
+| Concept                        | The word                      | Not                                          |
+| ------------------------------ | ----------------------------- | -------------------------------------------- |
+| `showModal()` vs `show()`      | **modal / non-modal**         | blocking / non-blocking                      |
+| Which template built a dialog  | **`template`**                | `modalType`, kind, category                  |
+| An unconditional transition    | **`beginOpen`**               | `requestOpen` (that one asks and may fail)   |
+| Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`     |
+| The work an open waits on      | **`prepare` / `isPreparing`** | `onOpen` (that one reports; this is awaited) |
+| A caller who may refuse        | **`on…Request`**              | a plain `on…` that reads a return value      |
+| Which edge a panel slides from | **`direction`**               | anything else calling itself a direction     |
 
 **`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
 edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; the positive and
@@ -62,6 +62,15 @@ consistently before it was written down, which is the only reason it survived be
 So a new callback picks its name from what it is allowed to do. One that may say no by returning
 something is `on…Request`; one that vetoes a gesture is `on…` and does it through the event; one that
 merely reports keeps `on…` and is read by nobody.
+
+**`prepare` is awaited, not a gate** — which matters more now the tiers above are written down,
+because a gate here is a thing that says no (`canDismiss`, `ActionGate`, `DismissGate` all decide
+whether something may proceed) and `prepare` cannot. `syncOpenSequence` shows the dialog and
+schedules the phase's frame **before** starting it, so the dialog is on screen and reaches `'open'`
+either way, and a `prepare` that throws is logged and settles like any other. What waits on it is
+`open()`'s promise, `isPreparing` and therefore `aria-busy`, `dismissWhilePreparing`, and the
+labelling diagnostic. The row above says "waits on" for that reason; it used to say "gating an
+open", which named neither the thing it blocks nor the thing it cannot do.
 
 Two more that are easy to blur:
 
