@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createLockLedger } from '../lock-ledger.js';
+import { createLockLedger, createLockOwner } from '../lock-ledger.js';
 
 /**
  * The claim ledger, on its own.
@@ -13,7 +13,7 @@ import { createLockLedger } from '../lock-ledger.js';
 test.describe('the first claim and the last release', () => {
   test('the first claim is the edge, and the matching release is the other one', () => {
     const ledger = createLockLedger();
-    const owner = {};
+    const owner = createLockOwner();
 
     expect(ledger.claim(owner)).toBe(true);
     expect(ledger.release(owner)).toBe(true);
@@ -24,7 +24,7 @@ test.describe('the first claim and the last release', () => {
     // application of the lock — for the body scroll lock, a second helping of compensating
     // padding, which shifts the page the compensation exists to hold still.
     const ledger = createLockLedger();
-    const owner = {};
+    const owner = createLockOwner();
 
     expect(ledger.claim(owner)).toBe(true);
     expect(ledger.claim(owner)).toBe(false);
@@ -39,8 +39,8 @@ test.describe('the first claim and the last release', () => {
     // and finds nothing of its own open; with last-writer-wins, `second` going away would drop a
     // lock `first` is still holding and the page would scroll behind an open modal.
     const ledger = createLockLedger();
-    const first = {};
-    const second = {};
+    const first = createLockOwner();
+    const second = createLockOwner();
 
     expect(ledger.claim(first)).toBe(true);
     expect(ledger.claim(second)).toBe(false);
@@ -55,17 +55,17 @@ test.describe('claims that were never made', () => {
     // The teardown path of a binding that unmounted before it ever opened — and it must not be
     // read as the last release, or it lets go of a lock somebody else is holding.
     const ledger = createLockLedger();
-    const holder = {};
+    const holder = createLockOwner();
     ledger.claim(holder);
 
-    expect(ledger.release({})).toBe(false);
+    expect(ledger.release(createLockOwner())).toBe(false);
     // Still held, so the real owner's release is still the edge.
     expect(ledger.release(holder)).toBe(true);
   });
 
   test('releasing the same owner twice reports one edge, not two', () => {
     const ledger = createLockLedger();
-    const owner = {};
+    const owner = createLockOwner();
     ledger.claim(owner);
 
     expect(ledger.release(owner)).toBe(true);
@@ -74,20 +74,20 @@ test.describe('claims that were never made', () => {
 });
 
 test.describe('what an owner is', () => {
-  test('owners are identity, so two equal-looking objects are two claimants', () => {
-    // A manager's token is an empty object literal, so structural equality would collapse every
+  test('owners are identity, so two freshly minted tokens are two claimants', () => {
+    // A token carries no data, so structural equality would collapse every
     // manager on the page into one claimant and the first release would let go for all of them.
     const ledger = createLockLedger();
 
-    expect(ledger.claim({})).toBe(true);
-    expect(ledger.claim({})).toBe(false);
+    expect(ledger.claim(createLockOwner())).toBe(true);
+    expect(ledger.claim(createLockOwner())).toBe(false);
   });
 
   test('re-claiming after a full release is an edge again', () => {
     // A lock is not one-shot: a manager that closes its last modal and opens another has to apply
     // it a second time.
     const ledger = createLockLedger();
-    const owner = {};
+    const owner = createLockOwner();
 
     expect(ledger.claim(owner)).toBe(true);
     expect(ledger.release(owner)).toBe(true);

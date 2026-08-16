@@ -11,6 +11,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Changed — a lock owner is a minted token now, not "any object"
+
+`lockBodyScroll(owner: object)` said something wider than it meant. The parameter is an identity —
+every comparison downstream is by reference, and nothing ever reads a field off it — but `object`
+reads as _any_ non-primitive, which invites passing a domain object that happens to be in scope and
+makes the lock's identity accidental rather than declared.
+
+`LockOwner` is branded with a `unique symbol` and minted by `createLockOwner()`. Measured against
+the compiler rather than argued: a string, a number, `null`, a function and a stray `{ id: 1 }` are
+each rejected now, where `object` accepted the last two. The manager's `const lockOwner = {}` reads
+as `createLockOwner()`, which says what it is.
+
+**`WeakKey` was the other candidate and is the interesting rejection.** It is the standard
+vocabulary for "a thing with identity", it is not the bare `object` keyword, and it costs nothing —
+but it resolves to `object | symbol` here, and its name promises weak retention while the ledger
+holds owners in a **strong** `Set`, which it must, because it reads `size`. A name that implies the
+opposite of what the data structure does is worse than the vague one it replaces.
+
+Worth knowing for the next time this comes up: `object` was never the loose type. The loose one is
+`{}`, which accepts primitives — `typescript/no-empty-object-type` has been `"error"` here all
+along, and `object` is unrestricted. The change is about saying _which_ identity, not about
+tightening a hole.
+
 ### Fixed — `containFocus` told you to set it on a modal dialog, where it now buys nothing
 
 The option's own JSDoc said "**Worth setting on a modal dialog too**, which the name does not
