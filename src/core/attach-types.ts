@@ -2,7 +2,7 @@ import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
-import type { GetDialog, ModalPhase } from './types.js';
+import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 
 /**
  * What every `attach*` function needs to know about the modal it is wiring.
@@ -29,10 +29,14 @@ export type ModalDomContext = {
 export type OpenSequenceOptions = {
   readonly prepare: ((signal: AbortSignal) => void | Promise<void>) | undefined;
   readonly nonModal: boolean;
+  /** Where a throwing `prepare` is reported. See the `onError` option. */
+  readonly onError: ((failure: ModalFailure) => void) | undefined;
 };
 
 /** Options for the closing half of the dialog lifecycle. */
 export type CloseSequenceOptions = {
+  /** Where a throwing `onClose` is reported. See the `onError` option. */
+  readonly onError: ((failure: ModalFailure) => void) | undefined;
   readonly nonModal: boolean;
   /** The transition property whose `transitionend` settles the close. */
   readonly primaryProperty: string;

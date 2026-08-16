@@ -49,7 +49,7 @@ test.describe('finalizeModalClose', () => {
     const store = createModalStore('finalize-open');
     const dialog = fakeDialog(true);
 
-    finalizeModalClose(store, dialog, noop);
+    finalizeModalClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(1);
     expect(dialog.open).toBe(false);
@@ -61,7 +61,7 @@ test.describe('finalizeModalClose', () => {
     const store = createModalStore('finalize-closed');
     const dialog = fakeDialog(false);
 
-    finalizeModalClose(store, dialog, noop);
+    finalizeModalClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(0);
   });
@@ -73,7 +73,7 @@ test.describe('finalizeModalClose', () => {
     store.beginOpen();
     store.close('cancel');
 
-    finalizeModalClose(store, null, noop);
+    finalizeModalClose(store, { dialog: null, onCloseError: noop });
 
     expect(store.getSnapshot().phase).toBe('closed');
   });
@@ -87,7 +87,7 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save', { id: 7 });
-    finalizeModalClose(store, fakeDialog(true), noop);
+    finalizeModalClose(store, { dialog: fakeDialog(true), onCloseError: noop });
 
     // `runOnClose` is fired detached, so it lands on the next microtask — the finalize below
     // does not wait for it, which is the point of `fireAndForget`.
@@ -106,7 +106,7 @@ test.describe('finalizeModalClose', () => {
       ran = true;
     });
 
-    finalizeModalClose(store, null, noop);
+    finalizeModalClose(store, { dialog: null, onCloseError: noop });
 
     expect(ran).toBe(false);
     expect(store.getSnapshot().phase).toBe('closed');
@@ -121,8 +121,11 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save');
-    finalizeModalClose(store, null, (error) => {
-      errors.push(error.message);
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        errors.push(error.message);
+      },
     });
 
     await Promise.resolve();
@@ -130,5 +133,60 @@ test.describe('finalizeModalClose', () => {
     expect(errors).toEqual(['onClose exploded']);
     // And the close still completed — a caller's failing callback is not the modal's problem.
     expect(store.getSnapshot().phase).toBe('closed');
+  });
+});
+
+test.describe('the onError channel', () => {
+  test('a throwing onClose is normalized and reported as its own source', async () => {
+    // `onClose` runs detached, as the modal finalizes, with nothing left rendering — there is no
+    // render pass to surface a failure in and no promise for it to reject. Without this channel a
+    // consumer's own callback can throw and leave no trace but a log that is off by default.
+    const failures: { readonly error: Error; readonly source: string }[] = [];
+    const store = createModalStore('on-error-close');
+
+    store.setOnClose(() => {
+      // A non-Error throw, because that is the case `normalizeError` exists for: what reaches
+      // `onError` is always an `Error`, never the raw value.
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- that is the case under test
+      throw 'not an error object';
+    });
+
+    store.beginOpen();
+    store.close('save');
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        failures.push({ error, source: 'onClose' });
+      },
+    });
+
+    await Promise.resolve();
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.error).toBeInstanceOf(Error);
+    expect(failures[0]?.error.message).toBe('not an error object');
+    expect(failures[0]?.source).toBe('onClose');
+  });
+
+  test('a close with nothing thrown reports nothing', () => {
+    // The channel is for failures only: a well-behaved `onClose` must not produce a report, or a
+    // consumer wiring this to their error reporter gets a stream of non-events.
+    const failures: Error[] = [];
+    const store = createModalStore('on-error-quiet');
+
+    store.setOnClose(() => {
+      // succeeds
+    });
+
+    store.beginOpen();
+    store.close('save');
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        failures.push(error);
+      },
+    });
+
+    expect(failures).toHaveLength(0);
   });
 });

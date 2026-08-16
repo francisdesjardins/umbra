@@ -10,6 +10,14 @@ type FinalizableStore = Pick<ModalStore, 'getSnapshot' | 'runOnClose' | 'finaliz
  */
 type ClosableDialog = Pick<HTMLDialogElement, 'open' | 'close'>;
 
+/** What the close tail needs beyond the store. */
+export type FinalizeCloseOptions = {
+  /** The element to close, or `null` when the binding never had one. */
+  readonly dialog: ClosableDialog | null;
+  /** Where a throwing `onClose` goes. Each call site names its own context. */
+  readonly onCloseError: (error: Error) => void;
+};
+
 /**
  * Shared tail of every close path: close the native dialog if still open,
  * fire the user's `onClose` callback with the close result, then finalize the
@@ -20,20 +28,21 @@ type ClosableDialog = Pick<HTMLDialogElement, 'open' | 'close'>;
  *
  * @internal
  */
-export function finalizeModalClose(
-  store: FinalizableStore,
-  dialog: ClosableDialog | null,
-  onCloseError: (error: Error) => void
-): void {
+export function finalizeModalClose(store: FinalizableStore, options: FinalizeCloseOptions): void {
+  const { dialog, onCloseError } = options;
+
   if (dialog?.open) {
     dialog.close();
   }
 
   const { closeResult: result } = store.getSnapshot();
   if (result) {
-    fireAndForget(() => {
-      return store.runOnClose(result);
-    }, onCloseError);
+    fireAndForget(
+      () => {
+        return store.runOnClose(result);
+      },
+      { onError: onCloseError }
+    );
   }
 
   store.finalize();

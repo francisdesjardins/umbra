@@ -7,16 +7,22 @@ import { normalizeError } from './normalize-error.js';
  * Each call site provides its own `onError` handler for context-specific logging.
  *
  * @param fn - Async (or sync) callback to execute
- * @param onError - Called with the normalized `Error` if `fn` throws
- * @param onSettled - Called in `finally` regardless of success or failure
+ * @param handlers - What to do when it fails, and what to do either way.
  *
  * @internal
  */
+export type FireAndForgetHandlers = {
+  /** Called with the normalized `Error` if `fn` throws. */
+  readonly onError: (error: Error) => void;
+  /** Called in `finally`, regardless of success or failure. */
+  readonly onSettled?: (() => void) | undefined;
+};
+
 export function fireAndForget(
   fn: () => void | Promise<void>,
-  onError: (error: Error) => void,
-  onSettled?: () => void
+  handlers: FireAndForgetHandlers
 ): void {
+  const { onError, onSettled } = handlers;
   void (async () => {
     try {
       await fn();

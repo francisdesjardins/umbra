@@ -9,6 +9,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 > project's memory: the code comments deliberately never narrate history, so the reasoning behind
 > a decision lives here and nowhere else.
 
+## 2026-08-16
+
+### Added — `onError`, for the two userland failures that could not reach you
+
+A `prepare` that throws and an `onClose` that throws were both invisible. Each was caught,
+logged through `log.error` — silent unless `setLogLevel` is on — and then settled as if nothing
+had happened: `open()`'s promise resolves, `isPreparing` goes false, `aria-busy` flips to false, and
+the modal announces itself ready. A modal whose content failed to load presented as one that loaded
+fine, and nothing documented it.
+
+`onError({ error, source })` is the channel, and it is **userland only** by design. Nothing the
+library does to itself arrives there: an internal failure is a bug, and routing it into a consumer
+callback turns a crash into silent misbehaviour nobody can report.
+
+The ones it deliberately does **not** claim already have homes, and taking them would have undone
+decisions rather than filled gaps — an action's throw is the render args' `error`, a throw from
+`render` reaches the framework's error boundary, and `onKeyDown` or an action's `onClick` escape to
+the DOM listener that called them, which is where a handler's own exception belongs. That left
+exactly two sources, so `ModalErrorSource` is a closed union of two rather than an open string.
+
+One object rather than two parameters, for the reason the whole option surface is moving that way: a
+third source becomes an addition instead of a signature change at every call site.
+
+A report and not a veto — the close still completes and `isPreparing` still settles, so wiring this
+to a reporter cannot change what the modal does.
+
+The compatibility matrix gate caught the addition before any test did: a new option with no row
+fails `yarn test:unit` with the file and the constant to edit. That is the gate doing exactly what
+it was built for.
+
 ## 2026-08-15
 
 ### Fixed — `prepare` was called a gate in three places, and it cannot refuse anything

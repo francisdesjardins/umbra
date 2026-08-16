@@ -249,6 +249,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         }),
         attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
         syncCloseSequence(ctx, {
+          onError: options.onError,
           nonModal: resolved.isNonModal,
           primaryProperty,
           exitDuration,
@@ -263,6 +264,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     // notification is what the other two bindings' dependency-array-free effect does.
     syncOpenSequence(domContext(snapshot.phase), {
       prepare: options.prepare,
+      onError: options.onError,
       nonModal: resolved.isNonModal,
     });
 
@@ -402,7 +404,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
-    teardownModal(store, manager, modalId, dialog);
+    teardownModal(store, { manager, modalId, dialog, onError: options.onError });
     // The unsubscribe above is what makes this necessary: a controller destroyed mid-`prepare`
     // never gets the notification that would clear `aria-busy`, and the element is the caller's —
     // it outlives the controller and would stay marked busy for good.

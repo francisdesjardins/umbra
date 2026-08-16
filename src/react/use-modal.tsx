@@ -63,6 +63,7 @@ export function useModal<TData = void, TReason extends string = string>(
     style: styleProp,
     onKeyDown,
     prepare,
+    onError,
     onOpenRequest,
     onClose,
     onDismissRequest,
@@ -154,6 +155,7 @@ export function useModal<TData = void, TReason extends string = string>(
       phase: snap.phase,
       isPreparing: snap.isPreparing,
       prepare,
+      onError,
       onKeyDown,
       nonModal: isNonModal,
       primaryProperty,
@@ -189,6 +191,14 @@ export function useModal<TData = void, TReason extends string = string>(
     openRequestHandler.current = onOpenRequest;
   }, [onOpenRequest]);
 
+  // Same reason, for the teardown below: the unmount effect is mount-only on purpose, and listing
+  // a callback whose identity changes every render would tear the modal down and re-register it on
+  // each one. Read through the ref, so teardown reports to whichever `onError` is current.
+  const errorHandler = useRef(onError);
+  useEffect(() => {
+    errorHandler.current = onError;
+  }, [onError]);
+
   // Whether the dialog answers bridged opens at all is a registration-time fact, so it is a
   // dependency below: a dialog that starts declaring one has to re-register to become reachable.
   const acceptsOpenRequests = onOpenRequest !== undefined;
@@ -208,7 +218,14 @@ export function useModal<TData = void, TReason extends string = string>(
     });
 
     return () => {
-      teardownModal(store, manager, modalId, getDialog());
+      teardownModal(store, {
+        manager,
+        modalId,
+        dialog: getDialog(),
+        onError: (failure) => {
+          errorHandler.current?.(failure);
+        },
+      });
     };
     // `isPortaled` is a dep (though unused in the body) because it, like `nonModal`,
     // changes the rendered structure — so toggling it while open must tear the modal down

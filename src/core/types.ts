@@ -448,6 +448,47 @@ export type UseModalBaseOptions<
   /** Called when the modal closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
   /**
+   * One of **your** callbacks threw, and the library caught it rather than let it escape.
+   *
+   * **Userland only, deliberately.** Nothing the library does to itself arrives here: an internal
+   * failure is a bug, and routing it into a consumer callback would turn a crash into silent
+   * misbehaviour that nobody can report. Only the callbacks you supplied are reported, because
+   * they are the only ones you can do anything about.
+   *
+   * **Two of them cannot reach you any other way**, which is the whole reason this exists:
+   *
+   * - `prepare` throws. The dialog is already on screen — it is shown before `prepare` starts —
+   *   and `isPreparing` settles either way, so `aria-busy` flips to `false` and the modal
+   *   announces itself ready. Without this, a modal whose content failed to load is
+   *   indistinguishable from one that loaded fine.
+   * - `onClose` throws. It runs as the modal finalizes, detached, with nothing left rendering,
+   *   so there is no render pass to surface it in and no promise for it to reject.
+   *
+   * The ones that are **not** here are not oversights. An action's throw is already the `error`
+   * in the render args; a throw from `render` reaches your framework's error boundary; a throw
+   * from `onKeyDown` or an action's `onClick` escapes to the DOM listener that called it, which
+   * is where a handler's own exception belongs.
+   *
+   * Called after the library has finished reacting — the close still completes, `isPreparing`
+   * still settles — so this is a report, not a veto. Throwing from it is not caught.
+   *
+   * @example
+   * useModal({
+   *   id: 'invoice',
+   *   prepare: loadInvoice,
+   *   onError: ({ error, source }) => {
+   *     reportToSentry(error, { modal: 'invoice', source });
+   *     if (source === 'prepare') {
+   *       setLoadFailed(true);
+   *     }
+   *   },
+   *   render: () => {
+   *     return loadFailed ? <RetryPanel /> : <Invoice />;
+   *   },
+   * });
+   */
+  readonly onError?: ((failure: ModalFailure) => void) | undefined;
+  /**
    * The dialog's accessible name, for the common case where the name is a string you already
    * have. A dialog without one is announced as just "dialog", which is the single most common
    * accessibility defect in a dialog implementation — the library cannot invent it, because
@@ -616,6 +657,28 @@ export type UseModalReturn<
  * separate `isPreparing` axis — see {@link ModalRenderArgs}.
  */
 export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
+
+/**
+ * Which callback of yours threw.
+ *
+ * A closed union rather than a string, so an `onError` that only cares about one of them narrows
+ * instead of comparing spellings — and so adding a third source is a change a consumer's
+ * exhaustive `switch` is told about.
+ */
+export type ModalErrorSource = 'prepare' | 'onClose';
+
+/**
+ * A callback of yours that threw, and which one it was.
+ *
+ * One object rather than two parameters, for the reason every option surface here takes one: a
+ * third field is then an addition rather than a signature change at every call site.
+ */
+export type ModalFailure = {
+  /** Normalized — a non-`Error` throw arrives here wrapped, never raw. */
+  readonly error: Error;
+  /** Which callback it came out of. */
+  readonly source: ModalErrorSource;
+};
 
 export type CloseResolver<TData = unknown, TReason extends string = string> = (
   result: AwaitedClose<TData, TReason>

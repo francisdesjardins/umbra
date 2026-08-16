@@ -19,6 +19,7 @@ const BASE: ModalLifecyclePass = {
   phase: 'open',
   isPreparing: false,
   prepare: undefined,
+  onError: undefined,
   onKeyDown: undefined,
   nonModal: false,
   primaryProperty: 'opacity',
@@ -151,6 +152,7 @@ test.describe('what each step reads', () => {
     const distinct: ModalLifecyclePass = {
       phase: 'opening',
       isPreparing: true,
+      onError: undefined,
       prepare: () => {},
       onKeyDown: () => {},
       nonModal: true,
