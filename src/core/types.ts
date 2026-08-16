@@ -339,11 +339,14 @@ export type UseModalBaseOptions<
    * a popover and wrong for a panel that behaves like a modal in everything but its stacking, so
    * it is asked for rather than assumed.
    *
-   * **Worth setting on a modal dialog too**, which the name does not suggest. Clicking a panel's
-   * empty space focuses the `<dialog>` element itself, and from there **WebKit does not move Tab
-   * into the content** — it swallows the press and the keyboard is stuck on the element until the
-   * mouse rescues it. Chromium and Firefox descend; measured on all three. The wrap is what a
-   * modal dialog does not need; this is what it does.
+   * **Nothing to set on a modal dialog**, which is worth saying because the neighbouring behaviour
+   * looks like a reason to. Clicking a panel's empty space focuses the `<dialog>` element itself,
+   * and from there **WebKit does not move Tab into the content** — it swallows the press and the
+   * keyboard is stuck on the element until the mouse rescues it (Chromium and Firefox descend;
+   * measured on all three). That recovery is **unconditional** — see `attach-focus-containment.ts`,
+   * which attaches it before reading this flag — so a modal dialog already has it. Turning this on
+   * there adds two inert markers inside content the top layer is already containing, and buys
+   * nothing.
    *
    * **It answers Tab; it does not trap focus.** The listener sits on the dialog and fires only
    * when focus is already inside it and already at one of the two ends. Focus moved by a click,

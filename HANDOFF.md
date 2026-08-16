@@ -96,5 +96,7 @@ binding-size claim in `src/CLAUDE.md` holds once it says which file it counts (`
 wrong); every
 non-glob entry in `.c8rc.json`'s exclude list still exists; the `react/` ⇄ `solid/` mirror matches the
 file list in `src/CLAUDE.md`; the `attach*` inventory matches `src/core/`; every root export has a
-playground `CATEGORIES` entry; and the logging namespace table agrees across `logger.ts`,
-`src/CLAUDE.md` and `API.md`. `yarn check` and `yarn verify:all` pass.
+playground `CATEGORIES` entry; the logging namespace table agrees across `logger.ts`,
+`src/CLAUDE.md` and `API.md`; and API.md's `useModal` option table now carries every option the
+gated matrix lists except `onOpenRequest` (documented with an example in the Dialog Manager chapter,
+where it belongs) and `clipContainer` (`@internal`, set by the template hooks). `yarn check` and `yarn verify:all` pass.
