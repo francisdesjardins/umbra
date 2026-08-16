@@ -12,24 +12,29 @@ CDN. Treat each item as unverified rather than as suspected-broken — nothing h
 
 ---
 
-## 1. The engine matrix — blocking, and the only item that could hide a real defect
+## 1. The engine matrix — **done**, on CI rather than here
 
-**Status: never run. Chromium only.**
+**Status: green on all three engines**, run 31940078327 against `1974be0`. Chromium, Firefox and
+WebKit each passed as their own job, alongside the three unit shards, Build, Docs, Lint, Type Check
+and Playground Smoke — thirteen checks, no failures. This was the one item that could have hidden a
+real defect, and it did not.
 
-`yarn test:component` runs three projects (`component`, `component-firefox`, `component-webkit`).
-Only the first ran, and not by the normal path: the sandbox ships Chromium build **1194** while this
-repo's `@playwright/test` 1.62.1 wants **1234**, so the suite was driven with a temporary
-`launchOptions.executablePath` pointing at `/opt/pw-browsers/chromium`. **That override was never
-committed** — `playwright.config.ts` on this branch is byte-identical to `main`.
-
-Firefox and WebKit cannot be installed here at all: `npx playwright install firefox` fails with
+It could not be run in the sandbox, which is worth recording because the next session will hit the
+same wall. `yarn test:component` runs three projects; only `component` ran locally, and not by the
+normal path — the sandbox ships Chromium build **1194** while this repo's `@playwright/test` 1.62.1
+wants **1234**, so the suite was driven with a temporary `launchOptions.executablePath` pointing at
+`/opt/pw-browsers/chromium`. **That override was never committed** — `playwright.config.ts` is
+byte-identical to `main`. Firefox and WebKit could not be installed at all:
 
 ```
 403 'request blocked: no rule or allowlist entry allows host "cdn.playwright.dev"'
 403 'request blocked: … "playwright.download.prss.microsoft.com"'
 ```
 
-So this is an environment limit, not a skipped step.
+which the agent proxy documents as an egress-policy denial to report rather than route around. **So
+push the branch and read CI** — that is the working route from this environment, not a workaround.
+
+On a machine that can install browsers:
 
 ```bash
 yarn install --immutable
@@ -37,12 +42,11 @@ yarn playwright install --with-deps chromium firefox webkit
 yarn test:component          # all three engines
 ```
 
-**Why this one matters more than the rest.** WebKit has produced two real defects in this repo
-already — it does not focus a `<button>` on click, which is what surfaced `chooseActionRunner`'s
-ordering, and it swallows a Tab that `attachFocusContainment` recovers. Both live in the focus paths.
-Two matrix cells are still open on exactly that ground (`focus restored after a failed action —
-umbra/solid`, and the `reconcileOpen — umbra/vanilla` caveat), so a three-engine run is what turns
-this branch's green into a claim.
+**Why it mattered.** WebKit has produced two real defects in this repo — it does not focus a
+`<button>` on click, which surfaced `chooseActionRunner`'s ordering, and it swallows a Tab that
+`attachFocusContainment` recovers. Both are in the focus paths, and two matrix cells are still open
+on that ground (`focus restored after a failed action — umbra/solid`, and the `reconcileOpen —
+umbra/vanilla` caveat). Green on all three is what turns this branch's local green into a claim.
 
 Everything this branch touched that a browser can see: `manager/scroll-lock.ts` (rewired onto
 `lock-ledger.ts`) and `utils/logger.ts` (rewired onto `safe-storage.ts`). Both are reached by the
