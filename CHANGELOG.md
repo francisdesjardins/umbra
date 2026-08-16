@@ -11,6 +11,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `prepare` was called a gate in three places, and it cannot refuse anything
+
+Left open this morning as "loose rather than wrong". Measured instead of read, and it is wrong.
+`syncOpenSequence` calls `showDialog`, then `manager.syncStackOrder`, then
+`store.scheduleOpenTransition()` — and only then starts `prepare`. So the dialog is on screen before
+`prepare` begins and reaches `'open'` whether or not it settles, and a `prepare` that throws is
+caught, logged, and runs `finishPreparing()` in the `finally` like any other. It gates neither the
+appearance nor the phase, and it has no way to say no.
+
+That collides with what "gate" already means here — `canDismiss`, `ActionGate` and `DismissGate` are
+all things that decide whether something may proceed — and the collision got sharper the moment the
+refusal tiers were written down beside it.
+
+What actually waits on `prepare`: `open()`'s promise (`finishPreparing` flushes the resolvers
+`beginOpen` pushed), `isPreparing` and therefore `aria-busy`, `dismissWhilePreparing`, and the
+labelling diagnostic.
+
+Three of the four places said "gates the open" — the compatibility matrix (and so API.md, generated
+from it) and `src/CLAUDE.md`'s vocabulary row. **The accurate one was README.md**, which has said
+"gates `isPreparing` and the promise `open()` returns" all along: the source of truth carried the
+loose claim while the prose carried the precise one, which is the opposite of the arrangement the
+matrix exists to produce.
+
 ### Fixed — `onKeyDown`'s `preventDefault()` takes the whole press, and the doc named one quarter of it
 
 The option said "call `event.preventDefault()` to suppress the default ESC dismiss behavior". What a

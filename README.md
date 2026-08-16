@@ -329,8 +329,9 @@ in three files.
 
 The question is whether anyone notices. Every rename in the CHANGELOG is that noticing, written
 down: `isOpen` → `isVisible`, because the flag stayed true through the entire exit animation and
-the semantics were right — the name was the lie; `onOpen` → `prepare`, because it is a gate and not
-a notification; `modalType` → `template`, because the field and the `data-modal-type` attribute it
+the semantics were right — the name was the lie; `onOpen` → `prepare`, because it is work the open
+waits on and not a notification; `modalType` → `template`, because the field and the
+`data-modal-type` attribute it
 shadowed were each right about something different. No model asked for one of those. The
 entry-point isolation tests exist because someone knew, before it happened, exactly how a framework
 import sneaks into a framework-free core.
