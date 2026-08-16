@@ -95,8 +95,8 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-15: **92.18%
-over 54 files**, against unit's **95.67%**. Never add them; re-measure both or neither — **and the
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-16: **92.21%
+over 54 files**, against unit's **95.70%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also hand-sets two
 badges from it. Moving one copy is how the README came to be two points and three files behind.
 

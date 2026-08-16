@@ -11,6 +11,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-16
 
+### Removed — `HANDOFF.md`, on the terms it set for itself
+
+Its first paragraph said to delete it when the branch merged, and the branch merged. Where its four
+sections went, since a changelog entry above still points at it:
+
+1. **The engine matrix** was already answered on it — green on all three, on CI. Re-confirmed here
+   against a real three-engine local run.
+2. **The coverage pair** is re-measured below and lives in `CLAUDE.md` and `README.md`, which is
+   where the rule to move both already pointed.
+3. **Three exports used only inside their own file** — a decision it recorded as "left alone
+   deliberately", so it dies with the file rather than outliving it as a task.
+4. **A root export `API.md` never mentions** stays open, and is carried in the entry below rather
+   than in a file nothing generates and nothing gates. Its narrower half — an _option_ the Options
+   table never mentions — is a gate as of today.
+
+### Changed — both coverage numbers, re-measured in one sitting
+
+Unit 95.67% → **95.70%**, component 92.18% → **92.21%** over the same 54 files. `CLAUDE.md` and
+`README.md` both moved, which is the pair the rule is about; the two README badges round to the
+same 96% / 92% and are unchanged.
+
+### Changed — the history of 2026-08-15 and 16 is two commits shorter
+
+`ea8f9a8` and its revert `b2b2c10` are gone: the tree they produced was byte-identical to the one
+before them, so nothing after them moved. What the revert _found_ is not gone — that
+`check-examples.mjs` gates an `@example` on an `@internal` module exactly like one on a root export
+is now stated in that script, where someone about to make the same mistake will read it.
+
+The two `re-measure both coverage numbers, in the same sitting` commits are **kept and renamed**.
+They looked like a duplicate and were not: two real measurements, one after `lock-ledger.ts`
+arrived and one after `safe-storage.ts`. The defect was two distinct commits sharing one subject
+line, so each names its module now. Nothing was reordered — moving non-adjacent commits would
+change intermediate trees for a cosmetic gain.
+
+Rebuilt with `git commit-tree` rather than a rebase, so every kept commit reuses its original tree
+and the result is byte-identical at `HEAD` — checked with an empty `git diff` against the old tip
+before anything was pushed.
+
 ### Fixed — `onError`'s payload type was unreachable, and its headline case untested
 
 The option shipped wired on all three bindings and short of the surface around it. Four gaps, and
