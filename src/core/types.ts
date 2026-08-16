@@ -399,9 +399,17 @@ export type UseModalBaseOptions<
   readonly onOpenRequest?: OpenRequestHandler | undefined;
 
   /**
-   * Optional keydown handler called on the dialog element.
-   * Fires before built-in ESC handling. Call `event.preventDefault()`
-   * to suppress the default ESC dismiss behavior.
+   * Keydown handler on the dialog element, running ahead of everything the library does with a
+   * press.
+   *
+   * **`preventDefault()` takes the whole press, not just the dismissal.** A prevented event stops
+   * the pipeline where it is, so for that key the popup-claim check, the **action hotkey dispatch**
+   * and the dismiss key are all skipped. Preventing Escape to hold a modal open is the common case
+   * and does what it looks like; preventing a key some action declared as its hotkey stops that
+   * action from firing, which does not.
+   *
+   * The same protocol an action's `onClick` uses, and the same reach: first in, and able to cancel
+   * what would have followed.
    */
   readonly onKeyDown?: ((event: KeyboardEvent) => void) | undefined;
   /**

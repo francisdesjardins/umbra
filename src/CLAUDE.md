@@ -39,12 +39,29 @@ what it usually means here, in a comment.
 | An unconditional transition    | **`beginOpen`**               | `requestOpen` (that one asks and may fail) |
 | Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`   |
 | The work gating an open        | **`prepare` / `isPreparing`** | `onOpen` (a notification, not a gate)      |
+| A caller who may refuse        | **`on…Request`**              | a plain `on…` that reads a return value    |
 | Which edge a panel slides from | **`direction`**               | anything else calling itself a direction   |
 
 **`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
 edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; the positive and
 negative cases of an assertion are its **halves**, not its directions — that second sense had spread
 to six comments and is the reason the row exists.
+
+**A callback's name says how it refuses**, and there are exactly three answers. The rule was applied
+consistently before it was written down, which is the only reason it survived being unwritten:
+
+- **`on…Request` asks, and the answer is the return value.** `onOpenRequest` refuses through
+  `request.refuse(reason)`, `onDismissRequest` by returning `false`. The suffix is what marks a
+  callback as a door rather than a report — `on…` alone would read as being told after the fact.
+- **A plain `on…` on a user gesture refuses through the event.** `onKeyDown` and an action's
+  `onClick` both take the whole press with `preventDefault()`; both return `void`, and nothing reads
+  it. Reaching for a boolean return here would be a second protocol for a thing the DOM already has.
+- **`onClose` is a notification** and the only one. Its result is ignored, and that is the point:
+  the close has happened.
+
+So a new callback picks its name from what it is allowed to do. One that may say no by returning
+something is `on…Request`; one that vetoes a gesture is `on…` and does it through the event; one that
+merely reports keeps `on…` and is read by nobody.
 
 Two more that are easy to blur:
 

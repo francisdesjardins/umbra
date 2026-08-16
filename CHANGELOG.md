@@ -11,6 +11,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `onKeyDown`'s `preventDefault()` takes the whole press, and the doc named one quarter of it
+
+The option said "call `event.preventDefault()` to suppress the default ESC dismiss behavior". What a
+prevented event actually does is stop the pipeline where it stands, so for that key the popup-claim
+check, the **action hotkey dispatch** and the dismiss key are all skipped — four consequences, one
+of them documented, and framed as ESC-specific when it is per-press.
+
+The gap is not academic. Preventing Escape to hold a modal open behaves exactly as the sentence
+implies; preventing a key that some action declared as its hotkey silently stops that action from
+firing, and nothing in the option's documentation suggested it could. `ActionOptions` already
+described this as "the same protocol `useModal`'s `onKeyDown` already uses" — so the protocol was
+named as shared while only one side of it was described accurately.
+
+### Added — how a callback refuses is what its name has to say
+
+Found while checking whether the gate-versus-notification rule in the vocabulary table actually
+holds. It does, and more consistently than the table claims: there are three tiers, and every
+callback in the library already sits in the right one.
+
+`on…Request` asks and reads the **return value** — `onOpenRequest` through `request.refuse(reason)`,
+`onDismissRequest` by returning `false`. A plain `on…` on a user gesture refuses through the
+**event** — `onKeyDown` and an action's `onClick` both take the press with `preventDefault()`, both
+return `void`, and nothing reads it. `onClose` is the only pure notification, and its result is
+ignored on purpose.
+
+That was applied everywhere and written nowhere, which left a new callback with no rule to follow.
+It is a row in the vocabulary table now, with the three tiers spelled out beneath it: a callback
+that may say no by returning something is `on…Request`; one that vetoes a gesture is `on…` and does
+it through the event; one that merely reports keeps `on…` and is read by nobody.
+
 ### Changed — a lock owner is a minted token now, not "any object"
 
 `lockBodyScroll(owner: object)` said something wider than it meant. The parameter is an identity —
