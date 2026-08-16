@@ -49,7 +49,7 @@ test.describe('finalizeModalClose', () => {
     const store = createModalStore('finalize-open');
     const dialog = fakeDialog(true);
 
-    finalizeModalClose(store, dialog, noop);
+    finalizeModalClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(1);
     expect(dialog.open).toBe(false);
@@ -61,7 +61,7 @@ test.describe('finalizeModalClose', () => {
     const store = createModalStore('finalize-closed');
     const dialog = fakeDialog(false);
 
-    finalizeModalClose(store, dialog, noop);
+    finalizeModalClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(0);
   });
@@ -73,7 +73,7 @@ test.describe('finalizeModalClose', () => {
     store.beginOpen();
     store.close('cancel');
 
-    finalizeModalClose(store, null, noop);
+    finalizeModalClose(store, { dialog: null, onCloseError: noop });
 
     expect(store.getSnapshot().phase).toBe('closed');
   });
@@ -87,7 +87,7 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save', { id: 7 });
-    finalizeModalClose(store, fakeDialog(true), noop);
+    finalizeModalClose(store, { dialog: fakeDialog(true), onCloseError: noop });
 
     // `runOnClose` is fired detached, so it lands on the next microtask — the finalize below
     // does not wait for it, which is the point of `fireAndForget`.
@@ -106,7 +106,7 @@ test.describe('finalizeModalClose', () => {
       ran = true;
     });
 
-    finalizeModalClose(store, null, noop);
+    finalizeModalClose(store, { dialog: null, onCloseError: noop });
 
     expect(ran).toBe(false);
     expect(store.getSnapshot().phase).toBe('closed');
@@ -121,8 +121,11 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save');
-    finalizeModalClose(store, null, (error) => {
-      errors.push(error.message);
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        errors.push(error.message);
+      },
     });
 
     await Promise.resolve();

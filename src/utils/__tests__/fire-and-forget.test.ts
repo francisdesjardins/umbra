@@ -15,7 +15,7 @@ test.describe('fireAndForget', () => {
       () => {
         called = true;
       },
-      () => {}
+      { onError: () => {} }
     );
     await tick();
     expect(called).toBe(true);
@@ -28,7 +28,7 @@ test.describe('fireAndForget', () => {
         await Promise.resolve();
         called = true;
       },
-      () => {}
+      { onError: () => {} }
     );
     await tick();
     expect(called).toBe(true);
@@ -40,8 +40,10 @@ test.describe('fireAndForget', () => {
       () => {
         throw new Error('boom');
       },
-      (error) => {
-        errors.push(error);
+      {
+        onError: (error) => {
+          errors.push(error);
+        },
       }
     );
     await tick();
@@ -57,8 +59,10 @@ test.describe('fireAndForget', () => {
         // eslint-disable-next-line @typescript-eslint/only-throw-error -- intentionally testing non-Error throw
         throw 'string error';
       },
-      (error) => {
-        errors.push(error);
+      {
+        onError: (error) => {
+          errors.push(error);
+        },
       }
     );
     await tick();
@@ -74,8 +78,10 @@ test.describe('fireAndForget', () => {
         await Promise.resolve();
         throw new Error('async boom');
       },
-      (error) => {
-        errors.push(error);
+      {
+        onError: (error) => {
+          errors.push(error);
+        },
       }
     );
     // Async fn needs slightly more time to settle
@@ -89,13 +95,12 @@ test.describe('fireAndForget', () => {
 
   test('calls onSettled after success', async () => {
     let settled = false;
-    fireAndForget(
-      () => {},
-      () => {},
-      () => {
+    fireAndForget(() => {}, {
+      onError: () => {},
+      onSettled: () => {
         settled = true;
-      }
-    );
+      },
+    });
     await tick();
     expect(settled).toBe(true);
   });
@@ -106,9 +111,11 @@ test.describe('fireAndForget', () => {
       () => {
         throw new Error('fail');
       },
-      () => {},
-      () => {
-        settled = true;
+      {
+        onError: () => {},
+        onSettled: () => {
+          settled = true;
+        },
       }
     );
     await tick();
@@ -117,10 +124,7 @@ test.describe('fireAndForget', () => {
 
   test('does not call onSettled when omitted', async () => {
     // Verify no TypeError from calling undefined
-    fireAndForget(
-      () => {},
-      () => {}
-    );
+    fireAndForget(() => {}, { onError: () => {} });
     await tick();
     // If we get here without an unhandled error, the test passes
   });

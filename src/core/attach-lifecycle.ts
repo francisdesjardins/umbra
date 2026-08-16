@@ -67,11 +67,13 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
         await prepare(signal);
         log('prepare completed', { id: modalId });
       },
-      (error) => {
-        log.error('prepare failed', { id: modalId, error: error.message });
-      },
-      () => {
-        store.finishPreparing();
+      {
+        onError: (error) => {
+          log.error('prepare failed', { id: modalId, error: error.message });
+        },
+        onSettled: () => {
+          store.finishPreparing();
+        },
       }
     );
   } else {
@@ -115,8 +117,11 @@ export function syncCloseSequence(
     primaryProperty: primaryProperty,
     exitDuration,
     finalize: () => {
-      finalizeModalClose(store, dialog, (error) => {
-        log.error('onClose callback failed', { id: modalId, error: error.message });
+      finalizeModalClose(store, {
+        dialog,
+        onCloseError: (error) => {
+          log.error('onClose callback failed', { id: modalId, error: error.message });
+        },
       });
     },
     log: (how) => {

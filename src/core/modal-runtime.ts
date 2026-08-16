@@ -232,8 +232,11 @@ export function teardownModal(
     // If already closing, it is a no-op and `closeResult` keeps the original reason.
     store.close(DISMISS_REASON);
 
-    finalizeModalClose(store, dialog, (error) => {
-      log.error('onClose callback failed during cleanup', { id: modalId, error: error.message });
+    finalizeModalClose(store, {
+      dialog,
+      onCloseError: (error) => {
+        log.error('onClose callback failed during cleanup', { id: modalId, error: error.message });
+      },
     });
   }
 

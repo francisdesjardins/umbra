@@ -209,7 +209,11 @@ export function createLogger(namespace: string): Logger {
   const color = resolveColor(namespace);
   const prefix = `dialog:${namespace}`;
 
-  function emit(method: 'debug' | 'warn' | 'error', message: string, data: LogData | undefined) {
+  function emit(
+    method: 'debug' | 'warn' | 'error',
+    line: { readonly message: string; readonly data: LogData | undefined }
+  ) {
+    const { message, data } = line;
     if (!matches(namespace)) {
       return;
     }
@@ -235,13 +239,13 @@ export function createLogger(namespace: string): Logger {
   }
 
   function log(message: string, data?: LogData): void {
-    emit('debug', message, data);
+    emit('debug', { message, data });
   }
   log.warn = (message: string, data?: LogData): void => {
-    emit('warn', message, data);
+    emit('warn', { message, data });
   };
   log.error = (message: string, data?: LogData): void => {
-    emit('error', message, data);
+    emit('error', { message, data });
   };
 
   return log;
