@@ -482,6 +482,12 @@ report(routes.length > 0, `discovered ${String(routes.length)} routes from the s
 // for `gotoRoute` in case both URL forms are ever wrong at once.
 const titleByRoute = new Map();
 
+// `cards > 0` is the "this page rendered its content" signal for a route that demonstrates
+// something, and every route does — except the scratch surface, which is empty on purpose and
+// would have to grow a decorative card to satisfy a check about a property it does not have. It
+// is still held to the rest: it must reach, render one `<h1>`, and raise no console error.
+const EMPTY_BY_DESIGN = new Set(['/warzone']);
+
 for (const route of routes) {
   errors.length = 0;
 
@@ -496,10 +502,12 @@ for (const route of routes) {
   const h1s = await page.locator('h1').allTextContents();
   if (h1s.length === 1) titleByRoute.set(route, h1s[0]);
 
+  const needsCards = !EMPTY_BY_DESIGN.has(route);
+
   report(
-    cards > 0 && errors.length === 0 && h1s.length === 1,
+    (cards > 0 || !needsCards) && errors.length === 0 && h1s.length === 1,
     route.padEnd(20),
-    `cards=${String(cards)} h1=${JSON.stringify(h1s)}${
+    `cards=${String(cards)}${needsCards ? '' : ' (empty by design)'} h1=${JSON.stringify(h1s)}${
       errors.length ? ` ERRORS: ${errors.slice(0, 2).join(' | ')}` : ''
     }`
   );
