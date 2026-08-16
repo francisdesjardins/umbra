@@ -127,9 +127,9 @@ export type BackdropClickEvent = {
  * The part of a dialog a backdrop test needs.
  *
  * Structural for the reason {@link BackdropClickEvent} is, and it buys the same two things: a
- * binding that hands something else rect-shaped is served, and the test for this can be written
- * in Node — the geometry is arithmetic, and requiring a real `<dialog>` to assert it was the only
- * thing making it a browser question.
+ * binding that hands something else rect-shaped is served, and the test for this runs in Node —
+ * the geometry is arithmetic, and asking for a whole `<dialog>` is what would make it a browser
+ * question.
  */
 export type BackdropDialog = {
   readonly getBoundingClientRect: () => {

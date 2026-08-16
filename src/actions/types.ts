@@ -234,10 +234,9 @@ export type ActionFactory<TData = never, TReason extends string = string> = {
   /**
    * Whether **that** action is running — the per-action question, asked away from its button.
    *
-   * `data-loading` is this same fact *on* the button, and until now it was the only form of it:
-   * a spinner in the dialog's header, a field disabled while one particular action runs, a
-   * label that changes for `'save'` but not for `'cancel'` — all of them had the state they
-   * needed sitting in a props object they were not the ones spreading.
+   * `data-loading` is the same fact *on* the button, which only reaches whoever spreads the
+   * props. This reaches everything else: a spinner in the dialog's header, a field disabled while
+   * one particular action runs, a label that changes for `'save'` but not for `'cancel'`.
    *
    * It hangs here rather than joining the render args because the factory is where actions
    * live, and because of the rule the aggregate follows in reverse: `hasRunningAction` has to

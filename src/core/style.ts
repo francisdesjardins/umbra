@@ -54,11 +54,10 @@ export type DialogStyle = {
  * make React's `CSSProperties` — which has no such index — stop satisfying `DialogStyle`, and that
  * assignability is what lets `getDialogAnimationStyles` take a binding's own style type.
  *
- * The branch is still **reached**, and by the callers it was kept for. A `Record<string, string>` is
- * assignable to `DialogStyle`, which is what a style assembled at runtime actually is — and what
- * `umbra/vanilla` hands over from plain JavaScript, where nothing narrows it on the way in.
+ * **Reached all the same**, by a `Record<string, string>` — assignable to `DialogStyle`, and what a
+ * style assembled at runtime is, including what `umbra/vanilla` hands over from plain JavaScript.
  * `--dialog-backdrop` is the one styling lever the library documents, so both halves are asserted:
- * the name goes through the hyphenation untouched, and the clearing pass finds it again.
+ * the name survives the hyphenation, and the clearing pass finds it again.
  */
 const toCssName = (key: string): string => {
   if (key.startsWith('--')) {

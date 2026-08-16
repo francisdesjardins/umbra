@@ -51,10 +51,8 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
  *
  * ## One key per step, not one key for the sequence
  *
- * The obvious executor is a single ordered pass behind a single key — which is what
- * `umbra/vanilla`'s `attachedFor` is, and it was the design this file was going to have. It is
- * wrong, and the reason is worth the paragraph because nothing in the suite would have failed on
- * it.
+ * The obvious executor is a single ordered pass behind a single key — `umbra/vanilla`'s
+ * `attachedFor`. It is wrong here, and worth the paragraph because no test would catch it.
  *
  * `focus.sync` carries state across its own attachment: `wasRunning` is how it recognises the
  * running → idle transition that restores focus to the button that ran an action. A single key

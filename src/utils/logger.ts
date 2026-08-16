@@ -65,12 +65,12 @@ const storageKey = 'dialog:log';
  * which caps a colour's relative luminance at 0.183, and 4.5:1 against a dark one, which floors it
  * at 0.237. The window is empty; the best any single value can do on both is about 4.06:1.
  *
- * Measured against that, every colour below used to fail on a light console — `action` at 2.16:1,
- * `modal:click-outside` at 2.30:1 — and two of them failed on a dark one as well.
+ * Measured against that, ink alone cannot pass: `action` scores 2.16:1 on a light console and
+ * `modal:click-outside` 2.30:1.
  *
- * A badge sidesteps the whole problem: the label's contrast is against the colour behind it, which
- * this file owns, so it reads the same on either console. The `padding` and `border-radius` here
- * were always written for a background; only the background was missing.
+ * A badge sidesteps it. The label's contrast is against the colour behind it, which this file
+ * owns, so it reads the same on either console — which is what the `padding` and `border-radius`
+ * below are for.
  */
 const colors: Readonly<Record<string, string>> = {
   manager: '#4CAF50',

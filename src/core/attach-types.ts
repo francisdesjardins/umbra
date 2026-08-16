@@ -7,10 +7,9 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 /**
  * What every `attach*` function needs to know about the modal it is wiring.
  *
- * The same five values the React hooks used to take, with one difference that is the point of
- * the file: nothing here is React's. An `attach*` function is handed this, wires DOM listeners,
- * and returns a teardown — so a binding's job at each of these seams is to call it from whatever
- * it calls an effect, and to call the teardown from whatever it calls a cleanup.
+ * Nothing here is any framework's, which is the point of the file. An `attach*` function is handed
+ * this, wires DOM listeners, and returns a teardown — so a binding's job at each seam is to call it
+ * from whatever it calls an effect, and the teardown from whatever it calls a cleanup.
  *
  * `phase` is passed rather than read off the store because a binding re-runs these on *its* view
  * of the phase, which is what keeps the listener set in step with what is rendered.

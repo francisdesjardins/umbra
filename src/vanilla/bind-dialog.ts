@@ -281,7 +281,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   // ── Adopting a dialog that is already open ──────────────────────────────────
   //
-  // **The hydration gap, and the one case the first `sync()` used to answer wrongly.** A page can
+  // **The hydration gap.** A page can
   // arrive with `<dialog open>` in the served HTML — that is what server-rendering a panel means —
   // and `bindDialog` then meets an element that is open while its brand-new store says `closed`.
   // Left alone, the first pass writes `display: none` and the three sources disagree in the worst

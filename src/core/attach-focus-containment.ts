@@ -88,11 +88,10 @@ export function attachFocusContainment(
   // disagree: Chromium and Firefox descend into the subtree, **WebKit does not** and swallows the
   // press, leaving the keyboard on the element with nothing but the mouse to recover it.
   //
-  // **Unconditional, and that is the point.** This used to sit behind `containFocus`, which made
-  // an ordinary click cost the keyboard on WebKit in every dialog that had not opted in — modal
-  // ones included, where the option looks irrelevant. Nothing here traps anybody: it answers a
-  // press that two engines already answer this way, so what it removes is a disagreement rather
-  // than a choice.
+  // **Unconditional, and not behind `containFocus`.** Gated, an ordinary click costs the keyboard
+  // on WebKit in every dialog that has not opted into an option about something else — modal ones
+  // included, where it looks irrelevant. Nothing here traps anybody: it answers a press two
+  // engines already answer this way, so it removes a disagreement rather than offering a choice.
   const handleDialogTab = (event: KeyboardEvent): void => {
     if (event.key !== 'Tab' || event.target !== dialog) {
       return;
