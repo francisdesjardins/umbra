@@ -16,6 +16,12 @@
 //           directory is deliberately not gitignored: oxlint honours .gitignore with no way to
 //           override it, so an ignored path is one it reports zero files for and passes.
 //
+// **Its reach is `src/`, not the public entry points** — an `@example` on an `@internal` module is
+// gated exactly like one on a root export. Worth stating because the opposite is the intuitive
+// guess and acting on it costs a gated example: the way to check is the reported count with the
+// block present against without it, and two readings taken after the example already existed
+// answer the same number whatever the truth is.
+//
 // An example assumes an application around it (`store`, `fetchUser`, `api`). Rather than
 // demanding that every snippet declare its world, the type pass runs twice: the first run
 // reports the free identifiers, the second declares them as `any` — so what remains is the
