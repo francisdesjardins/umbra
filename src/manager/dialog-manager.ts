@@ -8,7 +8,7 @@ import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
 import { raiseDialog, stampZIndex } from '../core/dialog-lifecycle.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
-import { lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
+import { createLockOwner, lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
 import { orderStack, planRaises, type StackPriority } from './stack-order.js';
 import type {
   ModalInfo,
@@ -608,7 +608,7 @@ export function createDialogManager(): DialogManager {
   const log = createLogger('manager');
 
   /** Identity this instance claims the global body scroll lock under — see `scroll-lock.ts`. */
-  const lockOwner = {};
+  const lockOwner = createLockOwner();
 
   /**
    * Where the stack starts, and it decides nothing for a **modal** dialog.

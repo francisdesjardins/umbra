@@ -17,7 +17,42 @@
  * caller actually has — *is this call the edge?* — and the DOM work sits behind that `if`.
  */
 
-/** A ledger of claims on one lock. Owners are compared by identity, so any object will do. */
+/**
+ * Nominal marker for {@link LockOwner}. Never read at runtime and never assigned — its only job is
+ * to stop the type meaning "any object".
+ */
+declare const LOCK_OWNER: unique symbol;
+
+/**
+ * Whoever holds a claim: an **identity**, not a value.
+ *
+ * Every comparison downstream is by reference — the ledger is a `Set` and nothing ever reads a
+ * field off an owner — so the requirement is only "a thing that is equal to itself and to nothing
+ * else". Spelling that as the bare `object` keyword says something else: it reads as *any*
+ * non-primitive, which invites handing over a domain object that happens to be in scope and makes
+ * the lock's identity accidental rather than declared.
+ *
+ * Branded, so an owner is something you **mint** rather than something you find. A stray
+ * `{ id: 1 }`, a function, a string, a number are all rejected; what survives is a token from
+ * {@link createLockOwner}.
+ *
+ * `WeakKey` was the other candidate and is wrong here for a reason worth recording: it resolves to
+ * `object | symbol`, and its name promises weak retention while the ledger below holds owners in a
+ * **strong** `Set` — which it must, because it reads `size`.
+ */
+export type LockOwner = { readonly [LOCK_OWNER]?: never };
+
+/**
+ * Mint an owner.
+ *
+ * An empty object is the whole implementation: the token carries no data because none is ever read,
+ * only compared. What it carries is the type.
+ */
+export function createLockOwner(): LockOwner {
+  return {};
+}
+
+/** A ledger of claims on one lock. */
 export type LockLedger = {
   /**
    * Register `owner`'s interest.
@@ -25,7 +60,7 @@ export type LockLedger = {
    * @returns whether the lock has to be applied now: `false` for a repeat claim, and `false` while
    *   somebody else is already holding it.
    */
-  readonly claim: (owner: object) => boolean;
+  readonly claim: (owner: LockOwner) => boolean;
   /**
    * Drop `owner`'s interest.
    *
@@ -33,7 +68,7 @@ export type LockLedger = {
    *   the teardown of a binding that unmounted before it ever opened — and `false` while another
    *   claim is outstanding.
    */
-  readonly release: (owner: object) => boolean;
+  readonly release: (owner: LockOwner) => boolean;
 };
 
 /**
@@ -49,7 +84,7 @@ export type LockLedger = {
  * }
  */
 export function createLockLedger(): LockLedger {
-  const owners = new Set<object>();
+  const owners = new Set<LockOwner>();
 
   return {
     claim(owner) {

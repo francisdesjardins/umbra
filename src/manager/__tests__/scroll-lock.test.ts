@@ -4,6 +4,7 @@ import {
   getScrollbarWidth,
   lockBodyScroll,
   unlockBodyScroll,
+  createLockOwner,
 } from '../scroll-lock.js';
 
 test.describe('computeScrollCompensation', () => {
@@ -53,8 +54,8 @@ test.describe('without a document', () => {
   });
 
   test('claiming and releasing the lock are no-ops, in any order', () => {
-    const owner = {};
-    const other = {};
+    const owner = createLockOwner();
+    const other = createLockOwner();
 
     expect(() => {
       lockBodyScroll(owner);
@@ -64,14 +65,14 @@ test.describe('without a document', () => {
       unlockBodyScroll(owner);
       // Releasing a claim that was never taken is the teardown path of a binding that unmounted
       // before it ever opened.
-      unlockBodyScroll({});
+      unlockBodyScroll(createLockOwner());
     }).not.toThrow();
   });
 
   test('a claim that never applied leaves no owner behind to strand the next one', () => {
     // The guard returns *before* `owners.add`, so a server render cannot seed the module-level
     // set — which is what would keep the first real lock in a hydrated page from ever applying.
-    const owner = {};
+    const owner = createLockOwner();
     lockBodyScroll(owner);
 
     // Nothing to observe directly (the set is private), so the observable is that the matching

@@ -20,7 +20,8 @@
  */
 
 import { BODY_LOCK_ATTR } from '../core/dialog-styles.js';
-import { createLockLedger } from './lock-ledger.js';
+import { createLockLedger, createLockOwner } from './lock-ledger.js';
+import type { LockOwner } from './lock-ledger.js';
 
 /**
  * Custom property published on `:root` while the lock is held, holding the width the lock
@@ -32,8 +33,10 @@ export const SCROLLBAR_WIDTH_VAR = '--dialog-scrollbar-width';
 
 // The attribute and the rule that reads it live together in `core/dialog-styles.ts`, so the
 // selector and this `setAttribute` cannot drift apart. Re-exported because this module is where
-// a reader looks for it.
-export { BODY_LOCK_ATTR };
+// a reader looks for it — and `createLockOwner` for the same reason: a caller of the two functions
+// below needs a token, and should not have to know which module mints it.
+export { BODY_LOCK_ATTR, createLockOwner };
+export type { LockOwner };
 
 /**
  * Who currently wants the body locked — module-level, because the lock target is: `document.body`
@@ -86,7 +89,7 @@ export function computeScrollCompensation(gutterBefore: number, gutterAfter: num
  *
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */
-export function lockBodyScroll(owner: object): void {
+export function lockBodyScroll(owner: LockOwner): void {
   // The document guard comes first, so a server render cannot seed the ledger with a claim that
   // applied nothing — which is what would keep the first real lock in a hydrated page from ever
   // taking effect.
@@ -125,7 +128,7 @@ export function lockBodyScroll(owner: object): void {
  *
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */
-export function unlockBodyScroll(owner: object): void {
+export function unlockBodyScroll(owner: LockOwner): void {
   if (typeof document === 'undefined' || !ledger.release(owner)) {
     return;
   }
