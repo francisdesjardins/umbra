@@ -70,6 +70,14 @@ export type { StackModal, StackPriority } from './manager/stack-order.js';
 // can hand you one.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
 
+// The same rule for `onError`'s payload. `ModalErrorSource` comes with `ModalFailure` rather than
+// being reached through it: its doc promises an exhaustive `switch`, and a `switch` whose type has
+// no name is not one a consumer can write.
+//
+// `docs:check` cannot ask for these — typedoc reaches them only through `UseModalBaseOptions`,
+// which is in `intentionallyNotExported` because each binding re-exports its own instantiation.
+export type { ModalErrorSource, ModalFailure } from './core/types.js';
+
 // The library's own close reason, as a value and as a type. Public because `CloseResult.reason`
 // is `TReason | DismissReason` — a consumer who can name the result must be able to name that
 // half of it — and because a caller comparing against it should not be retyping the string the

@@ -18,6 +18,7 @@ import {
   SolidOutletDisposalApp,
   SolidPortalApp,
   SolidClaimlessReclaimApp,
+  SolidPrepareFailureApp,
   SolidStackPriorityApp,
   SolidSlideApp,
 } from './solid-app.js';
@@ -160,4 +161,9 @@ export function SolidFailedActionHarness() {
  */
 export function SolidClaimlessReclaimHarness() {
   return <SolidRoot app={SolidClaimlessReclaimApp} />;
+}
+
+/** A `prepare` that throws, reported through `onError` — see the app for why Solid measures it too. */
+export function SolidPrepareFailureHarness() {
+  return <SolidRoot app={SolidPrepareFailureApp} />;
 }

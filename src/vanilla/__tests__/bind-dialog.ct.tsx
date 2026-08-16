@@ -13,6 +13,7 @@ import {
   VanillaNonModalOptionsHarness,
   VanillaOpenRequestHarness,
   VanillaPortalHarness,
+  VanillaPrepareFailureHarness,
   VanillaReconcileHarness,
   VanillaLabellingHarness,
   VanillaRestoreOnUnbindHarness,
@@ -848,5 +849,28 @@ test.describe('bindDialog — a dialog that claimed no opening focus', () => {
     ).toHaveCount(0);
     // And it is the *first* focusable, not the last — the half that only two buttons can show.
     await expect(page.getByTestId('vanilla-claimless-cancel')).toBeFocused();
+  });
+});
+
+test.describe('bindDialog — onError', () => {
+  test('a prepare that throws is reported, and the modal still settles', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<VanillaPrepareFailureHarness />);
+    await component.getByTestId('vpf-open').click();
+
+    await expect(page.locator('dialog[data-modal-id="vanilla-prepare-failure"]')).toBeVisible();
+
+    await expect(component.getByTestId('vpf-sources')).toHaveText('prepare');
+    await expect(component.getByTestId('vpf-message')).toHaveText('report is unavailable');
+
+    // A report, not a veto. `aria-busy` is the library's one owned attribute, written onto markup
+    // the caller wrote — so it says the settle reached the element and not only the store.
+    await expect(component.getByTestId('vpf-preparing')).toHaveText('ready');
+    await expect(page.locator('dialog[data-modal-id="vanilla-prepare-failure"]')).toHaveAttribute(
+      'aria-busy',
+      'false'
+    );
   });
 });

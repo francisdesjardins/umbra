@@ -505,6 +505,33 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'onError',
+    react: {
+      state: 'works',
+      note: 'Read through a ref, so a teardown reports to whichever handler is current rather than to the one captured when the effect last ran.',
+      reference: {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'a prepare that throws is reported, and the modal still settles',
+      },
+    },
+    solid: {
+      state: 'works',
+      note: '`options.onError` passed straight through — there is no stale capture to guard against, because nothing re-runs.',
+      reference: {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'a prepare that throws is reported, and the modal still settles',
+      },
+    },
+    vanilla: {
+      state: 'works',
+      note: 'No render pass, so the report reaches the page through the caller’s own subscriber. `aria-busy` on markup the caller wrote is what says the settle reached the element and not only the store.',
+      reference: {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a prepare that throws is reported, and the modal still settles',
+      },
+    },
+  },
+  {
     capability: 'the labelling diagnostic',
     react: { state: 'works' },
     solid: {

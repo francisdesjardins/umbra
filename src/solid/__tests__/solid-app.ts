@@ -1371,3 +1371,69 @@ function ClaimlessReclaimApp(): Built {
 export const SolidClaimlessReclaimApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, ClaimlessReclaimApp));
 };
+
+/**
+ * A `prepare` that throws, reported through `onError` — the second binding.
+ *
+ * The wiring differs from React's and that is why this is measured rather than inherited: React
+ * reads the callback through a ref so a teardown reports to whichever `onError` is current, while
+ * Solid passes `options.onError` straight through. Same guarantee, two schedules.
+ */
+function PrepareFailureApp(): Built {
+  const [sources, setSources] = createSignal<string[]>([]);
+  const [message, setMessage] = createSignal('none');
+
+  const modal = useModal({
+    id: 'solid-prepare-failure',
+    ariaLabel: 'Solid prepare that fails',
+    prepare: async () => {
+      await Promise.resolve();
+      throw new Error('report is unavailable');
+    },
+    onError: ({ error, source }) => {
+      setSources((seen) => {
+        return [...seen, source];
+      });
+      setMessage(error.message);
+    },
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('p', null, 'The dialog is up either way.'),
+          text(() => {
+            return ctx.isPreparing ? 'preparing' : 'ready';
+          }, 'solid-pf-preparing')
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'solid-pf-open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    text(() => {
+      return modal.isVisible ? 'open' : 'closed';
+    }, 'solid-pf-visible'),
+    text(() => {
+      return sources().join(',') || 'none';
+    }, 'solid-pf-sources'),
+    text(message, 'solid-pf-message'),
+    modal.Modal
+  );
+}
+
+export const SolidPrepareFailureApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, PrepareFailureApp));
+};

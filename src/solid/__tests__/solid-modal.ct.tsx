@@ -4,6 +4,7 @@ import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
   SolidClaimlessReclaimHarness,
+  SolidPrepareFailureHarness,
   SolidShadowRootHarness,
   SolidBusyHarness,
   SolidContainedHarness,
@@ -632,5 +633,28 @@ test.describe('a dialog that claimed no opening focus (Solid)', () => {
     ).toHaveCount(0);
     // And it is the *first* action, not the last — the half two buttons are there to show.
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  });
+});
+
+test.describe('onError (Solid)', () => {
+  test('a prepare that throws is reported, and the modal still settles', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<SolidPrepareFailureHarness />);
+    await component.getByTestId('solid-pf-open').click();
+
+    await expect(page.locator('dialog[data-modal-id="solid-prepare-failure"]')).toBeVisible();
+
+    await expect(component.getByTestId('solid-pf-sources')).toHaveText('prepare');
+    await expect(component.getByTestId('solid-pf-message')).toHaveText('report is unavailable');
+
+    // A report, not a veto — and the half that was invisible before the option existed.
+    await expect(component.getByTestId('solid-pf-visible')).toHaveText('open');
+    await expect(component.getByTestId('solid-pf-preparing')).toHaveText('ready');
+    await expect(page.locator('dialog[data-modal-id="solid-prepare-failure"]')).toHaveAttribute(
+      'aria-busy',
+      'false'
+    );
   });
 });

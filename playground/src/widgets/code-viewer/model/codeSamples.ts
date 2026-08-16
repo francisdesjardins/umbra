@@ -25,6 +25,7 @@ import mfeAuditSrc from '../../../../public/mfe/mfa4.js?raw';
 // independently-written scripts end up with one manager", which is the demo's whole subject.
 import mfeDistributionSrc from '../../../../vite-plugins/mfe-umbra.ts?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
+import prepareFailureSrc from '@/pages/getting-started/examples/prepare-failure.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibUseFormSrc from '@/shared/lib/use-form.ts?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
@@ -222,6 +223,7 @@ export const codeSamples: Record<string, string> = {
   // Playground examples
   'simple-modal': simpleModalSrc,
   'async-open': asyncOpenSrc,
+  'prepare-failure': prepareFailureSrc,
   'no-transition-message': noTransitionMessageSrc,
   'confirm-with-hotkeys': confirmWithHotkeysSrc,
   'focus-on-open': focusOnOpenSrc,

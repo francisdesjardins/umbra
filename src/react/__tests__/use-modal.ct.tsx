@@ -11,6 +11,7 @@ import {
   KeyPassthroughHarness,
   TransitionToggleHarness,
   BasicHarness,
+  PrepareFailureHarness,
   OnOpenAbortHarness,
   CustomDismissKeyHarness,
   DismissKeyDisabledHarness,
@@ -1413,5 +1414,37 @@ test.describe('a dialog inside a shadow root', () => {
     // The library's own sheet, adopted into *this* root. The UA default measures rgba(0, 0, 0, 0.1).
     expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
     expect(measured.focused).toBe('shadow-confirm');
+  });
+});
+
+/**
+ * `onError` — the two userland failures with nowhere else to go.
+ *
+ * Its own describe because the option is not about rendering: it reports a callback of the
+ * caller's that threw, and the point is that everything else carries on. Each assertion pair is
+ * "the failure was reported" **and** "the modal settled anyway" — checking only the first would
+ * pass on an implementation that left the dialog stuck announcing itself busy.
+ */
+test.describe('onError', () => {
+  test('a prepare that throws is reported, and the modal still settles', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<PrepareFailureHarness />);
+    await component.getByTestId('pf-open').click();
+
+    await expect(page.locator('dialog[data-modal-id="prepare-failure"]')).toBeVisible();
+
+    await expect(component.getByTestId('pf-sources')).toHaveText('prepare');
+    await expect(component.getByTestId('pf-message')).toHaveText('report is unavailable');
+
+    // The half that was invisible: without `onError` the state below is all a caller could see,
+    // and it reads as success. A report, not a veto.
+    await expect(component.getByTestId('pf-visible')).toHaveText('open');
+    await expect(component.getByTestId('pf-preparing')).toHaveText('ready');
+    await expect(page.locator('dialog[data-modal-id="prepare-failure"]')).toHaveAttribute(
+      'aria-busy',
+      'false'
+    );
   });
 });

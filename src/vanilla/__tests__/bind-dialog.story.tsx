@@ -1600,3 +1600,76 @@ export function VanillaClaimlessReclaimHarness() {
     </div>
   );
 }
+
+/**
+ * A `prepare` that throws, reported through `onError` — the controller binding.
+ *
+ * Worth its own harness rather than inheriting the hook bindings' proof, because there is no
+ * render pass here: the reported state has to reach the page through the caller's own listener,
+ * which is the shape a consumer of this binding actually writes. `aria-busy` is the library's one
+ * owned attribute and it is written onto markup the caller wrote, so it is the assertion that says
+ * the settle reached the element rather than only the store.
+ */
+export function VanillaPrepareFailureHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [controller, setController] = useState<Bound<'close'> | null>(null);
+  const [sources, setSources] = useState<string[]>([]);
+  const [message, setMessage] = useState('none');
+  const [preparing, setPreparing] = useState('ready');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-prepare-failure',
+      dialog,
+      ariaLabel: 'Vanilla prepare that fails',
+      manager: createDialogManager(),
+      prepare: async () => {
+        await Promise.resolve();
+        throw new Error('report is unavailable');
+      },
+      onError: ({ error, source }) => {
+        setSources((seen) => {
+          return [...seen, source];
+        });
+        setMessage(error.message);
+      },
+    });
+
+    const stop = bound.subscribe(() => {
+      setPreparing(bound.getSnapshot().isPreparing ? 'preparing' : 'ready');
+    });
+    setController(bound);
+
+    return () => {
+      stop();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <div>
+      <button
+        data-testid="vpf-open"
+        onClick={() => {
+          void controller?.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      <span data-testid="vpf-sources">{sources.join(',') || 'none'}</span>
+      <span data-testid="vpf-message">{message}</span>
+      <span data-testid="vpf-preparing">{preparing}</span>
+
+      <dialog ref={dialogRef}>
+        <p>The dialog is up either way.</p>
+      </dialog>
+    </div>
+  );
+}

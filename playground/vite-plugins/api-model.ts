@@ -83,6 +83,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'ModalPhase',
       'ModalStoreSnapshot',
       'CloseResult',
+      'ModalFailure',
+      'ModalErrorSource',
       'DISMISS_REASON',
       'DismissReason',
       'setLogLevel',

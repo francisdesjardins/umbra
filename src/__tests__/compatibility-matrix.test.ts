@@ -34,6 +34,18 @@ import { collectOptionNames } from './option-surface.js';
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(SRC_ROOT, '..');
 
+/**
+ * Options deliberately absent from `API.md`'s `### Options` table, each with the reason it is.
+ *
+ * A set rather than a filter in the test, so adding to it is a visible decision.
+ */
+const OPTIONS_TABLE_EXEMPT = new Set([
+  // Documented with an example in the Dialog Manager chapter, where the asking door belongs.
+  'onOpenRequest',
+  // `@internal`, set by the template hooks rather than by a caller.
+  'clipContainer',
+]);
+
 const BEGIN = '<!-- BEGIN COMPATIBILITY MATRIX -->';
 const END = '<!-- END COMPATIBILITY MATRIX -->';
 
@@ -163,6 +175,42 @@ test.describe('the compatibility matrix', () => {
     expect(
       unexplained,
       'A `✗ by design` or `~` cell needs a note or a reference — the reason is the cell.'
+    ).toEqual([]);
+  });
+
+  /**
+   * The hand-written option table, held to the same source the matrix is.
+   *
+   * The matrix chapter is generated, so a new option reaches `API.md` the moment it has a row —
+   * and reaches it in a table a reader looking up "what can I pass" does not open. The **prose**
+   * table under `### Options` is the one they read, nothing regenerates it, and nothing asked for
+   * it: `onError` shipped documented in the chapter and absent from the table, which is the drift
+   * the handoff predicted in the abstract before it happened in the concrete.
+   *
+   * Narrow on purpose. It asks one question — is every option a caller can pass named in the table
+   * a caller reads — and the two exceptions are written here rather than left as silence. The
+   * broader gate (a root export `API.md` never mentions) would fail on about twenty names today,
+   * most of them types, and needs a decision about what it should demand before it can exist.
+   */
+  test('the Options table names every option a caller can pass', () => {
+    const doc = readFileSync(resolve(REPO_ROOT, 'API.md'), 'utf8');
+    const start = doc.indexOf('### Options');
+    expect(start, 'API.md is missing the `### Options` heading').toBeGreaterThan(-1);
+    const table = doc.slice(start, doc.indexOf('\n### ', start + 1));
+
+    const missing = OPTION_ROWS.map((row) => {
+      return row.option;
+    })
+      .filter((option) => {
+        return !OPTIONS_TABLE_EXEMPT.has(option);
+      })
+      .filter((option) => {
+        return !table.includes(`\`${option}?\``) && !table.includes(`\`${option}\``);
+      });
+
+    expect(
+      missing,
+      `Add a row to API.md's \`### Options\` table for: ${missing.join(', ')}`
     ).toEqual([]);
   });
 

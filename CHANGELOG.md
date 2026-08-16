@@ -11,6 +11,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-16
 
+### Fixed — `onError`'s payload type was unreachable, and its headline case untested
+
+The option shipped wired on all three bindings and short of the surface around it. Four gaps, and
+each one is a rule this repo already had written down.
+
+**`ModalFailure` and `ModalErrorSource` reached no entry point.** `src/index.ts` carries the rule in
+a comment — a consumer who can name what they were handed must be able to name its parts — and
+`ModalErrorSource`'s own doc promises an exhaustive `switch` a consumer could not annotate. Not
+caught by `docs:check`, because typedoc reaches them only through `UseModalBaseOptions`, which is in
+`intentionallyNotExported` so each binding can re-export its own instantiation. Both are root
+exports now, with the `CATEGORIES` entries `/api` needs.
+
+**Nothing made `prepare` throw.** Anywhere, at any level — the failure the option was added for was
+covered by no test on any binding. The `onClose` source had core coverage; the `prepare` source had
+none, and it is the one whose whole point is that everything else settles normally. One CT per
+binding now, each asserting both halves: the report arrives with its `source`, **and** the dialog is
+open, no longer preparing, and no longer `aria-busy`. Checking only the first would pass on an
+implementation that left the modal stuck announcing itself busy.
+
+Worth measuring per binding rather than once: React reads the callback through a ref so a teardown
+reports to whichever handler is current, Solid passes `options.onError` straight through, and
+`umbra/vanilla` has no render pass at all, so the report reaches the page through the caller's own
+subscriber.
+
+**`API.md`'s `### Options` table did not list it.** The generated matrix chapter did, which is the
+table nobody opens to answer "what can I pass". **That is now a gate** — the Options table is
+checked against `OPTION_ROWS` with the two exceptions written down (`onOpenRequest`, documented in
+the Dialog Manager chapter; `clipContainer`, `@internal`). It fails on exactly this omission.
+Deliberately narrow: the broader rule — a root export `API.md` never mentions — would fail on about
+twenty names today and needs a decision about what it should demand first.
+
+**And the playground never showed it.** `When prepare fails` sits beside `Async Open` on
+`/getting-started`, with a switch that makes the same open succeed or throw — because the
+demonstration _is_ the pair. Both leave `aria-busy` at `false` and the dialog open; without
+`onError` the only difference is that one of them has nothing in it.
+
 ### Changed — two parameters everywhere, and the rule that says so is on
 
 `max-params: ["error", 2]` is enabled in `.oxlintrc.json`, so the convention the last few days

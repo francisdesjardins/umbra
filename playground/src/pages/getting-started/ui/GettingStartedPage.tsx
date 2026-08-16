@@ -8,6 +8,10 @@ import {
   NoTransitionMessageExample,
 } from '@/pages/getting-started/examples/no-transition-message';
 import {
+  MODAL_ID as PREPARE_FAILURE_ID,
+  PrepareFailureExample,
+} from '@/pages/getting-started/examples/prepare-failure';
+import {
   MODAL_ID as SIMPLE_ID,
   SimpleModalExample,
 } from '@/pages/getting-started/examples/simple-modal';
@@ -17,7 +21,7 @@ export const GettingStartedPage = () => {
   return (
     <PageLayout
       title="Getting Started"
-      description="The core loop — open a modal, render its content, read how it closed. Every other page builds on these three examples."
+      description="The core loop — open a modal, render its content, read how it closed, and hear about it when your own callback throws. Every other page builds on these."
     >
       <ExampleSection
         title="Core patterns"
@@ -39,6 +43,14 @@ export const GettingStartedPage = () => {
             modalId={ASYNC_OPEN_ID}
             tryLabel="Open"
             example={<AsyncOpenExample />}
+          />
+          <ExampleCard
+            title="When prepare fails"
+            description="The same shape when the fetch throws. prepare runs after the dialog is shown, so a throw does not stop it opening — without onError the modal announces itself ready with nothing in it."
+            codeKey="prepare-failure"
+            modalId={PREPARE_FAILURE_ID}
+            tryLabel="Open"
+            example={<PrepareFailureExample />}
           />
         </ExampleGrid>
       </ExampleSection>
