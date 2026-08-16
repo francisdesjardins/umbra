@@ -109,7 +109,7 @@ const flows = {
 <script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}</script>
 </head><body>
 <dialog id="ssr-dialog" open><p>Rendered before any script ran.</p><button id="ssr-close">Close</button></dialog>
-<span id="pre-hydration"></span><span id="phase"></span>
+<span id="pre-hydration"></span><span id="phase"></span><span id="reason"></span>
 <script type="module">
   // Read the pre-hydration truth first — this is the only moment it is observable.
   document.getElementById('pre-hydration').textContent = String(document.getElementById('ssr-dialog').open);
@@ -121,8 +121,9 @@ const flows = {
     nonModal: true,
     ariaLabel: 'Server rendered',
     manager: createDialogManager(),
+    onClose: (result) => { document.getElementById('reason').textContent = String(result.reason); },
   });
-  bound.bindAction(document.getElementById('ssr-close'), 'closed');
+  bound.bindAction(document.getElementById('ssr-close'), { reason: 'closed' });
   // Written on every transition, not once: adoption enters at 'opening' and settles on 'open' a
   // frame later, exactly as an ordinary open does. Reading it synchronously would be reading the
   // first of the two and calling it the answer.
@@ -161,9 +162,14 @@ const flows = {
     // Once adopted it is an ordinary registered dialog: its bound action closes it.
     await page.locator('#ssr-close').click();
     await page.waitForTimeout(500);
+    // The *reason* as well as the close: a `bindAction` call that named no reason at all would
+    // still shut the dialog, so asserting `open === false` alone passes on a broken binding.
+    const closed = (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false;
+    const reason = await page.locator('#reason').textContent();
     checks.push([
-      (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false,
-      'a bound action closes the adopted dialog',
+      closed && reason === 'closed',
+      'a bound action closes the adopted dialog, with its own reason',
+      `open=${String(!closed)} reason=${reason}`,
     ]);
 
     await page.unroute('**/__ssr-fixture');

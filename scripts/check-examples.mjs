@@ -434,7 +434,7 @@ function where(module, byModule) {
 
 /**
  * Inference through an `any` stand-in, not a mistake in the example: a stubbed store handed to
- * a generic like `watch(store, select)` leaves the snapshot parameter `unknown`, so the
+ * a generic like `watch(store, { select })` leaves the snapshot parameter `unknown`, so the
  * selector's argument is reported. The example is right; its surroundings are a stub.
  */
 const STUB_INFERENCE = /error TS18046/;
