@@ -11,7 +11,7 @@ import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
-import type { AwaitedClose, ModalHandle, ModalVariant } from './types.js';
+import type { AwaitedClose, ModalFailure, ModalHandle, ModalVariant } from './types.js';
 
 const log = createLogger('modal');
 
@@ -214,12 +214,16 @@ export function shouldDismissOnBackdropClick(
  * never come. `store.abandon()` is unconditional for that second case — after a normal close both
  * queues are already drained, so it costs nothing where it does not apply.
  */
-export function teardownModal(
-  store: ModalStore,
-  manager: DialogManager,
-  modalId: string,
-  dialog: HTMLDialogElement | null
-): void {
+export type TeardownOptions = {
+  readonly manager: DialogManager;
+  readonly modalId: string;
+  readonly dialog: HTMLDialogElement | null;
+  /** Where a throwing `onClose` goes on the unmount path — the same channel the close path uses. */
+  readonly onError: ((failure: ModalFailure) => void) | undefined;
+};
+
+export function teardownModal(store: ModalStore, options: TeardownOptions): void {
+  const { manager, modalId, dialog, onError } = options;
   const wasOpen = store.getSnapshot().phase !== 'closed';
 
   manager.unregister(modalId);
@@ -236,6 +240,10 @@ export function teardownModal(
       dialog,
       onCloseError: (error) => {
         log.error('onClose callback failed during cleanup', { id: modalId, error: error.message });
+        // The unmount path reports through the same channel as the close path. Without this an
+        // `onClose` that throws is visible when the modal closes and invisible when it is
+        // unmounted while open — the same failure, reported or not by how it happened to end.
+        onError?.({ error, source: 'onClose' });
       },
     });
   }

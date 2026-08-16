@@ -293,7 +293,7 @@ export function useModal<TData = void, TReason extends string = string>(
     // detachments come off before the modal is unregistered and finalized, which is the order
     // React's declaration-ordered cleanups give.
     director.destroy();
-    teardownModal(store, manager, modalId, getDialog());
+    teardownModal(store, { manager, modalId, dialog: getDialog(), onError: options.onError });
   });
 
   // ── What the caller places ──────────────────────────────────────────────────

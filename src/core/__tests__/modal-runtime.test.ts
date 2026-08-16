@@ -186,7 +186,12 @@ test.describe('teardownModal', () => {
       reasons.push(result.reason);
     });
 
-    teardownModal(store, dm, 'teardown-open', null);
+    teardownModal(store, {
+      manager: dm,
+      modalId: 'teardown-open',
+      dialog: null,
+      onError: undefined,
+    });
 
     expect(reasons).toEqual(['dismiss']);
     expect(store.getSnapshot().phase).toBe('closed');
@@ -201,7 +206,12 @@ test.describe('teardownModal', () => {
     const closed = openAndWait();
     store.finishPreparing();
 
-    teardownModal(store, dm, 'teardown-waiting', null);
+    teardownModal(store, {
+      manager: dm,
+      modalId: 'teardown-waiting',
+      dialog: null,
+      onError: undefined,
+    });
 
     // Not the abandoned branch: the modal *was* open, so the teardown closes it for real and the
     // waiter gets the reason the library produces on teardown rather than an error.
@@ -224,7 +234,12 @@ test.describe('teardownModal', () => {
     });
 
     expect(store.getSnapshot().phase).toBe('closed');
-    teardownModal(store, dm, 'teardown-closed', null);
+    teardownModal(store, {
+      manager: dm,
+      modalId: 'teardown-closed',
+      dialog: null,
+      onError: undefined,
+    });
 
     const [error, result] = await closed;
     expect(error).toBeInstanceOf(Error);
@@ -442,7 +457,12 @@ test.describe('teardownModal reports a failing onClose', () => {
     setLogLevel('modal');
 
     try {
-      teardownModal(store, dm, 'teardown-throws', null);
+      teardownModal(store, {
+        manager: dm,
+        modalId: 'teardown-throws',
+        dialog: null,
+        onError: undefined,
+      });
       await Promise.resolve();
 
       expect(errors).toHaveLength(1);
@@ -452,5 +472,57 @@ test.describe('teardownModal reports a failing onClose', () => {
       console.debug = originalDebug;
       setLogLevel(false);
     }
+  });
+});
+
+test.describe('teardownModal reports through onError', () => {
+  test('an onClose that throws on unmount reaches onError, like one that throws on close', async () => {
+    // The gap this closes: `onClose` failures reached `onError` on the close path and not on the
+    // unmount path, so the same callback throwing was reported or silent depending on how the
+    // modal happened to end. A modal unmounted while open is the ordinary React case, not an edge.
+    const dm = createDialogManager();
+    const { store } = createModalRuntime('teardown-on-error');
+    dm.register('teardown-on-error', store, { template: 'modal', nonModal: false });
+    store.beginOpen();
+    store.setOnClose(() => {
+      throw new Error('cleanup exploded');
+    });
+
+    const failures: { readonly error: Error; readonly source: string }[] = [];
+    teardownModal(store, {
+      manager: dm,
+      modalId: 'teardown-on-error',
+      dialog: null,
+      onError: (failure) => {
+        failures.push(failure);
+      },
+    });
+    await Promise.resolve();
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.source).toBe('onClose');
+    expect(failures[0]?.error.message).toBe('cleanup exploded');
+  });
+
+  test('a clean unmount reports nothing', async () => {
+    // The channel is for failures only — a consumer wiring it to a reporter must not get an event
+    // for every modal that unmounts normally.
+    const dm = createDialogManager();
+    const { store } = createModalRuntime('teardown-quiet');
+    dm.register('teardown-quiet', store, { template: 'modal', nonModal: false });
+    store.beginOpen();
+
+    const failures: unknown[] = [];
+    teardownModal(store, {
+      manager: dm,
+      modalId: 'teardown-quiet',
+      dialog: null,
+      onError: (failure) => {
+        failures.push(failure);
+      },
+    });
+    await Promise.resolve();
+
+    expect(failures).toHaveLength(0);
   });
 });
