@@ -125,7 +125,11 @@ function answerDismissKey(store: ModalStore, request: (() => boolean | void) | u
  * Fire the action whose hotkey this is by clicking its button, so a hotkey runs exactly the
  * path a real click does — loading state, `disabled` and any `onClick` veto all included.
  */
-const dispatchActionHotkey = (engine: ActionGate, event: KeyboardEvent, dialog: HTMLElement) => {
+const dispatchActionHotkey = (
+  engine: ActionGate,
+  press: { readonly event: KeyboardEvent; readonly dialog: HTMLElement }
+) => {
+  const { event, dialog } = press;
   if (engine.aggregated().hasRunningAction) {
     return false;
   }
@@ -186,7 +190,7 @@ export function attachDialogKeydown(
 
     // An action's hotkey beats dismissal, and runs through the button so the click path and
     // the key path stay the same path.
-    if (dispatchActionHotkey(engine, event, dialog)) {
+    if (dispatchActionHotkey(engine, { event, dialog })) {
       return;
     }
 

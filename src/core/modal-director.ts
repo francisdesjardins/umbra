@@ -19,7 +19,7 @@ import type { FocusCoordinator } from './attach-focus.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
 import type { ModalStore } from './modal-store.js';
 import type { StepInputs, StepTeardown } from './step-runner.js';
-import type { GetDialog, ModalPhase } from './types.js';
+import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 
 /**
  * Who asks the lifecycle's decisions, in what order, and on which pass.
@@ -129,6 +129,7 @@ export type ModalLifecyclePass = {
   readonly phase: ModalPhase;
   readonly isPreparing: boolean;
   readonly prepare: ((signal: AbortSignal) => void | Promise<void>) | undefined;
+  readonly onError: ((failure: ModalFailure) => void) | undefined;
   readonly onKeyDown: ((event: KeyboardEvent) => void) | undefined;
   readonly nonModal: boolean;
   /** The transition property whose `transitionend` settles the close. */
@@ -202,7 +203,11 @@ export const MODAL_LIFECYCLE_STEPS = [
     step: 'syncOpenSequence',
     inputs: null,
     run: (dom, pass) => {
-      syncOpenSequence(dom, { prepare: pass.prepare, nonModal: pass.nonModal });
+      syncOpenSequence(dom, {
+        prepare: pass.prepare,
+        nonModal: pass.nonModal,
+        onError: pass.onError,
+      });
     },
   },
   {
@@ -221,10 +226,11 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** Arm the exit: the `transitionend` the close waits on, and the finalisation behind it. */
     step: 'syncCloseSequence',
     inputs: (pass) => {
-      return [pass.phase, pass.nonModal, pass.primaryProperty, pass.exitDuration];
+      return [pass.phase, pass.nonModal, pass.primaryProperty, pass.exitDuration, pass.onError];
     },
     run: (dom, pass) => {
       return syncCloseSequence(dom, {
+        onError: pass.onError,
         nonModal: pass.nonModal,
         primaryProperty: pass.primaryProperty,
         exitDuration: pass.exitDuration,
