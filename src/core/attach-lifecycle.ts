@@ -34,7 +34,7 @@ const log = createLogger('modal:lifecycle');
  */
 export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOptions): void {
   const { store, getDialog, modalId, phase, manager } = ctx;
-  const { prepare, nonModal } = options;
+  const { prepare, nonModal, onError } = options;
 
   if (phase !== 'opening') {
     return;
@@ -70,6 +70,9 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
       {
         onError: (error) => {
           log.error('prepare failed', { id: modalId, error: error.message });
+          // After the log and before `finishPreparing`, so a caller reading `isPreparing` from
+          // inside this sees the state the failure happened in rather than the settled one.
+          onError?.({ error, source: 'prepare' });
         },
         onSettled: () => {
           store.finishPreparing();
@@ -96,7 +99,7 @@ export function syncCloseSequence(
   options: CloseSequenceOptions
 ): (() => void) | undefined {
   const { store, getDialog, modalId, phase } = ctx;
-  const { nonModal, primaryProperty, exitDuration } = options;
+  const { nonModal, primaryProperty, exitDuration, onError } = options;
 
   const dialog = getDialog();
   if (!dialog) {
@@ -121,6 +124,7 @@ export function syncCloseSequence(
         dialog,
         onCloseError: (error) => {
           log.error('onClose callback failed', { id: modalId, error: error.message });
+          onError?.({ error, source: 'onClose' });
         },
       });
     },

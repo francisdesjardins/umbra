@@ -182,6 +182,15 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     note: 'Scoped with `isOwnEventTarget`, so a modal opened from inside this one does not deliver its keys here on the way up.',
   },
   {
+    option: 'onError',
+    enforcement: 'RUNTIME',
+    note: 'Userland errors only, and only the two with nowhere else to go: a throwing `prepare` (the dialog is already shown and `isPreparing` settles either way, so the modal announces itself ready) and a throwing `onClose` (detached, with nothing left rendering). An action’s throw is already the render args’ `error`, `render` reaches the framework’s error boundary, and `onKeyDown` / `onClick` escape to the DOM listener that called them — none of those arrive here. The library’s own failures never do either: routing them into a consumer callback would make a bug unreportable. A report, not a veto — the close still completes.',
+    reference: {
+      file: 'src/core/__tests__/finalize-close.test.ts',
+      title: 'a throwing onClose is normalized and reported as its own source',
+    },
+  },
+  {
     option: 'prepare',
     enforcement: 'RUNTIME',
     note: 'Runs **after** the dialog is shown, alongside the entrance — it does not gate the open and cannot refuse it. `syncOpenSequence` shows the dialog and schedules the phase frame before starting it, and a `prepare` that throws is logged and settles like any other. What waits on it is `open()`’s promise, `isPreparing` and so `aria-busy`, and `dismissWhilePreparing`. Receives an `AbortSignal` the close aborts; `isPreparing` tracks the callback, not the `opening` phase.',

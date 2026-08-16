@@ -245,6 +245,7 @@ export function useModal<TData = void, TReason extends string = string>(
       phase: snap.phase,
       isPreparing: snap.isPreparing,
       prepare: options.prepare,
+      onError: options.onError,
       onKeyDown: options.onKeyDown,
       nonModal: isNonModal,
       primaryProperty,

@@ -135,3 +135,58 @@ test.describe('finalizeModalClose', () => {
     expect(store.getSnapshot().phase).toBe('closed');
   });
 });
+
+test.describe('the onError channel', () => {
+  test('a throwing onClose is normalized and reported as its own source', async () => {
+    // `onClose` runs detached, as the modal finalizes, with nothing left rendering — there is no
+    // render pass to surface a failure in and no promise for it to reject. Without this channel a
+    // consumer's own callback can throw and leave no trace but a log that is off by default.
+    const failures: { readonly error: Error; readonly source: string }[] = [];
+    const store = createModalStore('on-error-close');
+
+    store.setOnClose(() => {
+      // A non-Error throw, because that is the case `normalizeError` exists for: what reaches
+      // `onError` is always an `Error`, never the raw value.
+      // eslint-disable-next-line @typescript-eslint/only-throw-error -- that is the case under test
+      throw 'not an error object';
+    });
+
+    store.beginOpen();
+    store.close('save');
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        failures.push({ error, source: 'onClose' });
+      },
+    });
+
+    await Promise.resolve();
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.error).toBeInstanceOf(Error);
+    expect(failures[0]?.error.message).toBe('not an error object');
+    expect(failures[0]?.source).toBe('onClose');
+  });
+
+  test('a close with nothing thrown reports nothing', () => {
+    // The channel is for failures only: a well-behaved `onClose` must not produce a report, or a
+    // consumer wiring this to their error reporter gets a stream of non-events.
+    const failures: Error[] = [];
+    const store = createModalStore('on-error-quiet');
+
+    store.setOnClose(() => {
+      // succeeds
+    });
+
+    store.beginOpen();
+    store.close('save');
+    finalizeModalClose(store, {
+      dialog: null,
+      onCloseError: (error) => {
+        failures.push(error);
+      },
+    });
+
+    expect(failures).toHaveLength(0);
+  });
+});

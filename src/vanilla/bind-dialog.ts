@@ -249,6 +249,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         }),
         attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
         syncCloseSequence(ctx, {
+          onError: options.onError,
           nonModal: resolved.isNonModal,
           primaryProperty,
           exitDuration,
@@ -263,6 +264,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     // notification is what the other two bindings' dependency-array-free effect does.
     syncOpenSequence(domContext(snapshot.phase), {
       prepare: options.prepare,
+      onError: options.onError,
       nonModal: resolved.isNonModal,
     });
 
