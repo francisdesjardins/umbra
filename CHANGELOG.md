@@ -11,6 +11,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-15
 
+### Fixed — `containFocus` told you to set it on a modal dialog, where it now buys nothing
+
+The option's own JSDoc said "**Worth setting on a modal dialog too**, which the name does not
+suggest", and gave the reason: clicking a panel's empty space focuses the `<dialog>` element, and
+WebKit does not move Tab from there into the content. That reason is real and the advice is stale —
+the recovery moved out from behind the flag and is unconditional now.
+`attach-focus-containment.ts` attaches it _before_ reading `containFocus`, and says so in its own
+comment: "Unconditional, and that is the point. This used to sit behind `containFocus`."
+
+So a caller following the option's documentation adds two inert focus markers inside content the top
+layer is already containing, and gets a behaviour they already had. Caught by the compatibility
+matrix disagreeing with it — the matrix row has said `✗ ignored by nonModal: false` since the
+recovery moved, which is the whole reason the table is the source of truth and prose is not.
+
+The playground's one use is on a non-modal dialog and describes it correctly; nothing else repeated
+the advice.
+
+### Fixed — two public options were missing from the table a caller reads
+
+`onDismissRequest` appeared **once** in the whole of API.md — inside the generated compatibility
+matrix, which is a table about how features interact rather than the option reference. `containFocus`
+appeared only in that chapter too. Both are options a caller passes to `useModal`, and neither was in
+the `useModal` chapter's option table, so a reader of the reference would not learn they exist.
+
+`onDismissRequest` is the more serious of the two: it is the newest option in the library, it has a
+playground example built on it, and its entire user-facing documentation was one cell of a generated
+grid.
+
+Both have rows now. The two remaining options the table does not carry are correct as they are —
+`onOpenRequest` is documented with a worked example in the Dialog Manager chapter, where a
+registration-time option belongs, and `clipContainer` is `@internal`.
+
 ### Changed — "about 200 lines each" now says which 200 lines, because it was read two ways
 
 Flagged an hour earlier as a claim the code contradicts, on a count of the whole binding folder —
