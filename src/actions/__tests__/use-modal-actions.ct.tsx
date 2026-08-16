@@ -607,6 +607,28 @@ test.describe('focusOnOpen', () => {
       .toBe('foo-cancel');
   });
 
+  test('the opening focus is visibly focused, claimed or not', async ({ mount, page }) => {
+    // `:focus-visible` follows input modality, and the click that opens a dialog is pointer input —
+    // so the ring is missing on Chromium and Firefox and present on WebKit, for the same focus. A
+    // modal the user cannot see the keyboard inside is one where Enter is a guess.
+    //
+    // The subtlety that makes this worth pinning: `showModal()` often focuses the claimed element
+    // first, and refocusing an element that already has focus is a no-op on all three engines —
+    // flags included. So the fix only works because focus is dropped before it is taken.
+    await mount(<FocusOnOpenHarness />);
+    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
+
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          const active = document.activeElement;
+          return active instanceof HTMLElement && active.matches(':focus-visible');
+        });
+      })
+      .toBe(true);
+  });
+
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
     // The claimed button decides where the modal *opens*. Where it returns after a failure is
     // a different question, answered by whoever ran the action — the retry is under their hand.

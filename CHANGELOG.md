@@ -11,6 +11,31 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-16
 
+### Fixed — a modal opened by mouse put the keyboard somewhere you could not see
+
+Reported as "the first open has no focus on the button, the second one does". The focus was on the
+button **both times** — Enter and Space activated it on the first open too. What differed was the
+ring, and only that.
+
+`:focus-visible` follows input modality, and the click that opens a dialog is pointer input, so
+`showModal()`'s own focusing steps place focus without a ring. Press any key — Escape, to close it —
+and the next open draws one. Measured cold, one click, no key ever pressed: **Chromium and Firefox
+show nothing, WebKit shows the ring**, for identical focus. So the three engines disagree with each
+other and Chromium disagrees with itself between two opens.
+
+It applied to a claimed `focusOnOpen` as well, which is the sharper half: a caller says "start
+here" and two engines out of three start there invisibly.
+
+`focus({ focusVisible: true })` overrides the heuristic on all three. **The subtlety that makes the
+fix work is that it is not enough**: `showModal()` has usually focused the element already, and
+refocusing an element that already holds focus is a no-op on all three engines, flags included. So
+the focus is dropped first — and only when that buys something: never when a ring is already
+showing, never when focus is somewhere else.
+
+**It does not move focus.** Where the keyboard goes is unchanged, claimed or platform-picked; only
+whether you can see it. That is why it is applied to the unclaimed case too — the library is what
+opened a modal and relocated the keyboard, so the library is what owes the user a visible answer.
+
 ### Changed — the comment convention, applied; and this file, compacted
 
 **`src/` 9 338 → 9 283 comment lines.** Two passes. The first put back in the present twelve

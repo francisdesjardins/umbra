@@ -17,6 +17,23 @@ import { queryAllOwn, queryOwn } from '../utils/dialog-scope.js';
 /** The marker an action sets with `focusOnOpen` — see `ActionButtonProps`. */
 const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
 
+/**
+ * Focus, **and say so on screen** — for the moves the library makes on the user's behalf.
+ *
+ * `:focus-visible` follows input modality, and a dialog opened by a mouse click inherits "pointer"
+ * from that click. Measured on all three engines: a plain `focus()` after a click on a trigger
+ * draws no ring on Chromium or Firefox, and one on WebKit. So a caller who declares `focusOnOpen`
+ * gets an invisible focus on two engines out of three, and the same dialog reopened after any key
+ * press looks different — which is the platform being consistent with itself and inconsistent to a
+ * user.
+ *
+ * `focusVisible: true` overrides the heuristic, and does so on all three.
+ *
+ * **Only where the library chose the target.** A restore after an action goes back to the control
+ * the user just pressed, so forcing a ring there would paint one on every mouse-driven action.
+ */
+const SHOW_THE_RING: FocusOptions = { focusVisible: true };
+
 /** Everything Tab can stop on, in document order — the same set the browser walks. */
 const FOCUSABLE = [
   'a[href]',
@@ -71,7 +88,10 @@ export function focusFirstAvailable(dialog: HTMLDialogElement, fromEnd: boolean)
   }
 
   for (const candidate of candidates) {
-    candidate.focus();
+    // The library picked this one, so it announces itself — see {@link SHOW_THE_RING}. Under the
+    // Tab recovery the modality is already keyboard and this changes nothing; under the reclaim
+    // floor it is the difference between a dialog that has the keyboard and one that looks it.
+    candidate.focus(SHOW_THE_RING);
     if (activeWithin(dialog) === candidate) {
       return true;
     }
@@ -127,8 +147,19 @@ function focusInside(dialog: HTMLElement): HTMLElement | null {
  * @internal
  */
 export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | null {
-  const claimed = queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR);
-  claimed?.focus();
+  // Whoever is going to hold it: the claim if there is one, otherwise whatever `showModal()`'s
+  // own focusing steps already picked. **Only the first of those moves focus** — the second is
+  // the element that already has it, and is re-taken purely so it is visible.
+  const target = queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR) ?? focusInside(dialog);
+  if (target !== null) {
+    // Refocusing an element that already has focus is a no-op on all three engines, flags
+    // included, so dropping focus first is what makes the ring appear. Done only when it buys
+    // one: never when a ring is already showing, never when focus is somewhere else.
+    if (activeWithin(dialog) === target && !target.matches(':focus-visible')) {
+      target.blur();
+    }
+    target.focus(SHOW_THE_RING);
+  }
   return focusInside(dialog);
 }
 

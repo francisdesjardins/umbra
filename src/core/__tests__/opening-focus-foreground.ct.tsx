@@ -177,3 +177,30 @@ test.describe('a dialog that claimed no opening focus still gets its keyboard ba
       .toBe('shadow-claimless-cancel');
   });
 });
+
+test.describe('the opening focus announces itself', () => {
+  test('a dialog that claims nothing still shows where the keyboard went', async ({
+    mount,
+    page,
+  }) => {
+    // `showModal()` picks the first focusable, and it picks it under the modality of the click
+    // that opened the dialog — so the focus is real and the ring is not, on Chromium and Firefox.
+    // The keyboard is somewhere the user cannot see, which is 2.4.7 with a working Enter key.
+    //
+    // Asserted on the element that actually holds focus rather than on a named button, because
+    // which one the platform picks is the platform's business; that it is *visible* is ours.
+    const component = await mount(<ReclaimWithoutClaimHarness />);
+    await component.getByTestId('open-both').click();
+
+    await expect(page.locator('dialog[data-modal-id="reclaim-no-claim"]')).toBeVisible();
+
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          const active = document.activeElement;
+          return active instanceof HTMLElement && active.matches(':focus-visible');
+        });
+      })
+      .toBe(true);
+  });
+});
