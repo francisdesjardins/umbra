@@ -122,6 +122,16 @@ const storiesRoute = createRoute({
   }, 'StoriesPage'),
 });
 
+const warzoneRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/warzone',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/warzone');
+  }, 'WarzonePage'),
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   gettingStartedRoute,
@@ -134,6 +144,7 @@ const routeTree = rootRoute.addChildren([
   uiIntegrationsRoute,
   uiTemplatesRoute,
   storiesRoute,
+  warzoneRoute,
 ]);
 
 // Use hash-based history when built for file:// (VITE_HASH_ROUTER=true)
