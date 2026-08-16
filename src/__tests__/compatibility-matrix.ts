@@ -184,7 +184,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   {
     option: 'prepare',
     enforcement: 'RUNTIME',
-    note: 'Gates the open and receives an `AbortSignal` the close aborts. `isPreparing` tracks the callback, not the `opening` phase.',
+    note: 'Runs **after** the dialog is shown, alongside the entrance — it does not gate the open and cannot refuse it. `syncOpenSequence` shows the dialog and schedules the phase frame before starting it, and a `prepare` that throws is logged and settles like any other. What waits on it is `open()`’s promise, `isPreparing` and so `aria-busy`, and `dismissWhilePreparing`. Receives an `AbortSignal` the close aborts; `isPreparing` tracks the callback, not the `opening` phase.',
     reference: {
       file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
       title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
