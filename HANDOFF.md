@@ -78,13 +78,6 @@ Neither is a defect. Both are decisions that are yours.
 have real callers. Dropping the `export` keyword is cosmetic churn in lifecycle code, and one of them
 may be exported to keep a future test's reach. Left alone deliberately.
 
-**"The three shipped bindings differ in about 200 lines each"** ([src/CLAUDE.md](src/CLAUDE.md)) does
-not match a count. Excluding tests and comment-only lines: `react/` ~442, `solid/` ~492, `vanilla/`
-~306. The sentence is rhetorical and hedged, and "differ" could mean lines-of-their-own or the diff
-between two bindings — so it is left alone rather than rewritten against a reading that may not be
-the one intended. It is the only claim found in this sweep where the doc and the code disagree and
-the fix is not obvious.
-
 **`applyStyle` is a root export with no API.md chapter.** So are `DialogStyle`, `StyleTarget`,
 `DialogPlacement`, `isKeyClaimedByPopup` and about fifteen types. Some of that is fine — API.md is
 prose, not a generated reference, and the playground's `/api` is the generated one. But **nothing
@@ -97,7 +90,10 @@ so it needs a decision about what it should demand before it can be written.
 ## 4. Already checked here — no action needed
 
 Recorded so nobody repeats it: every markdown link in `CLAUDE.md`, `src/CLAUDE.md`,
-`store/CLAUDE.md`, `playground/CLAUDE.md`, `API.md` and `README.md` resolves to a real path; every
+`store/CLAUDE.md`, `playground/CLAUDE.md`, `API.md` and `README.md` resolves to a real path; the
+binding-size claim in `src/CLAUDE.md` holds once it says which file it counts (`use-modal` 204/221,
+`bind-dialog` 264 code lines — the folders around them are 442/492/306, which is what made it look
+wrong); every
 non-glob entry in `.c8rc.json`'s exclude list still exists; the `react/` ⇄ `solid/` mirror matches the
 file list in `src/CLAUDE.md`; the `attach*` inventory matches `src/core/`; every root export has a
 playground `CATEGORIES` entry; and the logging namespace table agrees across `logger.ts`,
