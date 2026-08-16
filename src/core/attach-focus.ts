@@ -38,15 +38,12 @@ export function createFocusCoordinator(
   /**
    * The last element inside the dialog to take focus, remembered as it happens.
    *
-   * Reading `activeElement` when the engine reports a running action assumes nothing has
-   * disabled the button yet, and that assumption is a subscriber-order bet. It holds where the
-   * binding commits on a later frame and loses where the binding writes `disabled` from its own
-   * synchronous engine subscriber — `umbra/vanilla`, whose `bindAction` subscribes before this
-   * coordinator does, because the caller binds actions after `bindDialog` has returned. The
-   * browser blurs a disabled element, so the read finds nothing and the retry lands on the
-   * dialog instead of on the button that was pressed.
-   *
-   * `focusin` cannot lose that race: it fires when focus arrives, which is before any of it.
+   * Reading `activeElement` when the engine reports a running action is a subscriber-order bet: it
+   * loses wherever a binding writes `disabled` from its own synchronous engine subscriber, which
+   * `umbra/vanilla` does — its `bindAction` subscribes ahead of this coordinator, since the caller
+   * binds actions after `bindDialog` returns. The browser blurs a disabled element, so the read
+   * finds nothing and the retry lands on the dialog. `focusin` fires when focus arrives, before
+   * any of it, and cannot lose that race.
    */
   let lastFocusInside: HTMLElement | null = null;
   /**

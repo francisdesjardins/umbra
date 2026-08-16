@@ -1,28 +1,17 @@
 /* oxlint-disable no-console -- this module is the sanctioned console logger */
 /**
- * Lightweight, zero-dependency debug logger for browser devtools.
+ * Zero-dependency debug logger for browser devtools — near-zero overhead when disabled.
  *
- * Designed for library authors: near-zero overhead when disabled, structured
- * data objects, and colored namespace labels in the console.
- *
- * Every emitted line is tagged with a monotonic `#0001` sequence id (shared
- * across all namespaces). Use it to anchor debugging: note the latest id, do
- * the thing you're investigating, then read every line above that id.
+ * Every line carries a monotonic `#0001` id, shared across namespaces: note the latest, do the
+ * thing you are investigating, then read everything above it.
  *
  * ## Activation
  *
  * ```ts
- * // Via localStorage (persists across reloads):
- * localStorage.setItem('dialog:log', '*');      // all namespaces
- * localStorage.setItem('dialog:log', 'modal');  // only modal core
- * localStorage.setItem('dialog:log', 'modal,action'); // modal + action
- * localStorage.setItem('dialog:log', 'dialog:modal'); // prefixed form also works
+ * localStorage.setItem('dialog:log', '*'); // persists; also 'modal', 'modal,action', 'dialog:modal'
  *
- * // Via programmatic API (session only, unless persist = true):
  * import { setLogLevel } from 'umbra';
- * setLogLevel('*');
- * setLogLevel('modal,action');
- * setLogLevel(false); // disable
+ * setLogLevel('modal,action'); // session only unless persist = true; `false` disables
  * ```
  *
  * ## Namespaces
@@ -39,14 +28,11 @@
  *
  * ## Privacy
  *
- * Logging is **opt-in, debug-only, and console-only** — nothing is persisted or
- * transmitted by this library. It never logs the `data` payload passed to
- * `close(data)` (only a `withData` flag), nor the close `result`, render
- * content, or store state. It **does** log `error.message` from your `prepare` /
- * `onClose` / action callbacks and the close `reason`, either of which can carry
- * user-supplied data if your code puts it there. Keep that in mind before
- * enabling logging in **production**, where a session-replay / RUM tool may
- * capture `console` output.
+ * Opt-in, debug-only, console-only — nothing is persisted or transmitted. Never logged: the
+ * `close(data)` payload (only a `withData` flag), the close result, render content, store state.
+ * **Logged**: `error.message` from your `prepare` / `onClose` / action callbacks, and the close
+ * `reason` — either can carry user data if your code puts it there. Weigh that before enabling it
+ * in production, where a session-replay tool may capture `console`.
  */
 
 import { createSafeStorage } from './safe-storage.js';
@@ -58,19 +44,13 @@ const storageKey = 'dialog:log';
 /**
  * Namespace colours, painted as a **filled badge** rather than as coloured text.
  *
- * The devtools console has two backgrounds and the page cannot choose between them: the console
- * follows the *system* theme, not the theme a page picked or a user toggled in the app, and it can
- * be set independently of both in devtools' own settings. So a namespace colour has to be legible
- * on white and on `#1f1f1f` at once — and no colour is. The bar is 4.5:1 against a white console,
- * which caps a colour's relative luminance at 0.183, and 4.5:1 against a dark one, which floors it
- * at 0.237. The window is empty; the best any single value can do on both is about 4.06:1.
+ * The console follows the *system* theme, not the page's, and can be set independently of both —
+ * so ink has to clear 4.5:1 on white **and** on `#1f1f1f`. Nothing does: the first caps relative
+ * luminance at 0.183 and the second floors it at 0.237, and the best any single value reaches on
+ * both is about 4.06:1. Measured here, `action` scores 2.16:1 on a light console.
  *
- * Measured against that, ink alone cannot pass: `action` scores 2.16:1 on a light console and
- * `modal:click-outside` 2.30:1.
- *
- * A badge sidesteps it. The label's contrast is against the colour behind it, which this file
- * owns, so it reads the same on either console — which is what the `padding` and `border-radius`
- * below are for.
+ * A badge sidesteps it — the label's contrast is against the colour behind it, which this file
+ * owns, so it reads the same either way. That is what the `padding` and `border-radius` are for.
  */
 const colors: Readonly<Record<string, string>> = {
   manager: '#4CAF50',

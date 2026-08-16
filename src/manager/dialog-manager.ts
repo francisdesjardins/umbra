@@ -93,14 +93,13 @@ export type OpenRequest = {
 /**
  * Build an {@link OpenRequest} — the envelope handed to {@link DialogManager.requestOpen}.
  *
- * `requestOpen(id, { payload, context })` works and always will; this exists because the call
- * site is a **boundary**, and a boundary is where an object literal is worst. The keys have to be
- * remembered exactly (this one was called `data` until it collided with the payload a modal
- * declares), the two halves mean different things, and the shape is the one place a protocol
- * would grow — a version, a correlation id — without every caller being edited.
+ * `requestOpen(id, { payload, context })` works and always will; this exists because the call site
+ * is a **boundary**, where an object literal is worst: the keys have to be remembered exactly, the
+ * two halves mean different things, and the shape is where a protocol would grow — a version, a
+ * correlation id — without every caller being edited.
  *
- * It validates nothing and it cannot: the payload is `unknown` on the way out, and the dialog
- * that receives it is the only side that knows what a good one looks like.
+ * It validates nothing and cannot: the payload is `unknown` on the way out, and the dialog that
+ * receives it is the only side that knows what a good one looks like.
  *
  * @example
  * // The two halves, named, at the boundary.
@@ -232,12 +231,10 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
  * DOM event name dispatched on document at the start of the opening sequence.
  *
  * **Why this exists next to {@link DialogManager.subscribe}, which reports the same moments.**
- * `subscribe` binds to one manager instance. These events are dispatched on `document`, so a
- * listener hears every dialog on the page — including ones raised by a *different copy of this
- * library*, in another bundle, in another microfrontend. That is the only mechanism here that
- * crosses that line, and it is the observation half of what {@link DialogManager.requestOpen}
- * opens on the way in: a shell can ask a dialog it does not own to open, and watch what came of
- * it, without either side sharing a module instance.
+ * `subscribe` binds to one manager instance; these are dispatched on `document`, so a listener
+ * hears every dialog on the page — including ones raised by a *different copy of this library*, in
+ * another bundle. It is the only mechanism here that crosses that line, and the observation half of
+ * {@link DialogManager.requestOpen}.
  *
  * Inside one app, `subscribe` is the better tool: same moments, no globals, no string names.
  *
@@ -459,28 +456,18 @@ export type DialogManager = {
    * opens over a high-priority one is put back underneath it before the frame is painted, and the
    * snapshot, `foreground`, `isForeground` and `getZIndex` all move with it.
    *
-   * **What it costs, and the one thing it cannot do.** Moving a dialog inside the top layer means
-   * closing and re-showing it — `z-index` does not apply there — so a reorder fires the element's
-   * native `close` event and re-runs CSS keyed on `[open]`. `raiseDialog` in
-   * `core/dialog-lifecycle.ts` documents all of it.
+   * **What a reorder costs** is `raiseDialog`'s subject in `core/dialog-lifecycle.ts`: moving a
+   * dialog inside the top layer is `close()` + `showModal()`, so it fires the element's native
+   * `close` and re-runs CSS keyed on `[open]`.
    *
-   * **A policy orders each family, never across them.** Every non-modal dialog sits under every
-   * modal one, and that is settled before the policy is asked — the platform paints top-layer
-   * elements above ordinary ones and no `z-index` reaches between them, so an order claiming
-   * otherwise would not be an opinion the library is entitled to, it would be false. Returning a
-   * huge number for a panel therefore ranks it against the other panels and moves it no nearer the
-   * user.
+   * **A policy orders each family, never across them.** Modality is settled before the policy is
+   * asked, so a huge number on a panel ranks it against the other panels and moves it no nearer the
+   * user — a platform law rather than a choice, in the compatibility matrix.
    *
-   * Opt-in, and dormant until called: with no policy nothing is ever re-shown or re-stamped, and the
-   * order is the modality rule above followed by the order the opens arrived in. Calling it again
-   * replaces the policy — it is one project-wide rule, not a stack of them.
-   *
-   * **Being dormant has a cost on the way in**, and it is the one case where a reorder is not
-   * minimal: the top layer is only tracked once a policy exists, so installing one over dialogs that
-   * are already open compares the desired order against nothing and re-shows **every** open modal
-   * dialog, bottom-first — each of those a native `close` event and a re-run of any CSS keyed on
-   * `[open]`. Installing at start-up, before anything opens, costs nothing at all. Seeding the
-   * tracking from the snapshot at install time would make this minimal too and is not done yet.
+   * Opt-in and dormant until called; calling it again replaces the policy rather than stacking one.
+   * **Installing it over dialogs that are already open is the one reorder that is not minimal** —
+   * the top layer is untracked until a policy exists, so the first plan re-shows every open modal
+   * dialog. At start-up it costs nothing. Also in the matrix, which is where that stays open.
    *
    * @returns A disposer that puts the order back to what it would be with no policy — within each
    *   family, since the modality rule is not the policy's to begin with — and reorders what is on
@@ -523,13 +510,11 @@ export type DialogManager = {
    * bottom-most open one would get. That is the useful answer, because a closed dialog's stale
    * z-index is never consulted.
    *
-   * **Position in the stack, not in the open order**: the bottom of that stack is a non-modal dialog
-   * whenever one is open, since the modality rule sorts before everything else. And the stamp
-   * outlives the show — `showDialog` writes the value that was current when *that* dialog opened,
-   * and `syncStackOrder` rewrites it on every open dialog whenever the order changes, which is the
-   * whole of what moving a non-modal dialog means. With no policy installed nothing rewrites it, so
-   * a stamp and this number can disagree numerically after a close; nothing reads the stamp back, and
-   * the relative order they describe is the same.
+   * **Position in the stack, not in the open order** — modality sorts first, so the bottom is a
+   * non-modal dialog whenever one is open. The stamp on the element is written at its own show and
+   * rewritten by `syncStackOrder`, which is what moving a non-modal dialog means; with no policy
+   * nothing rewrites it, so a stamp and this number can disagree after a close. Nothing reads the
+   * stamp back, and the order they describe is the same.
    */
   getZIndex(id: string): number;
 
@@ -615,19 +600,15 @@ export function createDialogManager(): DialogManager {
   /**
    * Where the stack starts, and it decides nothing for a **modal** dialog.
    *
-   * `showModal()` puts the element in the top layer, which paints above ordinary content in the
-   * order elements were added and ignores `z-index` between the two — so the number stamped on a
-   * modal dialog is debugging output (`data-modal-z`) and no more. It is **non-modal** panels this
-   * actually orders, because those stay in normal flow.
+   * The top layer ignores `z-index`, so the number on a modal dialog is debugging output
+   * (`data-modal-z`). It is **non-modal** panels this orders, since those stay in normal flow.
    *
-   * 1300 is the layer most component libraries reserve for a modal — MUI's `zIndex.modal`
-   * exactly, with its drawer at 1200 and its app bar at 1100. So a panel lands above the app
-   * chrome it is meant to cover and below the snackbars and tooltips meant to cover it, in the
-   * scale a consumer is most likely to already be using.
+   * 1300 is MUI's `zIndex.modal` exactly — drawer 1200, app bar 1100 — so a panel lands above the
+   * chrome it covers and below the snackbars meant to cover it, on the scale a consumer most
+   * likely already has.
    *
-   * **It is stamped inline**, so a consumer moving it needs `!important` on their own rule — the
-   * base is not an option today, and making it one is a decision rather than an oversight: the
-   * value only ever matters for non-modal dialogs, and no report has needed it.
+   * **Stamped inline**, so moving it needs `!important`. Not an option, deliberately: it matters
+   * only for non-modal dialogs and nothing has needed it.
    */
   const zIndexBase = 1300;
 
