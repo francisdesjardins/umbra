@@ -54,7 +54,7 @@ test.describe('slideDialogStyle', () => {
     // placement layer; leaving the opposite edge unset lets that `0` leak in and over-constrain
     // the box — `right: 0` plus a leaked `left: 0` is a full-width panel, not a content-width one.
     for (const direction of DIRECTIONS) {
-      const style = slideDialogStyle(direction, false, 'start');
+      const style = slideDialogStyle({ direction, contained: false, align: 'start' });
       expect(style[direction]).toBe(0);
       for (const other of DIRECTIONS.filter((edge) => {
         return edge !== direction;
@@ -65,39 +65,61 @@ test.describe('slideDialogStyle', () => {
   });
 
   test('contained panels size to their container, free ones to the viewport', () => {
-    expect(slideDialogStyle('right', true, 'stretch')).toMatchObject({
+    expect(
+      slideDialogStyle({ direction: 'right', contained: true, align: 'stretch' })
+    ).toMatchObject({
       position: 'absolute',
       height: '100%',
     });
-    expect(slideDialogStyle('right', false, 'stretch')).toMatchObject({
+    expect(
+      slideDialogStyle({ direction: 'right', contained: false, align: 'stretch' })
+    ).toMatchObject({
       position: 'fixed',
       height: '100dvh',
     });
-    expect(slideDialogStyle('bottom', false, 'stretch').width).toBe('100dvw');
+    expect(
+      slideDialogStyle({ direction: 'bottom', contained: false, align: 'stretch' }).width
+    ).toBe('100dvw');
   });
 
   test('stretch fills the cross axis; the others cap it and pin one edge', () => {
-    expect(slideDialogStyle('right', false, 'stretch')).toMatchObject({ top: 0, bottom: 0 });
+    expect(
+      slideDialogStyle({ direction: 'right', contained: false, align: 'stretch' })
+    ).toMatchObject({ top: 0, bottom: 0 });
 
-    const start = slideDialogStyle('right', false, 'start');
+    const start = slideDialogStyle({ direction: 'right', contained: false, align: 'start' });
     expect(start).toMatchObject({ top: 0, maxHeight: '100dvh' });
     expect(start.height).toBeUndefined();
 
-    expect(slideDialogStyle('right', false, 'end')).toMatchObject({ bottom: 0 });
-    expect(slideDialogStyle('right', false, 'center')).toMatchObject({ top: '50%' });
+    expect(slideDialogStyle({ direction: 'right', contained: false, align: 'end' })).toMatchObject({
+      bottom: 0,
+    });
+    expect(
+      slideDialogStyle({ direction: 'right', contained: false, align: 'center' })
+    ).toMatchObject({ top: '50%' });
 
     // The other axis, because "the cross axis" swaps with the direction: a panel sliding up from
     // the bottom is aligned left/right, not top/bottom, and the two pairs are separate branches.
-    const verticalStart = slideDialogStyle('bottom', false, 'start');
+    const verticalStart = slideDialogStyle({
+      direction: 'bottom',
+      contained: false,
+      align: 'start',
+    });
     expect(verticalStart).toMatchObject({ left: 0, maxWidth: '100dvw' });
     expect(verticalStart.width).toBeUndefined();
 
-    expect(slideDialogStyle('bottom', false, 'end')).toMatchObject({ right: 0 });
-    expect(slideDialogStyle('bottom', false, 'center')).toMatchObject({ left: '50%' });
+    expect(slideDialogStyle({ direction: 'bottom', contained: false, align: 'end' })).toMatchObject(
+      { right: 0 }
+    );
+    expect(
+      slideDialogStyle({ direction: 'bottom', contained: false, align: 'center' })
+    ).toMatchObject({ left: '50%' });
   });
 
   test('clears the UA’s max sizing so a full-bleed panel is not capped', () => {
-    expect(slideDialogStyle('left', false, 'stretch')).toMatchObject({
+    expect(
+      slideDialogStyle({ direction: 'left', contained: false, align: 'stretch' })
+    ).toMatchObject({
       margin: 0,
       maxWidth: 'none',
       maxHeight: 'none',

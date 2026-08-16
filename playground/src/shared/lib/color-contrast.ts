@@ -95,7 +95,11 @@ export const contrastRatio = (foreground: Rgb, background: Rgb): number => {
  * it already passes, when it is not an `hsl()`, or when even the endpoint cannot reach the bar,
  * because a silent black-or-white substitution would be worse than a reported failure.
  */
-export const readableHsl = (color: string, background: string, minimum = 4.5): string => {
+export const readableHsl = (
+  color: string,
+  against: { readonly background: string; readonly minimum?: number }
+): string => {
+  const { background, minimum = 4.5 } = against;
   const parsed = HSL.exec(color.trim());
   const back = parseCssColor(background);
   if (!parsed?.[1] || parsed[2] === undefined || parsed[3] === undefined || !back) {

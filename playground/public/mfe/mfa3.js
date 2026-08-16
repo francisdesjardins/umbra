@@ -15,9 +15,10 @@ import { createOpenRequest, dialogManager } from 'umbra';
 import { createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import h from 'solid-js/h';
-import { logTo } from './log.js';
+import { createLog } from './log.js';
 
 const LOG = 'mfa3-log';
+const log = createLog(LOG);
 
 /**
  * The same two glyphs Checkout draws, and deliberately the same paths: an arrow leaving for a
@@ -77,13 +78,13 @@ function Support() {
       const from = request.context?.source ?? 'anonymous';
       const refusal = asRefusal(payload);
       if (refusal === null) {
-        logTo(LOG, 'no', `refused — ${from} sent nothing I can open a ticket about`);
+        log('no', `refused — ${from} sent nothing I can open a ticket about`);
         request.refuse('no-refusal-details');
         return;
       }
-      logTo(LOG, 'in', `${from} refused ${refusal.amount}$ (limit ${refusal.limit}$)`);
+      log('in', `${from} refused ${refusal.amount}$ (limit ${refusal.limit}$)`);
       setSubject(refusal);
-      logTo(LOG, 'yes', 'accepted — opening support:ticket');
+      log('yes', 'accepted — opening support:ticket');
       void ticket.open();
     },
 
@@ -121,7 +122,7 @@ function Support() {
     },
 
     onClose: (result) => {
-      logTo(LOG, 'note', `support:ticket closed — "${result.reason}"`);
+      log('note', `support:ticket closed — "${result.reason}"`);
       setSubject(null);
     },
   });
@@ -158,7 +159,7 @@ function Support() {
             'aria-label': 'Ask Checkout',
             'data-tip': 'Ask Checkout',
             onClick: () => {
-              logTo(LOG, 'out', `asked checkout:receipt to open — ${reference()}`);
+              log('out', `asked checkout:receipt to open — ${reference()}`);
               // A support agent looking up a customer's receipt: a dialog owned by another
               // microfrontend, asked for by name, with the answer coming back.
               void dialogManager
@@ -168,11 +169,11 @@ function Support() {
                 )
                 .then(async (outcome) => {
                   if (!outcome.accepted) {
-                    logTo(LOG, 'no', `checkout refused — ${outcome.reason}`);
+                    log('no', `checkout refused — ${outcome.reason}`);
                     return;
                   }
                   const [, result] = await outcome.closed;
-                  logTo(LOG, 'yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
+                  log('yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
                 });
             },
           },
@@ -205,8 +206,8 @@ render(() => {
 // One manager on the page, so this hears the other two microfrontends' dialogs as well as its own.
 dialogManager.subscribe((event) => {
   if (event.id !== 'support:ticket') {
-    logTo(LOG, 'bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
+    log('bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
   }
 });
 
-logTo(LOG, 'note', 'ready — Solid binding, owns "support:ticket"');
+log('note', 'ready — Solid binding, owns "support:ticket"');

@@ -14,12 +14,12 @@ import { createStepRunner, sameInputs, type SyncStep } from '../step-runner.js';
 /** What a run produced: which steps attached, tore down, and in what order. */
 type Log = string[];
 
-/** A step that records itself. `inputs` reads one named field off the pass. */
+/** A step that records itself. `reads` names the one pass field its `inputs` looks at. */
 function step(
   name: string,
-  reads: string | null,
-  log: Log
+  spec: { readonly reads: string | null; readonly log: Log }
 ): SyncStep<Record<string, unknown>, string> {
+  const { reads, log } = spec;
   return {
     inputs:
       reads === null
@@ -82,9 +82,12 @@ test.describe('sameInputs', () => {
 test.describe('the first pass', () => {
   test('attaches every step, in the table’s order', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log), step('b', 'y', log)], () => {
-      return 'ctx';
-    });
+    const runner = createStepRunner(
+      [step('a', { reads: 'x', log }), step('b', { reads: 'y', log })],
+      () => {
+        return 'ctx';
+      }
+    );
 
     runner.sync({ x: 1, y: 1 });
 
@@ -119,9 +122,12 @@ test.describe('the first pass', () => {
 test.describe('only what moved is rebuilt', () => {
   test('a pass that changes nothing rebuilds nothing', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log), step('b', 'y', log)], () => {
-      return 'ctx';
-    });
+    const runner = createStepRunner(
+      [step('a', { reads: 'x', log }), step('b', { reads: 'y', log })],
+      () => {
+        return 'ctx';
+      }
+    );
 
     runner.sync({ x: 1, y: 1 });
     log.length = 0;
@@ -132,9 +138,12 @@ test.describe('only what moved is rebuilt', () => {
 
   test('a field only one step reads rebuilds only that step', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log), step('b', 'y', log)], () => {
-      return 'ctx';
-    });
+    const runner = createStepRunner(
+      [step('a', { reads: 'x', log }), step('b', { reads: 'y', log })],
+      () => {
+        return 'ctx';
+      }
+    );
 
     runner.sync({ x: 1, y: 1 });
     log.length = 0;
@@ -153,9 +162,12 @@ test.describe('everything stale goes down before anything comes up', () => {
    */
   test('two steps rebuilding together detach as a group', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log), step('b', 'x', log)], () => {
-      return 'ctx';
-    });
+    const runner = createStepRunner(
+      [step('a', { reads: 'x', log }), step('b', { reads: 'x', log })],
+      () => {
+        return 'ctx';
+      }
+    );
 
     runner.sync({ x: 1 });
     log.length = 0;
@@ -167,7 +179,11 @@ test.describe('everything stale goes down before anything comes up', () => {
   test('a surviving step is not detached, and keeps its place in the order', () => {
     const log: Log = [];
     const runner = createStepRunner(
-      [step('a', 'x', log), step('survivor', 'y', log), step('c', 'x', log)],
+      [
+        step('a', { reads: 'x', log }),
+        step('survivor', { reads: 'y', log }),
+        step('c', { reads: 'x', log }),
+      ],
       () => {
         return 'ctx';
       }
@@ -184,7 +200,7 @@ test.describe('everything stale goes down before anything comes up', () => {
 test.describe('a step with no inputs', () => {
   test('runs on every pass, and is never torn down', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('always', null, log)], () => {
+    const runner = createStepRunner([step('always', { reads: null, log })], () => {
       return 'ctx';
     });
 
@@ -231,9 +247,12 @@ test.describe('a step with no inputs', () => {
 test.describe('destroy', () => {
   test('runs every teardown, in the order the steps were wired', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log), step('b', 'y', log)], () => {
-      return 'ctx';
-    });
+    const runner = createStepRunner(
+      [step('a', { reads: 'x', log }), step('b', { reads: 'y', log })],
+      () => {
+        return 'ctx';
+      }
+    );
 
     runner.sync({ x: 1, y: 1 });
     log.length = 0;
@@ -250,7 +269,7 @@ test.describe('destroy', () => {
    */
   test('clears the keys, so an identical pass afterwards attaches again', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log)], () => {
+    const runner = createStepRunner([step('a', { reads: 'x', log })], () => {
       return 'ctx';
     });
 
@@ -264,7 +283,7 @@ test.describe('destroy', () => {
 
   test('is safe twice — the second finds nothing to run', () => {
     const log: Log = [];
-    const runner = createStepRunner([step('a', 'x', log)], () => {
+    const runner = createStepRunner([step('a', { reads: 'x', log })], () => {
       return 'ctx';
     });
 

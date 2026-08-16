@@ -97,8 +97,11 @@ export const searchSymbols = (query: string): readonly SymbolHit[] => {
   if (query.trim() === '') {
     return [];
   }
-  return fuzzyRank(query, SYMBOLS, (symbol) => {
-    return symbol.name;
+  return fuzzyRank(query, {
+    items: SYMBOLS,
+    key: (symbol) => {
+      return symbol.name;
+    },
   }).map((entry) => {
     return { symbol: entry.item, match: entry.match };
   });

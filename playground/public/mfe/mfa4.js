@@ -10,9 +10,10 @@
 // actions — and every difference in behaviour is the boundary talking, not the binding.
 import { createOpenRequest, dialogManager } from 'umbra';
 import { bindDialog } from 'umbra/vanilla';
-import { logTo } from './log.js';
+import { createLog } from './log.js';
 
 const LOG = 'mfa4-log';
+const log = createLog(LOG);
 
 /**
  * The component's own styles.
@@ -154,20 +155,20 @@ class AuditPanel extends HTMLElement {
             : null;
 
         if (amount === null) {
-          logTo(LOG, 'no', `refused — ${from} sent no amount to audit`);
+          log('no', `refused — ${from} sent no amount to audit`);
           request.refuse('no-amount');
           return;
         }
 
-        logTo(LOG, 'in', `${from} sent ${amount}$ for review`);
+        log('in', `${from} sent ${amount}$ for review`);
         underReview = { amount, from };
         detail.textContent = `${from} put ${amount}$ through. Flag it?`;
-        logTo(LOG, 'yes', 'accepted — opening audit:review');
+        log('yes', 'accepted — opening audit:review');
         void audit.open();
       },
 
       onClose: (result) => {
-        logTo(LOG, 'note', `audit:review closed — "${result.reason}"`);
+        log('note', `audit:review closed — "${result.reason}"`);
         underReview = null;
         detail.textContent = 'Nothing under review.';
       },
@@ -178,12 +179,13 @@ class AuditPanel extends HTMLElement {
     // and the failing action below is the third: after it settles, the modal puts focus back on
     // whoever ran it — which means the library had to have *recorded* who that was, across the
     // boundary, at the one instant it could be read.
-    audit.bindAction($('dismiss'), 'dismissed', { focusOnOpen: true });
+    audit.bindAction($('dismiss'), { reason: 'dismissed', focusOnOpen: true });
 
     // Deliberately throws. An action that fails leaves the modal open with its error reported,
     // and the keyboard has to stay usable — the retry belongs under the hand of the button that
     // was just pressed.
-    audit.bindAction($('escalate'), 'escalated', {
+    audit.bindAction($('escalate'), {
+      reason: 'escalated',
       onAction: async () => {
         await new Promise((resolve) => {
           return setTimeout(resolve, 200);
@@ -191,13 +193,14 @@ class AuditPanel extends HTMLElement {
         throw new Error('the audit service is unreachable');
       },
     });
-    audit.bindAction($('flag'), 'flagged', {
+    audit.bindAction($('flag'), {
+      reason: 'flagged',
       hotkey: 'Enter',
       onAction: async (close) => {
         await new Promise((resolve) => {
           return setTimeout(resolve, 400);
         });
-        logTo(LOG, 'note', `flagged ${underReview?.amount ?? 0}$`);
+        log('note', `flagged ${underReview?.amount ?? 0}$`);
         close();
       },
     });
@@ -217,7 +220,7 @@ class AuditPanel extends HTMLElement {
     });
 
     $('ask').addEventListener('click', () => {
-      logTo(LOG, 'out', 'asked checkout:receipt to open');
+      log('out', 'asked checkout:receipt to open');
       void dialogManager
         .requestOpenAndWait(
           'checkout:receipt',
@@ -225,15 +228,15 @@ class AuditPanel extends HTMLElement {
         )
         .then(async (outcome) => {
           if (!outcome.accepted) {
-            logTo(LOG, 'no', `checkout refused — ${outcome.reason}`);
+            log('no', `checkout refused — ${outcome.reason}`);
             return;
           }
           const [, result] = await outcome.closed;
-          logTo(LOG, 'yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
+          log('yes', `checkout answered — "${result?.reason ?? 'inconnu'}"`);
         });
     });
 
-    logTo(LOG, 'note', 'ready — web component, shadow root, owns "audit:review"');
+    log('note', 'ready — web component, shadow root, owns "audit:review"');
   }
 }
 
@@ -241,6 +244,6 @@ customElements.define('audit-panel', AuditPanel);
 
 dialogManager.subscribe((event) => {
   if (event.id !== 'audit:review') {
-    logTo(LOG, 'bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
+    log('bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
   }
 });

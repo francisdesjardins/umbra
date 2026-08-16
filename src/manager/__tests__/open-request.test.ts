@@ -59,7 +59,8 @@ test.describe('requestOpen', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
     const seen: OpenRequest[] = [];
-    dm.register('asked', store, {
+    dm.register('asked', {
+      store,
       onOpenRequest: (_payload, request) => {
         seen.push(request);
       },
@@ -84,7 +85,8 @@ test.describe('requestOpen', () => {
     dm.subscribe((event) => {
       events.push(event.type);
     });
-    dm.register('asked', createFakeStore(), {
+    dm.register('asked', {
+      store: createFakeStore(),
       onOpenRequest: () => {
         return undefined;
       },
@@ -100,7 +102,7 @@ test.describe('requestOpen', () => {
     // outside, and the honest answer to that is no.
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('never-asked', store);
+    dm.register('never-asked', { store });
 
     dm.requestOpen('never-asked', { payload: 'anything' });
 
@@ -120,7 +122,8 @@ test.describe('requestOpen', () => {
     // keeps the manager out of the business of deciding for it.
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('asked', store, {
+    dm.register('asked', {
+      store,
       onOpenRequest: () => {
         dm.open('asked');
       },
@@ -137,7 +140,8 @@ test.describe('requestOpen', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
     let asked = 0;
-    dm.register('asked', store, {
+    dm.register('asked', {
+      store,
       onOpenRequest: () => {
         asked += 1;
       },
@@ -152,7 +156,8 @@ test.describe('requestOpen', () => {
   test('unregistering takes the handler with it', () => {
     const dm = createDialogManager();
     let asked = 0;
-    dm.register('asked', createFakeStore(), {
+    dm.register('asked', {
+      store: createFakeStore(),
       onOpenRequest: () => {
         asked += 1;
       },
@@ -169,12 +174,13 @@ test.describe('requestOpen', () => {
     // a stale handler answering for a dialog that no longer offers it is the worst of both.
     const dm = createDialogManager();
     let asked = 0;
-    dm.register('asked', createFakeStore(), {
+    dm.register('asked', {
+      store: createFakeStore(),
       onOpenRequest: () => {
         asked += 1;
       },
     });
-    dm.register('asked', createFakeStore());
+    dm.register('asked', { store: createFakeStore() });
 
     dm.requestOpen('asked');
 
@@ -188,7 +194,8 @@ test.describe('requestOpenAndWait', () => {
     // is refused has no way to tell the user why nothing happened.
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('billing', store, {
+    dm.register('billing', {
+      store,
       onOpenRequest: (_payload, request) => {
         request.refuse('over-limit');
       },
@@ -202,7 +209,7 @@ test.describe('requestOpenAndWait', () => {
 
   test('the refuses the manager makes itself are reasons too, not just warnings', async () => {
     const dm = createDialogManager();
-    dm.register('deaf', createFakeStore());
+    dm.register('deaf', { store: createFakeStore() });
 
     expect(await dm.requestOpenAndWait('absent')).toEqual({
       accepted: false,
@@ -219,7 +226,8 @@ test.describe('requestOpenAndWait', () => {
     // the handler returns would report a successful accept as a refusal.
     const dm = createDialogManager();
     const store = createFakeStore();
-    dm.register('asked', store, {
+    dm.register('asked', {
+      store,
       onOpenRequest: () => {
         dm.open('asked');
       },
@@ -233,7 +241,8 @@ test.describe('requestOpenAndWait', () => {
 
   test('an async handler is awaited, so a validator that fetches can still refuse', async () => {
     const dm = createDialogManager();
-    dm.register('slow', createFakeStore(), {
+    dm.register('slow', {
+      store: createFakeStore(),
       onOpenRequest: async (_payload, request) => {
         await Promise.resolve();
         request.refuse('checked-and-refused');
@@ -248,7 +257,8 @@ test.describe('requestOpenAndWait', () => {
 
   test('the first answer stands — refusing twice does not rewrite it', async () => {
     const dm = createDialogManager();
-    dm.register('asked', createFakeStore(), {
+    dm.register('asked', {
+      store: createFakeStore(),
       onOpenRequest: (_payload, request) => {
         request.refuse('first');
         request.refuse('second');
@@ -262,7 +272,8 @@ test.describe('requestOpenAndWait', () => {
     // The fire-and-forget door is unchanged: adding the reporting one must cost no existing call.
     const dm = createDialogManager();
     let asked = 0;
-    dm.register('asked', createFakeStore(), {
+    dm.register('asked', {
+      store: createFakeStore(),
       onOpenRequest: () => {
         asked += 1;
       },
@@ -295,7 +306,8 @@ test.describe('createOpenRequest', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
     const seen: unknown[] = [];
-    dm.register('asked', store, {
+    dm.register('asked', {
+      store,
       onOpenRequest: (payload) => {
         seen.push(payload);
       },

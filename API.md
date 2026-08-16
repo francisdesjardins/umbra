@@ -925,8 +925,9 @@ const confirm = bindDialog<{ receipt: string }, 'approve' | 'cancel'>({
   },
 });
 
-confirm.bindAction(cancelButton, 'cancel');
-const unbind = confirm.bindAction(approveButton, 'approve', {
+confirm.bindAction(cancelButton, { reason: 'cancel' });
+const unbind = confirm.bindAction(approveButton, {
+  reason: 'approve',
   hotkey: 'Enter',
   onAction: async (close) => {
     close({ receipt: await charge() });
@@ -963,17 +964,17 @@ Positioning and animation are applied as **inline styles**, which outrank a styl
 
 ### `DialogController`
 
-| Member                                 | Type                                          | Description                                                                 |
-| -------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| `open()`                               | `() => Promise<void>`                         | Opens it. Resolves after `prepare` completes.                               |
-| `openAndWait()`                        | `() => Promise<AwaitedClose<TData, TReason>>` | Opens it and resolves with how it closed — see [openAndWait](#openandwait). |
-| `handle`                               | `ModalHandle<TData, TReason>`                 | `handle.close(reason?, data?)`, typed with this dialog's payload.           |
-| `bindAction(button, reason, options?)` | `(…) => () => void`                           | Turns a button into one of this dialog's actions. Returns an **unbind**.    |
-| `isActionRunning(reason)`              | `(reason) => boolean`                         | Whether **that** action is running — the hook bindings' `action.isRunning`. |
-| `subscribe(listener)`                  | `(() => void) => () => void`                  | Every state change — phases and actions alike.                              |
-| `getSnapshot()`                        | `() => ModalSnapshot`                         | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
-| `destroy()`                            | `() => void`                                  | Unregister, close if open, settle every waiter, detach every listener.      |
-| `dialogManager`                        | `DialogManager`                               | The manager this dialog is registered with.                                 |
+| Member                       | Type                                          | Description                                                                 |
+| ---------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `open()`                     | `() => Promise<void>`                         | Opens it. Resolves after `prepare` completes.                               |
+| `openAndWait()`              | `() => Promise<AwaitedClose<TData, TReason>>` | Opens it and resolves with how it closed — see [openAndWait](#openandwait). |
+| `handle`                     | `ModalHandle<TData, TReason>`                 | `handle.close(reason?, data?)`, typed with this dialog's payload.           |
+| `bindAction(button, action)` | `(…) => () => void`                           | Turns a button into one of this dialog's actions. Returns an **unbind**.    |
+| `isActionRunning(reason)`    | `(reason) => boolean`                         | Whether **that** action is running — the hook bindings' `action.isRunning`. |
+| `subscribe(listener)`        | `(() => void) => () => void`                  | Every state change — phases and actions alike.                              |
+| `getSnapshot()`              | `() => ModalSnapshot`                         | `{ phase, isVisible, isPreparing, hasRunningAction, error }`.               |
+| `destroy()`                  | `() => void`                                  | Unregister, close if open, settle every waiter, detach every listener.      |
+| `dialogManager`              | `DialogManager`                               | The manager this dialog is registered with.                                 |
 
 ### `bindAction` — the half a renderer does elsewhere
 
@@ -982,8 +983,9 @@ binding makes. It exists because nothing here re-renders: it attaches the click 
 `aria-keyshortcuts` and `data-focus-on-open` once, and then keeps `disabled`, `data-loading` and
 `aria-busy` synchronised as the action runs.
 
-It takes the same [`ActionOptions`](#actionreason-handleroroptions) the hook bindings do —
-`onAction`, `onClick`, `disabled`, `type`, `hotkey`, `focusOnOpen`.
+Its second argument is the action: the `reason`, plus the same
+[`ActionOptions`](#actionreason-handleroroptions) the hook bindings take — `onAction`, `onClick`,
+`disabled`, `type`, `hotkey`, `focusOnOpen`.
 
 **Call the unbind when the button goes away.** It removes the listener, retires the action's
 declaration — which is what stops a hotkey outliving its button and what lets backdrop dismissal
@@ -1399,7 +1401,7 @@ One row per option a caller can pass. The **held by** column is the one to read:
 | the render callback and the Modal it returns | ✓                                                                                                                                                                      | ✓ — Live values are getters, so the render args must not be destructured.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | ✗ by design — A controller does not render. Shipping one would mean shipping UI, which is the library’s one refusal.                                                                                                                                                                                                                                                                                          |
 | portal: true                                 | ✓ — `createPortal` returns a node the caller still places.                                                                                                             | ✓ — The binding mounts the element itself, so `Modal` is `null`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | ~ — Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor.                                                                                                                                                                                                                             |
 | ModalOutlet                                  | ✓                                                                                                                                                                      | ✓                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | ✗ by design — No render pass, so nothing for an outlet to place.                                                                                                                                                                                                                                                                                                                                              |
-| the action factory (action(reason, …))       | ✓                                                                                                                                                                      | ✓ — Re-wrapped to attach `undeclare`, because Solid never re-runs the parent and a button removed by its own `<Show>` has to retire itself.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | ✗ by design — No declaration window. `bindAction(button, reason)` attaches to a button that already exists and its unbind retires it.                                                                                                                                                                                                                                                                         |
+| the action factory (action(reason, …))       | ✓                                                                                                                                                                      | ✓ — Re-wrapped to attach `undeclare`, because Solid never re-runs the parent and a button removed by its own `<Show>` has to retire itself.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | ✗ by design — No declaration window. `bindAction(button, { reason })` attaches to a button that already exists and its unbind retires it.                                                                                                                                                                                                                                                                     |
 | per-action running state                     | ✓ — `action.isRunning(reason)`.                                                                                                                                        | ✓ — Same name, and it stays live through the wrapper — which is what the test pins.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | ✓ — Spelled `isActionRunning(reason)` on the controller: there is no factory to hang it on.                                                                                                                                                                                                                                                                                                                   |
 | useLookup                                    | ✓ — Returns the `ModalInfo` object.                                                                                                                                    | ✓ — Returns an accessor: a discriminated union cannot survive being spread into getters without losing the narrowing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | ✓ — Through `manager.lookup(id)` — the same answer, without a reactive wrapper.                                                                                                                                                                                                                                                                                                                               |
 | phase, exposed to the caller                 | ✗ by design — A phase moves while the dialog is up; exposing it invites logic keyed on a transition. `isVisible` and `isPreparing` are the two answers a caller needs. | ✗ by design — Same reason, and the getters make it worse: a phase read inside JSX would subscribe that expression to every transition.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | ✓ — The controller has no render pass, so its snapshot is the only clock a caller can read.                                                                                                                                                                                                                                                                                                                   |
@@ -1729,12 +1731,15 @@ createStore<TSnapshot, TContext>(
 // Domain store — only your builder's methods are exposed
 createStore<TSnapshot, TMethods, TContext>(
   initialSnapshot: TSnapshot,
-  builder: (api: StoreApi<TSnapshot, TContext>) => TMethods,
-  options?: CreateStoreOptions<TSnapshot, TContext>,
+  options: CreateDomainStoreOptions<TSnapshot, TMethods, TContext>,
 ): Store<TSnapshot, TMethods, TContext>
 ```
 
-**Two modes.** A **generic** store (no builder) exposes `set`/`reset` directly — a plain reactive cell. A **domain** store (with a builder) exposes _only_ the methods the builder returns, merged flat at the root (`store.load()`), zustand-style; the built-in mutators are reachable only through the builder's `api`. Want `reset` on the instance? Define one: `reset() { api.reset(); }`. There are no reserved keys — the store contract (`subscribe`/`getSnapshot`) simply wins on a name clash.
+**Both forms take one options object, and `builder` is what tells them apart** — a second
+positional parameter would have been the third thing this function takes, which is one more than
+any signature here is allowed.
+
+**Two modes.** A **generic** store (no `builder`) exposes `set`/`reset` directly — a plain reactive cell. A **domain** store (with a builder) exposes _only_ the methods the builder returns, merged flat at the root (`store.load()`), zustand-style; the built-in mutators are reachable only through the builder's `api`. Want `reset` on the instance? Define one: `reset() { api.reset(); }`. There are no reserved keys — the store contract (`subscribe`/`getSnapshot`) simply wins on a name clash.
 
 ### `CreateStoreOptions`
 
@@ -1742,6 +1747,7 @@ createStore<TSnapshot, TMethods, TContext>(
 | --------- | ----------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `equals`  | `(a: TSnapshot, b: TSnapshot) => boolean` | `Object.is` | Equality function for `set()` and `reset()`. When equal, the commit and notification are skipped.                                  |
 | `context` | `TContext`                                | —           | Dependencies the builder's methods read via `getContext()`. Domain form only — a builderless store has nothing that could read it. |
+| `builder` | `(api: StoreApi<…>) => TMethods`          | —           | **Required on the domain form**, and absent from the generic one. Returns the methods, merged flat at the root.                    |
 
 ### POJO contract
 
@@ -1755,25 +1761,27 @@ import { createStore } from 'umbra/react';
 // Module-level — lives outside React
 const formStore = createStore(
   { name: '', email: '', errors: {} as Record<string, string> },
-  ({ get, set }) => ({
-    setValue(key: string, value: string) {
-      set((s) => {
-        const { [key]: _removed, ...errors } = s.errors;
-        return { ...s, [key]: value, errors };
-      });
-    },
-    validate() {
-      const s = get();
-      const errors: Record<string, string> = {};
-      if (!s.name) errors.name = 'Required';
-      if (!s.email) errors.email = 'Required';
-      set((prev) => ({ ...prev, errors }));
-      return Object.keys(errors).length === 0;
-    },
-    reset() {
-      set({ name: '', email: '', errors: {} });
-    },
-  })
+  {
+    builder: ({ get, set }) => ({
+      setValue(key: string, value: string) {
+        set((s) => {
+          const { [key]: _removed, ...errors } = s.errors;
+          return { ...s, [key]: value, errors };
+        });
+      },
+      validate() {
+        const s = get();
+        const errors: Record<string, string> = {};
+        if (!s.name) errors.name = 'Required';
+        if (!s.email) errors.email = 'Required';
+        set((prev) => ({ ...prev, errors }));
+        return Object.keys(errors).length === 0;
+      },
+      reset() {
+        set({ name: '', email: '', errors: {} });
+      },
+    }),
+  }
 );
 ```
 
@@ -1809,9 +1817,8 @@ type Ctx = { apiClient: ApiClient };
 const initial: Form = { name: '', saving: false };
 
 // Bound where the store is built — the only place it is bound, and pure.
-const boundStore = createStore(
-  initial,
-  ({ get, set, getContext }: StoreApi<Form, Ctx>) => ({
+const boundStore = createStore(initial, {
+  builder: ({ get, set, getContext }: StoreApi<Form, Ctx>) => ({
     async save() {
       const { apiClient } = getContext();
       set((s) => ({ ...s, saving: true }));
@@ -1819,8 +1826,8 @@ const boundStore = createStore(
       set((s) => ({ ...s, saving: false }));
     },
   }),
-  { context: { apiClient } }
-);
+  context: { apiClient },
+});
 await boundStore.save();
 ```
 
@@ -1831,7 +1838,7 @@ composes immer at the call site (`set((s) => produce(s, recipe))`).
 to it, and there is deliberately no way to hand it a dependency from inside a component: that
 would be a mutation of shared state during a render React may run twice, discard or interleave,
 and two components injecting different values would be last-render-wins. To scope a store _and_
-its dependencies to a subtree, build one per provider — `createStore(initial, builder, { context })`
+its dependencies to a subtree, build one per provider — `createStore(initial, { builder, context })`
 inside the provider's factory. The playground keeps a `createStoreContext` helper doing exactly
 that, as code to copy rather than API to import.
 

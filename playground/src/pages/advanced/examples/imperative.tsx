@@ -10,19 +10,21 @@ import { createImmerStore } from '@/shared/lib/immer-store';
 
 const openCountStore = createImmerStore(
   { openCount: 0, result: null as string | null },
-  ({ update }) => {
-    return {
-      increment() {
-        update((draft) => {
-          draft.openCount += 1;
-        });
-      },
-      setResult(result: string | null) {
-        update((draft) => {
-          draft.result = result;
-        });
-      },
-    };
+  {
+    builder: ({ update }) => {
+      return {
+        increment() {
+          update((draft) => {
+            draft.openCount += 1;
+          });
+        },
+        setResult(result: string | null) {
+          update((draft) => {
+            draft.result = result;
+          });
+        },
+      };
+    },
   }
 );
 

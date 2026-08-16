@@ -85,6 +85,8 @@ export function mfeUmbraPlugin(): Plugin {
         }
       });
 
+      // Connect's handler signature, not ours — the three parameters are what `use` calls.
+      // oxlint-disable-next-line max-params
       server.middlewares.use(PUBLIC_PREFIX, (request, response, next) => {
         // The chunk names are only known after a build, so anything that is not one of ours —
         // `host.html`, the microfrontend scripts, the favicon — has to fall through untouched.

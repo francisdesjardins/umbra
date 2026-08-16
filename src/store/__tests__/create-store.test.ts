@@ -106,18 +106,23 @@ test.describe('createStore — reset', () => {
 
 test.describe('createStore — domain (builder)', () => {
   test('merges methods flat at the root; built-in mutators stay on the api', () => {
-    const counter = createStore({ count: 0 }, ({ set, reset }) => {
-      return {
-        increment() {
-          set((s) => {
-            return { ...s, count: s.count + 1 };
-          });
+    const counter = createStore(
+      { count: 0 },
+      {
+        builder: ({ set, reset }) => {
+          return {
+            increment() {
+              set((s) => {
+                return { ...s, count: s.count + 1 };
+              });
+            },
+            clear() {
+              reset();
+            },
+          };
         },
-        clear() {
-          reset();
-        },
-      };
-    });
+      }
+    );
 
     counter.increment();
     counter.increment();
@@ -132,14 +137,19 @@ test.describe('createStore — domain (builder)', () => {
   });
 
   test('the store contract wins over a same-named method', () => {
-    const store = createStore({ n: 0 }, () => {
-      return {
-        // deliberately shadow a contract key
-        getSnapshot: () => {
-          return 'nope';
+    const store = createStore(
+      { n: 0 },
+      {
+        builder: () => {
+          return {
+            // deliberately shadow a contract key
+            getSnapshot: () => {
+              return 'nope';
+            },
+          };
         },
-      };
-    });
+      }
+    );
     // built-in getSnapshot survives and returns the real snapshot
     expect(store.getSnapshot()).toEqual({ n: 0 });
   });
@@ -148,16 +158,18 @@ test.describe('createStore — domain (builder)', () => {
     type Ctx = { multiplier: number };
     const store = createStore<{ value: number }, { scale: (n: number) => void }, Ctx>(
       { value: 0 },
-      ({ set, getContext }) => {
-        return {
-          scale(n: number) {
-            set((s) => {
-              return { ...s, value: n * getContext().multiplier };
-            });
-          },
-        };
-      },
-      { context: { multiplier: 3 } }
+      {
+        builder: ({ set, getContext }) => {
+          return {
+            scale(n: number) {
+              set((s) => {
+                return { ...s, value: n * getContext().multiplier };
+              });
+            },
+          };
+        },
+        context: { multiplier: 3 },
+      }
     );
 
     store.scale(4);
@@ -176,17 +188,19 @@ test.describe('createStore — domain (builder)', () => {
 
 // ── Overload resolution ───────────────────────────────────────────────────────
 //
-// `createStore` is overloaded on its second parameter: `<TSnapshot, TContext>(initial, options?)`
-// and `<TSnapshot, TMethods, TContext>(initial, builder, options?)`. The two differ in type-
-// parameter arity, which invites the suspicion that an explicitly-instantiated
-// `createStore<Snap, Methods>(initial, builder)` matches the *generic* overload by arity and
-// silently binds `TContext = Methods`.
+// `createStore` is overloaded on its second parameter, and both forms now take an options
+// object: `<TSnapshot, TMethods, TContext>(initial, { builder, … })` and
+// `<TSnapshot, TContext>(initial, options?)`. The two differ in type-parameter arity, which
+// invites the suspicion that an explicitly-instantiated `createStore<Snap, Methods>(initial, …)`
+// matches the *generic* overload by arity and silently binds `TContext = Methods`.
 //
-// It does not, and these pin why: a builder is a function, and a function shares no property
-// with `CreateStoreOptions` (whose members are all optional), so weak-type detection rejects
-// the generic overload before arity can decide anything. Resolution falls through to the domain
-// overload in every form below. The assertions are the types themselves — `Equals` fails the
-// build if either overload starts capturing a call meant for the other.
+// It does not, and these pin why: the **domain overload is declared first and requires
+// `builder`**, so a call carrying one matches it before arity is consulted, and a call without
+// one fails it and falls through to the generic form. Declaration order is what makes that
+// robust rather than a freshness accident — excess-property checking would reject a stray
+// `builder` on an object *literal* handed to the generic overload, but not on a variable. The
+// assertions are the types themselves — `Equals` fails the build if either overload starts
+// capturing a call meant for the other.
 
 /** Compile error unless `A` and `B` are mutually assignable. */
 type Equals<A extends B, B extends C, C = A> = A;
@@ -195,23 +209,33 @@ type Snap = { count: number };
 type Methods = { inc(): void };
 type Ctx = { readonly api: string };
 
-const inferredDomain = createStore({ count: 0 }, ({ set }) => {
-  return {
-    inc() {
-      set((s) => {
-        return { count: s.count + 1 };
-      });
+const inferredDomain = createStore(
+  { count: 0 },
+  {
+    builder: ({ set }) => {
+      return {
+        inc() {
+          set((s) => {
+            return { count: s.count + 1 };
+          });
+        },
+      };
     },
-  };
-});
+  }
+);
 
-const explicitDomain = createStore<Snap, Methods>({ count: 0 }, ({ set }) => {
-  return {
-    inc() {
-      set({ count: 1 });
+const explicitDomain = createStore<Snap, Methods>(
+  { count: 0 },
+  {
+    builder: ({ set }) => {
+      return {
+        inc() {
+          set({ count: 1 });
+        },
+      };
     },
-  };
-});
+  }
+);
 
 const explicitGeneric = createStore<Snap>({ count: 0 }, { equals: Object.is });
 
@@ -224,14 +248,16 @@ export type _BareIsGeneric = Equals<ReturnType<typeof createStore<Snap>>, Generi
 // `getContext()`, never off the store, which is why `Store` carries no context type parameter.
 const domainWithContext = createStore<Snap, Methods, Ctx>(
   { count: 0 },
-  ({ set, getContext }) => {
-    return {
-      inc() {
-        set({ count: getContext().api.length });
-      },
-    };
-  },
-  { context: { api: 'xyz' } }
+  {
+    builder: ({ set, getContext }) => {
+      return {
+        inc() {
+          set({ count: getContext().api.length });
+        },
+      };
+    },
+    context: { api: 'xyz' },
+  }
 );
 export type _ContextDoesNotReachTheInstance = Equals<
   typeof domainWithContext,

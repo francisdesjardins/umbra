@@ -34,7 +34,8 @@ const THEME = arg('theme');
 // ── Reporting ────────────────────────────────────────────────────────────────
 
 let failures = 0;
-const report = (ok, label, detail = '') => {
+const report = (ok, said) => {
+  const { label, detail = '' } = said;
   if (!ok) failures++;
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${detail ? ` — ${detail}` : ''}`);
 };
@@ -108,7 +109,7 @@ const flows = {
 <script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}</script>
 </head><body>
 <dialog id="ssr-dialog" open><p>Rendered before any script ran.</p><button id="ssr-close">Close</button></dialog>
-<span id="pre-hydration"></span><span id="phase"></span>
+<span id="pre-hydration"></span><span id="phase"></span><span id="reason"></span>
 <script type="module">
   // Read the pre-hydration truth first — this is the only moment it is observable.
   document.getElementById('pre-hydration').textContent = String(document.getElementById('ssr-dialog').open);
@@ -120,8 +121,9 @@ const flows = {
     nonModal: true,
     ariaLabel: 'Server rendered',
     manager: createDialogManager(),
+    onClose: (result) => { document.getElementById('reason').textContent = String(result.reason); },
   });
-  bound.bindAction(document.getElementById('ssr-close'), 'closed');
+  bound.bindAction(document.getElementById('ssr-close'), { reason: 'closed' });
   // Written on every transition, not once: adoption enters at 'opening' and settles on 'open' a
   // frame later, exactly as an ordinary open does. Reading it synchronously would be reading the
   // first of the two and calling it the answer.
@@ -160,9 +162,14 @@ const flows = {
     // Once adopted it is an ordinary registered dialog: its bound action closes it.
     await page.locator('#ssr-close').click();
     await page.waitForTimeout(500);
+    // The *reason* as well as the close: a `bindAction` call that named no reason at all would
+    // still shut the dialog, so asserting `open === false` alone passes on a broken binding.
+    const closed = (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false;
+    const reason = await page.locator('#reason').textContent();
     checks.push([
-      (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false,
-      'a bound action closes the adopted dialog',
+      closed && reason === 'closed',
+      'a bound action closes the adopted dialog, with its own reason',
+      `open=${String(!closed)} reason=${reason}`,
     ]);
 
     await page.unroute('**/__ssr-fixture');
@@ -475,7 +482,7 @@ const routes = await page.$$eval('nav a[href]', (links) => {
     ),
   ];
 });
-report(routes.length > 0, `discovered ${String(routes.length)} routes from the sidebar`);
+report(routes.length > 0, { label: `discovered ${String(routes.length)} routes from the sidebar` });
 
 // Every route must render a distinct page: two routes reporting the same `<h1>` means the app
 // served one page twice. Collected here and checked for duplicates afterwards, as the backstop
@@ -494,7 +501,7 @@ for (const route of routes) {
   try {
     await gotoRoute(page, route);
   } catch (error) {
-    report(false, route.padEnd(20), error.message);
+    report(false, { label: route.padEnd(20), detail: error.message });
     continue;
   }
 
@@ -504,47 +511,54 @@ for (const route of routes) {
 
   const needsCards = !EMPTY_BY_DESIGN.has(route);
 
-  report(
-    (cards > 0 || !needsCards) && errors.length === 0 && h1s.length === 1,
-    route.padEnd(20),
-    `cards=${String(cards)}${needsCards ? '' : ' (empty by design)'} h1=${JSON.stringify(h1s)}${
+  report((cards > 0 || !needsCards) && errors.length === 0 && h1s.length === 1, {
+    label: route.padEnd(20),
+    detail: `cards=${String(cards)}${needsCards ? '' : ' (empty by design)'} h1=${JSON.stringify(h1s)}${
       errors.length ? ` ERRORS: ${errors.slice(0, 2).join(' | ')}` : ''
-    }`
-  );
+    }`,
+  });
 
   if (SHOTS) {
     await page.screenshot({ path: `${SHOTS}/shot${route.replace(/\//g, '-')}.png` });
   }
 }
 
-const repeated = [...titleByRoute.values()].filter((title, i, all) => {
-  return all.indexOf(title) !== i;
+const seenTitles = new Set();
+const repeated = [...titleByRoute.values()].filter((title) => {
+  const already = seenTitles.has(title);
+  seenTitles.add(title);
+  return already;
 });
-report(
-  repeated.length === 0,
-  'every route rendered its own page',
-  repeated.length ? `repeated <h1>: ${[...new Set(repeated)].join(', ')}` : ''
-);
+report(repeated.length === 0, {
+  label: 'every route rendered its own page',
+  detail: repeated.length ? `repeated <h1>: ${[...new Set(repeated)].join(', ')}` : '',
+});
 
 const selected = FLOW ? [FLOW] : Object.keys(flows);
 for (const name of selected) {
   const flow = flows[name];
   if (!flow) {
-    report(false, `flow:${name}`, `unknown — known flows: ${Object.keys(flows).join(', ')}`);
+    report(false, {
+      label: `flow:${name}`,
+      detail: `unknown — known flows: ${Object.keys(flows).join(', ')}`,
+    });
     continue;
   }
   errors.length = 0;
   try {
     for (const [ok, label, detail] of await flow(page)) {
-      report(ok, `flow:${name} ${label}`, detail);
+      report(ok, { label: `flow:${name} ${label}`, detail: detail });
     }
   } catch (error) {
     // Without this the whole run dies on the first bad selector, and a flow that could not even
     // reach its page reports as a 30-second Playwright timeout rather than as the navigation
     // failure it is. Every other flow still gets to run.
-    report(false, `flow:${name} threw`, error.message.split('\n')[0]);
+    report(false, { label: `flow:${name} threw`, detail: error.message.split('\n')[0] });
   }
-  report(errors.length === 0, `flow:${name} no console errors`, errors.slice(0, 2).join(' | '));
+  report(errors.length === 0, {
+    label: `flow:${name} no console errors`,
+    detail: errors.slice(0, 2).join(' | '),
+  });
 }
 
 await browser.close();

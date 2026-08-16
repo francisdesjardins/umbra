@@ -11,6 +11,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-08-16
 
+### Changed — two parameters everywhere, and the rule that says so is on
+
+`max-params: ["error", 2]` is enabled in `.oxlintrc.json`, so the convention the last few days
+have been converging on is now the thing that fails a build. Deno's rule, taken whole: **an
+options object counts as one of the two**, so `f(a, { b, c })` and never `f(a, b, { c })`. The
+"2 + options" reading was considered and dropped — it has no stopping point, because every
+parameter added positionally reads as the last one that could be, and the third one added is
+always the one nobody remembers the order of.
+
+Thirty-nine signatures moved. The public ones, and what each call site now says:
+
+- **`applyStyle(element, { next, previous })`** — the chaining idiom is what `previous` was for,
+  and it survives intact: `applied = applyStyle(el, { next, previous: applied })` is still one
+  expression, and the return value is still `next` so it can be. `StyleWrite` is the new type,
+  exported from the root and on the placement page of the reference.
+- **`createStore(initial, { builder, equals, context })`** — the builder moved into the options
+  object, which changes how the two overloads are told apart. It used to be positional, with weak-
+  type detection ruling out the generic form because a function shares no property with an
+  all-optional options type. Now the **domain overload is declared first and requires `builder`**,
+  so a call carrying one matches it before arity is consulted and a call without one falls through.
+  Declaration order rather than freshness, deliberately: excess-property checking would reject a
+  stray `builder` on an object literal and let one through on a variable. `create-store.test.ts`
+  pins all four instantiations, and its comment explains the new mechanism rather than the old one.
+- **`getDialogAnimationStyles(phase, { animation, customStyle, placement })`** — four parameters,
+  twenty-two call sites, and two of them optional in a way that made the fourth argument reachable
+  only by passing `undefined` for the third.
+- **`slideDialogStyle(geometry)` / `crossAxisStyle(geometry)`** — both read the same three answers,
+  and one of them took them in a different order. `SlideGeometry` is that triple named once, which
+  is the kind of defect the rule exists to make impossible rather than to catch.
+- **`bindAction(button, { reason, ...options })`** and **`DialogManager.register(id, options)`**,
+  whose `RegisterOptions` now carries the `store` it always travelled with.
+
+Internally the same move, and the one worth reading is `modal-director.ts`: the step table's six
+`(dom, pass, parts)` arrows are `(dom, { pass, parts })`, so the table stays a table.
+
+Two exceptions, and both are signatures handed to us rather than written here — a Playwright
+fixture and a Connect middleware. Each carries `oxlint-disable-next-line max-params` and a line
+saying whose shape it is; the rule's own comment in `.oxlintrc.json` says that is the only kind of
+exception there is.
+
 ### Added — `onError`, for the two userland failures that could not reach you
 
 A `prepare` that throws and an `onClose` that throws were both invisible. Each was caught,

@@ -95,7 +95,7 @@ export type {
 // renderer to hand a style object to, so `applyStyle` is the other half of `dialogPlacement`
 // being data: here is the table, and here is how it is applied.
 export { applyStyle } from './core/style.js';
-export type { DialogStyle, StyleTarget } from './core/style.js';
+export type { DialogStyle, StyleTarget, StyleWrite } from './core/style.js';
 
 // The question a surface that answers a key over a page has to ask before acting on one. The
 // library's own dismiss listeners ask it; a controlled surface driving its own key — where the
@@ -135,6 +135,7 @@ export type { OpenReconciliation } from './core/reconcile-open.js';
 
 export { createStore } from './store/create-store.js';
 export type {
+  CreateDomainStoreOptions,
   CreateStoreOptions,
   GenericStore,
   Store,

@@ -22,7 +22,11 @@ import type { ModalInfo } from '../manager/types.js';
  *   return <span>{info.isVisible ? 'Open' : 'Closed'}</span>;
  * }
  */
-function lookupIn(manager: DialogManager, snapshot: DialogManagerSnapshot, id: string): ModalInfo {
+function lookupIn(
+  id: string,
+  source: { readonly manager: DialogManager; readonly snapshot: DialogManagerSnapshot }
+): ModalInfo {
+  const { manager, snapshot } = source;
   // Linear scan — n is always tiny (1-3 open modals)
   const openModal = snapshot.openDialogs.find((d) => {
     return d.id === id;
@@ -46,5 +50,5 @@ export function useLookup(id: string): ModalInfo {
   // the first render for ever. Naming the snapshot makes it the dependency it already was: it is
   // what says *when* the imperative read may have gone stale. Uncompiled this looks identical,
   // which is why it took compiling the component bundle to see it at all.
-  return lookupIn(manager, snapshot, id);
+  return lookupIn(id, { manager, snapshot });
 }

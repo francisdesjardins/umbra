@@ -139,9 +139,9 @@ export const fuzzyMatch = (query: string, target: string): FuzzyMatch | null => 
 /** Matching items, best first. Ties keep the caller's order, which is the authored one. */
 export const fuzzyRank = <TItem>(
   query: string,
-  items: readonly TItem[],
-  key: (item: TItem) => string
+  over: { readonly items: readonly TItem[]; readonly key: (item: TItem) => string }
 ): readonly { readonly item: TItem; readonly match: FuzzyMatch }[] => {
+  const { items, key } = over;
   return items
     .map((item) => {
       return { item, match: fuzzyMatch(query, key(item)) };

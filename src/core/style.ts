@@ -85,6 +85,19 @@ export type StyleTarget = {
   readonly style: Pick<CSSStyleDeclaration, 'setProperty' | 'removeProperty'>;
 };
 
+/** The style to write, and what it is replacing. */
+export type StyleWrite = {
+  /** The style to apply. */
+  readonly next: DialogStyle;
+  /**
+   * What was applied last time, so its leftovers can be removed. Omit on first application.
+   *
+   * The chaining idiom is what this is for: `applied = applyStyle(el, { next, previous: applied })`
+   * keeps the bookkeeping to one expression, which is why {@link applyStyle} returns `next`.
+   */
+  readonly previous?: DialogStyle | undefined;
+};
+
 /**
  * Write a style object onto an element, clearing whatever the previous one set and this one does
  * not.
@@ -95,20 +108,16 @@ export type StyleTarget = {
  * renderer; one that owns the element writes it here.
  *
  * @param element - The element to style — the `<dialog>` or the host it is placed against.
- * @param next - The style to apply.
- * @param previous - What was applied last time, so its leftovers can be removed. Omit on first
- *   application.
- * @returns `next`, so a caller can keep it as the next call's `previous` in one expression.
+ * @param write - The style to apply, and optionally the one it replaces.
+ * @returns `write.next`, so a caller can keep it as the next call's `previous` in one expression.
  *
  * @example
- * const exitStyle = applyStyle(dialog, { opacity: 0, transform: 'scale(0.95)' });
- * applyStyle(dialog, { opacity: 1 }, exitStyle); // `transform` is removed
+ * const exitStyle = applyStyle(dialog, { next: { opacity: 0, transform: 'scale(0.95)' } });
+ * applyStyle(dialog, { next: { opacity: 1 }, previous: exitStyle }); // `transform` is removed
  */
-export function applyStyle(
-  element: StyleTarget,
-  next: DialogStyle,
-  previous?: DialogStyle
-): DialogStyle {
+export function applyStyle(element: StyleTarget, write: StyleWrite): DialogStyle {
+  const { next, previous } = write;
+
   if (previous) {
     for (const key of Object.keys(previous)) {
       if (!(key in next)) {

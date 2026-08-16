@@ -7,15 +7,20 @@ import { createStoreContext } from '../create-store-context';
 
 const CounterCtx = createStoreContext(
   () => {
-    return createStore({ count: 0 }, ({ set }) => {
-      return {
-        increment() {
-          set((s) => {
-            return { ...s, count: s.count + 1 };
-          });
+    return createStore(
+      { count: 0 },
+      {
+        builder: ({ set }) => {
+          return {
+            increment() {
+              set((s) => {
+                return { ...s, count: s.count + 1 };
+              });
+            },
+          };
         },
-      };
-    });
+      }
+    );
   },
   { name: 'StoryCounter' }
 );

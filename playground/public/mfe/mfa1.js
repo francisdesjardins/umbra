@@ -12,9 +12,10 @@ import { createOpenRequest, dialogManager, Key } from 'umbra';
 import { useModal } from 'umbra/react';
 import { createElement as h, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { logTo } from './log.js';
+import { createLog } from './log.js';
 
 const LOG = 'mfa1-log';
+const log = createLog(LOG);
 
 /**
  * The two panel glyphs, drawn rather than imported — nothing here has a bundler to pull an icon
@@ -73,8 +74,8 @@ function Checkout() {
     // Billing can ask this dialog to open too — the traffic runs both ways.
     onOpenRequest: (payload, request) => {
       const from = request.context?.source ?? 'anonymous';
-      logTo(LOG, 'in', `${from} asked me to show a receipt`);
-      logTo(LOG, 'yes', 'opening checkout:receipt');
+      log('in', `${from} asked me to show a receipt`);
+      log('yes', 'opening checkout:receipt');
       void receipt.open();
     },
     render: ({ action }) => {
@@ -94,7 +95,7 @@ function Checkout() {
       );
     },
     onClose: (result) => {
-      logTo(LOG, 'note', `checkout:receipt closed — "${result.reason}"`);
+      log('note', `checkout:receipt closed — "${result.reason}"`);
     },
   });
 
@@ -130,7 +131,7 @@ function Checkout() {
             'aria-label': 'Ask Billing',
             'data-tip': 'Ask Billing',
             onClick: () => {
-              logTo(LOG, 'out', `asked billing:confirm to open — ${amount}$`);
+              log('out', `asked billing:confirm to open — ${amount}$`);
               // The whole demo: a dialog owned by another microfrontend, asked to open — and the
               // answer coming back, which is what makes it a conversation rather than a shout.
               void dialogManager
@@ -140,15 +141,14 @@ function Checkout() {
                 )
                 .then(async (outcome) => {
                   if (!outcome.accepted) {
-                    logTo(LOG, 'no', `billing refused — ${outcome.reason}`);
+                    log('no', `billing refused — ${outcome.reason}`);
                     return;
                   }
                   const [, result] = await outcome.closed;
                   // Symmetric with Billing's own check: what came back crossed the same boundary,
                   // so it is `unknown` here until this side says otherwise.
                   const receipt = asReceipt(result?.data);
-                  logTo(
-                    LOG,
+                  log(
                     'yes',
                     receipt === null
                       ? `billing answered — "${result?.reason ?? 'inconnu'}" (sans reçu)`
@@ -182,8 +182,8 @@ createRoot(document.getElementById('mfa1-root')).render(h(Checkout));
 // One manager on the page, so this hears Billing's dialog as well as its own.
 dialogManager.subscribe((event) => {
   if (event.id !== 'checkout:receipt') {
-    logTo(LOG, 'bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
+    log('bus', `${event.id} ${event.type}${event.reason ? ` — "${event.reason}"` : ''}`);
   }
 });
 
-logTo(LOG, 'note', 'ready — React binding, owns "checkout:receipt"');
+log('note', 'ready — React binding, owns "checkout:receipt"');

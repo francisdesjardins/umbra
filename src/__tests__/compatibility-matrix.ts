@@ -390,7 +390,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'no-by-design',
-      note: 'No declaration window. `bindAction(button, reason)` attaches to a button that already exists and its unbind retires it.',
+      note: 'No declaration window. `bindAction(button, { reason })` attaches to a button that already exists and its unbind retires it.',
     },
   },
   {

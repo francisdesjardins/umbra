@@ -52,7 +52,7 @@ spread into getters; and `portal: true` mounts the dialog for you, leaving `Moda
 mean shipping a renderer, which this library refuses to do — so the element and its contents stay
 yours and `bindDialog` drives the lifecycle over them: phases and animation, `prepare`, the
 dismiss key, click-outside, backdrop hit-testing, opening focus, the registration that makes it
-addressable by id, and the typed close. `bindAction(button, reason)` is its one addition, and it
+addressable by id, and the typed close. `bindAction(button, { reason })` is its one addition, and it
 does the half a renderer would: attach the handler, then keep `disabled`, `data-loading` and
 `aria-busy` in step — and hand the button back as it was when you unbind it, since the markup is
 yours and outlives the controller.

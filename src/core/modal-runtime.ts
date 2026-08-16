@@ -158,6 +158,8 @@ export type ModalRuntime<TData = void, TReason extends string = string> = Return
 
 /** What the backdrop decision needs to know beyond the click itself. */
 export type BackdropDismissOptions = {
+  /** The box the pointer is measured against — the last question, and the only geometric one. */
+  readonly dialog: BackdropDialog;
   readonly store: ModalStore;
   readonly engine: ActionGate;
   readonly isNonModal: boolean;
@@ -175,10 +177,10 @@ export type BackdropDismissOptions = {
  */
 export function shouldDismissOnBackdropClick(
   event: BackdropClickEvent,
-  dialog: BackdropDialog,
   options: BackdropDismissOptions
 ): boolean {
-  const { store, engine, isNonModal, dismissOnBackdropClick, dismissWhilePreparing } = options;
+  const { dialog, store, engine, isNonModal, dismissOnBackdropClick, dismissWhilePreparing } =
+    options;
 
   if (isNonModal) {
     return false;

@@ -19,7 +19,7 @@ The whole thing is small (a `Set` of listeners + `get`/`set`), but the module st
 ## Two store modes
 
 - **Generic** — `createStore(initial, options?)`, no builder. The built-in mutators (`set`, `reset`) are exposed on the instance. Use for a plain reactive cell.
-- **Domain** — `createStore(initial, builder, options?)`. `builder(api)` returns your methods (merged flat at the root, `store.load()`). The built-in mutators are **not** on the instance — reach them through `api`. Want `reset` on the instance? Define one: `reset() { api.reset(); }`.
+- **Domain** — `createStore(initial, { builder, ...options })`. `builder(api)` returns your methods (merged flat at the root, `store.load()`). The built-in mutators are **not** on the instance — reach them through `api`. Want `reset` on the instance? Define one: `reset() { api.reset(); }`.
 
 There are **no reserved keys** — the store contract (`subscribe`/`getSnapshot`) simply wins on the rare name clash.
 
@@ -50,12 +50,13 @@ what `useSyncExternalStore` takes.
 
 ## Primitives
 
-| Export                                     | Purpose                                                                                                              |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `createStore(initial, builder?, options?)` | The store. `api` = `{ get, set, reset, getContext }`. `options` = `{ equals? }`, plus `context?` on the domain form. |
-| `StoreContract<TSnapshot>`                 | The `{ subscribe, getSnapshot }` pair every store satisfies — what a reader binds to.                                |
+| Export                           | Purpose                                                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createStore(initial, options?)` | The store. `options` = `{ equals? }`, plus `builder` and `context?` on the domain form — the presence of `builder` is what picks the mode. `api` = `{ get, set, reset, getContext }`. |
+| `StoreContract<TSnapshot>`       | The `{ subscribe, getSnapshot }` pair every store satisfies — what a reader binds to.                                                                                                 |
 
-Plus the shapes that go with them: `Store`, `GenericStore`, `StoreApi`, `CreateStoreOptions`.
+Plus the shapes that go with them: `Store`, `GenericStore`, `StoreApi`, `CreateStoreOptions` and
+`CreateDomainStoreOptions`.
 That is the whole module — the two files in this folder are `create-store.ts` and the barrel.
 
 **Not in this module, and not in the library:** async coordination (`asyncIdle`/`asyncPending`/`asyncFulfilled`/`asyncRejected`/`runAsync`, `safeAwait`, `createMutex`, `createSingleFlight`) is user-land, and lives in `playground/src/shared/lib/` as reference code to copy. `normalizeError` stays in [`src/utils/`](../utils/) and ships from the root, because the library itself needs it.
@@ -86,7 +87,7 @@ The playground demonstrates this with a `createImmerStore` helper (`playground/s
 ## Nothing writes during render
 
 Reading a store is a subscription, never a write. Context — the store's dependency injection — is
-supplied where the store is **built** (`createStore(initial, builder, { context })`), which is
+supplied where the store is **built** (`createStore(initial, { builder, context })`), which is
 pure. Nothing on the instance can change it afterwards.
 
 There is deliberately no way to inject context _from a component_. That would be a mutation of

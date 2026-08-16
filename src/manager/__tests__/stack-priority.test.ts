@@ -65,8 +65,8 @@ function stackOf(manager: ReturnType<typeof createDialogManager>): string[] {
 test.describe('prioritize', () => {
   test('a high-priority dialog is the foreground even when it opened first', () => {
     const manager = createDialogManager();
-    manager.register('warning', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide' });
+    manager.register('warning', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide' });
 
     manager.prioritize((modal) => {
       return modal.template === 'alert' ? 100 : 0;
@@ -85,8 +85,8 @@ test.describe('prioritize', () => {
 
   test('the stamped z-index follows the policy, not the open order', () => {
     const manager = createDialogManager();
-    manager.register('warning', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide' });
+    manager.register('warning', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide' });
     manager.prioritize((modal) => {
       return modal.template === 'alert' ? 1 : 0;
     });
@@ -101,8 +101,8 @@ test.describe('prioritize', () => {
 
   test('it applies to dialogs already open, not only to the ones opened after', () => {
     const manager = createDialogManager();
-    manager.register('warning', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide' });
+    manager.register('warning', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide' });
     manager.open('warning');
     manager.open('panel');
     expect(stackOf(manager)).toEqual(['warning', 'panel']);
@@ -116,8 +116,8 @@ test.describe('prioritize', () => {
 
   test('the disposer restores open order', () => {
     const manager = createDialogManager();
-    manager.register('warning', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide' });
+    manager.register('warning', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide' });
     const stop = manager.prioritize((modal) => {
       return modal.template === 'alert' ? 100 : 0;
     });
@@ -133,8 +133,8 @@ test.describe('prioritize', () => {
 
   test('a second call replaces the first, and the stale disposer does nothing', () => {
     const manager = createDialogManager();
-    manager.register('a', createFakeStore());
-    manager.register('b', createFakeStore());
+    manager.register('a', { store: createFakeStore() });
+    manager.register('b', { store: createFakeStore() });
     const stopFirst = manager.prioritize((modal) => {
       return modal.id === 'a' ? 1 : 0;
     });
@@ -155,9 +155,9 @@ test.describe('prioritize', () => {
 
   test('a closed dialog leaves the stack and the rest keep the policy order', () => {
     const manager = createDialogManager();
-    manager.register('warning', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide' });
-    manager.register('other', createFakeStore(), { template: 'slide' });
+    manager.register('warning', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide' });
+    manager.register('other', { store: createFakeStore(), template: 'slide' });
     manager.prioritize((modal) => {
       return modal.template === 'alert' ? 100 : 0;
     });
@@ -176,9 +176,9 @@ test.describe('prioritize', () => {
 
   test('an id nobody prioritised keeps open order among its equals', () => {
     const manager = createDialogManager();
-    manager.register('first', createFakeStore());
-    manager.register('second', createFakeStore());
-    manager.register('third', createFakeStore());
+    manager.register('first', { store: createFakeStore() });
+    manager.register('second', { store: createFakeStore() });
+    manager.register('third', { store: createFakeStore() });
     manager.prioritize(() => {
       return 0;
     });
@@ -192,8 +192,8 @@ test.describe('prioritize', () => {
 
   test('a non-modal dialog is under every modal one, whatever the policy asks for', () => {
     const manager = createDialogManager();
-    manager.register('modal', createFakeStore(), { template: 'alert' });
-    manager.register('panel', createFakeStore(), { template: 'slide', nonModal: true });
+    manager.register('modal', { store: createFakeStore(), template: 'alert' });
+    manager.register('panel', { store: createFakeStore(), template: 'slide', nonModal: true });
     // A policy shouting for the panel. It orders the panel against the other panels and moves it no
     // nearer the user — the platform paints top-layer elements above ordinary ones and no `z-index`
     // reaches between them, so an order claiming otherwise would be false rather than debatable.
@@ -216,8 +216,8 @@ test.describe('prioritize', () => {
 
   test('and it holds with no policy at all, which is the default that changed', () => {
     const manager = createDialogManager();
-    manager.register('modal', createFakeStore());
-    manager.register('panel', createFakeStore(), { nonModal: true });
+    manager.register('modal', { store: createFakeStore() });
+    manager.register('panel', { store: createFakeStore(), nonModal: true });
 
     // The panel opens *later*, so open order alone would put it in front.
     manager.open('modal');
@@ -229,8 +229,8 @@ test.describe('prioritize', () => {
 
   test('within one family the policy still decides', () => {
     const manager = createDialogManager();
-    manager.register('first-panel', createFakeStore(), { nonModal: true });
-    manager.register('second-panel', createFakeStore(), { nonModal: true });
+    manager.register('first-panel', { store: createFakeStore(), nonModal: true });
+    manager.register('second-panel', { store: createFakeStore(), nonModal: true });
     manager.prioritize((modal) => {
       return modal.id === 'first-panel' ? 5 : 0;
     });
@@ -244,7 +244,7 @@ test.describe('prioritize', () => {
 
   test('syncStackOrder is safe to call at any time, policy or not', () => {
     const manager = createDialogManager();
-    manager.register('a', createFakeStore());
+    manager.register('a', { store: createFakeStore() });
     manager.open('a');
 
     // The lifecycle calls it after every `showModal()`, including for dialogs whose manager has no

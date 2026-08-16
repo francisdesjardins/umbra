@@ -32,6 +32,16 @@
     // No implicit returns — every arrow function uses a block body with an explicit `return`.
     // A concise body hides the return value and makes the arrow awkward to extend.
     "arrow-body-style": ["error", "always"],
+    // Two parameters, and **an options object is one of the two** — `f(a, { b, c })`, never
+    // `f(a, b, { c })`. Deno's rule, and the reason to take it whole rather than as "2 + options"
+    // is that the second form has no stopping point: every parameter added positionally reads as
+    // the last one that could be. So a third thing to say goes in the object, where it is named at
+    // the call site, and the call reads the same whether it passes two of them or six.
+    //
+    // A signature a framework calls is the exception, and the only one: a Playwright fixture and a
+    // Connect middleware are shapes handed to us. Both carry `oxlint-disable-next-line max-params`
+    // and a line saying whose signature it is.
+    "max-params": ["error", 2],
     "no-unused-vars": "off",
     "typescript/no-unused-vars": [
       "error",

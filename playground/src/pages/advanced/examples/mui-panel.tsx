@@ -53,52 +53,54 @@ type SetupState = SetupValues & { step: number };
 
 const setupStore = createImmerStore<SetupState, SetupStoreMethods>(
   { step: 0, ...RECOMMENDED },
-  (api) => {
-    return {
-      resetToRecommended() {
-        api.update((draft) => {
-          Object.assign(draft, RECOMMENDED);
-        });
-      },
-      resetAll() {
-        api.reset();
-      },
-      setStep(step: number) {
-        api.update((draft) => {
-          draft.step = step;
-        });
-      },
-      setName(name: string) {
-        api.update((draft) => {
-          draft.name = name;
-        });
-      },
-      setEnvironment(environment: string) {
-        api.update((draft) => {
-          draft.environment = environment;
-        });
-      },
-      setRegion(region: string) {
-        api.update((draft) => {
-          draft.region = region;
-        });
-      },
-      setAccessLevel(accessLevel: string) {
-        api.update((draft) => {
-          draft.accessLevel = accessLevel;
-        });
-      },
-      setNotifications(notifications: boolean) {
-        api.update((draft) => {
-          draft.notifications = notifications;
-        });
-      },
-      setSchedule(schedule: string) {
-        api.update((draft) => {
-          draft.schedule = schedule;
-        });
-      },
-    };
+  {
+    builder: (api) => {
+      return {
+        resetToRecommended() {
+          api.update((draft) => {
+            Object.assign(draft, RECOMMENDED);
+          });
+        },
+        resetAll() {
+          api.reset();
+        },
+        setStep(step: number) {
+          api.update((draft) => {
+            draft.step = step;
+          });
+        },
+        setName(name: string) {
+          api.update((draft) => {
+            draft.name = name;
+          });
+        },
+        setEnvironment(environment: string) {
+          api.update((draft) => {
+            draft.environment = environment;
+          });
+        },
+        setRegion(region: string) {
+          api.update((draft) => {
+            draft.region = region;
+          });
+        },
+        setAccessLevel(accessLevel: string) {
+          api.update((draft) => {
+            draft.accessLevel = accessLevel;
+          });
+        },
+        setNotifications(notifications: boolean) {
+          api.update((draft) => {
+            draft.notifications = notifications;
+          });
+        },
+        setSchedule(schedule: string) {
+          api.update((draft) => {
+            draft.schedule = schedule;
+          });
+        },
+      };
+    },
   }
 );
 

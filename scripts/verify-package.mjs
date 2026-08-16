@@ -37,7 +37,8 @@ const DIST = join(REPO, 'dist');
 const TSC = join(REPO, 'node_modules', 'typescript-7', 'bin', 'tsc');
 
 let failures = 0;
-const report = (ok, label, detail = '') => {
+const report = (ok, said) => {
+  const { label, detail = '' } = said;
   if (!ok) failures++;
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${detail ? ` — ${detail}` : ''}`);
 };
@@ -186,10 +187,10 @@ try {
       stdio: 'pipe',
       encoding: 'utf8',
     });
-    report(true, 'both entry points resolve for an external consumer (NodeNext)');
+    report(true, { label: 'both entry points resolve for an external consumer (NodeNext)' });
   } catch (error) {
     const output = `${error.stdout ?? ''}${error.stderr ?? ''}`.trim();
-    report(false, 'both entry points resolve for an external consumer (NodeNext)');
+    report(false, { label: 'both entry points resolve for an external consumer (NodeNext)' });
     console.error(output.split('\n').slice(0, 12).join('\n'));
   }
 } finally {
@@ -229,13 +230,12 @@ for (const file of declarations) {
     }
   }
 }
-report(
-  declarations.length > 0 && extensionless.length === 0,
-  'every relative specifier in the emitted .d.ts carries an extension',
-  `${declarations.length} declaration files${
+report(declarations.length > 0 && extensionless.length === 0, {
+  label: 'every relative specifier in the emitted .d.ts carries an extension',
+  detail: `${declarations.length} declaration files${
     extensionless.length > 0 ? ` — ${extensionless.length} bad: ${extensionless[0]}, …` : ''
-  }`
-);
+  }`,
+});
 
 // ── 2. Each entry ships exactly its own framework ────────────────────────────
 
@@ -302,11 +302,10 @@ const describe = (result) => {
 };
 
 const root = walk(join(DIST, 'esm', 'index.js'));
-report(
-  root.leaks.length === 0 && root.seen.size > 3,
-  'the built root imports no framework',
-  `${root.seen.size} modules${root.leaks.length > 0 ? ` — LEAKS: ${describe(root)}` : ''}`
-);
+report(root.leaks.length === 0 && root.seen.size > 3, {
+  label: 'the built root imports no framework',
+  detail: `${root.seen.size} modules${root.leaks.length > 0 ? ` — LEAKS: ${describe(root)}` : ''}`,
+});
 
 // Mirror assertions: if the walker resolved nothing, the check above passes for the wrong
 // reason. Each binding must reach its own framework — and only its own, or installing one
@@ -317,22 +316,22 @@ for (const [entry, own, other] of [
 ]) {
   const result = walk(join(DIST, 'esm', entry));
   const reached = frameworksIn(result);
-  report(reached.has(own), `the built ${own} binding does import ${own} (walker is not blind)`);
-  report(
-    !reached.has(other),
-    `the built ${own} binding imports no ${other}`,
-    reached.has(other) ? describe(result) : ''
-  );
+  report(reached.has(own), {
+    label: `the built ${own} binding does import ${own} (walker is not blind)`,
+  });
+  report(!reached.has(other), {
+    label: `the built ${own} binding imports no ${other}`,
+    detail: reached.has(other) ? describe(result) : '',
+  });
 }
 
 // The controller binding renders nothing, so it reaches for nothing — it must resolve wherever
 // the root does, for a consumer who installed neither optional peer.
 const vanilla = walk(join(DIST, 'esm', 'vanilla.js'));
-report(
-  vanilla.leaks.length === 0 && vanilla.seen.size > 3,
-  'the built vanilla binding imports no framework',
-  `${vanilla.seen.size} modules${vanilla.leaks.length > 0 ? ` — LEAKS: ${describe(vanilla)}` : ''}`
-);
+report(vanilla.leaks.length === 0 && vanilla.seen.size > 3, {
+  label: 'the built vanilla binding imports no framework',
+  detail: `${vanilla.seen.size} modules${vanilla.leaks.length > 0 ? ` — LEAKS: ${describe(vanilla)}` : ''}`,
+});
 
 // ── The React Compiler actually ran ─────────────────────────────────────────
 //
@@ -348,25 +347,24 @@ report(
 const compiled = readFileSync(join(DIST, 'esm', 'react', 'use-modal.js'), 'utf8');
 const hasRuntime = compiled.includes('react/compiler-runtime');
 const hasMemoCache = /\bc\(\d+\)/.test(compiled);
-report(
-  hasRuntime && hasMemoCache,
-  'the React binding is compiled — compiler-runtime imported and a memo cache allocated',
+report(hasRuntime && hasMemoCache, {
+  label: 'the React binding is compiled — compiler-runtime imported and a memo cache allocated',
   // Only on failure, and it says which half is missing: an import with no `c(n)` means the plugin ran
   // and bailed on this hook, which is a different problem from the plugin not running at all.
-  hasRuntime && hasMemoCache
-    ? ''
-    : hasRuntime
-      ? 'no `c(n)` allocation, so the hook itself was not lowered'
-      : 'no `react/compiler-runtime` import at all — the plugin did not run'
-);
+  detail:
+    hasRuntime && hasMemoCache
+      ? ''
+      : hasRuntime
+        ? 'no `c(n)` allocation, so the hook itself was not lowered'
+        : 'no `react/compiler-runtime` import at all — the plugin did not run',
+});
 
 // And the other half of the same fact: the Solid binding must not be. The compiler decides what a
 // hook is by name, and `umbra/solid` exports `useModal` too.
 const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-modal.js'), 'utf8');
-report(
-  !solidSource.includes('compiler-runtime'),
-  'the Solid binding is not compiled — no compiler-runtime in it'
-);
+report(!solidSource.includes('compiler-runtime'), {
+  label: 'the Solid binding is not compiled — no compiler-runtime in it',
+});
 
 console.log(failures === 0 ? '\nPACKAGE OK' : `\n${failures} PACKAGE CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

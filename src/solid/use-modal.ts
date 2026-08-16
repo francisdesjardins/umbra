@@ -109,18 +109,21 @@ export function useModal<TData = void, TReason extends string = string>(
   });
 
   const content = document.createElement('div');
-  applyStyle(content, DIALOG_CONTENT_STYLE);
+  applyStyle(content, { next: DIALOG_CONTENT_STYLE });
   dialog.append(content);
 
   // The dialog's own styles, recomputed per phase. A render effect rather than an effect, so the
   // exit/entrance state is written before `syncOpenSequence` shows the dialog in the same flush.
   let appliedStyle: DialogStyle | undefined;
   createRenderEffect(() => {
-    appliedStyle = applyStyle(
-      dialog,
-      getDialogAnimationStyles(snapshot().phase, animation, options.style, placement),
-      appliedStyle
-    );
+    appliedStyle = applyStyle(dialog, {
+      next: getDialogAnimationStyles(snapshot().phase, {
+        animation,
+        customStyle: options.style,
+        placement,
+      }),
+      previous: appliedStyle,
+    });
   });
 
   // The host `dialogPlacement` asked for, when it asked for one: the dialog's `absolute`
@@ -129,7 +132,7 @@ export function useModal<TData = void, TReason extends string = string>(
   if (placement.host) {
     const host = document.createElement('div');
     host.setAttribute('data-modal-container', modalId);
-    applyStyle(host, placement.host);
+    applyStyle(host, { next: placement.host });
     host.append(dialog);
     placed = host;
   }
@@ -214,7 +217,8 @@ export function useModal<TData = void, TReason extends string = string>(
   // `modal-runtime.ts`'s, and it is the same call React's binding makes from its `onClick`.
   dialog.addEventListener('click', (event: MouseEvent) => {
     if (
-      shouldDismissOnBackdropClick(event, dialog, {
+      shouldDismissOnBackdropClick(event, {
+        dialog,
         store,
         engine,
         isNonModal,
@@ -271,7 +275,8 @@ export function useModal<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  manager.register(modalId, store, {
+  manager.register(modalId, {
+    store,
     template,
     nonModal: isNonModal,
     getDialog,

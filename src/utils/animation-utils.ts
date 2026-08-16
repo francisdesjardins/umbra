@@ -75,6 +75,25 @@ export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
   };
 }
 
+/** Everything the `<dialog>`'s computed style is built from, beyond the phase. */
+export type DialogAnimationStyleOptions<TStyle extends DialogStyle> = {
+  /** Entrance/exit CSS, durations and transition-property. */
+  readonly animation: ModalAnimation<TStyle>;
+  /**
+   * Structural styles applied by template hooks (e.g. slide positioning). Regular users should
+   * style their content inside the `render` callback instead.
+   */
+  readonly customStyle?: TStyle | undefined;
+  /**
+   * Where this dialog is positioned from, from `dialogPlacement()`. Only its `dialog` half
+   * applies here; the `host` half belongs to the element the caller renders around it.
+   */
+  readonly placement?: DialogPlacement | undefined;
+};
+
+/** What a dialog that was never placed sits at: nowhere in particular, and nothing to clear. */
+const UNPLACED: DialogPlacement = { host: null, dialog: {}, backdrop: null };
+
 /**
  * Compute CSS properties for the `<dialog>` element, merging animation state,
  * base layout defaults, and optional template-specific positioning styles.
@@ -82,12 +101,7 @@ export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
  * @param phase - The dialog's lifecycle phase. `'open'` selects the entrance properties and
  *   everything else the exit ones, and `'closed'` takes the dialog out of layout entirely —
  *   see the `display` note below.
- * @param animation - Modal animation configuration (entrance/exit CSS, durations, transition-property).
- * @param customStyle - Optional structural styles applied by template hooks (e.g. slide positioning).
- *   Regular users should style their content inside the `render` callback instead.
- * @param placement - Where this dialog is positioned from, from `dialogPlacement()`. Only its
- *   `dialog` half applies here; the `host` half belongs to the element the caller renders
- *   around it.
+ * @param options - The animation, and the two optional style layers merged over it.
  * @returns The merged style object for the `<dialog>` element. It carries the caller's own
  *   `TStyle` through the intersection, so a binding whose style type is stricter than
  *   {@link DialogStyle} — React's `CSSProperties` — can hand the result straight to its renderer.
@@ -96,10 +110,9 @@ export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
  */
 export function getDialogAnimationStyles<TStyle extends DialogStyle>(
   phase: ModalPhase,
-  animation: ModalAnimation<TStyle>,
-  customStyle?: TStyle,
-  placement: DialogPlacement = { host: null, dialog: {}, backdrop: null }
+  options: DialogAnimationStyleOptions<TStyle>
 ): DialogStyle & Partial<TStyle> {
+  const { animation, customStyle, placement = UNPLACED } = options;
   const isAnimating = phase === 'open';
   const { entranceDuration, exitDuration, transitionProperty } = resolveAnimation(animation);
   const activeDuration = isAnimating ? entranceDuration : exitDuration;

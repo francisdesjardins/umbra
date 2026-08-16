@@ -50,30 +50,30 @@ test.describe('contrastRatio', () => {
 
 test.describe('readableHsl', () => {
   test('darkens toward a light background and lightens toward a dark one', () => {
-    const onWhite = readableHsl('hsl(230, 4%, 64%)', '#ffffff');
-    const onBlack = readableHsl('hsl(220, 10%, 40%)', '#1a1a1a');
+    const onWhite = readableHsl('hsl(230, 4%, 64%)', { background: '#ffffff' });
+    const onBlack = readableHsl('hsl(220, 10%, 40%)', { background: '#1a1a1a' });
 
     expect(ratio(onWhite, '#ffffff')).toBeGreaterThanOrEqual(4.5);
     expect(ratio(onBlack, '#1a1a1a')).toBeGreaterThanOrEqual(4.5);
   });
 
   test('keeps hue and saturation, because that is what makes a theme itself', () => {
-    const adjusted = readableHsl('hsl(119, 34%, 47%)', '#ffffff');
+    const adjusted = readableHsl('hsl(119, 34%, 47%)', { background: '#ffffff' });
     expect(adjusted.startsWith('hsl(119, 34%,')).toBe(true);
   });
 
   test('leaves a colour that already passes exactly as it was', () => {
     const passing = 'hsl(230, 8%, 24%)';
-    expect(readableHsl(passing, '#ffffff')).toBe(passing);
+    expect(readableHsl(passing, { background: '#ffffff' })).toBe(passing);
   });
 
   test('leaves what it cannot parse alone rather than substituting a safe colour', () => {
-    expect(readableHsl('inherit', '#ffffff')).toBe('inherit');
-    expect(readableHsl('#a0a1a7', '#ffffff')).toBe('#a0a1a7');
+    expect(readableHsl('inherit', { background: '#ffffff' })).toBe('inherit');
+    expect(readableHsl('#a0a1a7', { background: '#ffffff' })).toBe('#a0a1a7');
   });
 
   test('honours a caller-supplied minimum', () => {
-    const strict = readableHsl('hsl(230, 4%, 64%)', '#ffffff', 7);
+    const strict = readableHsl('hsl(230, 4%, 64%)', { background: '#ffffff', minimum: 7 });
     expect(ratio(strict, '#ffffff')).toBeGreaterThanOrEqual(7);
   });
 });

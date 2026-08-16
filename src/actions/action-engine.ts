@@ -52,65 +52,67 @@ export function createActionEngine<TData, TReason extends string = string>(modal
   // methods below do not, because no action may be named it — see `ActionReason`.
   let closeFn: ((reason: TReason | DismissReason, data?: TData) => void) | null = null;
 
-  const store = createStore(initial, ({ get, set }) => {
-    /** Write one action's state and recompute the aggregates in the same pass. */
-    const setState = (reason: string, next: ActionState) => {
-      const states = { ...get().states, [reason]: next };
-      let hasRunningAction = false;
-      let error: Error | null = null;
-      for (const state of Object.values(states)) {
-        if (state.isRunning) {
-          hasRunningAction = true;
+  const store = createStore(initial, {
+    builder: ({ get, set }) => {
+      /** Write one action's state and recompute the aggregates in the same pass. */
+      const setState = (reason: string, next: ActionState) => {
+        const states = { ...get().states, [reason]: next };
+        let hasRunningAction = false;
+        let error: Error | null = null;
+        for (const state of Object.values(states)) {
+          if (state.isRunning) {
+            hasRunningAction = true;
+          }
+          if (error === null && state.error !== null) {
+            error = state.error;
+          }
         }
-        if (error === null && state.error !== null) {
-          error = state.error;
-        }
-      }
-      set({ states, hasRunningAction, error });
-    };
+        set({ states, hasRunningAction, error });
+      };
 
-    return {
-      /** State for one action; idle until it has run. */
-      stateOf(reason: string): ActionState {
-        return get().states[reason] ?? IDLE;
-      },
+      return {
+        /** State for one action; idle until it has run. */
+        stateOf(reason: string): ActionState {
+          return get().states[reason] ?? IDLE;
+        },
 
-      aggregated(): { hasRunningAction: boolean; error: Error | null } {
-        const { hasRunningAction, error } = get();
-        return { hasRunningAction, error };
-      },
+        aggregated(): { hasRunningAction: boolean; error: Error | null } {
+          const { hasRunningAction, error } = get();
+          return { hasRunningAction, error };
+        },
 
-      async run(
-        reason: ActionReason<TReason>,
-        handler: (close: ActionCloseFn<TData>) => void | Promise<void>
-      ): Promise<void> {
-        if (get().hasRunningAction) {
-          log.warn('Action overlap', { id: modalId, incoming: reason });
-        }
-        setState(reason, { isRunning: true, error: null });
-        log('Action started', { id: modalId, reason });
-        const startedAt = Date.now();
-        try {
-          await handler((data?: TData) => {
-            // Log that close was called and whether a payload came with it — never the payload
-            // itself, which may carry user data.
-            log('Action close', { id: modalId, reason, withData: data !== undefined });
-            closeFn?.(reason, data);
-          });
-          log('Action completed', { id: modalId, reason, ms: Date.now() - startedAt });
-          setState(reason, { isRunning: false, error: null });
-        } catch (err: unknown) {
-          const error = normalizeError(err);
-          log.error('Action failed', {
-            id: modalId,
-            reason,
-            error: error.message,
-            ms: Date.now() - startedAt,
-          });
-          setState(reason, { isRunning: false, error });
-        }
-      },
-    };
+        async run(
+          reason: ActionReason<TReason>,
+          handler: (close: ActionCloseFn<TData>) => void | Promise<void>
+        ): Promise<void> {
+          if (get().hasRunningAction) {
+            log.warn('Action overlap', { id: modalId, incoming: reason });
+          }
+          setState(reason, { isRunning: true, error: null });
+          log('Action started', { id: modalId, reason });
+          const startedAt = Date.now();
+          try {
+            await handler((data?: TData) => {
+              // Log that close was called and whether a payload came with it — never the payload
+              // itself, which may carry user data.
+              log('Action close', { id: modalId, reason, withData: data !== undefined });
+              closeFn?.(reason, data);
+            });
+            log('Action completed', { id: modalId, reason, ms: Date.now() - startedAt });
+            setState(reason, { isRunning: false, error: null });
+          } catch (err: unknown) {
+            const error = normalizeError(err);
+            log.error('Action failed', {
+              id: modalId,
+              reason,
+              error: error.message,
+              ms: Date.now() - startedAt,
+            });
+            setState(reason, { isRunning: false, error });
+          }
+        },
+      };
+    },
   });
 
   return {

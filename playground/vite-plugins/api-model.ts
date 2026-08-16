@@ -104,6 +104,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'applyStyle',
       'DialogStyle',
       'StyleTarget',
+      'StyleWrite',
     ],
   },
   {
@@ -129,6 +130,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     blurb: 'The reactive cell the library runs on, usable on its own and without a framework.',
     symbols: [
       'createStore',
+      'CreateDomainStoreOptions',
       'CreateStoreOptions',
       'Store',
       'StoreApi',
@@ -472,14 +474,10 @@ function text(parts: CommentPart[] | undefined): string {
  * the linking symbol ships from, and anything neither step can answer degrades to the text the
  * author wrote.
  */
-function doc(
-  parts: CommentPart[] | undefined,
-  names: Map<number, string>,
-  ctx: PrintContext
-): DocPart[] {
+function doc(parts: CommentPart[] | undefined, ctx: PrintContext): DocPart[] {
   return (parts ?? [])
     .map((part) => {
-      const target = typeof part.target === 'number' ? names.get(part.target) : undefined;
+      const target = typeof part.target === 'number' ? ctx.names.get(part.target) : undefined;
       // A target the entry points do not export stays a link part carrying its bare name: the
       // page renders those as inline code, which is the honest answer for a type a reader
       // cannot navigate to.
@@ -494,14 +492,12 @@ function doc(
 
 function blockTag(
   comment: Comment | undefined,
-  tag: string,
-  names: Map<number, string>,
-  ctx: PrintContext
+  options: PrintContext & { tag: string }
 ): DocPart[] {
   const found = comment?.blockTags?.find((entry) => {
-    return entry.tag === tag;
+    return entry.tag === options.tag;
   });
-  return doc(found?.content, names, ctx);
+  return doc(found?.content, options);
 }
 
 /** Typedoc hands `@example` back as a fenced markdown block; the page renders code, not markdown. */
@@ -569,16 +565,28 @@ type PrintContext = {
    */
   readonly resolve: (name: string) => string | undefined;
   readonly warn: (message: string) => void;
+  /** Every reflection id in the project, so an inline `{@link}`'s numeric target resolves. */
+  readonly names: Map<number, string>;
 };
+
+/**
+ * The context plus the sink the tokens go to.
+ *
+ * One object rather than an `(out, ctx)` pair threaded through a dozen mutually recursive
+ * functions: the two never travel apart, and a call that needs one more thing — a separator —
+ * spreads it in rather than growing a third parameter.
+ */
+type Printer = PrintContext & { readonly out: Tokens };
 
 /** An object literal type prints as a placeholder; its shape is the members table below it. */
 const OBJECT_PLACEHOLDER = '{ … }';
 
-function printCallSignature(signature: Node, out: Tokens, ctx: PrintContext): void {
-  printTypeParams(signature.typeParameters, out, ctx);
-  printParams(signature.parameters, out, ctx);
+function printCallSignature(signature: Node, printer: Printer): void {
+  const { out } = printer;
+  printTypeParams(signature.typeParameters, printer);
+  printParams(signature.parameters, printer);
   out.push(' => ');
-  printType(signature.type, out, ctx);
+  printType(signature.type, printer);
 }
 
 /** Typedoc's placeholder for a destructured parameter — a React component's props object. */
@@ -588,7 +596,8 @@ function paramName(param: Node): string {
   return param.name === DESTRUCTURED ? 'props' : param.name;
 }
 
-function printParams(params: Node[] | undefined, out: Tokens, ctx: PrintContext): void {
+function printParams(params: Node[] | undefined, printer: Printer): void {
+  const { out } = printer;
   out.push('(');
   (params ?? []).forEach((param, index) => {
     if (index > 0) {
@@ -597,15 +606,16 @@ function printParams(params: Node[] | undefined, out: Tokens, ctx: PrintContext)
     out.push(
       `${param.flags?.isRest === true ? '...' : ''}${paramName(param)}${param.flags?.isOptional === true ? '?' : ''}: `
     );
-    printType(param.type, out, ctx);
+    printType(param.type, printer);
   });
   out.push(')');
 }
 
-function printTypeParams(params: Node[] | undefined, out: Tokens, ctx: PrintContext): void {
+function printTypeParams(params: Node[] | undefined, printer: Printer): void {
   if (params === undefined || params.length === 0) {
     return;
   }
+  const { out } = printer;
   out.push('<');
   params.forEach((param, index) => {
     if (index > 0) {
@@ -614,31 +624,28 @@ function printTypeParams(params: Node[] | undefined, out: Tokens, ctx: PrintCont
     out.push(param.name);
     if (param.type !== undefined) {
       out.push(' extends ');
-      printType(param.type, out, ctx);
+      printType(param.type, printer);
     }
     if (param.default !== undefined) {
       out.push(' = ');
-      printType(param.default, out, ctx);
+      printType(param.default, printer);
     }
   });
   out.push('>');
 }
 
-function printList(
-  nodes: TypeNode[] | undefined,
-  separator: string,
-  out: Tokens,
-  ctx: PrintContext
-) {
+function printList(nodes: TypeNode[] | undefined, printer: Printer & { separator: string }) {
+  const { out, separator } = printer;
   (nodes ?? []).forEach((node, index) => {
     if (index > 0) {
       out.push(separator);
     }
-    printType(node, out, ctx);
+    printType(node, printer);
   });
 }
 
-function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): void {
+function printType(node: TypeNode | undefined, printer: Printer): void {
+  const { out } = printer;
   if (node === undefined) {
     out.push('unknown');
     return;
@@ -646,7 +653,7 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
 
   switch (node.type) {
     case undefined: {
-      ctx.warn('a type node arrived with no discriminant');
+      printer.warn('a type node arrived with no discriminant');
       out.push('unknown');
       return;
     }
@@ -661,7 +668,7 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
     }
     case 'reference': {
       const name = node.name ?? 'unknown';
-      const key = ctx.resolve(name);
+      const key = printer.resolve(name);
       if (key !== undefined) {
         out.link(name, key);
       } else {
@@ -669,17 +676,17 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
       }
       if (node.typeArguments !== undefined && node.typeArguments.length > 0) {
         out.push('<');
-        printList(node.typeArguments, ', ', out, ctx);
+        printList(node.typeArguments, { ...printer, separator: ', ' });
         out.push('>');
       }
       return;
     }
     case 'union': {
-      printList(node.types, ' | ', out, ctx);
+      printList(node.types, { ...printer, separator: ' | ' });
       return;
     }
     case 'intersection': {
-      printList(node.types, ' & ', out, ctx);
+      printList(node.types, { ...printer, separator: ' & ' });
       return;
     }
     case 'array': {
@@ -687,53 +694,53 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
       const composite =
         node.elementType?.type === 'union' || node.elementType?.type === 'intersection';
       out.push(composite ? '(' : '');
-      printType(node.elementType, out, ctx);
+      printType(node.elementType, printer);
       out.push(composite ? ')[]' : '[]');
       return;
     }
     case 'tuple': {
       out.push('[');
-      printList(node.elements, ', ', out, ctx);
+      printList(node.elements, { ...printer, separator: ', ' });
       out.push(']');
       return;
     }
     case 'namedTupleMember': {
       out.push(`${node.name ?? ''}${node.isOptional === true ? '?' : ''}: `);
-      printType(node.element, out, ctx);
+      printType(node.element, printer);
       return;
     }
     case 'indexedAccess': {
-      printType(node.objectType, out, ctx);
+      printType(node.objectType, printer);
       out.push('[');
-      printType(node.indexType, out, ctx);
+      printType(node.indexType, printer);
       out.push(']');
       return;
     }
     case 'typeOperator': {
       out.push(`${node.operator ?? 'keyof'} `);
-      printType(asTypeNode(node.target), out, ctx);
+      printType(asTypeNode(node.target), printer);
       return;
     }
     case 'query': {
       out.push('typeof ');
-      printType(node.queryType, out, ctx);
+      printType(node.queryType, printer);
       return;
     }
     case 'conditional': {
-      printType(node.checkType, out, ctx);
+      printType(node.checkType, printer);
       out.push(' extends ');
-      printType(node.extendsType, out, ctx);
+      printType(node.extendsType, printer);
       out.push(' ? ');
-      printType(node.trueType, out, ctx);
+      printType(node.trueType, printer);
       out.push(' : ');
-      printType(node.falseType, out, ctx);
+      printType(node.falseType, printer);
       return;
     }
     case 'mapped': {
       out.push(`{ [${node.parameter ?? 'K'} in `);
-      printType(node.parameterType, out, ctx);
+      printType(node.parameterType, printer);
       out.push(`]${node.optionalModifier === '+' ? '?' : ''}: `);
-      printType(node.templateType, out, ctx);
+      printType(node.templateType, printer);
       out.push(' }');
       return;
     }
@@ -741,7 +748,7 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
       out.push(`\`${node.head ?? ''}`);
       for (const [inner, literal] of node.tail ?? []) {
         out.push('${');
-        printType(inner, out, ctx);
+        printType(inner, printer);
         out.push(`}${literal}`);
       }
       out.push('`');
@@ -751,7 +758,7 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
       const declaration = node.declaration;
       const signature = declaration?.signatures?.[0];
       if (signature !== undefined) {
-        printCallSignature(signature, out, ctx);
+        printCallSignature(signature, printer);
         return;
       }
       out.push(OBJECT_PLACEHOLDER);
@@ -760,7 +767,7 @@ function printType(node: TypeNode | undefined, out: Tokens, ctx: PrintContext): 
     default: {
       // Honest degradation: an unhandled discriminant prints as `unknown` and says so at build
       // time, rather than rendering a signature the compiler would reject.
-      ctx.warn(`unhandled type kind "${node.type ?? 'undefined'}"`);
+      printer.warn(`unhandled type kind "${node.type ?? 'undefined'}"`);
       out.push('unknown');
       return;
     }
@@ -776,27 +783,32 @@ function asTypeNode(value: unknown): TypeNode | undefined {
 }
 
 /** The declaration line a reader would write themselves. */
-function printSignature(node: Node, kind: ApiSymbol['kind'], ctx: PrintContext): DocPart[] {
+function printSignature(
+  node: Node,
+  options: PrintContext & { kind: ApiSymbol['kind'] }
+): DocPart[] {
+  const { kind } = options;
   const out = new Tokens();
+  const printer: Printer = { ...options, out };
   const signature = node.signatures?.[0];
 
   if (kind === 'function' && signature !== undefined) {
     out.push(node.name);
-    printTypeParams(signature.typeParameters, out, ctx);
-    printParams(signature.parameters, out, ctx);
+    printTypeParams(signature.typeParameters, printer);
+    printParams(signature.parameters, printer);
     out.push(': ');
-    printType(signature.type, out, ctx);
+    printType(signature.type, printer);
     return out.done();
   }
 
   if (kind === 'variable') {
     out.push(`const ${node.name}: `);
-    printType(node.type, out, ctx);
+    printType(node.type, printer);
     return out.done();
   }
 
   out.push(`type ${node.name}`);
-  printTypeParams(node.typeParameters, out, ctx);
+  printTypeParams(node.typeParameters, printer);
   out.push(' = ');
   // An object-literal alias arrives as a declaration with children and no `type` at all —
   // printing it as `unknown` would be a lie, and its shape is the members table below.
@@ -804,7 +816,7 @@ function printSignature(node: Node, kind: ApiSymbol['kind'], ctx: PrintContext):
     out.push(OBJECT_PLACEHOLDER);
     return out.done();
   }
-  printType(node.type, out, ctx);
+  printType(node.type, printer);
   return out.done();
 }
 
@@ -817,12 +829,13 @@ function printSignature(node: Node, kind: ApiSymbol['kind'], ctx: PrintContext):
  */
 function toTypeParam(node: Node, ctx: PrintContext): ApiMember {
   const out = new Tokens();
+  const printer: Printer = { ...ctx, out };
   if (node.type !== undefined) {
     out.push('extends ');
-    printType(node.type, out, ctx);
+    printType(node.type, printer);
   } else if (node.default !== undefined) {
     out.push('= ');
-    printType(node.default, out, ctx);
+    printType(node.default, printer);
   }
   return {
     name: node.name,
@@ -839,10 +852,11 @@ function toMember(node: Node, ctx: PrintContext): ApiMember {
     summary: text((signature?.comment ?? node.comment)?.summary),
     type: (() => {
       const out = new Tokens();
+      const printer: Printer = { ...ctx, out };
       if (signature !== undefined) {
-        printCallSignature(signature, out, ctx);
+        printCallSignature(signature, printer);
       } else {
-        printType(node.type, out, ctx);
+        printType(node.type, printer);
       }
       return out.done();
     })(),
@@ -880,11 +894,9 @@ function members(node: Node, ctx: PrintContext): ApiMember[] {
 
 function toSymbol(
   node: Node,
-  specifier: string,
-  category: string,
-  names: Map<number, string>,
-  ctx: PrintContext
+  where: PrintContext & { specifier: string; category: string }
 ): ApiSymbol | null {
+  const { specifier, category, ...ctx } = where;
   const kind = KIND[node.kind];
   if (!kind) {
     return null;
@@ -899,15 +911,15 @@ function toSymbol(
     kind,
     category,
     specifier,
-    signature: printSignature(node, kind, ctx),
-    summary: doc(comment?.summary, names, ctx),
-    remarks: blockTag(comment, '@remarks', names, ctx),
+    signature: printSignature(node, { ...ctx, kind }),
+    summary: doc(comment?.summary, ctx),
+    remarks: blockTag(comment, { ...ctx, tag: '@remarks' }),
     see: (comment?.blockTags ?? [])
       .filter((entry) => {
         return entry.tag === '@see';
       })
       .map((entry) => {
-        return doc(entry.content, names, ctx);
+        return doc(entry.content, ctx);
       }),
     examples: allBlockTags(comment, '@example'),
     typeParams: (signature?.typeParameters ?? node.typeParameters ?? []).map((param) => {
@@ -922,7 +934,7 @@ function toSymbol(
       .map((param) => {
         return toMember(param, ctx);
       }),
-    returns: blockTag(comment, '@returns', names, ctx),
+    returns: blockTag(comment, { ...ctx, tag: '@returns' }),
     members: members(node, ctx),
   };
 }
@@ -974,7 +986,11 @@ ${output}
   );
 }
 
-function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) => void) {
+function buildModel(
+  repoRoot: string,
+  run: { readonly cacheDir: string; readonly warn: (message: string) => void }
+) {
+  const { cacheDir, warn } = run;
   mkdirSync(cacheDir, { recursive: true });
   const jsonPath = join(cacheDir, 'typedoc.json');
 
@@ -1078,6 +1094,7 @@ function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) 
         return pageOf.has(core) ? core : undefined;
       },
       warn,
+      names,
     };
     return {
       id: category.id,
@@ -1094,7 +1111,11 @@ function buildModel(repoRoot: string, cacheDir: string, warn: (message: string) 
         consumed.add(symbolKey(declaration.specifier, name));
         // The symbol is keyed by the page it is on, not by where it was declared: a shared type
         // appears in each binding's chapter, and each copy has to be its own link target.
-        const symbol = toSymbol(declaration.node, category.specifier, category.id, names, ctx);
+        const symbol = toSymbol(declaration.node, {
+          ...ctx,
+          specifier: category.specifier,
+          category: category.id,
+        });
         if (symbol === null) {
           throw new Error(
             `[dialog-api] "${symbolKey(category.specifier, name)}" has no renderable kind.`
@@ -1138,12 +1159,15 @@ export function apiModelPlugin(): Plugin {
       }
       const seen = new Set<string>();
       cached ??= JSON.stringify(
-        buildModel(repoRoot, cacheDir, (message) => {
-          // Once per distinct message: an unhandled type kind repeats across every symbol.
-          if (!seen.has(message)) {
-            seen.add(message);
-            this.warn(message);
-          }
+        buildModel(repoRoot, {
+          cacheDir,
+          warn: (message) => {
+            // Once per distinct message: an unhandled type kind repeats across every symbol.
+            if (!seen.has(message)) {
+              seen.add(message);
+              this.warn(message);
+            }
+          },
         })
       );
       return `export default ${cached};`;

@@ -204,7 +204,8 @@ export function useModal<TData = void, TReason extends string = string>(
   const acceptsOpenRequests = onOpenRequest !== undefined;
 
   useEffect(() => {
-    manager.register(modalId, store, {
+    manager.register(modalId, {
+      store,
       template,
       nonModal: isNonModal,
       getDialog,
@@ -243,7 +244,8 @@ export function useModal<TData = void, TReason extends string = string>(
       return;
     }
     if (
-      shouldDismissOnBackdropClick(event, dialog, {
+      shouldDismissOnBackdropClick(event, {
+        dialog,
         store,
         engine,
         isNonModal,
@@ -291,7 +293,7 @@ export function useModal<TData = void, TReason extends string = string>(
         role,
       })}
       onClick={handleBackdropClick}
-      style={getDialogAnimationStyles(snap.phase, animation, styleProp, placement)}
+      style={getDialogAnimationStyles(snap.phase, { animation, customStyle: styleProp, placement })}
     >
       {/* Content wrapper — see `DIALOG_CONTENT_STYLE`, which both bindings read. */}
       <div style={DIALOG_CONTENT_STYLE}>{snap.phase !== 'closed' && renderContent()}</div>

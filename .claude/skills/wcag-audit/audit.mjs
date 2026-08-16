@@ -204,7 +204,8 @@ function SCANNER() {
    * in that direction — and collection stops at the first opaque layer, since nothing behind an
    * opaque background contributes a pixel.
    */
-  const backdrop = (chain, styles, opacity) => {
+  const backdrop = (chain, painted) => {
+    const { styles, opacity } = painted;
     const layers = [];
     for (let i = 0; i < chain.length; i++) {
       const st = styles[i];
@@ -297,7 +298,7 @@ function SCANNER() {
     if (opacity[0] <= 0.05) continue;
 
     const st = styles[0];
-    const back = backdrop(chain, styles, opacity);
+    const back = backdrop(chain, { styles, opacity });
     if (back.unmeasurable) {
       results.unmeasurable += 1;
       continue;
@@ -342,7 +343,10 @@ function SCANNER() {
       const { chain, styles, opacity } = chainOf(el);
       if (opacity[0] <= 0.05) continue;
       const st = styles[0];
-      const back = backdrop(chain.slice(1), styles.slice(1), opacity.slice(1));
+      const back = backdrop(chain.slice(1), {
+        styles: styles.slice(1),
+        opacity: opacity.slice(1),
+      });
       if (back.unmeasurable) continue;
 
       if (el.tagName.toLowerCase() === 'svg') {

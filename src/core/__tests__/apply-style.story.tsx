@@ -19,7 +19,7 @@ function ApplyStyleStage({ steps }: { readonly steps: readonly DialogStyle[] }) 
     if (!target || !next) {
       return;
     }
-    appliedRef.current = applyStyle(target, next, appliedRef.current);
+    appliedRef.current = applyStyle(target, { next, previous: appliedRef.current });
   }, [step, steps]);
 
   return (
@@ -66,8 +66,11 @@ export function UndefinedClearsHarness() {
  * `CSSStyleDeclaration`, and `--anything` is not a member of that. A computed key carries it in
  * without an assertion, which is also how a caller would reach `--dialog-backdrop`.
  */
-const withCustomProperty = (style: DialogStyle, name: string, value: string): DialogStyle => {
-  return { ...style, [name]: value };
+const withCustomProperty = (
+  style: DialogStyle,
+  property: { readonly name: string; readonly value: string }
+): DialogStyle => {
+  return { ...style, [property.name]: property.value };
 };
 
 export function NameTranslationHarness() {
@@ -79,8 +82,7 @@ export function NameTranslationHarness() {
             marginInlineStart: '7px',
             webkitMaskImage: 'linear-gradient(black, black)',
           },
-          '--probe-token',
-          '9px'
+          { name: '--probe-token', value: '9px' }
         ),
       ]}
     />

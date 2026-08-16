@@ -3,20 +3,25 @@ import { useState, useSyncExternalStore } from 'react';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 import { useModal } from '../../../react/use-modal.js';
 
-const countStore = createStore({ count: 0 }, ({ set }) => {
-  return {
-    actions: {
-      increment() {
-        set((s) => {
-          return { ...s, count: s.count + 1 };
-        });
-      },
-      reset() {
-        set({ count: 0 });
-      },
+const countStore = createStore(
+  { count: 0 },
+  {
+    builder: ({ set }) => {
+      return {
+        actions: {
+          increment() {
+            set((s) => {
+              return { ...s, count: s.count + 1 };
+            });
+          },
+          reset() {
+            set({ count: 0 });
+          },
+        },
+      };
     },
-  };
-});
+  }
+);
 
 /**
  * Tests a standalone store alongside useModalActions.

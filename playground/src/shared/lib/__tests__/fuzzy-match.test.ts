@@ -17,14 +17,20 @@ const SYMBOLS = [
 ];
 
 const best = (query: string) => {
-  return fuzzyRank(query, SYMBOLS, (name) => {
-    return name;
+  return fuzzyRank(query, {
+    items: SYMBOLS,
+    key: (name) => {
+      return name;
+    },
   })[0]?.item;
 };
 
 const names = (query: string) => {
-  return fuzzyRank(query, SYMBOLS, (name) => {
-    return name;
+  return fuzzyRank(query, {
+    items: SYMBOLS,
+    key: (name) => {
+      return name;
+    },
   }).map((entry) => {
     return entry.item;
   });
