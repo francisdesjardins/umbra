@@ -133,8 +133,14 @@ The short list, and it is the measure of whether the core is doing its job. A bi
 6. registers with the manager and unregisters on teardown.
 
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys, the
-placement table, the slide geometry, the action factory, the default animation — is shared. The
-three shipped bindings differ in about 200 lines each, and none of it is logic.
+placement table, the slide geometry, the action factory, the default animation — is shared.
+
+**The list above is one file per binding, and that file is the measure**: `react/use-modal.tsx` and
+`solid/use-modal.ts` are a little over 200 code lines each, `vanilla/bind-dialog.ts` about 260, and
+none of it is logic. Say which file, because the folder around it is not the same number — on the
+hook bindings the outlet, the provider, `useLookup` and the two template hooks roughly double it, and
+they are surface rather than lifecycle. `umbra/vanilla` has none of them, which is why its one file
+is the largest and its folder the smallest.
 
 A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the
 caller's element, and drops 2 and 5 outright: there is no render pass, so actions are declared by
