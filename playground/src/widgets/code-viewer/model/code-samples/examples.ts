@@ -16,6 +16,7 @@ import slideCornerToastSrc from '@/pages/slide-modal/examples/corner-toast.tsx?r
 import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
 import stackPrioritySrc from '@/pages/advanced/examples/stack-priority.tsx?raw';
 import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
+import ssrWorkerSrc from '@/pages/advanced/examples/ssr-worker.tsx?raw';
 import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.ts?raw';
 import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw';
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
@@ -58,6 +59,7 @@ export const examples: Record<string, string> = {
   'stacked-modals': stackedModalsSrc,
   'stack-priority': stackPrioritySrc,
   'imperative-service-layer': serviceLayerSrc,
+  'ssr-worker': ssrWorkerSrc,
   'imperative-deployment-service': deploymentServiceSrc,
   'cosmic-override': cosmicOverrideSrc,
   'dom-events': domEventsSrc,

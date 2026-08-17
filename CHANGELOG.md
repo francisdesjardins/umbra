@@ -11,6 +11,33 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — server rendering, demonstrated by a page that has no server
+
+`/advanced` can now render a modal with **no DOM in scope and no server involved**: a Worker runs the
+real `react-dom/server` over the real binding, hands back real markup, and the page hydrates it. A
+Worker has no `document` — the one thing separating a Node render from a browser tab — so it is a
+faithful stand-in rather than a mock, and the demo reports the worker's own `'document' in globalThis`
+so the claim is its answer instead of the page's word for it.
+
+What comes back is a **closed** `<dialog>`, which is the only honest answer: the top layer is
+enterable from `showModal()` alone, so no served HTML can hand one back open. `hydrateRoot` then
+_adopts_ that markup rather than replacing it — a mismatch would be a console error, which is what
+makes this a test of the claim and not a picture of it. Measured end to end in a browser, in dev and
+in the built output served over HTTP: markup carries a closed dialog, hydration is silent, and the
+dialog opens and closes by its action afterwards.
+
+Two things had to be true and neither was obvious. The shared component is written with
+`createElement` in a `.ts`, because Vite's React plugin injects a Fast Refresh preamble into any
+module it sees exporting a component and that preamble reads `window` — which a Worker has not got,
+so the import died before rendering. The same reason `public/mfe/` avoids JSX. And Fast Refresh is
+excluded from `src/react/` in the playground's Vite config, since in dev a worker is served through
+the page's own pipeline and `worker.plugins` never sees it; nothing is lost, as the root tsconfig's
+`jsx: react-jsx` leaves esbuild emitting the automatic runtime either way.
+
+This is the half `verify:package` cannot reach. That gate proves the built binding _renders_ on a
+server; this shows the markup it produces being adopted by a live page, which was the last claim in
+`RATING.md` resting on reading rather than running.
+
 ### Fixed — a control that disables itself no longer strands the modal's keyboard
 
 Reported as a missing focus ring on the async-open example's Refetch button. Measured, it is not the

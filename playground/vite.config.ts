@@ -13,7 +13,12 @@ const hashRouter = process.env['VITE_HASH_ROUTER'] === 'true';
 export default defineConfig({
   base: hashRouter ? './' : '/',
   plugins: [
-    react(),
+    // Fast Refresh is kept off the modules a Worker imports. Its preamble reads `window`, which a
+    // Worker has not got, so anything reaching `umbra/react` from one died on import — and `worker.
+    // plugins` cannot answer for it, since in dev Vite serves a worker through this very pipeline.
+    // Excluding costs nothing: the root `tsconfig.json` sets `jsx: react-jsx`, so esbuild still emits
+    // the automatic runtime, and Fast Refresh over the library's own source is not what anyone edits.
+    react({ exclude: [/src\/react\//, /ssr-worker/] }),
     babel({
       // Pinned, not defaulted: the library build and the component-test bundle both pass
       // `{ target: '19' }`, and a demo compiled under a different target would stop being

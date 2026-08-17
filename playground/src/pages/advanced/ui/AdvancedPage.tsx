@@ -20,6 +20,7 @@ import {
 } from '@/pages/advanced/examples/modal-outlet';
 import { MODAL_ID as PANEL_MODAL_ID, MuiPanelExample } from '@/pages/advanced/examples/mui-panel';
 import { ServiceLayerExample } from '@/pages/advanced/examples/service-layer';
+import { SsrWorkerExample } from '@/pages/advanced/examples/ssr-worker';
 import {
   WARNING_ID as STACK_PRIORITY_WARNING_ID,
   StackPriorityExample,
@@ -130,6 +131,12 @@ export const AdvancedPage = () => {
             description="modal:open and modal:close fire on document for every dialog on the page — including ones raised by a different copy of this library, in another bundle. That reach is the point: dialogManager.subscribe reports the same two moments and is the better tool inside one app, but it binds to one manager instance. These events are the observation half of what requestOpen opens on the way in, and a tag manager or a plain script can listen having imported nothing."
             codeKey="dom-events"
             example={<DomEventsExample />}
+          />
+          <ExampleCard
+            title="Server rendering, with no server"
+            description="A Worker has no document — the one thing that separates a Node render from a browser tab — so it can run react-dom/server over the real binding and hand back real markup. Press Render to see what comes out: a closed <dialog>, described with nothing to draw it on, which is the only honest answer since the top layer is enterable from showModal() alone. Press Hydrate and React adopts that markup rather than replacing it; the dialog opens from there. This is the whole reason useSyncExternalStore is given a server reader — without one it throws, and takes the render of any page mounting a modal with it."
+            codeKey="ssr-worker"
+            example={<SsrWorkerExample />}
           />
         </ExampleGrid>
       </ExampleSection>
