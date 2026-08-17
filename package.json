@@ -110,7 +110,8 @@
     "docs:matrix": "node scripts/render-matrix.mjs",
     "docs:matrix:check": "node scripts/render-matrix.mjs --check",
     "todo": "node scripts/render-matrix.mjs --list",
-    "bench": "node scripts/bench.mjs"
+    "bench": "node scripts/bench.mjs",
+    "test:component:focus": "playwright test -c playwright.config.ts --project=component-focus --workers=1"
   },
   "peerDependencies": {
     "react": "^19.0.0",

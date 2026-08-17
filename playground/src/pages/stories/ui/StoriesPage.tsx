@@ -1,4 +1,5 @@
 import { StrandedFocusHarness } from 'umbra/core/__tests__/stranded-focus.story';
+import { VanillaSwapHarness } from 'umbra/vanilla/__tests__/swap.story';
 import { ExampleGrid, ExampleSection, StoryCard } from '@/entities/example';
 import { sectionSlug } from '@/shared/lib/section-slug';
 import { PageLayout } from '@/shared/ui/PageLayout';
@@ -160,7 +161,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A control that disables itself keeps the keyboard',
         description:
-          'Press "Do background work". The button disables itself while it runs, so the engine blurs it and focus lands on the page, where a modal’s keydown listener cannot hear it — every hotkey dead but Escape, which the platform’s own cancel carries. Watch the ring come back to that button when it re-enables, and never to OK: parking an ordinary "saving…" on the confirm button is how the next Enter commits the dialog.',
+          'Press "Do background work". The button disables itself while it runs, so the engine blurs it and focus lands on the page — where a modal’s keydown listener cannot hear it, leaving every hotkey dead but Escape, which the platform’s own cancel carries. The ring comes back to that button when it re-enables, and never to OK: parking an ordinary "saving…" on the confirm button is how the next Enter commits the dialog.',
         component: StrandedFocusHarness,
         codeKey: 'story-stranded-focus',
       },
@@ -518,6 +519,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
   {
     label: 'Rendering without {Modal}',
     stories: [
+      {
+        title: 'A fragment swapped underneath the controller',
+        description:
+          'The hypermedia case: a <dialog> arrives as server-written markup and is later replaced wholesale, the way htmx or Turbo swap a fragment. "Swap only" leaves the controller driving the node it was handed — the dialog on screen is a plain <dialog> again, carrying none of the library’s attributes, and Open does nothing. "Swap and rebind" runs the pair a caller owes: destroy(), then bind over what arrived.',
+        component: VanillaSwapHarness,
+        codeKey: 'story-vanilla-swap',
+      },
       {
         title: 'Basic Outlet',
         description: 'Modal renders via ModalOutlet — no {Modal} placed in JSX.',

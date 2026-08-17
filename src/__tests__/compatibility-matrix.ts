@@ -1001,6 +1001,31 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'markup replaced underneath it (htmx, Turbo, Unpoly)',
+    react: {
+      state: 'n-a',
+      note: 'The renderer owns the markup, so a fragment swap is not a thing that happens to it — React replaces the tree and the binding re-runs with it.',
+    },
+    solid: {
+      state: 'n-a',
+      note: 'As React: the dialog is the binding’s own output, not a fragment somebody hands it.',
+    },
+    vanilla: {
+      state: 'partial',
+      why: 'The binding a hypermedia page would use, and the one arrangement where nothing tells the library. `bindDialog` closes over the element it was handed and registers `getDialog` with the manager, so a swap leaves the controller driving a detached node while the fragment on screen carries none of the library’s attributes — it is a plain `<dialog>` again. **Deliberately not detected**: an observer per dialog is every consumer paying for one integration style, and the code doing the swapping is the one thing that already knows. `destroy()` then bind again over what arrived restores the whole surface and leaves the registry at one entry — run it from `htmx:beforeSwap` / `htmx:afterSwap` or the equivalent.',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/swap.ct.tsx',
+          title: 'destroy and bind again restores it over the fragment that arrived',
+        },
+        {
+          file: 'src/vanilla/__tests__/swap.ct.tsx',
+          title: 'the controller drives the element it was handed, not the one on screen',
+        },
+      ],
+    },
+  },
+  {
     capability: 'a server render (`renderToString`)',
     react: {
       state: 'works',

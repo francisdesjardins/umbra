@@ -58,6 +58,16 @@ const vitePlugins: any[] = [
 const COMPONENT_TIMEOUT = 30 * 1000;
 
 /**
+ * Tests the parallel runner cannot host, kept out of the default run rather than made tolerant.
+ *
+ * A browser dispatches `blur` and `focusout` only while the document holds the focus — without it
+ * `activeElement` still moves, silently. A test of anything built on those events therefore measures
+ * which page the runner happened to front, and under `cpus/2` workers that is a coin toss.
+ * `yarn test:component:focus` runs them on one worker, where the answer means something.
+ */
+const NEEDS_REAL_FOCUS = /@focus-dependent/;
+
+/**
  * Unified Playwright configuration for both unit and component tests.
  *
  * Projects:
@@ -143,17 +153,29 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Chrome'] },
       timeout: COMPONENT_TIMEOUT,
+      grepInvert: NEEDS_REAL_FOCUS,
     },
     // Gecko and WebKit run the same harnesses as Chromium. The declared floor names Firefox 115
     // and Safari 16.4, and a support claim nothing exercises is a guess with a version number on
     // it. Three engines cost about a minute on the full suite, and one of them earned its place
     // immediately.
+    // The excluded ones, on their own terms: one worker, so the page it drives is the one holding the
+    // browser's focus. `grepInvert` above is per project, so this needs its own rather than a flag.
+    {
+      name: 'component-focus',
+      testDir: './',
+      testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
+      use: { ...devices['Desktop Chrome'] },
+      timeout: COMPONENT_TIMEOUT,
+      grep: NEEDS_REAL_FOCUS,
+    },
     {
       name: 'component-firefox',
       testDir: './',
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Firefox'] },
       timeout: COMPONENT_TIMEOUT,
+      grepInvert: NEEDS_REAL_FOCUS,
     },
     // WebKit, which is the engine that found the focus bug rather than merely tripping over it —
     // see `captureActionRunner`. It is in the default list because it passes, and because the
@@ -165,6 +187,7 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Safari'] },
       timeout: COMPONENT_TIMEOUT,
+      grepInvert: NEEDS_REAL_FOCUS,
     },
   ],
 });

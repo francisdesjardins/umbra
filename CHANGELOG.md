@@ -13,30 +13,52 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ### Fixed — a control that disables itself no longer strands the modal's keyboard
 
-Reported from the async-open example: the Refetch button loses its focus ring. Measured, it is not
-the ring — focus is on `<body>`. A control that disables itself while its work runs is blurred by
-the engine, nothing hands the keyboard back, and Tab appears to resume from the button only because
-the browser keeps a sequential-navigation starting point where it was. It is the state the raise
-path already calls a defect in the matrix: "the modal stayed on screen with focus on `<body>` and
-every hotkey but Escape dead", Escape surviving on the platform's own `cancel`, which ignores focus.
+Reported as a missing focus ring on the async-open example's Refetch button. Measured, it is not the
+ring: focus is on `<body>`. A control disabled while its own work runs is blurred by the engine,
+nothing hands the keyboard back, and Tab appears to resume from the button only because the browser
+keeps a sequential-navigation starting point there. What is lost is the ring and every hotkey —
+`attachDialogKeydown` hears only what is raised inside the dialog — while Escape survives on the
+platform's own `cancel`, which ignores focus. The matrix already calls that state a defect on the
+raise path.
 
-`createFocusCoordinator` already had the repair — `reclaimIfInFront`, with the modal-only rule and
-the in-front guard — driven only by the manager's snapshot, so a userland control produced no
-notification and it never ran. It now also listens for `focusout` where `relatedTarget` is `null`,
-which is what distinguishes _stranded_ from _moved_: focus going to another element is somebody's
-choice and carries its destination, while focus going nowhere is what the engine does when the
-thing holding it stops being focusable.
+`createFocusCoordinator` had the repair and one trigger: `reclaimIfInFront`, driven by the manager's
+snapshot, which a userland control never moves. It now also listens for `focusout` with a null
+`relatedTarget` — what separates _stranded_ from _moved_, focus going somewhere carrying its
+destination and focus going nowhere being the engine reacting to a control that stopped being
+focusable — and gives the keyboard back **to that control and to nothing else**, when it is focusable
+again. The first attempt reclaimed to the dialog's first focusable, which is what the stack path does,
+and parked an ordinary "saving…" on the _confirm_ button, one Enter from committing the dialog; caught
+by eye in the playground.
 
-**It gives the keyboard back to that control and to nothing else**, and the first attempt proved why
-that has to be the rule. Reclaiming to the dialog's first focusable is what a stack raise does, and
-applied here it parked an ordinary "saving…" on the **confirm** button, where the next Enter commits
-the dialog — caught by eye in the playground before it went anywhere near a commit. So the control
-is remembered and handed the keyboard when it is focusable again, watched through a `MutationObserver`
-on its `disabled` attribute; a strand this cannot undo is left exactly as it was.
+### Fixed — the focus coordinator's bookkeeping outlives the element it watches
 
-Three tests, mutation-checked by detaching the listener and confirming the positive one goes red:
-the keyboard comes back to the control, it is never answered by moving focus elsewhere, and an
-ordinary Tab between two controls is left alone. Green on all three engines.
+Found while chasing the above, and the larger half of it. `focusin` → `lastFocusInside` and `click` →
+`lastActivated` were bound to the `<dialog>` captured when the attachment ran. A renderer that
+replaces that element leaves both listeners on an orphan, and nothing re-attaches them: this step's
+inputs are the phase alone, which does not change when the node does. The memory then reads empty for
+the rest of the dialog's life, and every restore that consults it does nothing — silently.
+
+Both are bound to the **root** now, with `getDialog()` resolved per event; the events bubble, so the
+scoping predicate still does its work, and the root outlives what it contains. `src/CLAUDE.md` carries
+the rule this is the third instance of: never hold an element across something that replaces it.
+
+### Changed — a test that needs the browser's focus says so, and runs where it can have it
+
+`stranded-focus.ct.tsx`'s first case was red about half the time under the parallel suite and green
+18/18 alone. The cause is not the repair: **a browser dispatches `blur` and `focusout` only while the
+document holds the focus.** Without it `activeElement` still moves when a focused control is disabled,
+silently — so the listener has nothing to hear, and the test measures which page the runner fronted.
+Instrumented with a counter light enough not to move the race, the red runs read `[81, 80, 0]`: sync
+opening, sync open, listener armed, then no event, ever. `page.bringToFront()` does not settle it
+either, since eight parallel pages take the focus from each other.
+
+Tagged `@focus-dependent` and excluded from the three component projects by `grepInvert`, with a
+`component-focus` project that runs it on one worker — `yarn test:component:focus`. Not marked
+tolerant and not retried: it is a real assertion that needs a condition the default runner cannot
+provide. Its harness also keeps the button's label constant now, so the renderer updates the node
+instead of replacing it — a replaced node is blurred by _removal_, which dispatches on a node already
+out of the tree, where the event bubbles to nobody. Six consecutive runs of the component project
+green, and the excluded case green on its own.
 
 ### Fixed — the story that would have been invisible
 

@@ -18,14 +18,35 @@ const focused = (page: Page) => {
  * answering Escape alone. A control that disables itself is blurred by the engine and lands there.
  */
 test.describe('a control that disables itself', () => {
-  test('gets the keyboard back when it comes back', async ({ mount, page }) => {
+  /**
+   * **@focus-dependent — excluded from the default run, and not because it is flaky.** A browser
+   * dispatches `blur` and `focusout` only while the document holds the focus; without it
+   * `activeElement` still moves when a focused control is disabled, silently. The repair listens for
+   * exactly that event, so on a page the runner has backgrounded there is nothing to hear and this
+   * measures the runner. Under eight workers one page holds the focus and the rest do not, which is
+   * a coin toss — `page.bringToFront()` does not settle it either, since the parallel pages take it
+   * from each other.
+   *
+   * Run it deliberately with `yarn test:component:focus`, which gives it one worker and the focus.
+   */
+  test('gets the keyboard back when it comes back @focus-dependent', async ({ mount, page }) => {
+    await page.bringToFront();
     await mount(<StrandedFocusHarness />);
     await page.getByTestId('stranded-open').click();
     await expect(page.getByTestId('stranded-work')).toBeVisible();
 
     // Keyboard-driven, so this is the ordinary way in rather than a scripted focus.
+    await expect(page.getByTestId('stranded-work')).toBeFocused();
     await page.getByTestId('stranded-work').press('Enter');
     await expect(page.getByTestId('stranded-work')).toBeDisabled();
+
+    // The strand itself, asserted before its repair: without this the test cannot tell "focus never
+    // left" from "focus left and never came back", and those are different defects.
+    await expect
+      .poll(() => {
+        return focused(page);
+      })
+      .not.toBe('stranded-work');
 
     await expect(page.getByTestId('stranded-runs')).toHaveText('1');
     await expect

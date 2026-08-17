@@ -173,36 +173,56 @@ export function createFocusCoordinator(
 
       const unsubscribe = engine.subscribe(check);
 
-      // Remember focus as it arrives, scoped with `isOwnEventTarget`: `focusin` bubbles, and a
+      // Remember focus as it arrives, scoped with `isOwnEventTarget`: both events bubble, and a
       // nested modal renders in this subtree, so the one underneath would restore to its button.
+      //
+      // **Bound to the root, and the dialog resolved per event.** Binding to the element is the
+      // obvious shape and it silently stops working: a renderer that replaces the `<dialog>` leaves
+      // every listener on an orphan, and nothing re-attaches them — this step's inputs are the phase
+      // alone, which does not change when the node does. The bookkeeping then reports an empty
+      // memory for the rest of the dialog's life, so a restore that depends on it does nothing.
+      // Measured under a loaded suite: the handler was never once called while the events reached
+      // the dialog on screen throughout. The root outlives the node, and `getRootNode()` rather than
+      // `document` keeps a dialog inside a shadow root heard in its own tree.
       let stopRemembering: (() => void) | undefined;
       const watched = getDialog();
-      if (watched) {
-        const remember = (event: Event) => {
+      const eventRoot = watched?.getRootNode();
+      if (eventRoot) {
+        /** This dialog's own subtree, as it stands right now — never as it stood at attach time. */
+        const ownTarget = (event: Event): HTMLElement | null => {
+          const dialog = getDialog();
           const { target } = event;
-          if (
+          return dialog &&
             target instanceof HTMLElement &&
-            target !== watched &&
-            isOwnEventTarget(watched, target)
-          ) {
+            target !== dialog &&
+            isOwnEventTarget(dialog, target)
+            ? target
+            : null;
+        };
+
+        const remember = (event: Event) => {
+          const target = ownTarget(event);
+          if (target) {
             lastFocusInside = target;
           }
         };
         // `closest` because the press often lands on a label or icon inside the control. Capture
         // is load-bearing: the engine notifies synchronously from the button's own handler, so a
         // bubbling listener would hear the click after the restore target had been chosen.
+        //
+        // A press outside this dialog leaves the memory alone rather than clearing it: on the root
+        // this listener hears the whole page, where on the element it heard only its own.
         const rememberActivation = (event: Event) => {
-          const { target } = event;
-          lastActivated =
-            target instanceof HTMLElement && target !== watched && isOwnEventTarget(watched, target)
-              ? target.closest<HTMLElement>('button, [role="button"]')
-              : null;
+          const target = ownTarget(event);
+          if (target) {
+            lastActivated = target.closest<HTMLElement>('button, [role="button"]');
+          }
         };
-        watched.addEventListener('focusin', remember);
-        watched.addEventListener('click', rememberActivation, true);
+        eventRoot.addEventListener('focusin', remember);
+        eventRoot.addEventListener('click', rememberActivation, true);
         stopRemembering = () => {
-          watched.removeEventListener('focusin', remember);
-          watched.removeEventListener('click', rememberActivation, true);
+          eventRoot.removeEventListener('focusin', remember);
+          eventRoot.removeEventListener('click', rememberActivation, true);
         };
       }
 
@@ -216,7 +236,7 @@ export function createFocusCoordinator(
       let stopWatchingStack: (() => void) | undefined;
       let stopWatchingStrand: (() => void) | undefined;
       /** Its own handle: the restore's `frame` is a different question, asked at a different time. */
-      let strandedFrame = 0;
+      let strandedTimer: ReturnType<typeof setTimeout> | undefined;
       if (phase === 'open') {
         const reclaimIfInFront = () => {
           const dialog = getDialog();
@@ -279,44 +299,86 @@ export function createFocusCoordinator(
             restoreFocus(dialog, control);
           };
 
-          const reclaimIfStranded = (event: FocusEvent) => {
-            const control = event.target;
-            if (event.relatedTarget !== null || !(control instanceof HTMLElement)) {
+          const reclaimIfStranded = (raised: Event) => {
+            const event: FocusEvent | null = raised instanceof FocusEvent ? raised : null;
+            const control = event?.target ?? null;
+            if (!event) {
+              return;
+            }
+            // Resolved per event, never captured: a renderer may replace the `<dialog>` between the
+            // open and the strand, and a listener bound to the node this attachment started with
+            // then hears nothing at all. Measured — under a loaded suite the handler simply stopped
+            // being called, while the event was reaching the dialog on screen the whole time.
+            const dialog = getDialog();
+            if (
+              event.relatedTarget !== null ||
+              !(control instanceof HTMLElement) ||
+              !dialog ||
+              // The dialog itself is not a control to hand anything back to: `showModal()` focuses
+              // it when nothing inside can take focus, and restoring *it* would make
+              // `dialog.contains(activeWithin())` true — reflexively — of a dialog holding nobody.
+              control === dialog ||
+              // Scoped like the two listeners above, and for their reason: `focusout` bubbles, and
+              // a nested dialog renders in this subtree.
+              !isOwnEventTarget(dialog, control)
+            ) {
               return;
             }
             watchEnable?.disconnect();
 
-            // A frame first: the renderer may place focus itself, and a control disabled for one
-            // paint is back before an observer would report it.
-            cancelAnimationFrame(strandedFrame);
-            strandedFrame = requestAnimationFrame(() => {
-              if (!control.matches(':disabled')) {
-                giveItBack(control);
+            // Armed **synchronously and over the whole dialog**, because neither narrowing survives
+            // contact: work that finishes inside the same task re-enables the control before any
+            // deferral could arm this, and watching that one element for `disabled` misses every
+            // other way a renderer brings it back — a re-created node, a wrapper toggled around it,
+            // a property set without the attribute. Anything changing in the dialog is the cue to
+            // re-ask a cheap question, and the answer disconnects it.
+            // **Disconnected on success, not on the first attempt.** The control coming back and the
+            // control being focusable are not the same instant — a renderer that re-enables it and
+            // re-paints it in the same batch will refuse the focus in between, and a one-shot
+            // observer spends its only try there and leaves the keyboard on the page. Every later
+            // mutation is another chance, so the repair costs a predicate rather than a guess about
+            // when the DOM has settled.
+            watchEnable = new MutationObserver(() => {
+              if (control.matches(':disabled') || !control.isConnected) {
                 return;
               }
-              // Still disabled, so the work is running: hand it back when the control comes back.
-              watchEnable = new MutationObserver(() => {
-                if (control.matches(':disabled')) {
-                  return;
-                }
+              giveItBack(control);
+              const dialog = getDialog();
+              if (dialog && dialog.contains(activeWithin(dialog))) {
+                watchEnable?.disconnect();
+              }
+            });
+            watchEnable.observe(dialog, { subtree: true, childList: true, attributes: true });
+
+            // The other shape: a control blurred without being disabled — hidden, or re-rendered
+            // away. A task later, so the renderer has committed and may have placed focus itself,
+            // and on a timer rather than a frame because a page the engine is not painting
+            // throttles `requestAnimationFrame`, and this must not depend on being visible.
+            clearTimeout(strandedTimer);
+            strandedTimer = setTimeout(() => {
+              if (!control.matches(':disabled')) {
                 watchEnable?.disconnect();
                 giveItBack(control);
-              });
-              watchEnable.observe(control, { attributes: true, attributeFilter: ['disabled'] });
-            });
+              }
+            }, 0);
           };
 
-          watched.addEventListener('focusout', reclaimIfStranded);
+          // Bound to the **root**, not to the element: `focusout` bubbles there either way, and the
+          // root outlives a dialog its renderer replaces. `getRootNode()` rather than `document`, so
+          // a dialog inside a shadow root is heard in its own tree instead of at a boundary the
+          // event is retargeted across.
+          const strandRoot = watched.getRootNode();
+          strandRoot.addEventListener('focusout', reclaimIfStranded);
           stopWatchingStrand = () => {
             watchEnable?.disconnect();
-            watched.removeEventListener('focusout', reclaimIfStranded);
+            strandRoot.removeEventListener('focusout', reclaimIfStranded);
           };
         }
       }
 
       return () => {
         cancelAnimationFrame(frame);
-        cancelAnimationFrame(strandedFrame);
+        clearTimeout(strandedTimer);
         stopRemembering?.();
         stopWatchingStack?.();
         stopWatchingStrand?.();

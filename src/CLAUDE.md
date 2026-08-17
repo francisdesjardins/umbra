@@ -405,10 +405,21 @@ find who actually ran it, and only falls back to the claimed one. Why there are 
 engine needs each, is on that function and on the coordinator in
 [core/attach-focus.ts](core/attach-focus.ts).
 
-**A remembered element is not enough**, and that is why every action's props carry
-`data-action-reason`: a fine-grained renderer replaces the button when the action's state changes, so
-all three reads can name a detached node. The coordinator reads the running reason off the engine and
-re-queries with `findActionButton` when the captured one is stale.
+### Never hold an element across something that replaces it
+
+**The defect this codebase keeps producing** — three times in a day, one shape: a reference captured
+once, and a renderer, a fragment swap or a `disabled` toggle replacing the node under it. Nothing
+errors; the held node stops being the one on screen and whatever depended on it goes quiet. The
+failed-action restore held its button, which Solid replaces. `bindDialog` holds its `<dialog>`, which
+an htmx swap removes. The coordinator bound `focusin` and `click` to the dialog element, and a
+renderer replacing it emptied the bookkeeping for that dialog's life — this step's inputs are the
+phase, which does not change when the node does.
+
+In order: **find it again rather than remember it**, through an identity outliving the node and
+re-queried at use — why action props carry `data-action-reason`. Failing that, **bind to the root,
+not the element**, resolving `getDialog()` per event; those events bubble, so the scoping predicate
+still works. Failing both, **say so**: a control the caller replaces has no stable identity to
+re-find, and that limit belongs in the matrix.
 
 ## Type System
 
