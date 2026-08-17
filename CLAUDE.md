@@ -102,32 +102,25 @@ badges from it. Moving one copy is how the README came to be two points and thre
 which is why **`yarn coverage:update` now does the whole move**: both measurements, both documents,
 both badges, one command — its patterns fail loudly if this prose is reworded.
 
-**So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.** Two
-moves have paid off repeatedly and are the first thing to try:
+**So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.**
+Two moves pay off repeatedly and are the first to try. **A DOM type in a signature is not a DOM
+dependency** — narrow the parameter to the members actually read (`BackdropDialog`,
+`Pick<HTMLDialogElement, 'open' | 'close'>`, `StyleTarget`) and the function becomes an ordinary unit
+test with no call site changed. **A function of the minority kind is a file in the wrong place** — a
+DOM one among pure ones, or the reverse, keeps its whole module out of reach; move it to where its
+kind lives and both modules become answerable. And **if something is hard to unit-test because it is
+tangled with a renderer, that is the finding**: extract the framework-free half into `core/`.
 
-- **A DOM type in a signature is not a DOM dependency.** `isBackdropClick`,
-  `shouldDismissOnBackdropClick` and `finalizeModalClose` each asked for an `HTMLDialogElement` while
-  reading one or two members; narrowed to what they use (`BackdropDialog`,
-  `Pick<HTMLDialogElement, 'open' | 'close'>`) they became ordinary unit tests and no call site
-  changed. `applyStyle` did the same with `StyleTarget`.
-- **A DOM function among pure ones is a file in the wrong place.** `clickHotkeyButton` kept the whole
-  of `utils/hotkey-utils.ts` out of the unit project's reach; it lives in `core/attach-keydown.ts` now
-  — its only caller, already DOM-only — and the module it left is fully covered.
+**Coverage is a local command, not a CI job, deliberately.** GitHub's upload is Cobertura-only and
+404s here (Code Quality needs an enterprise owner; this is a personal repo), and running the coverage
+variants in CI to publish an artifact nobody opens costs the component job ~45% more runtime. Do not
+re-add it unless the repo moves under an enterprise **and** something renders the result.
 
-**If something is hard to unit-test because it is tangled with a renderer, that is the finding**:
-extract the framework-free half into `core/` and test it there.
-
-**Coverage is a local command, not a CI job, and that is deliberate.** GitHub's code-coverage upload is
-Cobertura-only and returns HTTP 404 here, because Code Quality is gated on an enterprise owner
-allowing it and this is a personal repository. Running the coverage variants in CI to publish an
-artifact nobody opens costs the component job roughly 45% more runtime. Do not re-add it unless the
-repo moves under an enterprise **and** something renders the result.
-
-**Every way the CT report has failed so far has failed quietly**, so the four failure modes are
-documented where each can bite — `scripts/vite-plugin-ct-coverage.mjs`, `playwright.config.ts`'s
-`use.ctCacheDir`, and `scripts/ct-coverage-reset.mjs` — and `ct-coverage-report.mjs` prints all
-four when it finds nothing. **One is not printed and is not in any file**: editing the instrumenter
-invalidates neither CT cache, so delete `playwright/.cache-coverage/` by hand for that one.
+**Every way the CT report has failed has failed quietly**, so the four failure modes are documented
+where each can bite — `scripts/vite-plugin-ct-coverage.mjs`, `playwright.config.ts`'s `use.ctCacheDir`,
+`scripts/ct-coverage-reset.mjs` — and `ct-coverage-report.mjs` prints all four when it finds nothing.
+**A fifth is in no file**: editing the instrumenter invalidates neither CT cache, so delete
+`playwright/.cache-coverage/` by hand.
 
 ### Top-layer rule
 
@@ -158,13 +151,28 @@ invalidates neither CT cache, so delete `playwright/.cache-coverage/` by hand fo
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
 - **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
-- **Environment**: Node >=24.0.0 | **Yarn 4** (via Corepack, pinned by `packageManager`) | React ^19.0.0 (optional peer — required only by `./react`) | Solid ^1.9.0 (optional peer — required only by `./solid`; `./vanilla` needs neither) | Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8 (ESM). The **peer** ranges are what a consumer must satisfy and they are the wide ones; the repo's own `devDependencies` sit far above them (React 19.2.8, Solid 1.9.14) — quoting the dev pin as the requirement is how the README came to ask for more than the package does. **The browser floor is measured too**: the highest thing the runtime calls — constructed `CSSStyleSheet` (Safari 16.4), `toSorted` (Chrome 110, Firefox 115).
+- **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and
+  Solid ^1.9.0 as optional peers, each required only by its own binding and neither by `./vanilla` |
+  Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. The **peer** ranges
+  are what a consumer must satisfy and they are the wide ones — this repo's `devDependencies` sit far
+  above them, and quoting a dev pin as the requirement asks for more than the package does. **The
+  browser floor is measured**: the highest thing the runtime calls — constructed `CSSStyleSheet`
+  (Safari 16.4), `toSorted` (Chrome 110, Firefox 115).
 - **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
-- **Yarn workspaces**: the repo is two packages — `umbra` (root, published) and `umbra-playground` (`playground/`, `private: true`). One `yarn install` at the root installs both. **The published package's dependency list is the root manifest**, so anything the demo needs — MUI, Emotion, TanStack Router, immer, react-syntax-highlighter — belongs in `playground/package.json` and must never be added to the root. The root's own `dependencies` stay empty: the library ships zero runtime dependencies. Root `dev`/`playground:*` scripts delegate via `yarn workspace umbra-playground <script>`.
+- **Yarn workspaces**: two packages — `umbra` (root, published) and `umbra-playground`
+  (`playground/`, private); one `yarn install` at the root installs both. **The published dependency
+  list is the root manifest**, so anything the demo needs (MUI, Emotion, TanStack Router, immer,
+  react-syntax-highlighter) belongs in `playground/package.json` and never in the root, whose
+  `dependencies` stay empty. Root `dev`/`playground:*` scripts delegate with `yarn workspace`.
 - **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin — so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** (`'./types.js'`, `'../store/index.js'`) because `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext` — silently, under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
-- **TypeScript 7, and nothing beside it in the lint path**: every `tsc` call in `scripts` is `node node_modules/typescript-7/bin/tsc`, and linting is `oxlint --type-aware`, whose type-aware half runs through **tsgolint** — built on the TS 7 compiler, so the linter and `tsc` are the same compiler generation. **The bare `typescript` 6.0.3 dependency is typedoc's**, which peers on `6.0.x`; it also feeds the editor, since `typescript-7/lib` ships no `tsserver.js`, so IntelliSense stays a generation behind the gates and no setting fixes it (`options.typeAware` in `.oxlintrc.json` covers most of that cost). **Replacing typedoc is what collapses this to one TypeScript** — TS 7 does ship a JS API, so the blocker is that typedoc uses the previous shape of it, not that there is nothing to use; the playground's `/api` is built on typedoc's JSON model, so it is a change of its own.
-
-  **`resolutions` cannot shortcut it**: `typescript` is a _peer_ of typedoc, not a dependency, so it resolves from this project's tree by design. Re-measure before believing a release note — as of 2026-08-13 typedoc 0.28.20 still declares `6.0.x`.
+- **TypeScript 7, and nothing beside it in the lint path**: every `tsc` call in `scripts` is
+  `node node_modules/typescript-7/bin/tsc`, and linting is `oxlint --type-aware`, whose type-aware
+  half runs through **tsgolint** — built on the TS 7 compiler, so the linter and `tsc` are one
+  generation. **The bare `typescript` 6.0.3 is typedoc's**, which peers on `6.0.x`, and the editor's,
+  since `typescript-7/lib` ships no `tsserver.js` — so IntelliSense stays a generation behind the
+  gates and no setting fixes it (`options.typeAware` in `.oxlintrc.json` covers most of that cost).
+  `resolutions` cannot shortcut a peer. Collapsing this to one TypeScript means replacing typedoc;
+  what blocks that, and when it was last re-measured, is the matrix row.
 
 ## Design Philosophy
 
@@ -189,27 +197,25 @@ platform — as data, rendered into `API.md`'s _Compatibility_ chapter by `yarn 
 test that fails when the document and the table disagree.
 
 It exists because these facts were spread over this file, `src/CLAUDE.md`, `API.md`, the CHANGELOG and
-a hundred JSDoc blocks, and prose in five places disagrees with itself in five places: **inventorying
-the rows produced seven defects before a single cell was written.** So a new compatibility fact goes
-in the table, not in prose here — and if it is about one module, it goes in that module's JSDoc.
+a hundred JSDoc blocks, and prose in five places disagrees with itself in five: **inventorying the
+rows produced seven defects before a cell was written.** So a new compatibility fact goes in the
+table, not in prose here — and if it is about one module, in that module's JSDoc.
 
-Two things the vocabulary buys, and both are the reason to use it rather than a paragraph:
+Three things the vocabulary buys:
 
-- **The two kinds of ✗ are different facts.** `✗ platform` is a browser law no implementation would
-  change; `✗ by design` is a refusal that owes a reason. Neither is a to-do, and without the split a
-  list of everything that does not work fills up with items nobody can act on.
-- **`✓ untested` and `~` are declared states, so they enumerate.** **`yarn todo`** prints them, and that
-  list _is_ the backlog — there is one place to ask "is anything still open", and it is generated from
-  the same data the document is rather than kept beside it. A `TODO.md` would be a second answer that
-  drifts from the first.
-- **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and not
-  the others, a discrimination that does not reproduce. Written into the note instead, it would reach a
-  reader of the table and not the backlog, because the _state_ is what the enumeration reads and the
-  state says done. `yarn todo` lists caveats separately, prefixed `?`.
+- **The two kinds of ✗ are different facts.** `✗ platform` is a browser law; `✗ by design` is a
+  refusal that owes a reason — carried in `why`, which the gate requires of it and of `~`. Neither is
+  a to-do, and without the split a list of what does not work fills with items nobody can act on.
+- **`✓ untested` and `~` are declared states, so they enumerate.** **`yarn todo`** prints them and
+  that list _is_ the backlog, generated from the same data the document is. A `TODO.md` would be a
+  second answer that drifts from the first.
+- **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and
+  not the others. In a note it would reach a reader of the table and not the backlog, since the
+  enumeration reads the _state_, and the state says done. `yarn todo` lists caveats prefixed `?`.
 
-The gate checks that every option has a row, that no row names an option that no longer exists, and
-that every test a cell cites resolves to a real file and a real title. It **cannot** check that the
-cited test proves the cell; that part stays human, and the JSDoc says so.
+The gate checks that every option has a row, that no row names an option that no longer exists, that
+every cited test resolves to a real file and title, and that a refusal carries its `why`. It
+**cannot** check that the cited test proves the cell; that part stays human.
 
 ## Deeper Context
 

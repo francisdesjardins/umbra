@@ -43,62 +43,48 @@ what it usually means here, in a comment.
 | A flag covering every item     | **the name states the scope** | hanging it off the object that names one     |
 | Which edge a panel slides from | **`direction`**               | anything else calling itself a direction     |
 
-**A per-item flag is one word; an aggregate names its scope.** `action.isRunning(reason)` is one
-word because the argument says whose it is. `hasRunningAction` says its own, because a bare boolean
-has nothing to say it for — and it keeps that name on all four layers that publish it: the engine
-snapshot, `ActionGate`/`DismissGate`, the render args, and `umbra/vanilla`'s `ModalSnapshot`. So the
-aggregate does **not** move under `action`: the controller binding has no factory to move it to, and
-one fact would end up with two names across the seam built to give it one.
+**A per-item flag is one word; an aggregate names its scope.** `action.isRunning(reason)` is one word
+because the argument says whose it is; `hasRunningAction` says its own, a bare boolean having nothing
+else to say it for. It keeps that name on all four layers that publish it — engine snapshot,
+`ActionGate`/`DismissGate`, render args, `umbra/vanilla`'s `ModalSnapshot` — and does **not** move
+under `action`: the controller binding has no factory to move it to, so one fact would end up with
+two names across the seam built to give it one.
 
 **`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
-edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; the positive and
-negative cases of an assertion are its **halves**, not its directions — that second sense had spread
-to six comments and is the reason the row exists.
+edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; an assertion's
+positive and negative cases are its **halves**.
 
-**A callback's name says how it refuses**, and there are exactly three answers. The rule was applied
-consistently before it was written down, which is the only reason it survived being unwritten:
+**A callback's name says how it refuses**, and there are exactly three answers:
 
 - **`on…Request` asks, and the answer is the return value.** `onOpenRequest` refuses through
-  `request.refuse(reason)`, `onDismissRequest` by returning `false`. The suffix is what marks a
-  callback as a door rather than a report — `on…` alone would read as being told after the fact.
+  `request.refuse(reason)`, `onDismissRequest` by returning `false`. The suffix marks a door rather
+  than a report — `on…` alone reads as being told after the fact.
 - **A plain `on…` on a user gesture refuses through the event.** `onKeyDown` and an action's
-  `onClick` both take the whole press with `preventDefault()`; both return `void`, and nothing reads
-  it. Reaching for a boolean return here would be a second protocol for a thing the DOM already has.
-- **`onClose` is a notification** and the only one. Its result is ignored, and that is the point:
-  the close has happened.
+  `onClick` take the whole press with `preventDefault()`, return `void`, and nothing reads it. A
+  boolean return would be a second protocol for what the DOM already has.
+- **`onClose` is a notification** and the only one. Its result is ignored, which is the point: the
+  close has happened.
 
-So a new callback picks its name from what it is allowed to do. One that may say no by returning
-something is `on…Request`; one that vetoes a gesture is `on…` and does it through the event; one that
-merely reports keeps `on…` and is read by nobody.
-
-**`prepare` is awaited, not a gate** — which matters more now the tiers above are written down,
-because a gate here is a thing that says no (`canDismiss`, `ActionGate`, `DismissGate` all decide
-whether something may proceed) and `prepare` cannot. `syncOpenSequence` shows the dialog and
-schedules the phase's frame **before** starting it, so the dialog is on screen and reaches `'open'`
-either way, and a `prepare` that throws is logged and settles like any other. What waits on it is
-`open()`'s promise, `isPreparing` and therefore `aria-busy`, `dismissWhilePreparing`, and the
-labelling diagnostic. The row above says "waits on" for that reason; it used to say "gating an
-open", which named neither the thing it blocks nor the thing it cannot do.
+**`prepare` is awaited, not a gate.** A gate here says no — `canDismiss`, `ActionGate`, `DismissGate`
+all decide whether something may proceed — and `prepare` cannot: `syncOpenSequence` shows the dialog
+and schedules the phase's frame **before** starting it, so the dialog reaches `'open'` either way and
+a `prepare` that throws is logged and settles like any other. What waits on it is `open()`'s promise,
+`isPreparing` and therefore `aria-busy`, `dismissWhilePreparing`, and the labelling diagnostic.
 
 Two more that are easy to blur:
 
 - **`dialog` is the element, `modal` is the unit of state.** `dialogPlacement`, `dialogAttributes`,
-  `DialogStyle` and `dialog-lifecycle.ts` all act on a `<dialog>`; `modal-store.ts`, `ModalPhase`,
-  `ModalRenderArgs` and `modalId` are the library's own record of one. `DialogManagerSnapshot.openDialogs`
-  holds `RegisteredModalInfo` and so reads against the rule — it stays, because applying the rule
-  consistently would rename `DialogManager` itself, and the manager's name is the package's front
-  door. Do not add new exceptions; a new name picks the side its subject is on.
-- **`sync*` decides, `run*` does.** A `sync*` function (`syncOpenSequence`, `syncCloseSequence`,
-  `syncBodyScrollLock`) is handed a phase and may decide there is nothing to do, so it is safe on
-  every pass. A `run*` function (`runDialogExit`, `runCloseSequence`) performs what it names, every
-  time it is called.
+  `DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `modal-store.ts`, `ModalPhase`,
+  `ModalRenderArgs` and `modalId` are the library's record of one. `DialogManagerSnapshot.openDialogs`
+  holds `RegisteredModalInfo` and reads against the rule — it stays, because applying the rule would
+  rename `DialogManager` itself, the package's front door. Add no new exceptions.
+- **`sync*` decides, `run*` does.** A `sync*` function is handed a phase and may decide there is
+  nothing to do, so it is safe on every pass; a `run*` function performs what it names, every time.
 
-Two near-misses, considered and kept, so the next pass does not re-open them. `ActionGate` and
-`DismissGate` are "gate" in two senses — a narrowed view of the engine, and the inputs to one
-predicate — and the alternatives (`ReadonlyActionEngine`, `CanDismissOptions`) each cost more than
-the ambiguity does. `ModalRenderArgs` and `BaseRenderContext` are two words for one shape on
-purpose: the alias is the seam `SlideModalRenderContext` intersects, and "args" is right for a
-callback's parameter where "context" is right for what a template hands its render.
+Two near-misses kept on purpose, so the next pass does not re-open them: `ActionGate`/`DismissGate`
+are "gate" in two senses and the alternatives cost more than the ambiguity; `ModalRenderArgs` and
+`BaseRenderContext` are one shape under two words because the alias is the seam
+`SlideModalRenderContext` intersects.
 
 ### Where a file goes
 
@@ -124,18 +110,16 @@ convention to be remembered: [\_\_tests\_\_/binding-parity.test.ts](__tests__/bi
 diffs the two entry points' export names _and_ their module paths, so a hook added to one and
 forgotten on the other fails, and so does putting it at a different depth.
 
-**It is worth being that strict about the paths**, because the surface can be complete while the
-folders lie: `useSlideModal` was exported from `./solid` for a week from inside a combined
-`templates.ts`, and the honest reading of a `solid/` folder with no `use-slide-modal` in it was
-"Solid does not have one". A `templates/` folder on each side says the other true thing — the two
-template hooks are built _on_ `useModal`, not peers of it, and the framework-free half of them
-already lives in `src/templates/`.
+**The paths matter as much as the names**, because a surface can be complete while the folders lie: a
+`solid/` folder with no `use-slide-modal` in it reads as "Solid does not have one", whatever a
+combined `templates.ts` exports. A `templates/` folder on each side says the other true thing — the
+template hooks are built _on_ `useModal`, not peers of it, and their framework-free half lives in
+`src/templates/`.
 
-React's effects are **not** split into per-concern hook files. A `react/hooks/` folder holding
-`use-click-outside.ts` reads as a feature list that Solid is missing — which is exactly how it was
-read. Both hook bindings run the whole lifecycle through **one** deps-free call into
-[core/modal-director.ts](core/modal-director.ts), so the order is not theirs to write and the diff
-between them is scheduling.
+React's effects are **not** split into per-concern hook files: a `react/hooks/` folder holding
+`use-click-outside.ts` reads as a feature list Solid is missing. Both hook bindings run the whole
+lifecycle through **one** deps-free call into [core/modal-director.ts](core/modal-director.ts), so
+the order is not theirs to write and the diff between them is scheduling.
 
 **A test lives next to what it tests, whatever framework its harness uses.** `apply-style.ct.tsx`
 tests a core function through a React harness and belongs in `core/__tests__/`; so do the manager's
