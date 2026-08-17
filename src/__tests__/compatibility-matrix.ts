@@ -1252,6 +1252,142 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
 ];
 
+// ── Axis D — WCAG 2.2, criterion by criterion ────────────────────────────────
+//
+// The success criteria a dialog *engine* touches, mapped with the same states as everything else —
+// not a conformance claim. A headless library renders nothing, so most criteria land on the
+// caller's content; these rows say which halves are the library's, which are the platform's, and
+// which are deliberately handed over. The bar for a `works` is the same as everywhere in this
+// file: a named test proves it.
+
+/** One WCAG 2.2 success criterion, and where a headless dialog library stands on it. */
+export type WcagRow = {
+  /** The numbered criterion, e.g. `'2.1.2'`. */
+  readonly criterion: string;
+  /** Its name as the spec titles it. */
+  readonly name: string;
+  readonly level: 'A' | 'AA' | 'AAA';
+  readonly state: CellState;
+  readonly why: string;
+  readonly references?: readonly TestReference[];
+  /** An open question this row carries despite its state — see {@link Cell.caveat}. */
+  readonly caveat?: string;
+};
+
+export const WCAG_ROWS: readonly WcagRow[] = [
+  {
+    criterion: '2.1.1',
+    name: 'Keyboard',
+    level: 'A',
+    state: 'works',
+    why: 'Everything the library itself does is reachable by key: a hotkey dispatches by clicking the declaring button, so the key path and the click path are one path — running state, veto and typed close included — and the dismiss key unwinds the stack one dialog per press. The controls themselves are the caller’s markup, which is where the rest of this criterion lives.',
+    references: [
+      {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'an action hotkey runs the same path its button does',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'the dismiss key unwinds the stack one modal per press, front to back',
+      },
+    ],
+  },
+  {
+    criterion: '2.1.2',
+    name: 'No Keyboard Trap',
+    level: 'A',
+    state: 'works',
+    why: 'A modal dialog is exited by Escape through the native `cancel`, wherever focus is; a non-modal one lets Tab walk out by default, and `containFocus` — the opt-in wrap — never claims the dismiss key. Even the deliberate dead end (a modal with `dismissKey: false` in front of a panel) leaves the press travelling, so the application can still answer it.',
+    references: [
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'lets Tab walk out of it — which is what show() means',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title:
+          'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
+      },
+    ],
+  },
+  {
+    criterion: '2.2.1',
+    name: 'Timing Adjustable',
+    level: 'A',
+    state: 'n-a',
+    why: 'The library ships no timed content — nothing auto-dismisses and nothing expires. A toast that adds a timer is user-land, and the playground’s corner toast demonstrates the compliant shape: the countdown pauses on hover **and** on focus, so the keyboard user reaching the Dismiss button gets the same reprieve a pointer user does.',
+  },
+  {
+    criterion: '2.3.3',
+    name: 'Animation from Interactions',
+    level: 'AAA',
+    state: 'no-by-design',
+    why: 'Animations are defaults the caller replaces, and the off-switch is one CSS rule — `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — which the close path *measures* and short-circuits on (`checkTransitionsDisabled`), so a reduced-motion dialog closes immediately instead of waiting for a `transitionend` that never comes. The playground ships that rule; a consumer writes it once. AAA rather than AA, listed because honouring it costs one declaration.',
+  },
+  {
+    criterion: '2.4.3',
+    name: 'Focus Order',
+    level: 'A',
+    state: 'works',
+    why: 'Opening focus goes to the claim (`focusOnOpen`) or to what the platform chose, never to a dialog that is not in front; the restore after an action returns to whoever ran it; the reclaim when the stack moves prefers where the user actually was. Order inside the content is the caller’s markup, in DOM order, untouched — the library never rewrites a `tabindex`.',
+    references: [
+      {
+        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        title: 'the marked action takes the opening focus from the first focusable',
+      },
+      {
+        file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
+        title: 'a panel opening underneath does not take focus from the dialog in front',
+      },
+    ],
+  },
+  {
+    criterion: '2.4.7',
+    name: 'Focus Visible',
+    level: 'AA',
+    state: 'works',
+    why: 'Every focus move the library makes on the user’s behalf carries `focusVisible: true`, because input modality would otherwise hide it: a dialog opened by mouse inherits “pointer”, and two engines out of three draw no ring on a library-made focus. The ring itself is the page’s own `:focus-visible` styling — the library asks for it, the caller draws it.',
+    references: [
+      {
+        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        title: 'the opening focus is visibly focused, claimed or not',
+      },
+      {
+        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        title: 'the button it returns to is visibly focused, not silently',
+      },
+    ],
+  },
+  {
+    criterion: '2.4.11',
+    name: 'Focus Not Obscured (Minimum)',
+    level: 'AA',
+    state: 'no-by-design',
+    why: 'A modal dialog cannot produce the failure: focus is inside it and the top layer paints above everything. The case that can arise is a **non-modal** panel positioned by the caller over the page element that holds focus — and placement is deliberately user-land (`dialogPlacement` is a table of CSS the caller applies), so the guarantee is the caller’s. The library’s half: it never moves focus underneath a panel (the foreground rules decline), and the panel stays dismissible from wherever focus is through the window-level dismiss key.',
+  },
+  {
+    criterion: '4.1.2',
+    name: 'Name, Role, Value',
+    level: 'A',
+    state: 'works',
+    why: 'The name is relayed and never invented (`aria-label=""` is refused), the role is a closed union that narrows with the variant, `aria-busy` is owned and written both ways, and the hotkey a button advertises through `aria-keyshortcuts` is the exact string dispatch queries — value and behaviour cannot drift apart. The labelling diagnostic reports the three ways the element can still end up lying.',
+    references: [
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: '`ariaLabel` names the dialog for assistive technology',
+      },
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'aria-busy clears when prepare settles',
+      },
+      {
+        file: 'src/core/__tests__/action-factory.test.ts',
+        title: 'carry the ARIA spelling of the hotkey, not the string as written',
+      },
+    ],
+  },
+];
+
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
 const SYMBOL: Record<CellState, string> = {
@@ -1344,6 +1480,20 @@ export function renderMatrix(): string {
   for (const row of PLATFORM_ROWS) {
     lines.push(`| ${escapeCell(row.fact)} | ${SYMBOL[row.state]} | ${escapeCell(row.why)} |`);
   }
+  lines.push('');
+
+  lines.push('### WCAG 2.2, criterion by criterion', '');
+  lines.push(
+    'The success criteria a dialog *engine* touches, in the same vocabulary as everything above — not a conformance claim. A headless library renders nothing, so most criteria land on the caller’s content; these rows say which halves are the library’s, which are the platform’s, and which are deliberately handed over. A ✓ here meets the same bar as everywhere else in this table: a named test proves it.'
+  );
+  lines.push('');
+  lines.push('| Criterion | Level | | Where the library stands |');
+  lines.push('| --- | --- | --- | --- |');
+  for (const row of WCAG_ROWS) {
+    lines.push(
+      `| ${row.criterion} ${escapeCell(row.name)} | ${row.level} | ${SYMBOL[row.state]} | ${escapeCell(row.why)} |`
+    );
+  }
 
   return lines.join('\n');
 }
@@ -1402,6 +1552,16 @@ export function worklist(): string[] {
     }).map((row) => {
       return `? (${SYMBOL[row.state]})  ${row.fact}: ${row.caveat ?? ''}`;
     }),
+    ...WCAG_ROWS.filter((row) => {
+      return open(row.state);
+    }).map((row) => {
+      return `${SYMBOL[row.state]}  WCAG ${row.criterion} ${row.name}`;
+    }),
+    ...WCAG_ROWS.filter((row) => {
+      return row.caveat !== undefined;
+    }).map((row) => {
+      return `? (${SYMBOL[row.state]})  WCAG ${row.criterion} ${row.name}: ${row.caveat ?? ''}`;
+    }),
   ];
 }
 
@@ -1432,6 +1592,9 @@ export function allReferences(): readonly {
     }),
     ...PLATFORM_ROWS.flatMap((row) => {
       return spread(row.fact, row.references);
+    }),
+    ...WCAG_ROWS.flatMap((row) => {
+      return spread(`WCAG ${row.criterion} ${row.name}`, row.references);
     }),
   ];
 }

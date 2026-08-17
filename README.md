@@ -86,7 +86,9 @@ yours and outlives the controller.
 The accessible half of a dialog is mostly the platform's, and the library's job is to keep it
 intact — then hand you the one lever only you hold, and refuse the ones that would lie. Every
 claim below is a cell in the compatibility matrix ([API.md → Compatibility](API.md#compatibility)),
-where each cites the test that proves it on which engine and which binding.
+where each cites the test that proves it on which engine and which binding — including a
+**WCAG 2.2 chapter**, criterion by criterion, that says which halves are the library's and which
+are deliberately yours.
 
 - **Native `<dialog>`, natively modal.** `showModal()` puts the dialog in the top layer and makes
   the rest of the document inert, and that is what assistive technology is told — the library never
