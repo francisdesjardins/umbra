@@ -1,6 +1,8 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
 import {
+  EditableContentHarness,
+  EditableOnlyHarness,
   FocusContainmentHarness,
   FramedContentHarness,
   HiddenStopHarness,
@@ -168,6 +170,43 @@ test.describe('what counts as a stop', () => {
     await page.keyboard.press('Shift+Tab');
 
     expect(await focused(page)).toBe('inside-last');
+  });
+
+  test('a contenteditable region is a stop, and the wrap lands on it', async ({ mount, page }) => {
+    // An editable region is a Tab stop with no `tabindex`, no `href` and no control tag, so a
+    // selector made of those never proposes it. Discriminating on every engine: with the editor
+    // missing from the scan, the wrap's only candidate is `inside-first` and focus is handed
+    // straight back to where the press started.
+    const component = await mount(<EditableContentHarness />);
+    await component.getByTestId('open').click();
+    await expect(page.locator('dialog[data-modal-id="focus-containment-editable"]')).toBeVisible();
+
+    await page.getByTestId('inside-first').focus();
+    await page.keyboard.press('Shift+Tab');
+
+    expect(await focused(page)).toBe('editor-surface');
+  });
+
+  test('a dialog whose only stop is an editor still gets the Tab recovery', async ({
+    mount,
+    page,
+  }) => {
+    // The worst case of the same miss, on the unconditional half rather than the wrap: a
+    // dead-space click puts focus on the `<dialog>` element, and with nothing the scan can find
+    // the recovery declines the press. Chromium and Firefox descend on their own; WebKit does
+    // not, and the keyboard is stuck on the element — the exact bug the recovery exists to fix.
+    const component = await mount(<EditableOnlyHarness />);
+    await component.getByTestId('open').click();
+    await expect(
+      page.locator('dialog[data-modal-id="focus-containment-editable-only"]')
+    ).toBeVisible();
+
+    await page.getByTestId('dead-space').click();
+    expect(await focused(page)).toBe('modal-focus-containment-editable-only');
+
+    await page.keyboard.press('Tab');
+
+    expect(await focused(page)).toBe('editor-surface');
   });
 });
 

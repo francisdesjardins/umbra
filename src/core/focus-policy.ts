@@ -45,13 +45,26 @@ const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
  */
 export const SHOW_THE_RING: FocusOptions = { focusVisible: true };
 
-/** Everything Tab can stop on, in document order — the same set the browser walks. */
+/**
+ * Everything Tab can stop on, in document order — the same set the browser walks.
+ *
+ * The scan below forgives a false positive (a candidate that refuses focus costs one step), but a
+ * kind this list does not name is never tried at all — a dialog whose only stop was a
+ * `contenteditable` editor had no recovery, no wrap destination and no reclaim floor, which is why
+ * the list errs wide. Kept private on purpose: one source, no userland override, so the door to a
+ * configurable set stays openable without a refactor.
+ */
 const FOCUSABLE = [
   'a[href]',
+  'area[href]',
   'button:not([disabled])',
   'input:not([disabled])',
   'select:not([disabled])',
   'textarea:not([disabled])',
+  '[contenteditable]:not([contenteditable="false"])',
+  'audio[controls]',
+  'video[controls]',
+  'summary',
   'iframe',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');

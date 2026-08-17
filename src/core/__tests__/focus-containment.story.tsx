@@ -247,6 +247,106 @@ export function HiddenStopHarness() {
 }
 
 /**
+ * A panel whose far end is a `contenteditable` editor — a stop no form-control selector names.
+ *
+ * An editable region is a Tab stop the browser walks to without `tabindex`, `href` or a control
+ * tag, so a scan built from those alone never proposes it: the wrap from the first stop had
+ * nowhere to land and handed focus straight back to where it started, with the containment
+ * looking present the whole time.
+ */
+export function EditableContentHarness() {
+  const modal = useModal({
+    id: 'focus-containment-editable',
+    nonModal: true,
+    containFocus: true,
+    ariaLabel: 'Panel with an editor',
+    render: () => {
+      return (
+        <>
+          <button data-testid="inside-first" type="button">
+            First
+          </button>
+          <div
+            contentEditable
+            data-testid="editor-surface"
+            style={{ minHeight: 40 }}
+            suppressContentEditableWarning
+          >
+            Type here
+          </div>
+        </>
+      );
+    },
+  });
+
+  return (
+    <>
+      <button data-testid="outside" type="button">
+        Outside
+      </button>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void modal.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      {modal.Modal}
+    </>
+  );
+}
+
+/**
+ * A dialog whose **only** focusable content is a `contenteditable` editor.
+ *
+ * The worst case of the same miss: with nothing else for the scan to find, the unconditional Tab
+ * recovery had nothing to move to — on WebKit, which does not descend from a focused `<dialog>`
+ * element on its own, that is a keyboard stuck on the element with only the mouse to free it. No
+ * `containFocus`, deliberately: the recovery is the unconditional half and must not need the flag.
+ */
+export function EditableOnlyHarness() {
+  const modal = useModal({
+    id: 'focus-containment-editable-only',
+    nonModal: true,
+    ariaLabel: 'Editor panel',
+    render: () => {
+      return (
+        <>
+          <div
+            contentEditable
+            data-testid="editor-surface"
+            style={{ minHeight: 40 }}
+            suppressContentEditableWarning
+          >
+            Type here
+          </div>
+          <p data-testid="dead-space" style={{ height: 80 }}>
+            Nothing to focus here.
+          </p>
+        </>
+      );
+    },
+  });
+
+  return (
+    <>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void modal.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      {modal.Modal}
+    </>
+  );
+}
+
+/**
  * A modal with a **non-modal panel opened inside it**, which is where the Tab recovery's scan can
  * meet a dialog that is not its own.
  *
