@@ -3,41 +3,25 @@ import type { DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
 
-// The model a binding instantiates, and the reason the two knobs below exist at all.
-//
-// Everything a dialog *is* — its phases, its close result, its options, what its render callback
-// is handed — is the same in every framework. Two things are not: the type of a style object and
-// the type of a rendered node. So those are type parameters with framework-free defaults, and a
-// binding pins them once: `src/react/types.ts` says `CSSProperties` and `ReactNode`,
-// `src/solid/types.ts` says `DialogStyle` and Solid's `JSX.Element`. Nothing else is duplicated,
-// and a third binding is two aliases and a renderer.
+// The model a binding instantiates. Only the style-object and rendered-node types vary per
+// framework, so they are type parameters with framework-free defaults that each binding pins once
+// (`src/react/types.ts`, `src/solid/types.ts`); a third binding is two aliases and a renderer.
 
 // ── Close Results ─────────────────────────────────────────────────────────────
 
 /**
  * Result of a modal close: the reason, plus the payload if the modal declares one.
  *
- * `TData` defaults to `void`, which makes `data` an unusable `void | undefined` — you cannot
- * assign it to anything — so the default surface is effectively `{ reason }` while the type
- * stays a plain object rather than a conditional.
- *
- * That is deliberate. A conditional here is opaque to the checker: nothing can be *assigned*
- * to `CloseResult<TData>` while `TData` is still a type parameter, so every generic boundary
- * the result crosses — the store, the resolver queue, `onClose` — would need an assertion to
- * get past it. A shape the compiler can see through is what lets `TData` flow from
- * `useModal<TData>()` to `handle.close()` and back out of `openAndWait()` with no casts.
+ * A plain object, not a conditional: the `void` default makes `data` unusable anyway, and a
+ * conditional is opaque at every generic boundary the result crosses (store, resolver queue,
+ * `onClose`) — this shape lets `TData` flow from `useModal` to `openAndWait` with no casts.
  */
 export type CloseResult<TData = void, TReason extends string = string> = {
   /**
-   * Why it closed: an action's reason, or `'dismiss'` — which the library itself produces on
-   * Escape, backdrop click and teardown, so it is always possible regardless of `TReason`.
-   *
-   * The two are disjoint wherever `TReason` is declared: no action may be *named* `'dismiss'`, so
-   * this field carrying it means nobody acted. Left at the `string` default there is nothing for
-   * `ActionReason`'s `Exclude` to remove, and the engine warns at declaration instead — one more
-   * reason to declare the union. See {@link DismissReason}.
-   *
-   * Declare a union on `useModal` and this narrows to it, making a `switch` here exhaustive.
+   * Why it closed: an action's reason, or `'dismiss'` (Escape, backdrop click, teardown — always
+   * possible regardless of `TReason`). No action may be *named* `'dismiss'`, so this carrying it
+   * means nobody acted; declare a union on `useModal` to narrow it and make a `switch` exhaustive
+   * (at the `string` default the engine can only warn at declaration). See {@link DismissReason}.
    */
   readonly reason: TReason | DismissReason;
   /** The payload, when the modal declares one. */

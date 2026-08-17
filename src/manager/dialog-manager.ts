@@ -1,7 +1,5 @@
-// The plain barrel: `../store` is framework-free, its React bindings living in
-// `../store/react`. This module is the root of an entry point that must resolve without React,
-// and that separation is what makes the import structural rather than dependent on Rollup
-// tree-shaking unused re-exports back out. Pinned by __tests__/entry-isolation.test.ts.
+// `../store` is the framework-free barrel (React bindings live in `../store/react`); this entry
+// must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
@@ -18,48 +16,30 @@ import type {
 } from './types.js';
 
 /**
- * What the manager needs from a modal store — a port, declared as the requirement rather than
- * derived from `ModalStore`. The manager is the framework-agnostic side of the boundary and
- * `createModalStore` is one implementation of it; a second binding supplies its own. Contrast
- * `finalize-close.ts`, which is an internal helper always handed the real store and so takes a
- * `Pick<ModalStore, …>`: that one is a narrowing of a known type, this one is a contract.
- *
- * The *snapshot* is a different matter. It is shared vocabulary, so it is the real
- * `ModalStoreSnapshot` instead of a restatement that could quietly disagree with it — the
- * manager reads `closeResult.reason` off it to emit close events.
+ * The manager's port onto a modal store — declared as the requirement, not derived from
+ * `ModalStore` (contrast `finalize-close.ts`, which narrows the real store). The snapshot stays
+ * the shared `ModalStoreSnapshot` so the manager can read `closeResult.reason` off it.
  */
 type RegisteredStore = {
-  /**
-   * Start opening, unconditionally — a state transition, not a request. Named apart from
-   * {@link DialogManager.requestOpen} on purpose: that one asks an owner who may refuse, this
-   * one cannot be refused, and `open(id)` calls it precisely because it cannot.
-   */
+  /** Unconditional state transition — unlike {@link DialogManager.requestOpen} it cannot be refused, which is why `open(id)` calls it. */
   readonly beginOpen: () => void;
   // A method, not a property: a modal that narrows its reasons still satisfies the port.
   close(reason: string): boolean;
   readonly subscribe: (listener: () => void) => () => void;
   readonly getSnapshot: () => ModalStoreSnapshot;
   /**
-   * Register a one-shot resolver for the next close, so `requestOpenAndWait` can hand back the
-   * close of a dialog it does not own. The port grows because the manager genuinely needs it:
-   * `subscribe` reports *that* a close happened, and an awaiting caller needs the result.
-   *
-   * Erased at `unknown`, not at the modal's `TData`, and for two reasons that agree. A callback
-   * in a parameter position is checked contravariantly — the same trap `runOnClose` exists to
-   * avoid — so a resolver typed at `TData` would make `ModalStore<TData>` unassignable to this
-   * port. And the honest type is `unknown` anyway: the registry is keyed by string, so nothing
-   * here knows what a given modal closes with, exactly as with {@link OpenRequest.payload}.
+   * One-shot resolver for the next close, so `requestOpenAndWait` can hand back the close of a
+   * dialog it does not own. Erased at `unknown`: a parameter-position callback is checked
+   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable — and the
+   * string-keyed registry cannot know `TData` anyway, as with {@link OpenRequest.payload}.
    */
   readonly addCloseResolver: (resolve: (result: AwaitedClose<unknown>) => void) => void;
 };
 
 /**
- * What a caller says about itself when asking a dialog it does not own to open.
- *
- * Every field is a **claim**, in the sense an HTTP `Referer` is a claim: it travels with the
- * request, it is useful, and nothing anywhere verified it. A dialog deciding on this is deciding
- * on what the caller chose to say — which is fine for routing and for logs, and is not a security
- * boundary. Treat it the way you would treat the body of a `postMessage`.
+ * What a caller says about itself when asking a dialog it does not own to open. Every field is a
+ * claim in the HTTP-`Referer` sense — useful for routing and logs, verified by nothing, not a
+ * security boundary; treat it like the body of a `postMessage`.
  */
 export type OpenRequestContext = {
   /** Who says it is asking — a microfrontend name, a feature, a route. */

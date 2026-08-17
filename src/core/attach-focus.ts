@@ -13,12 +13,9 @@ import type { FocusCoordinatorOptions, ModalDomContext } from './attach-types.js
 import type { ModalPhase } from './types.js';
 
 /**
- * The scheduling half of the focus policy — where the decisions in `focus-policy.ts` are asked.
- *
- * A coordinator rather than a bare `attach*` function because one thing has to outlive a single
- * attachment: where the opening focus landed. It is read when an action settles, which can be
- * several phase changes later, so it lives on the coordinator while everything else lives inside
- * the attachment it belongs to.
+ * The scheduling half of the focus policy — where `focus-policy.ts`'s decisions are asked. A
+ * coordinator rather than an `attach*` function because where the opening focus landed must
+ * outlive one attachment: it is read when an action settles, phases later.
  *
  * @internal Not part of the public API.
  */
@@ -31,34 +28,20 @@ export function createFocusCoordinator(
 
   let openingFocus: HTMLElement | null = null;
   /**
-   * Whether the opening focus has been decided for this open — including the decision *not* to
-   * take it. `openingFocus` cannot carry that: `null` is also what a dialog with nothing to focus
-   * records, and the two would be indistinguishable on the next pass.
+   * Whether the opening focus has been decided, including the decision *not* to take it —
+   * `openingFocus` cannot carry that, since `null` is also "nothing to focus".
    */
   let settled = false;
   /**
-   * The last element inside the dialog to take focus, remembered as it happens.
-   *
-   * Reading `activeElement` when the engine reports a running action is a subscriber-order bet: it
-   * loses wherever a binding writes `disabled` from its own synchronous engine subscriber, which
-   * `umbra/vanilla` does — its `bindAction` subscribes ahead of this coordinator, since the caller
-   * binds actions after `bindDialog` returns. The browser blurs a disabled element, so the read
-   * finds nothing and the retry lands on the dialog. `focusin` fires when focus arrives, before
-   * any of it, and cannot lose that race.
+   * The last element inside to take focus, remembered from `focusin` rather than read at action
+   * start: a binding that disables its button from its own synchronous engine subscriber
+   * (`umbra/vanilla` does) blurs the element before this coordinator could read it.
    */
   let lastFocusInside: HTMLElement | null = null;
   /**
-   * The last control inside the dialog to be *activated*, which is a different question from
-   * which was last focused, and on WebKit the only one with a useful answer.
-   *
-   * **WebKit does not focus a `<button>` when it is clicked.** Measured across all three engines:
-   * click a button while another holds focus and `document.activeElement` is the button on
-   * Chromium and Firefox, and `<body>` — or, inside a modal, the `<dialog>` — on WebKit. That is a
-   * platform convention rather than a bug, and it leaves neither of the other two reads able to
-   * name the button that ran an action: `activeElement` never held it and `focusin` never fired,
-   * so both answer with whatever had focus *before* the press.
-   *
-   * A `click` names it on every engine, which is why this sits between them.
+   * The last control *activated*, which is the only useful answer on WebKit: it does not focus a
+   * clicked `<button>`, so neither `activeElement` nor `focusin` can name what ran the action —
+   * both answer with whatever held focus before the press. A `click` names it on every engine.
    */
   let lastActivated: HTMLElement | null = null;
 
@@ -69,10 +52,8 @@ export function createFocusCoordinator(
      * Call it whenever the phase changes, tearing down the previous attachment first.
      */
     sync(phase: ModalPhase): (() => void) | undefined {
-      // Clear on close so the next open starts fresh — after the floor, which is the one read
-      // that still wants this open's memory. By this pass `close()` has run and the platform's
-      // own restore has had its turn, so a keyboard still on `<body>` here is one the close
-      // stranded, and it goes back to whoever held it before the open. See `restoreOpenerFocus`.
+      // Clear on close, but after the floor: by this pass the platform's own restore has had its
+      // turn, so a keyboard still on `<body>` is one the close stranded. See `restoreOpenerFocus`.
       if (phase === 'closed') {
         const dialog = getDialog();
         if (dialog) {
@@ -85,23 +66,10 @@ export function createFocusCoordinator(
         return undefined;
       }
 
-      // Settle the opening focus once the dialog is fully open, and remember where it landed —
-      // reading the active element is reliable here, because `showModal()` fires autofocus
-      // synchronously before a binding's effects run.
-      //
-      // Unless something else is in front. A dialog opening *underneath* another is not what the
-      // user is looking at, and taking the keyboard from what they are looking at is the worst
-      // thing an opening can do: the dialog in front is left with no focus, so its own keydown
-      // listener hears nothing and its dismiss key goes dead. Reported from an application — a
-      // connection error in the top layer, focused on its cancel button, losing the focus the
-      // instant a side panel opened behind it.
-      //
-      // Asked of the manager rather than of the DOM, because the question is which dialog is in
-      // front rather than which element is where, and the manager is the one that knows — modal
-      // before non-modal, then whatever policy is installed.
-      //
-      // Declining is all this does. Putting the focus back is the front dialog's own business, and
-      // the watcher below is where it does it.
+      // Settle the opening focus once open — unless something else is in front, since a dialog
+      // opening *underneath* another would leave the one the user is looking at with no focus and
+      // so no dismiss key. Asked of the manager, which is what knows the order; declining is all
+      // this does, and the watcher below puts focus back.
       if (phase === 'open' && !settled) {
         const dialog = getDialog();
         if (dialog) {
@@ -110,18 +78,14 @@ export function createFocusCoordinator(
         }
       }
 
-      // Subscribe directly to the action state changes so focus restoration fires on every
-      // hasRunningAction transition regardless of whether the binding re-renders. `wasRunning`
-      // and `runner` are local to this attachment: they only need to survive between successive
-      // check() calls within one, not across them.
+      // Subscribed to the engine so the restore fires on every `hasRunningAction` transition
+      // whether or not the binding re-renders; both flags are per-attachment.
       let wasRunning = false;
       let runner: HTMLElement | null = null;
       let frame = 0;
 
-      // The engine notifies synchronously, so at that instant the button that just ran is still
-      // rendered `disabled` and cannot take focus. A frame later the binding has committed the
-      // idle state and the button is focusable again — which is the difference between the
-      // hotkey working on the retry and the modal answering to nothing but the mouse.
+      // A frame later, because the engine notifies synchronously while the button is still
+      // `disabled` and cannot take focus.
       const scheduleRestore = () => {
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(() => {
@@ -129,18 +93,10 @@ export function createFocusCoordinator(
           if (!dialog?.open) {
             return;
           }
-          // **Not while something else is in front**, which is the same rule the reclaim below
-          // states and for the same reason: the user is looking at the dialog on top, and an action
-          // settling *underneath* it has no claim on their keyboard. A save started before a second
-          // modal opened lands a frame later and would otherwise pull focus out of whatever they
-          // have since typed into.
-          //
-          // It is a guard rather than an assumption because the platform only *sometimes* makes it
-          // one. A modal dialog in the top layer renders everything behind it inert, so in Chromium
-          // this `focus()` is a silent no-op and the rule looks like it holds for free. WebKit lets
-          // it through, and the focus really moves — which is how CI found this: the same assertion,
-          // green on one engine and red on another, because the library was relying on an
-          // inertness it never asked for.
+          // Not while something else is in front: an action settling *underneath* the dialog the
+          // user is looking at has no claim on their keyboard. A guard rather than an assumption —
+          // Chromium's top-layer inertness makes this `focus()` a silent no-op, WebKit lets it
+          // through, and CI found the difference.
           if (!manager.lookup().isForeground(modalId)) {
             return;
           }
@@ -175,9 +131,7 @@ export function createFocusCoordinator(
           return;
         }
         if (wasRunning) {
-          // Action just completed (running → idle transition). Restore focus unconditionally —
-          // covers both async (focus escaped) and sync throws (focus stays on the throwing
-          // button inside the dialog).
+          // Unconditional on running → idle: covers the async escape and the sync throw alike.
           wasRunning = false;
           scheduleRestore();
           return;
@@ -190,10 +144,8 @@ export function createFocusCoordinator(
 
       const unsubscribe = engine.subscribe(check);
 
-      // Remember focus as it arrives. Scoped with `isOwnEventTarget` for the same reason the
-      // keydown listener is: a modal opened from inside this one renders its `<dialog>` in this
-      // subtree, and `focusin` bubbles — without this, the modal underneath would restore focus
-      // to a button belonging to the modal above it.
+      // Remember focus as it arrives, scoped with `isOwnEventTarget`: `focusin` bubbles, and a
+      // nested modal renders in this subtree, so the one underneath would restore to its button.
       let stopRemembering: (() => void) | undefined;
       const watched = getDialog();
       if (watched) {
@@ -207,15 +159,9 @@ export function createFocusCoordinator(
             lastFocusInside = target;
           }
         };
-        // Same scoping, same reason. `closest` because the press often lands on a label or an
-        // icon inside the control; a click on nothing activatable clears this, which is correct
-        // rather than careless.
-        //
-        // **Capture**, and that is load-bearing. The action runs from the button's own handler
-        // and the engine notifies synchronously, so a bubbling listener on the dialog would not
-        // hear the click until after the restore target had been chosen. Capture runs downwards,
-        // ahead of the target — which covers `umbra/vanilla` binding natively to the button, and
-        // React dispatching from the root container above the dialog.
+        // `closest` because the press often lands on a label or icon inside the control. Capture
+        // is load-bearing: the engine notifies synchronously from the button's own handler, so a
+        // bubbling listener would hear the click after the restore target had been chosen.
         const rememberActivation = (event: Event) => {
           const { target } = event;
           lastActivated =
@@ -233,26 +179,11 @@ export function createFocusCoordinator(
 
       // ── Taking the focus back when the stack moves ────────────────────────
       //
-      // **Every dialog answers for its own focus.** The alternative was tried: the dialog *opening
-      // underneath* reached across and settled the focus back onto whichever dialog the manager
-      // named as the front one. Three things were wrong with it, and they are the three findings
-      // this replaces. It had to find that dialog's element with a
-      // `document.querySelector('dialog[data-modal-id=…]')` — the one lookup this library documents
-      // as broken, because it finds nothing inside a shadow root and can hit another manager's
-      // dialog of the same id. It re-honoured the front dialog's `focusOnOpen` rather than the
-      // position focus was actually in, so a caret in a text field became a ring on the primary
-      // button. And it only ran on an *opening*, so the mirror case had nobody in it at all: when
-      // the front dialog closed, the dialog left behind had declined its opening focus, was now the
-      // one in front, and nothing ever gave it the keyboard.
-      //
-      // Watching the manager answers all three at once. The dialog that needs the focus is the one
-      // asking for it, so it has its own element and its own memory of where focus was, and it
-      // hears *every* way the stack can move — an open, a close, a `prioritize` raise — rather than
-      // only the one the other dialog happened to notice.
-      //
-      // The snapshot changes on dialog transitions and on nothing else, which is what makes this
-      // safe to act on: a user clicking the page behind a panel does not reach here, so the focus is
-      // only ever taken back when the stack really did move under it.
+      // Every dialog answers for its own focus, by watching the manager: it owns its element (no
+      // `document.querySelector`, which finds nothing in a shadow root), it remembers where focus
+      // actually was rather than re-honouring `focusOnOpen` over a caret, and it hears every way
+      // the stack moves — including the close that leaves it in front. The snapshot changes on
+      // dialog transitions and nothing else, so a click on the page behind never reaches here.
       let stopWatchingStack: (() => void) | undefined;
       if (phase === 'open') {
         const reclaimIfInFront = () => {
@@ -262,24 +193,18 @@ export function createFocusCoordinator(
           }
           const info = manager.lookup(modalId);
           if (!info.isForeground || (info.exists && info.nonModal)) {
-            // **Modal only, and that is a rule rather than a shortcut.** A non-modal dialog does not
-            // own the page's focus and never did — the page underneath it is live, and a panel that
-            // yanked the keyboard back every time some other dialog opened or closed would be taking
-            // something the page did not agree to give. It does not need to: its dismiss key comes
-            // from `attachWindowDismissKey`, which answers wherever focus is. A modal dialog has no
-            // such listener — its keydown is scoped to itself and only Escape survives focus being
-            // elsewhere, through the native `cancel` — so for that one, focus is the keyboard.
+            // Modal only, as a rule: a non-modal panel never owned the page's focus, and its
+            // dismiss key comes from `attachWindowDismissKey`, which answers wherever focus is. A
+            // modal has no such listener — its keydown is scoped to itself — so focus is its
+            // keyboard.
             return;
           }
           if (dialog.contains(activeWithin(dialog))) {
-            // Focus is already ours, so there is nothing to take back — but note that "ours" is not
-            // "where the user was". A `prioritize` raise re-shows this dialog, and `showModal()` then
-            // puts focus on its first focusable, *inside* it; that satisfies this guard, so a position
-            // moved by a raise is not corrected and a caret is lost. The memory below would be the
-            // right answer, except the raise's own `showModal()` fires a `focusin` that overwrites it
-            // first. Fixing it means ignoring focus the library itself moves during a raise, which
-            // needs a window `raiseDialog` can publish and this can read. Pinned as a known limit by
-            // "keeps the keyboard when something opens over it" in `vanilla/__tests__/bind-dialog.ct.tsx`.
+            // Ours already — though "ours" is not "where the user was": a raise re-shows the
+            // dialog and `showModal()` focuses its first control, satisfying this guard and losing
+            // a caret. Fixing it needs a window `raiseDialog` publishes and this reads, so the
+            // raise's own `focusin` stops overwriting the memory. Known limit, pinned by "keeps
+            // the keyboard when something opens over it" in `vanilla/__tests__/bind-dialog.ct.tsx`.
             return;
           }
           openingFocus = reclaimFocus(dialog, lastFocusInside) ?? openingFocus;
