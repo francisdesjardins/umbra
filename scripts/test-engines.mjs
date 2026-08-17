@@ -3,7 +3,10 @@
 // (`cpus/2` wide locally), which made the suite flaky. Measured — 8 workers 2/3 red, `--workers=4`
 // 1/3 red and 40% slower, the same tests `--repeat-each=20` 180/180 green, one engine at a time
 // 1/21 red and no slower — so neither worker count nor the assertions. CI never saw it because CI
-// runs one engine per job. Retries stay at zero: green without trustworthy is worth nothing.
+// runs one engine per job. Retries stay at zero **locally**, where this arrangement is the whole
+// defence: green without trustworthy is worth nothing, and a local retry would hide exactly what
+// splitting the engines exposes. CI sets 2, against one worker rather than `cpus/2` — a different
+// bargain, since a job that is not competing for the machine has no contention to retry through.
 //
 // Spawned without a shell (DEP0190: `shell: true` concatenates arguments instead of escaping them),
 // so `yarn test:component --grep "a prepare that throws"` reaches the child as one argument with no
