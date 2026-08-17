@@ -29,10 +29,21 @@ const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
  *
  * `focusVisible: true` overrides the heuristic, and does so on all three.
  *
- * **Only where the library chose the target.** A restore after an action goes back to the control
- * the user just pressed, so forcing a ring there would paint one on every mouse-driven action.
+ * **The restore after an action needs it for the same reason**, which is not obvious: the button
+ * is `disabled` while its action runs, the browser blurs a disabled element, and focus is on
+ * `<body>` by the time the action settles. So putting it back is a move the library makes from
+ * nowhere — not a continuation of the click, which ended several hundred milliseconds earlier.
+ * Without the ring a failed action reads as a dialog that lost the keyboard, and the retry the
+ * docs promise is under a hand that cannot see it.
+ *
+ * **Where it does *not* belong**, so the next reader does not add it for symmetry: a hotkey's
+ * `clickHotkeyButton` runs from a keydown, so the modality is already keyboard and this is a
+ * no-op; and `restoreFocus`'s last-resort `dialog.focus()` targets the element, which takes no
+ * ring at all.
+ *
+ * @internal
  */
-const SHOW_THE_RING: FocusOptions = { focusVisible: true };
+export const SHOW_THE_RING: FocusOptions = { focusVisible: true };
 
 /** Everything Tab can stop on, in document order — the same set the browser walks. */
 const FOCUSABLE = [
@@ -234,7 +245,7 @@ export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLEleme
  * @internal
  */
 export function restoreFocus(dialog: HTMLDialogElement, preferred: HTMLElement | null): void {
-  (preferred ?? dialog).focus();
+  (preferred ?? dialog).focus(SHOW_THE_RING);
   if (!dialog.contains(activeWithin(dialog))) {
     dialog.focus();
   }

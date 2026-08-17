@@ -159,20 +159,15 @@ const KEYS_BY_LOWERCASE = new Map(
 /**
  * Read a hotkey out of a string, or `undefined` when the string is not one.
  *
- * **The inverse the library was missing.** Three functions turn a `HotkeyDef` into text — a label,
- * an `aria-keyshortcuts` value, a match against an event — and nothing turned text back into a
- * `HotkeyDef`. That is fine while every shortcut is written in the source, where the closed union
- * makes `'Escpae'` a compile error. It stops being fine the moment shortcuts arrive as *data*: a
- * configuration file, a user preference, a value from a server, a string handed over by another
- * library whose own type is `string`. Without a parser the only crossings are an unchecked cast —
- * which throws the union's guarantee away exactly where the input is least trustworthy — or a
- * hand-rolled validator per call site.
+ * **For shortcuts that arrive as data** — a configuration file, a user preference, a value from a
+ * server, another library whose own type is `string`. In source the closed union makes `'Escpae'`
+ * a compile error; crossing that boundary without a parser means an unchecked cast exactly where
+ * the input is least trustworthy, or a hand-rolled validator per call site.
  *
  * Nothing is asserted here. The key is *found* in `Key`, so it carries that table's type out with
  * it, and each modifier arrangement is rebuilt from literal pieces. What cannot be built is
  * rejected: the union names fourteen shapes and not every subset of the four modifiers, so
- * `'Alt+Shift+Meta+a'` parses as far as its parts and then returns `undefined` rather than
- * inventing a type that does not exist.
+ * `'Alt+Shift+Meta+a'` returns `undefined` rather than inventing a type that does not exist.
  *
  * Case is not significant, matching the type's own rule: `'ctrl+s'`, `'Ctrl+S'` and `'CTRL+s'` are
  * one hotkey, and the canonical spelling comes back out.

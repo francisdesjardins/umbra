@@ -8,16 +8,13 @@ import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-director.js';
  * The order the shared lifecycle is wired in, and who is allowed to write it down.
  *
  * **Why this exists.** Every framework-free piece of this library is a decision — `canDismiss`,
- * `orderStack`, `chooseActionRunner` — and each is tested. The *sequence* those decisions are
- * asked in is a decision too, and it was the one thing written three times and asserted nowhere.
- * The bug that prompted this was one layer down: a focus policy that existed only as the order of
- * statements someone happened to write, with no name and no test, wrong for two years on an engine
- * nobody ran.
+ * `orderStack`, `chooseActionRunner` — and each is tested. The *sequence* they are asked in is a
+ * decision too, and an unnamed one is a decision no test can reach: the focus-policy bug one layer
+ * down existed only as the order of statements someone happened to write.
  *
- * **Most of what this file used to check is now the compiler's job.** The hook bindings do not
- * wire the steps any more — `core/modal-director.ts` does, once, and `MODAL_LIFECYCLE_SEQUENCE` is
- * *derived* from the table that runs them, so there is no second statement of the order to drift
- * from the first. What is left here is the part a type cannot hold:
+ * **Most of the order is the compiler's job now.** `core/modal-director.ts` wires the steps once
+ * and `MODAL_LIFECYCLE_SEQUENCE` is *derived* from the table that runs them, so there is no second
+ * statement to drift from the first. What is left here is the part a type cannot hold:
  *
  * 1. the sequence is what this file records, so reordering the director is a deliberate edit;
  * 2. no hook binding wires a step behind the director's back;

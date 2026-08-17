@@ -11,13 +11,12 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * and asked for with `containFocus`.
  *
  * **Two behaviours, and only one of them is optional.** The *wrap* is what `containFocus` asks
- * for. The `keydown` that recovers a Tab pressed while focus is on the `<dialog>` element itself
- * is **unconditional**: a click on a panel's empty space produces exactly that, and from there
- * WebKit does not move Tab into the content — it swallows the press and the keyboard is stuck on
- * the element, mouse-only, modal or otherwise. Chromium and Firefox descend. Behind the flag, an
- * ordinary click cost the keyboard on WebKit in every dialog that had not opted into an option
- * that reads as being about something else. Measured on all three engines; see
- * `focus-containment.ct.tsx`.
+ * for. The `keydown` recovering a Tab pressed while focus is on the `<dialog>` element itself is
+ * **unconditional**, because a click on a panel's empty space produces exactly that and the
+ * markers below cannot see it: from there WebKit swallows the press and the keyboard is stuck on
+ * the element, mouse-only, modal or otherwise, where Chromium and Firefox descend. Gating it would
+ * cost the keyboard on WebKit in every dialog that had not opted into an option about something
+ * else. Measured on all three engines; see `focus-containment.ct.tsx`.
  *
  * **Two focusable markers, not a computed boundary.** The obvious implementation answers `Tab` on
  * the dialog and compares the focused element against the last of its tab stops. It is wrong twice
@@ -41,10 +40,6 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * focus wraps to the other end. From outside — `showModal()`'s own opening focus, or a Tab
  * arriving from the page — it means they are coming *in*, and focus goes to the near end instead.
  * Without that distinction a modal dialog would open with its last control focused.
- *
- * **One press the markers cannot see**, and it is the ordinary one: a click on the panel's empty
- * space leaves focus on the `<dialog>` itself, from where Tab may skip the whole subtree. That
- * single case is answered by a `keydown` on the element, and only when it is the element's own.
  *
  * Nothing is rendered: the markers are zero-sized, carry no text and no role, and are removed on
  * teardown. A binding calls this and passes nothing but the flag.

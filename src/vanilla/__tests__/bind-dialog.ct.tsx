@@ -614,18 +614,34 @@ test.describe('a shadow-root dialog in a stack', () => {
     // `prioritize` lives on the manager and every binding inherits it without a line of its own,
     // which is exactly why nothing would fail if one of them stopped reaching it: the parity test
     // compares export names, and this is a method.
-    expect(await frontDialogIdDeep(page)).toBe('vanilla-shadow-front');
-    expect(await frontDialogId(page)).not.toBe('vanilla-light-over');
+    await expect
+      .poll(() => {
+        return frontDialogIdDeep(page);
+      })
+      .toBe('vanilla-shadow-front');
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .not.toBe('vanilla-light-over');
   });
 
   test('keeps the keyboard when something opens over it', async ({ mount, page }) => {
     const component = await mount(<VanillaShadowStackHarness />);
     await component.getByTestId('toggle-policy').click();
     await component.getByTestId('open-shadow-front').click();
-    expect(await focusedInShadow(page)).toBe('shadow-confirm');
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-confirm');
 
     await page.locator('#shadow-note').click();
-    expect(await focusedInShadow(page)).toBe('shadow-note');
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-note');
 
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
@@ -633,7 +649,11 @@ test.describe('a shadow-root dialog in a stack', () => {
     // The claim, and it is about the **dialog** rather than the control: the one in front still has
     // the keyboard, from inside a shadow root — where `document.activeElement` answers with the host
     // and a document-scoped check would read "focus left" forever.
-    expect(await focusedDialogInShadow(page)).toBe('vanilla-shadow-front');
+    await expect
+      .poll(() => {
+        return focusedDialogInShadow(page);
+      })
+      .toBe('vanilla-shadow-front');
 
     // **Which control it lands on is the engine's, not the library's, and asserting one of them is
     // what broke CI.** Chromium puts focus on the dialog's first focusable: the newcomer's
@@ -652,7 +672,11 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('open-shadow-front').click();
     await page.locator('#shadow-note').click();
     await page.locator('#shadow-note').fill('typed in a shadow root');
-    expect(await focusedInShadow(page)).toBe('shadow-note');
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-note');
 
     // The late install: nothing is tracked yet, so the first plan lifts everything bottom-first —
     // this dialog, while it holds the keyboard. That is the one arrangement reaching `raiseDialog`'s
@@ -661,7 +685,11 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('policy')).toHaveText('on');
 
-    expect(await focusedInShadow(page)).toBe('shadow-note');
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-note');
     await expect(page.locator('#shadow-note')).toHaveValue('typed in a shadow root');
   });
 

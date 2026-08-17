@@ -10,6 +10,7 @@
  */
 
 import { ensureDialogStyles, styleRootOf } from './dialog-styles.js';
+import { SHOW_THE_RING } from './focus-policy.js';
 
 /**
  * Per-element cache for transition-disabled detection, so the closing path never triggers a
@@ -130,14 +131,11 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
  *   listener that has to tell a raise from a real close. The library's own close reporting is
  *   driven by the store and is not involved. It matters most in `umbra/vanilla`, where the
  *   `<dialog>` and any listener on it are the caller's.
- * - **Focus is restored only when this dialog had it**, and that case is narrower than it looks —
- *   worth knowing, because reasoning it away is a mistake already made once here. A raise usually
- *   happens to a dialog that does *not* hold the keyboard: the newcomer's own `showModal()` has
- *   already taken it. The exception is a policy installed **late**, over dialogs that are already up:
- *   the top layer is not tracked until then, so that first plan compares against nothing and lifts
- *   every dialog bottom-first — and the bottom one is the one that has been up longest, which is
- *   frequently the one being typed in. Restoring is what makes a caret survive that, and
- *   `stack-priority.ct.tsx` pins it.
+ * - **Focus is restored only when this dialog had it**, which is narrower than it looks: a raise
+ *   usually happens to a dialog the newcomer's `showModal()` has already taken the keyboard from.
+ *   The case that reaches it is a policy installed **late** — the top layer is untracked until
+ *   then, so the first plan lifts every dialog bottom-first, and the bottom one has been up
+ *   longest and is frequently the one being typed in. `stack-priority.ct.tsx` pins the caret.
  * - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
  *   `dialog[open] { animation }`. The library's own entrance is driven by phase rather than by
  *   `[open]`, so it is unaffected.
@@ -156,7 +154,11 @@ export function raiseDialog(dialog: HTMLDialogElement): boolean {
   dialog.showModal();
 
   if (holdsFocus && active instanceof HTMLElement && active.isConnected) {
-    active.focus();
+    // Visibly — the same rule as the other moves the library makes on the user's behalf, and for
+    // the same reason: `showModal()` above has just taken the keyboard, so this is a restore from
+    // nowhere rather than a continuation of anything the user did. A text field shows its ring
+    // either way; a button is the case that would otherwise come back silently.
+    active.focus(SHOW_THE_RING);
   }
   return true;
 }

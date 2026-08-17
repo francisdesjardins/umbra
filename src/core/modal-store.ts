@@ -6,21 +6,15 @@ import type { CloseResolver, CloseResult, ModalStoreSnapshot } from './types.js'
 const log = createLogger('modal');
 
 /**
- * Closure-based store for modal lifecycle state — the whole `useModal` state
- * machine, with no React in it.
+ * The whole `useModal` state machine, with no framework in it — `createStore` for the
+ * subscribe/getSnapshot contract, closure variables for what must not be reactive (pending
+ * resolvers, the animation frame, the current `onClose`).
  *
- * Uses `createStore` for the subscribe/getSnapshot contract consumed by
- * `useSyncExternalStore`. Domain methods use `get`/`set` for snapshot state and
- * closure variables for non-reactive internals (pending resolvers, the pending
- * animation frame, the current `onClose`).
+ * **Each method is a complete transition, not a plumbing primitive**, which is what lets the store
+ * own its own animation frame: callers schedule and cancel it as a side effect of the transition
+ * they asked for and never see the handle.
  *
- * The method surface is deliberately narrow: each one is a complete transition,
- * not a plumbing primitive. In particular the store owns its own animation frame
- * — callers schedule and cancel it only as a side effect of the transitions they
- * ask for, and never see the handle.
- *
- * DOM element access is kept outside the store (via `useRef` + getter function
- * passed to hooks) to avoid tainting the store as ref-like in React Compiler.
+ * DOM access stays outside, behind a getter, or the store taints as ref-like to the React Compiler.
  *
  * @typeParam TData - The close payload this modal carries. `useModal<TData>` instantiates
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
@@ -196,19 +190,16 @@ export function createModalStore<TData = unknown, TReason extends string = strin
         /**
          * Settle every waiter that is never going to get an answer.
          *
-         * A close-resolver promise settles from {@link finalize}, which only runs on a real
-         * close. A modal can be destroyed without one — unmounted while closed, or unmounted
-         * having never opened — and any promise still waiting would then stay pending for the
-         * life of the process, holding its continuation (and everything that closure captures)
-         * alive while the awaiting code silently never resumes.
+         * A close-resolver settles from {@link finalize}, which only runs on a real close — and a
+         * modal can be destroyed without one, unmounted while closed or having never opened. Any
+         * promise still waiting would then stay pending for the life of the process, holding its
+         * continuation alive while the awaiting code silently never resumes.
          *
-         * The waiters get the `[Error, null]` branch of `AwaitedClose` rather than the
-         * retained `closeResult`: a resolver registered after an earlier close is waiting
-         * for the *next* one, so replaying the previous reason would be a wrong answer, not a
-         * late one.
+         * They get the `[Error, null]` branch rather than the retained `closeResult`: a resolver
+         * registered after an earlier close is waiting for the *next* one, so replaying the
+         * previous reason would be a wrong answer rather than a late one.
          *
-         * Idempotent, and safe to call after a normal close — both queues are drained by then,
-         * so teardown can invoke it unconditionally.
+         * Idempotent, so teardown can call it unconditionally.
          */
         abandon(): void {
           // Torn down while open is a close nobody reported; the work has to stop for it too.

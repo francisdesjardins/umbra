@@ -265,16 +265,13 @@ export type UseModalBaseOptions<
    * so `nonModal: true` silently changes what your own sizing means. Worth knowing before
    * porting a panel from one to the other.
    *
-   * **A hairline flush to the edge is worth avoiding.** Left at `fit-content` a dialog's box
-   * lands on a fraction of a pixel, and `margin: auto` puts both edges off-pixel — so a 1px
-   * border on content that reaches the dialog's edge occupies that last fractional pixel, and
-   * how much of it survives is the compositor's business rather than yours. Measured on one
-   * page: three dialogs at 154.844px, 243.094px and 252.266px wide kept 16%, 91% and 73% of
-   * their right border, and the first read as missing. Measured on another, a panel whose sides
-   * landed on whole pixels and whose top and bottom did not lost exactly those two edges — and
-   * a translucent border loses twice, since each half of the split carries half the alpha.
-   * Inset the border by a pixel, give the dialog a whole-pixel `width`, or put the border on an
-   * inner element — any of the three removes the question.
+   * **A hairline flush to the edge is worth avoiding.** At `fit-content` a dialog's box lands on a
+   * fraction of a pixel and `margin: auto` puts both edges off-pixel, so a 1px border on content
+   * reaching the edge occupies that fractional pixel and how much survives is the compositor's
+   * business. Measured: three dialogs at 154.844px, 243.094px and 252.266px kept 16%, 91% and 73%
+   * of their right border, and the first read as missing — and a translucent one loses twice,
+   * each half of the split carrying half the alpha. Inset the border, give the dialog a
+   * whole-pixel `width`, or put the border on an inner element.
    */
   readonly style?: TStyle | undefined;
   /**
@@ -293,22 +290,19 @@ export type UseModalBaseOptions<
    * way it is without this option. What changes is the last step: `store.close(DISMISS_REASON)`
    * becomes this call, and the modal leaves the screen when the owner says so.
    *
-   * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself: the
-   * boolean upstream would still be `true`, and the next render would put the dialog back. Its
-   * only correct answer to the key is to tell the owner, which is why every controlled wrapper
-   * ends up writing its own listener — and writing it three times, differently, because the
-   * non-modal case cannot be heard from the dialog at all. This is that listener, already built.
+   * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself — the
+   * boolean upstream is still `true` and the next render puts it back — so its only correct answer
+   * to the key is to tell the owner. This is the listener every controlled wrapper writes, and
+   * writes three times because the non-modal case cannot be heard from the dialog at all.
    *
-   * **Return `false` to decline the press.** For a non-modal panel the window listener captures,
-   * so a press it takes is a press no one else sees; declining leaves it un-prevented and still
-   * travelling. Anything else — including returning nothing — means the request was taken. Use it
-   * for a condition only the caller can know, such as another framework's modal being on top.
+   * **Return `false` to decline the press**, for a condition only the caller can know, such as
+   * another framework's modal being on top. The non-modal window listener captures, so a press it
+   * takes is one nobody else sees; declining leaves it un-prevented and still travelling. Anything
+   * else, `undefined` included, means the request was taken.
    *
-   * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings, because
-   * `TemplateCommonOptions` excludes only the five options a template owns. That is not incidental
-   * here: a controlled surface is usually a *panel*, so the template hook is where the option is
-   * most often passed — see `/advanced` → "When the open is a prop" in the playground, which is a
-   * `useSlideModal` drawer driven entirely this way.
+   * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings — which
+   * matters because a controlled surface is usually a panel, so a template hook is where this is
+   * most often passed.
    *
    * @example
    * ```ts

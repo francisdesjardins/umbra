@@ -687,6 +687,36 @@ test.describe('focus after a failed action follows the button that ran it', () =
   });
 });
 
+test.describe('the restore after a failed action announces itself', () => {
+  test('the button it returns to is visibly focused, not silently', async ({ mount, page }) => {
+    // **A mouse-driven failure, which is the case that hides it.** The button is `disabled` while
+    // its action runs, the browser blurs a disabled element, and focus is on `<body>` by the time
+    // the action settles — so putting it back is a move the library makes from nowhere, several
+    // hundred milliseconds after the click ended. Without a ring the dialog reads as having lost
+    // the keyboard, and the retry the docs promise sits under a hand that cannot see it.
+    //
+    // Clicked rather than pressed on purpose: a keyboard-driven failure already carries the ring
+    // through input modality, so it would pass whatever the library does.
+    await mount(<FocusOnOpenHarness />);
+    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+
+    await page.getByTestId('foo-confirm').click();
+    await expect(page.getByTestId('foo-error')).toHaveText('Deletion failed');
+
+    await expect
+      .poll(() => {
+        return page.evaluate(() => {
+          const active = document.activeElement;
+          return {
+            id: active?.getAttribute('data-testid') ?? null,
+            ring: active instanceof HTMLElement && active.matches(':focus-visible'),
+          };
+        });
+      })
+      .toEqual({ id: 'foo-confirm', ring: true });
+  });
+});
+
 test.describe('action.isRunning — the per-action question, away from the button', () => {
   test('names which action is running, where the aggregate only says that one is', async ({
     mount,

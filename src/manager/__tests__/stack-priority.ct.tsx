@@ -27,7 +27,11 @@ test('without a policy the dialog that opened last is in front', async ({ mount,
   await component.getByTestId('open-panel').click();
 
   // The baseline, and the reason the next test means something: this is the defect, reproduced.
-  expect(await frontDialogId(page)).toBe('sp-panel');
+  await expect
+    .poll(() => {
+      return frontDialogId(page);
+    })
+    .toBe('sp-panel');
 });
 
 test('with a policy the high-priority dialog stays in front of a later open', async ({
@@ -39,7 +43,11 @@ test('with a policy the high-priority dialog stays in front of a later open', as
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
 
-  expect(await frontDialogId(page)).toBe('sp-warning');
+  await expect
+    .poll(() => {
+      return frontDialogId(page);
+    })
+    .toBe('sp-warning');
 
   // Both are still open — a raise is a re-show, not a close, and the dialog that was pushed under
   // is still there to be dealt with once the warning is answered.
@@ -62,7 +70,11 @@ test('being in front means being the one the mouse and the keyboard reach', asyn
 
   await expect(page.locator('dialog[data-modal-id="sp-warning"]')).not.toHaveAttribute('open', '');
   // Answering the warning hands the page back to the panel underneath.
-  expect(await frontDialogId(page)).toBe('sp-panel');
+  await expect
+    .poll(() => {
+      return frontDialogId(page);
+    })
+    .toBe('sp-panel');
 });
 
 test('the raise leaves focus in the dialog it put in front', async ({ mount, page }) => {
@@ -74,7 +86,11 @@ test('the raise leaves focus in the dialog it put in front', async ({ mount, pag
   // `showModal()` runs the focusing steps on every show, so a reorder that ignored focus would
   // leave the keyboard in the dialog underneath — visibly stuck, since only the topmost modal
   // dialog is not inert.
-  expect(await focusedDialogId(page)).toBe('sp-warning');
+  await expect
+    .poll(() => {
+      return focusedDialogId(page);
+    })
+    .toBe('sp-warning');
 });
 
 test.describe('three dialogs, and a policy that arrives late', () => {
@@ -91,8 +107,16 @@ test.describe('three dialogs, and a policy that arrives late', () => {
 
     // `mr-low` arrived last and ranks lowest, so the plan is two raises — `mr-mid` then `mr-high` —
     // and this is the only place that loop runs with more than one entry in it.
-    expect(await frontDialogId(page)).toBe('mr-high');
-    expect(await paintedStackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('mr-high');
+    await expect
+      .poll(() => {
+        return paintedStackOrder(page);
+      })
+      .toEqual(['mr-low', 'mr-mid', 'mr-high']);
 
     // Raises are re-shows, so nothing closed on the way.
     await expect(page.locator('dialog[open]')).toHaveCount(3);
@@ -104,15 +128,27 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     // Opened with no policy at all, so the last one in is in front — `mr-low`.
     await component.getByTestId('mr-open-all').click();
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
-    expect(await frontDialogId(page)).toBe('mr-low');
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('mr-low');
 
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
 
     // The paint order moved under three dialogs that were already up — the half of `prioritize` a
     // snapshot assertion cannot see, since in Node this path stops at the `document` guard.
     await expect(page.locator('dialog[data-modal-id="mr-high"]')).toBeVisible();
-    expect(await frontDialogId(page)).toBe('mr-high');
-    expect(await paintedStackOrder(page)).toEqual(['mr-low', 'mr-mid', 'mr-high']);
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('mr-high');
+    await expect
+      .poll(() => {
+        return paintedStackOrder(page);
+      })
+      .toEqual(['mr-low', 'mr-mid', 'mr-high']);
   });
 
   test('and removing it puts the paint order back', async ({ mount, page }) => {
@@ -120,7 +156,11 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await component.getByTestId('mr-open-all').click();
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
-    expect(await frontDialogId(page)).toBe('mr-high');
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('mr-high');
 
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('mr-policy')).toHaveText('off');
@@ -128,8 +168,16 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     // Back to open order — and this is the only thing that exercises the clause keeping
     // `syncStackOrder` awake for one sync after the policy is gone.
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
-    expect(await frontDialogId(page)).toBe('mr-low');
-    expect(await paintedStackOrder(page)).toEqual(['mr-high', 'mr-mid', 'mr-low']);
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('mr-low');
+    await expect
+      .poll(() => {
+        return paintedStackOrder(page);
+      })
+      .toEqual(['mr-high', 'mr-mid', 'mr-low']);
   });
 });
 

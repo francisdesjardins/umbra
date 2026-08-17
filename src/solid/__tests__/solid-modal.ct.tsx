@@ -428,7 +428,11 @@ test.describe('prioritize (Solid)', () => {
     await page.getByTestId('solid-sp-open-panel').click();
     await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toBeVisible();
 
-    expect(await frontDialogId(page)).toBe('solid-sp-panel');
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('solid-sp-panel');
   });
 
   test('the policy is inherited by this binding too', async ({ mount, page }) => {
@@ -440,7 +444,11 @@ test.describe('prioritize (Solid)', () => {
     // Nothing in `src/solid/` implements any of this — the policy lives on the manager and the
     // binding reaches it through `useModal`'s returned instance. Which is why nothing else would
     // notice if it stopped: `binding-parity.test.ts` compares export names, and this is a method.
-    expect(await frontDialogId(page)).toBe('solid-sp-warning');
+    await expect
+      .poll(() => {
+        return frontDialogId(page);
+      })
+      .toBe('solid-sp-warning');
     await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toHaveAttribute(
       'open',
       ''

@@ -47,29 +47,21 @@ const log = createLogger('modal');
  * click-outside, backdrop hit-testing, opening focus and restoration, the manager registration
  * that makes it addressable by id, and the typed close.
  *
- * Nothing below is a decision this file makes. Every one of them is a call into `core/`, the same
- * calls `umbra/react` and `umbra/solid` make in the same order — which is the claim the
- * architecture rests on, tested here by a consumer that is not a framework at all.
+ * Nothing below is a decision this file makes. Every one is a call into `core/`, in the order
+ * `umbra/react` and `umbra/solid` make the same calls — the architecture's central claim, tested
+ * here by a consumer that is not a framework at all.
  *
  * ## Server-rendered markup
  *
- * **This is the binding for it, and the only one that can be.** The other two build their own
- * `<dialog>`; here the element is yours, so it can already be in the document when the script
- * arrives — which is what server-rendering a dialog means.
+ * **This is the binding for it, and the only one that can be**: the other two build their own
+ * `<dialog>`, where here the element is yours and can already be in the document when the script
+ * arrives. One that **arrives open** is adopted, so the DOM, the library and the screen agree from
+ * the first pass rather than the first style write hiding an element still reporting `open`.
  *
- * A dialog that **arrives open** is adopted: the store starts at `open` rather than at `closed`,
- * so the DOM, the library and the screen agree from the first pass. Without that the store would
- * start closed against an open element and the first style write would hide it — the element still
- * reporting `open`, nothing visible, and no warning.
- *
- * **A server cannot render a *modal* dialog, and no library can change that.** The top layer is
- * enterable only through `showModal()` from script, so an `open` attribute in HTML is by
- * definition a non-modal open: no backdrop, nothing inert. Pass `nonModal: true` and the dialog is
- * adopted where it stands. Leave it modal and it is **closed** on binding, with a warning under
- * `setLogLevel` — because the alternative is claiming a containment the element does not have.
- *
- * So the pattern for a server-rendered page is: render the panel open if it should be open,
- * declare it `nonModal`, and bind. For a modal, render it closed and call `open()`.
+ * **A server cannot render a *modal* dialog, and no library can change that** — the top layer is
+ * enterable only from script, so an `open` attribute in HTML is by definition a non-modal open. So
+ * declare `nonModal` and it is adopted where it stands; leave it modal and it is **closed** on
+ * binding with a warning, rather than claiming a containment it does not have.
  *
  * ```html
  * <!-- Sent by the server, on screen before this script is fetched. -->

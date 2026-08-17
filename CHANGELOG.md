@@ -11,6 +11,36 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-16
 
+### Fixed — `yarn test` ran three engines in one worker pool, and was unreliable for it
+
+Locally the suite failed roughly every other full run: one test, a different one each time, always
+green when run alone. CI never saw it — one engine per job, two retries.
+
+Four hypotheses, three of them wrong, and the measurements are the reason the fourth is the one
+that shipped:
+
+|                                                | result                              |
+| ---------------------------------------------- | ----------------------------------- |
+| default (8 workers, three engines interleaved) | **2 of 3 runs red**                 |
+| `--workers=4`, still interleaved               | 1 of 3 red, and 40% slower          |
+| the failing tests alone, `--repeat-each=20`    | 180 of 180 green                    |
+| one engine at a time                           | **1 of 21 runs red**, and no slower |
+
+So it is not worker count, and it is not the tests — it is Chromium, Firefox and WebKit pages live
+in the same pool at the same moment. `yarn test:component` runs them in sequence now, through
+`scripts/test-engines.mjs`, which is what CI already does by having one job per engine.
+
+**Retries stay at zero locally.** A retry would have made the runs green without making them
+trustworthy, and a local suite is worth having only if a red means something.
+
+Honest about what is left: ~55% of runs red became ~5%, not zero. The residual is a Firefox timing
+flake that has not been characterised, and saying it was solved would be the same class of claim
+this changelog spent the day removing.
+
+Separately, and not the cause: 21 assertions on the stack probes were `expect(await probe(page))`,
+a single read where Playwright retries only `expect(locator)` and `expect.poll`. They poll now.
+That is a real gap in the harness — it just was not this one.
+
 ### Fixed — a modal opened by mouse put the keyboard somewhere you could not see
 
 Reported as "the first open has no focus on the button, the second one does". The focus was on the

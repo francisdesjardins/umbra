@@ -52,15 +52,12 @@ const POPUP_ROLES = ['listbox', 'menu', 'tree', 'grid', 'dialog']
  * dismissal — needs the same question answered, and a second copy of the rule is a second copy
  * that drifts.
  *
- * **The problem this exists for.** The window-level listener below captures, so it runs before
- * every other handler in the page — including the one belonging to whatever the user is actually
- * looking at. A combobox, a select or a date picker opened from inside a non-modal dialog is an
- * overlay whose own answer to the dismiss key is "close me", and capturing the press first turns
- * one Escape into "close the whole panel" while the list is still on screen. The user pressed a
- * key at a popup and lost their work.
+ * **The problem this exists for.** The window-level listener below captures, so it runs ahead of
+ * every other handler in the page — including whatever the user is actually looking at. A combobox
+ * or a date picker opened from inside a non-modal dialog answers the dismiss key with "close me",
+ * and capturing first turns one Escape into "close the whole panel" with the list still on screen.
  *
- * Two declarative signals, and nothing cleverer, because a guess here fails silently in both
- * directions:
+ * Two declarative signals and nothing cleverer, because a guess here fails silently both ways:
  *
  * - **The control says it is expanded.** `aria-expanded="true"` on the press's target or above it
  *   is how a combobox reports an open list while keeping focus on itself.
