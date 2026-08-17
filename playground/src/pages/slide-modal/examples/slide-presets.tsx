@@ -148,7 +148,12 @@ function usePalettePreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
+            {/* `focusOnOpen`, because this palette's content overflows: the scroll region is a
+                declared Tab stop (see `useScrollRegion`) and sits first in the DOM, so without a
+                claim `showModal()` opens the dialog focused on the reading area instead of the
+                control. The pairing rule: a dialog whose region scrolls says where its opening
+                focus belongs. */}
+            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
               Close
             </Shared.Button>
           </SlideModal.Footer>

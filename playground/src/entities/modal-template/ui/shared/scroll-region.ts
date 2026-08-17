@@ -25,6 +25,12 @@ export type ScrollRegionProps =
  * detect this. The explicit `tabindex` is also what plugs the pattern into the core's own focus
  * scan — the region becomes a legitimate destination for the Tab wrap, the recovery and the
  * reclaim floor, which an engine-implicit stop never would be.
+ *
+ * **Pair it with `focusOnOpen` when the region sits first.** A content area usually precedes the
+ * footer in the DOM, so once it overflows it is the first focusable and `showModal()` opens the
+ * dialog focused on the reading area rather than a control. The APG accepts either; if the
+ * control is where your opening belongs, say so — `action('…', { focusOnOpen: true })` is the
+ * lever, and the slide presets' command palette is the worked example.
  */
 export function useScrollRegion<T extends HTMLElement>(
   label: string
