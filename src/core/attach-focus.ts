@@ -1,4 +1,5 @@
 import { isOwnEventTarget } from '../utils/dialog-scope.js';
+import { restoreOpenerFocus } from './dialog-lifecycle.js';
 import {
   activeWithin,
   captureActionRunner,
@@ -68,8 +69,15 @@ export function createFocusCoordinator(
      * Call it whenever the phase changes, tearing down the previous attachment first.
      */
     sync(phase: ModalPhase): (() => void) | undefined {
-      // Clear on close so the next open starts fresh.
+      // Clear on close so the next open starts fresh — after the floor, which is the one read
+      // that still wants this open's memory. By this pass `close()` has run and the platform's
+      // own restore has had its turn, so a keyboard still on `<body>` here is one the close
+      // stranded, and it goes back to whoever held it before the open. See `restoreOpenerFocus`.
       if (phase === 'closed') {
+        const dialog = getDialog();
+        if (dialog) {
+          restoreOpenerFocus(dialog);
+        }
         openingFocus = null;
         settled = false;
         lastFocusInside = null;

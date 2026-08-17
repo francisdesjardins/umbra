@@ -48,6 +48,19 @@ export function checkTransitionsDisabled(dialog: HTMLDialogElement): boolean {
 }
 
 /**
+ * Who held the keyboard when each dialog was shown — the element the platform's own close restore
+ * would return focus to, remembered because the platform's condition for using it can be lost.
+ *
+ * The close-the-dialog steps restore the previously focused element for `show()` as well as
+ * `showModal()` — measured on all three engines with a bare dialog — but only when focus is still
+ * inside the dialog at `close()` time. An action-driven close breaks that condition on Chromium:
+ * the button is `disabled` while its action settles, the browser blurs a disabled element, and by
+ * the time `close()` runs the keyboard is on `<body>` and the platform keeps it there. Per open
+ * rather than per element, for the same reason as {@link transitionsDisabledCache}.
+ */
+const openerFocus = new WeakMap<HTMLDialogElement, HTMLElement>();
+
+/**
  * Open the dialog in the requested mode and stamp its stacking z-index.
  *
  * @param nonModal - `dialog.show()` (normal flow, no top layer) vs `dialog.showModal()` (top layer).
@@ -66,12 +79,52 @@ export function showDialog(
     ensureDialogStyles(styleRoot);
   }
 
+  // Before the show, which is what makes the answer mean anything: the dialog focusing steps run
+  // for `show()` too, so a read on the next line already finds focus inside the dialog. `<body>`
+  // is recorded as nothing — restoring to it is the failure the floor exists to prevent.
+  const opener = deepActiveElement(dialog.ownerDocument);
+  if (opener instanceof HTMLElement && opener !== dialog.ownerDocument.body && opener !== dialog) {
+    openerFocus.set(dialog, opener);
+  } else {
+    openerFocus.delete(dialog);
+  }
+
   if (nonModal) {
     dialog.show();
   } else {
     dialog.showModal();
   }
   stampZIndex(dialog, zIndex);
+}
+
+/**
+ * Give the keyboard back to whoever had it before the open — but only when the close left it on
+ * nothing.
+ *
+ * The floor under the platform's own restore, not a replacement for it: when the close-the-dialog
+ * steps already returned focus, or the user is somewhere real — typing in the page a non-modal
+ * panel never blocked, holding a control in the dialog underneath — the read below finds a live
+ * element and this does nothing. It acts on the one outcome that serves nobody: a close that
+ * stranded the keyboard on `<body>`, which is what an action-driven close produces on Chromium
+ * (see {@link openerFocus}) and what the APG's "focus returns to the invoker" exists to rule out.
+ *
+ * Visibly, like every focus move the library makes from nowhere — see `SHOW_THE_RING`.
+ *
+ * @internal
+ */
+export function restoreOpenerFocus(dialog: HTMLDialogElement): void {
+  const opener = openerFocus.get(dialog);
+  openerFocus.delete(dialog);
+  if (!opener?.isConnected) {
+    return;
+  }
+
+  const doc = dialog.ownerDocument;
+  const active = deepActiveElement(doc);
+  const stranded = active === null || active === doc.body || active === doc.documentElement;
+  if (stranded) {
+    opener.focus(SHOW_THE_RING);
+  }
 }
 
 /**
