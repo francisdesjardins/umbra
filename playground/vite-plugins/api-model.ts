@@ -1172,7 +1172,12 @@ export function apiModelPlugin(): Plugin {
           },
         })
       );
-      return `export default ${cached};`;
+      // `JSON.parse` of a string literal rather than the object literal itself. `cached` is
+      // already JSON, and the projected model is ~215 kB of it — an engine parses that as data in
+      // one pass, where the same bytes spelled as JavaScript go through the full parser and its
+      // object-shape machinery. The second `JSON.stringify` is what turns the JSON into a valid JS
+      // string literal, escaping included.
+      return `export default JSON.parse(${JSON.stringify(cached)});`;
     },
 
     configureServer(server) {

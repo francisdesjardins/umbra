@@ -335,7 +335,9 @@ that suffix, so renaming it silently downgrades a stylesheet to TSX highlighting
   (`@/shared/lib/…`) — patterns a user copies, deliberately not shipped by the library. `useForm`
   is the one the two `/ui-integrations` form cards share, which is what makes that pair's claim —
   same hook, two markups — literally true rather than two implementations that agree.
-- `CodePaneProvider` (`@/app/providers/CodePaneProvider/CodePaneProvider`) + `useCodePane` (`@/widgets/code-viewer`)
+- `CodePaneProvider` (`@/app/providers/CodePaneProvider/CodePaneProvider`) + `useCodePane`
+  (`@/shared/lib/code-pane-context` — `ViewCodeButton` is `shared/ui` and may not reach a widget;
+  the code-viewer barrel names the rule and deliberately does not re-export it)
 
 ## Testing
 
