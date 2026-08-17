@@ -54,7 +54,7 @@ export type TestReference = {
 export type Cell = {
   readonly state: CellState;
   readonly note?: string;
-  readonly reference?: TestReference;
+  readonly references?: readonly TestReference[];
   /**
    * An open question this cell carries **despite** its state, and the reason the field exists.
    *
@@ -76,7 +76,7 @@ export type OptionRow = {
   readonly ignoredBy?: readonly string[];
   readonly enforcement: Enforcement;
   readonly note: string;
-  readonly reference?: TestReference;
+  readonly references?: readonly TestReference[];
 };
 
 /** One capability, across the three bindings. */
@@ -92,7 +92,7 @@ export type PlatformRow = {
   readonly fact: string;
   readonly state: CellState;
   readonly why: string;
-  readonly reference?: TestReference;
+  readonly references?: readonly TestReference[];
   /** An open question this row carries despite its state — see {@link Cell.caveat}. */
   readonly caveat?: string;
 };
@@ -126,30 +126,36 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'style',
     enforcement: 'RUNTIME',
     note: 'Merged _over_ a template’s structural styles and over the placement, so a caller always wins. A `<dialog>` keeps the UA’s `fit-content` unless this says otherwise.',
-    reference: {
-      file: 'src/utils/__tests__/animation-utils.test.ts',
-      title: 'a custom style wins over the placement it would fight',
-    },
+    references: [
+      {
+        file: 'src/utils/__tests__/animation-utils.test.ts',
+        title: 'a custom style wins over the placement it would fight',
+      },
+    ],
   },
   {
     option: 'dismissKey',
     excludes: ['an action that declares the same hotkey'],
     enforcement: 'RUNTIME',
     note: '`engine.ownsHotkey` is asked at keydown, so an action claiming the key suppresses the dismissal rather than both firing. `false` turns the key off entirely.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'Escape defers to the action that claimed it',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'Escape defers to the action that claimed it',
+      },
+    ],
   },
   {
     option: 'onDismissRequest',
     dependsOn: ['dismissKey'],
     enforcement: 'RUNTIME',
     note: 'Replaces the *last* step of the dismiss key and nothing before it — which key, whether an action claimed it, whether a popup answers it first, whether a `prepare` or a running action forbids it, and which dialog is in front are all still the library’s. `dismissKey: false` turns the key off, so nothing is requested either. Returning `false` declines the press, which only the non-modal listener acts on: it captures, so a press it takes is one the page never sees.',
-    reference: {
-      file: 'src/core/__tests__/dismiss-request.ct.tsx',
-      title: 'a declined press is left travelling',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/dismiss-request.ct.tsx',
+        title: 'a declined press is left travelling',
+      },
+    ],
   },
   {
     option: 'dismissWhilePreparing',
@@ -162,19 +168,23 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     ignoredBy: ['nonModal: false'],
     enforcement: 'RUNTIME',
     note: 'Buys the Tab **wrap**, and only that. A modal dialog is wrapped by the top layer already, so the markers are redundant there — accepted and inert, which is what `ignoredBy` says. The recovery that used to share this flag does not: reaching the content from a focused `<dialog>` is unconditional now, on both variants, because it answers a platform disagreement rather than offering a choice. Off by default because on a toast or a popover keeping Tab inside is the defect rather than the fix.',
-    reference: {
-      file: 'src/core/__tests__/focus-containment.ct.tsx',
-      title: 'a dead-space click leaves the keyboard reachable without containFocus',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'a dead-space click leaves the keyboard reachable without containFocus',
+      },
+    ],
   },
   {
     option: 'onOpenRequest',
     enforcement: 'RUNTIME',
     note: 'The asking door: refusal is explicit through `request.refuse(reason)`, acceptance is the default because the manager cannot infer it — React’s open is asynchronous.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a refused request reports why, and nothing opens',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a refused request reports why, and nothing opens',
+      },
+    ],
   },
   {
     option: 'onKeyDown',
@@ -185,19 +195,23 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'onError',
     enforcement: 'RUNTIME',
     note: 'Userland errors only, and only the two with nowhere else to go: a throwing `prepare` (the dialog is already shown and `isPreparing` settles either way, so the modal announces itself ready) and a throwing `onClose` (detached, with nothing left rendering). An action’s throw is already the render args’ `error`, `render` reaches the framework’s error boundary, and `onKeyDown` / `onClick` escape to the DOM listener that called them — none of those arrive here. The library’s own failures never do either: routing them into a consumer callback would make a bug unreportable. A report, not a veto — the close still completes.',
-    reference: {
-      file: 'src/core/__tests__/finalize-close.test.ts',
-      title: 'a throwing onClose is normalized and reported as its own source',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/finalize-close.test.ts',
+        title: 'a throwing onClose is normalized and reported as its own source',
+      },
+    ],
   },
   {
     option: 'prepare',
     enforcement: 'RUNTIME',
     note: 'Runs **after** the dialog is shown, alongside the entrance — it does not gate the open and cannot refuse it. `syncOpenSequence` shows the dialog and schedules the phase frame before starting it, and a `prepare` that throws is logged and settles like any other. What waits on it is `open()`’s promise, `isPreparing` and so `aria-busy`, and `dismissWhilePreparing`. Receives an `AbortSignal` the close aborts; `isPreparing` tracks the callback, not the `opening` phase.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
+      },
+    ],
   },
   {
     option: 'onClose',
@@ -215,10 +229,12 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     dependsOn: ['an element with that id, rendered by the time prepare settles'],
     enforcement: 'RUNTIME',
     note: '`syncLabellingDiagnostics` reports ids that resolve to nothing — reading the element, not the options, because in `umbra/vanilla` the markup is the caller’s. Silent until `setLogLevel`.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'reports a reference the caller’s markup gets wrong',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'reports a reference the caller’s markup gets wrong',
+      },
+    ],
   },
   {
     option: 'ariaDescribedBy',
@@ -234,10 +250,12 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'template',
     enforcement: 'RUNTIME',
     note: 'Free-form, and read by exactly one library path: the `StackModal` handed to a `prioritize` policy. That is how "every drawer under every alert" is expressed.',
-    reference: {
-      file: 'src/manager/__tests__/stack-order.test.ts',
-      title: 'the policy is told what a dialog is, and asked once per dialog',
-    },
+    references: [
+      {
+        file: 'src/manager/__tests__/stack-order.test.ts',
+        title: 'the policy is told what a dialog is, and asked once per dialog',
+      },
+    ],
   },
   {
     option: 'clipContainer',
@@ -250,20 +268,24 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     ignoredBy: ['nonModal: false'],
     enforcement: 'PROSE',
     note: 'A modal dialog is placed by the top layer, so `portal` changes nothing for it. In `umbra/vanilla` it selects the placement and does **not** move the element — the markup is the caller’s.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'portal places without relocating',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'portal places without relocating',
+      },
+    ],
   },
   {
     option: 'nonModal',
     excludes: ['dismissOnBackdropClick when true', 'dismissOnClickOutside when false'],
     enforcement: 'TYPE',
     note: '**The one pair the checker holds.** `ModalVariant` is a discriminated union, so the wrong dismissal option for the variant is a compile error rather than an option that is silently read by nobody.',
-    reference: {
-      file: 'src/core/__tests__/type-model.test.ts',
-      title: 'the documented variant combinations are the ones that compile',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/type-model.test.ts',
+        title: 'the documented variant combinations are the ones that compile',
+      },
+    ],
   },
   {
     option: 'dismissOnBackdropClick',
@@ -271,10 +293,12 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     excludes: ['dismissOnClickOutside'],
     enforcement: 'TYPE',
     note: 'Opt-in, and gated on `hasActions()` as well — a modal that has drawn no action does not dismiss on its backdrop, which is why `undeclare` matters beyond stale hotkeys.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'unbinding an action retires it — backdrop dismissal comes back',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'unbinding an action retires it — backdrop dismissal comes back',
+      },
+    ],
   },
   {
     option: 'dismissOnClickOutside',
@@ -297,42 +321,52 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'open / close / the typed close reason',
     react: {
       state: 'works',
-      reference: {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
-        title: 'closes with reason "confirm" via controller',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'closes with reason "confirm" via controller',
+        },
+      ],
     },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'an action closes with its own reason',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'an action closes with its own reason',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a bound action closes with its own reason',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a bound action closes with its own reason',
+        },
+      ],
     },
   },
   {
     capability: 'the render callback and the Modal it returns',
     react: {
       state: 'works',
-      reference: {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
-        title: 'opens when open() is called',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'opens when open() is called',
+        },
+      ],
     },
     solid: {
       state: 'works',
       note: 'Live values are getters, so the render args must not be destructured.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'the template’s context stays live, because it is merged and not spread',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'the template’s context stays live, because it is merged and not spread',
+        },
+      ],
     },
     vanilla: {
       state: 'no-by-design',
@@ -345,35 +379,43 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     solid: {
       state: 'works',
       note: 'The binding mounts the element itself, so `Modal` is `null`.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'portal: true mounts the dialog itself and leaves Modal null',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'portal: true mounts the dialog itself and leaves Modal null',
+        },
+      ],
     },
     vanilla: {
       state: 'partial',
       note: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'portal places without relocating',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'portal places without relocating',
+        },
+      ],
     },
   },
   {
     capability: 'ModalOutlet',
     react: {
       state: 'works',
-      reference: {
-        file: 'src/react/__tests__/modal-outlet.ct.tsx',
-        title: 'renders modal via outlet without {Modal} in JSX',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/modal-outlet.ct.tsx',
+          title: 'renders modal via outlet without {Modal} in JSX',
+        },
+      ],
     },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'an outlet renders the dialog and Modal becomes null',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'an outlet renders the dialog and Modal becomes null',
+        },
+      ],
     },
     vanilla: { state: 'no-by-design', note: 'No render pass, so nothing for an outlet to place.' },
   },
@@ -383,10 +425,12 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     solid: {
       state: 'works',
       note: 'Re-wrapped to attach `undeclare`, because Solid never re-runs the parent and a button removed by its own `<Show>` has to retire itself.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'a removed action stops counting — backdrop dismissal comes back',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'a removed action stops counting — backdrop dismissal comes back',
+        },
+      ],
     },
     vanilla: {
       state: 'no-by-design',
@@ -399,18 +443,22 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     solid: {
       state: 'works',
       note: 'Same name, and it stays live through the wrapper — which is what the test pins.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'action.isRunning names which one, and survives the binding’s own wrapper',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'action.isRunning names which one, and survives the binding’s own wrapper',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
       note: 'Spelled `isActionRunning(reason)` on the controller: there is no factory to hang it on.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'isActionRunning answers for one action, off the button',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'isActionRunning answers for one action, off the button',
+        },
+      ],
     },
   },
   {
@@ -419,10 +467,12 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     solid: {
       state: 'works',
       note: 'Returns an accessor: a discriminated union cannot survive being spread into getters without losing the narrowing.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'the manager hooks are live from outside the panel',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'the manager hooks are live from outside the panel',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
@@ -448,25 +498,31 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'prioritize (the stack policy)',
     react: {
       state: 'works',
-      reference: {
-        file: 'src/manager/__tests__/stack-priority.ct.tsx',
-        title: 'with a policy the high-priority dialog stays in front of a later open',
-      },
+      references: [
+        {
+          file: 'src/manager/__tests__/stack-priority.ct.tsx',
+          title: 'with a policy the high-priority dialog stays in front of a later open',
+        },
+      ],
     },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'the policy is inherited by this binding too',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'the policy is inherited by this binding too',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
       note: 'Including a dialog inside a shadow root.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'the policy puts it in front of a light-DOM dialog opened later',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'the policy puts it in front of a light-DOM dialog opened later',
+        },
+      ],
     },
   },
   {
@@ -474,18 +530,22 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'focusOnOpen claims the opening focus',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'focusOnOpen claims the opening focus',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
       note: 'On a button the library never rendered — the caller forwards `data-focus-on-open`.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'focusOnOpen claims the opening focus on a button it never rendered',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'focusOnOpen claims the opening focus on a button it never rendered',
+        },
+      ],
     },
   },
   {
@@ -498,10 +558,12 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     vanilla: {
       state: 'works',
       note: 'Reads `focusin` rather than `activeElement`, because this binding’s own `bindAction` disables the button synchronously first.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a failed action hands focus back to the button that ran it',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a failed action hands focus back to the button that ran it',
+        },
+      ],
     },
   },
   {
@@ -509,26 +571,32 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: {
       state: 'works',
       note: 'Read through a ref, so a teardown reports to whichever handler is current rather than to the one captured when the effect last ran.',
-      reference: {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
-        title: 'a prepare that throws is reported, and the modal still settles',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'a prepare that throws is reported, and the modal still settles',
+        },
+      ],
     },
     solid: {
       state: 'works',
       note: '`options.onError` passed straight through — there is no stale capture to guard against, because nothing re-runs.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'a prepare that throws is reported, and the modal still settles',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'a prepare that throws is reported, and the modal still settles',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
       note: 'No render pass, so the report reaches the page through the caller’s own subscriber. `aria-busy` on markup the caller wrote is what says the settle reached the element and not only the store.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a prepare that throws is reported, and the modal still settles',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a prepare that throws is reported, and the modal still settles',
+        },
+      ],
     },
   },
   {
@@ -536,17 +604,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'says nothing about a name its prepare had not rendered yet',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'says nothing about a name its prepare had not rendered yet',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'reports a dialog with no accessible name at all',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'reports a dialog with no accessible name at all',
+        },
+      ],
     },
   },
   {
@@ -554,17 +626,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'onOpenRequest can refuse, and the refusal carries its reason',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'onOpenRequest can refuse, and the refusal carries its reason',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'an accepted request opens the dialog',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'an accepted request opens the dialog',
+        },
+      ],
     },
   },
   {
@@ -577,10 +653,12 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     vanilla: {
       state: 'works',
       note: 'The element is the caller’s, so it can arrive open — from server-rendered HTML, or from a page that opened it before the binding existed. Adopted for a non-modal dialog, closed for a modal one. Before this the store started at `closed` against an open element and the first pass wrote `display: none` over it: the DOM said open, the store said closed, the user saw nothing, and nothing warned.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a non-modal one is adopted where it stands',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a non-modal one is adopted where it stands',
+        },
+      ],
     },
   },
   {
@@ -588,17 +666,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'containFocus wraps Tab inside a non-modal panel',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'containFocus wraps Tab inside a non-modal panel',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'containFocus wraps Tab inside the panel',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'containFocus wraps Tab inside the panel',
+        },
+      ],
     },
   },
   {
@@ -606,17 +688,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'dismissOnClickOutside closes it on a click in the page',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'dismissOnClickOutside closes it on a click in the page',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'dismissOnClickOutside closes it on a click in the page',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'dismissOnClickOutside closes it on a click in the page',
+        },
+      ],
     },
   },
   {
@@ -625,17 +711,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     solid: {
       state: 'works',
       note: 'Reached through the `undeclare` test, which asserts dismissal coming back.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'a removed action stops counting — backdrop dismissal comes back',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'a removed action stops counting — backdrop dismissal comes back',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'unbinding an action retires it — backdrop dismissal comes back',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'unbinding an action retires it — backdrop dismissal comes back',
+        },
+      ],
     },
   },
   {
@@ -643,17 +733,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'a custom dismissKey closes it, and Escape does not',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'a custom dismissKey closes it, and Escape does not',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a custom dismissKey closes it, and Escape does not',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a custom dismissKey closes it, and Escape does not',
+        },
+      ],
     },
   },
   {
@@ -661,44 +755,54 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works' },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'a close aborts the prepare it was waiting on',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'a close aborts the prepare it was waiting on',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
+        },
+      ],
     },
   },
   {
     capability: 'reconcileOpen',
     react: {
       state: 'works',
-      reference: {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
-        title: 'the prop drives the dialog, and stays authoritative over an imperative open',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'the prop drives the dialog, and stays authoritative over an imperative open',
+        },
+      ],
     },
     solid: {
       state: 'works',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'the signal drives the dialog, and stays authoritative over an imperative open',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'the signal drives the dialog, and stays authoritative over an imperative open',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
       note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others.',
       caveat:
         'The `phase`-versus-`isVisible` half is proven on React only: moving the decision to `isVisible` fails there and does not here, and why it does not is unexplained rather than accounted for.',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'the flag drives the dialog, and stays authoritative over an imperative open',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'the flag drives the dialog, and stays authoritative over an imperative open',
+        },
+      ],
     },
   },
   {
@@ -706,25 +810,31 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: {
       state: 'works',
       note: 'Portaled into the root with `createPortal`, which is the shape a web component hosting a React tree takes.',
-      reference: {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
-        title: 'gets the library backdrop and its opening focus',
-      },
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'gets the library backdrop and its opening focus',
+        },
+      ],
     },
     solid: {
       state: 'works',
       note: 'The whole Solid app rendered into the root, which is how a widget keeps the host page’s CSS out.',
-      reference: {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
-        title: 'gets the library backdrop and its opening focus',
-      },
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'gets the library backdrop and its opening focus',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
-      reference: {
-        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-        title: 'a dialog in a shadow root gets the library backdrop and its opening focus',
-      },
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'a dialog in a shadow root gets the library backdrop and its opening focus',
+        },
+      ],
     },
   },
 ];
@@ -736,64 +846,78 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     fact: 'z-index orders two dialogs in the top layer',
     state: 'no-platform',
     why: 'Top-layer elements paint in the order they were added and `z-index` does not apply between them — measured: a dialog stamped `z-index: 9999` still paints under one shown after it. Moving one is `close()` + `showModal()` and nothing cheaper.',
-    reference: {
-      file: 'src/manager/__tests__/stack-priority.ct.tsx',
-      title: 'with a policy the high-priority dialog stays in front of a later open',
-    },
+    references: [
+      {
+        file: 'src/manager/__tests__/stack-priority.ct.tsx',
+        title: 'with a policy the high-priority dialog stays in front of a later open',
+      },
+    ],
   },
   {
     fact: 'a non-modal dialog can sit above a modal one',
     state: 'no-platform',
     why: 'The top layer paints above ordinary content and no `z-index` reaches between them. So modality is the first sort key and a policy cannot overrule it — a big number on a panel ranks it against the other panels only.',
-    reference: {
-      file: 'src/manager/__tests__/stack-order.test.ts',
-      title: 'a policy cannot lift a non-modal dialog over a modal one',
-    },
+    references: [
+      {
+        file: 'src/manager/__tests__/stack-order.test.ts',
+        title: 'a policy cannot lift a non-modal dialog over a modal one',
+      },
+    ],
   },
   {
     fact: 'Tab reaches the content when the dialog element itself has focus',
     state: 'partial',
     why: 'Clicking a dialog’s empty space focuses the `<dialog>` element — it is click-focusable while open, though it takes no `tabindex` and refuses `focus()` from script. What Tab does from there is the engines’ own answer and they do not agree: **forward Tab reaches the content on Chromium and Firefox and is swallowed by WebKit**, and **Shift+Tab reaches nothing on any of the three**. Measured both ways on all three. `attachFocusContainment` answers it unconditionally now — the recovery used to sit behind `containFocus`, which made an ordinary click cost the keyboard in any dialog that had not opted into an option about something else. Left open only to be re-measured: if WebKit descends one day, the forward half becomes redundant.',
-    reference: {
-      file: 'src/core/__tests__/focus-containment.ct.tsx',
-      title: 'a dead-space click leaves the keyboard reachable without containFocus',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'a dead-space click leaves the keyboard reachable without containFocus',
+      },
+    ],
   },
   {
     fact: 'a server-rendered `<dialog open>` can be modal',
     state: 'no-platform',
     why: 'The top layer is enterable only through `showModal()` from script, so an `open` attribute in served HTML is **by definition** a non-modal open — no backdrop, nothing inert. It is the one thing SSR cannot hand a dialog. `bindDialog` adopts such a dialog when the caller asked for `nonModal`, and closes it otherwise rather than claiming a containment the element does not have.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a modal one is closed instead, because the top layer is not enterable from HTML',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a modal one is closed instead, because the top layer is not enterable from HTML',
+      },
+    ],
   },
   {
     fact: 'a raise avoids firing the element’s native close event',
     state: 'no-platform',
     why: '`close()` queues the event, so it arrives with `dialog.open` already back to `true` — which is the only guard a listener has for telling a raise from a real close. It matters most in `umbra/vanilla`, where the listener is the caller’s.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a raise fires the native close event, with the dialog already open again',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a raise fires the native close event, with the dialog already open again',
+      },
+    ],
   },
   {
     fact: 'a raise keeps the caret where the user left it',
     state: 'partial',
     why: 'Restored for the dialog that **held** the keyboard — the case a late policy install hits. One that did not is re-shown by `showModal()`, and where focus lands then is **the engine’s answer, not the library’s**: Chromium puts it on the dialog’s first focusable, WebKit preserves the field. So the guarantee is that the dialog in front keeps the keyboard; the position is not one, and a test that pinned a control was pinning one engine. Fixing it for real means teaching the `focusin` bookkeeping to ignore focus the library itself moves during a raise, which needs a window `raiseDialog` can publish and the coordinator can read.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a policy installed over it keeps the caret where it was',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a policy installed over it keeps the caret where it was',
+      },
+    ],
   },
   {
     fact: 'a raise hands the keyboard back to a dialog that claimed no `focusOnOpen`',
     state: 'works',
     why: 'A panel opening underneath runs the platform’s focusing steps and takes the keyboard from the dialog in front. `reclaimFocus` undoes it, and with a claim there is something to aim at — **without one there was not**: the fallback was `dialog.focus()`, which an open `<dialog>` refuses, so the modal stayed on screen with focus on `<body>` and every hotkey but Escape dead. The floor is the dialog’s **first focusable** instead. Which one that is depends on how the confirmation is read: focusing a candidate and asking the `document` who holds it is wrong inside a shadow root — it answers with the *host*, so the scan walks past a candidate that took focus and the dialog ends on its **last** control. `focusFirstAvailable` asks the dialog’s own root — and scans only this dialog’s own controls, which the row below carries.\n\nProven on all three bindings, and measuring them turned up two things inference had got wrong. **The theft itself is Chromium’s**: on Firefox and WebKit a non-modal `show()` underneath does not take the keyboard from a modal in the top layer, so the dialog keeps it with no repair at all — disabling both repair paths leaves those two engines green. And on `umbra/vanilla` the floor is **not** the delivering path: `bind-dialog.ts` runs `focus.sync` *before* `syncOpenSequence` where the director runs it after, so its `focusin` bookkeeping hears the opening autofocus that the hook bindings’ misses, `preferred` is set, and the floor is never reached. Either path suffices there — measured by disabling each alone (green) and both together (red).',
-    reference: {
-      file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
-      title: 'a panel opening underneath does not leave focus on the body',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
+        title: 'a panel opening underneath does not leave focus on the body',
+      },
+    ],
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',
@@ -804,37 +928,46 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     fact: 'the adopted stylesheet reaches a dialog inside a shadow root',
     state: 'works',
     why: '`adoptedStyleSheets` does not cross a shadow boundary, so the sheet is adopted per **root** rather than per document — `showDialog` adopts into `dialog.getRootNode()` on every open, idempotent. Without it the dialog shows the UA backdrop, measured at `rgba(0, 0, 0, 0.1)`.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'a dialog in a shadow root gets the library backdrop and its opening focus',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a dialog in a shadow root gets the library backdrop and its opening focus',
+      },
+    ],
   },
   {
     fact: 'one Escape closes only the dialog it was pressed in',
     state: 'works',
     why: 'A modal opened from inside another renders its `<dialog>` in that subtree, so every event bubbles through the one underneath. `isOwnEventTarget` and `queryOwn` scope both the keydown and the hotkey dispatch.',
-    reference: {
-      file: 'src/react/__tests__/use-modal.ct.tsx',
-      title: 'the dismiss key unwinds the stack one modal per press, front to back',
-    },
+    references: [
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'the dismiss key unwinds the stack one modal per press, front to back',
+      },
+    ],
   },
   {
     fact: 'the Tab recovery lands on a control of the dialog it was pressed in',
     state: 'works',
     why: 'The same subtree rule as the row above, on the one path that had been written without it. `focusFirstAvailable` — the scan that answers a Tab pressed while focus is on the `<dialog>` element — walked a plain `querySelectorAll` where every other lookup in `focus-policy.ts` goes through the scope. **Reproduced on all three engines before it was fixed**, and only in the reversed direction: forward, this dialog’s own first control is first either way, so the defect was invisible to `Tab` and plain under `Shift+Tab`, which scans from the end and reached a nested panel’s button. `queryAllOwn` is `queryOwn`’s plural, added so the rule has one statement rather than a filter copied to a second call site.',
-    reference: {
-      file: 'src/core/__tests__/focus-containment.ct.tsx',
-      title: 'Shift+Tab from the dialog element stays on this dialog’s own last stop',
-    },
+    references: [
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'Shift+Tab from the dialog element stays on this dialog’s own last stop',
+      },
+    ],
   },
   {
     fact: 'Escape is always answered by someone',
     state: 'no-by-design',
     why: 'Put a modal with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the modal was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both halves of that are asserted.',
-    reference: {
-      file: 'src/react/__tests__/use-modal.ct.tsx',
-      title: 'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
-    },
+    references: [
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title:
+          'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
+      },
+    ],
   },
   {
     fact: 'a modal dialog’s own sizing survives the UA’s max-width',
@@ -850,28 +983,34 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     fact: 'a contained non-modal panel needs nothing from the caller',
     state: 'no-by-design',
     why: 'It is `absolute` against a library-owned host that is itself `absolute; inset: 0` over the nearest sized, positioned ancestor — so the caller must provide that region or the panel collapses. Absolute rather than in-flow because a `height: 100%` block is laid out after the content it should cover.',
-    reference: {
-      file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-      title: 'positions the panel against the dialog’s parent by default',
-    },
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'positions the panel against the dialog’s parent by default',
+      },
+    ],
   },
   {
     fact: 'the body scroll lock is safe with two managers on one page',
     state: 'works',
     why: 'Claimed per owner and released when the last claim goes: the target is one global `<body>`, and a shared boolean would make it last-writer-wins.',
-    reference: {
-      file: 'src/manager/__tests__/dialog-manager.ct.tsx',
-      title: 'two managers both holding the lock release it only when the last one lets go',
-    },
+    references: [
+      {
+        file: 'src/manager/__tests__/dialog-manager.ct.tsx',
+        title: 'two managers both holding the lock release it only when the last one lets go',
+      },
+    ],
   },
   {
     fact: 'the scroll lock compensates the right width',
     state: 'works',
     why: 'It pads by what the lock **actually reclaims**, not by the current scrollbar width — a page with `scrollbar-gutter: stable` keeps its gutter through `overflow: hidden`, so the naive version shifts content inward.',
-    reference: {
-      file: 'src/manager/__tests__/scroll-lock.test.ts',
-      title: 'scrollbar-gutter: stable — gutter survives the lock, so compensation is zero',
-    },
+    references: [
+      {
+        file: 'src/manager/__tests__/scroll-lock.test.ts',
+        title: 'scrollbar-gutter: stable — gutter survives the lock, so compensation is zero',
+      },
+    ],
   },
   {
     fact: 'a policy orders two copies of the library on one page',
@@ -1048,11 +1187,14 @@ export function allReferences(): readonly {
   readonly where: string;
   readonly ref: TestReference;
 }[] {
+  const spread = (where: string, references: readonly TestReference[] | undefined) => {
+    return (references ?? []).map((ref) => {
+      return { where, ref };
+    });
+  };
   return [
     ...OPTION_ROWS.flatMap((row) => {
-      return row.reference === undefined
-        ? []
-        : [{ where: `option ${row.option}`, ref: row.reference }];
+      return spread(`option ${row.option}`, row.references);
     }),
     ...BINDING_ROWS.flatMap((row) => {
       return (
@@ -1062,13 +1204,11 @@ export function allReferences(): readonly {
           ['vanilla', row.vanilla],
         ] as const
       ).flatMap(([binding, value]) => {
-        return value.reference === undefined
-          ? []
-          : [{ where: `${row.capability} (${binding})`, ref: value.reference }];
+        return spread(`${row.capability} (${binding})`, value.references);
       });
     }),
     ...PLATFORM_ROWS.flatMap((row) => {
-      return row.reference === undefined ? [] : [{ where: row.fact, ref: row.reference }];
+      return spread(row.fact, row.references);
     }),
   ];
 }

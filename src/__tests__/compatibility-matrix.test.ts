@@ -166,7 +166,7 @@ test.describe('the compatibility matrix', () => {
       )
         .filter(([, value]) => {
           const owes = value.state === 'no-by-design' || value.state === 'partial';
-          return owes && value.note === undefined && value.reference === undefined;
+          return owes && value.note === undefined && value.references === undefined;
         })
         .map(([binding]) => {
           return `${row.capability} (${binding})`;
