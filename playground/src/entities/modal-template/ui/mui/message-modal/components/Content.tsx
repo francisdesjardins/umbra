@@ -12,13 +12,13 @@ export type ContentProps = {
 };
 
 export const Content = ({ children, sx, label }: ContentProps) => {
-  const { ref, regionProps } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');
+  const { ref, regionProps, regionSx } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');
 
   return (
     <DialogContent
       ref={ref}
       {...regionProps}
-      sx={mergeSx({ p: 0, flex: 1, overflowY: 'auto' }, sx)}
+      sx={mergeSx({ ...regionSx, flex: 1, overflowY: 'auto' }, sx)}
     >
       <Stack sx={{ gap: `${String(spacing.content)}px` }}>{children}</Stack>
     </DialogContent>

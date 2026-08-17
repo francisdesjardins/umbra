@@ -1,7 +1,7 @@
 import { Stack, type SxProps } from '@mui/material';
 import type { ReactNode } from 'react';
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
-import { focusRingSpace, spacing } from '@/entities/modal-template/ui/shared/tokens';
+import { focusRingRoom, spacing } from '@/entities/modal-template/ui/shared/tokens';
 import { DefaultContainer } from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer';
 
 export type DefaultLayoutProps = {
@@ -29,8 +29,7 @@ export const DefaultLayout = ({ children, slotProps }: DefaultLayoutProps) => {
             // padding box, hence the reserved focus-ring room below.
             overflow: 'hidden',
             // Grown outward into the container's own 24px padding, so nothing on screen moves.
-            padding: focusRingSpace,
-            margin: `calc(-1 * ${focusRingSpace})`,
+            ...focusRingRoom,
           },
           slotProps?.stack?.sx
         )}

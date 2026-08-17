@@ -2,6 +2,7 @@ import { Box, type SxProps } from '@mui/material';
 import type { ReactNode } from 'react';
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
+import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 
 export type PanelContentProps = {
   readonly children: ReactNode;
@@ -17,7 +18,7 @@ export type PanelContentProps = {
  * footer.
  */
 export const PanelContent = ({ children, sx, padding = true, label }: PanelContentProps) => {
-  const { ref, regionProps } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');
+  const { ref, regionProps, regionSx } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');
 
   return (
     <Box
@@ -28,7 +29,10 @@ export const PanelContent = ({ children, sx, padding = true, label }: PanelConte
           flex: 1,
           overflowY: 'auto',
           py: 2.5,
-          ...(padding ? { px: 3 } : { px: 0 }),
+          // `px: 0` leaves a flush control's ring nothing to occupy; `regionSx` is the reserve, and
+          // the inline padding below wins over it whenever this panel is padded at all.
+          ...regionSx,
+          ...(padding ? { px: 3 } : { px: focusRingSpace, mx: `calc(-1 * ${focusRingSpace})` }),
         },
         sx
       )}

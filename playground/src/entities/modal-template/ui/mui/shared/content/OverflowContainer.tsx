@@ -24,9 +24,8 @@ export const OverflowContainer = ({
   label,
   ...boxRest
 }: OverflowContainerProps) => {
-  const { ref, isOverflowing, scrollbarWidth, regionProps } = useScrollRegion<HTMLDivElement>(
-    label ?? 'Scrollable content'
-  );
+  const { ref, isOverflowing, scrollbarWidth, regionProps, regionSx } =
+    useScrollRegion<HTMLDivElement>(label ?? 'Scrollable content');
 
   return (
     <Box
@@ -37,8 +36,8 @@ export const OverflowContainer = ({
         {
           maxHeight: sizes.maxHeight,
           overflowY: 'auto',
+          ...regionSx,
           py: 1,
-          px: 0,
           '--scrollbar-width': `${String(scrollbarWidth)}px`,
         },
         sx,

@@ -14,6 +14,11 @@
   --modal-spacing: 16px;
   --modal-spacing-sm: 8px;
   --modal-spacing-lg: 24px;
+  /* Room a scroll container leaves for a focus ring drawn outside its controls: the ring is a 2px
+     outline at 2px offset, and a box that is not `overflow: visible` clips at its padding box, so a
+     flush control keeps part of its ring and loses the rest. `overflow-y: auto` also makes
+     `overflow-x` compute to `auto`, so every side needs it — not just the scrolling one. */
+  --modal-focus-ring-space: 4px;
   --button-hover-bg: rgba(0, 0, 0, 0.04);
   --button-hover-border: rgba(0, 0, 0, 0.23);
 
@@ -105,7 +110,11 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 0;
+  padding: var(--modal-focus-ring-space);
+  /* Cancels the padding's offset, so the content sits where it did. */
+  margin: calc(-1 * var(--modal-focus-ring-space));
+  /* The scrolled case: scroll-into-view parks a tabbed-to control against the edge. */
+  scroll-padding: var(--modal-focus-ring-space);
 }
 
 /* ========== Footer ========== */
