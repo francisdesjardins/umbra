@@ -1,4 +1,27 @@
 import { StrandedFocusHarness } from 'umbra/core/__tests__/stranded-focus.story';
+import { ActionIsRunningHarness } from 'umbra/actions/__tests__/use-modal-actions/action-is-running.story';
+import { DomSafeSpreadHarness } from 'umbra/actions/__tests__/use-modal-actions/dom-safe-spread.story';
+import { SpreadContractHarness } from 'umbra/actions/__tests__/use-modal-actions/spread-contract.story';
+import {
+  AsymmetricKeyframesHarness,
+  NameTranslationHarness,
+} from 'umbra/core/__tests__/apply-style.story';
+import {
+  DismissKeyOwnershipHarness,
+  KeyClaimProbeHarness,
+} from 'umbra/core/__tests__/dismiss-key-ownership.story';
+import {
+  ControlledModalHarness,
+  ControlledPanelHarness,
+} from 'umbra/core/__tests__/dismiss-request.story';
+import {
+  OpenEventInDocumentHarness,
+  OpenEventInShadowHarness,
+} from 'umbra/manager/__tests__/open-event-element.story';
+import {
+  LatePolicyFocusHarness,
+  MultiRaiseHarness,
+} from 'umbra/manager/__tests__/stack-priority.story';
 import { UseLookupPreparingHarness } from 'umbra/react/__tests__/use-lookup.story';
 import { ActionErrorHotkeyRetryHarness } from 'umbra/react/__tests__/use-modal/action-error-hotkey-retry.story';
 import { ContainedOverlayHarness } from 'umbra/react/__tests__/use-modal/contained-overlay.story';
@@ -355,6 +378,97 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'The regression fixture for the director’s granularity. focus.sync remembers, for one attachment, that an action is running; rebuild that attachment mid-action — which a caller’s inline arrow does on every render — and the memory goes with it, so the settle is missed and focus never comes back.',
         component: VolatileKeyDownHarness,
         codeKey: 'story-volatile-keydown',
+      },
+      {
+        title: 'Which action is running, asked away from its button',
+        description:
+          'data-loading is that fact on the button, and reaches only whoever spreads the props. action.isRunning(reason) is the same fact for everything else — a header spinner, a field locked for one action, a label that changes for save and not for cancel. Observed while the action runs, not after: the harness holds it open on a promise the test releases.',
+        component: ActionIsRunningHarness,
+        codeKey: 'story-action-is-running',
+      },
+      {
+        title: 'What an action returns is only DOM props',
+        description:
+          'The claim the whole action API rests on. Being agnostic of the UI put into it, the library ships the running state as data-loading rather than a loading prop named for one component family — so the set spreads onto a native <button> with nothing React refuses and nothing a wrapper has to translate.',
+        component: DomSafeSpreadHarness,
+        codeKey: 'story-dom-safe-spread',
+      },
+      {
+        title: 'The spread, on a native button, as the docs promise it',
+        description:
+          'Every claim the API makes rests on “spread is the single binding pattern” being literally true. This puts one on a real <button> and checks what arrives — the type, the click, the disabled and busy state — rather than trusting the sentence.',
+        component: SpreadContractHarness,
+        codeKey: 'story-spread-contract',
+      },
+      {
+        title: 'Entrance and exit keyframes that carry different properties',
+        description:
+          'The case the clearing half of applyStyle exists for. Without clearing what the previous style set, a dialog whose entrance animates scale and whose exit animates only opacity stays scaled down while fully opaque.',
+        component: AsymmetricKeyframesHarness,
+        codeKey: 'story-apply-style',
+      },
+      {
+        title: 'Custom properties reach the element, camelCase reaches it too',
+        description:
+          'DialogStyle maps CSSStyleDeclaration, whose keys are camelCase — so a custom property like --x has no key there and needs the computed form. A style that silently fails to apply is invisible, which is why both spellings are asserted.',
+        component: NameTranslationHarness,
+        codeKey: 'story-apply-style',
+      },
+      {
+        title: 'An open overlay owns Escape before the dialog does',
+        description:
+          'The window listener captures, so it runs first — and would close the dialog out from under a select that Escape should merely collapse. Two shapes: a control reporting its own open list, and a popup portaled out of the dialog. Declared with aria-expanded and a popup role, because that is what the guard reads.',
+        component: DismissKeyOwnershipHarness,
+        codeKey: 'story-dismiss-key-ownership',
+      },
+      {
+        title: 'The predicate on its own, without the listener around it',
+        description:
+          'Asked directly rather than through a dismissal, because a caller that imports it gets the function and not the machinery — so it has to answer correctly standing alone.',
+        component: KeyClaimProbeHarness,
+        codeKey: 'story-dismiss-key-ownership',
+      },
+      {
+        title: 'A modal whose Escape is a request, not a close',
+        description:
+          'The dialog reports and the state above it decides, as in any controlled wrapper. One that closed itself would leave the boolean upstream still saying true, and the next render would put it straight back on screen.',
+        component: ControlledModalHarness,
+        codeKey: 'story-dismiss-request',
+      },
+      {
+        title: 'A non-modal panel that may decline the dismissal',
+        description:
+          'Outside the top layer, so the press comes from a button beside it — which a dialog-level listener would never hear. The window listener captures, so a press it swallows is one the page never sees, and declining has to mean the page still gets its key.',
+        component: ControlledPanelHarness,
+        codeKey: 'story-dismiss-request',
+      },
+      {
+        title: 'modal:open carries the element, not just the id',
+        description:
+          'The event a tag manager or a plain script can listen for having imported nothing. It carries the very node the dialog rendered to, which is what makes it useful beyond logging.',
+        component: OpenEventInDocumentHarness,
+        codeKey: 'story-open-event-element',
+      },
+      {
+        title: 'The same event, for a dialog a document query cannot reach',
+        description:
+          'In a shadow root querySelector cannot see the dialog at all — and the event still carries it. That is the difference between an id a listener has to resolve and an element it is handed.',
+        component: OpenEventInShadowHarness,
+        codeKey: 'story-open-event-element',
+      },
+      {
+        title: 'Two modal dialogs racing for the front',
+        description:
+          'The panel’s showModal() lands after the warning’s, so the platform paints it in front and the warning falls under its backdrop. The no-policy half is the baseline: a reorder that never happens, so the policy half is measured against something rather than asserted alone.',
+        component: MultiRaiseHarness,
+        codeKey: 'story-stack-priority-extra',
+      },
+      {
+        title: 'A policy arriving after a dialog already holds the caret',
+        description:
+          'The smallest arrangement that reaches raiseDialog’s focus restore. Until prioritize is called the manager tracks no top layer, so the first sync compares the desired order against an empty one — and moving a modal dialog means closing and re-showing it, with a caret in the way.',
+        component: LatePolicyFocusHarness,
+        codeKey: 'story-stack-priority-extra',
       },
       {
         title: 'A control that disables itself keeps the keyboard',

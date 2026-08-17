@@ -68,6 +68,11 @@ import storyStoreContextSrc from '@/shared/lib/__tests__/create-store-context.st
 import storyDmDomEventsSrc from 'umbra/manager/__tests__/dialog-manager/dom-events.story.tsx?raw';
 import storyDmLookupSrc from 'umbra/manager/__tests__/dialog-manager/lookup.story.tsx?raw';
 import storyUseLookupSrc from 'umbra/react/__tests__/use-lookup.story.tsx?raw';
+import storyActionIsRunningSrc from 'umbra/actions/__tests__/use-modal-actions/action-is-running.story.tsx?raw';
+import storyDomSafeSpreadSrc from 'umbra/actions/__tests__/use-modal-actions/dom-safe-spread.story.tsx?raw';
+import storySpreadContractSrc from 'umbra/actions/__tests__/use-modal-actions/spread-contract.story.tsx?raw';
+import storyOpenEventElementSrc from 'umbra/manager/__tests__/open-event-element.story.tsx?raw';
+import storyStackPrioritySrc from 'umbra/manager/__tests__/stack-priority.story.tsx?raw';
 import storyActionErrorHotkeyRetrySrc from 'umbra/react/__tests__/use-modal/action-error-hotkey-retry.story.tsx?raw';
 import storyContainedOverlaySrc from 'umbra/react/__tests__/use-modal/contained-overlay.story.tsx?raw';
 import storyEscAnsweredByNobodySrc from 'umbra/react/__tests__/use-modal/esc-answered-by-nobody.story.tsx?raw';
@@ -168,6 +173,11 @@ export const stories: Record<string, string> = {
   'story-dm-lookup-foreground': storyDmLookupSrc,
   'story-dm-lookup-unregistered': storyDmLookupSrc,
   'story-use-lookup-basic': storyUseLookupSrc,
+  'story-action-is-running': storyActionIsRunningSrc,
+  'story-dom-safe-spread': storyDomSafeSpreadSrc,
+  'story-spread-contract': storySpreadContractSrc,
+  'story-open-event-element': storyOpenEventElementSrc,
+  'story-stack-priority-extra': storyStackPrioritySrc,
   'story-action-error-hotkey-retry': storyActionErrorHotkeyRetrySrc,
   'story-contained-overlay': storyContainedOverlaySrc,
   'story-esc-answered-by-nobody': storyEscAnsweredByNobodySrc,

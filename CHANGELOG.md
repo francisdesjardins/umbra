@@ -11,6 +11,23 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — the last decision-free lot: `core`, `manager` and `actions`, thirteen cards
+
+What remained that needed no judgement call, done in one pass. Six of the thirteen pair off inside a
+single file and get a card each, because the pairing is the argument: `applyStyle`'s two are
+asymmetric keyframes and the camelCase/custom-property spelling, `dismiss-key-ownership` splits the
+predicate from the listener that normally hides it, and `dismiss-request` shows the same refusal on a
+modal and on a non-modal panel, where the press arrives from outside the top layer.
+
+Three of the eight source files were already registered with the code viewer under their own keys, so
+the new cards point at those rather than importing the same file twice — `story-apply-style`,
+`story-dismiss-request`, `story-dismiss-key-ownership`. Thirteen cards rendered and checked in a
+browser, console clean.
+
+Thirty-eight remain, and both lots need the same decision first: `solid` (20) and `vanilla` (18) are
+thin wrappers over `solid-app.ts` and one large `bind-dialog.story.tsx`, so a `?raw` of the story file
+shows the wrapper and none of the subject.
+
 ### Added — the React harnesses reach the page, fourteen of them
 
 The second slice of the 75, and the last one that is purely mechanical: every React harness lives in

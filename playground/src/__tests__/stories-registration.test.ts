@@ -31,18 +31,6 @@ const STORIES_PAGE = join(REPO, 'playground/src/pages/stories/ui/StoriesPage.tsx
 
 /** Prop-free harnesses the page does not show yet — see this file's doc comment. */
 const NOT_ON_THE_PAGE = new Set([
-  'ActionIsRunningHarness',
-  'AsymmetricKeyframesHarness',
-  'ControlledModalHarness',
-  'ControlledPanelHarness',
-  'DismissKeyOwnershipHarness',
-  'DomSafeSpreadHarness',
-  'KeyClaimProbeHarness',
-  'LatePolicyFocusHarness',
-  'MultiRaiseHarness',
-  'NameTranslationHarness',
-  'OpenEventInDocumentHarness',
-  'OpenEventInShadowHarness',
   'SolidBasicHarness',
   'SolidBusyHarness',
   'SolidClaimlessReclaimHarness',
@@ -63,7 +51,6 @@ const NOT_ON_THE_PAGE = new Set([
   'SolidShadowRootHarness',
   'SolidSlideHarness',
   'SolidStackPriorityHarness',
-  'SpreadContractHarness',
   'VanillaBasicHarness',
   'VanillaBusyHarness',
   'VanillaClaimlessReclaimHarness',
