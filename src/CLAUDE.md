@@ -304,9 +304,11 @@ invent one — so it takes the caller's and **omits the attribute entirely when 
 
 `role` is deliberately not the whole ARIA surface: a `<dialog>` _is_ a dialog, and a surface that is
 not one — a toast, a popover — wants a live region **inside** it rather than a role contradicting its
-element. **`role: 'alertdialog'` does not require `ariaDescribedBy`**; making it a type error was
-considered and rejected, and the reasoning is on the rule in
-[core/dialog-labelling.ts](core/dialog-labelling.ts).
+element. **It narrows with the variant**: `'alertdialog'` is the modal branch's alone, an alertdialog
+being modal by definition — the pair is a type error on the hook bindings, and on `umbra/vanilla`'s
+hand-written markup the labelling diagnostic reports it. **`role: 'alertdialog'` does not require
+`ariaDescribedBy`**; making it a type error was considered and rejected, and the reasoning is on the
+rule in [core/dialog-labelling.ts](core/dialog-labelling.ts).
 
 **The diagnostic that _is_ shipped** is `syncLabellingDiagnostics`
 ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)) over that rule, and — like every warning here

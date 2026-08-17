@@ -195,6 +195,10 @@ export function syncLabellingDiagnostics(
       label: dialog.getAttribute('aria-label'),
       labelledBy: dialog.getAttribute('aria-labelledby'),
       describedBy: dialog.getAttribute('aria-describedby'),
+      role: dialog.getAttribute('role'),
+      // Off the element like everything else here: in `umbra/vanilla` both the role and the
+      // variant are the caller's markup, and the option type never saw either.
+      nonModal: dialog.getAttribute('data-modal-type') === 'non-modal',
     },
     // The element's own tree, which is what the platform resolves an IDREF against — so for a
     // dialog in a shadow root, an id out in the light DOM genuinely resolves to nothing for a

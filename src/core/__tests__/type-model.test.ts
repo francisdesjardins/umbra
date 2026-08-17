@@ -255,13 +255,23 @@ const bogusBackdrop: ModalVariant = { nonModal: true, dismissOnBackdropClick: tr
 // @ts-expect-error a modal dialog uses dismissOnBackdropClick, not click-outside
 const bogusClickOutside: ModalVariant = { nonModal: false, dismissOnClickOutside: true };
 
+// The other pair the union holds: an alertdialog is modal by definition, so the non-modal
+// branch offers `'dialog'` alone and the pair below is unwritable rather than merely wrong.
+const modalAlert: ModalVariant = { role: 'alertdialog' };
+const nonModalPlain: ModalVariant = { nonModal: true, role: 'dialog' };
+
+// @ts-expect-error an alertdialog is modal by definition — the non-modal branch has no such role
+const bogusAlert: ModalVariant = { nonModal: true, role: 'alertdialog' };
+
 test.describe('type model', () => {
   test('the documented variant combinations are the ones that compile', () => {
     // The assertions are the two `@ts-expect-error` directives above: if either combination
     // became legal, `tsc` reports the unused directive and the build fails.
     expect(modalVariant.dismissOnBackdropClick).toBe(true);
     expect(nonModalVariant.nonModal).toBe(true);
-    expect([bogusBackdrop, bogusClickOutside]).toHaveLength(2);
+    expect(modalAlert.role).toBe('alertdialog');
+    expect(nonModalPlain.role).toBe('dialog');
+    expect([bogusBackdrop, bogusClickOutside, bogusAlert]).toHaveLength(3);
   });
 
   test('the payload cannot be widened at either end of the close path', () => {

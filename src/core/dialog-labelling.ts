@@ -1,18 +1,22 @@
 /**
- * What a dialog's labelling attributes are missing, as data.
+ * What a dialog's self-description is missing, as data.
  *
- * The two findings here are the ones that are unambiguously broken. A reference that resolves to
- * nothing is the failure mode of writing `aria-labelledby` by hand: the attribute is there, the
- * element is not, and the dialog stays anonymous *while looking named* — invisible to a type, to
- * a linter, and to a reading of the source. A dialog with no name at all is the defect the option
- * docs already call the commonest in a dialog implementation.
+ * Every finding here is unambiguously broken — that is the bar for being one. A reference that
+ * resolves to nothing is the failure mode of writing `aria-labelledby` by hand: the attribute is
+ * there, the element is not, and the dialog stays anonymous *while looking named* — invisible to
+ * a type, to a linter, and to a reading of the source. A dialog with no name at all is the defect
+ * the option docs already call the commonest in a dialog implementation. And `role="alertdialog"`
+ * on a **non-modal** dialog contradicts itself for assistive technology: an alertdialog is modal
+ * by definition (the APG requires `aria-modal`), and the hook bindings' option type refuses the
+ * pair — this is the same refusal for the markup `umbra/vanilla` cannot type-check.
  *
- * **There is deliberately no third finding, and specifically nothing about `alertdialog`.** The
- * pairing with a description is a strong recommendation with a documented exception — WAI-ARIA
- * Practices: *"It is advisable to omit specifying `aria-describedby` if the dialog content
- * includes semantic structures, such as lists, tables, or multiple paragraphs, that need to be
- * perceived in order to easily understand the content."* Warning on the omission would push
- * people toward the pattern the spec tells them to avoid, which is worse than saying nothing.
+ * **There is deliberately nothing about `alertdialog` and its description.** That pairing is a
+ * strong recommendation with a documented exception — WAI-ARIA Practices: *"It is advisable to
+ * omit specifying `aria-describedby` if the dialog content includes semantic structures, such as
+ * lists, tables, or multiple paragraphs, that need to be perceived in order to easily understand
+ * the content."* Warning on the omission would push people toward the pattern the spec tells them
+ * to avoid, which is worse than saying nothing — where the modality contradiction above is
+ * unconditional, which is what lets it be a finding.
  */
 
 /**
@@ -28,6 +32,10 @@ export type LabellingAttributes = {
   readonly label: string | null;
   readonly labelledBy: string | null;
   readonly describedBy: string | null;
+  /** The `role` attribute as written on the element, `null` when absent. */
+  readonly role: string | null;
+  /** Read off `data-modal-type`, so the caller's markup answers rather than the options. */
+  readonly nonModal: boolean;
 };
 
 /**
@@ -56,7 +64,7 @@ function idsOf(value: string | null): readonly string[] {
  *
  * @example
  * findLabellingProblems(
- *   { label: null, labelledBy: 'confirm-title', describedBy: null },
+ *   { label: null, labelledBy: 'confirm-title', describedBy: null, role: null, nonModal: false },
  *   (id) => document.getElementById(id) !== null
  * );
  */
@@ -95,6 +103,12 @@ export function findLabellingProblems(
   // is missing, and it is the one that says what to fix.
   if (!named && !nameIsBroken) {
     problems.push('no accessible name — screen readers announce it as just "dialog"');
+  }
+
+  if (attributes.role === 'alertdialog' && attributes.nonModal) {
+    problems.push(
+      'role="alertdialog" on a non-modal dialog — an alertdialog is modal by definition; a non-modal surface with something urgent to say wants a live region inside its content'
+    );
   }
 
   return problems;

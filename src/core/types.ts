@@ -186,6 +186,22 @@ export type ModalVariant =
       readonly dismissOnBackdropClick?: boolean | undefined;
       /** Not applicable — modal dialogs use `dismissOnBackdropClick` instead. */
       readonly dismissOnClickOutside?: never;
+      /**
+       * `'alertdialog'` for a dialog that interrupts to report something the user must act on — a
+       * destructive confirm, an error that blocks progress. Screen readers announce its
+       * description immediately rather than waiting to be read.
+       *
+       * Deliberately not the full `role` surface: a `<dialog>` element is a dialog, and a surface
+       * that is *not* one (a toast, a popover) wants a live region inside it rather than a role
+       * that contradicts its own element.
+       *
+       * On the variant rather than the flat surface, because the union is what carries the other
+       * half of that reasoning: an alertdialog is modal by definition, so the non-modal branch
+       * does not offer it.
+       *
+       * @default 'dialog'
+       */
+      readonly role?: 'dialog' | 'alertdialog' | undefined;
     }
   | {
       /**
@@ -196,6 +212,13 @@ export type ModalVariant =
       readonly nonModal: true;
       /** Not applicable — non-modal dialogs have no backdrop. */
       readonly dismissOnBackdropClick?: never;
+      /**
+       * `'dialog'` only: an alertdialog is modal by definition (the APG requires `aria-modal`),
+       * so announcing one over content the user can still reach would be a contradiction for
+       * assistive technology. A non-modal surface that has something urgent to say wants a live
+       * region inside its content instead.
+       */
+      readonly role?: 'dialog' | undefined;
       /**
        * Whether clicking outside the dialog dismisses it.
        * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
@@ -499,18 +522,6 @@ export type UseModalBaseOptions<
   readonly ariaLabelledBy?: string | undefined;
   /** The id of the element that describes this dialog — usually its body text. */
   readonly ariaDescribedBy?: string | undefined;
-  /**
-   * `'alertdialog'` for a dialog that interrupts to report something the user must act on — a
-   * destructive confirm, an error that blocks progress. Screen readers announce its description
-   * immediately rather than waiting to be read.
-   *
-   * Deliberately not the full `role` surface: a `<dialog>` element is a dialog, and a surface
-   * that is *not* one (a toast, a popover) wants a live region inside it rather than a role
-   * that contradicts its own element.
-   *
-   * @default 'dialog'
-   */
-  readonly role?: 'dialog' | 'alertdialog' | undefined;
   /**
    * Which template built this dialog — a free-form label the library carries and never interprets.
    * See `ModalInfo.template`.

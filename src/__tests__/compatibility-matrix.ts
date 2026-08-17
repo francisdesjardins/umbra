@@ -99,10 +99,11 @@ export type PlatformRow = {
 
 // ── Axis A — option × option ──────────────────────────────────────────────────
 //
-// One row per option, and the interesting column is `enforcement`: **exactly one pair is `TYPE`
-// today** — `nonModal` against the two dismissal options, through `ModalVariant`'s discriminated
-// union, pinned by two `@ts-expect-error` assertions in `core/__tests__/type-model.test.ts`.
-// Everything else is a function that narrows at run time, or a sentence.
+// One row per option, and the interesting column is `enforcement`: **two pairs are `TYPE`
+// today**, both through `ModalVariant`'s discriminated union and both pinned by `@ts-expect-error`
+// assertions in `core/__tests__/type-model.test.ts` — `nonModal` against the two dismissal
+// options, and `nonModal: true` against `role: 'alertdialog'`. Everything else is a function that
+// narrows at run time, or a sentence.
 
 export const OPTION_ROWS: readonly OptionRow[] = [
   {
@@ -292,8 +293,15 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   },
   {
     option: 'role',
+    excludes: ['nonModal: true (for `"alertdialog"`)'],
     enforcement: 'TYPE',
-    note: 'A closed union of `"dialog" | "alertdialog"`. Deliberately not the whole ARIA surface — a `<dialog>` is a dialog, and a surface that is not one wants a live region inside it.',
+    note: 'A closed union, and it narrows with the variant: the modal branch offers `"dialog" | "alertdialog"`, the non-modal branch `"dialog"` alone — an alertdialog is modal by definition, so the pair is unwritable rather than merely wrong. Deliberately not the whole ARIA surface — a `<dialog>` is a dialog, and a surface that is not one wants a live region inside it. For the markup the type cannot see, `umbra/vanilla`’s hand-written `role="alertdialog"` on a non-modal dialog is the labelling diagnostic’s third finding.',
+    references: [
+      {
+        file: 'src/core/__tests__/dialog-labelling.test.ts',
+        title: 'reports an alertdialog on a non-modal dialog',
+      },
+    ],
   },
   {
     option: 'template',
@@ -1294,7 +1302,7 @@ export function renderMatrix(): string {
 
   lines.push('### Option × option', '');
   lines.push(
-    'One row per option a caller can pass. The **held by** column is the one to read: `TYPE` means the checker rejects the wrong combination, `RUNTIME` means a named function narrows or refuses, `PROSE` means a sentence and nothing else — so every `PROSE` row is a candidate to become one of the other two. **Exactly one pair is `TYPE` today**: `nonModal` against the two dismissal options, through `ModalVariant`.'
+    'One row per option a caller can pass. The **held by** column is the one to read: `TYPE` means the checker rejects the wrong combination, `RUNTIME` means a named function narrows or refuses, `PROSE` means a sentence and nothing else — so every `PROSE` row is a candidate to become one of the other two. **Two pairs are `TYPE` today**, both through `ModalVariant`: `nonModal` against the two dismissal options, and `nonModal: true` against `role: "alertdialog"`.'
   );
   lines.push('');
   lines.push('| Option | Held by | Notes |');
