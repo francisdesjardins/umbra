@@ -11,6 +11,21 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — ten of the seventy-five harnesses reach the page, chosen for what they discriminate
+
+The gate made the list authoritative; this is the first of it worked down, and the selection is the
+point. Every one of these ten carries a JSDoc saying what it exists to tell apart — a hidden stop
+from a disabled one, a scan of the dialog's own subtree from one that reaches a nested panel, a
+contenteditable from the selector that never proposes it — so the card can say something a reader
+cannot get from the title. The descriptions are those reasons, not restatements of the component
+name.
+
+Six are the focus-containment family, three the reclaim across a shadow boundary, one `applyStyle`'s
+explicit `undefined`. Their source files were registered with the code viewer at the same time, since
+several harnesses share one file and the viewer keys off the file rather than the card.
+
+Sixty-five remain, and the gate's list names them.
+
 ### Added — the stories page has a gate, and it found 75 harnesses nobody could reach
 
 The rule was prose in `playground/CLAUDE.md` — export from the barrel, add a `StoryEntry`, register

@@ -1,4 +1,18 @@
 import { StrandedFocusHarness } from 'umbra/core/__tests__/stranded-focus.story';
+import {
+  EditableContentHarness,
+  EditableOnlyHarness,
+  FramedContentHarness,
+  HiddenStopHarness,
+  NestedPanelScanHarness,
+  RovingToolbarHarness,
+} from 'umbra/core/__tests__/focus-containment.story';
+import {
+  OpeningFocusForegroundHarness,
+  ReclaimWithoutClaimHarness,
+  ShadowReclaimWithoutClaimHarness,
+} from 'umbra/core/__tests__/opening-focus-foreground.story';
+import { UndefinedClearsHarness } from 'umbra/core/__tests__/apply-style.story';
 import { VanillaSwapHarness } from 'umbra/vanilla/__tests__/swap.story';
 import { ExampleGrid, ExampleSection, StoryCard } from '@/entities/example';
 import { sectionSlug } from '@/shared/lib/section-slug';
@@ -157,6 +171,76 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'A modal whose content holds nothing focusable. showModal() has nowhere to put focus, so the keydown listener never hears the key — the browser’s own cancel carries it instead, and the dialog still closes rather than desyncing from the store.',
         component: EscWithoutFocusHarness,
         codeKey: 'story-esc-without-focus',
+      },
+      {
+        title: 'Tab wraps inside the panel, or walks out of it',
+        description:
+          'Three stops with containFocus as a prop, so the same panel walks out when it is off and wraps when it is on. The outside button sits before the panel deliberately: with a forward Tab that has somewhere to go, "left the dialog" and "left the page" stop looking identical to document.activeElement.',
+        component: RovingToolbarHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'The recovery scans its own dialog, not the one inside it',
+        description:
+          'A modal holding an open non-modal panel, where the recovery’s scan can meet a dialog that is not its own. Scanned with a plain querySelectorAll it reaches the nested panel’s controls, which Shift+Tab makes plain: it walks from the end, so the wrong subtree is the first thing it finds.',
+        component: NestedPanelScanHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'A hidden stop is not a stop',
+        description:
+          'The middle control disappears with display: none rather than disabled, because the focusable selector already excludes a disabled control and would pass here without ever consulting visibility. The wrap has to land on something a user can actually reach.',
+        component: HiddenStopHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'A contenteditable is a Tab stop with no attribute to find it by',
+        description:
+          'A panel ending in an editor: no tabindex, no href, no control tag, so a scan built from those never proposes it and the wrap hands focus back where it started. What Tab can stop on is wider than what a selector lists.',
+        component: EditableContentHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'A dialog whose only stop is an editor',
+        description:
+          'Nothing but a contenteditable inside, so the Tab recovery has nowhere else to move and WebKit does not descend from a focused <dialog> — the keyboard is stuck without the recovery. No containFocus, deliberately: the recovery is the unconditional half and must not need the flag.',
+        component: EditableOnlyHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'Tab out of an iframe, which no keydown listener hears',
+        description:
+          'A press inside an <iframe> reaches no listener in the parent document, so an approach built on keydown cannot see the Tab that leaves it. The browser still walks onto a focus marker placed after it, which is what the containment uses.',
+        component: FramedContentHarness,
+        codeKey: 'story-focus-containment',
+      },
+      {
+        title: 'A panel opening underneath does not take the keyboard',
+        description:
+          'A non-modal panel opens beneath a modal that holds focus. It claims focusOnOpen on purpose, so the test cannot pass merely because nothing asked for focus — the dialog in front must keep it anyway. It opens from inside the modal’s render because the top layer swallows outside clicks.',
+        component: OpeningFocusForegroundHarness,
+        codeKey: 'story-opening-focus-foreground',
+      },
+      {
+        title: 'Taking the keyboard back, with a claim to aim at',
+        description:
+          'The reclaim in the shape where focusOnOpen exists: the only way to tell "handed back where focus was" from "re-honoured the claim" is to have a claim and put focus somewhere else first.',
+        component: ReclaimWithoutClaimHarness,
+        codeKey: 'story-opening-focus-foreground',
+      },
+      {
+        title: 'The same reclaim, across a shadow boundary',
+        description:
+          'The floor focuses a candidate and then asks who holds it. Asked of the document, a shadow root answers with its host — so a candidate that took focus perfectly well reads as a failure and the scan walks on to the dialog’s last control. It has to ask the dialog’s own root.',
+        component: ShadowReclaimWithoutClaimHarness,
+        codeKey: 'story-opening-focus-foreground',
+      },
+      {
+        title: 'An explicit undefined removes a property',
+        description:
+          'applyStyle writes a style object onto an element and clears what the previous one set. An explicit undefined means remove, not write the string "undefined" — the difference between a cleared property and a broken one.',
+        component: UndefinedClearsHarness,
+        codeKey: 'story-apply-style',
       },
       {
         title: 'A control that disables itself keeps the keyboard',

@@ -32,6 +32,11 @@ import storyNestedHotkeyScopeSrc from 'umbra/react/__tests__/use-modal/nested-ho
 import storyFocusUnderAnotherModalSrc from 'umbra/react/__tests__/use-modal/focus-under-another-modal.story.tsx?raw';
 import storyEscWithoutFocusSrc from 'umbra/react/__tests__/use-modal/esc-without-focus.story.tsx?raw';
 import storyStrandedFocusSrc from 'umbra/core/__tests__/stranded-focus.story.tsx?raw';
+import storyApplyStyleSrc from 'umbra/core/__tests__/apply-style.story.tsx?raw';
+import storyDismissRequestSrc from 'umbra/core/__tests__/dismiss-request.story.tsx?raw';
+import storyDismissKeyOwnershipSrc from 'umbra/core/__tests__/dismiss-key-ownership.story.tsx?raw';
+import storyFocusContainmentSrc from 'umbra/core/__tests__/focus-containment.story.tsx?raw';
+import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.story.tsx?raw';
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-modal/busy-while-preparing.story.tsx?raw';
@@ -110,6 +115,11 @@ export const stories: Record<string, string> = {
   'story-focus-under-another-modal': storyFocusUnderAnotherModalSrc,
   'story-esc-without-focus': storyEscWithoutFocusSrc,
   'story-stranded-focus': storyStrandedFocusSrc,
+  'story-apply-style': storyApplyStyleSrc,
+  'story-dismiss-request': storyDismissRequestSrc,
+  'story-dismiss-key-ownership': storyDismissKeyOwnershipSrc,
+  'story-focus-containment': storyFocusContainmentSrc,
+  'story-opening-focus-foreground': storyOpeningFocusSrc,
   'story-vanilla-swap': storyVanillaSwapSrc,
   'story-accessible-name': storyAccessibleNameSrc,
   'story-busy-while-preparing': storyBusyWhilePreparingSrc,
