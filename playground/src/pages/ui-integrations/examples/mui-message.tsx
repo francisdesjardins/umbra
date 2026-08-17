@@ -18,8 +18,7 @@ export function MuiMessageExample() {
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     ariaDescribedBy: `${MODAL_ID}-body`,
-    // Its vanilla twin says the same thing with the same role: the point of this page is that the
-    // markup differs and the behaviour does not, accessibility included.
+    // Same role as its vanilla twin: only the markup differs, accessibility included.
     role: 'alertdialog',
     render: ({ action, error }) => {
       return (

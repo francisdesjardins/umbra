@@ -1,13 +1,5 @@
-// Shared MUI components
-// Shared MUI components
-// Shared MUI components
-// Shared MUI components
 export { Button } from '@/entities/modal-template/ui/mui/shared/MuiButton';
 
-// Content components
-// Content components
-// Content components
-// Content components
 export { AlertContent } from '@/entities/modal-template/ui/mui/shared/content/AlertContent';
 export { Detail } from '@/entities/modal-template/ui/mui/shared/content/Detail';
 export { DetailList } from '@/entities/modal-template/ui/mui/shared/content/DetailList';

@@ -6,25 +6,11 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 
 /**
- * An open the dialog is allowed to refuse.
- *
- * `dialogManager.open(id)` is an instruction and it is the right shape for code that owns the
- * dialog. `requestOpen` is for everything else — a shell, a deep link, another microfrontend —
- * and it asks instead: the request reaches the dialog's own code, which decides.
- *
- * It matters most for a **controlled** dialog, the shape most component-library call sites take:
- * `open` is a prop held by the component that renders it, so an instruction from outside opens it
- * for a moment and its own reconciliation puts it back. Asking costs none of that — nothing moves
- * unless the owner agrees.
- *
- * The payload is `unknown` because it crossed an ownership boundary. So is `context`, which is
- * what the caller *says* about itself and nothing anyone verified — an HTTP `Referer`, not a
- * credential. The owner below validates both, which is the point of the whole arrangement: what
- * it will not accept, it does not open for.
- *
- * And it says so. Every line in the result panel is written by the **caller**, from what
- * `requestOpenAndWait` came back with — the owner only decides. A refusal the asker never hears
- * is a dead end, which is what `request.refuse(reason)` exists to prevent.
+ * An open the dialog may refuse: `open(id)` instructs, `requestOpen` asks and the dialog decides —
+ * what a shell, deep link or other microfrontend needs, and what a **controlled** dialog requires,
+ * an outside instruction holding only until the owner reconciles it back. Payload and `context`
+ * cross an ownership boundary, so both are `unknown` and validated below; `context` is a claim (an
+ * HTTP `Referer`, not a credential), and `refuse(reason)` reaches the asker.
  */
 
 /** What this dialog agrees to be opened with. Anything else is refused. */
@@ -42,12 +28,7 @@ function parseArchiveRequest(data: unknown): ArchiveRequest | null {
 type ArchiveReceipt = { readonly room: string; readonly archivedAt: string };
 
 /**
- * A type predicate rather than a parse-or-null, because the caller's question is a yes/no about
- * a value it already holds: `outcome.closed` resolves with `data?: unknown`, symmetrically with
- * the payload on the way in, and one `if` narrows it for the rest of the block.
- *
- * The point the pair makes together: **both directions cross the boundary unvalidated.** The
- * dialog does not trust what the shell sent, and the shell does not trust what came back.
+ * A predicate, not parse-or-null: `data?: unknown` comes back, and each side distrusts the other.
  */
 function isArchiveReceipt(data: unknown): data is ArchiveReceipt {
   if (typeof data !== 'object' || data === null) {
@@ -68,14 +49,12 @@ export function OpenRequestExample() {
     id: 'open-request-demo',
     ariaLabelledBy: 'open-request-demo-title',
 
-    // The whole opt-in. Without it every `requestOpen('open-request-demo', …)` is refused and
-    // logged, and this dialog is reachable only by the code that renders it.
+    // The opt-in: without it every `requestOpen('open-request-demo', …)` is refused and logged.
     onOpenRequest: (payload, request) => {
       const from = request.context?.source ?? 'inconnu';
       const parsed = parseArchiveRequest(payload);
 
-      // Refusal is explicit: returning would refuse too, but silently, and the asker below
-      // would have nothing to show. Acceptance needs no word — opening is the yes.
+      // Refusal is explicit; returning refuses silently, leaving the asker nothing to show.
       if (!TRUSTED_SOURCES.has(from)) {
         request.refuse(`source-non-fiable:${from}`);
         return;
@@ -85,8 +64,7 @@ export function OpenRequestExample() {
         return;
       }
 
-      // Accepted: the state is set first, so the dialog renders once with its data rather than
-      // opening empty and filling in.
+      // State first, so the dialog renders once with its data instead of opening empty.
       setRoom(parsed.room);
       void modal.open();
     },
@@ -112,8 +90,7 @@ export function OpenRequestExample() {
             <Shared.Button
               variant="contained"
               {...action('confirm', (close) => {
-                // The typed door: `TData` is declared on the hook, so this payload is checked
-                // here and arrives at the caller as `unknown` only because it crossed a boundary.
+                // `TData` on the hook checks it here; it reaches the caller as `unknown`.
                 close({ room: room ?? '—', archivedAt: new Date().toISOString() });
               })}
             >
@@ -134,8 +111,7 @@ export function OpenRequestExample() {
     try {
       payload = JSON.parse(rawPayload);
     } catch {
-      // Sent as-is. A caller that cannot even produce JSON is exactly the case the owner's
-      // validation exists for, so it is worth being able to try it here.
+      // Sent as-is: a caller that cannot produce JSON is what the owner's validation is for.
       payload = rawPayload;
     }
 
@@ -148,7 +124,7 @@ export function OpenRequestExample() {
       return;
     }
     setLog('Acceptée — en attente de la fermeture…');
-    // The second half is opt-in: the decision settles now, the close settles when the user is done.
+    // Opt-in second half: the decision settles now, the close when the user is done.
     const [, result] = await outcome.closed;
     if (result === null) {
       setLog('Le dialogue a disparu avant de répondre');
@@ -159,7 +135,6 @@ export function OpenRequestExample() {
       setLog(`Fermée sans reçu : ${result.reason}`);
       return;
     }
-    // Narrowed: `result.data` is an `ArchiveReceipt` for the rest of this block.
     setLog(`Salle ${result.data.room} archivée à ${result.data.archivedAt}`);
   };
 
@@ -199,8 +174,7 @@ export function OpenRequestExample() {
           <Shared.Button
             onClick={() => {
               setLog(null);
-              // The other door, for comparison: it does not ask, and it does not care what this
-              // dialog would have said. Nothing validates, and `room` is whatever it last was.
+              // The other door: no asking, no validation, and `room` is whatever it last was.
               dialogManager.open('open-request-demo');
             }}
             size="small"

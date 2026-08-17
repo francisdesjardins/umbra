@@ -1,22 +1,11 @@
 /**
- * Body scroll lock with scrollbar-width compensation.
- *
- * Framework-agnostic: plain DOM, no React. Used by the dialog manager whenever at least one
- * *modal* (blocking, `showModal()`) dialog is open.
- *
- * Why the compensation matters: hiding `overflow` removes a classic (space-taking) scrollbar,
- * which widens the viewport by its width and shifts every centered or right-aligned element —
- * the ~15px "jump" you see when a modal opens. We reserve the same amount as body padding so
- * the layout stays put.
- *
- * `position: fixed` elements are *not* touched — hunting a consumer's DOM for them would be
- * the opposite of headless. Instead the measured width is published as the
- * `--dialog-scrollbar-width` custom property on `:root` while the lock is held, so user-land
- * can opt in wherever it matters:
- *
- * ```css
- * .my-fixed-header { padding-right: var(--dialog-scrollbar-width, 0px); }
- * ```
+ * Body scroll lock with scrollbar-width compensation — plain DOM, held while at least one *modal*
+ * (`showModal()`) dialog is open. Hiding `overflow` removes a classic scrollbar and widens the
+ * viewport by its width, shifting every centered or right-aligned element (the ~15px "jump"), so
+ * the same amount is reserved as body padding. `position: fixed` elements are *not* touched —
+ * hunting a consumer's DOM for them would be the opposite of headless — so the reclaimed width is
+ * published as `--dialog-scrollbar-width` on `:root`, for user-land to apply with
+ * `padding-right: var(--dialog-scrollbar-width, 0px)` wherever it matters.
  */
 
 import { BODY_LOCK_ATTR } from '../core/dialog-styles.js';
@@ -24,35 +13,25 @@ import { createLockLedger, createLockOwner } from './lock-ledger.js';
 import type { LockOwner } from './lock-ledger.js';
 
 /**
- * Custom property published on `:root` while the lock is held, holding the width the lock
- * reclaimed — i.e. exactly how much to compensate. `0px` when nothing was reclaimed (overlay
- * scrollbars, or a page using `scrollbar-gutter: stable`), so consumers can use it
- * unconditionally.
+ * Published on `:root` while the lock is held: the width reclaimed, i.e. how much to compensate.
+ * `0px` when nothing was, so consumers can use it unconditionally.
  */
 export const SCROLLBAR_WIDTH_VAR = '--dialog-scrollbar-width';
 
-// The attribute and the rule that reads it live together in `core/dialog-styles.ts`, so the
-// selector and this `setAttribute` cannot drift apart. Re-exported because this module is where
-// a reader looks for it — and `createLockOwner` for the same reason: a caller of the two functions
-// below needs a token, and should not have to know which module mints it.
+// The attribute and the rule reading it live together in `core/dialog-styles.ts`, so the selector
+// and this `setAttribute` cannot drift; both re-exported because this is where a caller looks.
 export { BODY_LOCK_ATTR, createLockOwner };
 export type { LockOwner };
 
-/**
- * Who currently wants the body locked — module-level, because the lock target is: `document.body`
- * is one body however many managers a page builds. The ownership rule and what it prevents are
- * {@link createLockLedger}'s.
- */
+/** Who currently wants the body locked — module-level, because `document.body` is one body. */
 const ledger = createLockLedger();
 /** Body's own inline `padding-right` before we touched it (`null` when we didn't). */
 let restorePaddingRight: string | null = null;
 
 /**
- * Width of the classic scrollbar currently taking layout space, in px.
- *
- * `window.innerWidth` includes the scrollbar gutter; `documentElement.clientWidth` does not.
- * Returns `0` for overlay scrollbars (mobile, `scrollbar-gutter`-less overlay mode) — i.e.
- * exactly the cases where there is nothing to compensate.
+ * Width of the classic scrollbar currently taking layout space — `window.innerWidth` includes the
+ * gutter, `documentElement.clientWidth` does not. `0` for overlay scrollbars, which have nothing to
+ * compensate.
  */
 export function getScrollbarWidth(): number {
   if (typeof document === 'undefined') {
@@ -62,10 +41,9 @@ export function getScrollbarWidth(): number {
 }
 
 /**
- * How much horizontal space the lock reclaimed, and therefore how much to compensate.
- *
- * Pure so the three real-world cases are testable without a browser (headless Chromium uses
- * overlay scrollbars, so it cannot reproduce a space-taking gutter):
+ * How much horizontal space the lock reclaimed, and therefore how much to compensate. Pure, so the
+ * three real-world cases are testable without a browser — headless Chromium uses overlay
+ * scrollbars and cannot reproduce a space-taking gutter:
  *
  * | case                       | before | after | compensation |
  * | -------------------------- | -----: | ----: | -----------: |
@@ -73,9 +51,9 @@ export function getScrollbarWidth(): number {
  * | overlay scrollbar          |      0 |     0 |            0 |
  * | `scrollbar-gutter: stable` |     15 |    15 |            0 |
  *
- * The last row is why this is a delta and not simply "the scrollbar width": that page keeps
- * its gutter through `overflow: hidden`, so padding by the scrollbar width would shift content
- * inward by 15px — a jump in the opposite direction from the one we are fixing.
+ * The last row is why this is a delta and not simply "the scrollbar width": that page keeps its
+ * gutter through `overflow: hidden`, so padding by the scrollbar width would shift content inward
+ * by 15px — a jump in the opposite direction from the one being fixed.
  */
 export function computeScrollCompensation(gutterBefore: number, gutterAfter: number): number {
   return Math.max(0, gutterBefore - gutterAfter);
@@ -83,14 +61,9 @@ export function computeScrollCompensation(gutterBefore: number, gutterAfter: num
 
 /**
  * The inline `padding-right` the lock writes when it reclaimed space: the page's own computed
- * padding plus the reclaimed width.
- *
- * Pure for the same reason {@link computeScrollCompensation} is, and it is the other half of the
- * same measurement problem: headless Chromium uses overlay scrollbars, so the branch that pads
- * was reachable by **no** test project at all — and the interesting part of it is exactly here,
- * the parse of a computed `padding-right` that can be `'16px'`, `'0px'` or a shape
- * `Number.parseFloat` turns into `NaN`. Called only when `reclaimed > 0`; the zero case is
- * {@link computeScrollCompensation}'s answer, not this one's.
+ * padding plus the reclaimed width. Pure for {@link computeScrollCompensation}'s reason, and the
+ * interesting part is the parse of a computed value that can be `'16px'` or a shape
+ * `Number.parseFloat` turns into `NaN`. Called only when `reclaimed > 0`.
  */
 export function compensationPadding(computedPaddingRight: string, reclaimed: number): string {
   const existing = Number.parseFloat(computedPaddingRight) || 0;
@@ -98,32 +71,23 @@ export function compensationPadding(computedPaddingRight: string, reclaimed: num
 }
 
 /**
- * Claim the body scroll lock for `owner`, applying it if this is the first claim.
- *
- * Idempotent per owner, so stacked modals within one manager never double-pad, and repeat
- * claims across managers are free.
+ * Claim the body scroll lock for `owner`, applying it on the first claim and idempotent per owner —
+ * so stacked modals within one manager never double-pad and repeat claims are free.
  *
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */
 export function lockBodyScroll(owner: LockOwner): void {
   // The document guard comes first, so a server render cannot seed the ledger with a claim that
-  // applied nothing — which is what would keep the first real lock in a hydrated page from ever
-  // taking effect.
+  // applied nothing — which would keep the first real lock in a hydrated page from taking effect.
   if (typeof document === 'undefined' || !ledger.claim(owner)) {
     return;
   }
 
   const { body, documentElement } = document;
 
-  // Compensate the width the lock *actually reclaims*, not the current scrollbar width — those
-  // differ, and assuming the latter introduces a shift in the opposite direction. Measured
-  // cases at 1000px viewport:
-  //   classic scrollbar        gutter 15 → 0   → reclaimed 15, pad 15  (fixes the jump)
-  //   overlay scrollbar        gutter  0 → 0   → reclaimed  0, pad  0  (nothing to do)
-  //   scrollbar-gutter: stable gutter 15 → 15  → reclaimed  0, pad  0  (padding would shift
-  //                                                                     content inward by 15)
-  // Setting the attribute and reading layout back costs one synchronous reflow, but everything
-  // here happens in a single task, so the browser never paints an intermediate state.
+  // Compensate the width the lock *actually reclaims*, not the current scrollbar width — see the
+  // table on `computeScrollCompensation`. Setting the attribute and reading layout back costs one
+  // synchronous reflow, but it is all one task, so no intermediate state is painted.
   const gutterBefore = getScrollbarWidth();
   body.setAttribute(BODY_LOCK_ATTR, 'true');
   const reclaimed = computeScrollCompensation(gutterBefore, getScrollbarWidth());
@@ -138,8 +102,8 @@ export function lockBodyScroll(owner: LockOwner): void {
 }
 
 /**
- * Drop `owner`'s claim. The lock is released — and the body's original inline padding
- * restored — only when the last claim goes.
+ * Drop `owner`'s claim; the lock releases, and the body's original inline padding is restored, only
+ * when the last claim goes.
  *
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */

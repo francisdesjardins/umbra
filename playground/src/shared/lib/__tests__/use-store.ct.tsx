@@ -32,7 +32,6 @@ test.describe('useStore', () => {
     const component = await mount(<UseStoreHarness />);
     await component.getByRole('button', { name: 'Bump Other' }).click();
     await expect(component.getByTestId('other')).toHaveText('1');
-    // Sliced values are untouched
     await expect(component.getByTestId('selected-count')).toHaveText('0');
     await expect(component.getByTestId('pair')).toHaveText('0:idle');
   });

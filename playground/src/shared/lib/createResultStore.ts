@@ -1,20 +1,11 @@
 import { createStore } from 'umbra/react';
 
 /**
- * Creates a module-level store for tracking a single `result: string | null`
- * value — the standard pattern used across playground examples to display what
- * happened after a modal closes.
- *
- * Call once at module scope, use `useStore(resultStore)` in the component.
+ * A module-level store for a single `result: string | null` — the playground's standard way to show
+ * what happened after a modal closes. Call once at module scope, read with `useStore`.
  *
  * @example
- * const resultStore = createResultStore();
- *
- * export function MyExample() {
- *   const { result } = useStore(resultStore);
- *   // ...
- *   // onClose: (r) => { resultStore.setResult(`Closed: ${r.reason}`); }
- * }
+ * const resultStore = createResultStore(); // onClose: (r) => resultStore.setResult(r.reason)
  */
 export function createResultStore() {
   const store = createStore(

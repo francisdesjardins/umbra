@@ -8,12 +8,7 @@ import {
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
 
-/**
- * Context passed to the MessageModal render function.
- * Provides modal state and the close handle.
- *
- * @typeParam TData - The modal's close payload type.
- */
+/** Modal state and the close handle, passed to the MessageModal render function. */
 export type MessageModalRenderContext<
   TData = void,
   TReason extends string = string,
@@ -24,11 +19,8 @@ export type MessageModalType = 'info' | 'warning' | 'error' | 'success';
 
 /**
  * Options for `useMessageModal`.
- *
- * @typeParam TData - Typed data payload from close. Defaults to `void`; declare it on the hook,
- * which is the one place it is stated.
- * @typeParam TReason - The reasons this modal closes with. Declare them: it is what rejects a
- * mistyped `action('confirmm')` and makes a `switch` in `onClose` exhaustive.
+ * @typeParam TData - Typed data payload from close, declared here and nowhere else. Default `void`.
+ * @typeParam TReason - The reasons this modal closes with; declare them, see `useModal`.
  */
 export type UseMessageModalOptions<
   TData = void,
@@ -48,15 +40,10 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
 >;
 
 /**
- * Headless template hook for a standard message/confirmation modal.
- *
- * Users provide their own UI components in the render callback and use
- * the `action` factory for async actions with per-button loading.
- *
+ * Headless template hook for a standard message/confirmation modal. Bring your own UI in the
+ * render callback and use the `action` factory for async actions with per-button loading.
  * @typeParam TData - Typed data payload from close. Defaults to `void`.
- * @typeParam TReason - The reasons this modal closes with; declaring them rejects a mistyped
- * reason and makes a `switch` in `onClose` exhaustive.
- *
+ * @typeParam TReason - The reasons this modal closes with; declare them, see `useModal`.
  * @example
  * const modal = useMessageModal<void, 'cancel' | 'confirm'>({
  *   id: 'delete-confirm',
@@ -81,9 +68,8 @@ export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason> {
   return useModal<TData, TReason>({
-    // The type arguments are spelled out because `TemplateBaseOptions` is an `Omit`, and TS
-    // cannot infer through a mapped type — left to inference, the style and node parameters fall
-    // back to their framework-free defaults and the result stops being React's options.
+    // Spelled out because `TemplateBaseOptions` is an `Omit` and inference cannot reach through a
+    // mapped type: left alone, style and node fall back to their framework-free defaults.
     ...buildModalOptions<
       TData,
       MessageModalRenderContext<TData, TReason>,
@@ -92,9 +78,7 @@ export function useMessageModal<TData = void, TReason extends string = string>(
       ReactNode
     >(options, {
       animation: DEFAULT_FADE_ANIMATION,
-      // Names itself, the way `useSlideModal` reports `'slide'`: `template` exists so a
-      // cross-cutting listener can tell one kind of dialog from another, and a template that
-      // inherits the generic default tells it nothing.
+      // Names itself, so a cross-cutting listener can tell one kind of dialog from another.
       template: 'message',
     }),
     render: (args) => {

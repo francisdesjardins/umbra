@@ -24,7 +24,7 @@ import { collectOptionNames } from './option-surface.js';
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(SRC_ROOT, '..');
 
-/** Options kept out of `API.md`'s `### Options` table — a set, so adding one is a visible choice. */
+/** Options kept out of `API.md`'s `### Options` table — a set, so adding is a visible choice. */
 const OPTIONS_TABLE_EXEMPT = new Set([
   // Documented with an example in the Dialog Manager chapter, where the asking door belongs.
   'onOpenRequest',

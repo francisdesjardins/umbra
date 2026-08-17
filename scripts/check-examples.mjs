@@ -1,31 +1,10 @@
 #!/usr/bin/env node
 // ── The JSDoc examples are code, so they are held to the code gates ──────────
-//
-// Nothing else checks them. A worked `@example` is the part of the documentation a reader
-// copies, and it lives in a comment where the compiler, the linter and the formatter never
-// look — two of the ones in this repo were wrong when written, and one did not parse at all.
-//
-// This extracts every `@example` from `src/`, writes each to a real module under
-// `scripts/examples/generated/`, and runs the three gates over them:
-//
-//   format  prettier, with the repo's own config. `--fix` writes the formatted example back
-//           into the doc comment it came from.
-//   types   `tsc -p scripts/examples/tsconfig.json` — see that file for why the snippet
-//           allowances (unused locals, implicit any) are the only thing it relaxes.
-//   lint    oxlint's own scope for the generated directory, type-aware pass included. The
-//           directory is deliberately not gitignored: oxlint honours .gitignore with no way to
-//           override it, so an ignored path is one it reports zero files for and passes.
-//
-// **Its reach is `src/`, not the public entry points** — an `@example` on an `@internal` module is
-// gated exactly like one on a root export. Worth stating because the opposite is the intuitive
-// guess and acting on it costs a gated example: the way to check is the reported count with the
-// block present against without it, and two readings taken after the example already existed
-// answer the same number whatever the truth is.
-//
-// An example assumes an application around it (`store`, `fetchUser`, `api`). Rather than
-// demanding that every snippet declare its world, the type pass runs twice: the first run
-// reports the free identifiers, the second declares them as `any` — so what remains is the
-// example using *this library* wrongly, which is the thing worth failing a build over.
+// Extracts every `@example` under `src/` (`@internal` modules included, not just the entry points),
+// writes each as a module under `scripts/examples/generated/`, and runs prettier, `tsc` and oxlint
+// over them — nothing else looks inside a comment, and two examples here were wrong when written.
+// The type pass runs twice: the first reports the free identifiers an example assumes (`store`,
+// `api`), the second declares them `any`, so what remains is misuse of *this library*.
 //
 // Usage:
 //   node scripts/check-examples.mjs          # check (exit 1 on any failure)
@@ -69,14 +48,11 @@ const DECLARATION =
   /^\s*export\s+(?:declare\s+)?(?:async\s+)?(?:function|const|let|type|class)\s+([A-Za-z_$][\w$]*)/;
 
 /**
- * Pull the `@example` blocks out of one file.
- *
- * Line-based on purpose: the rewrite has to put the formatted code back between the exact
- * lines it came from, keeping the ` * ` prefix and the block's indentation.
+ * Pull the `@example` blocks out of one file. Line-based, because the rewrite puts formatted code
+ * back between the exact lines it came from, ` * ` prefix and indentation intact.
  */
 function collectFromFile(path) {
-  // `\r?\n`: an editor or a script can leave CRLF behind, and a stray `\r` would ride into the
-  // extracted code and break both the parse and the comparison against the formatted form.
+  // `\r?\n`: a stray `\r` would ride into the code and break the parse and the comparison.
   const lines = readFileSync(path, 'utf8').split(/\r?\n/);
   const found = [];
 
@@ -149,12 +125,9 @@ function collectExamples() {
 // ── Format ───────────────────────────────────────────────────────────────────
 
 /**
- * Format one example with the repo's prettier config.
- *
- * Returns `null` when prettier cannot parse it. That is not a failure: a few examples are
- * deliberately elliptical (`useModal({ ... })`) or show two sibling JSX call sites, which are
- * illustrations rather than statements. They still get type-checked, through the
- * normalisation below.
+ * Format one example with the repo's prettier config. `null` when prettier cannot parse it, which
+ * is not a failure: a few are deliberately elliptical (`useModal({ ... })`) or show sibling JSX
+ * call sites, and the normalisation below type-checks them anyway.
  */
 async function formatExample(example, options) {
   try {
@@ -253,9 +226,7 @@ function buildModule(example, from) {
     }),
   ].filter(Boolean);
 
-  // The component wrapper is `async` too: several examples show a component *and* the awaited
-  // call that drives it, and a wrapper that cannot host `await` would report the harness
-  // rather than the example.
+  // `async` too: some examples show a component *and* the awaited call driving it.
   const body = component
     ? `export async function Example_${name}() {\n${code}\n  return null;\n}`
     : topLevelAwait
@@ -266,11 +237,8 @@ function buildModule(example, from) {
 }
 
 /**
- * Which entry point an example's file belongs to.
- *
- * The two bindings deliberately export the same names, so an example under `src/solid/` that was
- * handed `useLookup` from `umbra/react` would be type-checked against the wrong one — and would
- * fail in a way that reads as a bug in the example rather than in this harness.
+ * Which entry point an example's file belongs to. The bindings export the same names, so a
+ * `src/solid/` example handed `useLookup` from `umbra/react` fails as if it, not this, were wrong.
  */
 function specifierFor(file) {
   const path = relative(SRC, file).replaceAll('\\', '/');
@@ -330,13 +298,9 @@ function run(command, args) {
 }
 
 /**
- * Every published specifier must be mapped to source in the examples tsconfig.
- *
- * An unmapped one does not fail — it falls through to node resolution, finds the workspace
- * self-link at `node_modules/umbra`, and resolves through `exports` into `dist/`. So the example
- * type-checks against whatever was last built on a machine that has a `dist/`, and reports
- * TS2307 on one that does not. A gate whose answer depends on that is not a gate, and the
- * asymmetry is invisible until CI (which never builds before this job) disagrees with a laptop.
+ * Every published specifier must be mapped to source in the examples tsconfig. An unmapped one does
+ * not fail — it falls through the workspace self-link into `dist/`, so the example checks against
+ * whatever was last built and reports TS2307 where nothing was, invisible until CI disagrees.
  */
 function assertSpecifiersMapped() {
   const { exports: published } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
@@ -375,12 +339,9 @@ function typeCheck() {
 }
 
 /**
- * Lint the generated modules, as structured results rather than a report to re-parse.
- *
- * `--type-aware` matters here rather than being a copied flag: the two rules this scope keeps on
- * for their own sake — `no-floating-promises` and `await-thenable` — are type-aware, so without it
- * the pass would run and report the syntax half only, silently. `--no-ignore` because the generated
- * directory is gitignored, which is the whole point of it.
+ * Lint the generated modules as structured results. `--type-aware` is not a copied flag: the rules
+ * this scope keeps — `no-floating-promises`, `await-thenable` — are type-aware, so without it the
+ * pass silently reports the syntax half only.
  */
 function lint() {
   const output = run(join(ROOT, 'node_modules', '.bin', 'oxlint'), [
@@ -394,9 +355,8 @@ function lint() {
     return [];
   }
   const { diagnostics = [], number_of_files: linted } = JSON.parse(output.slice(start));
-  // The one way this pass fails without saying so, and it happened: oxlint reports zero files and
-  // exits clean for a path git ignores, which `generated/` was. Nothing about "lint: clean"
-  // distinguishes that from a clean lint, so the count is checked rather than trusted.
+  // Its one silent failure, and it happened: oxlint reports zero files and exits clean for a
+  // git-ignored path, indistinguishable from a clean lint — so count, do not trust.
   if (linted === 0) {
     console.error(
       `check-examples: oxlint linted 0 files under ${relative(ROOT, GENERATED)} — the lint gate is not running.\n` +
@@ -438,11 +398,7 @@ function where(module, byModule) {
     : 'unknown';
 }
 
-/**
- * Inference through an `any` stand-in, not a mistake in the example: a stubbed store handed to
- * a generic like `watch(store, { select })` leaves the snapshot parameter `unknown`, so the
- * selector's argument is reported. The example is right; its surroundings are a stub.
- */
+/** Inference through an `any` stub: `watch(store, { select })` leaves the snapshot `unknown`. */
 const STUB_INFERENCE = /error TS18046/;
 
 function attributeTypes(output, byModule) {
@@ -502,8 +458,7 @@ if (FIX) {
   }
 }
 
-// Before the first `tsc`, so a forgotten mapping is reported as the one-line configuration
-// problem it is rather than as N confusing TS2307s attributed to individual examples.
+// Before the first `tsc`, so a forgotten mapping reports once rather than as N TS2307s.
 assertSpecifiersMapped();
 
 writeModules(examples, { exported, stubsByModule: {} });

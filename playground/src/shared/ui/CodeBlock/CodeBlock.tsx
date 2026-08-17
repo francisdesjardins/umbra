@@ -3,10 +3,9 @@ import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, useTheme } from '@mui/material';
 import { useCallback, useState } from 'react';
-// Deep paths rather than the package barrels, and both halves matter. `react-syntax-highlighter`
-// re-exports `Prism` — every grammar refractor ships — beside `PrismLight`, and
-// `styles/prism` re-exports all 47 themes; Vite serves modules unbundled in dev, so importing
-// through either barrel pulls the whole of it whatever the named import says.
+// Deep paths, not the barrels: `react-syntax-highlighter` re-exports `Prism` (every grammar
+// refractor ships) and `styles/prism` re-exports all 47 themes, and Vite serves modules unbundled
+// in dev, so a barrel import pulls the whole of it whatever the named import says.
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
 import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
@@ -15,39 +14,24 @@ import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
 import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
 
-/**
- * The four grammars this app asks for, and the whole list — `language` defaults to `tsx` below,
- * `HomePage` passes `bash` and `tsx`, `SymbolArticle` passes `tsx`, and `languageForCodeKey` in
- * the code viewer returns `css`, `markup` or `tsx`.
- *
- * An unregistered grammar renders as plain text and raises nothing, so a fifth `language` value
- * would be a silent downgrade — add it here in the same commit that introduces it. The
- * dependencies come free: refractor's `tsx` registers `jsx` and `typescript`, which pull `markup`,
- * `javascript` and `clike`.
- */
+// The whole list of grammars this app asks for. An unregistered one renders as plain text and
+// raises nothing, so a fifth `language` value is a silent downgrade — register it in the same
+// commit. Free: refractor's `tsx` pulls `jsx`, `typescript`, `markup`, `javascript`, `clike`.
 SyntaxHighlighter.registerLanguage('tsx', tsx);
 SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('css', css);
 SyntaxHighlighter.registerLanguage('markup', markup);
 
-/**
- * The surface code is painted on — named once, because two things depend on it agreeing.
- *
- * The block paints it, and `readableSyntaxStyle` measures every token colour against it. A
- * literal in each place is a pair that drifts silently: the tokens would be corrected for a
- * background the code is no longer on, and the report would still come back green.
- */
+// Named once because the block paints it and `readableSyntaxStyle` measures every token colour
+// against it; two literals drift silently, correcting tokens for a background they are not on.
 const CODE_SURFACE = { light: '#ffffff', dark: '#1a1a1a' } as const;
 
 type CodeBlockProps = {
   code: string;
   language?: string;
   /**
-   * Wrap long lines instead of scrolling them.
-   *
-   * For a sample embedded in prose — the API reference — a horizontal scrollbar hides the end
-   * of the line the reader is on and there is no scrollbar in view to suggest it. The code
-   * viewer keeps scrolling, where the pane is wide and the file is real source.
+   * Wrap long lines instead of scrolling them: in prose a horizontal scrollbar hides the line's
+   * end with none in view to suggest it. The code viewer keeps scrolling — wide pane, real source.
    */
   wrap?: boolean | undefined;
 };
@@ -70,7 +54,6 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
     <Box
       sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}
     >
-      {/* Floating Copy Button */}
       <IconButton
         size="small"
         onClick={handleCopy}
@@ -118,18 +101,14 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
             padding: '24px !important',
             paddingTop: '24px !important',
             borderRadius: '0 !important',
-            // The highlighter theme paints its own background on the <code>, a different grey
-            // from this box's — and a background on a scroll container stays put while the
-            // content moves, so scrolling a long line sideways slid the code off its own colour
-            // onto ours. One surface, painted once, by the box that is actually scrolled.
+            // The theme paints its own background on the <code>, and a background on a scroll
+            // container stays put while content moves, sliding the code off its own colour.
             background: 'transparent !important',
-            // Without this the block is only as wide as the viewport, so the background stops
-            // where the visible area does and the scrolled-in region has none at all.
+            // Otherwise the block is only viewport-wide and the scrolled-in region has none.
             minWidth: 'max-content',
           },
-          // Wrapping has to be declared here — the highlighter puts `white-space: pre` inline
-          // on the <pre> and wins otherwise. Only on `pre`/`code`: the same rule on the token
-          // spans lets each token wrap on its own and the line comes apart into columns.
+          // Declared here because the highlighter puts `white-space: pre` inline on the <pre>. Only
+          // on `pre`/`code`: on the token spans each token wraps alone and the line breaks apart.
           ...(wrap && { '& pre, & code': { whiteSpace: 'pre-wrap !important' } }),
         }}
       >
@@ -144,17 +123,13 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
             padding: 0,
             fontFamily: '"JetBrains Mono", "Fira Code", "Consolas", monospace',
           }}
-          // Both off when wrapping: they wrap each line into a flex row whose items are
-          // tokens, which is what scrambles a wrapped line. Numbers on a five-line sample in
-          // the middle of prose earn little anyway.
+          // Both off when wrapping: they wrap each line into a flex row of tokens, which scrambles.
           showLineNumbers={!wrap}
           wrapLines={!wrap}
           lineNumberStyle={{
             minWidth: '3.5em',
             paddingRight: '1.5em',
-            // A line number is text a reader is expected to use — to point at a line in a
-            // review, to match an error. `#cbd5e0` on white measured 1.49:1, which is a
-            // decoration pretending to be a number.
+            // A line number is text a reader uses; `#cbd5e0` on white measured 1.49:1.
             color: isDarkMode ? '#8b94a7' : '#6b7280',
             userSelect: 'none',
             textAlign: 'right',

@@ -1,8 +1,6 @@
 /**
- * The library's own component-test harnesses, rendered live by `/stories` and shown here as
- * source. The largest of the three groups and the one route that needs it.
- *
- * Split from its siblings — see `codeSamples.ts`.
+ * The library's component-test harnesses, rendered live by `/stories` and shown here as source —
+ * the largest of the three groups, for the one route that needs it. See `codeSamples.ts`.
  */
 import storyUseModalBasicSrc from 'umbra/react/__tests__/use-modal/basic.story.tsx?raw';
 import storyUseModalOpenAndWaitSrc from 'umbra/react/__tests__/use-modal/open-and-wait.story.tsx?raw';

@@ -1,22 +1,11 @@
 #!/usr/bin/env node
 /**
- * Playground smoke probe.
+ * Playground smoke probe: walks every route the sidebar advertises (discovered, not hardcoded),
+ * asserts each renders free of console/page errors, then drives the named interaction flows. Exists
+ * because `yarn test` never renders the playground, so a broken page is otherwise green. Needs a
+ * server on :3000; exit code is non-zero if any check fails.
  *
- * Walks every route the sidebar advertises, asserts each one renders and stays free of
- * console/page errors, then optionally drives a named interaction flow.
- *
- * Routes are discovered from the running app's navigation, not hardcoded — adding a route to
- * the sidebar puts it under test automatically.
- *
- * Usage (from the repo root, with a server already running on :3000 — `yarn dev`, or
- * `yarn playground:build && yarn playground:preview` for the production bundle):
- *   yarn smoke
- *   yarn smoke --base http://localhost:4173
- *   yarn smoke --flow service
- *   yarn smoke --shots <dir>
- *   yarn smoke --theme dark
- *
- * Exit code is non-zero if any check fails, so it gates a commit and a CI job alike.
+ * Usage: yarn smoke [--base <url>] [--flow <name>] [--shots <dir>] [--theme dark|light]
  */
 import { chromium } from '@playwright/test';
 
@@ -40,10 +29,7 @@ const report = (ok, said) => {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${detail ? ` — ${detail}` : ''}`);
 };
 
-// ── Interaction flows ────────────────────────────────────────────────────────
-//
-// Each flow returns a list of [ok, label, detail] checks. Add one here rather than writing a
-// throwaway script; a flow that lives in the repo gets rerun on the next change.
+// ── Interaction flows: each returns [ok, label, detail] checks ───────────────
 
 /** Poll `predicate` until it holds or the budget runs out. Returns whether it held. */
 async function waitFor(predicate, { timeout = 8000, interval = 100 } = {}) {
@@ -58,20 +44,15 @@ async function waitFor(predicate, { timeout = 8000, interval = 100 } = {}) {
 /** The route the app is actually showing, whichever history the build uses. */
 const currentRoute = (page) => {
   const url = new URL(page.url());
-  // Under `createHashHistory` the whole location lives in the fragment, so that is the route;
-  // otherwise the path is.
+  // Under `createHashHistory` the whole location lives in the fragment; otherwise the path.
   return url.hash ? url.hash.slice(1).split('#')[0] : url.pathname;
 };
 
 /**
- * Navigate to a playground route and *confirm we landed on it*.
- *
- * The playground ships two histories: browser (`yarn playground:build`) and hash
- * (`yarn playground:build:file`, the static-host build). Under the hash build a path URL like
- * `/api` is not a route at all — the server returns index.html and the router falls back to the
- * index, so a plain `goto` succeeds while showing the wrong page. Every per-route assertion
- * then measures the index page instead, and passes. So: try the path, fall back to the hash
- * form, and refuse to continue if neither lands.
+ * Navigate to a route and *confirm we landed on it*. The playground ships two histories, browser
+ * and hash (`playground:build:file`, the static-host build), and under the hash build a path URL
+ * like `/api` is not a route: the router falls back to the index, so `goto` succeeds on the wrong
+ * page and every per-route assertion measures the index and passes. Path first, then the hash form.
  */
 async function gotoRoute(page, route) {
   for (const url of [`${BASE}${route}`, `${BASE}/#${route}`]) {
@@ -86,24 +67,15 @@ async function gotoRoute(page, route) {
 
 const flows = {
   /**
-   * A dialog that arrived open in server-rendered HTML, adopted by `umbra/vanilla`.
-   *
-   * **Real server rendering, and the only place this repo can do it.** The playground ships as a
-   * static bundle — `build:file` is `vite build` — so there is no server in the deployed artifact
-   * and a demo panel claiming SSR would be a claim the deployment contradicts. A test has no such
-   * problem: the document below is built **in Node** and delivered as an HTTP response the browser
-   * parses before it has fetched a single module. That is what SSR hands a client, produced the
-   * way SSR produces it.
-   *
-   * What it proves that the component test cannot: the page has **no framework in it at all** —
-   * an import map and one module, the same mechanism `/microfrontends` uses — and the binding
-   * still adopts a dialog it did not create and did not open.
+   * A dialog that arrived open in server-rendered HTML, adopted by `umbra/vanilla` — real server
+   * rendering, and the only place this repo can do it since the playground ships static. The
+   * document is built in Node and parsed before a module is fetched, on a page with no framework in
+   * it at all, which is what the component test cannot prove.
    */
   async ssr(page) {
     const checks = [];
 
-    // The server's job: produce the bytes. `<dialog open>` is in them, so the browser paints it
-    // before any script exists — which is the condition the whole flow is about.
+    // `<dialog open>` is in the bytes, so the browser paints it before any script exists.
     const document_ = `<!doctype html>
 <html><head><meta charset="utf-8">
 <script type="importmap">{"imports":{"umbra":"/mfe/umbra.mjs","umbra/vanilla":"/mfe/umbra-vanilla.mjs"}}</script>
@@ -151,8 +123,7 @@ const flows = {
       (await page.locator('#phase').textContent()) === 'open',
       'the binding adopted it rather than starting from closed',
     ]);
-    // The defect this guards: the store used to start at `closed` and the first pass wrote
-    // `display: none` over an element that was still reporting `open`.
+    // Guards a store that starts at `closed` writing `display: none` over an element still open.
     const shown = await page.evaluate(() => {
       const d = document.getElementById('ssr-dialog');
       return d instanceof HTMLDialogElement && d.open && d.getBoundingClientRect().height > 0;
@@ -162,8 +133,7 @@ const flows = {
     // Once adopted it is an ordinary registered dialog: its bound action closes it.
     await page.locator('#ssr-close').click();
     await page.waitForTimeout(500);
-    // The *reason* as well as the close: a `bindAction` call that named no reason at all would
-    // still shut the dialog, so asserting `open === false` alone passes on a broken binding.
+    // The *reason* too: `open === false` alone passes on a binding that named no reason.
     const closed = (await page.locator('#ssr-dialog').evaluate((d) => d.open)) === false;
     const reason = await page.locator('#reason').textContent();
     checks.push([
@@ -218,17 +188,12 @@ const flows = {
     return checks;
   },
 
-  /**
-   * A close payload survives the whole round trip: an action's `close(data)` → the store →
-   * `onClose` → the page. The types say it does; this watches it happen.
-   */
+  /** A close payload survives `close(data)` → the store → `onClose` → the page. */
   async forms(page) {
     const checks = [];
     await gotoRoute(page, '/ui-integrations');
 
-    // Each form is addressed by its own modal id rather than "whatever dialog is open" — the
-    // previous one may still be finishing its exit animation with `open` still set, and a
-    // stray `dialog[open] input` match would fill the wrong form.
+    // By modal id, not "whatever is open": the previous one may still be exiting with `open` set.
     const forms = [
       { id: 'mui-form-example', trigger: /open mui form/i, name: 'Ada Lovelace' },
       { id: 'vanilla-form-example', trigger: /open vanilla form/i, name: 'Grace Hopper' },
@@ -250,10 +215,7 @@ const flows = {
       await inputs.nth(0).fill(form.name);
       await inputs.nth(1).fill(email);
 
-      // `simulateApiCall` fails 30% of the time on purpose — it is how the demo shows error
-      // handling — and the form correctly stays open on failure. Two forms would then make
-      // roughly half of all runs red for a reason that has nothing to do with what this flow
-      // asserts, so retry the submit until the mock cooperates.
+      // `simulateApiCall` fails 30% of the time on purpose and the form correctly stays open.
       let closed = false;
       for (let attempt = 1; attempt <= 5 && !closed; attempt += 1) {
         await dialog
@@ -266,8 +228,7 @@ const flows = {
       }
       checks.push([closed, `${form.id} closed after submit`]);
 
-      // The payload only reaches the page through `close(data)` → `onClose` → the store, and
-      // each form contributes a distinct name, so this cannot pass on the other one's result.
+      // Each form contributes a distinct name, so this cannot pass on the other one's result.
       const text = await page.locator('main').innerText();
       checks.push([text.includes(form.name), `${form.id} payload reached the page`]);
     }
@@ -276,13 +237,9 @@ const flows = {
   },
 
   /**
-   * One Escape closes a modal whose content holds nothing focusable.
-   *
-   * `showModal()` has nowhere to put focus in that case, so it lands outside the dialog — and
-   * a dialog-element keydown listener never sees the key. The browser's own cancel then closed
-   * the `<dialog>` behind the store's back: still rendered, out of the top layer, backdrop
-   * gone, sitting wherever it happens to be in the tree. The component suite reproduces this
-   * with a synthetic blur; only the real page produces the focus condition on its own.
+   * One Escape closes a modal whose content holds nothing focusable: `showModal()` then puts focus
+   * outside the dialog, a dialog-element keydown listener never sees the key, and the browser's own
+   * cancel closes it behind the store's back. Only the real page produces that condition itself.
    */
   async esc(page) {
     const checks = [];
@@ -314,13 +271,10 @@ const flows = {
   },
 
   /**
-   * A warm open shows no loading flash.
-   *
-   * `onOpen` runs on every open — an `async` function returns a promise even when a warm cache
-   * gives it nothing to await — so `isPreparing` is briefly true even when the data is already
-   * there. Gate the fallback on `isPreparing` alone and it starts visible and fades out for no
-   * reason. Sampled frame by frame, because a 250ms crossfade is invisible to any assertion
-   * that only looks at the end state.
+   * A warm open shows no loading flash. `onOpen` runs on every open and an `async` function returns
+   * a promise with nothing to await, so `isPreparing` is briefly true even with the data there and
+   * gating on it alone makes the fallback start visible. Sampled frame by frame, because a 250ms
+   * crossfade is invisible to an end-state assertion.
    */
   async asyncopen(page) {
     const checks = [];
@@ -362,14 +316,9 @@ const flows = {
     return checks;
   },
 
-  /** Section jump bars stick under the top bar (an ancestor `overflow` silently breaks this). */
   /**
-   * A declared hotkey actually fires its action.
-   *
-   * This exists because a refactor once dropped `hotkey` from six playground examples and
-   * every one of the 403 library tests still passed — correctly, since the playground has no
-   * tests of its own by design. A hotkey that silently stops working is invisible to a probe
-   * that only checks a page renders, so it gets checked here.
+   * A declared hotkey actually fires its action — a refactor once dropped `hotkey` from six
+   * examples and all 403 library tests still passed, the playground having none of its own.
    */
   async hotkey(page) {
     const checks = [];
@@ -391,9 +340,7 @@ const flows = {
       `${shortcut}`,
     ]);
 
-    // Let the entrance settle, then send the key *to the dialog* rather than to the page. The
-    // hotkey listener is bound to the dialog, and a page-level press depends on whatever held
-    // focus when the previous flow finished — which made this flow flaky in a full run.
+    // To the dialog, not the page: a page-level press depends on whatever last held focus.
     await page.waitForTimeout(400);
     await dialog.press('Enter');
     const closed = await waitFor(async () => {
@@ -408,6 +355,7 @@ const flows = {
     return checks;
   },
 
+  /** Section jump bars stick under the top bar (an ancestor `overflow` silently breaks this). */
   async sticky(page) {
     await gotoRoute(page, '/stories');
     await page.evaluate(() => window.scrollTo(0, 1400));
@@ -432,9 +380,8 @@ page.on('console', (m) => {
 await page.goto(BASE, { waitUntil: 'networkidle' });
 
 if (THEME === 'dark' || THEME === 'light') {
-  // Measured, not matched against a literal: the palette is the mascot's, so dark mode is its
-  // body (`#0f172a`) rather than black, and an equality test against `rgb(0, 0, 0)` reports
-  // every page as light — which silently makes `--theme dark` a no-op.
+  // Measured, not matched: dark mode is `#0f172a`, so testing `rgb(0, 0, 0)` reports every page
+  // as light and silently makes `--theme dark` a no-op.
   const luminance = async () => {
     return page.evaluate(() => {
       const [r, g, b] = getComputedStyle(document.body)
@@ -458,19 +405,11 @@ if (THEME === 'dark' || THEME === 'light') {
   }
 }
 
-// Discover routes from the sidebar rather than hardcoding them.
-//
-// Waited for rather than read straight away, and the reason is that the alternative fails *quietly*:
-// `networkidle` is not hydration, so on a cold dev server — one still regenerating the API model,
-// which takes typedoc the better part of ten seconds — the query runs before React has committed the
-// sidebar and comes back empty. The route loop then walks nothing, and every assertion inside it
-// passes vacuously, including the one that reports a route answering 500. Measured: this script was
-// green against a playground whose `/api` was broken.
-//
-// `report` below still fails on an empty list, which is the second half of the same guard.
+// Waited for, not read straight away: `networkidle` is not hydration, so on a cold dev server
+// (typedoc takes ~10s) the query returns empty, the route loop walks nothing, and every assertion
+// passes vacuously — this was once green against a playground whose `/api` was broken.
 await page.waitForSelector('nav a[href]', { timeout: 15_000 }).catch(() => {
-  // Let the assertion below do the reporting rather than throwing here — a failure that names what
-  // was expected is worth more than a stack trace out of a helper.
+  // Reported by the assertion below rather than thrown from a helper.
 });
 const routes = await page.$$eval('nav a[href]', (links) => {
   return [
@@ -484,15 +423,11 @@ const routes = await page.$$eval('nav a[href]', (links) => {
 });
 report(routes.length > 0, { label: `discovered ${String(routes.length)} routes from the sidebar` });
 
-// Every route must render a distinct page: two routes reporting the same `<h1>` means the app
-// served one page twice. Collected here and checked for duplicates afterwards, as the backstop
-// for `gotoRoute` in case both URL forms are ever wrong at once.
+// Two routes with the same `<h1>` means one page served twice — the backstop for `gotoRoute`.
 const titleByRoute = new Map();
 
-// `cards > 0` is the "this page rendered its content" signal for a route that demonstrates
-// something, and every route does — except the scratch surface, which is empty on purpose and
-// would have to grow a decorative card to satisfy a check about a property it does not have. It
-// is still held to the rest: it must reach, render one `<h1>`, and raise no console error.
+// `cards > 0` is the "rendered its content" signal; the scratch surface is empty on purpose, and
+// still held to reaching, one `<h1>`, and no console error.
 const EMPTY_BY_DESIGN = new Set(['/warzone']);
 
 for (const route of routes) {
@@ -550,9 +485,8 @@ for (const name of selected) {
       report(ok, { label: `flow:${name} ${label}`, detail: detail });
     }
   } catch (error) {
-    // Without this the whole run dies on the first bad selector, and a flow that could not even
-    // reach its page reports as a 30-second Playwright timeout rather than as the navigation
-    // failure it is. Every other flow still gets to run.
+    // Otherwise the run dies on the first bad selector and a navigation failure reports as a 30s
+    // Playwright timeout.
     report(false, { label: `flow:${name} threw`, detail: error.message.split('\n')[0] });
   }
   report(errors.length === 0, {

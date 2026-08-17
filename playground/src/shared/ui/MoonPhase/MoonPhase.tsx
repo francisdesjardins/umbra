@@ -8,35 +8,18 @@ export type Phase =
   | 'waning-crescent';
 
 /**
- * The little moon that marks a heading — drawn, not typed.
- *
- * These were the characters `●`, `◐` and `◑`. Two problems, and the second is the one that shows:
- *
- * - A glyph is sized by the font, so the same mark inherited 48px in the page title and 12px in
- *   an `overline` label, and the geometric shapes block is drawn to different optical weights in
- *   different families anyway — the disc and the half-disc were never the same size on screen
- *   even at one font size.
- * - A screen reader reads them. `◐ Umbra` is announced “circle with left half black Umbra”, and
- *   the row of shade blocks at the foot of the landing page is worse.
- *
- * So: one shape, an explicit `size` in px, `currentColor`, and `aria-hidden`. Deliberately not
- * `em` — relative sizing is exactly the behaviour being replaced.
- *
- * **The geometry is shared with `scripts/build-moons.mjs`, which draws the README's marks.**
- * Markdown cannot call a component and GitHub strips inline `<svg>`, so that side has to emit
- * files in the favicon's amber — but the arcs are these arcs, and a change here belongs there
- * too. Keeping them in step is what stops the page and its README from disagreeing about what a
- * gibbous moon looks like.
+ * The little moon that marks a heading — drawn, not typed. As glyphs (`●`, `◐`, `◑`) they were
+ * sized by the font (48px in a page title, 12px in an `overline` label), drawn to different
+ * optical weights per family, and announced as “circle with left half black”. So: one shape, an
+ * explicit `size` in px, `currentColor`, `aria-hidden` — not `em`, the behaviour being replaced.
+ * The geometry is shared with `scripts/build-moons.mjs`, which redraws the README's marks in the
+ * favicon's amber (Markdown cannot call a component, GitHub strips inline `<svg>`).
  */
 
 const C = 8;
 const R = 6.5;
 const STROKE = 1.5;
-/**
- * A stroke straddles its path, so the ring's outer edge sits half a stroke beyond `R`. The full
- * moon is a *fill* rather than a ring, so drawn at `R` it comes out smaller than every phase
- * beside it — measured 52px against 58 at the same nominal size.
- */
+/** A stroke straddles its path, so a *fill* drawn at `R` comes out smaller — 52px against 58. */
 const FULL_R = R + STROKE / 2;
 /** How far the terminator swells from a straight line — the crescent/gibbous waist. */
 const WAIST = R / 2;

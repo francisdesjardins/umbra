@@ -17,12 +17,7 @@ import type { UseModalReturn } from '../types.js';
 
 export type { SlideAlign, SlideDirection };
 
-/**
- * Context passed to the SlideModal render function.
- * Provides modal state, the close handle, and the slide direction.
- *
- * @typeParam TData - The modal's close payload type.
- */
+/** Modal state, the close handle and the slide direction, passed to the render function. */
 export type SlideModalRenderContext<
   TData = void,
   TReason extends string = string,
@@ -31,14 +26,7 @@ export type SlideModalRenderContext<
   readonly direction: SlideDirection;
 };
 
-/**
- * Options for `useSlideModal`.
- *
- * @typeParam TData - Typed data payload from close. Defaults to `void`; declare it on the hook,
- * which is the one place it is stated.
- * @typeParam TReason - The reasons this panel closes with. Declare them: it is what rejects a
- * mistyped `action('savee')` and makes a `switch` in `onClose` exhaustive.
- */
+/** Options for `useSlideModal` — declare both parameters on the hook, as React's twin says. */
 export type UseSlideModalOptions<
   TData = void,
   TReason extends string = string,
@@ -52,9 +40,7 @@ export type UseSlideModalOptions<
   /** Slide direction */
   readonly direction: SlideDirection;
   /**
-   * Alignment on the cross axis (perpendicular to the slide).
-   * `stretch` (default) fills the cross axis; `start`/`center`/`end` pin a
-   * content-sized panel — size it yourself in the `render` callback.
+   * `stretch` fills the cross axis, `start`/`center`/`end` pin a panel you size in `render`.
    * @default 'stretch'
    */
   readonly align?: SlideAlign | undefined;
@@ -67,15 +53,8 @@ export type UseSlideModalReturn<TData = void, TReason extends string = string> =
 >;
 
 /**
- * Headless template hook for a slide-in panel modal.
- *
- * Configures the slide animation and the panel's positioning from the direction and alignment.
- * By default the panel stretches across the cross axis (a full-height side drawer or full-width
- * top/bottom sheet); pass `align: 'start' | 'center' | 'end'` for a content-sized panel pinned to
- * that cross-axis position, and size it yourself in `render`.
- *
- * Identical to `umbra/react`'s: which edge the panel is pinned to and how far it travels come
- * from `templates/slide-geometry.ts`, which neither binding owns.
+ * Headless template hook for a slide-in panel modal — `umbra/react`'s, and which edge it pins to
+ * and how far it travels are `templates/slide-geometry.ts`'s, which neither binding owns.
  */
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
@@ -96,12 +75,10 @@ export function useSlideModal<TData = void, TReason extends string = string>(
       style: slideDialogStyle({ direction: options.direction, contained, align }),
       template: 'slide',
     }),
-    // A slide enters/exits by translating past its container edge; clip the contained wrapper so
-    // an off-screen (positive-translate) panel doesn't expand document overflow.
+    // A slide translates past its container edge; clipping stops it expanding document overflow.
     clipContainer: true,
-    // `mergeProps`, not a spread. The render args are getters over the modal's stores, and
-    // spreading them would read each one once and hand the template a frozen copy — the panel
-    // would never see `isPreparing` go false. `mergeProps` forwards the access instead.
+    // `mergeProps`, not a spread: the render args are getters, and spreading would freeze them —
+    // the panel would never see `isPreparing` go false.
     render: (args) => {
       return options.render(mergeProps(args, { direction: options.direction }));
     },

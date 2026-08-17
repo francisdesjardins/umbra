@@ -3,50 +3,29 @@ import { useEffect, useRef, useState } from 'react';
 import { UmbraMoon } from './UmbraMoon';
 
 /**
- * The playground's easter egg: Umbra's moon slides in from the right, peeks for a couple of
- * minutes with the occasional giggle, waves, and slides back out — returning every few minutes at
- * a different height.
- *
- * **The right edge, and only the right.** Never the bottom: a mascot entering there crosses the
- * reading column and lands over content. Never the left either, and that one is not symmetry —
- * the sidebar owns the left edge above 900px, so a moon peeking in from it either covers the
- * navigation or hides behind it, and both are worse than the same joke told from the other side.
- * Height is what varies between visits instead.
- *
- * It is **shy**: bring the pointer near and it ducks back out of sight, then comes back later.
- * That is the joke, and it is also why the mascot can never be in your way — reaching for
- * anything underneath it makes it leave.
- *
- * Catch it anyway — click it, or press Enter while it has focus — and it goes out the way its
- * name says: a flare, then total shadow, and it does not come back. Keyboard dismissal is not
- * decoration here; something that flees the pointer must still be dismissible without one.
- *
- * A sibling of stardust's `PeekingStar`, sharing its timing model so the two playgrounds feel
- * like one family.
+ * The playground's easter egg: Umbra's moon slides in from the right, peeks ~2 minutes with the
+ * occasional giggle, waves, slides out, and returns at a new height. Right edge only — the bottom
+ * crosses the reading column and the sidebar owns the left above 900px. It is shy, ducking out when
+ * the pointer nears; click or Enter eclipses it for good, since what flees the pointer must stay
+ * dismissible without one. Sibling of stardust's `PeekingStar`.
  */
 
 type Phase = 'peek' | 'shy' | 'eclipse';
 
 type Config = {
-  /** Where it rests vertically, in px from the top of the viewport. */
+  /** Rest position, px from the top of the viewport. */
   readonly offset: number;
   readonly key: number;
 };
 
-// Timing, all in ms:
-//   slide in + settle   0 →   2 000
-//   peeking + giggles   2 000 → 122 000  (~2 min)
-//   wave + slide out  122 000 → 125 000
+// Timing (ms): slide in + settle 0→2 000, peek + giggles 2 000→122 000, wave + out →125 000.
 const ANIM_MS = 125_000;
 const SHY_MS = 420;
 const ECLIPSE_MS = 950;
 
 /**
- * How close the pointer may get, in px, before the moon ducks out.
- *
- * Small on purpose: it should flee when you reach *for it*, not when you pass nearby. A wide
- * radius makes it look like it is running from the whole corner of the page, and you never get
- * to see it — the joke only lands if you almost had it.
+ * How close the pointer may get, in px, before it ducks out. Small: it should flee when you reach
+ * *for it*, not when you pass nearby — the joke only lands if you almost had it.
  */
 const SHY_RADIUS = 45;
 
@@ -56,7 +35,7 @@ const SETTLE_MS = 2200;
 /** How much of the moon clears the edge it leans against. */
 const VISIBILITY_RATIO = 0.7;
 
-/** When each giggle beat fires. Generated into keyframes below rather than written ten times. */
+/** When each giggle beat fires; generated into keyframes below. */
 const GIGGLE_AT = [10_000, 21_000, 33_000, 45_000, 57_000, 69_000, 81_000, 93_000, 107_000];
 
 const pct = (ms: number) => {
@@ -76,12 +55,7 @@ const responsiveSize = (viewportWidth: number) => {
   return 180;
 };
 
-/**
- * Where it comes to rest, vertically — the only thing that changes between visits.
- *
- * Bounded away from both ends of the viewport so it never arrives clipped by an edge it is not
- * leaning against, which reads as a layout bug rather than a mascot.
- */
+/** Bounded off both viewport ends, so it never arrives clipped by an edge it is not leaning on. */
 const computeOffset = (size: number) => {
   return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
 };
@@ -124,11 +98,7 @@ export const PeekingMoon = () => {
     phaseRef.current = phase;
   }, [phase]);
 
-  /**
-   * @param soon - after a startled exit, not a natural one. Being scared off and then staying
-   *   away for four minutes reads as broken rather than shy; it should peek back at a new height
-   *   while you still remember chasing it.
-   */
+  /** @param soon - after a startled exit; four minutes away reads as broken rather than shy. */
   const scheduleNext = (prev?: Config, soon = false) => {
     if (dismissedRef.current) {
       return;
@@ -160,8 +130,7 @@ export const PeekingMoon = () => {
       });
     };
 
-    // Shyness. Reading the live rect rather than recomputing the layout keeps this honest
-    // while the peek animation is mid-flight.
+    // Shyness. The live rect stays honest while the peek animation is mid-flight.
     const handlePointer = (event: MouseEvent) => {
       if (phaseRef.current !== 'peek' || dismissedRef.current) {
         return;
@@ -215,10 +184,8 @@ export const PeekingMoon = () => {
     return `translateX(${px.toString()}px)${tilt}`;
   };
 
-  // Generous on purpose. The artwork is painted well past its own box — the glow is a circle of
-  // r=112 in a 200 viewBox, breathing to 1.035 — and the exit rotates, which widens the swept
-  // area again. Translating by exactly `size` hides the disc and leaves its halo glowing over
-  // the edge, which reads worse than not hiding at all.
+  // Generous on purpose: the artwork paints past its own box (glow circle r=112 in a 200 viewBox,
+  // breathing to 1.035) and the exit rotates, so translating by exactly `size` leaves a halo lit.
   const tHide = off(size * 1.6);
   const tPeek = off(hidden);
 
@@ -228,20 +195,17 @@ export const PeekingMoon = () => {
   const sway = key % 2 === 0 ? 1 : -1;
 
   const peekKeyframes: Record<string, { transform: string }> = {
-    // Slide in, overshoot, settle — a spring without a spring library.
     [pct(0)]: { transform: tHide },
     [pct(420)]: { transform: `${tPeek} rotate(-14deg) scale(1.1)` },
     [pct(820)]: { transform: `${tPeek} rotate(8deg) scale(0.95)` },
     [pct(1150)]: { transform: `${tPeek} rotate(-4deg) scale(1.02)` },
     [pct(2000)]: { transform: `${tPeek} rotate(0deg) scale(1)` },
-    // Wave, then withdraw.
     [pct(122_000)]: { transform: `${tPeek} rotate(0deg) scale(1)` },
     [pct(123_000)]: { transform: `${tPeek} rotate(7deg) scale(0.97)` },
     [pct(123_800)]: { transform: `${tPeek} rotate(-4deg)` },
     [pct(ANIM_MS)]: { transform: tHide },
   };
 
-  // Three beats per giggle, alternating lean, so the loop stays legible at a glance.
   for (const [i, at] of GIGGLE_AT.entries()) {
     const dir = i % 2 === 0 ? sway : -sway;
     peekKeyframes[pct(at)] = {
@@ -253,16 +217,14 @@ export const PeekingMoon = () => {
     peekKeyframes[pct(at + 600)] = { transform: `${tPeek} rotate(0deg) scale(1)` };
   }
 
-  // Startled: a small flinch away from the pointer, then straight out of sight.
   const shyKeyframes = {
     '0%': { transform: `${tPeek} scale(1)` },
     '22%': { transform: `${tPeek} rotate(6deg) scale(0.94)` },
     '100%': { transform: `${tHide} rotate(-6deg)` },
   };
 
-  // It leaves the way it is named. The corona flares — the diamond-ring instant just before
-  // totality — and then the disc contracts into its own shadow and is gone. No spin: a moon
-  // does not cartwheel out of an eclipse.
+  // It leaves the way it is named: a diamond-ring flare, then the disc contracts into its own
+  // shadow. No spin; a moon does not cartwheel out of an eclipse.
   const eclipseKeyframes = {
     '0%': { transform: `${tPeek} scale(1)`, filter: 'brightness(1)', opacity: 1 },
     '18%': { transform: `${tPeek} scale(1.14)`, filter: 'brightness(2.1)', opacity: 1 },
@@ -316,8 +278,7 @@ export const PeekingMoon = () => {
         if (phase === 'eclipse') {
           setGone(true);
         } else {
-          // Either way it comes back, and `makeConfig` draws a fresh height — so a startled moon
-          // returns somewhere else down the edge rather than exactly where you reached for it.
+          // `makeConfig` draws a fresh height, so a startled moon returns elsewhere down the edge.
           scheduleNext(config, phase === 'shy');
         }
       }}

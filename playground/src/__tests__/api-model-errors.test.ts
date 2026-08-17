@@ -2,10 +2,8 @@ import { expect, test } from '@playwright/test';
 import { typedocFailure } from '../../vite-plugins/api-model.ts';
 
 /**
- * The API model is generated during every playground build, including the deploy one, and
- * typedoc runs there with `treatWarningsAsErrors`. So a broken `{@link}` fails a deploy — and
- * the only thing standing between that and half an hour of guessing is whether the failure
- * carries typedoc's own words.
+ * Every playground build generates the API model, and typedoc runs with `treatWarningsAsErrors`, so
+ * a broken `{@link}` fails a deploy — diagnosable only if the failure carries typedoc's own words.
  */
 test.describe('typedocFailure', () => {
   test('repeats what typedoc printed, on both streams', () => {

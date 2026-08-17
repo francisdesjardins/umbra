@@ -2,13 +2,9 @@ import { Box, type Theme } from '@mui/material';
 import type { ApiSymbol } from 'virtual:dialog-api';
 
 /**
- * What a symbol *is*, at a glance.
- *
- * Colour carries it in the rail and in search results, where there is no room for the word.
- * Two accents and a neutral rather than three accents, because the palette only has two: it is
- * the mascot's, and `secondary` there is the eclipse's **body** — a fill, and in dark mode the
- * very value `background.default` takes. A type is the quietest of the three kinds anyway, so it
- * reads as the absence of an accent rather than as a third one nobody has.
+ * What a symbol *is*, where the word does not fit. Two accents and a neutral: the palette's
+ * `secondary` is the eclipse's body (dark mode's `background.default`), and a type, the quietest
+ * kind, reads as the absence of an accent.
  */
 const KIND = {
   function: { label: 'fn', tone: 'primary' },
@@ -19,13 +15,9 @@ const KIND = {
 type Tone = (typeof KIND)[keyof typeof KIND]['tone'];
 
 /**
- * The readable end of a tone, per mode.
- *
- * `main` is tuned to be a background with `contrastText` on it; as 11px text on the *page* it is
- * the wrong end of the ramp — amber `primary.main` measures 3.19:1 on white, under the 4.5:1 an
- * 11px bold glyph needs. So light mode takes `dark` and dark mode takes `light`, which is the
- * pair MUI ships for exactly this. The observation this badge made first is now a palette token,
- * `accent.onSurface`, and every amber-on-the-page in the app reads it.
+ * The readable end of a tone, per mode: `main` is a background for `contrastText`, and as 11px page
+ * text amber `primary.main` measures 3.19:1 on white against a needed 4.5:1. So light takes `dark`,
+ * dark takes `light`, and amber is now the `accent.onSurface` token.
  */
 const toneColor = (theme: Theme, tone: Tone): string => {
   if (tone === 'neutral') {
@@ -57,8 +49,7 @@ export const KindBadge = ({ kind }: { readonly kind: ApiSymbol['kind'] }) => {
         borderColor: (theme: Theme) => {
           return toneColor(theme, tone);
         },
-        // No `opacity` here: it multiplies the contrast that was just measured, and a badge this
-        // small has none to give away. Reach for a dimmer tone instead if one is wanted.
+        // No `opacity`: it multiplies the contrast just measured. Use a dimmer tone instead.
         flexShrink: 0,
       }}
     >

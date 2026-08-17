@@ -164,9 +164,8 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
 ];
 
 /**
- * The third flavour, and the honest one: none of it renders anything visible, so it works under
- * either of the other two — the announcer's hidden live region included. These are the patterns
- * the library deliberately does not ship, so that a dialog manager stays a dialog manager.
+ * The third flavour: nothing here renders anything visible (the announcer's hidden live region
+ * included), so it works under either other one. Patterns the library deliberately does not ship.
  */
 const PATTERNS_GROUP: TemplateGroup = {
   title: 'Patterns the library does not ship',
@@ -299,8 +298,7 @@ export const UITemplatesPage = () => {
       {groups.map((group) => {
         return (
           <TemplateGroupSection
-            // Flavours reuse group titles (both have a "MessageModal"); scope the key so
-            // switching flavour remounts the cards instead of diffing across two sets.
+            // Flavours reuse group titles, so scope the key or switching diffs across two sets.
             key={`${flavor}-${group.title}`}
             title={group.title}
             description={group.description}

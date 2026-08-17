@@ -3,16 +3,10 @@ import type { Accessor } from 'solid-js';
 import type { StoreContract } from '../store/create-store.js';
 
 /**
- * Read any of the library's stores as a Solid signal.
- *
- * `StoreContract` is `{ subscribe, getSnapshot }` — the pair React consumes through
- * `useSyncExternalStore` with no adapter at all. Solid needs one, and this is the whole of it:
- * a signal seeded with the current snapshot and written on every notification, with the
- * unsubscribe tied to the owner that called.
- *
- * `equals: false` because the store already decides what a change is — it skips notifying when
- * the next snapshot is equal — so a second identity check here could only ever swallow a
- * notification the store meant to send.
+ * Read any of the library's stores as a Solid signal — the adapter React does not need for the
+ * same `{ subscribe, getSnapshot }` pair: a signal seeded with the current snapshot, written on
+ * every notification, unsubscribed with the calling owner. `equals: false` because the store
+ * already decides what a change is, so a second identity check could only swallow one.
  *
  * @example
  * const counter = createStore({ count: 0 });

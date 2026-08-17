@@ -20,8 +20,8 @@ declare module '*.css?raw' {
   export default content;
 }
 
-// The microfrontend frame's hand-written files, as text. They live in `public/`, which is mounted
-// at `/` and therefore has no importable address — `mfeUmbraPlugin` reads them off disk instead.
+// The microfrontend frame's files as text: they live in `public/`, mounted at `/` and so with no
+// importable address, so `mfeUmbraPlugin` reads them off disk.
 declare module 'virtual:mfe-sources' {
   export const host: string;
   export const checkout: string;
@@ -30,8 +30,8 @@ declare module 'virtual:mfe-sources' {
   export const audit: string;
 }
 
-// The shape is owned by the plugin that emits it — re-exported here rather than restated, so
-// a change to the projection cannot leave the page type-checking against a stale model.
+// Re-exported from the emitting plugin rather than restated, so the page cannot type-check against
+// a stale projection.
 declare module 'virtual:dialog-api' {
   export type { ApiCategory, ApiMember, ApiSymbol, DocPart } from '../vite-plugins/api-model.ts';
 

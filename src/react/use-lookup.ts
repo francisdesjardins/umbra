@@ -4,16 +4,10 @@ import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-man
 import type { ModalInfo } from '../manager/types.js';
 
 /**
- * Reactive hook for querying a single modal's state.
- *
- * Returns `ModalInfo` that updates whenever any modal opens or closes.
- * Uses `useSyncExternalStore` for tear-free reads. For open modals,
- * the result is a stable reference from the snapshot; for closed or
- * unregistered modals, the imperative `lookup(id)` provides the info.
- *
- * Automatically uses the nearest `DialogManagerProvider` instance, or
- * falls back to the static `dialogManager` singleton when no provider
- * is present.
+ * One modal's `ModalInfo`, updating whenever any modal opens or closes, through
+ * `useSyncExternalStore` for tear-free reads. An open modal answers with a stable reference from
+ * the snapshot, a closed or unregistered one from `lookup(id)`. Scoped to the nearest
+ * `DialogManagerProvider`, or the singleton when there is none.
  *
  * @example
  * function ModalStatus({ id }: { id: string }) {
@@ -44,11 +38,9 @@ export function useLookup(id: string): ModalInfo {
   const snapshot = useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
 
   // `snapshot` is passed rather than read inside, and it is the difference between working and
-  // silently freezing. The closed branch answers from `manager.lookup(id)`, a read of mutable
-  // state the compiler has no way to see into — so left inline it memoises on `manager` and `id`,
-  // neither of which changes when a modal registers, and the hook reports the answer it gave on
-  // the first render for ever. Naming the snapshot makes it the dependency it already was: it is
-  // what says *when* the imperative read may have gone stale. Uncompiled this looks identical,
-  // which is why it took compiling the component bundle to see it at all.
+  // silently freezing: the closed branch reads mutable state through `manager.lookup(id)`, so
+  // inline the compiler memoises on `manager` and `id` — neither moves when a modal registers —
+  // and the hook repeats its first answer for ever. Naming the snapshot makes it the dependency it
+  // already was; uncompiled the two look identical, which is why this took the compiled bundle.
   return lookupIn(id, { manager, snapshot });
 }

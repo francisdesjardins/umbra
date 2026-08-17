@@ -15,8 +15,8 @@ export function SimpleModalExample() {
 
   const simpleModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
-    // Points at the heading below rather than repeating it as a string: a name written twice is
-    // a name that drifts. The id is derived from the modal's own, which is already unique.
+    // Points at the heading rather than repeating it — a name written twice drifts; the id derives
+    // from the modal's own, already unique.
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (

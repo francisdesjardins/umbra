@@ -1,9 +1,8 @@
 import type { ModalPhase } from '../core/types.js';
 
 /**
- * Inputs to {@link canDismiss} — everything the guard needs, with no React,
- * DOM, or action coupling. `hasRunningAction` is read from the actions bridge
- * at the call site and passed in as a plain boolean.
+ * Inputs to {@link canDismiss} — everything the guard needs, with no React, DOM or action coupling;
+ * `hasRunningAction` is read from the actions bridge at the call site as a plain boolean.
  */
 export type DismissGate = {
   /** Current lifecycle phase of the modal. */
@@ -17,19 +16,12 @@ export type DismissGate = {
 };
 
 /**
- * Whether a user-initiated dismissal (dismiss key, backdrop click, click outside)
- * may close the modal right now.
- *
- * The single source of truth for the guard chain shared by every dismissal path:
- * `attachDialogKeydown`, `attachDialogCancel` and `attachWindowDismissKey` (the dialog-level,
- * native-`cancel` and non-modal window-level listeners), `attachClickOutside`, and
- * `shouldDismissOnBackdropClick`. Each path adds its own path-specific check on top
- * (backdrop-click opt-in, action hotkey suppression, foreground check, hit testing) — this
- * covers only what they share.
- *
- * A modal that is already `'closing'` or `'closed'` cannot be dismissed again;
- * calling `store.close()` in those phases is a no-op, so gating here just avoids
- * the pointless round trip.
+ * Whether a user-initiated dismissal (dismiss key, backdrop click, click outside) may close the
+ * modal right now — the single source of truth for what every dismissal path shares:
+ * `attachDialogKeydown`, `attachDialogCancel`, `attachWindowDismissKey`, `attachClickOutside` and
+ * `shouldDismissOnBackdropClick`, each of which adds its own check on top (backdrop opt-in, hotkey
+ * suppression, foreground, hit testing). A modal already `'closing'` or `'closed'` cannot be
+ * dismissed again — `store.close()` is a no-op there, so this just avoids the round trip.
  */
 export function canDismiss({
   phase,

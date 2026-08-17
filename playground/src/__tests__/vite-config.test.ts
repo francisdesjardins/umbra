@@ -6,12 +6,9 @@ import { fileURLToPath } from 'node:url';
 const PLAYGROUND = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 /**
- * Vite's `configLoader: 'native'` — the coming default — resolves a config's imports as
- * written, so an extensionless relative specifier warns today and fails to resolve later. The
- * warning is easy to scroll past in build output, which is why it is asserted here instead.
- *
- * The same rule the library follows for its own emitted declarations (`.js` on every relative
- * import, checked by `scripts/verify-package.mjs`) — this is the config-file half of it.
+ * Vite's `configLoader: 'native'` — the coming default — resolves a config's imports as written, so an
+ * extensionless relative specifier warns today (easy to scroll past) and fails to resolve later. The
+ * config-file half of the `.js`-on-every-relative-import rule `scripts/verify-package.mjs` checks.
  */
 const RELATIVE_IMPORT = /from\s+'(\.[^']*)'/g;
 

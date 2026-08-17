@@ -7,14 +7,12 @@ export type ScrollRegionProps =
   | Record<string, never>;
 
 /**
- * The keyboard half of a designated scroll container, applied only while it actually overflows.
+ * The keyboard half of a scroll container, applied only while it overflows. A scroller with no
+ * focusable child is keyboard-unreachable (WCAG 2.1.1); Chromium and Firefox add the Tab stop but
+ * WebKit does not, so it is declared — `tabindex="0"`, `role="region"` and a name, the explicit
+ * tabindex also being what makes the region visible to the library's focus scan.
  *
- * A scroller with no focusable child is keyboard-unreachable (WCAG 2.1.1). Chromium and Firefox
- * add the Tab stop themselves; WebKit does not — so the norm is to declare it: `tabindex="0"`,
- * `role="region"`, and a name that makes the stop announce as more than a block of text. The
- * explicit tabindex is also what makes the region a destination the library's focus scan can see.
- *
- * Userland on purpose: the scroller is the caller's markup, and an engine-granted stop carries no
+ * Userland on purpose: the scroller is the caller's markup and an engine-granted stop carries no
  * attribute a selector could name. Pair with `focusOnOpen` when the region sits first in the DOM,
  * or an overflowing dialog opens focused on its reading area.
  */

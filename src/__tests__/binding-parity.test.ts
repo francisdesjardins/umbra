@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Names an entry file exports directly. `export * from './index.js'` is deliberately not followed:
-// both re-export the root, so its names are equal by construction and would only pad the comparison.
+// both re-export the root, so its names are equal by construction and would only pad the diff.
 const directExports = (entryFile: string): Set<string> => {
   const source = readFileSync(resolve(SRC_ROOT, entryFile), 'utf8');
   const names = new Set<string>();
@@ -125,7 +125,7 @@ test.describe('the controller binding', () => {
   });
 
   test('every binding re-exports the root, so an app needs one import path', () => {
-    // Makes `dialogManager`, `Key`, `createStore` reachable from all three; losing it fails nothing.
+    // Makes `dialogManager`, `Key`, `createStore` reachable from all three; losing it is silent.
     for (const entry of ['react.ts', 'solid.ts', 'vanilla.ts']) {
       const source = readFileSync(resolve(SRC_ROOT, entry), 'utf8');
       expect(source, `${entry} must re-export the root`).toContain("export * from './index.js'");

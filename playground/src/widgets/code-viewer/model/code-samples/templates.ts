@@ -1,8 +1,6 @@
 /**
- * The copy-paste catalogue behind `/ui-templates`: both template flavours, the playground's own
- * shared components, and the `shared/lib` patterns the Shared tab lists.
- *
- * Split from its siblings — see `codeSamples.ts`.
+ * The copy-paste catalogue behind `/ui-templates`: both template flavours, the playground's shared
+ * components, and the `shared/lib` patterns the Shared tab lists. Split off — see `codeSamples.ts`.
  */
 import templateMsgCreateTextSrc from '@/entities/modal-template/ui/mui/create-text-message-modal.tsx?raw';
 import templateMsgDefaultContainerSrc from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer.tsx?raw';

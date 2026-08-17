@@ -12,45 +12,19 @@ export const PANEL_ID = 'controlled-filters';
 const resultStore = createResultStore();
 
 /**
- * A dialog whose `open` is a prop — the shape most component-library call sites take.
+ * A dialog whose `open` is a prop — the component-library shape. It cannot close itself: the
+ * boolean above it is still `true`, the next render puts it back, and the user sees a blink.
  *
- * The switch is the only truth on this card. Everything else *asks* it, and that is the whole
- * pattern: a controlled dialog cannot close itself, because the boolean above it would still be
- * `true` and the next render would put it straight back. What the user would see is a panel that
- * blinks.
- *
- * Two library pieces make it, and neither is much code — which is the point, since both are
- * written by hand in every wrapper that does not know they exist.
- *
- * **`onDismissRequest` turns the dismiss key into a report.** Every gate above it is unchanged
- * and still the library's: which key, whether an action claimed it, whether a `prepare` or a
- * running action forbids it, and — here, because the panel is non-modal — which dialog is
- * actually in front. Only the last step moves, from `close()` to a call to the owner. Written by
- * hand it is written three times and differently: a modal dialog hears Escape through its own
- * `keydown` and through the native `cancel`, and a non-modal panel hears it through neither, since
- * it is outside the top layer and the press is routinely made somewhere else on the page. Try it —
- * focus the switch, press Escape, and the panel still hears it.
- *
- * It can also **decline**, by returning `false`: the non-modal listener captures at the window, so
- * a press it takes is a press the page never sees, and an owner that decided not to act must not
- * cost the page its keyboard. Nothing here declines, because the interesting case is a condition
- * only a real application knows — another framework's modal sitting on top.
- *
- * **`reconcileOpen` puts the dialog back where the prop says it belongs.** Reconciled on every
- * pass rather than reacted to, which is what makes the prop *authoritative*: press "Open it from
- * outside" and the panel is closed again, because `dialogManager.open()` is an instruction and the
- * switch did not agree. It decides on `phase` and never on `isVisible` — the difference is a cut
- * animation, and the reasoning is on the function itself.
- *
- * **The Close button is an action that does not close.** `onAction` that never calls `close`
- * leaves the dialog exactly where it is; lowering the switch is what closes it. So the reason
- * every close carries is the owner's, which is why `onClose` below reports `'close'` and never
- * `'dismiss'` — the panel is never dismissed, it is always lowered.
- *
- * **Non-modal is a requirement, not a preference.** `showModal()` puts a dialog in the top layer
- * and the native backdrop blocks every click outside it, so the switch that drives this one would
- * be unreachable while it is open. A controlled surface whose control sits outside the dialog is
- * exactly the case that has to be non-modal.
+ * - `onDismissRequest` reports the dismiss key instead of closing, leaving every gate above it
+ *   (which key, an action's claim, a `prepare` or running action, which dialog is in front) the
+ *   library's. By hand it is three implementations: a modal dialog hears Escape through its own
+ *   `keydown` and the native `cancel`, a non-modal panel through neither, being outside the top
+ *   layer. Returning `false` declines, handing back a press the window-level capture ate.
+ * - `reconcileOpen` runs every pass rather than reacting, making the prop authoritative, and
+ *   decides on `phase` not `isVisible` — the difference is a cut animation.
+ * - An action whose `onAction` never calls `close` leaves the dialog, so `onClose` reports the
+ *   owner's `'close'`, never `'dismiss'`. Non-modal is required: the top layer's native backdrop
+ *   would block the switch driving it.
  */
 export function ControlledPanelExample() {
   const { result } = useStore(resultStore);
@@ -113,9 +87,7 @@ export function ControlledPanelExample() {
 
   const { phase } = useLookup(PANEL_ID);
 
-  // The reconciliation, and the whole of it. `modal` is a fresh object every render, so this runs
-  // on every pass — which is what "reconciled, not reacted to" means and is free: `reconcileOpen`
-  // answers `'none'` unless the prop and the phase actually disagree.
+  // `modal` is fresh every render; `reconcileOpen` answers `'none'` unless prop and phase disagree.
   useEffect(() => {
     const next = reconcileOpen(phase, open);
     if (next === 'open') {

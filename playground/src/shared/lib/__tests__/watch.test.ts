@@ -72,7 +72,6 @@ test.describe('watch', () => {
       onChange: (next) => {
         return calls.push(next.x);
       },
-      // ignore y
       equals: (a, b) => {
         return a.x === b.x;
       },

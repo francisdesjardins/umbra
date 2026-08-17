@@ -5,14 +5,9 @@ import { useDialogManagerContext } from './dialog-manager-context.js';
 export type { DialogManagerSnapshot };
 
 /**
- * Reactive hook for subscribing to dialog manager state changes.
- *
- * Returns an immutable `DialogManagerSnapshot` that updates whenever
- * modals open or close. Uses `useSyncExternalStore` for tear-free reads.
- *
- * Automatically uses the nearest `DialogManagerProvider` instance, or
- * falls back to the static `dialogManager` singleton when no provider
- * is present.
+ * An immutable `DialogManagerSnapshot` that updates whenever modals open or close, through
+ * `useSyncExternalStore` for tear-free reads. Scoped to the nearest `DialogManagerProvider`, or
+ * the singleton when there is none.
  *
  * @example
  * function ModalCounter() {

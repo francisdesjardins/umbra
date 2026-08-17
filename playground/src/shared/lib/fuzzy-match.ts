@@ -1,18 +1,10 @@
 /**
- * Small fuzzy matcher — the kind a symbol filter needs and nothing more.
- *
- * Two passes, in order of confidence:
- *
- * 1. **Subsequence.** `usmodal` matches `useModalActions`, scored by _where_ the letters land:
- *    a hit on a word boundary (`M` in `useModal`, after a `-`) or right after the previous hit
- *    is worth far more than one in the middle of a word, so `useModal` outranks
- *    `UseSlideModalOptions` for `usmodal` even though both contain the letters.
- * 2. **Edit distance.** A transposition (`modla`) or a wrong letter (`modul`) breaks the
- *    subsequence scan entirely, so a Damerau–Levenshtein pass with a free start (Sellers'
- *    variant, which is approximate _substring_ search rather than whole-string comparison)
- *    catches typos. It always scores below a real subsequence hit, so typos sort last.
- *
- * Ranges come from pass 1 only; a typo hit has no honest character mapping to highlight.
+ * Small fuzzy matcher — what a symbol filter needs, no more. Pass 1 is a **subsequence** scan
+ * scored by where the letters land: a word-boundary or consecutive hit outweighs a mid-word one,
+ * so `useModal` beats `UseSlideModalOptions` for `usmodal`. Pass 2 catches typos that scan cannot
+ * see (`modla`, `modul`) — Damerau–Levenshtein with a free start (Sellers' variant, approximate
+ * _substring_ search), always scoring below a real subsequence hit so typos sort last. Ranges come
+ * from pass 1 only: a typo hit has no honest character mapping to highlight.
  */
 
 /** Half-open `[start, end)` slices of the target that the query matched. */
@@ -65,9 +57,8 @@ const subsequence = (query: string, target: string): FuzzyMatch | null => {
     } else if (isBoundary(target, hit)) {
       score += BOUNDARY_BONUS;
     }
-    // `previousHit` starts at -1, so the guard matters: without it the first character is
-    // "consecutive" with nothing, scores a bonus it did not earn, and is merged into a range
-    // that does not exist yet — dropping it from the highlight.
+    // `previousHit` starts at -1, so the guard matters: without it the first character scores a
+    // consecutive bonus it did not earn and is merged into a range that does not exist yet.
     if (previousHit !== -1 && hit === previousHit + 1) {
       score += CONSECUTIVE_BONUS;
       const last = ranges.at(-1);
@@ -86,10 +77,7 @@ const subsequence = (query: string, target: string): FuzzyMatch | null => {
   return { score: score - target.length * 0.05, ranges };
 };
 
-/**
- * Best edit distance between the query and any substring of the target (Sellers' variant:
- * row zero is all zeroes, so the match may start anywhere for free).
- */
+/** Best edit distance to any substring (Sellers': row zero all zeroes, so a match starts free). */
 const approximateDistance = (query: string, target: string) => {
   const width = target.length + 1;
   let beforePrevious: number[] = [];
@@ -102,9 +90,8 @@ const approximateDistance = (query: string, target: string) => {
     for (let j = 1; j <= target.length; j++) {
       const substitution = (previous[j - 1] ?? 0) + (query[i - 1] === target[j - 1] ? 0 : 1);
       let cost = Math.min(substitution, (previous[j] ?? 0) + 1, (current[j - 1] ?? 0) + 1);
-      // Damerau: two swapped neighbours are one slip of the fingers, not two errors. Without
-      // it `modla` costs as much as two wrong letters, and the budget would have to be doubled
-      // — letting everything else in — to catch the commonest typo there is.
+      // Damerau: two swapped neighbours are one slip, not two errors. Without it `modla` costs
+      // two edits and the budget would have to double — letting everything else in — to catch it.
       if (i > 1 && j > 1 && query[i - 1] === target[j - 2] && query[i - 2] === target[j - 1]) {
         cost = Math.min(cost, (beforePrevious[j - 2] ?? 0) + 1);
       }
@@ -129,8 +116,8 @@ export const fuzzyMatch = (query: string, target: string): FuzzyMatch | null => 
     return direct;
   }
 
-  // One slip per four characters, and never zero. Loosen this and a short query starts
-  // matching half the list — `outlet` at two edits reaches names sharing nothing with it.
+  // One slip per four characters, never zero. Looser and a short query matches half the list —
+  // `outlet` at two edits reaches names sharing nothing with it.
   const budget = Math.max(1, Math.floor(trimmed.length / 4));
   const distance = approximateDistance(trimmed.toLowerCase(), target.toLowerCase());
   return distance <= budget ? { score: TYPO_CEILING - distance, ranges: [] } : null;

@@ -10,9 +10,8 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
       sx={{
         p: 1.5,
         borderRadius: 1,
-        // Derived from the palette, not written out: the border beside it is `primary.main`, so a
-        // literal here means the fill and the outline disagree the moment the palette moves — as
-        // they did, leaving a fuchsia wash inside an amber border.
+        // Derived from the palette, not written out: the border beside it is `primary.main`, and a
+        // literal here left a fuchsia wash inside an amber border the moment the palette moved.
         bgcolor: (theme) => {
           return result
             ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.15 : 0.1)

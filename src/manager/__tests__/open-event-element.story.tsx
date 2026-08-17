@@ -60,12 +60,7 @@ export function OpenEventInDocumentHarness() {
   );
 }
 
-/**
- * The same dialog, rendered into a shadow root — the case the event field exists for.
- *
- * A `document.querySelector` cannot see into a shadow root, so an integration handed only the id
- * has no way back to the element. The event carries it regardless, which is the whole claim.
- */
+/** The same dialog in a shadow root: `querySelector` cannot see in, but the event carries it. */
 export function OpenEventInShadowHarness() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [shadow, setShadow] = useState<ShadowRoot | null>(null);

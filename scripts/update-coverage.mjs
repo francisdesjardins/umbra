@@ -1,19 +1,10 @@
 #!/usr/bin/env node
-// ── The coverage pair, measured and written down in one move ─────────────────
-//
-// The rule is "re-measure both or neither", and it was held by hand: two commands, four
-// call sites (two badges and a paragraph in README.md, the pair in CLAUDE.md), and the drift
-// arrived exactly as predicted — one document moved without the other, twice, in both
-// directions. This script is the rule made mechanical: it runs both measurements, parses the
-// numbers out of their own reports, and rewrites every quote of the pair plus the date.
-//
-// Replacements are anchored on the surrounding prose and must match exactly once each — a
-// reworded paragraph fails the run loudly instead of leaving a stale number behind. The write
-// goes through prettier for the same reason `render-matrix.mjs`'s does: prettier owns this
-// repository's markdown layout, so a raw write would leave the files dirty on every run.
-//
-// Usage:
-//   yarn coverage:update      # run both coverage commands, rewrite README.md and CLAUDE.md
+// The coverage pair, measured and written down in one move: the rule is "re-measure both or
+// neither", and holding it by hand drifted README.md and CLAUDE.md apart twice, in both directions.
+// The replacements below are anchored on the surrounding prose and must match exactly once each, so
+// a reworded paragraph fails loudly instead of leaving a stale number. The write goes through
+// prettier, which owns this repository's markdown layout.
+// Usage: `yarn coverage:update` — run both coverage commands, rewrite README.md and CLAUDE.md.
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -57,10 +48,7 @@ if (fileCount === 0) {
 const today = new Date().toISOString().slice(0, 10);
 console.log(`coverage: unit ${unit}% · component ${component}% over ${fileCount} files · ${today}`);
 
-/**
- * Apply each edit exactly once, or fail loudly — a pattern that stopped matching means the prose
- * moved, and a silent skip here is the stale-number bug this script exists to end.
- */
+/** Each edit must apply exactly once — a pattern that stopped matching means the prose moved. */
 const rewrite = async (relative, edits) => {
   const path = resolve(ROOT, relative);
   const original = readFileSync(path, 'utf8');

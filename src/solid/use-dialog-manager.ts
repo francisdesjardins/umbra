@@ -5,11 +5,9 @@ import type { DialogManagerSnapshot } from '../manager/dialog-manager.js';
 export type { DialogManagerSnapshot };
 
 /**
- * The manager's live state — the same `DialogManagerSnapshot` React's hook returns, with the two
- * fields as getters so reading one inside JSX subscribes that expression to it.
- *
- * A snapshot is a fixed pair, so it can be handed back as an object and stay reactive. Contrast
- * `useLookup`, whose `ModalInfo` is a discriminated union and therefore cannot.
+ * The manager's live state — React's `DialogManagerSnapshot`, with both fields as getters so
+ * reading one inside JSX subscribes that expression. A fixed pair can be an object and stay
+ * reactive; `useLookup`'s discriminated union cannot.
  *
  * @example
  * const dialogs = useDialogManager();

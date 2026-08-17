@@ -151,22 +151,16 @@ export function MuiPanelExample() {
   const { result } = useStore(resultStore);
   const setup = useStore(setupStore);
 
-  // Template hooks infer the payload from `actions` too — `submit` is the only action that
-  // carries one, so `SetupValues` is what this modal closes with.
+  // Template hooks infer the payload from `actions`; `submit` is the only one carrying a payload.
   const modal = useMessageModal<SetupValues, 'back' | 'close' | 'next' | 'submit'>({
     id: MODAL_ID,
-    // A string, because the heading below is the *step* and changes three times while the dialog
-    // stays open. The wizard is one thing to the user; which step they are on is content, and the
-    // "Step 2 of 3" line beside the heading says it.
+    // A string: the heading is the *step* and changes three times while the dialog stays open.
     ariaLabel: 'Project setup',
     render: ({ action, error }) => {
       const title = STEP_TITLES[setup.step] ?? STEP_TITLES[0];
 
-      // `100%`, not `92vw`. The UA caps a `<dialog>` at `calc(100% - 6px - 2em)` — 337px on a
-      // 375px phone — so a panel sized against the *viewport* asks for 345 and overflows its own
-      // dialog by eight pixels: cut off on the right, and its rounded corner with it. Above about
-      // 475px the two agree and nothing shows, which is why this only ever appeared on a phone.
-      // Sizing against the dialog's own box cannot disagree with it.
+      // `100%`, not `92vw`: the UA caps a `<dialog>` at `calc(100% - 6px - 2em)` — 337px on a 375px
+      // phone — so a viewport-sized panel asks 345 and overflows by 8px. They agree above ~475px.
       return (
         <PanelModal.PanelContainer sx={{ width: 'min(600px, 100%)' }}>
           <PanelModal.PanelHeader>

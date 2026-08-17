@@ -4,11 +4,8 @@ import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
 
 // ── virtual:dialog-api ───────────────────────────────────────────────────────
-//
-// Runs typedoc over the library's entry points and hands the playground a compact model of the
-// public surface, so the API page renders with this site's own components instead of an
-// iframed second design system. Typedoc's own JSON is ~470 kB of graph; the projection below
-// keeps what a reference page shows and nothing else.
+// Projects typedoc's ~470 kB graph over the library's entry points into a compact model, so the API
+// page renders with this site's own components rather than an iframed second design system.
 
 const VIRTUAL_ID = 'virtual:dialog-api';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -26,13 +23,9 @@ const ENTRY_LABEL: Record<string, string> = {
 };
 
 /**
- * How a symbol is addressed everywhere downstream — the specifier it ships from, then its name.
- *
- * A bare name is not an identity here. The three bindings deliberately export the same words —
- * `useModal`, `UseModalOptions`, `DialogManagerSnapshot`, `ModalHandle` — with different
- * signatures, so keying on the name alone silently shows one binding's declaration under
- * another's specifier. This is the key the category table, the cross-reference links and the
- * search index all agree on.
+ * How a symbol is addressed downstream: the specifier it ships from, then its name. The bindings
+ * export the same words (`useModal`, `ModalHandle`) with different signatures, so keying on the
+ * bare name shows one binding's declaration under another's specifier.
  */
 export const symbolKey = (specifier: string, name: string): string => {
   return `${specifier}#${name}`;
@@ -46,16 +39,9 @@ const KIND: Record<number, ApiSymbol['kind']> = {
 };
 
 /**
- * The reader-facing table of contents — one page per entry, in reading order.
- *
- * It is hand-written because the shape a reader wants is the one the entry points already
- * declare in their section banners, and nothing in typedoc's output carries it: `src/utils/`
- * alone holds async state, keys, hotkeys and logging, which are four different chapters.
- * `symbols` is also the order symbols appear in, so a category leads with the thing you call
- * and trails with the types it hands back.
- *
- * Every exported symbol must appear exactly once — `buildModel` throws otherwise, because a
- * new export that silently belongs to no page is an export nobody can find.
+ * The reader-facing table of contents, one page per entry, hand-written because typedoc's output
+ * carries no such shape (`src/utils/` alone holds four chapters); `symbols` is the render order,
+ * and every export must appear exactly once or `buildModel` throws.
  */
 export const CATEGORIES: readonly CategoryDef[] = [
   {
@@ -353,19 +339,11 @@ export type ApiMember = {
   readonly optional: boolean;
 };
 
-/**
- * A run of prose. `link` is set when the source wrote `{@link Symbol}` and typedoc resolved it,
- * or when a rendered type names another exported symbol, so the page can anchor to that symbol
- * instead of printing its name.
- *
- * It carries a {@link symbolKey} when the target is exported and a bare name when it is not —
- * the page renders the second kind as inline code, which is the honest answer for a type a
- * reader cannot navigate to.
- */
+/** `link` is a {@link symbolKey} when exported, a bare name when not (rendered as inline code). */
 export type DocPart = { readonly text: string; readonly link?: string };
 
 export type ApiSymbol = {
-  /** `specifier#name` — see {@link symbolKey}. Its identity everywhere off this page. */
+  /** `specifier#name` — see {@link symbolKey}. */
   readonly key: string;
   readonly name: string;
   readonly kind: 'function' | 'variable' | 'type';
@@ -440,16 +418,12 @@ type TypeNode = {
 };
 
 /**
- * Undo the source file's hard wrap.
- *
- * A doc comment is wrapped at 100 columns for the editor; rendering those newlines verbatim
- * gives a ragged half-width paragraph in a browser. Single newlines become spaces so the
- * browser wraps, while blank lines (paragraphs) and lines opening a list, heading, quote or
- * table are left alone — those newlines are meaning, not formatting.
+ * Undo the source file's 100-column hard wrap, which renders as a ragged half-width paragraph.
+ * Single newlines become spaces; blank lines and lines opening a list, heading, quote or table are
+ * meaning rather than formatting, and are left alone.
  */
 function reflow(value: string): string {
-  // Both guards matter: `(?<!\n)` keeps the second newline of a paragraph break from being
-  // eaten, which would leave the next paragraph indented by a stray space instead of separated.
+  // `(?<!\n)` stops a paragraph break's second newline being eaten into a stray leading space.
   return value.replace(/(?<!\n)\n(?!\n)(?![ \t]*(?:[-*+]|\d+\.|#|>|\|))/g, ' ');
 }
 
@@ -469,20 +443,15 @@ function text(parts: CommentPart[] | undefined): string {
 }
 
 /**
- * Same, but keeping `{@link}` targets as links.
- *
- * Typedoc gives an inline tag a numeric `target` pointing into its own reflection graph, so
- * `names` maps those ids back to symbol names; the name is then resolved against the specifier
- * the linking symbol ships from, and anything neither step can answer degrades to the text the
- * author wrote.
+ * Same, keeping `{@link}` targets as links: an inline tag's numeric `target` maps back through
+ * `names`, the name resolves against the linking symbol's specifier, and anything neither step
+ * answers degrades to the author's text.
  */
 function doc(parts: CommentPart[] | undefined, ctx: PrintContext): DocPart[] {
   return (parts ?? [])
     .map((part) => {
       const target = typeof part.target === 'number' ? ctx.names.get(part.target) : undefined;
-      // A target the entry points do not export stays a link part carrying its bare name: the
-      // page renders those as inline code, which is the honest answer for a type a reader
-      // cannot navigate to.
+      // A target the entry points do not export keeps its bare name; the page renders it as code.
       return part.kind === 'inline-tag' && target !== undefined
         ? { text: part.text ?? target, link: ctx.resolve(target) ?? target }
         : { text: reflow(part.text ?? '') };
@@ -527,10 +496,8 @@ function allBlockTags(comment: Comment | undefined, tag: string): string[] {
 }
 
 // ── Type printing ────────────────────────────────────────────────────────────
-//
-// A signature is the one thing a reference page cannot paraphrase, so the printer below
-// covers every `type` discriminant typedoc emits for this library and reports anything it
-// does not recognise instead of quietly printing something plausible and wrong.
+// A signature cannot be paraphrased, so the printer covers every `type` discriminant typedoc emits
+// and reports what it does not recognise rather than printing something plausible and wrong.
 
 /** Emits tokens, merging plain runs so the page renders a handful of spans, not hundreds. */
 class Tokens {
@@ -556,14 +523,9 @@ class Tokens {
 
 type PrintContext = {
   /**
-   * The symbol a name means *here*, as a {@link symbolKey}, or `undefined` when nothing on these
-   * pages answers to it.
-   *
-   * Own specifier first, then the core — so `UseModalOptions` inside a Solid signature links to
-   * Solid's page and `ModalPhase` inside the same signature links to the core's. Driven by the
-   * category table rather than by where typedoc happened to materialise a declaration: a type
-   * three bindings re-export is one reflection, and a reader following a link from the Solid
-   * chapter should land in the Solid chapter.
+   * The symbol a name means *here*, as a {@link symbolKey}, else `undefined`. Own specifier first,
+   * then the core, driven by the category table rather than by where typedoc materialised a
+   * declaration — so a link out of the Solid chapter lands in the Solid chapter.
    */
   readonly resolve: (name: string) => string | undefined;
   readonly warn: (message: string) => void;
@@ -572,11 +534,8 @@ type PrintContext = {
 };
 
 /**
- * The context plus the sink the tokens go to.
- *
- * One object rather than an `(out, ctx)` pair threaded through a dozen mutually recursive
- * functions: the two never travel apart, and a call that needs one more thing — a separator —
- * spreads it in rather than growing a third parameter.
+ * The context plus the token sink — one object, not an `(out, ctx)` pair threaded through a dozen
+ * mutually recursive functions, so a call needing a separator spreads it in.
  */
 type Printer = PrintContext & { readonly out: Tokens };
 
@@ -767,8 +726,7 @@ function printType(node: TypeNode | undefined, printer: Printer): void {
       return;
     }
     default: {
-      // Honest degradation: an unhandled discriminant prints as `unknown` and says so at build
-      // time, rather than rendering a signature the compiler would reject.
+      // Unhandled prints `unknown` and warns, rather than a signature the compiler would reject.
       printer.warn(`unhandled type kind "${node.type ?? 'undefined'}"`);
       out.push('unknown');
       return;
@@ -776,10 +734,7 @@ function printType(node: TypeNode | undefined, printer: Printer): void {
   }
 }
 
-/**
- * `target` is the generic slot typedoc uses for both a reflection id and a nested type, so it
- * arrives as `unknown`; only the object form is a type.
- */
+/** `target` is typedoc's slot for both a reflection id and a nested type; only objects are types. */
 function asTypeNode(value: unknown): TypeNode | undefined {
   return typeof value === 'object' && value !== null ? { ...value } : undefined;
 }
@@ -812,8 +767,7 @@ function printSignature(
   out.push(`type ${node.name}`);
   printTypeParams(node.typeParameters, printer);
   out.push(' = ');
-  // An object-literal alias arrives as a declaration with children and no `type` at all —
-  // printing it as `unknown` would be a lie, and its shape is the members table below.
+  // An object-literal alias has children and no `type`; its shape is the members table below.
   if (node.type === undefined && (node.children ?? []).length > 0) {
     out.push(OBJECT_PLACEHOLDER);
     return out.done();
@@ -825,9 +779,8 @@ function printSignature(
 // ── Projection ───────────────────────────────────────────────────────────────
 
 /**
- * A type parameter's "type" is its constraint or its default — never the parameter itself.
- * Printing `node.type` the way a property does would render every unconstrained one as
- * `unknown`, which reads as a real annotation and is not one.
+ * A type parameter's "type" is its constraint or default, never the parameter itself — printing it
+ * as a property does renders every unconstrained one as a bogus `unknown` annotation.
  */
 function toTypeParam(node: Node, ctx: PrintContext): ApiMember {
   const out = new Tokens();
@@ -867,12 +820,8 @@ function toMember(node: Node, ctx: PrintContext): ApiMember {
 }
 
 /**
- * The fields a symbol exposes: an object type's properties, a const object's entries like
- * `Key`, or a component's props.
- *
- * Undescribed entries are kept — the type is rendered beside the name, which is most of what
- * a reader came for; `Escape: 'Escape'` needs no prose. Intersections are unwrapped so
- * `A & { b }` still lists `b`; the `A` half stays a link in the signature.
+ * The fields a symbol exposes. Undescribed entries are kept — the type renders beside the name, and
+ * `Escape: 'Escape'` needs no prose — and intersections are unwrapped so `A & { b }` lists `b`.
  */
 function members(node: Node, ctx: PrintContext): ApiMember[] {
   const shapes: (TypeNode | undefined)[] =
@@ -927,8 +876,7 @@ function toSymbol(
     typeParams: (signature?.typeParameters ?? node.typeParameters ?? []).map((param) => {
       return toTypeParam(param, ctx);
     }),
-    // A destructured props object is listed field by field under members, so listing it again
-    // here as one anonymous `{ … }` parameter would say nothing.
+    // Listed field by field under members already, so one anonymous `{ … }` here says nothing.
     params: (signature?.parameters ?? [])
       .filter((param) => {
         return param.name !== DESTRUCTURED;
@@ -941,7 +889,6 @@ function toSymbol(
   };
 }
 
-/** Every reflection id in the project, so `{@link}` targets resolve to a name. */
 function collectNames(root: Node): Map<number, string> {
   const names = new Map<number, string>();
   const walk = (node: Node) => {
@@ -966,13 +913,9 @@ function captured(error: unknown, stream: 'stdout' | 'stderr'): string {
 }
 
 /**
- * Say what typedoc said.
- *
- * `stdio: 'pipe'` is what lets the plugin decide when typedoc's output matters, but it also
- * means a failure arrives as `Command failed: node …/typedoc` with the actual diagnostics
- * sitting unread on the error. Typedoc runs with `treatWarningsAsErrors`, so this is the
- * message a broken `{@link}` produces — during `yarn dev`, and during a deploy build, which is
- * the worst possible moment to be told only that something failed.
+ * Say what typedoc said: `stdio: 'pipe'` means a failure arrives as `Command failed: node
+ * …/typedoc` with the diagnostics unread on the error, which under `treatWarningsAsErrors` is what
+ * a broken `{@link}` produces mid-`yarn dev`.
  */
 export function typedocFailure(error: unknown): Error {
   const output = [captured(error, 'stdout'), captured(error, 'stderr')].join('').trim();
@@ -996,8 +939,8 @@ function buildModel(
   mkdirSync(cacheDir, { recursive: true });
   const jsonPath = join(cacheDir, 'typedoc.json');
 
-  // Typedoc's programmatic serializer needs a filesystem it does not have here, so the CLI
-  // writes the JSON. `--out` points at the cache so the committed docs are never touched.
+  // The CLI writes the JSON (the programmatic serializer needs a filesystem it lacks here), with
+  // `--out` at the cache so the committed docs are never touched.
   try {
     execFileSync(
       process.execPath,
@@ -1005,11 +948,7 @@ function buildModel(
         join(repoRoot, 'node_modules', 'typedoc', 'bin', 'typedoc'),
         '--options',
         join(repoRoot, 'typedoc.json'),
-        // Named here rather than taken from `typedoc.json` so this projection decides its own
-        // scope: the reference documents every published entry point, and adding one is a line
-        // here plus its categories above. The projection keys declarations by `specifier#name`
-        // (see `symbolKey`), which is what lets three bindings export `useModal` and get three
-        // pages rather than the last one to be walked.
+        // Here, not in `typedoc.json`, so this projection owns its scope.
         '--entryPoints',
         'src/index.ts',
         '--entryPoints',
@@ -1033,18 +972,9 @@ function buildModel(
   rmSync(join(cacheDir, 'html'), { recursive: true, force: true });
   const names = collectNames(root);
 
-  // Every declaration typedoc emitted, by qualified key and by bare name.
-  //
-  // The two indexes exist because a re-exported type is **one** reflection: `ModalHandle` comes
-  // from `core/types.ts` and is named by `./react`, `./solid` and `./vanilla` alike, so typedoc
-  // materialises it under whichever entry point it walked first and emits references from the
-  // rest — which `KIND` filters out. So a binding asking for a name it genuinely exports has to
-  // be able to fall back to that single declaration. `UseModalOptions` is the opposite case:
-  // `react/types.ts` and `solid/types.ts` declare two different aliases, each gets its own
-  // qualified key, and the fallback is never consulted.
-  //
-  // A binding's `export * from './index.js'` does not land here either, for the same reason —
-  // so the root's symbols are documented once, on the root's pages.
+  // Two indexes because a re-exported type is **one** reflection: `ModalHandle` is named by all
+  // three bindings but materialises under whichever entry point typedoc walked first, so a binding
+  // must fall back to it. `UseModalOptions` is the opposite — two aliases, two keys, no fallback.
   const declarations = new Map<string, Declaration>();
   const byName = new Map<string, Declaration[]>();
   for (const module of root.children ?? []) {
@@ -1059,9 +989,8 @@ function buildModel(
   }
 
   /**
-   * The declaration a category means. Its own if it has one, otherwise the single shared
-   * reflection — and never a guess: two declarations of a name are two different types, and
-   * picking one of them is how a binding's page ends up showing the other's signature.
+   * Its own declaration, else the single shared reflection, never a guess: two declarations of a
+   * name are two types, and picking one shows the other's signature.
    */
   const declarationFor = (specifier: string, name: string): Declaration | undefined => {
     const own = declarations.get(symbolKey(specifier, name));
@@ -1072,9 +1001,7 @@ function buildModel(
     return shared.length === 1 ? shared[0] : undefined;
   };
 
-  // Where the category table says each name is rendered — built before anything is printed,
-  // because that is what a cross-reference has to resolve against. A link out of the Solid
-  // chapter lands in the Solid chapter, whichever entry point typedoc happened to walk first.
+  // Where each name renders — built first, because a cross-reference resolves against it.
   const pageOf = new Set(
     CATEGORIES.flatMap((category) => {
       return category.symbols.map((name) => {
@@ -1111,8 +1038,7 @@ function buildModel(
           );
         }
         consumed.add(symbolKey(declaration.specifier, name));
-        // The symbol is keyed by the page it is on, not by where it was declared: a shared type
-        // appears in each binding's chapter, and each copy has to be its own link target.
+        // Keyed by page, not declaration site: each binding's copy is its own link target.
         const symbol = toSymbol(declaration.node, {
           ...ctx,
           specifier: category.specifier,
@@ -1172,17 +1098,13 @@ export function apiModelPlugin(): Plugin {
           },
         })
       );
-      // `JSON.parse` of a string literal rather than the object literal itself. `cached` is
-      // already JSON, and the projected model is ~215 kB of it — an engine parses that as data in
-      // one pass, where the same bytes spelled as JavaScript go through the full parser and its
-      // object-shape machinery. The second `JSON.stringify` is what turns the JSON into a valid JS
-      // string literal, escaping included.
+      // `JSON.parse` of a string literal, not the object literal: ~215 kB parses as data in one
+      // pass where the same bytes as JavaScript go through the full parser.
       return `export default JSON.parse(${JSON.stringify(cached)});`;
     },
 
     configureServer(server) {
-      // The model is generated from `src`, which Vite does not otherwise watch on behalf of a
-      // virtual module. Re-generate on change and let HMR push the new page.
+      // Vite does not watch `src` on behalf of a virtual module, so re-generate and let HMR push it.
       server.watcher.add(watched);
       server.watcher.on('change', (file) => {
         if (!file.startsWith(watched)) {

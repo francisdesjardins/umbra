@@ -14,13 +14,10 @@ type FormValues = { name: string; email: string };
 const resultStore = createResultStore();
 
 /**
- * The same form as the MUI card, and the diff between the two files is the page's whole subject.
- *
- * Open both in the code viewer side by side: the `useForm` call is identical down to the
- * validator, the `useModal` call is identical, and everything that differs is markup —
- * `VanillaFormModal.Input` where the other has `TextField`, a `FieldError` where the other has
- * `FormHelperText`. `field('email')` hands back plain DOM props, so a bare `<input>` takes them
- * spread with no adapter, exactly as MUI's control does.
+ * The same form as the MUI card; the diff between the two files is the page's subject. `useForm`
+ * and `useModal` are identical down to the validator; only markup differs — `VanillaFormModal.Input`
+ * for `TextField`, `FieldError` for `FormHelperText`, a bare `<input>` taking `field('email')`'s
+ * plain DOM props with no adapter.
  */
 export function VanillaFormExample() {
   const { result } = useStore(resultStore);
@@ -40,8 +37,7 @@ export function VanillaFormExample() {
     },
   });
 
-  // Same two type arguments as the MUI version — the hooks are identical, only the markup below
-  // differs. That is the whole point of this page.
+  // Same two type arguments as the MUI version; only the markup below differs.
   const formModal = useModal<FormValues, 'cancel' | 'submit'>({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
@@ -71,8 +67,7 @@ export function VanillaFormExample() {
                 {...form.field('name')}
                 error={form.errors.name !== undefined}
               />
-              {/* The id `field()` pointed `aria-describedby` at — rendered, or the reference
-                  resolves to nothing and a screen reader announces an error it cannot read. */}
+              {/* The id `field()` pointed `aria-describedby` at; unrendered, it dangles. */}
               {form.errors.name !== undefined && (
                 <VanillaFormModal.FieldError id={form.errorId('name')}>
                   {form.errors.name}

@@ -42,8 +42,7 @@ export const HomePage = () => {
     id: 'home-hello',
     ariaLabelledBy: 'home-hello-title',
     onClose: (result) => {
-      // The claim in the panel is that the reason comes back typed and exhaustive; showing it is
-      // cheaper than asking anyone to believe it.
+      // Shows the panel's claim rather than asserting it: the reason is typed and exhaustive.
       switch (result.reason) {
         case 'confirm':
           setLastReason('confirm');
@@ -60,9 +59,8 @@ export const HomePage = () => {
       return (
         <Box
           sx={{
-            // The library ships no UI: a dialog with no surface of its own is text on the
-            // backdrop. This is the one thing every consumer has to bring, so the front page
-            // had better bring it too.
+            // The library ships no UI: unstyled, a dialog is text on the backdrop. Consumers bring
+            // this, front page included.
             p: 3,
             maxWidth: 'min(420px, 88vw)',
             display: 'flex',
@@ -89,9 +87,8 @@ export const HomePage = () => {
             <Button size="small" {...action('cancel', { focusOnOpen: true })}>
               Not now
             </Button>
-            {/* No `onClick` of our own: written after the spread it would replace the action's,
-                and the action would never run — the exact prop-dropping the library warns about.
-                An action with no handler closes with its own reason, which is all this needs. */}
+            {/* No `onClick` of our own: after the spread it would replace the action's and the
+                action would never run. A handler-less action closes with its own reason. */}
             <Button size="small" variant="contained" {...action('confirm', { hotkey: Key.Enter })}>
               Confirm
             </Button>
@@ -108,9 +105,8 @@ export const HomePage = () => {
         direction={{ xs: 'column', md: 'row' }}
         sx={{ alignItems: 'center', gap: { xs: 3, md: 6 }, py: { xs: 4, md: 7 }, minWidth: 0 }}
       >
-        {/* The corona is drawn past the SVG's own box on purpose, so the art is inset inside a
-            square that clips nothing: the wrapper bounds the layout, the disc sits at 78% of it,
-            and the flames have the remaining margin to burn into. */}
+        {/* The corona paints past the SVG's box, so the art is inset in a square that clips
+            nothing: the wrapper bounds the layout and the disc sits at 78% of it. */}
         <Box
           sx={{
             width: { xs: 176, md: 220 },
@@ -140,8 +136,7 @@ export const HomePage = () => {
               gap: 1.5,
             }}
           >
-            {/* Sized to the heading's two steps rather than left to inherit them: the mark is
-                part of the lockup here, not a bullet like the ones further down. */}
+            {/* Sized to the heading's two steps: the mark is part of the lockup, not a bullet. */}
             <Box component="span" sx={{ display: { xs: 'none', md: 'flex' } }}>
               <MoonPhase phase="first-quarter" size={40} />
             </Box>
@@ -201,9 +196,7 @@ export const HomePage = () => {
         </Box>
       </Stack>
 
-      {/* Stacked, not side by side. Two panes at half the page width put both snippets into
-          their own horizontal scrollbar, which is the one thing a landing page's code must not
-          ask for — full width, each of these fits. */}
+      {/* Stacked, not side by side: at half width both snippets get a horizontal scrollbar. */}
       <Stack sx={{ gap: 3, mb: 5, minWidth: 0 }}>
         <Box sx={{ minWidth: 0 }}>
           <Typography
@@ -251,8 +244,7 @@ export const HomePage = () => {
               title: 'API reference',
               body: 'Generated from the source, so it cannot drift from the code.',
             },
-            // `satisfies`, so each `phase` narrows to its literal instead of widening to
-            // `string` — the array is the only thing that knows which moon a card carries.
+            // `satisfies`, so each `phase` narrows to its literal instead of widening to `string`.
           ] satisfies readonly { to: string; phase: Phase; title: string; body: string }[]
         ).map((card) => {
           return (
@@ -287,15 +279,9 @@ export const HomePage = () => {
         })}
       </Stack>
 
-      {/* Decoration, and marked as such: a screen reader reading “light shade medium shade dark
-          shade” at the end of the page is noise. The `opacity` it used to carry is gone with it —
-          multiplied into `text.secondary` it measured 4.3:1, and an ornament is not worth a
-          contrast exception when the same tone one step up looks the same.
-
-          It was `░ ▒ ▓ ● ▓ ▒ ░` — the same falloff, said in shade blocks, which are glyphs and so
-          carry the sizing problem `MoonPhase` exists to solve. Three steps into the umbra and
-          three back out is a lunar cycle already, and the README's footer now says it this way
-          too. */}
+      {/* Decoration, marked as such, and carrying no `opacity`: over `text.secondary` that
+          measured 4.3:1, and an ornament is not worth a contrast exception. `MoonPhase` rather
+          than shade-block glyphs, which carry the sizing problem it exists to solve. */}
       <Stack
         aria-hidden="true"
         direction="row"

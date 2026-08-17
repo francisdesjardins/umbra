@@ -1,10 +1,7 @@
 import { useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 
-/**
- * Visually hidden, present for assistive technology — the classic clip pattern, inline so the
- * hook has no stylesheet to forget.
- */
+/** The classic clip pattern, inline so the hook has no stylesheet to forget. */
 const VISUALLY_HIDDEN: CSSProperties = {
   position: 'absolute',
   width: 1,
@@ -18,22 +15,16 @@ const VISUALLY_HIDDEN: CSSProperties = {
 };
 
 /**
- * A live region that exists **before** it has anything to say — which is the entire trick.
+ * A live region that exists **before** it has anything to say, which is the whole trick. Screen
+ * readers announce a region's *changes*, and one inserted into the accessibility tree already
+ * holding its text is the case they miss — exactly what `role="status"` inside a modal's `render`
+ * produces, since the content mounts in the same pass that shows the `<dialog>`. The fix is
+ * structural: the region lives *outside* the dialog, mounted from the first render.
  *
- * Screen readers announce a live region's *changes*; a region inserted into the accessibility
- * tree already holding its text is the case they miss or announce inconsistently. That is exactly
- * what rendering `role="status"` inside a modal's `render` produces: the library mounts the
- * content in the same pass that shows the `<dialog>`, so the region is born full and the toast
- * appears silently. The fix is structural, not an attribute — the region lives *outside* the
- * dialog, mounted from the first render, and the dialog stays what it is: the visual shell.
- *
- * `announce` clears the region and writes a frame later, so two identical toasts in a row are two
- * announcements — a live region that goes `"Saved"` → `"Saved"` has, as far as the platform is
- * concerned, never changed.
- *
- * The library deliberately ships nothing like this: a dialog manager is not where anyone looks
- * for a live region, and `role: 'status'` on a `<dialog>` is refused for the same reason. Copy
- * this next to whatever raises your notifications.
+ * `announce` clears the region and writes a frame later, so two identical toasts are two
+ * announcements — `"Saved"` → `"Saved"` has, to the platform, never changed. The library ships
+ * nothing like this on purpose (and refuses `role: 'status'` on a `<dialog>` for the same reason);
+ * copy it next to whatever raises your notifications.
  *
  * @example
  * const { announce, region } = useAnnouncer();
@@ -64,8 +55,8 @@ export function useAnnouncer(): {
     });
   };
 
-  // `aria-live` and `aria-atomic` restate what `role="status"` already implies, on purpose — the
-  // redundancy is what older screen reader and browser pairings actually key on.
+  // `aria-live`/`aria-atomic` restate what `role="status"` implies on purpose: older screen reader
+  // and browser pairings key on the redundancy.
   const region = (
     <div
       aria-atomic="true"

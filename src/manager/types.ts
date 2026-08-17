@@ -7,20 +7,15 @@ type ModalInfoBase = {
   /** Current lifecycle phase. `'closed'` for unregistered modals. */
   readonly phase: ModalPhase;
   /**
-   * Whether the dialog is on screen (`phase !== 'closed'`) — true through the exit animation
-   * too. `phase` is the finer answer; this is the one an observer usually wants.
+   * Whether the dialog is on screen (`phase !== 'closed'`) — true through the exit animation too.
+   * `phase` is the finer answer; this is the one an observer usually wants.
    */
   readonly isVisible: boolean;
   /**
-   * Whether the modal's `prepare` is still running — it is on screen, its content is not ready.
-   * `false` for unregistered modals.
-   *
-   * The second axis, and the one an observer usually wants. `phase` describes the `<dialog>`
-   * element and reaches `'open'` on the animation frame after it is shown, so `'opening'` lasts
-   * a single frame no matter how long the modal takes to prepare — asking `phase` "is it ready
-   * yet" always answers yes. A dialog that loads something sits at `phase: 'open'` with
-   * `isPreparing: true` for as long as the load takes, and that is the state a watcher elsewhere
-   * in the app is really asking about.
+   * Whether the modal's `prepare` is still running — on screen, content not ready; `false` for
+   * unregistered modals. The second axis, and usually what an observer is really asking: `phase`
+   * reaches `'open'` on the frame after the `<dialog>` is shown however long preparing takes, so a
+   * dialog that loads something sits at `phase: 'open'` with `isPreparing: true` for the duration.
    */
   readonly isPreparing: boolean;
   /**
@@ -40,17 +35,13 @@ export type RegisteredModalInfo = ModalInfoBase & {
   /** The discriminant: this modal is registered. */
   readonly exists: true;
   /**
-   * Which template built it, as its creator named it at registration.
-   *
-   * Any string, and the library never interprets it. It exists so an application can tell one
-   * kind of dialog from another across a cross-cutting listener (analytics, a handler that only
-   * cares about drawers) without keeping its own id-to-kind table — and so a
-   * `prioritize` policy can order by kind, which is the one library path that reads it. `useModal` defaults to `'modal'`, `useSlideModal` reports `'slide'`, and a template
-   * you write should name itself too.
-   *
-   * Distinct from `nonModal` below, which is the library's own two-valued distinction and
-   * reaches the DOM as `data-modal-type`. One word for both is a word that contradicts itself:
-   * a `nonModal` dialog naming no template defaults to `'modal'`.
+   * Which template built it, as its creator named it at registration — any string, never
+   * interpreted by the library. It lets a cross-cutting listener (analytics, a handler that only
+   * cares about drawers) tell one kind of dialog from another without its own id-to-kind table, and
+   * lets a `prioritize` policy order by kind. `useModal` defaults to `'modal'`, `useSlideModal`
+   * reports `'slide'`, and a template you write should name itself too. Distinct from `nonModal`
+   * below, which reaches the DOM as `data-modal-type`: one word for both would contradict itself,
+   * a `nonModal` dialog naming no template defaulting to `'modal'`.
    */
   readonly template: string;
   /** Whether the modal uses `dialog.show()` instead of `dialog.showModal()`. */
@@ -67,22 +58,17 @@ export type UnregisteredModalInfo = ModalInfoBase & {
 };
 
 /**
- * Rich snapshot of a modal's state at query time, discriminated by `exists`.
- *
- * Always returned by `lookup(id)` — never `undefined`. Reading `template` or `nonModal` off
- * one requires narrowing with `exists` first, which is the point: those are registration-time
- * facts and an unregistered modal has none. Queries that can only ever return registered
- * modals (`getOpen`, `getClosed`, `getForeground`, `openDialogs`) are typed
+ * Rich snapshot of a modal's state at query time, discriminated by `exists` — always returned by
+ * `lookup(id)`, never `undefined`. Reading `template` or `nonModal` requires narrowing on `exists`
+ * first, which is the point. Queries that can only return registered modals are typed
  * {@link RegisteredModalInfo} and need no narrowing at all.
  */
 export type ModalInfo = RegisteredModalInfo | UnregisteredModalInfo;
 
 /**
- * Collection-level query API returned by `dialogManager.lookup()`.
- *
- * All methods read live state at call time (imperative, not reactive).
- * Counts and existence checks are derivable from the returned arrays:
- * `getOpen().length`, `getOpen('modal').length > 0`, `getClosed().length`.
+ * Collection-level query API returned by `dialogManager.lookup()`. Every method reads live state at
+ * call time (imperative, not reactive); counts and existence checks derive from the returned arrays
+ * — `getOpen().length`, `getOpen('modal').length > 0`, `getClosed().length`.
  */
 export type ModalLookup = {
   /** Get modal info by id. Returns null-object default for unregistered ids. */
@@ -91,16 +77,14 @@ export type ModalLookup = {
   exists(id: string): boolean;
   /**
    * Get the open dialog in front — the most recently opened **modal** one, or whichever a
-   * `dialogManager.prioritize` policy put there. A non-modal dialog is never in front of a modal one,
-   * however much later it opened.
+   * `dialogManager.prioritize` policy put there. A non-modal dialog is never in front of a modal one.
    */
   getForeground(): RegisteredModalInfo | undefined;
   /**
-   * Get currently open modals in stack order, bottom first — so the index is the stack position.
-   * Non-modal dialogs first (the platform's rule, not a policy's), then whatever
-   * `dialogManager.prioritize` installed, then open order. Optionally filter to `'modal'`
-   * (`showModal()`) or `'non-modal'` (`dialog.show()`) dialogs — the same two words as the
-   * `nonModal` option and the `data-modal-type` attribute, so one distinction has one vocabulary.
+   * Get currently open modals in stack order, bottom first, so the index is the stack position:
+   * non-modal first (the platform's rule, not a policy's), then `dialogManager.prioritize`, then
+   * open order. Optionally filtered to `'modal'` (`showModal()`) or `'non-modal'` (`dialog.show()`)
+   * — the `nonModal` option's words and `data-modal-type`'s, one distinction with one vocabulary.
    */
   getOpen(filter?: 'modal' | 'non-modal'): RegisteredModalInfo[];
 

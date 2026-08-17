@@ -69,7 +69,7 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
     if (!withPolicy) {
       return undefined;
     }
-    // Once at start-up: one rule, one place, for parts of the app that never learn about each other.
+    // Once at start-up: one rule, one place, for parts of the app that never learn of each other.
     return dialogManager.prioritize((modal) => {
       return modal.template === 'alert' ? 100 : 0;
     });

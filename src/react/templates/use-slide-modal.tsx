@@ -11,12 +11,7 @@ import {
 export type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
 import type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
 
-/**
- * Context passed to the SlideModal render function.
- * Provides modal state, the close handle, and the slide direction.
- *
- * @typeParam TData - The modal's close payload type.
- */
+/** Modal state, the close handle and the slide direction, passed to the render function. */
 export type SlideModalRenderContext<
   TData = void,
   TReason extends string = string,
@@ -27,11 +22,8 @@ export type SlideModalRenderContext<
 
 /**
  * Options for `useSlideModal`.
- *
- * @typeParam TData - Typed data payload from close. Defaults to `void`; declare it on the hook,
- * which is the one place it is stated.
- * @typeParam TReason - The reasons this panel closes with. Declare them: it is what rejects a
- * mistyped `action('savee')` and makes a `switch` in `onClose` exhaustive.
+ * @typeParam TData - Typed data payload from close, declared here and nowhere else. Default `void`.
+ * @typeParam TReason - The reasons this panel closes with; declare them, see `useModal`.
  */
 export type UseSlideModalOptions<
   TData = void,
@@ -46,9 +38,8 @@ export type UseSlideModalOptions<
   /** Slide direction */
   readonly direction: SlideDirection;
   /**
-   * Alignment on the cross axis (perpendicular to the slide).
-   * `stretch` (default) fills the cross axis; `start`/`center`/`end` pin a
-   * content-sized panel — size it yourself in the `render` callback.
+   * Alignment on the cross axis: `stretch` fills it, `start`/`center`/`end` pin a content-sized
+   * panel you size yourself in `render`.
    * @default 'stretch'
    */
   readonly align?: SlideAlign | undefined;
@@ -61,16 +52,10 @@ export type UseSlideModalReturn<TData = void, TReason extends string = string> =
 >;
 
 /**
- * Headless template hook for a slide-in panel modal.
- *
- * Automatically configures slide animation and dialog positioning based on the specified
- * direction. Users provide their own UI components.
- *
- * By default the panel stretches across the cross axis (a full-height side drawer or
- * full-width top/bottom sheet). Pass `align: 'start' | 'center' | 'end'` for a content-sized
- * panel pinned to that cross-axis position — e.g. a corner toast (`direction: 'right'`,
- * `align: 'start'`) or a centered command palette (`direction: 'top'`, `align: 'center'`).
- * With a non-stretch `align` you must size the panel yourself in `render`.
+ * Headless template hook for a slide-in panel modal: it configures the slide animation and the
+ * dialog's positioning from the direction, and you bring the UI. By default the panel stretches
+ * across the cross axis (a full-height side drawer or full-width top/bottom sheet); a non-stretch
+ * `align` pins a content-sized one — a corner toast, a palette — that you size in `render`.
  *
  * @example
  * const panel = useSlideModal<void, 'close'>({
@@ -93,8 +78,7 @@ export function useSlideModal<TData = void, TReason extends string = string>(
   const align = options.align ?? 'stretch';
 
   return useModal<TData, TReason>({
-    // Spelled out for the reason `useMessageModal` gives: inference cannot reach through the
-    // `Omit` in `TemplateBaseOptions`, so the style and node parameters have to be stated.
+    // Spelled out for the reason `useMessageModal` gives.
     ...buildModalOptions<
       TData,
       SlideModalRenderContext<TData, TReason>,
@@ -106,8 +90,8 @@ export function useSlideModal<TData = void, TReason extends string = string>(
       style: slideDialogStyle({ direction: options.direction, contained, align }),
       template: 'slide',
     }),
-    // A slide enters/exits by translating past its container edge; clip the contained
-    // wrapper so an off-screen (positive-translate) panel doesn't expand document overflow.
+    // A slide translates past its container edge, so the wrapper is clipped to stop an off-screen
+    // panel expanding document overflow.
     clipContainer: true,
     render: (args) => {
       return options.render({ ...args, direction: options.direction });

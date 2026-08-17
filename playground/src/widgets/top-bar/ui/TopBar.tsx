@@ -35,8 +35,7 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
             <MenuIcon />
           </IconButton>
         )}
-        {/* The brand is the way home. Every other route is in the sidebar; the landing page is
-            not, so without this there is no way back to it. */}
+        {/* The brand is the way home — the landing page is the one route not in the sidebar. */}
         <Box
           component={Link}
           to="/"
@@ -62,20 +61,16 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
               justifyContent: 'center',
             }}
           >
-            {/* The umbra is the total-shadow core of an eclipse — what a modal backdrop
-                casts over the page. Same badge geometry as the sibling stardust playground,
-                so the two read as a set.
-
-                20px, which is what `fontSize="small"` resolves to on the theme toggle beside
-                it: both badges are 32px, so matching the mark to that icon is what makes the
-                two ends of the bar read as the same weight. It is a size now rather than a
-                font size, so it is the same 20px in every font. */}
+            {/* The umbra is the total-shadow core of an eclipse — what a modal backdrop casts. Same
+                badge geometry as the sibling stardust playground, so the two read as a set. 20px is
+                what `fontSize="small"` resolves to on the theme toggle beside it, and both badges are
+                32px, so the two ends of the bar read as the same weight; a size, not a font size, so
+                it holds in every font. */}
             <Box sx={{ color: 'primary.contrastText', display: 'flex' }}>
               <MoonPhase phase="first-quarter" size={20} />
             </Box>
           </Box>
-          {/* Not an <h1>: the page's own title owns that, and two h1s per page leaves
-              screen-reader users without a unique document heading. */}
+          {/* Not an <h1>: the page's own title owns that, and two leave no unique document heading. */}
           <Typography
             className="umbra-wordmark"
             variant="h6"

@@ -1,7 +1,3 @@
-// Namespace components for composition
-// Namespace components for composition
-// Namespace components for composition
-// Namespace components for composition
 export { Content } from '@/entities/modal-template/ui/mui/message-modal/components/Content';
 export { DefaultContainer } from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer';
 export { DefaultLayout } from '@/entities/modal-template/ui/mui/message-modal/components/DefaultLayout';

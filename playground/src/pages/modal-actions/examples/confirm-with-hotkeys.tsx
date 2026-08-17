@@ -18,8 +18,7 @@ export function ConfirmWithHotkeysExample() {
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
-    // A plain dialog, not an `alertdialog`: this asks, it does not interrupt. Reaching for the
-    // interrupting role on every confirm is how it stops meaning anything.
+    // A plain dialog, not an `alertdialog`: this asks, it does not interrupt.
     render: ({ action, hasRunningAction, error }) => {
       return (
         <MessageModal.DefaultLayout>
@@ -57,9 +56,7 @@ export function ConfirmWithHotkeysExample() {
               {...action('confirm', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
-                  // Deterministic on purpose: this card's subject is the keyboard, and a demo
-                  // that fails a third of the time teaches the wrong thing about the key.
-                  // The random failures live on the Delete card next to it.
+                  // Deterministic: the subject is the keyboard; random failures live on Delete.
                   await new Promise((resolve) => {
                     setTimeout(resolve, 400);
                   });

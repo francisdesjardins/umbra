@@ -1,23 +1,11 @@
-// ── shallowEqual ──────────────────────────────────────────────────────────────
-//
-// Zero-dependency shallow equality, used as a selector `equals` in `useStore` /
-// `watch` so object slices don't re-render when their fields are unchanged.
-
 /**
- * Shallow structural equality.
- *
- * - Primitives compare by `Object.is`.
- * - Two objects (or arrays, or Maps/Sets) are equal when they have the same
- *   keys/entries and each value is `Object.is`-equal.
- *
- * One level deep only — nested objects compare by reference.
+ * Zero-dependency shallow structural equality: primitives by `Object.is`; objects (arrays,
+ * Maps/Sets too) equal when they have the same keys/entries and each value is `Object.is`-equal.
+ * One level deep only — nested objects compare by reference. Used as a selector `equals` in
+ * `useStore` / `watch`, so a selector rebuilding the same fields does not re-render its consumers.
  *
  * @example
- * // A selector that builds a new object each render, but the same fields.
- * const view = useStore(store, {
- *   select: (s) => ({ id: s.id, name: s.name }),
- *   equals: shallowEqual,
- * });
+ * const view = useStore(store, { select: (s) => ({ id: s.id }), equals: shallowEqual });
  */
 export function shallowEqual<T>(a: T, b: T): boolean {
   if (Object.is(a, b)) {

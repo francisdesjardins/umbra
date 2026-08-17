@@ -1,10 +1,7 @@
 import { createStore } from 'umbra/react';
 import { createStoreContext } from '../create-store-context';
 
-// ── Context-scoped store ────────────────────────────────────────────────────
-// The factory runs once per Provider mount, so each Provider owns an isolated
-// store instance while all descendants of one Provider share the same one.
-
+// The factory runs once per Provider mount, so each Provider owns an isolated store instance.
 const CounterCtx = createStoreContext(
   () => {
     return createStore(
@@ -46,10 +43,7 @@ function IncrementButton({ label }: { readonly label: string }) {
   );
 }
 
-/**
- * Tests provider-scoped stores: two consumers under one Provider share state;
- * a second Provider owns a fully isolated instance.
- */
+/** Two consumers under one Provider share state; a second Provider is a fully isolated instance. */
 export function StoreContextHarness() {
   return (
     <div>

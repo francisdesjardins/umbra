@@ -1,11 +1,6 @@
 /**
- * The playground's own examples, plus the microfrontend frame's files — every sample reachable
- * from a route that demonstrates something, which is all of them but `/stories` and
- * `/ui-templates`.
- *
- * Split from its siblings because a reader who opens the viewer on `/advanced` should not
- * download the template catalogue and the test harnesses to see one file. See `codeSamples.ts`
- * for how a route picks its group.
+ * The playground's own examples plus the microfrontend frame's files — every route's samples but
+ * `/stories` and `/ui-templates`. Split off; see `codeSamples.ts` for how a route picks its group.
  */
 import simpleModalSrc from '@/pages/getting-started/examples/simple-modal.tsx?raw';
 import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
@@ -31,8 +26,8 @@ import openRequestSrc from '@/pages/advanced/examples/open-request.tsx?raw';
 import controlledPanelSrc from '@/pages/advanced/examples/controlled-panel.tsx?raw';
 import modalOutletSrc from '@/pages/advanced/examples/modal-outlet.tsx?raw';
 import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw';
-// The build behind the import map. Not a file a user copies — it is the answer to "how do three
-// independently-written scripts end up with one manager", which is the demo's whole subject.
+// The build behind the import map: not a file to copy, but the demo's subject — how three
+// independently-written scripts end up with one manager.
 import mfeDistributionSrc from '../../../../../vite-plugins/mfe-umbra.ts?raw';
 import muiMessageSrc from '@/pages/ui-integrations/examples/mui-message.tsx?raw';
 import muiSlideSrc from '@/pages/ui-integrations/examples/mui-slide.tsx?raw';

@@ -3,12 +3,8 @@ import { useStore } from '@/shared/lib/use-store';
 import { asyncIdle, runAsync, type AsyncState } from './async-state';
 import { createSingleFlight } from './single-flight';
 
-// ── A useQuery stand-in ──────────────────────────────────────────────────────
-//
-// Same shape as the real thing (`{ data, isFetching, refetch }`) so an example can show how one
-// marries the modal lifecycle, without the playground taking a dependency for it. Built from
-// primitives the library already ships, so swapping in React Query changes the import and
-// nothing about the pattern at the call site.
+// A `useQuery` stand-in with the real shape (`{ data, isFetching, refetch }`), built from the
+// library's own primitives, so swapping in React Query changes the import and nothing else.
 
 /** Declared at module scope so nothing is created during a render. */
 export type Query<T> = {

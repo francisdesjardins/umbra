@@ -1,17 +1,11 @@
 import { createContext, use, type ReactNode } from 'react';
 
 /**
- * Shared state for the source-code viewer.
- *
- * The viewer itself is a slide modal owned by the root layout — this context only carries *what*
- * to show (`selectedExample`, `exampleActions`) and the opener the layout publishes once its modal
- * is mounted (`codeModalOpen`). Any `ViewCodeButton` anywhere in the tree can therefore drive a
- * single viewer instance.
- *
- * **It lives in `shared` because of who consumes it.** `ViewCodeButton` is a `shared/ui`
- * component, and under Feature-Sliced Design it may not reach up into `app` or `widgets` for the
- * hook it needs. The provider stays `app`'s and the modal stays the root layout's; only the
- * contract sits down here, where everything above it may read.
+ * Shared state for the source-code viewer: only *what* to show (`selectedExample`,
+ * `exampleActions`) and the opener the root layout publishes once its slide modal is mounted
+ * (`codeModalOpen`), so any `ViewCodeButton` in the tree drives one viewer instance. It lives in
+ * `shared` because of who consumes it — `ViewCodeButton` is `shared/ui`, and under Feature-Sliced
+ * Design may not reach up into `app` or `widgets`. Contract here, provider and modal above.
  */
 export type CodePaneContextValue = {
   selectedExample: string | null;

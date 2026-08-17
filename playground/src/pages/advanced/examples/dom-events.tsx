@@ -77,10 +77,8 @@ export function DomEventsExample() {
   });
 
   useEffect(() => {
-    // These events fire on `document` for *every* modal on the page, whichever manager instance
-    // raised it — that is the point of them, and why an analytics listener needs no import from
-    // this library at all. The filter below is a demo concession: without it this log fills up
-    // with the modals of the cards around it. An app would not filter.
+    // These fire on `document` for *every* modal, whichever manager raised it, so an analytics
+    // listener needs no import. The filter is a demo concession; an app would not filter.
     const OWN = new Set([ALERT_ID, PANEL_ID]);
 
     // No cast: the library augments `DocumentEventMap`, so `e.detail` is already typed.

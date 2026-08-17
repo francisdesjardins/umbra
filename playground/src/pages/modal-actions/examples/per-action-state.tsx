@@ -18,21 +18,16 @@ const slow = (ms: number) => {
 };
 
 /**
- * `action.isRunning(reason)` — the per-action state, read away from the button that owns it.
- *
- * Spreading an action's props gives that button `data-loading`, and for the button that is
- * enough. Everything else in this dialog — the header, the field, the notice — is not that
- * button, and `hasRunningAction` only tells them that *something* is running. Publishing and
- * saving a draft are not the same wait, and the dialog says which one it is in.
+ * `action.isRunning(reason)` — per-action state, read away from the button that owns it. Spreading
+ * an action's props gives that button `data-loading`; the header, field and notice are not that
+ * button, and `hasRunningAction` only says *something* runs, not which wait this is.
  */
 export function PerActionStateExample() {
   const { result } = useStore(resultStore);
 
   const modal = useMessageModal<void, 'draft' | 'publish' | 'cancel'>({
     id: MODAL_ID,
-    // A string rather than a reference to the heading below, because that heading is a *status* —
-    // it goes from "Ready to publish" to "Publishing…" while the dialog is open. An accessible
-    // name that changes under the user is disorienting; the status is content, and reads as such.
+    // A string, not the heading: it is a status changing under the user, and a name must not.
     ariaLabel: 'Publish post',
     dismissOnBackdropClick: false,
     render: ({ action, hasRunningAction }) => {
@@ -57,8 +52,7 @@ export function PerActionStateExample() {
 
           <MessageModal.Content>
             <Stack spacing={2}>
-              {/* Not an action's button, and it locks for one action rather than for any: a
-                  draft still takes edits, a publish does not. */}
+              {/* Not an action's button: it locks for publish only, so a draft still takes edits. */}
               <TextField
                 label="Release note"
                 size="small"

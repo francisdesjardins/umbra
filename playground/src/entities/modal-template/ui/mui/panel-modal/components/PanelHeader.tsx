@@ -14,20 +14,8 @@ export type PanelHeaderProps = {
 };
 
 /**
- * Header shell for big/complex modals. Manages padding only — compose a
- * `<Divider />` after it in the parent for visual separation.
- *
- * ```tsx
- * <PanelModal.PanelContainer>
- *   <PanelModal.PanelHeader>
- *     <PanelModal.HeaderActionLayout content={…} actions={…} />
- *   </PanelModal.PanelHeader>
- *   <Divider />
- *   <PanelModal.PanelContent>…</PanelModal.PanelContent>
- *   <Divider />
- *   <PanelModal.PanelFooter>…</PanelModal.PanelFooter>
- * </PanelModal.PanelContainer>
- * ```
+ * Header shell for big/complex modals — padding only; compose a `<Divider />` after it for visual
+ * separation, and a `HeaderActionLayout` inside it. See `PanelContainer` for the full composition.
  */
 export const PanelHeader = ({ children, sx, slotProps }: PanelHeaderProps) => {
   return (

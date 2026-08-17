@@ -35,12 +35,8 @@ export const StoryCard = ({ title, description, codeKey, children }: StoryCardPr
           </Typography>
         )}
 
-        {/*
-          A harness is a test fixture: bare `<button>`s and `<span data-testid>` readouts, with no
-          styling of its own — deliberately, because what the assertions press must be what you
-          press. So the presentation is applied from out here, to the markup as it comes, rather
-          than by editing the fixtures into something prettier than what is tested.
-        */}
+        {/* Harnesses are unstyled test fixtures so assertions press what you press; presentation
+            is applied from out here rather than by prettifying the fixtures. */}
         <Box
           sx={{
             mt: 'auto',
@@ -51,8 +47,7 @@ export const StoryCard = ({ title, description, codeKey, children }: StoryCardPr
             flexDirection: 'column',
             gap: 1.25,
             alignItems: 'flex-start',
-            // The harness lays its controls out with plain text nodes; a flex row with wrapping
-            // turns that into something legible without moving a single element.
+            // Harness controls are plain text nodes; a wrapping flex row makes them legible.
             '& > div': { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 },
             '& button': {
               font: 'inherit',
@@ -69,8 +64,7 @@ export const StoryCard = ({ title, description, codeKey, children }: StoryCardPr
               '&:hover:not(:disabled)': { borderColor: 'primary.main', bgcolor: 'action.hover' },
               '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
             },
-            // The state readouts a test asserts on — worth reading here too, so they get the
-            // monospace pill treatment instead of running into the prose beside them.
+            // The state readouts a test asserts on, as monospace pills so they read as distinct.
             '& span[data-testid]': {
               fontFamily: 'monospace',
               fontSize: '0.75rem',

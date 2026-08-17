@@ -10,11 +10,8 @@ type ApiLayoutProps = {
 };
 
 /**
- * Two columns: where you are, and what you are reading.
- *
- * The rail carries its own scroll, which is safe because it is a sibling of the content
- * column — an `overflow` on an *ancestor* of the content is what silently kills
- * `position: sticky` (see the playground's layout notes).
+ * Two columns: where you are, and what you are reading. The rail's own scroll is safe because it is
+ * a sibling of the content — an `overflow` on an *ancestor* silently kills `position: sticky`.
  */
 export const ApiLayout = ({ activeCategory, activeSymbol, children }: ApiLayoutProps) => {
   return (

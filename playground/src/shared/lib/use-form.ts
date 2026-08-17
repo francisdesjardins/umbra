@@ -3,31 +3,19 @@ import { createStore } from 'umbra/react';
 import { useStore } from './use-store';
 
 // ── A form, small enough to read ──────────────────────────────────────────────
-//
-// **A stand-in, not a form library.** The same standing this site's `useQuery` has: enough of the
-// shape that the examples are honest, none of the surface that would make it a dependency. There
-// is no schema, no resolver, no field array, no uncontrolled mode and no ref registration — reach
-// for any of those and you want React Hook Form, which is a real library and this is not trying
-// to be one.
-//
-// **Why it exists here at all.** `/ui-integrations` claims the same hooks wear two different UIs.
-// Before this, the MUI and vanilla forms each carried their own store, their own `setValue` /
-// `setErrors` / `reset`, and their own copy of the validation strings — so the pair proved the
-// opposite of its claim: two implementations that happened to agree. With the logic shared, the
-// two files differ only in what they render, which is the thing the page is for.
+// A stand-in, not a form library — no schema, resolver, field array, uncontrolled mode or ref
+// registration; wanting any of those means wanting React Hook Form. It exists so `/ui-integrations`
+// can claim the same hook wears two UIs: with the logic shared, the MUI and vanilla forms differ
+// only in what they render rather than being two implementations that happen to agree.
 
 /**
  * The keys whose value is a `string`, and therefore the only ones {@link Form.field} can serve.
  *
- * **This is the whole of what makes the hook generic without making it a form library.** A text
- * input's props are honest to produce — `value` is the string, `onChange` reads `target.value`.
- * A checkbox wants `checked`, a number input wants a parse, a date picker wants whatever that
- * library decided: inventing one shape for all of them is where a form helper turns into React
- * Hook Form. So `field(name)` is a type error on a non-string field, and everything else goes
- * through {@link Form.set}, which asks for the value already in its own type.
- *
- * The same move the library makes with `ActionReason<TReason>`: narrow the parameter so the
- * wrong call does not compile, rather than accept it and cope.
+ * A text input's props are honest to produce, where a checkbox wants `checked`, a number input a
+ * parse and a date picker whatever that library decided — inventing one shape for all of them is
+ * where a form helper becomes React Hook Form. So `field(name)` is a type error on a non-string
+ * field and everything else goes through {@link Form.set}, which asks for the value in its own
+ * type: the same narrowing the library does with `ActionReason<TReason>`.
  */
 export type TextKeys<TValues> = {
   [K in keyof TValues]: TValues[K] extends string ? K : never;
@@ -35,11 +23,10 @@ export type TextKeys<TValues> = {
   string;
 
 /**
- * One message per invalid field, keyed by any field — not only the text ones.
- *
- * Spelled with the `| undefined` suffix rather than as a `Partial<Record<…>>`, because this repo
- * runs `exactOptionalPropertyTypes`: under it a validator returning `{ email: undefined }` for a
- * valid field — the natural way to write one — does not satisfy a plain `Partial`.
+ * One message per invalid field, keyed by any field — not only the text ones. Spelled with the
+ * `| undefined` suffix rather than `Partial<Record<…>>` because under `exactOptionalPropertyTypes`
+ * a validator returning `{ email: undefined }` for a valid field does not satisfy a plain
+ * `Partial`.
  */
 export type FieldErrors<TValues> = {
   readonly [K in keyof TValues & string]?: string | undefined;
@@ -49,12 +36,9 @@ export type FieldErrors<TValues> = {
 export type FormValidator<TValues> = (values: TValues) => FieldErrors<TValues>;
 
 /**
- * What a control needs, as plain DOM props.
- *
- * **The shape is deliberate**: it is the same trick the library's own `action(reason)` uses, and
- * for the same reason. Every field is a DOM attribute or a DOM event, so MUI's `TextField` and a
- * bare `<input>` both accept the whole set spread onto them with no adapter in between — which is
- * what lets the two examples differ in markup and nowhere else.
+ * What a control needs, as plain DOM props — the same shape `action(reason)` returns. Every field
+ * is a DOM attribute or event, so MUI's `TextField` and a bare `<input>` both take the whole set
+ * spread onto them with no adapter, which is what lets the two examples differ only in markup.
  */
 export type FieldProps = {
   readonly name: string;
@@ -71,33 +55,25 @@ export type Form<TValues> = {
   /** The current values. Controlled: the caller renders them and nothing else holds them. */
   readonly values: TValues;
   /**
-   * The messages to render, which is **not** everything `validate` returned.
-   *
-   * A field's message appears once it has been **changed and then blurred**, or once a submit has
-   * been attempted. Two rules, and each answers a different way of being annoying: telling someone
-   * their email is invalid on the third character is true and useless, and telling them a field is
-   * required when they never touched it — because pressing a button blurred whatever the dialog
-   * autofocused — is a complaint about the form's own behaviour. `validate` is pure and unaware of
-   * both.
+   * The messages to render, which is **not** everything `validate` returned: a message appears once
+   * its field has been changed *and* blurred, or once a submit was attempted. Flagging an email on
+   * the third character is true and useless; flagging an untouched field — blurred because a button
+   * press moved focus off whatever the dialog autofocused — is the form complaining about itself.
    */
   readonly errors: FieldErrors<TValues>;
   /** The props for one text field, ready to spread. Not available on other value types. */
   readonly field: (name: TextKeys<TValues>) => FieldProps;
   /**
-   * Set any field, including the ones `field` refuses.
-   *
-   * The escape hatch that keeps the hook generic: a checkbox calls `set('agree', checked)` and
-   * renders itself, and nothing here had to guess what a checkbox's props look like.
+   * Set any field, including the ones `field` refuses — a checkbox calls `set('agree', checked)`
+   * and renders itself, so nothing here had to guess what a checkbox's props look like.
    */
   readonly set: <K extends keyof TValues>(name: K, value: TValues[K]) => void;
   /** The id this field's message must be rendered under, so `aria-describedby` resolves. */
   readonly errorId: (name: keyof TValues & string) => string;
   /**
-   * Validate, then run `onValid` only if nothing is wrong.
-   *
-   * Returns a promise so an async `onValid` can be awaited — an action handler in this library
-   * stays "running" for exactly as long as the promise it returns, so awaiting this is what keeps
-   * a submit button disabled while the work happens.
+   * Validate, then run `onValid` only if nothing is wrong. Returns a promise so an async `onValid`
+   * can be awaited: an action handler stays "running" for as long as the promise it returns, which
+   * is what keeps a submit button disabled while the work happens.
    */
   readonly submit: (onValid: (values: TValues) => void | Promise<void>) => Promise<void>;
   /** Back to the initial values, with every message and every blur forgotten. */
@@ -118,13 +94,9 @@ export function useForm<TValues extends Record<string, unknown>>({
   readonly initialValues: TValues;
   readonly validate: FormValidator<TValues>;
 }): Form<TValues> {
-  // **The library's own cell, not React's `useState`** — built once per hook call, the way
-  // `useModal` builds its runtime. Two things follow that `useState` cannot give: a component
-  // that reads one field can `select` it and re-render on that field alone, and the state is a
-  // plain store a test can drive with no renderer at all.
-  //
-  // Per call rather than at module scope, which is the difference from the stores these examples
-  // used to carry: two forms on one page are two forms, not one shared draft.
+  // The library's own cell, not `useState`: a reader can `select` one field and re-render on that
+  // alone, and a test can drive the store with no renderer. Per hook call, not module scope, so two
+  // forms on one page are two forms rather than one shared draft.
   const [store] = useState(() => {
     return createStore(
       { values: initialValues, shown: new Set<string>(), changed: new Set<string>() },
@@ -162,9 +134,8 @@ export function useForm<TValues extends Record<string, unknown>>({
   const { values, shown, changed } = useStore(store);
 
   const found = validate(values);
-  // Built by copying rather than by `Object.fromEntries` + a cast: the keys come from the
-  // validator's own output, so they are keys of `TValues` by construction, and `Object.assign`
-  // says that without an `as` — which this repo does not use.
+  // Copied rather than `Object.fromEntries` + a cast: the keys come from the validator's output so
+  // they are keys of `TValues` by construction, and `Object.assign` says so without an `as`.
   const errors: FieldErrors<TValues> = {};
   for (const [name, message] of Object.entries(found)) {
     if (message !== undefined && shown.has(name)) {
@@ -189,35 +160,31 @@ export function useForm<TValues extends Record<string, unknown>>({
       const message = errors[name];
       return {
         name,
-        // Narrowed by `TextKeys`, which the checker enforces at the call site — so this is the
-        // one place the constraint is taken on trust, and it is one line rather than a cast at
-        // every consumer.
+        // Narrowed by `TextKeys` at the call site, so the constraint is taken on trust here alone
+        // rather than cast at every consumer.
         value: values[name] as string,
         onChange: (event) => {
           store.change(name, event.target.value);
         },
         onBlur: () => {
-          // Only once they have actually typed something. Leaving an untouched field — which is
-          // what pressing any button does to the one the dialog autofocused — is not a mistake to
-          // report; the submit is where an empty required field gets named.
+          // Only once they have typed: leaving an untouched field — what any button press does to
+          // the one the dialog autofocused — is named at submit, not here.
           if (changed.has(name)) {
             store.reveal([name]);
           }
         },
         'aria-invalid': message !== undefined,
-        // Omitted rather than empty when the field is clean: a describedby pointing at an element
-        // that is not rendered is a reference a screen reader resolves to nothing, which is the
-        // same defect the library's own labelling diagnostic reports on a dialog.
+        // Omitted, not empty, when clean: a describedby pointing at an unrendered element is a
+        // reference a screen reader resolves to nothing.
         'aria-describedby': message === undefined ? undefined : errorId(name),
       };
     },
 
     submit: async (onValid) => {
       const problems = validate(values);
-      // Filtered on the value, not counted by key. A validator naturally returns
-      // `{ email: undefined }` for a field that is fine — the shape this repo's
-      // `exactOptionalPropertyTypes` encourages — and `Object.keys` counts that as a problem, so a
-      // clean form never submits. Caught by "runs it once every field is clean".
+      // Filtered on the value, not counted by key: a validator returns `{ email: undefined }` for a
+      // field that is fine, and `Object.keys` counts that as a problem, so a clean form never
+      // submits.
       const names = Object.entries(problems)
         .filter(([, message]) => {
           return message !== undefined;
@@ -226,8 +193,8 @@ export function useForm<TValues extends Record<string, unknown>>({
           return name;
         });
       if (names.length > 0) {
-        // Every wrong field earns its message at once — a submit is the user saying they are
-        // finished, so showing them one problem at a time would be three round trips.
+        // Every wrong field at once: a submit says the user is finished, so one problem at a time
+        // would be three round trips.
         store.reveal(names);
         return;
       }

@@ -44,14 +44,12 @@ test.describe('the first claim and the last release', () => {
 
 test.describe('claims that were never made', () => {
   test('releasing an owner that never claimed changes nothing', () => {
-    // The teardown path of a binding that unmounted before it ever opened — and it must not be
-    // read as the last release, or it lets go of a lock somebody else is holding.
+    // A binding unmounting before it opened: must not read as the last release.
     const ledger = createLockLedger();
     const holder = createLockOwner();
     ledger.claim(holder);
 
     expect(ledger.release(createLockOwner())).toBe(false);
-    // Still held, so the real owner's release is still the edge.
     expect(ledger.release(holder)).toBe(true);
   });
 
@@ -67,8 +65,7 @@ test.describe('claims that were never made', () => {
 
 test.describe('what an owner is', () => {
   test('owners are identity, so two freshly minted tokens are two claimants', () => {
-    // A token carries no data, so structural equality would collapse every
-    // manager on the page into one claimant and the first release would let go for all of them.
+    // A token carries no data, so structural equality would collapse every manager into one.
     const ledger = createLockLedger();
 
     expect(ledger.claim(createLockOwner())).toBe(true);
@@ -76,8 +73,7 @@ test.describe('what an owner is', () => {
   });
 
   test('re-claiming after a full release is an edge again', () => {
-    // A lock is not one-shot: a manager that closes its last modal and opens another has to apply
-    // it a second time.
+    // Not one-shot: a manager closing its last modal and opening another applies it again.
     const ledger = createLockLedger();
     const owner = createLockOwner();
 

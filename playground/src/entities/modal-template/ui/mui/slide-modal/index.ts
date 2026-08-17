@@ -1,7 +1,3 @@
-// Namespace components for composition
-// Namespace components for composition
-// Namespace components for composition
-// Namespace components for composition
 export { Content } from '@/entities/modal-template/ui/mui/slide-modal/components/Content';
 export { DefaultLayout } from '@/entities/modal-template/ui/mui/slide-modal/components/DefaultLayout';
 export { MuiSlideFooter as Footer } from '@/entities/modal-template/ui/mui/slide-modal/components/Footer';

@@ -6,19 +6,15 @@ import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-regi
 export type PanelContentProps = {
   readonly children: ReactNode;
   readonly sx?: SxProps | undefined;
-  /**
-   * When `false`, removes the default `px: 3` horizontal padding — useful when
-   * the content is a full-bleed table or custom layout.
-   */
+  /** `false` drops the default `px: 3`, for full-bleed content like data tables. */
   readonly padding?: boolean | undefined;
   /** Accessible name the region announces when it scrolls — see `useScrollRegion`. */
   readonly label?: string | undefined;
 };
 
 /**
- * Scrollable content area for big modals. Fills all available vertical space
- * between the header and (optional) footer. Horizontal padding is on by
- * default and can be turned off for full-bleed content like data tables.
+ * Scrollable content area for big modals, filling the vertical space between the header and any
+ * footer.
  */
 export const PanelContent = ({ children, sx, padding = true, label }: PanelContentProps) => {
   const { ref, regionProps } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');

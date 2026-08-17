@@ -5,28 +5,13 @@ import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
 export type PanelFooterProps = {
   readonly children: ReactNode;
   readonly sx?: SxProps | undefined;
-  /**
-   * Controls alignment of footer actions.
-   * - `'end'` (default) — buttons aligned to the right.
-   * - `'space-between'` — useful for wizard back/next patterns.
-   * - `'start'` — left-aligned.
-   */
+  /** Action alignment: `'end'` (default), `'start'`, or `'space-between'` for wizard back/next. */
   readonly justify?: 'start' | 'end' | 'space-between' | undefined;
 };
 
 /**
- * Footer for big/complex modals. Manages padding and action alignment only —
- * compose a `<Divider />` before it in the parent for visual separation.
- *
- * ```tsx
- * <PanelModal.PanelContainer>
- *   <PanelModal.PanelHeader>…</PanelModal.PanelHeader>
- *   <Divider />
- *   <PanelModal.PanelContent>…</PanelModal.PanelContent>
- *   <Divider />
- *   <PanelModal.PanelFooter>…</PanelModal.PanelFooter>
- * </PanelModal.PanelContainer>
- * ```
+ * Footer for big/complex modals — padding and action alignment only; compose a `<Divider />`
+ * before it for visual separation. See `PanelContainer` for the full composition.
  */
 export const PanelFooter = ({ children, sx, justify = 'end' }: PanelFooterProps) => {
   const justifyContent =

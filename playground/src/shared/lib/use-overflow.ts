@@ -7,15 +7,9 @@ export type OverflowState = {
 };
 
 /**
- * Returns whether the given element is currently overflowing vertically,
- * along with the current scrollbar width in pixels.
- *
- * The implementation is deliberately light-weight and suitable for
- * message-modal/container use cases; it observes both the container itself
- * and the first child (typical when wrapping a `<Stack>` or similar) and
- * listens for scroll events. You can reuse this hook anywhere you need the
- * same boolean guard.  The caller is responsible for attaching the ref to a
- * scrollable element.
+ * Whether the element overflows vertically, plus the current scrollbar width. Observes the
+ * container and its first child (the usual shape when wrapping a `<Stack>`) and listens for
+ * scroll. The caller attaches the ref to a scrollable element.
  */
 export function useIsOverflowing<T extends HTMLElement = HTMLElement>(
   elRef: RefObject<T | null>

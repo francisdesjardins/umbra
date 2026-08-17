@@ -10,18 +10,13 @@ import type {
 /**
  * Options common to all template hooks (useMessageModal, useSlideModal).
  *
- * Stated as the **complement** of what a template owns rather than a list of what it forwards:
- * an option added to `UseModalBaseOptions` reaches every template by default, and only a
- * deliberate edit to the exclusion list keeps it out. An enumeration of forwarded keys would
- * instead let a new core option reach no template at all, with nothing to fail.
- *
- * The five exclusions are exactly what a template does not inherit: `id`, `render` and
- * `onClose` are redeclared by {@link TemplateBaseOptions} (`render` with the template's own
- * context type), while `template` and `clipContainer` are the template's to set — a template
- * names itself, and clipping follows from its animation.
- *
- * Built from the flat `UseModalBaseOptions` and intersected with `ModalVariant` directly, so
- * the union is not double-intersected the way omitting from `UseModalOptions` would.
+ * Stated as the **complement** of what a template owns rather than a list of what it forwards, so a
+ * new `UseModalBaseOptions` option reaches every template by default and only a deliberate edit to
+ * the exclusion list keeps it out; an enumeration of forwarded keys would let it reach no template
+ * at all, with nothing to fail. The five exclusions: `id`, `render` and `onClose` are redeclared by
+ * {@link TemplateBaseOptions} (`render` with the template's own context type), while `template` and
+ * `clipContainer` are the template's to set. Intersected with `ModalVariant` directly, so the union
+ * is not double-intersected the way omitting from `UseModalOptions` would.
  *
  * @internal Not exported from index.ts.
  */
@@ -37,11 +32,8 @@ export type TemplateCommonOptions<
   ModalVariant;
 
 /**
- * Base options shared by all template hooks.
- *
- * Combines `TemplateCommonOptions` with the `id`, `render`, and `onClose`
- * props that every template requires. Template-specific props (e.g.
- * `direction`, `defaultValues`) are added via intersection in each template.
+ * {@link TemplateCommonOptions} plus the `id`, `render` and `onClose` every template requires;
+ * template-specific props (`direction`, `defaultValues`) are added by intersection per template.
  *
  * @typeParam TData - Close data payload type.
  * @typeParam TRenderContext - The template's render context type.
@@ -64,13 +56,10 @@ export type TemplateBaseOptions<
 };
 
 /**
- * Base context shared by all template render callbacks. Template-specific contexts intersect
- * this with their extra fields (e.g. `useSlideModal` adds `direction`).
- *
- * It *is* `ModalRenderArgs`, not a copy of it: a template's render callback sees exactly what a
- * bare `useModal` render callback sees, because that is what the templates forward. Stating it
- * as an alias means a new render-time field is added once, in the core, and every template
- * context has it — and no template can drift into a subtly different `isPreparing`.
+ * Base context shared by all template render callbacks; template-specific contexts intersect this
+ * with their extra fields (`useSlideModal` adds `direction`). It *is* `ModalRenderArgs`, not a copy,
+ * because that is what templates forward — so a new render-time field is added once in the core and
+ * no template can drift into a subtly different `isPreparing`.
  *
  * @typeParam TData - The modal's close payload, so a template's `handle.close` is as typed as
  * the core one.
@@ -83,8 +72,7 @@ export type BaseRenderContext<TData = void, TReason extends string = string> = M
 >;
 
 /**
- * Default fade animation used by useMessageModal.
- * useSlideModal uses direction-based slide animation instead.
+ * Default fade animation for useMessageModal; useSlideModal uses a direction-based slide instead.
  *
  * @internal Not exported from index.ts.
  */
@@ -97,12 +85,9 @@ export const DEFAULT_FADE_ANIMATION = {
 } satisfies ModalAnimation;
 
 /**
- * The caller's structural styles over the template's, or whichever one exists.
- *
- * Written as a function with a declared return type rather than inline, because merging two
- * values of the same generic style type has to *stay* that type: spreading `TStyle | undefined`
- * twice in a literal produces a union the checker can no longer call a `TStyle`, and the
- * template's options would stop accepting its own output.
+ * The caller's structural styles over the template's, or whichever one exists. A function with a
+ * declared return type rather than inline, because spreading `TStyle | undefined` twice in a literal
+ * produces a union the checker will no longer call a `TStyle`.
  *
  * @internal Not exported from index.ts.
  */
@@ -121,11 +106,8 @@ function mergeStyle<TStyle extends DialogStyle>(
 
 /**
  * Maps template options to `useModal` options, applying the template's own animation, style and
- * name. Eliminates the repeated prop-by-prop passthrough in each template hook.
- *
- * A caller's `style` is merged *over* the template's structural one rather than replacing it:
- * the template's placement is what makes it that template, but sizing is the caller's — a
- * drawer that should be 380px wide says so without rebuilding the hook.
+ * name. A caller's `style` merges *over* the template's structural one rather than replacing it:
+ * the placement makes it that template, but sizing is the caller's.
  *
  * @internal Not exported from index.ts.
  */

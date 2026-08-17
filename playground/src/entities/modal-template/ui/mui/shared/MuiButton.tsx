@@ -16,10 +16,9 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  // **This line is the seam.** The library ships the running state as `data-loading`, a DOM
-  // attribute, because it has no way to know what your design system calls it — MUI says
-  // `loading`, another says `busy`, a headless one says nothing and wants you to render the
-  // spinner. Mapping it belongs here, in the wrapper that knows the answer, and nowhere else.
+  // **The seam**: the library ships the running state as the DOM attribute `data-loading` because
+  // it cannot know your design system's word for it (MUI: `loading`; others: `busy`, or nothing at
+  // all); mapping belongs here, in the wrapper that knows.
   const busy: boolean = loading ?? props['data-loading'] ?? false;
   return (
     <MuiButton disabled={disabled || busy} loading={busy} {...props}>

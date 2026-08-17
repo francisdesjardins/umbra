@@ -25,8 +25,8 @@ export const DefaultLayout = ({ children, slotProps }: DefaultLayoutProps) => {
             flexDirection: 'column',
             height: '100%',
             maxHeight: '100%',
-            // Bounds the layout so `Content` scrolls instead of the box growing — and clips at
-            // this padding box, which is why the ring needs room reserved inside it.
+            // Bounds the layout so `Content` scrolls rather than the box growing; it clips at this
+            // padding box, hence the reserved focus-ring room below.
             overflow: 'hidden',
             // Grown outward into the container's own 24px padding, so nothing on screen moves.
             padding: focusRingSpace,

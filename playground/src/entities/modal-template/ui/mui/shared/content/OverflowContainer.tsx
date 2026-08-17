@@ -7,16 +7,10 @@ import { sizes } from '@/entities/modal-template/ui/shared/tokens';
 export type OverflowContainerProps = {
   readonly children: ReactNode;
 
-  /**
-   * Base `sx` styles forwarded to the inner `Box`. `maxHeight` defaults to
-   * `sizes.maxHeight` but can be overridden here.
-   */
+  /** Base `sx` for the inner `Box`; `maxHeight` defaults to `sizes.maxHeight` and is overridable. */
   readonly sx?: SxProps | undefined;
 
-  /**
-   * `sx` styles applied only while the container is overflowing vertically.
-   * Use this for right padding, subtle background, etc.
-   */
+  /** `sx` applied only while overflowing vertically — right padding, subtle background, etc. */
   readonly overflowSx?: SxProps | undefined;
 
   /** Accessible name the region announces when it scrolls — see `useScrollRegion`. */

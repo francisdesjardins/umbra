@@ -4,8 +4,8 @@ import { CssBaseline, ThemeProvider as MuiThemeProvider, useMediaQuery } from '@
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { ThemeContext } from '@/shared/lib/theme-context';
 
-// Seed the modal surface CSS vars on :root before first paint so dialogs (which inherit
-// custom properties from :root through the DOM, top layer included) theme correctly on mount.
+// Seed the modal surface vars on :root before first paint: dialogs inherit custom properties from
+// :root through the DOM, top layer included, so they theme correctly on mount.
 if (typeof document !== 'undefined') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const initialBg = prefersDark ? colors.modalBgDark : colors.modalBgLight;
@@ -21,14 +21,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const mode = userOverride ?? (prefersDarkMode ? 'dark' : 'light');
   const theme = createAppTheme(mode);
 
-  // Apply data-mui-color-scheme attribute to document for vanilla CSS modules
+  // `data-mui-color-scheme` on the document is what the vanilla CSS modules key off.
   useEffect(() => {
     document.documentElement.setAttribute('data-mui-color-scheme', mode);
   }, [mode]);
 
-  // Keep the modal surface CSS vars on :root in sync with the theme. Open dialogs pick up
-  // the change automatically via custom-property inheritance from :root — no per-dialog
-  // sync needed (the library no longer copies these vars onto the <dialog> inline style).
+  // Open dialogs pick these up through custom-property inheritance from :root, so no per-dialog sync.
   useLayoutEffect(() => {
     const bg = mode === 'dark' ? colors.modalBgDark : colors.modalBgLight;
     document.documentElement.style.setProperty('--modal-bg', bg);
@@ -36,7 +34,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.style.setProperty('--form-bg', bg);
   }, [mode]);
 
-  // Theme the dialog backdrop based on current mode
   useEffect(() => {
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(

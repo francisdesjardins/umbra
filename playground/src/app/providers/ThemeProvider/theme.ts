@@ -40,18 +40,10 @@ declare module '@mui/material/styles' {
 }
 
 /**
- * The palette is the mascot's, not a decoration chosen beside it.
- *
- * `UmbraMoon` draws an eclipse: a dark slate body with the corona escaping around its rim in
- * ambers. Every value below is one of the five it already uses — flame, flame edge, body, body
- * edge, ink — so the page and the thing in its corner cannot drift into two different products.
- *
- * The fuchsia this replaces was a personal mark rather than the library's, and it fought the
- * mascot: a magenta accent beside an amber corona reads as two brands sharing a page.
- *
- * The corona shifts intensity between modes rather than hue, the way the mascot does — a bright
- * page needs less glow to register, so light mode takes the deeper amber and dark mode the
- * brighter one.
+ * The palette is the mascot's: every value is one of the five `UmbraMoon` already draws its
+ * eclipse with — flame, flame edge, body, body edge, ink — so the page and the thing in its corner
+ * cannot drift into two products. The corona shifts intensity between modes rather than hue, since
+ * a bright page needs less glow to register: light mode takes the deeper amber, dark the brighter.
  */
 const MASCOT = {
   light: {
@@ -71,29 +63,22 @@ const MASCOT = {
 } as const;
 
 /**
- * What sits *on* the corona, in both modes.
- *
- * Amber cannot carry white text: `#d97706` measures 3.19:1 against `#ffffff` and `#f59e0b` only
- * 2.15:1, so a contained button was the least readable thing on the page — worst in dark mode,
- * where the fill is brightest. The eclipse already answers this: fire is what you read the dark
- * body against, not the other way round.
- *
- * The consequence is that **primary hover has to brighten, not darken.** Deepening the fill to
- * `flameEdge` under a dark ink lands at 2.5:1 — the old hover was compensating for the old ink.
+ * What sits *on* the corona, in both modes. Amber cannot carry white text — `#d97706` is 3.19:1
+ * against `#ffffff` and `#f59e0b` only 2.15:1 — so fire is what you read the dark body against,
+ * not the reverse. The consequence: **primary hover has to brighten, not darken**, since deepening
+ * the fill to `flameEdge` under a dark ink lands at 2.5:1.
  */
 const INK_ON_FLAME = '#0f172a';
 
 export const createAppTheme = (mode: 'light' | 'dark') => {
   const mascot = MASCOT[mode];
 
-  // The readable end of the corona, per mode — amber as *text* rather than as a fill.
-  // `main` is tuned to be a background, and on the page it is the wrong end of the ramp:
-  // `#d97706` measures 3.19:1 on white. Light mode takes the deep edge, dark mode the bright
-  // ink, which is the pair MUI ships for exactly this and the one `KindBadge` already used.
+  // The readable end of the corona: amber as *text*, since `main` is tuned as a background and
+  // `#d97706` is 3.19:1 on white. Light takes the deep edge, dark the bright ink.
   const accent = mode === 'dark' ? mascot.ink : mascot.flameEdge;
 
   return createTheme({
-    // Scrollbar tokens (used by global styles to theme scrollbars)
+    // Read by the global styles below.
     scrollbar: {
       thumb: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
       track: 'transparent',
@@ -101,9 +86,9 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
     },
     palette: {
       mode,
-      // MUI's default is 3, which is AA for *large* text only — so white scores 3.19 on
-      // `#d97706`, clears the bar and gets picked, and every contained button ships at 3.19:1.
-      // At 4.5 the derived `contrastText` is a readable ink on error and success too.
+      // MUI's default 3 is AA for *large* text only, so white scores 3.19 on `#d97706`, clears the
+      // bar and gets picked — every contained button then ships at 3.19:1. At 4.5 the derived
+      // `contrastText` is a readable ink on error and success too.
       contrastThreshold: 4.5,
       accent: {
         onSurface: accent,
@@ -113,13 +98,11 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         main: mascot.flame,
         light: mascot.ink,
         dark: mascot.flameEdge,
-        // The eclipse's own body, not a generic black: the mascot is fire behind a dark disc,
-        // and this is that disc. The *deepest* of the two bodies in both modes — the lighter
-        // one clears 4.5 by a tenth, and a tenth is what a washed-out panel spends.
+        // The eclipse's own body, not a generic black — and the *deepest* of the two in both
+        // modes, since the lighter one clears 4.5 by only a tenth.
         contrastText: INK_ON_FLAME,
       },
-      // The body, not a second accent. An eclipse is one fire against one shadow, and a palette
-      // with two warm accents has nowhere left to put emphasis.
+      // The body, not a second accent: a palette with two warm accents has nowhere to put emphasis.
       secondary: {
         main: mascot.body,
         light: mascot.bodyEdge,
@@ -127,15 +110,11 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         contrastText: '#ffffff',
       },
       /**
-       * A third step in the text ramp, and a readable one.
-       *
-       * `text.disabled` is MUI's *inactive control* tone (0.38 in light mode, 2.68:1 on white)
-       * and this app spends it as tertiary text — counts, specifier labels, hints, the “Result:”
-       * placeholder — none of which is inactive, so none of which 1.4.3 exempts. Eighteen call
-       * sites, one decision: raise the token rather than repaint the sites.
-       *
-       * The step it leaves is small on purpose. Below `secondary` there is no room left above
-       * 4.5:1, so the hierarchy under this line is carried by size and weight, not by fading.
+       * A third, readable step in the text ramp. `text.disabled` is MUI's *inactive control* tone
+       * (0.38 light, 2.68:1 on white) but this app spends it as tertiary text — counts, hints, the
+       * “Result:” placeholder — none of which 1.4.3 exempts, so the token is raised rather than
+       * eighteen call sites repainted. The step it leaves is small: below `secondary` there is no
+       * room above 4.5:1, so hierarchy under this line is size and weight, not fading.
        */
       text: {
         ...(mode === 'dark' ? { primary: '#ffffff', secondary: 'rgba(255, 255, 255, 0.7)' } : {}),
@@ -143,8 +122,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
       },
       ...(mode === 'dark' && {
         background: {
-          // The mascot's own body rather than pure black: amber on `#000` is a warning label,
-          // amber on slate is dusk. It is also what the moon is already drawn on.
+          // The mascot's body, not pure black: amber on `#000` is a warning label, on slate dusk.
           default: mascot.body,
           paper: mascot.bodyEdge === '#334155' ? '#111c30' : '#121212',
         },
@@ -164,23 +142,19 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
         },
       },
       MuiButton: {
-        // Matched on `color: 'primary'`, not applied to the `contained` slot: the unscoped rule
-        // this replaces painted *every* filled button amber on hover, so the red Delete buttons
-        // on /modal-actions turned brand-coloured under the pointer. A destructive action has to
-        // stay destructive.
+        // Matched on `color: 'primary'` rather than the `contained` slot: unscoped, it painted
+        // *every* filled button amber on hover, turning /modal-actions' red Delete brand-coloured.
         variants: [
           {
             props: { variant: 'contained', color: 'primary' },
-            // The corona flares — it does not go out. With a dark ink on the fill, deepening it
-            // is what breaks contrast; brightening keeps the pair legible (8.3:1 light, 10.7:1
-            // dark), and is what an eclipse does anyway.
+            // With a dark ink on the fill, deepening breaks contrast; brightening keeps the pair
+            // legible (8.3:1 light, 10.7:1 dark).
             style: {
               '&:hover': { backgroundColor: mode === 'dark' ? mascot.ink : MASCOT.dark.flame },
             },
           },
-          // The unfilled variants paint `primary.main` on the *page*, which is the 3.19:1 pair
-          // the accent token exists to replace. The outline goes with it: MUI draws it at
-          // `alpha(main, .5)`, which is 2.1:1 against the page and below what a boundary needs.
+          // Unfilled variants paint `primary.main` on the *page* — the 3.19:1 pair `accent`
+          // replaces. The outline too: MUI draws it at `alpha(main, .5)`, 2.1:1 against the page.
           {
             props: { variant: 'text', color: 'primary' },
             style: { color: accent },
@@ -196,18 +170,15 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
           root: { color: accent },
         },
       },
-      // A focused field's label turns `primary.main`, which is the same 3.19:1 pair as everywhere
-      // else — and a label is the one piece of text a filled field cannot do without.
+      // A focused field's label turns `primary.main` — the same 3.19:1 pair, on the one piece of
+      // text a filled field cannot do without.
       MuiFormLabel: {
         styleOverrides: {
           root: { '&.Mui-focused': { color: accent } },
         },
       },
-      // MUI pulls the root 11px left so a Checkbox's ripple squares up with text above and below
-      // it. A Switch is padded differently, so the pull does not align anything — it just hangs
-      // the control outside whatever contains it, measurably: 330px against a content edge at
-      // 341px, on cards and inside dialogs alike. Zeroed here rather than with an `ml: 0` at each
-      // call site, for the same reason the focus ring is declared once.
+      // MUI's 11px left pull squares up a Checkbox's ripple, but a Switch is padded differently
+      // and just hangs outside its container — 330px against a content edge at 341px.
       MuiFormControlLabel: {
         styleOverrides: {
           root: { marginLeft: 0 },
@@ -238,47 +209,36 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
               backgroundColor: alpha(theme.scrollbar.thumb, 0.9),
             },
             /**
-             * One keyboard focus ring, for everything.
+             * One keyboard focus ring, for everything. `ButtonBase` zeroes the UA outline and
+             * marks focus with `.Mui-focusVisible`, which in this theme resolves to no visual
+             * change at all (measured: outline, box-shadow, border, background and both
+             * pseudo-elements byte-identical focused and not). Declared globally because the
+             * custom link surfaces are plain `<a>`; the 2px offset puts the ring on the page
+             * rather than the control, which keeps it readable over the amber fill.
              *
-             * There was none. `ButtonBase` zeroes the UA outline and marks focus with its own
-             * `.Mui-focusVisible` class, and in this theme that class resolves to no visual
-             * change at all — measured in the browser, not inferred: outline, box-shadow,
-             * border, background and both pseudo-elements are byte-identical focused and not.
-             * So every button, every sidebar entry and every card link was focusable with
-             * nothing on screen to say which one had it.
-             *
-             * Declared globally rather than per component, because the custom link surfaces
-             * (the home cards, the brand) are plain `<a>` and would each need their own rule.
-             * The 2px offset puts the ring on the page rather than on the control, which is
-             * what keeps it readable on top of the amber fill.
-             *
-             * `body ` is load-bearing, not tidiness: `ButtonBase` zeroes the outline from
-             * `.MuiButtonBase-root`, which is the same specificity as a bare `:focus-visible`
-             * and is injected after this, so it won. The descendant element lifts this above
-             * it. Measured — with the bare selector the plain links got a ring and every MUI
-             * button silently did not.
+             * `body ` is load-bearing: `.MuiButtonBase-root` zeroes the outline at the same
+             * specificity as a bare `:focus-visible` and is injected after this, so it won. The
+             * descendant selector lifts this above it — measured, with the bare selector the plain
+             * links got a ring and every MUI button silently did not.
              */
             'body :focus-visible': {
               outline: `2px solid ${theme.palette.accent.ring}`,
               outlineOffset: '2px',
             },
-            // Browser UA stylesheet sets `color: black` on <dialog> elements explicitly,
-            // overriding any inherited theme colour. Reset it to inherit so MUI theme
-            // text colours (set on body by CssBaseline) flow through correctly.
+            // The UA stylesheet sets `color: black` on <dialog> explicitly, overriding the theme
+            // colour CssBaseline puts on body.
             dialog: {
               color: 'inherit',
             },
-            // Prevent background scroll when a modal dialog is open (critical on mobile
-            // where touch-scrolling passes through the native backdrop).
-            // Non-modal dialogs (data-modal-type="non-modal") leave scroll intact.
+            // Background scroll while a modal is open — critical on mobile, where touch-scrolling
+            // passes through the native backdrop. Non-modal dialogs leave scroll intact.
             'html:has(dialog[open][data-modal-type="modal"])': {
               overflow: 'hidden',
             },
-            // WCAG 2.3.3 — the one-rule off-switch the library's close path is built to meet:
-            // `checkTransitionsDisabled` measures a 0s duration and finalizes immediately, so a
-            // reduced-motion dialog snaps instead of waiting for a `transitionend` that never
-            // comes. On the dialog element only: the slide/fade defaults live there as inline
-            // transitions, which is why the `!important` is required and safe.
+            // WCAG 2.3.3: `checkTransitionsDisabled` measures a 0s duration and finalizes at once,
+            // so a reduced-motion dialog snaps rather than awaiting a `transitionend` that never
+            // comes. Dialog element only — the slide/fade defaults are inline there, which is why
+            // the `!important` is required and safe.
             '@media (prefers-reduced-motion: reduce)': {
               'dialog[data-modal-id]': {
                 transition: 'none !important',
@@ -291,7 +251,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
   });
 };
 
-// Minimal helper to provide theme tokens to non-MUI consumers (keeps templates uncoupled)
+// Theme tokens for non-MUI consumers, so templates stay uncoupled.
 export const getPrimaryHex = (mode: 'light' | 'dark') => {
   return createAppTheme(mode).palette.primary.main;
 };

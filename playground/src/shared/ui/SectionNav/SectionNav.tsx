@@ -7,18 +7,11 @@ type SectionNavProps = {
 };
 
 /**
- * Sticky jump bar for long pages.
- *
- * Pages like Test Stories run to sixty-odd cards; without this the only way to reach a group
- * is to scroll past every group before it.
- *
- * The chips navigate through the router rather than carrying a bare `href="#id"`, because that
- * anchor cannot express a section under the hash-router build (`yarn playground:build:file`,
- * which is what ships to a static host). There, the whole URL after `#` is the *route* — so a
- * plain `#stacking` replaces `#/advanced` instead of adding to it, and the click lands on the
- * index page rather than scrolling. Handing the router both halves lets it emit `#/advanced`
- * plus its own `#stacking` and scroll to it, which is why every link in the API reference is a
- * `Link` too. Deep links still survive a reload and are still shareable, in both builds.
+ * Sticky jump bar for long pages — Test Stories runs to sixty-odd cards. The chips navigate through
+ * the router rather than a bare `href="#id"`: under the hash-router build
+ * (`yarn playground:build:file`, what ships to a static host) everything after `#` is the *route*,
+ * so `#stacking` would replace `#/advanced` and land on the index page. Given both halves the
+ * router emits `#/advanced` plus `#stacking` and scrolls — so API-reference links are `Link`s too.
  */
 export const SectionNav = ({ sections }: SectionNavProps) => {
   const pathname = useRouterState({
@@ -43,20 +36,9 @@ export const SectionNav = ({ sections }: SectionNavProps) => {
         bgcolor: 'background.default',
         borderBottom: 1,
         borderColor: 'divider',
-        /**
-         * A two-pixel bleed of *background only*, which is a subpixel fix and nothing more.
-         *
-         * A highlighted card and this bar are both the content column's width, so the card's 1px
-         * border should pass exactly behind it. They do not land on the same pixel: the column's
-         * width is fractional, so the card's border straddles the bar's edge and roughly half of
-         * it stays lit — an orange hairline down each side of the bar, moving as the page scrolls.
-         *
-         * It has to be the background that widens and not the box. Widening the box (negative
-         * margins with matching padding) takes the `borderBottom` with it, and the divider then
-         * runs past the cards it is supposed to sit above — which is far more visible than the
-         * hairline it fixes. Hence a pseudo-element behind: the bar's own edges, border included,
-         * do not move at all.
-         */
+        // A two-pixel bleed of *background only*: the column's width is fractional, so a card's 1px
+        // border straddles this bar's edge and stays half-lit as an orange hairline. The background
+        // widens, not the box — negative margins would take `borderBottom` past the cards.
         '&::before': {
           content: '""',
           position: 'absolute',

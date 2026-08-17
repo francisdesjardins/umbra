@@ -3,19 +3,10 @@ import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
 import { Box, Typography, useTheme } from '@mui/material';
 
 /**
- * A deliberately empty page, kept empty.
- *
- * Somewhere to build a flow against the core and watch it behave — a reproduction, a stacking
- * arrangement nobody has tried, a shape being shown before it is worth a card. Nothing here is a
- * demo: `/getting-started` through `/microfrontends` are the demonstrations, and a scratch surface
- * that starts explaining itself has quietly become one of them.
- *
- * **The moon is the still one**, the same `UmbraMoon` the landing page makes its hero. The peeking
- * mascot is suppressed on this route in `RootLayout` for the reason it is suppressed on `/`: the
- * joke is that one is *hiding*, and a hider beside a full-size twin reads as a stray second render.
- *
- * Whatever lands here is temporary by construction. If something proves worth keeping, it belongs
- * on a real route with a card and a `codeSamples` entry — see `playground/CLAUDE.md`.
+ * A deliberately empty page: build a flow against the core and take it apart again, never a demo —
+ * a scratch surface that starts explaining itself has become one. Anything worth keeping moves to a
+ * real route with a card and a `codeSamples` entry (`playground/CLAUDE.md`). `RootLayout` hides
+ * the peeking mascot here as on `/`: a hider beside its full-size twin reads as a stray render.
  */
 export const WarzonePage = () => {
   const theme = useTheme();
@@ -36,9 +27,8 @@ export const WarzonePage = () => {
           py: { xs: 6, md: 10 },
         }}
       >
-        {/* The corona is painted past the SVG's own box, so the art is inset in a square that
-            clips nothing — the wrapper bounds the layout and the flames burn into the margin.
-            Same arrangement as the landing page's hero. */}
+        {/* The corona paints past the SVG's box, so the art is inset in a square that clips
+            nothing — the landing page hero's arrangement. */}
         <Box
           sx={{
             width: { xs: 160, md: 200 },

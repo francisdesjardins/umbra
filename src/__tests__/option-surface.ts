@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // The body of `export type <name>`, `=` to closing brace — brace-counted, because `ModalVariant`'s
-// union and `UseModalBaseOptions`'s nested function types make a line-regex cut early, and silently.
+// union and `UseModalBaseOptions`'s nested function types make a line-regex cut early, silently.
 function typeBody(source: string, name: string): string {
   const start = source.indexOf(`export type ${name}`);
   if (start === -1) {

@@ -10,15 +10,10 @@ export type ContentTransitionProps = {
 };
 
 /**
- * Crossfade between a fallback and the real content using CSS opacity transitions.
- *
- * Both layers are placed in the same grid cell so they overlap naturally
- * without absolute positioning — avoids layout collapse and overflow issues.
- *
- * `pending` rather than `loading`: this component has no idea *why* the content is not ready,
- * and the modal's own flag it usually reads (`isPreparing`) is not about data either. It is
- * also not `transitioning` — that would name the animation, which runs when this flips, not
- * while it is true.
+ * Crossfade between a fallback and the real content via CSS opacity, both layers in one grid cell
+ * so they overlap without absolute positioning — no layout collapse or overflow. `pending` not
+ * `loading` (this never knows *why* content is not ready, and `isPreparing` is not about data) and
+ * not `transitioning` (that names the animation, which runs when this flips, not while it is true).
  */
 export function ContentTransition({
   pending,

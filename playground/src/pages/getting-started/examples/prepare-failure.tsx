@@ -13,17 +13,10 @@ export const MODAL_ID = 'prepare-failure';
 const resultStore = createResultStore();
 
 /**
- * The other half of `Async Open`: what the same card does when the fetch throws.
- *
- * **The switch is the demonstration.** Both openings run the identical code path — the dialog is
- * already on screen when `prepare` runs, `isPreparing` settles either way, and `aria-busy` goes
- * back to `false`. So a failed open and a successful one leave the modal in the same state, and
- * without `onError` the only difference is that one of them has nothing in it. Flip the switch and
- * open twice to see that.
- *
- * `onError` is a **report, not a veto**: it does not stop the open and does not close anything.
- * What the user sees is the caller's decision, which is why the failure is held in component state
- * and rendered here rather than handled by the library.
+ * The other half of `Async Open`: the same card when the fetch throws. Both openings run the same
+ * path — the dialog is on screen when `prepare` runs, `isPreparing` settles either way, `aria-busy`
+ * returns to `false` — so without `onError` a failed open just looks empty. `onError` reports
+ * rather than vetoes, so the failure is held in component state and rendered here.
  */
 export function PrepareFailureExample() {
   const { result } = useStore(resultStore);
@@ -41,9 +34,8 @@ export function PrepareFailureExample() {
         throw new Error('The profile service did not answer.');
       }
     },
-    // Typed as `ModalFailure`, which the root exports so a handler can be written outside the
-    // call. `source` is a closed union, so a third one would be a compile error here rather than
-    // a string comparison that quietly stops matching.
+    // `ModalFailure` is a root export, so a handler can live outside the call; `source` is a closed
+    // union, so a new one is a compile error rather than a string compare that stops matching.
     onError: (reported) => {
       setFailure(reported);
     },

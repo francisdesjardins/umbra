@@ -4,12 +4,9 @@ import { fromStore } from './from-store.js';
 import type { ModalInfo } from '../manager/types.js';
 
 /**
- * One modal's live state.
- *
- * **Returns an accessor, and that is forced rather than chosen.** `ModalInfo` is a discriminated
- * union — `info.exists` narrows it — and a union cannot be handed back as one object of getters
- * without flattening the discriminant away, which would cost exactly the narrowing the type
- * exists for. So this one is `info()`, while {@link useDialogManager} next door is not.
+ * One modal's live state. **An accessor, forced rather than chosen**: `ModalInfo` is a
+ * discriminated union (`info.exists` narrows it) and an object of getters would flatten the
+ * discriminant away, so this one is `info()` while {@link useDialogManager} is not.
  *
  * @example
  * const info = useLookup('settings');

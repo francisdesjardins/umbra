@@ -1,22 +1,13 @@
 #!/usr/bin/env node
 /**
- * Verifies the *built* package the way a consumer resolves it.
- *
- * `type-check` compiles `src/`, which says nothing about whether the published artifact is
- * usable: the `exports` map, the emitted `.d.ts` layout and the entry-point split are only
- * exercised by importing the package from outside. Those failures cannot be patched away
- * after a release, so they are worth catching before one.
- *
- * Checks, against `dist/`:
- *   1. both entry points resolve — types and all — under `moduleResolution: NodeNext`
- *   2. the root's transitive graph contains no `react` import (the optional-peer promise)
- *   3. the React binding really does re-export the root
- *   4. the inference the type model promises survives into the emitted `.d.ts` — the global
- *      `DocumentEventMap` augmentation, `ModalInfo`'s `exists` discrimination, the typed
- *      close payload, and a payload declared once on an action and *inferred* at the modal,
- *      each with a matching `@ts-expect-error` so a widened type fails too
- *
- * Run after `yarn build`; wired into `prepublishOnly`.
+ * Verifies the *built* package as a consumer resolves it: `type-check` compiles `src/` and says
+ * nothing about the `exports` map, the emitted `.d.ts` layout or the entry split, and those
+ * failures outlive a release. Against `dist/` — both entries resolve (types included) under
+ * `moduleResolution: NodeNext`; the root's graph imports no `react` (the optional-peer promise);
+ * the React binding re-exports the root; the promised inference survives into the `.d.ts` (the
+ * `DocumentEventMap` augmentation, `ModalInfo`'s `exists` discrimination, the typed close payload,
+ * a payload declared once on an action and *inferred* at the modal), each with a matching
+ * `@ts-expect-error` so a widened type fails too. Run after `yarn build`; in `prepublishOnly`.
  */
 import { execFileSync } from 'node:child_process';
 import {
@@ -103,8 +94,7 @@ try {
     ].join('\n')
   );
 
-  // The controller binding: no framework at all, so it must resolve for a consumer who installed
-  // neither peer — which is exactly what the leak walk below checks.
+  // The controller binding: no framework, so it must resolve for a consumer with neither peer.
   writeFileSync(
     join(sandbox, 'vanilla-entry.ts'),
     [
@@ -115,9 +105,7 @@ try {
     ].join('\n')
   );
 
-  // The second binding, resolved the same way — same hook names, same re-exported root. A
-  // consumer must be able to import it without React installed, which is what the leak walk
-  // below checks; here it is the `exports` entry and the emitted `.d.ts` that are on trial.
+  // The second binding: same hook names, same re-exported root — its `exports` entry and `.d.ts`.
   writeFileSync(
     join(sandbox, 'solid-entry.ts'),
     [
@@ -128,11 +116,8 @@ try {
     ].join('\n')
   );
 
-  // Type-level promises that only hold if the emitted `.d.ts` carries them: the global
-  // `DocumentEventMap` augmentation, the `exists`-discriminated `ModalInfo`, the payload
-  // typing on `handle.close`, and the payload *inference* that lets a consumer declare it
-  // once. Each `@ts-expect-error` doubles as a negative assertion — an unused directive is
-  // itself an error, so a widened type fails this run.
+  // Type-level promises that hold only if the emitted `.d.ts` carries them. Each
+  // `@ts-expect-error` is a negative assertion: an unused directive is itself an error.
   writeFileSync(
     join(sandbox, 'inference.ts'),
     [
@@ -198,17 +183,11 @@ try {
 }
 
 // ── 1b. Every relative specifier in the declarations carries an extension ─────
-//
-// `tsc` copies relative specifiers into the emitted `.d.ts` verbatim, and an extensionless one
-// is invalid under `moduleResolution: node16`/`nodenext`. The failure is silent in the worst
-// possible way: `skipLibCheck: true` — a common default, and what the sandbox above uses —
-// suppresses the resolution error, so every type imported across a module boundary degrades to
-// an error type the checker lets through. The package then appears to type-check while
-// providing no type safety at all.
-//
-// Checked statically because it is an invariant of the emitted artifact, not something a
-// single consumer file happens to exercise: one extensionless specifier anywhere in the graph
-// silently kills the types that flow through it.
+// `tsc` copies relative specifiers into the emitted `.d.ts` verbatim, and an extensionless one is
+// invalid under `moduleResolution: node16`/`nodenext` — silently, since `skipLibCheck: true` (a
+// common default, and what the sandbox above uses) suppresses the resolution error and every type
+// crossing that boundary degrades to an error type: the package type-checks with no type safety.
+// Checked statically because it is an invariant of the artifact, not of one consumer file.
 
 const collectDeclarations = (dir) => {
   const found = [];
@@ -307,9 +286,7 @@ report(root.leaks.length === 0 && root.seen.size > 3, {
   detail: `${root.seen.size} modules${root.leaks.length > 0 ? ` — LEAKS: ${describe(root)}` : ''}`,
 });
 
-// Mirror assertions: if the walker resolved nothing, the check above passes for the wrong
-// reason. Each binding must reach its own framework — and only its own, or installing one
-// binding's peer would be a condition for using the other.
+// Mirror assertions — else a blind walker passes the check above, and one peer would gate both.
 for (const [entry, own, other] of [
   ['react.js', 'react', 'solid'],
   ['solid.js', 'solid', 'react'],
@@ -325,8 +302,7 @@ for (const [entry, own, other] of [
   });
 }
 
-// The controller binding renders nothing, so it reaches for nothing — it must resolve wherever
-// the root does, for a consumer who installed neither optional peer.
+// The controller binding renders nothing, so it must resolve for a consumer with neither peer.
 const vanilla = walk(join(DIST, 'esm', 'vanilla.js'));
 report(vanilla.leaks.length === 0 && vanilla.seen.size > 3, {
   label: 'the built vanilla binding imports no framework',
@@ -334,23 +310,15 @@ report(vanilla.leaks.length === 0 && vanilla.seen.size > 3, {
 });
 
 // ── The React Compiler actually ran ─────────────────────────────────────────
-//
-// Nothing asserted this, and the repo records what it costs: the wiring that looks right
-// (`react({ babel: … })`) is accepted under this Vite and transforms *nothing*, so the bundle shipped
-// uncompiled while the source was written — and documented — as if it were not. `verify:package`
-// already catches the opposite mistake, the compiler leaking into the Solid binding, which made the
-// silence here look like coverage.
-//
-// The evidence is the same one grep the docs point at: a compiled hook module imports React's
-// `compiler-runtime` and opens with a `c(n)` memo-cache call. Both, because the import alone would
-// survive a build that compiled one trivial function and bailed on `useModal`.
+// `react({ babel: … })` is accepted under this Vite and transforms *nothing*, so the bundle once
+// shipped uncompiled while the source was documented as compiled. Both halves are asserted — a
+// `compiler-runtime` import alone survives a build that compiled one trivial function and bailed.
 const compiled = readFileSync(join(DIST, 'esm', 'react', 'use-modal.js'), 'utf8');
 const hasRuntime = compiled.includes('react/compiler-runtime');
 const hasMemoCache = /\bc\(\d+\)/.test(compiled);
 report(hasRuntime && hasMemoCache, {
   label: 'the React binding is compiled — compiler-runtime imported and a memo cache allocated',
-  // Only on failure, and it says which half is missing: an import with no `c(n)` means the plugin ran
-  // and bailed on this hook, which is a different problem from the plugin not running at all.
+  // Only on failure, and it names which half is missing — two different problems.
   detail:
     hasRuntime && hasMemoCache
       ? ''
@@ -359,8 +327,7 @@ report(hasRuntime && hasMemoCache, {
         : 'no `react/compiler-runtime` import at all — the plugin did not run',
 });
 
-// And the other half of the same fact: the Solid binding must not be. The compiler decides what a
-// hook is by name, and `umbra/solid` exports `useModal` too.
+// The Solid binding must not be: the compiler names hooks by convention and it exports `useModal`.
 const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-modal.js'), 'utf8');
 report(!solidSource.includes('compiler-runtime'), {
   label: 'the Solid binding is not compiled — no compiler-runtime in it',

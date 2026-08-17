@@ -43,8 +43,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     ariaDescribedBy: `${MODAL_ID}-body`,
-    // A destructive confirm interrupts, so it is an alertdialog — and an alertdialog is announced
-    // with its description rather than waiting to be read, which is why the two go together.
+    // A destructive confirm interrupts, and an alertdialog is announced with its description.
     role: 'alertdialog',
     render: ({ action, hasRunningAction, error }) => {
       return (
@@ -101,9 +100,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
     },
   });
 
-  // The wrapper composes the safe primitive once, so no call site has to remember the ordering:
-  // `openAndWait` registers the close resolver before the open, so a close landing during
-  // `prepare` cannot be missed — and no call site has to know that.
+  // `openAndWait` registers the resolver before the open, so a close during `prepare` is not missed.
   const openForItem = (id: string, name: string) => {
     deleteItemStore.prepareForItem(id, name);
     return modal.openAndWait();

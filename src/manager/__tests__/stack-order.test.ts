@@ -33,7 +33,7 @@ test.describe('orderStack', () => {
 
   test('a non-modal dialog is under every modal one, whatever the open order', () => {
     // The platform paints every top-layer dialog above every ordinary one and no `z-index` reaches
-    // between them: an order claiming a later non-modal is in front would be false, not opinionated.
+    // between them: an order claiming a later non-modal is in front is false, not opinionated.
     const ordered = orderStack(
       [
         candidate('panel', { openSequence: 2, nonModal: true }),

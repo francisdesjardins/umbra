@@ -13,19 +13,15 @@ export type SingleFlightOptions = {
 export type SingleFlight = <T>(task: (signal: AbortSignal) => Promise<T>) => Promise<T>;
 
 /**
- * Deduplicates concurrent async calls.
- *
- * - `'first'` (default): while a call is in flight, later callers share its result.
- * - `'last'`: each new call aborts the previous one; all callers resolve to the
- *   latest call's result.
+ * Deduplicates concurrent async calls. `'first'` (default) lets later callers share the in-flight
+ * result; `'last'` aborts the previous call and resolves everyone to the latest — which suits a
+ * search box, where each keystroke supersedes the request before it.
  *
  * @example
  * const flight = createSingleFlight();
- * // Three callers at once; one request goes out and all three get its result.
  * const [a, b, c] = await Promise.all([flight(load), flight(load), flight(load)]);
  *
  * @example
- * // `'last'` suits a search box: each keystroke aborts the request before it.
  * const search = createSingleFlight({ mode: 'last' });
  * const hits = await search((signal) => fetch(url, { signal }).then((r) => r.json()));
  */

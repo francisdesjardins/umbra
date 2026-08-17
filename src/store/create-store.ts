@@ -1,15 +1,11 @@
 // ── Store module ──────────────────────────────────────────────────────────────
 //
-// A tiny reactive cell with a stable, framework-agnostic contract
-// (`subscribe`/`getSnapshot`). Zero runtime dependencies — the reactive cell and
-// shallow equality are hand-rolled here. This is the single swap point for the
-// state layer — nothing outside `src/store/` reaches for its internals.
-//
-// Snapshots are plain POJOs: methods live beside the state (in the builder),
-// never inside it, so `getSnapshot()` stays clone/serialize-safe and
-// selector-stable. Mutation is `set(next | (prev) => next)` and `reset()`;
-// for draft-style nested updates, compose any immutable-update helper in the
-// call site (`set((s) => produce(s, recipe))`) — the store stays dependency-free.
+// A tiny reactive cell with a stable, framework-agnostic contract (`subscribe`/`getSnapshot`),
+// hand-rolled with zero runtime dependencies — the single swap point for the state layer, so
+// nothing outside `src/store/` reaches for its internals. Snapshots are plain POJOs with methods
+// beside the state (in the builder) and never inside it, keeping `getSnapshot()` clone-safe and
+// selector-stable; mutation is `set(next | (prev) => next)` and `reset()`, and draft-style nested
+// updates compose an immutable-update helper at the call site (`set((s) => produce(s, recipe))`).
 
 /**
  * Minimal read-only contract satisfied by every store — and precisely the surface
@@ -22,14 +18,7 @@ export type StoreContract<TSnapshot> = {
   readonly getSnapshot: () => TSnapshot;
 };
 
-/**
- * API handed to the `builder` callback of {@link createStore}.
- *
- * - `get()` — current snapshot
- * - `set(next)` — replace the snapshot (or `(prev) => next`)
- * - `reset(next?)` — restore the initial baseline, or commit/derive a new one
- * - `getContext()` — the context injected at construction via `{ context }`
- */
+/** API handed to the `builder` callback of {@link createStore}. */
 export type StoreApi<TSnapshot, TContext = never> = {
   /** Current snapshot. */
   readonly get: () => TSnapshot;
@@ -37,7 +26,7 @@ export type StoreApi<TSnapshot, TContext = never> = {
   readonly set: (next: TSnapshot | ((prev: TSnapshot) => TSnapshot)) => void;
   /** Restore the baseline, or commit a new one. */
   readonly reset: (next?: TSnapshot | ((initial: TSnapshot) => TSnapshot)) => void;
-  /** The injected dependencies. */
+  /** The dependencies injected at construction via `{ context }`. */
   readonly getContext: () => TContext;
 };
 
@@ -47,13 +36,10 @@ type StoreBase<TSnapshot> = {
 };
 
 /**
- * A domain store: the store contract plus exactly the methods your builder
- * returns — the built-in mutators (`set`/`reset`) are **not** exposed here;
- * reach them through the `api` inside the builder. Want `reset` on the
- * instance? Define one: `reset() { api.reset(); }`.
- *
- * Methods merge flat at the root (`store.load()`), zustand-style; namespacing
- * (`{ ui: { … } }` → `store.ui.…`) works too.
+ * A domain store: the contract plus exactly the methods your builder returns — `set`/`reset` are
+ * **not** exposed here, only through the builder's `api`, so `reset` on the instance means defining
+ * one (`reset() { api.reset(); }`). Methods merge flat at the root (`store.load()`), zustand-style;
+ * namespacing (`{ ui: { … } }` → `store.ui.…`) works too.
  */
 export type Store<TSnapshot, TMethods> = StoreBase<TSnapshot> & TMethods;
 
@@ -66,11 +52,9 @@ export type GenericStore<TSnapshot> = StoreBase<TSnapshot> & {
 };
 
 /**
- * Options accepted by {@link createStore}.
- *
- * `context` is a builder concept: it is read back through the `api.getContext()` handed to the
- * builder, so it is only meaningful on the domain form. The builderless overload accepts
- * `equals` alone rather than taking a dependency nothing could read.
+ * Options accepted by {@link createStore}. `context` is a builder concept, read back through
+ * `api.getContext()`, so the builderless overload accepts `equals` alone rather than a dependency
+ * nothing could read.
  */
 export type CreateStoreOptions<TSnapshot, TContext = never> = {
   /** Skip notifying when the next snapshot is equal. Default `Object.is`. */
@@ -80,10 +64,8 @@ export type CreateStoreOptions<TSnapshot, TContext = never> = {
 };
 
 /**
- * The **domain** form's options: the builder, plus everything the generic form takes.
- *
- * `builder` is required, and that is what tells the two forms apart — see the overloads on
- * {@link createStore}.
+ * The **domain** form's options: the builder, plus everything the generic form takes. `builder` is
+ * required, and that is what tells the two forms apart — see the overloads on {@link createStore}.
  */
 export type CreateDomainStoreOptions<TSnapshot, TMethods, TContext = never> = CreateStoreOptions<
   TSnapshot,
@@ -127,16 +109,10 @@ function createCell<TSnapshot>(initial: TSnapshot): Cell<TSnapshot> {
 // ── Factory ───────────────────────────────────────────────────────────────────
 
 /**
- * Creates a reactive store.
- *
- * Two modes, told apart by whether the options carry a `builder`:
- * - **Generic** — `createStore(initial)` exposes the built-in mutators
- *   (`set`, `reset`) directly on the instance. Use for a plain reactive cell.
- * - **Domain** — `createStore(initial, { builder })` exposes only the methods
- *   your builder returns (merged flat at the root, zustand-style). The built-in
- *   mutators are reachable through the builder's `api` argument
- *   (`{ get, set, reset, getContext }`); to expose `reset` on the instance,
- *   define one: `reset() { api.reset(); }`.
+ * Creates a reactive store, in one of two modes told apart by whether the options carry a `builder`:
+ * **generic** (`createStore(initial)`) exposes the built-in `set`/`reset` on the instance, for a
+ * plain reactive cell; **domain** (`createStore(initial, { builder })`) exposes only the builder's
+ * methods, with the mutators reachable through its `api` argument.
  *
  * @example
  * const counter = createStore(
@@ -218,7 +194,7 @@ export function createStore<TSnapshot, TContext = never>(
       return contextCell.value;
     },
   });
-  // The store contract (subscribe/getSnapshot) always wins over a same-named
-  // method — no reserved-key list, no runtime throw.
+  // The contract (subscribe/getSnapshot) always wins over a same-named method — no reserved-key
+  // list, no runtime throw.
   return { ...methods, ...base };
 }

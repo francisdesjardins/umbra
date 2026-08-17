@@ -33,10 +33,7 @@ export function AsyncOpenExample() {
 
   const asyncModal = useMessageModal<void, 'confirm'>({
     id: MODAL_ID,
-    // A string rather than `ariaLabelledBy`, and this is the case that decides which to use: the
-    // pending branch below renders no heading at all, so a reference would point at nothing during
-    // exactly the window where the name matters most. The loaded heading is the fetched name,
-    // which is content — the dialog is "Profile" either way.
+    // A string: the pending branch has no heading to point at, the loaded one is the fetched name.
     ariaLabel: 'Profile',
     // Awaiting here is what makes `open()` resolve with the data already in.
     prepare: async () => {
@@ -45,8 +42,7 @@ export function AsyncOpenExample() {
       }
     },
     render: ({ isPreparing, action }) => {
-      // In both branches: the loaded one is by definition where preparing is over, so
-      // `isPreparing: true` would never be visible.
+      // In both branches: the loaded one is where preparing is over, so `true` would never show.
       const axes = (
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
           <Chip
@@ -64,8 +60,7 @@ export function AsyncOpenExample() {
 
       return (
         <ContentTransition
-          // `prepare` runs on every open, so `isPreparing` is briefly true even on a warm
-          // cache — gating on it alone fades a fallback in and out for nothing.
+          // `prepare` runs on every open, so `isPreparing` is briefly true even on a warm cache.
           pending={isPreparing && !isSuccess}
           fallback={
             <MessageModal.DefaultContainer>

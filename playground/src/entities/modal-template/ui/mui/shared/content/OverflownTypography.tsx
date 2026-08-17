@@ -3,12 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 
 export type OverflownTypographySlotProps = {
   /**
-   * Props forwarded to the underlying `Tooltip`. `title` and `children` are
-   * controlled internally and cannot be overridden here.
-   *
-   * `slotProps.tooltip.slotProps.popper.disablePortal` defaults to `true` so
-   * the tooltip renders inside the dialog (not escaped to `<body>`). Override
-   * via `slotProps.tooltip.slotProps.popper` if you need portal behaviour.
+   * Forwarded to the `Tooltip` (`title`/`children` are internal). Its popper's `disablePortal`
+   * defaults to `true`, keeping the tooltip inside the dialog instead of `<body>`.
    */
   tooltip?: Omit<TooltipProps, 'title' | 'children'>;
 };
@@ -18,25 +14,9 @@ export type OverflownTypographyProps = Omit<TypographyProps, 'noWrap'> & {
 };
 
 /**
- * Typography that truncates with an ellipsis when the container runs out of
- * horizontal space. A tooltip with the full text is shown **only** when the
- * content is actually truncated. Requires a width-constrained parent — the
- * `content` slot of `PanelModal.HeaderActionLayout` (which sets
- * `flex: 1, minWidth: 0`) satisfies this automatically.
- *
- * ```tsx
- * <PanelModal.HeaderActionLayout
- *   content={
- *     <Shared.OverflownTypography
- *       variant="h6"
- *       slotProps={{ tooltip: { placement: 'bottom', enterDelay: 500, fontWeight: 600 } }}
- *     >
- *       {title}
- *     </Shared.OverflownTypography>
- *   }
- *   actions={headerActions}
- * />
- * ```
+ * Typography that ellipsis-truncates when horizontal space runs out, showing a tooltip of the full
+ * text only while actually truncated. Needs a width-constrained parent; the `content` slot of
+ * `PanelModal.HeaderActionLayout` (`flex: 1, minWidth: 0`) is one.
  */
 export const OverflownTypography = ({
   children,

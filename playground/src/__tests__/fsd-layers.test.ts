@@ -4,26 +4,13 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The layer rule, as a gate rather than a paragraph.
- *
- * `playground/CLAUDE.md` states two things about Feature-Sliced Design here — imports run
- * **downward only** (app → pages → widgets → entities → shared), and a slice is entered through
- * its public entry rather than reached into. Both were prose, and prose does not hold: a sweep
- * found `shared/ui` importing a provider out of `app`, a widget importing one too, and thirty
- * cross-slice imports going straight at a `ui/` file whose barrel already exported it.
- *
- * **Two exemptions, and each is a decision rather than a leak.**
- *
- * `?raw` imports are asset reads. `codeSamples.ts` names every example's source *as text* for the
- * viewer to display; nothing is called, rendered or depended on, and the alternative is a
- * generated registry that would have to be regenerated on every example added. It is step 2 of
- * "Adding an Example" in the playground's own guide.
- *
- * `entities/modal-template` has **no public entry on purpose** — its own barrel says so and
- * re-exports nothing. The templates are a directory tree because that is the shape they are
- * copied out in, flavour by flavour, and `import * as MessageModal from '…/mui/message-modal'`
- * is the form that says which flavour. A barrel would flatten exactly the distinction the slice
- * exists to make.
+ * The layer rule from `playground/CLAUDE.md` as a gate: imports run **downward only**
+ * (app → pages → widgets → entities → shared) and a slice is entered through its public entry. As
+ * prose it did not hold — a sweep found two upward provider imports and thirty past a barrel.
+ * **Two exemptions**: `?raw` imports are asset reads, the alternative being a registry regenerated
+ * per example (step 2 of "Adding an Example"); `entities/modal-template` has **no public entry on
+ * purpose**, a tree being the shape templates are copied out in and the namespace import saying
+ * which flavour — a barrel would flatten that.
  */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,7 +24,7 @@ const RANK: Readonly<Record<string, number>> = {
   shared: 4,
 };
 
-/** The one slice whose surface is its tree — see the note above. */
+/** The one slice whose surface is its tree. */
 const NO_PUBLIC_ENTRY = 'modal-template';
 
 function sourceFiles(): string[] {
@@ -90,7 +77,7 @@ test.describe('the playground follows its own layer rule', () => {
         continue;
       }
       for (const specifier of importsOf(file)) {
-        // An asset read, not a dependency — see the exemption in this file's doc.
+        // An asset read, not a dependency.
         if (specifier.endsWith('?raw')) {
           continue;
         }
@@ -139,8 +126,7 @@ test.describe('the playground follows its own layer rule', () => {
   });
 
   test('the rule is matching something — the alias is in use across layers', () => {
-    // Both checks pass trivially if the specifier pattern stops matching, which is what a path
-    // alias rename produces and the failure nobody notices.
+    // Both checks pass trivially if the specifier pattern stops matching — what an alias rename does.
     const seen = new Set<string>();
     for (const file of sourceFiles()) {
       const layer = layerOf(relative(file));

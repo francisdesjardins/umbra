@@ -71,11 +71,8 @@ type SymbolSearchProps = {
 };
 
 /**
- * Fuzzy symbol search.
- *
- * Typo-tolerant on purpose — the name you are looking for is one you half remember, and
- * `usemodl` should still find `useModal`. Results are computed inline on every keystroke:
- * ninety names is nothing, and memoising is not available under the React Compiler anyway.
+ * Fuzzy symbol search, typo-tolerant so `usemodl` still finds `useModal`. Computed inline on every
+ * keystroke: ninety names is nothing, and the React Compiler rules out memoising anyway.
  */
 export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => {
   const [query, setQuery] = useState('');
@@ -127,8 +124,7 @@ export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => 
                 >
                   <Highlight text={hit.symbol.name} ranges={hit.match.ranges} />
                 </Box>
-                {/* Three bindings export `useModal`, so a hit without its specifier is a row a
-                    reader cannot choose between. */}
+                {/* Three bindings export `useModal`; without the specifier the rows are alike. */}
                 <Box
                   component="span"
                   sx={{ fontFamily: 'monospace', fontSize: '0.6875rem', color: 'text.disabled' }}

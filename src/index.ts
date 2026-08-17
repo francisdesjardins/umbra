@@ -1,29 +1,14 @@
 /**
  * `umbra` — the dialog manager itself. Plain TypeScript, no framework.
  *
- * This is the library: a registry of dialogs addressed by id, a state machine per dialog, a
- * body scroll lock, a lifecycle event stream, and the state/async primitives that go with
- * them. It has no opinion about how anything renders, and **React is not required to use
- * it** — the package resolves and runs with React absent entirely.
+ * A registry of dialogs addressed by id, a state machine per dialog, a body scroll lock, a
+ * lifecycle event stream and the state primitives that go with them — no opinion about rendering,
+ * so a caller with no renderer (a service, a router guard, a worker, an SSR path) imports straight
+ * from here, which `src/__tests__/entry-isolation.test.ts` enforces off the real import graph.
  *
- * Bindings live on their own entry points and are the optional layer. Each re-exports
- * everything here, so an app imports from one path and never needs this one:
- *
- * - `umbra/react` — `useModal`, the template hooks, `ModalOutlet`, the manager hooks.
- * - `umbra/solid` — the same surface for Solid, plus `fromStore`.
- * - `umbra/vanilla` — `bindDialog`, a controller over a `<dialog>` you wrote yourself. No
- *   framework at all.
- *
- * A fourth (Vue, a web component) is the same shape: subscribe to a store, render a `<dialog>`,
- * register it with the manager. Nothing in this module needs to change to support one.
- *
- * A caller with no renderer at all — a service, an API client, a router guard, a worker, an SSR
- * path — imports straight from here. That freedom is enforced by
- * `src/__tests__/entry-isolation.test.ts`, which walks this module's real import graph. It is
- * not a comment to be trusted; it is a test.
+ * Bindings are the optional layer, each on its own entry point re-exporting everything here so an
+ * app imports one path. A fourth — Vue, a web component — changes nothing in this module.
  */
-
-// ── The manager ──────────────────────────────────────────────────────────────
 
 export {
   MODAL_CLOSE_EVENT,
@@ -55,40 +40,26 @@ export type {
   UnregisteredModalInfo,
 } from './manager/types.js';
 
-// The stack policy `dialogManager.prioritize` takes, and what it is told about a dialog. A consumer
-// installing one writes the function, so both halves have to be nameable — and the policy is the
-// kind of thing an app declares in its own module and exports, which needs the annotation.
+// Both halves of `dialogManager.prioritize`: an app declares such a policy in its own module.
 export type { StackModal, StackPriority } from './manager/stack-order.js';
 
-// The vocabulary the manager's own public surface speaks: `ModalInfo.phase` is a `ModalPhase`,
-// and the store port a `DialogManager` registers reports a `ModalStoreSnapshot`, whose
-// `closeResult` is a `CloseResult`. A root consumer that can name `ModalInfo` but not
-// `ModalPhase` cannot write the annotation the type it was handed requires.
-//
-// The hook-shaped types next to them (`ModalHandle`, `UseModalOptions`, `UseModalReturn`) stay
-// on `./react`: they describe rendering a dialog, which is what a binding does. Nothing here
-// can hand you one.
+// The vocabulary the manager's own surface speaks: a consumer who can name `ModalInfo` but not
+// `ModalPhase` cannot write the annotation it requires. The hook-shaped types beside them describe
+// rendering, so they stay on a binding.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
 
-// The same rule for `onError`'s payload. `ModalErrorSource` comes with `ModalFailure` rather than
-// being reached through it: its doc promises an exhaustive `switch`, and a `switch` whose type has
-// no name is not one a consumer can write.
-//
-// `docs:check` cannot ask for these — typedoc reaches them only through `UseModalBaseOptions`,
-// which is in `intentionallyNotExported` because each binding re-exports its own instantiation.
+// The same rule for `onError`'s payload: `ModalErrorSource` ships beside `ModalFailure` because its
+// doc promises an exhaustive `switch`, and one whose type has no name is not one. (`docs:check`
+// cannot ask for these, reaching them only through `UseModalBaseOptions`.)
 export type { ModalErrorSource, ModalFailure } from './core/types.js';
 
-// The library's own close reason, as a value and as a type. Public because `CloseResult.reason`
-// is `TReason | DismissReason` — a consumer who can name the result must be able to name that
-// half of it — and because a caller comparing against it should not be retyping the string the
-// library reserves. See `core/dismiss-reason.ts` for why it is reserved.
+// The reserved close reason, value and type: `CloseResult.reason` is `TReason | DismissReason`, and
+// comparing against it should not mean retyping the string.
 export { DISMISS_REASON } from './core/dismiss-reason.js';
 export type { DismissReason } from './core/dismiss-reason.js';
 
-// Placement is the one piece of a binding's rendering job that is not framework work: it is a
-// table of CSS, and getting it wrong is what makes an inline non-modal dialog jump. Shipping it
-// from the root means the React binding, a future one, and a host written by hand all position
-// a dialog identically — see `core/placement.ts`.
+// The one piece of a binding's rendering job that is not framework work — a table of CSS whose
+// mistakes make an inline non-modal dialog jump — so every binding positions one identically.
 export { dialogPlacement } from './core/placement.js';
 export type {
   DialogHostStyle,
@@ -98,49 +69,28 @@ export type {
   DialogPositionStyle,
 } from './core/placement.js';
 
-// The style vocabulary those tables are written in, and the one way to write one onto an element.
-// A binding that owns its DOM node — Solid's does, and so does a hand-written connector — has no
-// renderer to hand a style object to, so `applyStyle` is the other half of `dialogPlacement`
-// being data: here is the table, and here is how it is applied.
+// Their vocabulary, plus the one way to write a style onto an element that owns no renderer.
 export { applyStyle } from './core/style.js';
 export type { DialogStyle, StyleTarget, StyleWrite } from './core/style.js';
 
-// The question a surface that answers a key over a page has to ask before acting on one. The
-// library's own dismiss listeners ask it; a controlled surface driving its own key — where the
-// press is a request to its owner rather than a dismissal — has no listener of ours to inherit it
-// from, and a second copy of the rule is a second copy that drifts.
+// The question a surface answering a key over a page must ask before acting on it: driving its own
+// key, it has none of our dismiss listeners to inherit the rule from, and a second copy drifts.
 export { isKeyClaimedByPopup } from './core/attach-keydown.js';
 
-// Its sibling, and needed by the same callers for the same reason. Nested dialogs are the normal
-// shape here — the top layer swallows outside clicks, so a second modal is opened from inside the
-// first and lands in its subtree — and a key pressed in the inner one bubbles through the outer.
-// Anything that listens on a dialog it did not build has to drop those, or the surface underneath
-// answers for the surface above it.
+// Its sibling, for the same callers: the top layer swallows outside clicks, so a second modal opens
+// inside the first and its keys bubble through — the outer one must drop them or answer for it.
 export { isOwnEventTarget } from './utils/dialog-scope.js';
 
-// The decision a controlled wrapper has to make on every pass, so nobody has to rediscover that
-// it turns on `phase` and not on `isVisible`. This library is imperative and a great deal of
-// component API is a boolean prop; the crossing between them is one function, and it is here.
+// The decision a controlled wrapper makes on every pass, so nobody rediscovers that it turns on
+// `phase` and not `isVisible`: the crossing between a boolean prop and an imperative library.
 export { reconcileOpen } from './core/reconcile-open.js';
 export type { OpenReconciliation } from './core/reconcile-open.js';
 
-// ── State ────────────────────────────────────────────────────────────────────
-//
-// The reactive cell the library actually runs on: the modal store, the action engine, the
-// outlet and the manager are all built on it. The rule is **export what the library runs on and
-// would otherwise be duplicated; do not export what it does not use** — keeping this private
-// would force a second copy of the same file into the playground, which is worse than the name
-// it saves.
-//
-// `StoreContract` is the `{ subscribe, getSnapshot }` pair every store satisfies, and precisely
-// what `useSyncExternalStore` — and Solid's `from`, and a Vue `ref` bridge — consume, so reading
-// a store needs no helper from us.
-//
-// What is *not* here is everything built over it. `useStore`, `createStoreContext`, `watch` and
-// `shallowEqual` had no caller inside the library, and a dialog manager is not where anyone
-// looks for state management — least of all when the same author ships `stardust` for exactly
-// that. They live in the playground now, as patterns to copy.
-
+// The reactive cell the modal store, the action engine, the outlet and the manager all run on. The
+// rule is **export what the library runs on and would otherwise be duplicated** — private, this
+// would force a second copy into the playground. `StoreContract` is the `{ subscribe, getSnapshot }`
+// pair `useSyncExternalStore`, Solid's `from` and a Vue `ref` bridge consume; what is built *over*
+// it (`useStore`, `createStoreContext`, `watch`, `shallowEqual`) had no caller here.
 export { createStore } from './store/create-store.js';
 export type {
   CreateDomainStoreOptions,
@@ -151,31 +101,17 @@ export type {
   StoreContract,
 } from './store/create-store.js';
 
-// ── Errors ───────────────────────────────────────────────────────────────────
-//
-// The one general-purpose helper the library itself needs: it turns whatever an action handler
-// throws into the `Error` the modal reports on `error`. It ships because a caller composing its
-// own handler wants that same normalisation.
-//
-// Async coordination — a mutex, single-flight, a fetch-state machine — is user-land, and lives
-// in the playground as reference code to copy, on the same terms as the modal templates. A
-// dialog manager is not where anyone would look for a mutex.
-
+// The one general-purpose helper the library needs — it turns whatever an action handler throws
+// into the `Error` reported on `error`, and a caller composing its own wants the same. Async
+// coordination is user-land, and lives in the playground to copy.
 export { normalizeError } from './utils/normalize-error.js';
 
-// ── Keys ─────────────────────────────────────────────────────────────────────
-
-// Two formatters, because a hotkey has two audiences. `formatHotkeyLabel` is what a person reads
-// on a menu item — `Ctrl` is the spelling on the keycap. `formatAriaKeyshortcuts` is what the
-// platform parses, where every token must be a `KeyboardEvent.key` value: `Control`, and `Space`
-// for the key whose value is a space and so cannot sit in a space-delimited list. The second is
-// what the library writes and dispatches by, so a wrapper that builds the attribute itself needs
-// it — which is the trap of having shipped only the first.
-
-// `parseHotkey` is the way back in, and the reason it exists is that a shortcut is not always
-// written in the source: a configuration file, a user preference, a value off the wire and another
-// library's `string` all have to become a `HotkeyDef` somehow, and the alternatives were an
-// unchecked cast or a validator per call site.
+// Two formatters, because a hotkey has two audiences: `formatHotkeyLabel` for a person reading a
+// menu item (`Ctrl`, the keycap spelling), `formatAriaKeyshortcuts` for the platform, where every
+// token must be a `KeyboardEvent.key` value — `Control`, and `Space` for the key whose value is a
+// space and so cannot sit in a space-delimited list. The library dispatches by the second, so a
+// wrapper building the attribute needs it; `parseHotkey` is the way back in, for a shortcut off
+// configuration or the wire without an unchecked cast or a validator per call site.
 export {
   formatAriaKeyshortcuts,
   formatHotkeyLabel,
@@ -184,6 +120,5 @@ export {
 } from './utils/hotkey-utils.js';
 export { Key } from './utils/keys.js';
 export type { KeyValue } from './utils/keys.js';
-// The root's own signatures name it (`formatHotkeyLabel(def: HotkeyDef)`), so a framework-free
-// consumer must be able to as well.
+// Named by the root's own signatures, so a framework-free consumer must be able to name it too.
 export type { HotkeyDef } from './actions/types.js';

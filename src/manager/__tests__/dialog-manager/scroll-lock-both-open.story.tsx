@@ -42,15 +42,8 @@ function InnerModal() {
 }
 
 /**
- * Two managers, two open modal dialogs, one body.
- *
- * `scroll-lock-two-managers` covers the half where the second manager has nothing open. This is
- * the other half, and the one the `Set` of owners exists for: both managers claim the lock, and
- * the first to let go must not release it on the other's behalf. A shared boolean passes the
- * story next door and fails here — the body would start scrolling behind a modal that is still up.
- *
- * The claim is idempotent per owner too, which the outer modal's own stacking exercises on the
- * way past: nothing double-pads.
+ * Two managers, two open modal dialogs, one body — what the `Set` of owners exists for: a shared
+ * boolean would let the first to let go release the other's lock. Claims are idempotent per owner.
  */
 export function ScrollLockBothOpenHarness() {
   const { open, Modal } = useModal<void, 'done'>({

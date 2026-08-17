@@ -1,48 +1,33 @@
 import type { ModalAnimation } from '../core/types.js';
 
 /**
- * The geometry of a slide panel, as data — no framework, no hook.
- *
- * `useSlideModal` is a style and an animation over `useModal` and nothing else, and neither half
- * is renderer work: which edge the panel is pinned to, how far it travels, and what it does on
- * the cross axis are answers a Solid binding needs to give identically or the two templates are
- * two different templates wearing one name. So they live here, and each binding's hook is the
- * three lines that hand them to its own `useModal`.
+ * The geometry of a slide panel, as data — no framework, no hook. `useSlideModal` is a style and an
+ * animation over `useModal`, and neither half is renderer work, so both bindings must answer these
+ * identically or the two templates are two templates wearing one name.
  */
 
 /**
- * Direction from which the slide panel enters the viewport.
- *
- * **Physical edges, and that is an open question rather than a settled answer.** In a
- * right-to-left document, "the drawer slides in from where the navigation is" is a *logical*
- * statement — `inline-start`, not `left` — and this union cannot say it; a caller shipping RTL
- * must flip the direction themselves from `dir`. Going logical is a design change of its own
- * pass: the placement table and both style functions would move to inset-inline/block
- * properties, the four names here would need a migration, and the decision deserves a real RTL
- * consumer rather than a guess. Until then the words mean exactly what they say on screen.
+ * Direction from which the slide panel enters the viewport. **Physical edges — an open question, not
+ * a settled answer**: an RTL document wants a *logical* `inline-start`, which this union cannot say,
+ * so an RTL caller flips the direction from `dir` themselves. Going logical means inset-inline/block
+ * in the placement table and both style functions, and migrating all four names — it waits on a
+ * real RTL consumer, not a guess.
  */
 export type SlideDirection = 'left' | 'right' | 'top' | 'bottom';
 
 /**
- * Alignment along the panel's **cross axis** — the axis perpendicular to the slide.
- *
- * For `left`/`right` the cross axis is vertical (`start` = top, `end` = bottom); for
- * `top`/`bottom` it is horizontal (`start` = left, `end` = right).
- *
- * - `stretch` (default) — fill the cross axis edge-to-edge, i.e. a classic full-height
- *   side drawer or full-width top/bottom sheet.
- * - `start` / `center` / `end` — the panel takes only the size its content (or your `style`)
- *   defines on the cross axis and is pinned to that position. Use for corner toasts,
- *   centered command palettes, or partial-height side panels.
+ * Alignment along the panel's **cross axis** — perpendicular to the slide, so vertical for
+ * `left`/`right` (`start` = top, `end` = bottom) and horizontal for `top`/`bottom`. `stretch`
+ * (default) fills it edge-to-edge, the classic full-height drawer or full-width sheet; `start` /
+ * `center` / `end` pin the panel at that position and leave its cross-axis size to the content or
+ * your `style` — corner toasts, command palettes, partial-height panels.
  */
 export type SlideAlign = 'stretch' | 'start' | 'center' | 'end';
 
 /**
- * Everything the panel's position is derived from: which edge, how it sits across it, and what it
- * is measured against.
- *
- * One shape rather than three arguments because the two style functions read exactly the same
- * three answers, and a caller passing them in different orders was the failure the type removes.
+ * Everything the panel's position is derived from: which edge, how it sits across it, and what it is
+ * measured against. One shape rather than three arguments, since both style functions read the same
+ * three answers and callers passing them in different orders is the failure it removes.
  */
 export type SlideGeometry = {
   /** Edge the panel enters from. */
@@ -50,9 +35,9 @@ export type SlideGeometry = {
   /** Cross-axis alignment. */
   readonly align: SlideAlign;
   /**
-   * `true` for a non-modal, inline (non-portaled) dialog. It anchors to the library's positioned
-   * wrapper via `absolute` and sizes to that container (`100%`) instead of the viewport
-   * (`100dvw`/`100dvh`) — see `useModal`'s contained mode.
+   * `true` for a non-modal, inline (non-portaled) dialog: it anchors to the library's positioned
+   * wrapper via `absolute` and sizes to that container (`100%`) rather than the viewport — see
+   * `useModal`'s contained mode.
    */
   readonly contained: boolean;
 };
@@ -61,11 +46,9 @@ export type SlideGeometry = {
 type CrossSize = '100%' | '100dvh' | '100dvw';
 
 /**
- * Exactly the properties a slide panel sets, with exactly the values it sets them to.
- *
- * Enumerated rather than typed as a general style object for the reason `DialogHostStyle` is: a
- * literal type is assignable to *every* binding's style type — React's `CSSProperties` included —
- * so this one table can feed all of them without an assertion at the seam.
+ * Exactly the properties a slide panel sets, with exactly the values it sets them to. Enumerated
+ * rather than typed as a general style object for `DialogHostStyle`'s reason: a literal type is
+ * assignable to every binding's style type, so one table feeds all without an assertion at the seam.
  */
 export type SlideDialogStyle = {
   readonly position?: 'absolute' | 'fixed';
@@ -103,12 +86,10 @@ const isHorizontal = (direction: SlideDirection): boolean => {
 };
 
 /**
- * The entrance/exit transforms for one direction and alignment.
- *
- * `align: 'center'` positions the panel's cross-axis *edge* at the 50% mark, so it needs a
- * -50% self-shift to be truly centered. Transform is a single property, and the slide owns
- * it — so the cross-axis shift is folded into BOTH keyframes (constant across the animation)
- * instead of being set separately, where the slide would overwrite it.
+ * The entrance/exit transforms for one direction and alignment. `align: 'center'` puts the panel's
+ * cross-axis *edge* at the 50% mark and so needs a -50% self-shift; transform is a single property
+ * the slide owns, so that shift is folded into BOTH keyframes — constant across the animation —
+ * rather than set separately, where the slide would overwrite it.
  */
 export function slideAnimation(
   direction: SlideDirection,
@@ -129,16 +110,10 @@ export function slideAnimation(
 }
 
 /**
- * Cross-axis placement for one direction + alignment.
- *
- * `stretch` pins both cross-axis edges (`0`/`0`) and forces the full cross size — the classic
- * edge-to-edge drawer. The other values pin a single edge (or center via `50%` + a 50%
- * self-offset) and leave the size to the content, so the panel is only as large as it needs.
- *
- * The centering offset is composed into the *base* transform rather than fighting the slide:
- * the slide animation drives the main axis only, so a cross-axis `translate` on the same
- * element would be overwritten. Instead `center` uses `top: 50%` plus a `translateY(-50%)`
- * folded into every keyframe (see {@link slideAnimation}).
+ * Cross-axis placement for one direction + alignment. `stretch` pins both cross-axis edges and
+ * forces the full cross size — the edge-to-edge drawer; the others pin a single edge (or the
+ * midpoint via `50%`) and leave the size to the content, `center`'s self-offset riding in the base
+ * transform rather than fighting the slide — see {@link slideAnimation}.
  */
 function crossAxisStyle(geometry: SlideGeometry): SlideDialogStyle {
   const { direction, align, contained } = geometry;
@@ -152,7 +127,6 @@ function crossAxisStyle(geometry: SlideGeometry): SlideDialogStyle {
   }
 
   if (align === 'center') {
-    // Pin the cross-axis midpoint; the -50% self-shift is applied via the animation transform.
     return horizontal ? { top: '50%', maxHeight: fullCross } : { left: '50%', maxWidth: fullCross };
   }
 
@@ -164,14 +138,12 @@ function crossAxisStyle(geometry: SlideGeometry): SlideDialogStyle {
 }
 
 /**
- * Positioning styles for the slide `<dialog>`.
- *
- * Each direction anchors to its own edge (`left`/`right`/`top`/`bottom: 0`). All four insets are
- * set explicitly (unused edges → `auto`) because non-modal dialogs receive `inset: 0` from the
- * core layer; leaving the opposite edge unset would let that `0` leak in and over-constrain the
- * box (e.g. `right: 0` + a leaked `left: 0` → full-width instead of content-width). Anchoring at
- * the near/far edge (not the far edge via `left/top: 100%`) also keeps the available size full,
- * so `auto` never collapses to zero.
+ * Positioning styles for the slide `<dialog>`, each direction anchoring to its own edge. All four
+ * insets are set explicitly (unused edges → `auto`) because non-modal dialogs receive `inset: 0`
+ * from the core layer, and an unset opposite edge lets that `0` leak in and over-constrain the box
+ * (`right: 0` plus a leaked `left: 0` → full-width instead of content-width). Anchoring at the near
+ * edge, not the far one via `left/top: 100%`, keeps the available size full so `auto` never
+ * collapses to zero.
  *
  * @param geometry - Which edge, how it sits across it, and what it is measured against.
  */

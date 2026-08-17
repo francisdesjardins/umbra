@@ -4,44 +4,31 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Height for the instant between mount and the first measurement — the two-column layout's,
- * measured, rather than a number chosen to be inoffensive.
- *
- * It has to be close, and `loading="lazy"` is why: the frame is fetched as it scrolls into view,
- * so the correction from this value to the real one lands exactly when the reader arrives at it.
- * Wrong by four hundred pixels, that is the page walking down under them at the worst moment —
- * which is what a placeholder left over from the four-column layout was doing.
- *
- * The common case, not a universal one: below 560px the host goes single-column and is taller
- * than this — though the `maxHeight` below caps what a phone actually renders, so the correction
- * there is bounded. It is the desktop read this spares.
+ * measured. It has to be close because `loading="lazy"` fetches the frame as it scrolls into view,
+ * so the correction lands exactly when the reader arrives; wrong by four hundred pixels it is the
+ * page walking down under them. Below 560px the host goes single-column and is taller, but the
+ * `maxHeight` caps what a phone renders, so that correction is bounded.
  */
 const INITIAL_HEIGHT = 660;
 
 /**
  * Four microfrontends, one shared manager, in an iframe.
  *
- * The page inside is deliberately not part of this app: plain HTML, an import map, and four
- * `<script type="module">`. No bundler runs on it, which is the only way to show what the import
- * map is doing — a build step that resolved `umbra` for all four would prove nothing.
+ * The page inside is deliberately not part of this app — plain HTML, an import map, four
+ * `<script type="module">` — because a build step that resolved `umbra` for all four would prove
+ * nothing about the import map. It demonstrates what `requestOpen` exists for: a dialog owned by
+ * one microfrontend, addressed by another that never imports it. `dialogManager` is a module-level
+ * singleton, so pointing every side at one build is the whole mechanism; four copies would be four
+ * registries finding nothing.
  *
- * It demonstrates the claim `requestOpen` exists for: a dialog owned by one microfrontend,
- * addressed by another that never imports it. `dialogManager` is a module-level singleton, so
- * pointing every side at one build is the whole mechanism — four copies would be four
- * registries and the requests would find nothing.
+ * The four are written four ways on purpose: Checkout with `useModal` from `umbra/react`, Support
+ * with the same call from `umbra/solid`, Billing with `umbra/vanilla` over a hand-written
+ * `<dialog>`, Audit as a web component whose dialog lives in a shadow root — a different DOM tree
+ * rather than a different framework. They address each other regardless, because what they share
+ * is the manager and not the renderer. Push Checkout past Billing's approval limit and a request
+ * crosses three of them: React asks plain JS, plain JS refuses and hands the refusal to Solid.
  *
- * The four sides are written four different ways on purpose, and that is the second claim.
- * Checkout drives its dialog with `useModal` from `umbra/react`; Support does the same with
- * `useModal` from `umbra/solid` — the same call, the same options, the same return; Billing uses
- * `umbra/vanilla` over a `<dialog>` written by hand in the host page; and Audit is a web
- * component whose dialog lives in a shadow root, which is a different DOM tree rather than a
- * different framework. They address each other regardless, because what they share is the
- * manager and not the renderer.
- *
- * Push Checkout past Billing's approval limit to see a request cross three of them: React asks
- * plain JS, plain JS refuses and hands the refusal to Solid, and the answer travels back.
- *
- * No `ExampleLayout` here: there is no trigger row, no modal of ours and no result to report —
- * everything happens in the frame, which is a document and a realm of its own.
+ * No `ExampleLayout`: no trigger row, no modal of ours, no result — it all happens in the frame.
  */
 export function HostFrame() {
   const [reloadKey, setReloadKey] = useState(0);
@@ -50,27 +37,18 @@ export function HostFrame() {
   const { isDarkMode } = useTheme();
 
   /**
-   * Take the height from the document inside, rather than from breakpoints.
+   * Take the height from the document inside, not from breakpoints: MUI's key off the **viewport**
+   * while the host's grid keys off the **frame's width**, and the two diverge by the sidebar plus
+   * the page padding — a `md` height computed for a 1200px viewport applied to a 604px frame that
+   * had reflowed to two columns and wanted twice as much.
    *
-   * Breakpoints cannot answer this. MUI's key off the **viewport** while the host's own grid
-   * keys off the **frame's width**, and the two diverge by the sidebar plus the page padding —
-   * so a `md` height computed for a 1200px viewport was being applied to a 604px frame that had
-   * reflowed to two columns and wanted twice as much. Every hard-coded value here was wrong at
-   * some width, and adding a fourth panel made most of them wrong at once.
-   *
-   * **The body, not `documentElement`, and that is the difference between measuring and
-   * latching.** `documentElement.scrollHeight` is never less than the viewport it is in — and
-   * that viewport is the frame, whose height this sets. So the two agree at whatever the tallest
-   * layout ever produced was and stay there: the frame grows freely and can never shrink, because
-   * the number it reads is the number it wrote. Invisible while the content only ever got taller;
-   * the moment a panel got shorter it left two hundred pixels of blank frame under it. The body is
-   * sized by its content, so it answers the question actually being asked.
-   *
-   * Same origin, so `contentDocument` is readable and no `postMessage` handshake is needed. The
-   * `ResizeObserver` covers what `load` cannot: the frame's own width crossing one of the host
-   * grid's breakpoints re-lays the panels into two columns or one, and the document is a
-   * different height on the other side of it. It is no longer clicking that moves this — the
-   * logs are fixed boxes that scroll, so the height a panel reports is the height it keeps.
+   * **The body, not `documentElement`** — that is the difference between measuring and latching.
+   * `documentElement.scrollHeight` is never less than its viewport, which here *is* the frame this
+   * sets the height of, so the two agree at the tallest layout ever produced and stay there: it can
+   * grow but never shrink. The body is sized by its content instead. Same origin, so
+   * `contentDocument` is readable and no `postMessage` handshake is needed, and the
+   * `ResizeObserver` covers what `load` cannot — the frame's width crossing a host-grid breakpoint
+   * re-lays the panels and changes the document's height.
    */
   useEffect(() => {
     const frame = frameRef.current;
@@ -85,25 +63,19 @@ export function HostFrame() {
       if (!inner) {
         return;
       }
-      // Plus the frame's own border. `box-sizing: border-box` is global here, so a height of
-      // exactly the content leaves the inner viewport two pixels short and the frame grows a
-      // scrollbar for them. Read the difference rather than hard-coding it — the border is a
-      // style, and a style can change.
+      // Plus the frame's border: `box-sizing: border-box` is global, so a height of exactly the
+      // content leaves the inner viewport two pixels short and grows a scrollbar. Read rather than
+      // hard-coded, because the border is a style.
       const chrome = frame.offsetHeight - frame.clientHeight;
       setHeight(Math.ceil(inner.scrollHeight) + chrome);
     };
 
     /**
-     * Hand the frame the theme the top bar is showing.
-     *
-     * The page inside is its own document, so it has its own `prefers-color-scheme` — which
-     * answers the OS and knows nothing about a toggle in this app. Same origin, so the attribute
-     * can simply be written; `host.html` turns it into a `color-scheme` and its `light-dark()`
-     * tokens follow.
-     *
-     * It rides along with the measurement effect rather than living in one of its own, because
-     * both need the same thing: a document that exists. A reload wipes the attribute, and `attach`
-     * is already the one place that knows the frame has finished loading.
+     * Hand the frame the theme the top bar is showing: its own document has its own
+     * `prefers-color-scheme`, which answers the OS and knows nothing about this app's toggle. Same
+     * origin, so the attribute is simply written and `host.html`'s `light-dark()` tokens follow.
+     * Riding along with the measurement effect because both need a document that exists, and
+     * `attach` already knows when the frame has finished loading.
      */
     const applyTheme = () => {
       const root = frame.contentDocument?.documentElement;
@@ -160,30 +132,21 @@ export function HostFrame() {
         component="iframe"
         src={`${import.meta.env.BASE_URL}mfe/host.html`}
         title="Microfrontend host — four microfrontends sharing one dialog manager"
-        // The frame carries its own copy of the library, of React and of Solid; it sits low on
-        // the page, so it should not be fetched by anyone who never scrolls to it.
+        // It carries its own copy of the library, React and Solid, and sits low on the page.
         loading="lazy"
         sx={{
           width: '100%',
           // Measured from the document inside — see the effect above.
           height,
           /**
-           * On a phone the frame is capped and scrolls itself, and that is about the modals.
+           * Capped on a phone so it scrolls itself, and that is about the modals: `showModal()`
+           * centres in **its own** viewport, and an iframe sized to its whole document has one as
+           * tall as that document — 1802px at a 390px screen, so the dialog centres 900px down and
+           * the reader sees nothing. Capping makes the frame's viewport what is on screen; the
+           * cost is a nested scroll area, cheaper than dialogs opening out of sight.
            *
-           * A `<dialog>` opened with `showModal()` centres in **its own** viewport, and an iframe
-           * sized to its whole document has a viewport as tall as that document — 1802px at a
-           * 390px-wide screen. So the modal centres 900px down, the backdrop dims the frame and
-           * nothing else, and a reader sitting on the Checkout panel sees no dialog at all. It is
-           * not off by a little: it is a screen and a half below the fold.
-           *
-           * Capping the frame makes its viewport the thing that is actually on screen, so a modal
-           * lands where the reader is looking. The cost is a nested scroll area, which is the
-           * cheaper of the two — a demo whose dialogs open out of sight demonstrates nothing.
-           *
-           * A viewport unit rather than the measured height, and a breakpoint rather than the
-           * frame's own width: the note on the effect above is about *content* height, which the
-           * frame's width decides. This is the reader's screen, which is exactly what a media
-           * query is for.
+           * A viewport unit and a breakpoint rather than the measured height and the frame's own
+           * width: this is the reader's screen, not the content height the effect above tracks.
            */
           maxHeight: { xs: '80vh', sm: 'none' },
           border: 1,

@@ -8,28 +8,22 @@ import type { ActionCloseFn, ActionReason, ActionState, HotkeyDef } from './type
 const log = createLogger('action');
 
 /**
- * Execution and state for a modal's actions.
- *
- * React-free on purpose: it is a store plus a handler runner, and a second binding needs it
- * unchanged. `useModal` owns one of these and hands out the `action()` factory that writes to
- * it, which is why there is no bridge — nothing has to be handed *in*.
- *
- * Actions are declared by being rendered. Each render pass re-declares the ones it draws, so
- * the hotkey table always describes the buttons currently on screen rather than every button
- * ever drawn — which matters because a stale hotkey would keep suppressing the dismiss key.
+ * Execution and state for a modal's actions — a store plus a handler runner, React-free so a second
+ * binding needs it unchanged; `useModal` owns one and hands out the `action()` factory that writes
+ * to it, so nothing has to be handed *in*. Actions are declared by being rendered, each pass
+ * re-declaring what it draws, so a stale hotkey cannot keep suppressing the dismiss key.
  */
 
 /**
- * The engine's public state. Exported because a binding reads it *reactively* — the action
- * factory's `disabled` and `data-loading` are computed from a snapshot the binding hands in,
- * not from the engine's own getters, so a fine-grained renderer can track them.
+ * The engine's public state. Exported because a binding reads it *reactively* — the factory's
+ * `disabled` and `data-loading` come from a snapshot handed in, not the engine's own getters, so a
+ * fine-grained renderer can track them.
  */
 export type ActionEngineSnapshot = {
   readonly states: Readonly<Record<string, ActionState>>;
   /**
-   * Pre-computed: true when **any** action is running — the same flag the hook publishes as
-   * `hasRunningAction`, under the same name. Contrast `ActionState.isRunning`, which is one
-   * action's own: the object it hangs on says whose it is, this one has to say it itself.
+   * Pre-computed: true when **any** action is running — the flag the hook publishes under the same
+   * name. Contrast `ActionState.isRunning`, one action's own, whose object says whose it is.
    */
   readonly hasRunningAction: boolean;
   /** Pre-computed: first non-null error across all actions. */
@@ -93,8 +87,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
           const startedAt = Date.now();
           try {
             await handler((data?: TData) => {
-              // Log that close was called and whether a payload came with it — never the payload
-              // itself, which may carry user data.
+              // Whether a payload came, never the payload itself, which may carry user data.
               log('Action close', { id: modalId, reason, withData: data !== undefined });
               closeFn?.(reason, data);
             });
@@ -145,15 +138,11 @@ export function createActionEngine<TData, TReason extends string = string>(modal
     },
 
     /**
-     * Called by the `action()` factory as each button is drawn.
-     *
-     * The guard is the runtime half of a compile-time rule, and it is needed because the type
-     * only half-delivers: `ActionReason` is `Exclude<TReason, DismissReason>`, and
-     * `Exclude<string, 'dismiss'>` is `string` — so a modal that left `TReason` at its default
-     * gets no error at all, which is precisely the modal most likely to name a button
-     * `'dismiss'` without meaning what that produces. Warned rather than refused: the button
-     * works, it is the close it reports that stops being distinguishable from the four the
-     * library raises on its own. Said once per engine, because React re-declares every pass.
+     * Called by the `action()` factory as each button is drawn. The guard is the runtime half of a
+     * rule the type only half-delivers — a modal left at the default `TReason` gets no error, and
+     * is the one most likely to name a button `'dismiss'` without meaning what that produces.
+     * Warned rather than refused, since only the close it reports suffers; once per engine, because
+     * React re-declares every pass.
      */
     declare(reason: ActionReason<TReason>, hotkey: HotkeyDef | undefined): void {
       if (!warnedDismiss && reason === DISMISS_REASON) {
@@ -173,14 +162,10 @@ export function createActionEngine<TData, TReason extends string = string>(modal
     },
 
     /**
-     * Drop an action's declaration.
-     *
-     * The counterpart to {@link declare} for a binding whose render is not a *pass*. React
-     * re-runs `render` wholesale and the `beginRender`/`endRender` swap is what expires a
-     * declaration; a fine-grained renderer never re-runs the parent, so a button removed by its
-     * own conditional has to say so. Without it the hotkey outlives the button, and — because
-     * `hasActions()` decides whether backdrop click dismisses — a modal that has drawn its last
-     * action silently stays opt-in.
+     * Drop an action's declaration — {@link declare}'s counterpart for a binding whose render is
+     * not a *pass*. A fine-grained renderer never re-runs the parent, so the `beginRender`/
+     * `endRender` swap never expires anything and a button removed by its own conditional has to
+     * say so, or its hotkey outlives it and `hasActions()` keeps backdrop dismissal opt-in.
      */
     undeclare(reason: ActionReason<TReason>): void {
       (pending ?? declared).delete(reason);
@@ -213,9 +198,8 @@ export function createActionEngine<TData, TReason extends string = string>(modal
     },
 
     /**
-     * Whether this modal drew any actions at all. Backdrop dismissal is opt-out without them
-     * and opt-in with them, on the reasoning that a modal offering buttons wants to be
-     * dismissed through one.
+     * Whether this modal drew any actions at all — backdrop dismissal is opt-out without them and
+     * opt-in with them, a modal offering buttons wanting to be dismissed through one.
      */
     hasActions(): boolean {
       return declared.size > 0;
@@ -229,11 +213,9 @@ export type ActionEngine<TData = never, TReason extends string = string> = Retur
 >;
 
 /**
- * The payload-free half of the engine: what the dismissal and keydown hooks read.
- *
- * They gate ESC / click-outside / backdrop on `isRunning` and dispatch hotkeys; none of them
- * ever closes *with data*, so none of them has to become generic. An `ActionEngine<Result>` is
- * an `ActionGate` whatever `Result` is.
+ * The payload-free half of the engine: what the dismissal and keydown hooks read. They gate ESC /
+ * click-outside / backdrop on `isRunning` and dispatch hotkeys, never closing *with data*, so none
+ * has to become generic — an `ActionEngine<Result>` is an `ActionGate` whatever `Result` is.
  */
 export type ActionGate = Omit<ActionEngine, 'run' | 'bindClose'>;
 
@@ -244,17 +226,12 @@ export type RenderWindow = {
 };
 
 /**
- * Run a render pass inside the engine's declaration window.
- *
- * Both hook bindings wrap their `render` call in exactly this, so by the rule that decides what
- * is core, it is core. The `finally` is what makes it worth sharing rather than inlining: a
- * `render` that throws must still close the window, or the engine keeps the half-built map of a
- * pass that never finished and every later `hasActions()` answers from it.
- *
- * It also has to live *outside* the hook, which is a second reason and the less obvious one. The
- * React Compiler cannot lower a `try` with no `catch`, and it bails per function — so with these
- * four lines inline, the whole of `useModal` went uncompiled. Out here they are an ordinary
- * function the compiler ignores, and the hook compiles.
+ * Run a render pass inside the engine's declaration window — both hook bindings wrap their `render`
+ * call in exactly this, so by the rule that decides what is core, it is core. The `finally` is what
+ * makes it worth sharing: a `render` that throws must still close the window, or every later
+ * `hasActions()` answers from a half-built map. It also has to live *outside* the hook, since the
+ * React Compiler cannot lower a `try` with no `catch` and bails per function — inline, these four
+ * lines leave the whole of `useModal` uncompiled.
  *
  * @example
  * const content = runDeclarationWindow(engine, () => {

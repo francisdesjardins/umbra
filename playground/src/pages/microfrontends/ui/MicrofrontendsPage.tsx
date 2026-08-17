@@ -10,12 +10,8 @@ const SECTIONS = [
 ] as const;
 
 /**
- * The microfrontend demo, on a page of its own.
- *
- * It earns one. The frame is the widest thing the playground renders — four panels that only fit
- * side by side across a whole column — and the claim it makes, one manager shared across four
- * bindings and a shadow boundary, is the peer of stacking or imperative control rather than a
- * card filed under them.
+ * Its own page: the frame is the widest thing the playground renders, and one manager across four
+ * bindings and a shadow boundary is a peer of stacking, not a card filed under it.
  */
 export const MicrofrontendsPage = () => {
   return (

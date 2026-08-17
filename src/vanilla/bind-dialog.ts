@@ -38,40 +38,13 @@ const log = createLogger('modal');
 /**
  * Drive a `<dialog>` you wrote yourself, with everything the hook bindings give theirs.
  *
- * **A controller, not a renderer** — which is the whole difference, and the reason this binding's
- * surface is not `useModal`'s. React and Solid render a dialog *and* its contents from a `render`
- * callback; a vanilla binding that did the same would have to invent a renderer, and a library
- * whose first rule is "zero shipped UI" has no business doing that. So the element is yours and
- * the lifecycle is ours: phases and the entrance/exit animation, `prepare` with its `AbortSignal`,
- * the dismiss key (dialog, native `cancel`, and window-level for a non-modal panel),
- * click-outside, backdrop hit-testing, opening focus and restoration, the manager registration
- * that makes it addressable by id, and the typed close.
+ * **A controller, not a renderer**: the element is yours, the lifecycle is ours, and every step of
+ * it is a call into `core/` in the order `umbra/react` and `umbra/solid` make the same calls.
  *
- * Nothing below is a decision this file makes. Every one is a call into `core/`, in the order
- * `umbra/react` and `umbra/solid` make the same calls — the architecture's central claim, tested
- * here by a consumer that is not a framework at all.
- *
- * ## Server-rendered markup
- *
- * **This is the binding for it, and the only one that can be**: the other two build their own
- * `<dialog>`, where here the element is yours and can already be in the document when the script
- * arrives. One that **arrives open** is adopted, so the DOM, the library and the screen agree from
- * the first pass rather than the first style write hiding an element still reporting `open`.
- *
- * **A server cannot render a *modal* dialog, and no library can change that** — the top layer is
- * enterable only from script, so an `open` attribute in HTML is by definition a non-modal open. So
- * declare `nonModal` and it is adopted where it stands; leave it modal and it is **closed** on
- * binding with a warning, rather than claiming a containment it does not have.
- *
- * ```html
- * <!-- Sent by the server, on screen before this script is fetched. -->
- * <dialog id="filters" open>…</dialog>
- * ```
- *
- * ```ts
- * bindDialog({ id: 'filters', dialog: document.getElementById('filters'), nonModal: true });
- * ```
- *
+ * The only binding that can adopt **server-rendered** markup, the element being in the document
+ * already. One that arrives open is adopted where it stands if it declares `nonModal`, and closed
+ * with a warning otherwise: the top layer is enterable only from script, so an `open` attribute in
+ * HTML is by definition a non-modal open.
  * @example
  * const confirm = bindDialog<{ id: string }, 'approve' | 'decline'>({
  *   id: 'billing:confirm',
@@ -97,8 +70,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const manager = options.manager ?? singleton;
 
   const resolved = resolveModalOptions(options);
-  // Annotated for the reason the other two bindings give: an un-annotated fallback leaves a union
-  // whose branches disagree about the style parameter `getDialogAnimationStyles` infers.
+  // Annotated for the reason React's binding gives.
   const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
@@ -107,12 +79,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return dialog;
   };
 
-  // ── The element ─────────────────────────────────────────────────────────────
-
-  // Absent options skip rather than empty, which here does double duty: an unnamed dialog stays
-  // visibly unnamed to an audit, *and* an `aria-labelledby` written in the caller's own markup is
-  // not overwritten by an option they never passed. `aria-busy` is the exception and always has a
-  // value, which is why this is a function rather than a one-shot loop — it re-runs from `sync`.
+  // Absent options skip rather than empty, so an audit still sees an unnamed dialog and an
+  // `aria-labelledby` in the caller's markup survives. A function, because `aria-busy` moves.
   const writeAttributes = () => {
     setDialogAttributes(
       dialog,
@@ -131,9 +99,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   writeAttributes();
 
   if (resolved.placement.host) {
-    // A contained panel is positioned `absolute` against a host, and in a binding that owns no
-    // markup the host has to be pointed at. The parent is the sane default — it is what the
-    // dialog is already inside.
+    // The parent is the only host a binding that owns no markup can assume.
     const host = options.host ?? dialog.parentElement;
     if (host) {
       host.setAttribute('data-modal-container', modalId);
@@ -142,8 +108,6 @@ export function bindDialog<TData = void, TReason extends string = string>(
       log.warn('Contained dialog has no host to position against', { id: modalId });
     }
   }
-
-  // ── Registration ────────────────────────────────────────────────────────────
 
   store.setOnClose((result) => {
     return options.onClose?.(result);
@@ -155,8 +119,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     nonModal: resolved.isNonModal,
     getDialog,
     ...(options.onOpenRequest !== undefined && {
-      // Returned, not swallowed: the manager awaits the handler, so an owner that validates
-      // asynchronously still gets to refuse before `requestOpenAndWait` answers.
+      // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
       onOpenRequest: (
         payload: unknown,
         request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]
@@ -165,8 +128,6 @@ export function bindDialog<TData = void, TReason extends string = string>(
       },
     }),
   });
-
-  // ── Backdrop click ──────────────────────────────────────────────────────────
 
   const handleDialogClick = (event: MouseEvent) => {
     if (
@@ -184,13 +145,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
   };
   dialog.addEventListener('click', handleDialogClick);
 
-  // ── The driver ──────────────────────────────────────────────────────────────
-  //
-  // React re-runs effects on a render and Solid re-runs them on a signal; there is neither here,
-  // so the store itself is the clock. Attachments are torn down and rebuilt when the two values
-  // they depend on change — the phase and whether `prepare` is still running — which is the same
-  // dependency list the other two bindings hand their effect systems.
-
+  // No render and no signal here, so the store is the clock: attachments rebuild when the phase or
+  // `prepare`'s progress moves, the dependency list the other two bindings hand their effects.
   const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
 
   let appliedStyle: DialogStyle | undefined;
@@ -204,8 +160,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const sync = () => {
     const snapshot = store.getSnapshot();
 
-    // `aria-busy` is the only one of these that moves, and the store is the only clock this
-    // binding has.
+    // `aria-busy` is the only one of these that moves.
     writeAttributes();
 
     // Styles first, so the exit/entrance state is on the element before `syncOpenSequence` shows it.
@@ -258,8 +213,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
       });
     }
 
-    // Guarded internally on `phase === 'opening'` and `!dialog.open`, so calling it on every
-    // notification is what the other two bindings' dependency-array-free effect does.
+    // Guarded internally on `phase === 'opening'` and `!dialog.open`, so every notification is safe.
     syncOpenSequence(domContext(snapshot.phase), {
       prepare: options.prepare,
       onError: options.onError,
@@ -271,22 +225,9 @@ export function bindDialog<TData = void, TReason extends string = string>(
     });
   };
 
-  // ── Adopting a dialog that is already open ──────────────────────────────────
-  //
-  // **The hydration gap.** A page can
-  // arrive with `<dialog open>` in the served HTML — that is what server-rendering a panel means —
-  // and `bindDialog` then meets an element that is open while its brand-new store says `closed`.
-  // Left alone, the first pass writes `display: none` and the three sources disagree in the worst
-  // possible arrangement: the DOM reports `open`, the store reports `closed`, the user sees
-  // nothing, and no warning is raised.
-  //
-  // **Adoption is only honest for a non-modal dialog**, and that is a platform law rather than a
-  // choice here: the top layer is enterable only through `showModal()` from script, so an `open`
-  // attribute in HTML is *by definition* a non-modal open — no backdrop, nothing inert. Adopting
-  // it as a modal one would claim a containment the element does not have.
-  //
-  // So a non-modal dialog is adopted where it stands, and a modal one is closed: the caller asked
-  // for the top layer, and the only way in is to open it again from script.
+  // The hydration gap: a server-rendered `<dialog open>` meets a store saying `closed`, and the
+  // first style write would hide an element the DOM still reports open. Only the non-modal case is
+  // honest (see above), so a modal one is closed instead.
   if (dialog.open) {
     if (resolved.isNonModal) {
       log('Adopting a dialog that was already open', { id: modalId });
@@ -307,23 +248,17 @@ export function bindDialog<TData = void, TReason extends string = string>(
   // Once up front, so a closed dialog carries `display: none` before anything can see it.
   sync();
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
-
-  // The engine's own snapshot, because there is no reactive layer to read it through. The props'
-  // live fields are still getters; `syncState` below is what pushes them onto the element, which
-  // is the job a renderer does in the other two bindings.
+  // The engine's own snapshot: no reactive layer here, so `syncState` below pushes the props' live
+  // getters onto the element, the job a renderer does elsewhere.
   const action = createActionFactory<TData, TReason>(engine, engine.getSnapshot);
 
   const bindAction: DialogController<TData, TReason>['bindAction'] = (button, binding) => {
     const { reason, ...actionOptions } = binding;
     const props = action(reason, actionOptions);
 
-    // Everything below writes onto a button this binding did not create, so retiring the action
-    // has to retire the writes: a `<button>` left `disabled` by an action that no longer exists is
-    // a dead control in the caller's page, not a stale attribute. Restoring rather than clearing
-    // is what keeps a button the caller disabled themselves from being switched on by an unbind —
-    // and it is the *attribute* that is captured, because `button.type` reads `'submit'` for a
-    // button that has no `type` at all, so restoring the property would add one.
+    // Retiring the action must retire its writes onto a button this binding did not create — one
+    // left `disabled` is a dead control. Restoring, not clearing, keeps a button the caller
+    // disabled off; the *attribute*, since `button.type` reads `'submit'` when there is no `type`.
     const restore = [
       'type',
       'disabled',
@@ -366,16 +301,13 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return () => {
       unsubscribeState();
       button.removeEventListener('click', handleClick);
-      // Retiring the declaration is the half a render pass would have done: it is what stops the
-      // hotkey outliving the button, and what lets `hasActions()` go back to false.
+      // Stops the hotkey outliving the button and lets `hasActions()` go back to false.
       engine.undeclare(reason);
       for (const undo of restore) {
         undo();
       }
     };
   };
-
-  // ── Reading state ───────────────────────────────────────────────────────────
 
   const getSnapshot = (): ModalSnapshot => {
     const { phase, isPreparing } = store.getSnapshot();
@@ -400,9 +332,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
     teardownModal(store, { manager, modalId, dialog, onError: options.onError });
-    // The unsubscribe above is what makes this necessary: a controller destroyed mid-`prepare`
-    // never gets the notification that would clear `aria-busy`, and the element is the caller's —
-    // it outlives the controller and would stay marked busy for good.
+    // Destroyed mid-`prepare`, nothing else would ever clear `aria-busy` off the caller's element.
     writeAttributes();
   };
 

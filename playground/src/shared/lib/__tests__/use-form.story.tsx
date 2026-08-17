@@ -4,15 +4,11 @@ import { useForm } from '../use-form';
 type Values = { name: string; email: string; agree: boolean };
 
 /**
- * A form with two text fields and one value `field()` refuses.
- *
- * The `agree` flag is not decoration: it is the case that proves the hook is generic over value
- * types while `field()` stays honest about only serving text. It is set through `set`, and the
- * checkbox renders itself.
+ * A form with two text fields and one value `field()` refuses. `agree` proves the hook is generic
+ * over value types while `field()` only serves text: it is set through `set`, and renders itself.
  */
 export function UseFormHarness() {
-  // React state rather than a DOM write: the next render would overwrite anything poked
-  // straight into the element, which is a harness bug that reads as a hook bug.
+  // React state, not a DOM write: the next render would overwrite anything poked into the element.
   const [submitted, setSubmitted] = useState('');
 
   const form = useForm<Values>({

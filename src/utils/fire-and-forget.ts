@@ -1,10 +1,9 @@
 import { normalizeError } from './normalize-error.js';
 
 /**
- * Fire-and-forget an async callback with error normalization.
- *
- * Replaces the repeated `void (async () => { try { … } catch { normalizeError } })()` pattern.
- * Each call site provides its own `onError` handler for context-specific logging.
+ * Fire-and-forget an async callback with error normalization, replacing the repeated
+ * `void (async () => { try { … } catch { normalizeError } })()` pattern; each call site brings its
+ * own `onError` for context-specific logging.
  *
  * @param fn - Async (or sync) callback to execute
  * @param handlers - What to do when it fails, and what to do either way.

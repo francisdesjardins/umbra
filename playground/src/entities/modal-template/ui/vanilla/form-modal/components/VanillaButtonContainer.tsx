@@ -6,9 +6,8 @@ type VanillaButtonContainerProps = {
 };
 
 /**
- * Kept as this template's name for the row of actions, but it no longer owns how they are placed —
- * `Shared.ButtonRow` does, for every vanilla template at once. Three copies of one flex rule had
- * already drifted to three different gaps.
+ * This template's name for the row of actions; placement belongs to `Shared.ButtonRow`, shared by
+ * every vanilla template because three copies of one flex rule drift to three different gaps.
  */
 export function VanillaButtonContainer({ children }: VanillaButtonContainerProps) {
   return <ButtonRow>{children}</ButtonRow>;

@@ -3,7 +3,6 @@ import { DialogManagerProvider } from '../../../react/dialog-manager-context.js'
 import { useModal } from '../../../react/use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/** A modal registered with whichever manager is nearest — never opened, only mounted. */
 function BystanderModal() {
   const { Modal } = useModal({
     id: 'two-managers-bystander',
@@ -16,14 +15,9 @@ function BystanderModal() {
 }
 
 /**
- * Two dialog managers, one body.
- *
- * The modal dialog belongs to the outer manager, so the body scroll lock is held on its
- * behalf. The nested provider owns a second, isolated manager with nothing open — and its own
- * registry churn (here, a modal unmounting) must not release a lock it never took.
- *
- * The toggle lives inside the modal dialog's render callback: that modal owns the top layer,
- * so a button outside it would not be clickable while it is open.
+ * Two managers, one body: the outer one holds the lock while the nested provider's manager has
+ * only a mounted-never-opened bystander, so its registry churn must not release a lock it never
+ * took. The toggle sits inside the modal's render because that modal owns the top layer.
  */
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);

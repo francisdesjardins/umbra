@@ -46,12 +46,8 @@ type ApiRailProps = {
 };
 
 /**
- * The reference's own table of contents: search on top, then the ten pages, with the open
- * one unfolded to its symbols.
- *
- * Only the open category unfolds. Ninety monospace names in one column is the flat list this
- * page was split up to stop being — the rail's job is to show where you are and what is one
- * click away, not to hold the whole surface at once.
+ * The reference's table of contents: search, then the ten pages, with only the open one unfolded to
+ * its symbols — ninety monospace names in one column is the flat list this page was split to avoid.
  */
 export const ApiRail = ({ activeCategory, activeSymbol }: ApiRailProps) => {
   return (

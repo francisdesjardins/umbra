@@ -31,11 +31,8 @@ const Remarks = ({ symbol }: { readonly symbol: ApiSymbol }) => {
 };
 
 /**
- * One entry, top to bottom in the order a reader needs it: what it is called, what it looks
- * like, what it does, then the detail.
- *
- * Members are titled "Props" for a component — the destructured parameter typedoc reports is
- * the props object, and calling it anything else would be pedantry over a React reader.
+ * One entry in the order a reader needs it: name, signature, summary, then detail. Members are
+ * titled "Props" for a component, since typedoc's destructured parameter is the props object.
  */
 export const SymbolArticle = ({ symbol }: { readonly symbol: ApiSymbol }) => {
   return (
@@ -91,8 +88,7 @@ export const SymbolArticle = ({ symbol }: { readonly symbol: ApiSymbol }) => {
                   <MemberListLabel>
                     {symbol.examples.length > 1 ? `Example ${String(index + 1)}` : 'Example'}
                   </MemberListLabel>
-                  {/* No height cap: a nested scrollbar inside a scrolling page hides the end of
-                      an example, and the longest one here is twenty lines. */}
+                  {/* No height cap: a nested scrollbar hides the end of a twenty-line example. */}
                   <Box
                     sx={{
                       borderRadius: 1.5,

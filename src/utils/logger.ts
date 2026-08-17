@@ -1,38 +1,18 @@
 /* oxlint-disable no-console -- this module is the sanctioned console logger */
 /**
- * Zero-dependency debug logger for browser devtools — near-zero overhead when disabled.
+ * Zero-dependency debug logger for browser devtools — near-zero overhead when disabled. Every line
+ * carries a monotonic `#0001` id shared across namespaces: note the latest, do the thing you are
+ * investigating, then read everything above it.
  *
- * Every line carries a monotonic `#0001` id, shared across namespaces: note the latest, do the
- * thing you are investigating, then read everything above it.
+ * Enable with `localStorage.setItem('dialog:log', '*')` — also `'modal'`, `'modal,action'`,
+ * `'dialog:modal'` — or {@link setLogLevel}. Namespaces: `manager` (the singleton), `outlet`
+ * (ModalOutlet registration), `modal` (useModal core), `modal:lifecycle` (open/close DOM),
+ * `modal:keydown` (dismiss key), `modal:click-outside`, `action` (actions, hotkeys).
  *
- * ## Activation
- *
- * ```ts
- * localStorage.setItem('dialog:log', '*'); // persists; also 'modal', 'modal,action', 'dialog:modal'
- *
- * import { setLogLevel } from 'umbra';
- * setLogLevel('modal,action'); // session only unless persist = true; `false` disables
- * ```
- *
- * ## Namespaces
- *
- * | Namespace             | Module                           |
- * |-----------------------|----------------------------------|
- * | `manager`             | DialogManager singleton          |
- * | `outlet`              | ModalOutlet registration         |
- * | `modal`               | useModal core                    |
- * | `modal:lifecycle`     | Open/close DOM lifecycle         |
- * | `modal:keydown`       | Dismiss-key handling             |
- * | `modal:click-outside` | Non-modal click-outside dismiss  |
- * | `action`              | Modal actions; hotkey registration & hits     |
- *
- * ## Privacy
- *
- * Opt-in, debug-only, console-only — nothing is persisted or transmitted. Never logged: the
- * `close(data)` payload (only a `withData` flag), the close result, render content, store state.
- * **Logged**: `error.message` from your `prepare` / `onClose` / action callbacks, and the close
- * `reason` — either can carry user data if your code puts it there. Weigh that before enabling it
- * in production, where a session-replay tool may capture `console`.
+ * **Privacy**: opt-in, debug-only, console-only — nothing persisted or transmitted. Never logged:
+ * the `close(data)` payload (only a `withData` flag), the close result, render content, store state.
+ * **Logged**: `error.message` from your `prepare` / `onClose` / action callbacks and the close
+ * `reason` — either can carry user data where a session-replay tool captures `console`.
  */
 
 import { createSafeStorage } from './safe-storage.js';
@@ -42,15 +22,10 @@ const storageKey = 'dialog:log';
 // ── Namespace colors (visible in browser devtools) ──────────────────────────
 
 /**
- * Namespace colours, painted as a **filled badge** rather than as coloured text.
- *
- * The console follows the *system* theme, not the page's, and can be set independently of both —
- * so ink has to clear 4.5:1 on white **and** on `#1f1f1f`. Nothing does: the first caps relative
- * luminance at 0.183 and the second floors it at 0.237, and the best any single value reaches on
- * both is about 4.06:1. Measured here, `action` scores 2.16:1 on a light console.
- *
- * A badge sidesteps it — the label's contrast is against the colour behind it, which this file
- * owns, so it reads the same either way. That is what the `padding` and `border-radius` are for.
+ * Namespace colours, painted as a **filled badge** rather than coloured text: the console follows
+ * the *system* theme, so ink would have to clear 4.5:1 on white **and** `#1f1f1f`, and the best any
+ * single value reaches on both is ~4.06:1 (`action` scores 2.16:1 light). A badge's label contrasts
+ * against a colour this file owns — hence the `padding` and `border-radius`.
  */
 const colors: Readonly<Record<string, string>> = {
   manager: '#4CAF50',
@@ -59,7 +34,7 @@ const colors: Readonly<Record<string, string>> = {
   'modal:keydown': '#009688',
   'modal:click-outside': '#00BCD4',
   action: '#FF9800',
-  // Lifted a step off `#AB47BC`, which was the one hue the shared ink could not clear (4.36:1).
+  // A step off `#AB47BC`, the one hue the shared ink cannot clear (4.36:1).
   outlet: '#BA68C8',
 };
 
@@ -71,19 +46,15 @@ const labelStyle = (color: string) => {
 };
 const resetStyle = 'color:inherit';
 /**
- * The sequence id is the one thing left that is bare text on the console's own background, and
- * it cannot be a badge without turning every line into two of them. `#7e7e7e` is the exact
- * luminance where the two console themes are equally bad — 4.06:1 on both — which is the best a
- * single value can do, and better than the `#888` it replaces (3.54:1 on a light console).
+ * The sequence id is bare text on the console's own background and cannot be a badge without two
+ * per line; `#7e7e7e` is where both themes are equally bad (4.06:1), beating `#888`'s 3.54:1 light.
  */
 const idStyle = 'color:#7e7e7e;font-weight:normal';
 
 // ── Sequence id ─────────────────────────────────────────────────────────────
 
-// Monotonic counter shared across every logger instance, so ids are globally
-// ordered across namespaces. Only advances on an emitted (matched) log, giving
-// a dense sequence you can anchor to: note the latest `#id`, trigger an action,
-// then read every line above that id.
+// Shared across every logger instance, so ids order globally across namespaces; only advances on
+// an emitted log, which is what keeps the sequence dense enough to anchor to.
 let logSeq = 0;
 
 function nextLogId(): string {
@@ -93,20 +64,13 @@ function nextLogId(): string {
 
 // ── Pattern matching ────────────────────────────────────────────────────────
 
-// In-memory override set via `setLogLevel()`. Takes priority over localStorage.
-// `undefined` means "not set, fall back to localStorage".
+// In-memory override from `setLogLevel()`, outranking localStorage; `undefined` means unset.
 let sessionOverride: string | null | undefined;
 
 /**
- * Where a persisted pattern lives, with every way of failing to reach it already answered by
- * {@link createSafeStorage} — which is also what makes the probe happen once rather than on every
- * log call.
- *
- * The environment question is the part that belongs here: `localStorage` is a `Window` API, so ask
- * whether there is a window, and ask it in a way that never touches the getter. Touching it is the
- * thing that warns — Node exposes it as a getter that emits a process warning unless the process
- * was started with `--localstorage-file`, and a dialog manager has no business printing that in a
- * worker, an SSR render or a test run.
+ * Where a persisted pattern lives; the failures and the once-only probe are
+ * {@link createSafeStorage}'s. The environment question belongs here: ask whether there is a window
+ * without ever touching the getter, which is the thing that warns.
  */
 const storage = createSafeStorage(() => {
   return typeof globalThis.window === 'undefined' ? null : globalThis.localStorage;
@@ -156,18 +120,15 @@ export type Logger = {
 // ── Factory ─────────────────────────────────────────────────────────────────
 
 /**
- * The badge colour for a namespace: its own, or the nearest ancestor's.
- *
- * Nearest rather than first: `modal:lifecycle:deep` takes `modal:lifecycle`'s colour, so a family
- * that has split its own hue out keeps it down the whole branch.
+ * The badge colour for a namespace: its own, or the *nearest* ancestor's — so `modal:lifecycle:deep`
+ * takes `modal:lifecycle`'s and a family that split its hue out keeps it down the whole branch.
  */
 function resolveColor(namespace: string): string {
   if (colors[namespace]) {
     return colors[namespace];
   }
   const idx = namespace.lastIndexOf(':');
-  // The unknown-namespace fallback is a badge like the rest, so it takes the same ink: `#999`
-  // reached only 4.36:1 against it where every named colour clears 5.
+  // The unknown-namespace fallback is a badge too, so same ink: `#999` clears only 4.36:1 on it.
   return idx !== -1 ? resolveColor(namespace.slice(0, idx)) : '#B0B0B0';
 }
 
@@ -236,10 +197,8 @@ export function createLogger(namespace: string): Logger {
 /**
  * Programmatically enable or disable debug logging.
  *
- * @param pattern - Namespace filter (`'*'` for all, `'modal,action'` for specific),
- *                  or `false` to disable.
- * @param persist - If `true`, writes to `localStorage` so the setting survives
- *                  page reloads. Defaults to `false` (session only).
+ * @param pattern - Namespace filter (`'*'` for all, `'modal,action'` for some), or `false` to disable.
+ * @param persist - Write to `localStorage` so the setting survives reloads. Defaults to `false`.
  *
  * @example
  * import { setLogLevel } from 'umbra';

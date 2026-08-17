@@ -6,19 +6,14 @@ type ExampleSectionProps = {
   readonly title: string;
   /** One line on what the section demonstrates. Omit when the title already says it. */
   readonly description?: string | undefined;
-  /**
-   * Anchor id, so a section can be deep-linked (`#stacking`) and jumped to from a page's
-   * navigation bar. Defaults to a slug of the title.
-   */
+  /** Anchor id for deep links (`#stacking`) and page nav bars; defaults to a slug of the title. */
   readonly id?: string | undefined;
   readonly children: ReactNode;
 };
 
 /**
- * One labelled band of examples.
- *
- * Every page renders its groups through this component, so the heading style, the vertical
- * rhythm, and the anchor behaviour are identical everywhere rather than re-decided per page.
+ * One labelled band of examples — every page renders its groups through it, so heading style,
+ * vertical rhythm and anchor behaviour are identical rather than re-decided per page.
  */
 export const ExampleSection = ({ title, description, id, children }: ExampleSectionProps) => {
   return (

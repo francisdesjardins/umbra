@@ -1,27 +1,19 @@
 /**
  * Web Storage that answers instead of throwing, and is asked for at most once.
  *
- * Every way of reaching `localStorage` can fail, and each one fails differently — which is why
- * this is a decision rather than three `try` blocks at the call sites:
+ * Every way of reaching `localStorage` fails differently: there may be **no storage** (a server
+ * render, a worker, a Node process — asking `globalThis` is the caller's job, since *how* to ask
+ * without waking a warning is environment-specific), **reaching it may throw** `SecurityError` (a
+ * sandboxed `<iframe>` without `allow-same-origin`, storage blocked outright), or **it may exist and
+ * refuse anyway** (quota, a permission revoked between two reads, which nothing earlier catches). A
+ * dialog manager has no business crashing or warning in any of them, so the whole surface is three
+ * methods that cannot fail: a read answers `null`, a write and a remove are no-ops.
  *
- * - **There is no storage.** A server render, a worker, a Node process. Asking `globalThis` for it
- *   is the caller's job, because *how* to ask without waking a warning is environment-specific.
- * - **Reaching it throws.** A sandboxed `<iframe>` without `allow-same-origin`, or a browser with
- *   storage blocked outright, raises a `SecurityError` on the property access itself.
- * - **It exists and refuses anyway.** A quota exceeded on write, a permission revoked between two
- *   reads. The probe already succeeded, so nothing earlier can catch this.
- *
- * A dialog manager has no business crashing in any of them, and a debug logger has no business
- * printing a warning in any of them either. So the whole surface is three methods that cannot
- * fail: a read answers `null`, a write and a remove are no-ops.
- *
- * **The probe runs once, and once means once — including when it answers nothing.** Re-asking is
- * not free: Node exposes `localStorage` as a getter that emits a process warning unless the
- * process was started with `--localstorage-file`, and nothing throws, so no `try` can quiet it —
- * only not looking again can. Remembering *absence* is therefore the case that matters most, and
- * it is the one a `undefined`-means-unasked sentinel gets wrong: a `window` shim with no storage
- * on it answers `undefined`, which reads as "not asked yet" and re-probes forever. The flag below
- * is separate from the value for exactly that reason.
+ * **The probe runs once, including when it answers nothing** — Node exposes `localStorage` as a
+ * getter that emits a process warning unless started with `--localstorage-file`, and nothing throws,
+ * so only not looking again quiets it. Remembering *absence* is what a `undefined`-means-unasked
+ * sentinel gets wrong (a `window` shim with no storage re-probes forever), hence a flag separate
+ * from the value.
  */
 
 /** What this needs of a storage — the three methods it calls, so a fake is three functions. */
@@ -41,8 +33,8 @@ export type SafeStorage = {
  * Wrap a way of reaching storage in one that cannot fail.
  *
  * @param probe - How to obtain the storage. Called at most once, allowed to throw, and allowed to
- *   answer `null` or `undefined` — all three mean the same thing to everything downstream, and all
- *   three are remembered. Keep it to the environment question; the failure handling is here.
+ *   answer `null` or `undefined` — all three mean the same thing downstream, and all three are
+ *   remembered. Keep it to the environment question; the failure handling is here.
  *
  * @example
  * const storage = createSafeStorage(() => {
@@ -80,8 +72,8 @@ export function createSafeStorage(probe: () => StorageLike | null | undefined): 
       try {
         target()?.setItem(key, value);
       } catch {
-        // A full quota, or private mode. The setting is still live for this session; only its
-        // survival across a reload is lost, and that is not worth an exception to the caller.
+        // A full quota, or private mode: the setting stays live for this session, only its survival
+        // across a reload is lost — not worth an exception to the caller.
       }
     },
     remove(key) {

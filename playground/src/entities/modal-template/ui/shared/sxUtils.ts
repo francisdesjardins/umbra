@@ -1,13 +1,9 @@
 import type { SxProps, Theme } from '@mui/material';
 import type { SystemStyleObject } from '@mui/system';
 
-// helpers are generic so callers can supply a custom theme type if they wish.
-// the default is MUI's own `Theme` interface; this avoids explicit `any`
-// usage and satisfies the linter while still supporting un-typed callers.
+// Generic over the theme, defaulting to MUI's `Theme`, so un-typed callers work without `any`.
 
 type SxObject<T extends object = Theme> = SystemStyleObject<T>;
-
-// -- Type Guards ----------------------------------------
 
 function isSxCallback<T extends object>(
   value: unknown
@@ -19,26 +15,15 @@ function isSxObject<T extends object>(value: unknown): value is SxObject<T> {
   return typeof value === 'object' && value !== null;
 }
 
-// -- Helpers --------------------------------------------
-
-/** Typed empty style object - keeps the single unavoidable cast in one place. */
 const EMPTY_SX: SxObject = {};
 function emptySx<T extends object>(): SxObject<T> {
-  // `{}` is structurally compatible with every `SystemStyleObject<T>` because
-  // all properties are optional.  This wrapper centralises the one cast that
-  // cannot be expressed without `as` in a generic context.
+  // `{}` fits every `SystemStyleObject<T>` (all properties optional); centralises the one `as`.
   return EMPTY_SX as SxObject<T>;
 }
 
 /**
- * Convert an MUI `SxProps` into a plain style object suitable for spreading.
- *
- * The implementation mirrors MUI's own resolver but avoids allocating a new
- * object per array element and lets us safely merge several `sx` values.
- *
- * The optional `theme` argument is only used when callers want deterministic
- * output for callbacks; most of our code simply passes `undefined` and relies
- * on callers doing their own theming.
+ * Convert an MUI `SxProps` into a plain spreadable object — MUI's own resolver without the
+ * per-array-element allocation. `theme` only matters for deterministic callback output.
  */
 export function sxToObject<T extends object = Theme>(
   sx?: SxProps<T> | null,
@@ -77,10 +62,7 @@ export function sxToObject<T extends object = Theme>(
   return emptySx<T>();
 }
 
-/**
- * Combine multiple `SxProps` values into a single object.
- * The left-to-right order matches the browser cascade: later entries win.
- */
+/** Combine `SxProps` values into one object, left to right — later entries win, as in the cascade. */
 export function mergeSx<T extends object = Theme>(
   ...items: Array<SxProps<T> | null | undefined>
 ): SxObject<T> {

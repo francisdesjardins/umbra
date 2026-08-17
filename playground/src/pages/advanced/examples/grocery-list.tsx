@@ -19,16 +19,10 @@ const ITEMS: readonly Item[] = [
 ];
 
 /**
- * One flow, end to end: a panel that edits something, a confirm raised from inside it, an async
- * action that can fail, and a typed payload coming back out.
- *
- * A plain shopping list on purpose. The subject is the modal — every noun a reader has to learn
- * first is a noun standing between them and it.
- *
- * The confirm is opened from *inside* the panel's render, which is not a style choice: both dialogs
- * here are modal, and a modal dialog swallows every click outside itself, so a trigger
- * that must work while a modal is open has to live in that modal's tree. The confirm's `<dialog>`
- * therefore nests inside the panel's, and both keep their own Escape and their own hotkey.
+ * One flow end to end: a panel that edits, a confirm inside it, an async action that can fail, a
+ * typed payload back out, over a shopping list kept boring so no domain noun is in the way. The
+ * confirm opens from the panel's render because a modal swallows outside clicks; the nested
+ * `<dialog>`s each keep their own Escape and hotkey.
  */
 export function GroceryListExample() {
   const [checked, setChecked] = useState<readonly string[]>([]);
@@ -74,8 +68,7 @@ export function GroceryListExample() {
               {...action('send', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
-                  // Fails about a third of the time: the panel underneath must survive that,
-                  // and the error has to land somewhere a reader can see.
+                  // Fails about a third of the time, so the panel underneath must survive it.
                   await simulateApiCall('Send list', 900);
                   close(checked.length);
                 },
@@ -92,8 +85,7 @@ export function GroceryListExample() {
   const list = useSlideModal<number, 'close' | 'sent'>({
     id: LIST_ID,
     direction: 'right',
-    // Was `ariaLabel: 'Grocery list'`, next to a heading reading "Grocery list" — the name written
-    // twice, which is the drift the option's own doc warns about. One of them is now the other.
+    // Point at the heading rather than repeat its text in `ariaLabel` — the drift its doc warns of.
     ariaLabelledBy: `${LIST_ID}-title`,
     render: ({ direction, action, handle }) => {
       return (
@@ -127,8 +119,7 @@ export function GroceryListExample() {
             <Shared.Button variant="outlined" {...action('close')}>
               Close
             </Shared.Button>
-            {/* Inside the panel's render — which is what keeps it clickable once the confirm
-                is open, and what nests the two dialogs. */}
+            {/* Inside the panel's render: what keeps it clickable once the confirm is open. */}
             <Shared.Button
               variant="contained"
               disabled={checked.length === 0}

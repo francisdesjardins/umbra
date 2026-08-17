@@ -1,16 +1,8 @@
 #!/usr/bin/env node
-// ── The compatibility matrix, rendered into API.md ───────────────────────────
-//
-// The table lives once, as data, in `src/__tests__/compatibility-matrix.ts`. This writes it between
-// the markers in `API.md`, and `compatibility-matrix.test.ts` fails when the two disagree — so the
-// document cannot drift from the table, which is the failure a hand-kept second copy guarantees.
-//
-// **The write goes through prettier, and that is what makes a no-op run a no-op.** Rendered markdown
-// pads no columns; prettier pads every one and normalises `*em*` to `_em_`, and it owns the layout of
-// this repository's markdown. So writing raw output left `API.md` dirty on every single run — which
-// was not theoretical: reaching for this script to *print the worklist* silently rewrote the document
-// and the commit that followed had to be caught by a hook.
-//
+// The compatibility matrix, rendered into API.md between its markers. The table lives once as data
+// in `src/__tests__/compatibility-matrix.ts`; `compatibility-matrix.test.ts` fails when the two
+// disagree. Written through prettier, which owns this repo's markdown layout (padded columns,
+// `*em*` → `_em_`) — raw output left `API.md` dirty every run, and a `--list` run once rewrote it.
 // Usage:
 //   node scripts/render-matrix.mjs           # write the block if it changed
 //   node scripts/render-matrix.mjs --check   # exit 1 if it would change, write nothing
@@ -39,8 +31,6 @@ const printWorklist = () => {
   }
 };
 
-// Nothing is read or written on this path: a read-only use of a writing script is exactly how the
-// document got rewritten by accident.
 if (LIST_ONLY) {
   printWorklist();
   process.exit(0);

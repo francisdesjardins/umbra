@@ -6,8 +6,7 @@ const PANEL_SX: SxProps<Theme> = {
   fontFamily: 'monospace',
   fontSize: '0.8125rem',
   lineHeight: 1.7,
-  // Signatures wrap rather than scroll: a horizontal scrollbar hides the return type, which is
-  // the half of the line a reader came for.
+  // Signatures wrap rather than scroll: a horizontal scrollbar hides the return type.
   whiteSpace: 'pre-wrap',
   overflowWrap: 'anywhere',
   display: 'block',
@@ -22,10 +21,8 @@ const PANEL_SX: SxProps<Theme> = {
 };
 
 /**
- * The declaration line, with every referenced export kept clickable.
- *
- * This is the one thing a reference page cannot paraphrase — and following `UseModalOptions`
- * from a signature to its own entry is the movement a reader makes most.
+ * The declaration line, unparaphrasable, with every export clickable — following a referenced type
+ * to its own entry is the commonest move a reader makes.
  */
 export const Signature = ({ parts }: { readonly parts: readonly DocPart[] }) => {
   if (parts.length === 0) {

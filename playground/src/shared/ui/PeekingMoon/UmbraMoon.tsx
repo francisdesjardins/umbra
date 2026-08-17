@@ -1,36 +1,15 @@
 /**
- * Umbra's mascot: an eclipsed sun with a face.
+ * Umbra's mascot: the heraldic/woodcut sun inverted, because this is an *umbra* — the disc is the
+ * dark body, the face is cut into it in light, and the flames are the corona escaping around the
+ * rim, the same thing `--dialog-backdrop` does to a page. Eight flames (not the reference's ten)
+ * drawn from inside the disc so only their tips clear the rim, each flanked by a short and a
+ * middling one, because eight identical rays read as a cog. The tall one is widened, not
+ * lengthened: reach turns a silhouette into noise at 120px, breadth makes it burn. Inline, so the
+ * playground keeps its no-binary-assets rule.
  *
- * The register is the heraldic/woodcut sun — a disc with an engraved face and flame rays — but
- * inverted, because this is an *umbra*: the disc is the dark body, the face is cut into it in
- * light, and the flames are the corona escaping around the rim. That is the eclipse the name
- * refers to, and it is the same thing `--dialog-backdrop` does to a page.
- *
- * Eight flames rather than the reference's ten, and drawn from inside the disc so only their
- * tips clear the rim — enough fire to read as a sun at a glance, without the silhouette turning
- * into noise at 180px in the corner of a page.
- *
- * **The eight are unchanged in number and each now travels with two smaller flames**, one short
- * and one middling, set close on either side. A corona of eight identical rays reads as a cog:
- * the eye finds the repeat immediately because every element is the same and the spacing is
- * uniform. Flanking each with a different pair breaks both at once — the ring keeps its
- * eightfold structure at a glance and dissolves into fire when actually looked at.
- *
- * The tall one is widened rather than lengthened. Reach is what turns a silhouette into noise at
- * 120px; breadth is what makes it look like it is burning. The flankers are shorter than they are
- * narrow for the same reason — they must not out-reach the flame they belong to, or the cluster
- * stops having a subject.
- *
- * Drawn inline rather than imported so the playground keeps its no-binary-assets rule.
- */
-/**
- * @param breathing - Let the outer halo swell and fade. For the one that sits still: the corona
- *   flickers on three short rhythms, and a single slow pulse underneath gives them a common beat
- *   so the cluster reads as one fire rather than twenty-four twitches. It is **off** on the
- *   peeking mascot on purpose — that one is already sliding, tilting and giggling, and a
- *   breathing halo on a moving object is motion on top of motion, which is where charm becomes
- *   distraction. Slower than the slowest flame (8.3s against 5.1s) and low amplitude, or it stops
- *   being a floor under the flicker and becomes another thing competing for the eye.
+ * @param breathing - Let the outer halo swell and fade, giving the three flame rhythms a common
+ *   beat. Off on the peeking mascot, which already moves. Slower than the slowest flame (8.3s
+ *   against 5.1s) and low amplitude, or it stops being a floor under the flicker.
  */
 export function UmbraMoon({
   isDark,
@@ -39,32 +18,22 @@ export function UmbraMoon({
   readonly isDark: boolean;
   readonly breathing?: boolean | undefined;
 }) {
-  // The corona is light escaping past a shadow, so it stays warm in both themes; only its
-  // intensity shifts, because a bright page needs less glow to register.
-  //
-  // It sits at the same value as the engraved face on purpose. The corona *is* the light source
-  // here and the face is only where that light reaches through the body, so a corona darker than
-  // the engraving inverts the drawing's own story — which it did, a full amber step down. The
-  // edge stays deep: definition against the page comes from the outline, not from dimming the
-  // fill, and dimming the fill was costing the flames their read at 120px.
+  // Warm in both themes; only the intensity shifts. Same value as the engraved face on purpose —
+  // the corona *is* the light source, so a darker one (it was a full amber step down) inverts the
+  // drawing's story and cost the flames their read at 120px. Definition comes from the outline.
   const flame = isDark ? '#fbbf24' : '#f59e0b';
   const flameEdge = isDark ? '#b45309' : '#92400e';
   const body = isDark ? '#0f172a' : '#1e293b';
   const bodyEdge = isDark ? '#334155' : '#475569';
   const ink = isDark ? '#fbbf24' : '#fcd34d';
 
-  // One flame, pointing up from the rim. Eight rotated copies make the corona — a single path
-  // kept in one place so the silhouette can be tuned without touching eight of them.
+  // One flame from the rim; eight rotated copies make the corona, tunable in one place.
   const ray = 'M87 68 C79 48, 94 36, 95 2 C104 26, 100 40, 106 34 C115 46, 117 54, 113 68 Z';
 
   /**
-   * One cluster: the original flame, and the two that flank it. `at` is degrees either side of
-   * the base angle, `sx` is across the flame and `sy` along it.
-   *
-   * Scaling about the disc centre rather than the flame's own base keeps every base buried inside
-   * the body at any size, so a short flame never lifts its root above the rim and shows the join.
-   * The ±15° spread is what keeps three flames legible as three: closer and they merge into one
-   * fat ray, wider and the cluster stops reading as a group and becomes twenty-four separate rays.
+   * One cluster: `at` is degrees either side of the base angle, `sx` across the flame, `sy` along
+   * it. Scaled about the disc centre, not the flame's own base, so no short flame lifts its root
+   * above the rim. ±15° keeps three legible as three: closer they merge, wider they stop grouping.
    */
   const CLUSTER = [
     { at: -15, cls: 'um-flame-s', sx: 0.62, sy: 0.56 },
@@ -145,16 +114,14 @@ export function UmbraMoon({
         {...(breathing ? { className: 'um-halo' } : {})}
       />
 
-      {/* Corona — eight flames, drawn behind the body so only their tips clear the rim. Each
-          gets its own wrapper because the flicker is a CSS `transform` and the placement is an
-          SVG `transform` attribute: on one element the first silently wins and the ring
-          collapses to a single flame at 0°. */}
+      {/* Corona, behind the body. Each flame gets its own wrapper: the flicker is a CSS
+          `transform` and the placement an SVG `transform` attribute, and on one element the first
+          silently wins and the ring collapses to a single flame at 0°. */}
       <g fill={flame} stroke={flameEdge} strokeWidth="2.5" strokeLinejoin="round">
         {[0, 45, 90, 135, 180, 225, 270, 315].flatMap((deg, i) => {
           return CLUSTER.map((flame, j) => {
-            // A negative delay starts each one already mid-flicker, so the corona is alight on
-            // the first frame instead of igniting together. The step is irrational-ish against
-            // all three durations, which is what stops the ring re-synchronising later.
+            // Negative delay: the corona is alight on the first frame instead of igniting
+            // together, and the irrational-ish step stops the ring re-synchronising later.
             const delay = -(((i * 3 + j) * 0.41) % 5.1);
             return (
               <g
@@ -172,24 +139,16 @@ export function UmbraMoon({
         })}
       </g>
 
-      {/* The umbra: the body doing the eclipsing. */}
       <circle cx="100" cy="100" r="64" fill="url(#um-disc)" stroke={flameEdge} strokeWidth="3" />
 
-      {/*
-        The face, engraved in light. Strokes only — a woodcut has no fills.
-
-        Not the jolly heraldic sun it borrows its form from. This one is smug: heavy angled
-        brows, eyes narrowed to a lid and a pupil, and a smirk pulled up on one side only.
-        A dialog manager spends its life putting a shadow over your page and waiting for you to
-        deal with it, and the mascot should look like it knows that.
-      */}
+      {/* The face, engraved in light — strokes only, a woodcut has no fills. Smug rather than the
+          jolly heraldic sun it borrows from: a dialog manager spends its life putting a shadow
+          over your page and waiting for you to deal with it. */}
       <g fill="none" stroke={ink} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-        {/* Brows: thick, angled, tapering inward — with a clear gap over the nose. Let them meet
-            and the face gains a unibrow and loses the smugness. The attitude lives here. */}
+        {/* Brows: a clear gap over the nose — let them meet and the face gains a unibrow. */}
         <path d="M64 82 C72 68, 85 66, 93 75" strokeWidth="6.5" />
         <path d="M107 75 C115 66, 128 68, 136 82" strokeWidth="6.5" />
 
-        {/* Eyes: narrowed to a lid over a pupil — looking at you, thoroughly unimpressed. */}
         <g className="um-eyes">
           <path d="M70 92 C78 84, 92 84, 99 92 C92 99, 78 99, 70 92 Z" strokeWidth="3" />
           <path d="M101 92 C108 84, 122 84, 130 92 C122 99, 108 99, 101 92 Z" strokeWidth="3" />
@@ -200,11 +159,9 @@ export function UmbraMoon({
           <circle cx="115" cy="92" r="4" fill={ink} stroke="none" />
         </g>
 
-        {/* Nose: one ridge, one turn. Kept quiet so the brows and the smirk carry the face. */}
         <path d="M100 100 L97 120 C97 124, 103 124, 104 120" strokeWidth="3" />
 
-        {/* The smirk. Flat on the left, lifting on the right — asymmetry is the entire joke;
-            a symmetric curve is a smile, and a smile would be a different library. */}
+        {/* The smirk: asymmetric on purpose — a symmetric curve is a smile. */}
         <path d="M83 134 C94 134, 107 133, 116 126" strokeWidth="4" />
         <path d="M118 122 C120 126, 120 130, 118 133" strokeWidth="3" />
       </g>

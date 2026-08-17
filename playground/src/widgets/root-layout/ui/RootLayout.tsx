@@ -11,8 +11,7 @@ const MainContent = () => {
   const codeModal = useCodeModal();
   const { setCodeModalOpen } = useCodePane();
 
-  // `open` keeps a stable identity for the life of the hook, so it can be used as
-  // an effect dependency directly — no ref indirection needed.
+  // `open` keeps a stable identity, so it works as an effect dependency directly.
   const { open } = codeModal;
   useEffect(() => {
     setCodeModalOpen(() => {
@@ -34,18 +33,14 @@ const MainContent = () => {
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        // A flex item defaults to `min-width: auto`, which is the *content's* minimum — so one
-        // unwrappable thing inside (a code block's longest line) stretches this box past the
-        // viewport and the whole page scrolls sideways on a phone. Every page's content must be
-        // free to shrink; what cannot shrink scrolls inside its own container instead.
+        // A flex item's default `min-width: auto` is the content's minimum, so one unwrappable line
+        // stretches this past the viewport; what cannot shrink scrolls in its own container instead.
         minWidth: 0,
       }}
     >
       <Toolbar sx={{ height: 64 }} />
-      {/* No `overflow: auto` here. The box never actually scrolls (it grows with its content
-          and the window does the scrolling), but declaring it makes this box the nearest
-          scrolling ancestor — which silently disables `position: sticky` for everything
-          inside, including each page's section jump bar. */}
+      {/* No `overflow: auto`: the window does the scrolling, and declaring it would make this the
+          nearest scrolling ancestor, silently killing `position: sticky` on every jump bar inside. */}
       <Box
         sx={{
           flex: 1,
@@ -88,24 +83,20 @@ const ResponsiveShell = () => {
 };
 
 export const RootLayout = () => {
-  // Everywhere but the two routes that already show the same moon standing still, at 78% of its
-  // column. The joke is that one is *hiding*, and a hider needs to be the only one of its kind
-  // on screen — beside a full-size twin it reads as a stray second render, and worse, it arrives
-  // a second and a half after the page settles, which reads as a bug rather than a visit.
+  // Suppressed on the two routes already showing the same moon still, at 78% of its column: a
+  // hider beside a full-size twin, arriving 1.5s late, reads as a stray render rather than a joke.
   const hasStillMoon = useRouterState({
     select: (state) => {
       return state.location.pathname === '/' || state.location.pathname === '/warzone';
     },
   });
 
-  // The providers that used to wrap this are composed in `app/router.tsx` now — deciding what
-  // surrounds the application is `app`'s job, and a widget reaching up into it for two of them
-  // was the layer order inverted. This renders the shell and nothing above it.
+  // The shell and nothing above it: providers are `app/router.tsx`'s job, and a widget reaching up
+  // for them inverts the layer order.
   return (
     <>
       <ResponsiveShell />
-      {/* Sits at z-index 1200, below the 1300+ the manager assigns dialogs, so the mascot
-          never covers a panel it is meant to be charming next to. */}
+      {/* z-index 1200, below the 1300+ the manager assigns dialogs, so it never covers a panel. */}
       {!hasStillMoon && <PeekingMoon />}
     </>
   );

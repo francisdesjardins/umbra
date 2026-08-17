@@ -34,10 +34,7 @@ type NavGroup = {
   readonly items: readonly NavItem[];
 };
 
-/**
- * Grouped so the nine routes read as a path rather than a flat list: learn the core loop,
- * then the patterns built on it, then the copy-paste reference, then the test harnesses.
- */
+/** Grouped so the routes read as a path: core loop, patterns on it, reference, harnesses. */
 const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: 'Learn',
@@ -126,8 +123,7 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
               <GroupLabel label={group.label} />
               <List disablePadding>
                 {group.items.map((item) => {
-                  // The API reference has a page per category under `/api/…`, so its nav entry
-                  // stays lit on those too. Every other route is a single page.
+                  // `/api/…` has a page per category, so its entry stays lit on those too.
                   const isActive =
                     currentPath === item.path || currentPath.startsWith(`${item.path}/`);
                   const Icon = item.icon;
@@ -146,9 +142,7 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
                         '&.Mui-selected': {
                           bgcolor: 'primary.main',
                           color: 'primary.contrastText',
-                          // Brighter, not deeper — `primary.dark` under the dark ink the fill
-                          // now carries lands at 2.5:1, so the entry you are on would become
-                          // the one you cannot read the moment you point at it.
+                          // Brighter, not deeper: `primary.dark` under this fill's dark ink is 2.5:1.
                           '&:hover': { bgcolor: 'primary.light' },
                           '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
                         },
@@ -160,11 +154,8 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
                       <ListItemText
                         primary={item.label}
                         slotProps={{
-                          // One weight for every entry, on purpose. Switching the selected one from
-                          // 400 to 600 re-measures every glyph in its label, so the text re-spaces
-                          // at the moment the entry becomes current — the release of the click that
-                          // selected it, which reads as the menu twitching under the pointer. The
-                          // filled background already says which one you are on.
+                          // One weight throughout: 400→600 on select re-measures every glyph, so the
+                          // label re-spaces under the pointer mid-click. The fill already says which.
                           primary: { variant: 'body2' },
                         }}
                       />

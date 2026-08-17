@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { useModal } from '../../../react/use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/**
- * Tests lookup(id) for registered and unregistered modals.
- * Registers two modals, opens one, and displays ModalInfo for both.
- * Queries are triggered by button clicks (after registration).
- */
+/** `lookup(id)` over two registered modals and an unknown id; queries fire from button clicks. */
 export function LookupFindHarness() {
   const [result, setResult] = useState('');
 
@@ -27,8 +23,7 @@ export function LookupFindHarness() {
                   `a-open:${String(info.isVisible)}`,
                   `a-phase:${info.phase}`,
                   `a-fg:${String(info.isForeground)}`,
-                  // `template` is a registration-time fact, so it only exists on the
-                  // `exists: true` branch — narrowing is what makes it readable.
+                  // `template` is registration-time, so it lives only on the `exists: true` branch.
                   `a-template:${info.exists ? info.template : ''}`,
                   `b-exists:${String(infoB.exists)}`,
                   `b-open:${String(infoB.isVisible)}`,
@@ -98,10 +93,7 @@ export function LookupFindHarness() {
   );
 }
 
-/**
- * Tests collection-level queries: getOpen, getClosed, counts.
- * Registers three modals, opens two.
- */
+/** Collection-level queries — `getOpen`, `getClosed`, counts — over three modals, two opened. */
 export function LookupCollectionHarness() {
   const [stats, setStats] = useState('');
 
@@ -198,9 +190,7 @@ export function LookupCollectionHarness() {
   );
 }
 
-/**
- * Tests getForeground and isForeground with two stacked modals.
- */
+/** `getForeground` and `isForeground` with two stacked modals. */
 export function LookupForegroundHarness() {
   const [foregroundId, setForegroundId] = useState('');
   const [isFgA, setIsFgA] = useState('');
@@ -287,10 +277,7 @@ export function LookupForegroundHarness() {
   );
 }
 
-/**
- * Tests lookup(id) null-object default for unregistered ids.
- * Query triggered via button click (after mount).
- */
+/** The null-object default `lookup(id)` returns for unregistered ids; queried after mount. */
 export function LookupUnregisteredHarness() {
   const [result, setResult] = useState('');
 

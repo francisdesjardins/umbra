@@ -16,30 +16,14 @@ export const WARNING_ID = 'stack-priority-warning';
 const PANEL_ID = 'stack-priority-panel';
 
 /**
- * The stack order as a policy rather than a race — with the race reproduced first.
- *
- * A dialog's place in the stack is the order its `showModal()` landed in, and in an app assembled
- * from independent features nobody schedules that order: the session warning is on a timer, the
- * panel is on a deep link, and neither knows the other exists. Lose the race and the warning is
- * *behind* the panel — under its backdrop, inert, dimmed — while the user carries on with exactly
- * the thing the app was trying to interrupt.
- *
- * Run it with the switch off to see that, then turn the switch on **while both are open**: the
- * warning comes to the front, the panel stays where it was, and nothing closed. A policy applies to
- * what is already on screen, not only to the next open.
- *
- * The switch is repeated inside both dialogs because it has to be — a modal dialog is in the top
- * layer and swallows every click outside itself, so the only reachable control is one inside the
- * dialog that is currently in front. Which is the problem being demonstrated.
+ * The stack order as a policy rather than a race, with the race reproduced first. Position is the
+ * order `showModal()` landed in, unscheduled across independent features (a timer, a deep link), so
+ * losing leaves the warning inert behind the panel's backdrop; the switch raises it **while both
+ * are open**, closing nothing. It is repeated inside both dialogs because a modal swallows clicks.
  */
 const prioritizeAlerts: StackPriority = (modal) => {
-  // Higher is nearer the user, and a tie keeps open order — so a policy only says where it
-  // disagrees with "whoever opened last wins".
-  //
-  // A real project keys this on `modal.template`, because the rule is about *kinds* of dialog and
-  // then covers every alert added later. Scoped to one id here for a boring reason: the playground
-  // shares one manager with every other example on the page, and a demo should not quietly reorder
-  // the cards below it.
+  // Higher is nearer the user and ties keep open order. A real project keys this on
+  // `modal.template`; scoped to one id here because the playground shares one manager.
   return modal.id === WARNING_ID ? 100 : 0;
 };
 
@@ -134,9 +118,7 @@ export function StackPriorityExample() {
               <Shared.Button
                 variant="outlined"
                 onClick={() => {
-                  // `open(id)` rather than `panel.open()`: the point is that the panel is raised by
-                  // code which knows nothing about this dialog, which is the door a router guard or
-                  // another feature would use.
+                  // `open(id)`, not `panel.open()` — the door a router guard would use.
                   dialogManager.open(PANEL_ID);
                 }}
               >
@@ -162,9 +144,7 @@ export function StackPriorityExample() {
     if (!enabled) {
       return undefined;
     }
-    // One rule for the whole manager, installed in one place. The disposer restores plain open
-    // order — and reorders what is on screen to match, which is what makes the switch work both
-    // ways rather than only on the way in.
+    // The disposer restores open order and reorders what is on screen, so the switch works both ways.
     return dialogManager.prioritize(prioritizeAlerts);
   }, [enabled, dialogManager]);
 

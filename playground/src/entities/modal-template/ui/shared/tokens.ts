@@ -1,25 +1,18 @@
 // Shared visual tokens for playground template parity
 export const spacing = {
-  // `gapUnit` is intended for MUI `sx` numeric gap values (theme spacing units)
-  gapUnit: 2, // MUI spacing units (theme.spacing(3))
-  // Content gap used by `Content` helpers across templates (pixels)
-  content: 8,
-  small: 6, // px — small gaps (kbd, tiny paddings)
+  gapUnit: 2, // MUI theme spacing units, for numeric `sx` gaps
+  content: 8, // px — `Content` helpers across templates
+  small: 6, // px — kbd, tiny paddings
   medium: 12, // px
   large: 24, // px
 };
 
 /**
- * Room a bounded box has to leave for a focus ring drawn outside its controls.
- *
- * The app's ring is a 2px outline at a 2px offset, so it reaches 4px past a button's border box —
- * and a container that is not `overflow: visible` clips at its padding box. A footer button sits
- * flush against that edge, so without this its ring loses the two sides that reach it: visible on
- * the top and left, gone on the right and bottom, which reads as a rendering glitch rather than
- * as the missing focus indicator it is.
- *
- * Spent as padding with a matching negative margin, so the content does not move — the same trade
- * the vanilla form modal makes with `--form-focus-ring-space`.
+ * Room a bounded box leaves for a focus ring drawn outside its controls: the ring is a 2px outline
+ * at 2px offset, reaching 4px past a button's border box, and a container that is not
+ * `overflow: visible` clips at its padding box — a flush footer button then keeps the top and left
+ * of its ring and loses the right and bottom. Spent as padding with a matching negative margin so
+ * content does not move, as `--form-focus-ring-space` does in vanilla.
  */
 export const focusRingSpace = '4px';
 

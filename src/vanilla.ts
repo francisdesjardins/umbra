@@ -1,46 +1,32 @@
 /**
  * `umbra/vanilla` — the binding for a `<dialog>` you wrote yourself.
  *
- * The third binding, and deliberately **not** the same shape as the other two. `umbra/react` and
- * `umbra/solid` render a dialog *and* its contents from a `render` callback; a vanilla binding
- * that did the same would have to ship a renderer, which is the one thing this library refuses to
- * do. So this one is a **controller**: the element and everything in it is markup you already
- * have, and what it drives is the lifecycle.
+ * Deliberately **not** the shape of the other two: they render a dialog *and* its contents, which
+ * a vanilla binding could match only by shipping a renderer. So this one is a **controller** — the
+ * markup is yours, the lifecycle is ours. Everything a modal *is* (phases and animation, `prepare`
+ * with its `AbortSignal`, the dismiss key on the dialog, on native `cancel` and at the window for a
+ * non-modal panel, click-outside, backdrop hit-testing, opening focus and restoration after a failed
+ * action, the registration that makes it addressable by id from another microfrontend, the typed
+ * close and `openAndWait`) is the hook bindings' code, in the same order; `bindAction` is the one
+ * addition, and only because nothing here re-renders.
  *
- * That is the difference, and it is the whole of it. Everything a modal *is* — phases and the
- * entrance/exit animation, `prepare` with its `AbortSignal`, the dismiss key on the dialog, on
- * its native `cancel` and at the window for a non-modal panel, click-outside, backdrop
- * hit-testing, opening focus and restoration after a failed action, the registration that makes
- * it addressable by id from another microfrontend, the typed close and `openAndWait` — is the
- * same code the hook bindings run, called in the same order.
- *
- * `bindAction` is the one addition, and it exists because nothing here re-renders: it attaches an
- * action to a button and keeps `disabled`, `data-loading` and `aria-busy` in step, which is the
- * half a renderer does elsewhere.
- *
- * **No framework, optional or otherwise.** This entry point imports nothing React or Solid ship,
- * so it resolves in exactly the environments the root does — a plain page, an Astro island, a web
- * component, a server-rendered app with a sprinkle of JavaScript. The root is re-exported
- * wholesale below, so those apps import from this one path.
+ * **No framework, optional or otherwise** — this entry point imports nothing React or Solid ship,
+ * so it resolves wherever the root does: a plain page, an Astro island, a web component, a
+ * server-rendered app with a sprinkle of JavaScript.
  */
 
 export { bindDialog } from './vanilla/bind-dialog.js';
 export type { BindDialogOptions, DialogController, ModalSnapshot } from './vanilla/types.js';
 
-// The framework-agnostic core, re-exported wholesale: `dialogManager`, `createStore`,
-// `dialogPlacement`, `applyStyle`, `Key`. One import path.
-//
-// Every relative specifier carries its `.js` extension — `tsc` copies them into the emitted
-// `.d.ts` verbatim, and an extensionless one is invalid on `moduleResolution: node16`/`nodenext`.
+// The core, wholesale, so this is the one import path. The `.js` is load-bearing — see the note on
+// `./react`'s copy of this line.
 export * from './index.js';
 
-// The vocabulary a controller's callbacks speak. `CloseResult`, `ModalPhase` and
-// `ModalStoreSnapshot` are deliberately absent: they ship from the root, which this file
-// re-exports wholesale.
+// The vocabulary a controller's callbacks speak; `CloseResult`, `ModalPhase` and
+// `ModalStoreSnapshot` are absent because the root has them.
 export type { ModalHandle, ModalVariant, AwaitedClose } from './core/types.js';
 
-// Actions are bound rather than rendered here, but they are the same actions — the options a
-// caller passes to `bindAction`, and the props it applies on their behalf.
+// Bound rather than rendered here, but the same actions: what `bindAction` takes and applies.
 export type {
   ActionButtonProps,
   ActionClickEvent,

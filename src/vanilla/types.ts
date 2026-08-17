@@ -10,14 +10,8 @@ import type {
 import type { DialogManager } from '../manager/dialog-manager.js';
 
 /**
- * `umbra/vanilla`'s half of the type model — and the one place it is *not* the other bindings'.
- *
- * React and Solid instantiate the model's two open knobs, a style type and a **node** type,
- * because they render. This one does not render: the `<dialog>` and everything in it is markup the
- * caller already wrote. So the node knob is `never` and `render` is omitted outright, which is why
- * the options below are an `Omit` rather than an alias.
- *
- * Everything else is the same model, so an option means here exactly what it means there.
+ * `umbra/vanilla`'s half of the type model. Nothing renders here, so the node knob is `never` and
+ * `render` is omitted (hence an `Omit`, not an alias); the rest is the hook bindings' model.
  */
 
 /** Options for {@link bindDialog}. */
@@ -27,54 +21,37 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
 > &
   ModalVariant & {
     /**
-     * The `<dialog>` to drive. It is yours: this binding shows it, hides it, animates it and
-     * listens on it, and never touches what is inside.
-     *
-     * Attributes the options do not name are left alone, so an `aria-labelledby` written in the
-     * markup survives. Positioning and animation are applied as **inline styles**, which outrank
-     * a stylesheet rule on `dialog` — the same bargain the other two bindings make.
+     * The `<dialog>` to drive: shown, hidden, animated and listened on, never touched inside.
+     * Attributes the options do not name are left alone (an `aria-labelledby` in the markup
+     * survives); positioning and animation are **inline styles**, outranking a stylesheet rule.
      */
     readonly dialog: HTMLDialogElement;
     /**
-     * Which **placement** a non-modal panel gets — and, unlike the hook bindings, nothing else.
-     *
-     * `portal: true` still means viewport-anchored (`position: fixed; inset: 0`) and `false` still
-     * means contained (`absolute` against the `host` below). What it does *not* do
-     * here is move the element: React portals its dialog into `document.body` and Solid mounts its
-     * own there, but this binding was handed markup the caller wrote, and relocating that is the
-     * one thing a controller refuses — a `<dialog>` reparented out of the section it documents
-     * takes its ids, its stylesheet scope and its event listeners with it.
-     *
-     * So `fixed` means the viewport only if the element is not inside a transformed or
-     * `will-change` ancestor, which is a containing block `fixed` resolves against instead. Place
-     * the `<dialog>` at the top level of the document yourself, or use the contained variant, which
-     * is immune to it by construction. Pinned by *portal places without relocating* in
+     * Which **placement** a non-modal panel gets, and nothing else: `true` viewport-anchored
+     * (`position: fixed; inset: 0`), `false` contained (`absolute` against the `host` below). It
+     * does not *move* the element as the hook bindings do — reparenting the caller's markup would
+     * take its ids, stylesheet scope and listeners with it — so `fixed` means the viewport only
+     * where no transformed or `will-change` ancestor supplies the containing block: put it at top
+     * level, or use the contained variant. Pinned by *portal places without relocating* in
      * `__tests__/bind-dialog.ct.tsx`.
      */
     readonly portal?: boolean | undefined;
     /**
-     * The element a *contained* non-modal panel is positioned against
-     * (`nonModal: true` without `portal`). Defaults to the dialog's parent.
-     *
-     * It must be sized, because the dialog fills it — see `dialogPlacement`. Ignored for every
-     * other variant, which needs no host at all.
+     * What a *contained* panel (`nonModal: true` without `portal`) is positioned against,
+     * defaulting to the dialog's parent. Must be sized, because the dialog fills it — see
+     * `dialogPlacement`. Ignored for every other variant.
      */
     readonly host?: HTMLElement | undefined;
     /**
-     * The manager to register with. Defaults to the `dialogManager` singleton.
-     *
-     * This is the vanilla answer to `DialogManagerProvider`: there is no tree to read a context
-     * from, so an isolated instance is passed rather than provided. Test harnesses want it; an
-     * application almost never does.
+     * The manager to register with; defaults to the singleton. The vanilla answer to
+     * `DialogManagerProvider`, there being no tree to read a context from — harnesses want it.
      */
     readonly manager?: DialogManager | undefined;
   };
 
 /**
- * The live state of a bound dialog, read through {@link DialogController.getSnapshot}.
- *
- * `Modal`, not `Dialog`: the vocabulary splits them, and this holds no element — it is the unit of
- * state the controller drives, the same one `ModalStoreSnapshot` describes for the hook bindings.
+ * The live state of a bound dialog, read through {@link DialogController.getSnapshot}. `Modal`, not
+ * `Dialog`: it holds no element — it is what `ModalStoreSnapshot` describes for the hook bindings.
  */
 export type ModalSnapshot = {
   /** Where the `<dialog>` is in its lifecycle. */
@@ -90,12 +67,9 @@ export type ModalSnapshot = {
 };
 
 /**
- * What {@link bindDialog} hands back.
- *
- * The doors are the hook bindings' doors — `open`, `openAndWait`, `handle` — because those are the
- * modal's, not the renderer's. What differs is everything that assumed a render pass:
- * `bindAction` attaches an action to a button you already have, and `subscribe`/`getSnapshot` are
- * how content that has to react to state gets told, since nothing here re-renders it for you.
+ * What {@link bindDialog} hands back. `open`, `openAndWait` and `handle` are the hook bindings',
+ * belonging to the modal rather than the renderer; what differs assumed a render pass —
+ * `bindAction`, and `subscribe`/`getSnapshot` for content that reacts to state.
  */
 export type DialogController<TData = void, TReason extends string = string> = {
   /** Open the dialog. Resolves after `prepare` completes. */
@@ -105,32 +79,22 @@ export type DialogController<TData = void, TReason extends string = string> = {
   /** Close it imperatively, with a reason and the payload this dialog declares. */
   readonly handle: ModalHandle<TData, TReason>;
   /**
-   * Turn a button into one of this dialog's actions, and keep it in step.
+   * Turn a button into one of this dialog's actions and keep it in step: `action(reason)`'s props,
+   * plus the half a renderer does elsewhere — the click handler, `aria-keyshortcuts` and
+   * `data-focus-on-open` once, then `disabled`, `data-loading` and `aria-busy` as it runs.
    *
-   * The vanilla counterpart of spreading `action(reason)` onto a button — and it does the second
-   * half a renderer would otherwise do: it attaches the click handler, writes
-   * `aria-keyshortcuts` and `data-focus-on-open` once, and then keeps `disabled`, `data-loading`
-   * and `aria-busy` synchronised as the action runs.
-   *
-   * @returns An unbind. Call it when the button goes away — it removes the listener *and* retires
-   *   the action's declaration, which is what stops a hotkey outliving its button and what lets
-   *   backdrop dismissal go back to its no-actions default.
+   * @returns An unbind. It removes the listener *and* retires the declaration, which stops a
+   *   hotkey outliving its button and lets backdrop dismissal go back to its no-actions default.
    */
   readonly bindAction: (
     button: HTMLButtonElement,
     action: ActionOptions<TData> & { readonly reason: ActionReason<TReason> }
   ) => () => void;
   /**
-   * Whether **that** action is running.
-   *
-   * The hook bindings hang this on their `action` factory, where the argument alone says whose
-   * state is being asked for. There is no factory here — actions are bound, not rendered — so
-   * the name carries the noun instead.
-   *
-   * `bindAction` already keeps `disabled`, `data-loading` and `aria-busy` on the button itself;
-   * this is the same fact for everything that is *not* that button — a spinner in the header, a
-   * form field, a status line. Read it from a {@link DialogController.subscribe} listener, which
-   * fires on every action transition.
+   * Whether **that** action is running — the hook bindings hang this on their `action` factory,
+   * and there is none here, so the name carries the noun. `bindAction` already keeps the button's
+   * own attributes in step, so this is for everything that is *not* it; read it from a
+   * {@link DialogController.subscribe} listener.
    */
   readonly isActionRunning: (reason: ActionReason<TReason>) => boolean;
   /** Subscribe to every state change — the dialog's phases and its actions alike. */

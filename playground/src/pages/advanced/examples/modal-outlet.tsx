@@ -49,7 +49,6 @@ function ConfirmDialog() {
     },
   });
 
-  // Notice: no {confirmModal.Modal} anywhere!
   return (
     <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
       <Shared.Button

@@ -4,10 +4,7 @@ import { useDialogManager } from '../../../react/use-dialog-manager.js';
 import { useModal } from '../../../react/use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/**
- * A self-contained modal that registers with the nearest DialogManager
- * and exposes state via data-testid attributes scoped by `label`.
- */
+/** A modal registering with the nearest manager, exposing state via `label`-scoped testids. */
 function ScopedModal({ id, label }: { readonly id: string; readonly label: string }) {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
@@ -51,9 +48,8 @@ function ScopedModal({ id, label }: { readonly id: string; readonly label: strin
 }
 
 /**
- * Two modals wrapped in separate DialogManagerProviders.
- * Each provider creates an isolated registry — opening a modal in one
- * scope must not affect the dialog count or state in the other.
+ * Two modals in separate `DialogManagerProvider`s: each registry is isolated, so opening in one
+ * scope must not move the other's dialog count or state.
  */
 export function ProviderIsolationHarness() {
   return (
@@ -68,10 +64,7 @@ export function ProviderIsolationHarness() {
   );
 }
 
-/**
- * A modal without any provider — uses the static singleton.
- * Verifies backward compatibility: existing code without a provider still works.
- */
+/** No provider at all — the static singleton, so existing code without one still works. */
 export function NoProviderHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();

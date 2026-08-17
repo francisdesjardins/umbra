@@ -4,30 +4,19 @@ import styles from '@/entities/modal-template/ui/vanilla/shared/ButtonRow.module
 type ButtonRowProps = {
   readonly children: ReactNode;
   /**
-   * The calling template's own footer class — its padding, and the rule above it where it has one.
-   *
-   * Taken rather than wrapped: a footer *is* the row of actions, so nesting a second flex box
-   * inside it would add an element to every copied template to say something the outer one is
-   * already positioned to say.
+   * The calling template's footer class — taken rather than wrapped, since a footer *is* the row
+   * of actions and a second flex box would only restate what the outer one already says.
    */
   readonly className?: string | undefined;
 };
 
 /**
- * Where a modal's actions sit — one component, for every vanilla template.
- *
- * It exists because there were three copies of the rule and they had already drifted apart: the
- * message footer flexed its buttons to the trailing edge with an 8px gap, the form footer used 16,
- * and the slide footer had no `display: flex` at all, so two actions sat left-aligned and
- * touching. None of that took a mistake — three places to remember is enough on its own.
- *
- * A footer keeps its own chrome (padding, and the rule above it where the template has one); this
- * owns the placement and nothing else, which is why a template can adopt it without giving up how
- * it looks.
+ * Where a modal's actions sit, for every vanilla template, owning placement and not chrome — one
+ * rule copied three ways drifts: 8px gap in the message footer, 16px in the form footer, and no
+ * `display: flex` at all in the slide footer, leaving two actions left-aligned and touching.
  */
 export function ButtonRow({ children, className }: ButtonRowProps) {
-  // Joined rather than interpolated: `noUncheckedIndexedAccess` types a CSS-module lookup as
-  // possibly-undefined, and a template literal would either print "undefined" or need a cast.
+  // Joined, not interpolated: `noUncheckedIndexedAccess` makes the lookup possibly-undefined.
   const classes = [styles['buttonRow'], className]
     .filter((name) => {
       return name !== undefined && name !== '';

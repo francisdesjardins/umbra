@@ -3,8 +3,7 @@ import { UseAnnouncerHarness } from './use-announcer.story';
 
 test.describe('useAnnouncer', () => {
   test('the region exists, empty, before it has anything to say', async ({ mount }) => {
-    // The whole point of the hook: a live region announces *changes*, so one born holding its
-    // text is the case screen readers miss. Present-and-empty at mount is the guarantee.
+    // A live region announces *changes*, so one born holding its text is missed.
     const component = await mount(<UseAnnouncerHarness />);
     const region = component.getByRole('status');
 
@@ -21,8 +20,7 @@ test.describe('useAnnouncer', () => {
   });
 
   test('the same message twice is two changes, not none', async ({ mount, page }) => {
-    // `announce` clears and rewrites a frame later; without that, "Saved" → "Saved" never changes
-    // and the second toast is silent. The observer sees every non-empty value the region takes.
+    // `announce` clears and rewrites a frame later; without it "Saved" → "Saved" never changes.
     const component = await mount(<UseAnnouncerHarness />);
     await expect(component.getByRole('status')).toBeAttached();
     await page.evaluate(() => {

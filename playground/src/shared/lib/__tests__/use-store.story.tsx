@@ -3,10 +3,7 @@ import { createStore } from 'umbra/react';
 import { shallowEqual } from '../shallow-equal';
 import { useStore } from '../use-store';
 
-// ── Store ───────────────────────────────────────────────────────────────────
-// Factory (not module scope) so every mounted harness gets a fresh store —
-// component tests stay isolated without cross-test state bleed.
-
+// Factory, not module scope, so every mounted harness gets a fresh store and tests stay isolated.
 function createCounterStore() {
   return createStore(
     { count: 0, label: 'idle', other: 0 },
@@ -34,22 +31,16 @@ function createCounterStore() {
   );
 }
 
-/**
- * Tests the three useStore overloads: whole snapshot, selector slice, and
- * options form with `shallowEqual` for an object-returning selector.
- */
+/** The three `useStore` overloads: whole snapshot, selector slice, options + `shallowEqual`. */
 export function UseStoreHarness() {
   const [store] = useState(createCounterStore);
 
-  // Whole snapshot — re-renders on any change
   const snap = useStore(store);
 
-  // Selector — referentially stable slice
   const count = useStore(store, (s) => {
     return s.count;
   });
 
-  // Options form — object-returning selector guarded by shallowEqual
   const pair = useStore(store, {
     select: (s) => {
       return { count: s.count, label: s.label };

@@ -112,12 +112,9 @@ type LowercaseLetter = (typeof Key)[
   | 'Z'];
 
 /**
- * All concrete key values from the built-in `Key` constant: named keys (Enter, Escape, F1–F12,
- * etc.), digits 0–9, and letters a–z / A–Z.
- *
- * Deliberately closed. A key missing here — a media key, a browser-specific one — is a missing
- * entry in `Key`, which is a one-line addition that benefits everyone; it is not something each
- * consumer should re-derive through type gymnastics. Keeping the union closed is what makes a
- * mistyped `'Escpae'` a compile error.
+ * All concrete key values from the built-in `Key` constant: named keys (Enter, Escape, F1–F12),
+ * digits 0–9, letters a–z / A–Z. Deliberately closed — a key missing here (a media key, a
+ * browser-specific one) is a one-line addition to `Key` that benefits everyone rather than type
+ * gymnastics each consumer re-derives, and a closed union is what makes `'Escpae'` a compile error.
  */
 export type KeyValue = (typeof Key)[keyof typeof Key] | Capitalize<LowercaseLetter>;

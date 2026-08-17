@@ -1,4 +1,3 @@
-// Shared components for Vanilla templates
 export { ButtonRow } from '@/entities/modal-template/ui/vanilla/shared/ButtonRow';
 export { Alert } from '@/entities/modal-template/ui/vanilla/shared/Alert';
 export { VanillaButton as Button } from '@/entities/modal-template/ui/vanilla/shared/VanillaButton';

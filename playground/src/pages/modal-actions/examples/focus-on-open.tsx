@@ -35,10 +35,8 @@ function useFocusedLabel(active: boolean) {
 }
 
 /**
- * Which button the modal opens on — and where focus goes when an action fails.
- *
- * The text field is deliberately first: it is what `showModal()` focuses on its own, so focus
- * landing on *Keep* proves the option did it rather than the browser agreeing by accident.
+ * Which button the modal opens on, and where focus goes when an action fails. The text field is
+ * first on purpose: `showModal()` would focus it, so focus on *Keep* proves the option did it.
  */
 export function FocusOnOpenExample() {
   const [attempts, setAttempts] = useState(0);
@@ -49,11 +47,7 @@ export function FocusOnOpenExample() {
   const modal = useMessageModal<void, 'delete' | 'keep'>({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
-    // Deliberately *not* `role: 'alertdialog'`, though the copy is a delete confirm. An
-    // alertdialog is announced with its description, and everything in this one's body is
-    // commentary about where focus went — announcing that immediately would be worse than not
-    // announcing anything. The role travels with a description worth interrupting for; see
-    // `delete-item-modal` for the pair done properly.
+    // Not `alertdialog`: it announces its description, and this body is focus commentary.
     prepare: () => {
       setIsVisible(true);
       setAttempts(0);
@@ -112,8 +106,7 @@ export function FocusOnOpenExample() {
                   await new Promise((resolve) => {
                     setTimeout(resolve, 500);
                   });
-                  // The first attempt always fails, so the restoration is visible on purpose
-                  // rather than one time in three.
+                  // The first attempt always fails, so the restoration is visible every time.
                   if (attempt === 1) {
                     throw new Error('Delete failed: the server said no');
                   }

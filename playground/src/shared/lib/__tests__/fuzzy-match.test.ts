@@ -59,8 +59,7 @@ test.describe('fuzzyMatch', () => {
   });
 
   test('rejects an out-of-order query', () => {
-    // `l` before `m` exists in neither order here, and the typo budget for four characters is
-    // one edit — three substitutions is not a typo.
+    // `l` before `m` exists in neither order, and four characters buy one edit, not three.
     expect(fuzzyMatch('ldom', 'Key')).toBeNull();
   });
 

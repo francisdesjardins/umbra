@@ -15,12 +15,7 @@ import { ApiLayout } from './ApiLayout';
 import { KindBadge } from './KindBadge';
 import { RouterLink } from './RouterLink';
 
-/**
- * The doors in, for a reader who has not decided what they need yet.
- *
- * Qualified, because the first question is which binding — three of them export `useModal` and
- * the chips would otherwise repeat one word three times without saying what differs.
- */
+/** Doors in, qualified: three bindings export `useModal`, so bare chips would repeat one word. */
 const START_HERE: readonly { readonly specifier: string; readonly name: string }[] = [
   { specifier: 'umbra/react', name: 'useModal' },
   { specifier: 'umbra/solid', name: 'useModal' },
@@ -131,12 +126,7 @@ const StartHere = () => {
   );
 };
 
-/**
- * The reference's front door.
- *
- * It answers three questions before any symbol does: what the package exports, where each
- * export lives, and what counts as public — which is simply everything on these pages.
- */
+/** The front door: what the package exports, where each lives, and what is public — all of this. */
 export const ApiIndexPage = () => {
   return (
     <PageLayout

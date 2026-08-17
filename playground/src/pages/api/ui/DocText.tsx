@@ -14,12 +14,8 @@ const CODE_SX: SxProps<Theme> = {
 };
 
 /**
- * A cross-reference to another symbol, addressed by its `specifier#name` key.
- *
- * Symbols live on category pages, so this is a route + hash rather than a bare `#anchor` —
- * which also keeps it working under the hash history the file:// build uses. A key nothing
- * answers to is a type the entry points do not export, and renders as inline code: the reader
- * is told what it is called and not offered a link that goes nowhere.
+ * A cross-reference by `specifier#name`. Route + hash, not a bare `#anchor`: symbols live on
+ * category pages and the file:// build uses hash history. An unanswered key renders as inline code.
  */
 export const SymbolLink = ({
   symbolKey,
@@ -69,11 +65,7 @@ const Emphasis = ({ text: value }: { readonly text: string }) => {
   );
 };
 
-/**
- * A JSDoc summary is markdown, and its inline code is where half the meaning sits.
- *
- * Backticks first: a `**` inside a code span is code, not emphasis.
- */
+/** A JSDoc summary is markdown; backticks split first, so `**` inside a code span stays code. */
 export const InlineCode = ({ text: value }: { readonly text: string }) => {
   return (
     <>
@@ -106,8 +98,7 @@ export const DocProse = ({ parts, variant = 'body1', color }: DocProseProps) => 
       component="div"
       variant={variant}
       color={color}
-      // JSDoc uses blank lines as paragraph breaks; honouring them is most of what makes a
-      // long `@remarks` readable rather than a wall.
+      // JSDoc uses blank lines as paragraph breaks; honouring them is what makes `@remarks` read.
       sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}
     >
       {parts.map((part, index) => {

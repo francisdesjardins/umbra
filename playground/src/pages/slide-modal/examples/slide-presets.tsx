@@ -4,9 +4,9 @@ import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import { useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { useSlideModal } from 'umbra/react';
 
 export const DRAWER_ID = 'slide-preset-drawer';
@@ -17,12 +17,9 @@ export const INSPECTOR_ID = 'slide-preset-inspector';
 const resultStore = createResultStore();
 
 /**
- * The four slide shapes people actually build, each as its own hook.
- *
- * One panel per shape rather than one panel with switches: `direction` and `align` decide the
- * animation and the placement, so a hook whose direction changes between opens is a panel that
- * leaves by one edge and returns by another. That is a demo artefact, not a pattern anyone
- * ships — and it hides the thing worth reading, which is how few options each shape needs.
+ * The four slide shapes, one hook each rather than one panel with switches: `direction` and `align`
+ * decide animation and placement, so a hook changing direction between opens leaves by one edge and
+ * returns by another.
  */
 
 /** Every preset shows its own option block, because the options *are* the lesson. */
@@ -148,9 +145,8 @@ function usePalettePreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            {/* All four presets claim the control: this palette's overflowing scroll region
-                (`useScrollRegion`) would otherwise win the opening focus, and the other three
-                match it. */}
+            {/* Claimed because this palette's overflowing scroll region (`useScrollRegion`) would
+                otherwise win the opening focus; the other three match it. */}
             <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
               Close
             </Shared.Button>
@@ -172,13 +168,8 @@ const ROWS = [
 ];
 
 /**
- * Contained inspector: non-modal, no portal — it answers to a region of the page.
- *
- * It does **not** use the drawer layout the other presets share. That one is sized for a
- * viewport-height drawer (the template pins 400px wide, full height), and a contained panel is
- * only as big as the box it was given — here a card in the middle of a page. Bringing your own
- * markup for the panel is the ordinary case, not a workaround: the library places the box, and
- * what goes in it was never its business.
+ * Contained inspector: non-modal, no portal, over a region of the page — not the shared drawer
+ * layout (400px wide, viewport height), since a contained panel is only as big as its host box.
  */
 function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
   return useSlideModal<void, 'close'>({
@@ -186,6 +177,7 @@ function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
     direction: 'right',
     nonModal: true,
     portal: false,
+    containFocus: true,
     dismissOnClickOutside: false,
     ariaLabel: 'Row details',
     // A share of the host, not a fixed width: the host is what decides how big this can be.
@@ -228,10 +220,7 @@ function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
   });
 }
 
-/**
- * The shape, drawn. A row of buttons with a line of code under each reads as a status bar; a
- * rectangle with one edge filled says "it comes from there" before anything is read.
- */
+/** A rectangle with one edge filled says "it comes from there"; buttons over code read as a bar. */
 function ShapeTile({
   label,
   options,
@@ -262,8 +251,7 @@ function ShapeTile({
       sx={{
         gap: 1,
         p: 1.5,
-        // Share the row and wrap in pairs rather than each tile sizing to its own longest line:
-        // `minWidth: 0` is what lets the monospace option line wrap instead of setting the floor.
+        // `minWidth: 0` lets the monospace option line wrap instead of setting the tile's floor.
         flex: '1 1 150px',
         minWidth: 0,
         alignItems: 'flex-start',
@@ -358,8 +346,7 @@ export function SlidePresetsExample() {
           />
         </Stack>
 
-        {/* A contained panel is only as big as the box it was given, so the box has to be a real
-            one: a card with rows the panel slides over, at the height it actually has. */}
+        {/* A contained panel is only as big as its host, so the host is a real card with rows. */}
         <Box>
           <Typography variant="caption" color="text.secondary">
             Contained panel — a details pane inside a card, not an overlay on the page:
@@ -369,9 +356,7 @@ export function SlidePresetsExample() {
               position: 'relative',
               height: 220,
               mt: 0.5,
-              // Clips so the contained panel cannot escape its card — and so it also clips the
-              // focus ring of the row buttons that reach this edge. The scroll container inside
-              // reserves its own room; this reserves the rest, because both boxes clip.
+              // Clips the panel into the card and the row focus rings with it, so both boxes pad.
               overflow: 'hidden',
               py: focusRingSpace,
               border: 1,
@@ -380,11 +365,8 @@ export function SlidePresetsExample() {
               bgcolor: 'background.paper',
             }}
           >
-            {/* Tabbing to a row's button scrolls it into view, and scroll-into-view parks it
-                flush against the container edge — so the ring is clipped for whichever button
-                you just reached, every time. `scroll-padding` is the property for exactly that:
-                it tells the scroll the edge is four pixels further in. The padding covers the
-                resting case, where a row already sits at the edge with no scrolling involved. */}
+            {/* Scroll-into-view parks a tabbed-to button flush against the edge, clipping its ring;
+                `scroll-padding` moves that edge inward, and the padding covers the resting case. */}
             <Stack
               sx={{
                 height: '100%',

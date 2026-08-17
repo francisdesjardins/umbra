@@ -20,71 +20,42 @@ const TICK_MS = 100;
 /**
  * Corner toast — the use case `align` exists for.
  *
- * `direction: 'right'` slides in from the right edge, and `align: 'start'` pins it to the
- * TOP of the cross axis instead of stretching full-height (the default `stretch`, which
- * would give a floor-to-ceiling drawer). Because a non-stretch align makes the panel
- * content-sized on the cross axis, the toast sizes itself — hence the explicit `width`
- * and the absence of any height.
+ * `direction: 'right'` slides in from the right edge; `align: 'start'` pins it to the top of the
+ * cross axis rather than the default `stretch` (a floor-to-ceiling drawer), which makes the panel
+ * content-sized on the cross axis — hence the explicit `width` and no height. `nonModal: true`
+ * keeps the page interactive, `portal: true` anchors it to the viewport (a non-modal dialog never
+ * enters the top layer, so otherwise it positions against its container), and `dismissKey: false`
+ * because a toast ends on its own action or its timer. The countdown lives here rather than in the
+ * trigger so the pointer can pause it, which doubles as proof the page underneath is interactive.
  *
- * `nonModal: true` keeps the page interactive (no backdrop, no focus trap, no scroll lock)
- * and `portal: true` anchors it to the viewport — required for a corner overlay, since a
- * non-modal dialog never enters the top layer and would otherwise be positioned relative
- * to its container. `dismissKey: false` disables Escape: a toast is dismissed by its own
- * action or by its timer, not by a stray keypress.
+ * **A toast is not a dialog.** `<dialog>` carries an implicit `role="dialog"` — a surface to
+ * attend to and dismiss — where a toast is a passing status message that taking focus for would be
+ * hostile. So the element is only a shell (positioning, slide, lifecycle, typed close) and the
+ * announcement goes through a live region **outside** it, because a live region announces
+ * *changes*: one rendered by `render` mounts in the same pass that shows the dialog and enters the
+ * accessibility tree already holding its text, the case screen readers miss. `useAnnouncer` mounts
+ * a hidden `role="status"` beside the trigger on first render, long before there is anything to
+ * say; every binding inherits the rule, since markup inside a closed dialog sits under
+ * `display: none`, out of the tree, and becomes an insertion when it opens. The element disagrees
+ * and that is handled rather than asserted: the focusing steps run on `show()` too — measured,
+ * focus lands on Dismiss within 50ms — so the trigger remembers where focus was and `prepare` puts
+ * it back. (Same reasoning behind `role` being only `'dialog' | 'alertdialog'`: a role that
+ * contradicts its own element is not a fix.) It is still named, for the other way in — the element
+ * stays in the tree, so a virtual cursor can land on it later and "dialog" is not useful to find.
  *
- * The countdown lives here rather than in the trigger that opened it, which is what lets the
- * pointer pause it: a toast that expires while you are reading it is a toast you cannot read.
- * Pausing on hover is also the proof that the dialog underneath stays interactive — a modal
- * one would never receive the pointer at all.
- *
- * **A toast is not a dialog**, and this is the one example where that distinction bites. A
- * `<dialog>` carries an implicit `role="dialog"`: a surface the user is meant to attend to and
- * dismiss. A toast is a passing status message — nobody navigates to it, and taking focus for
- * it would be hostile. So the element here is a shell (positioning, the slide, the lifecycle,
- * the typed close) and the announcement goes through a live region that is **not inside it**.
- *
- * **Not inside it, because a live region announces *changes*.** A region rendered by `render`
- * is mounted in the same pass that shows the dialog, so it enters the accessibility tree already
- * holding its text — the case screen readers miss or announce inconsistently, and this example
- * used to be exactly that case while claiming otherwise. `useAnnouncer` mounts a visually hidden
- * `role="status"` region beside the trigger on the page's first render, long before there is
- * anything to say, and `announce('Changes saved')` at open time is what a screen reader actually
- * hears. The same rule reaches every binding: vanilla markup inside a closed dialog sits under
- * `display: none`, out of the tree, and becomes an insertion when it opens.
- *
- * **The element does not agree, and that has to be handled rather than asserted.** The dialog
- * focusing steps run on `show()` too, not only on `showModal()` — measured here: focus lands on
- * the Dismiss button within 50ms of opening. For a modal that is the correct behaviour; for a
- * status message it is the caret being taken out of whatever the user was typing. So the trigger
- * remembers where focus was and `prepare` puts it back, which is the whole mitigation.
- *
- * The same reasoning is why `useModal`'s `role` option is `'dialog' | 'alertdialog'` and not
- * every ARIA role: a role that contradicts its own element is not a fix.
- *
- * **It is still named**, and the two facts do not conflict. The announcement comes from the
- * external region; the name is for the other way in — the element stays in the accessibility
- * tree, so a screen reader's virtual cursor can land on it minutes later, and "dialog" is not a
- * useful thing to find there.
- *
- * **What changes once the toast carries actions.** Everything above assumes a passing status
- * message. Put a link or a set of choices in it and three things stop being optional:
- *
- * - The timer must pause on **focus** as well as hover — a keyboard user tabbing to the action
- *   is exactly the person the countdown would rob (WCAG 2.2.1). That is why this one listens to
- *   both, though its only control is Dismiss.
- * - The actions have to be *reachable*. The live region announces text; it does not put anything
- *   in the tab order at a predictable moment, and a toast that leaves after five seconds is a
- *   control the keyboard may never arrive at. Either it stops auto-dismissing once it has an
- *   action, or the app gives the notification region a shortcut to jump to.
- * - If the choice is one the user *must* make, it is not a toast any more: that is a dialog with
- *   `role: 'alertdialog'`, taking focus, dismissible with Escape — which is a different hook
- *   call, not a different style of this one. `dismissKey: false` here is only defensible because
- *   nothing in this toast needs an answer.
+ * **Once a toast carries actions, three things stop being optional.** The timer must pause on
+ * focus as well as hover, or a keyboard user tabbing to the action is exactly who the countdown
+ * robs (WCAG 2.2.1) — this one listens to both. The actions must be *reachable*: a live region
+ * announces text and puts nothing in the tab order, so a control that leaves after five seconds
+ * may never be arrived at, and either auto-dismiss stops or the app offers a jump to the
+ * notification region. And a choice the user *must* make is not a toast — it is `alertdialog`,
+ * taking focus, dismissible with Escape, a different hook call rather than a restyling of this
+ * one; `dismissKey: false` is defensible here only because nothing in this toast needs an answer.
  */
 export function SlideCornerToastExample() {
   const { result } = useStore(resultStore);
   const { announce, region } = useAnnouncer();
-  /** Where focus was when the toast was raised — a status message has no business taking it. */
+  /** Where focus was when the toast was raised; a status message has no business taking it. */
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const [remaining, setRemaining] = useState(LIFETIME_MS);
   const [hovered, setHovered] = useState(false);
@@ -106,19 +77,16 @@ export function SlideCornerToastExample() {
     render: ({ handle }) => {
       return (
         <Box
-          // No `role="status"` here, deliberately: this Box is mounted in the same pass that
-          // shows the dialog, so a live region here is born already holding its text — the case
-          // screen readers miss. The announcement goes through `useAnnouncer`'s persistent
-          // region, mounted beside the trigger; this is only the visual shell.
+          // No `role="status"` here: mounted in the same pass that shows the dialog, it would be
+          // born already holding its text — `useAnnouncer`'s persistent region does the announcing.
           onPointerEnter={() => {
             setHovered(true);
           }}
           onPointerLeave={() => {
             setHovered(false);
           }}
-          // Focus, not just hover: a keyboard user reaching the Dismiss button gets the same
-          // reprieve a pointer user gets, which is what WCAG 2.2.1 asks for and what stops the
-          // toast from expiring under someone's hands.
+          // Focus, not just hover: a keyboard user reaching Dismiss gets the same reprieve a
+          // pointer user gets, which is what WCAG 2.2.1 asks for.
           onFocusCapture={() => {
             setFocusedInside(true);
           }}
@@ -164,10 +132,8 @@ export function SlideCornerToastExample() {
             </IconButton>
           </Stack>
           <Stack direction="row" sx={{ px: 2, pb: 1.5, gap: 1, justifyContent: 'flex-end' }}>
-            {/* `handle.close('dismiss')`, not `action('dismiss')`: `'dismiss'` is the
-                library's reason for a toast nobody acted on, so it is a close you *report*
-                rather than an action you declare — and this button wants nothing an action
-                provides (no hotkey, no running state, nothing to disable). */}
+            {/* `handle.close('dismiss')`, not `action('dismiss')`: a close you *report* rather
+                than an action you declare, wanting no hotkey, running state or disabling. */}
             <Shared.Button
               size="small"
               variant="text"
@@ -178,7 +144,7 @@ export function SlideCornerToastExample() {
               Dismiss
             </Shared.Button>
           </Stack>
-          {/* The timer, made visible — otherwise "it pauses on hover" is a claim, not a demo. */}
+          {/* The timer made visible — otherwise "it pauses on hover" is a claim, not a demo. */}
           <LinearProgress
             variant="determinate"
             value={(remaining / LIFETIME_MS) * 100}
@@ -195,14 +161,13 @@ export function SlideCornerToastExample() {
 
   const { isVisible, handle } = toast;
 
-  // The countdown: one interval while the toast is open and the pointer is elsewhere.
   useEffect(() => {
     if (!isVisible || isPaused) {
       return;
     }
-    // The updater stays pure. React may run one during a render, and closing from inside it
-    // writes to the modal store mid-render — “Cannot update a component while rendering a
-    // different component”, logged on every toast that ran out on its own.
+    // The updater stays pure: React may run one during a render, and closing from inside it writes
+    // to the modal store mid-render — “Cannot update a component while rendering a different
+    // component” on every toast that ran out on its own.
     const id = window.setInterval(() => {
       setRemaining((left) => {
         return Math.max(0, left - TICK_MS);
@@ -213,9 +178,8 @@ export function SlideCornerToastExample() {
     };
   }, [isVisible, isPaused]);
 
-  // Closing is the side effect the tick implies, so it happens after the render that showed the
-  // zero — still the same tick, so the visible number and the actual lifetime remain one thing
-  // rather than two timers that drift apart.
+  // Closing after the render that showed the zero, off the same tick, so the visible number and
+  // the actual lifetime stay one thing rather than two timers that drift.
   useEffect(() => {
     if (isVisible && remaining <= 0) {
       handle.close('timeout');
@@ -233,7 +197,7 @@ export function SlideCornerToastExample() {
           setFocusedInside(false);
           returnFocusTo.current =
             document.activeElement instanceof HTMLElement ? document.activeElement : null;
-          // Through the persistent region, not the toast's own markup — see the essay above.
+          // Through the persistent region, not the toast's own markup.
           announce('Changes saved');
           await toast.open();
         }}

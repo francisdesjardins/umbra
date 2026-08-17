@@ -1,13 +1,9 @@
 import { createContext, use } from 'react';
 
 /**
- * The theme, as a context every layer may read.
- *
- * **It lives in `shared` because of who consumes it, not who provides it.** The provider is
- * `app`'s — it owns the MUI theme object and the persistence — but `ThemeToggleButton` is a
- * `shared/ui` component and the microfrontend frame is a page, and under Feature-Sliced Design
- * imports run downward only: neither may reach up into `app`. Keeping the *contract* here and the
- * *implementation* there is what lets both read it without inverting the layer order.
+ * The theme, as a context every layer may read. It lives in `shared` because of who consumes it,
+ * not who provides it: the provider is `app`'s, but `ThemeToggleButton` is `shared/ui` and the
+ * microfrontend frame is a page, and Feature-Sliced Design imports run downward only.
  */
 export type ThemeContextValue = {
   isDarkMode: boolean;

@@ -1,8 +1,6 @@
 /**
- * WCAG contrast, and the one operation worth having beside it: nudge a colour until it passes.
- *
- * Written out rather than pulled in because the playground is a demo of a zero-dependency
- * library and a colour package in its manifest would be the first thing a reader notices.
+ * WCAG contrast, plus the one operation worth having beside it: nudge a colour until it passes.
+ * Hand-written — a colour package in a zero-dependency library's demo manifest would be noticed.
  */
 
 type Rgb = { readonly r: number; readonly g: number; readonly b: number };
@@ -31,8 +29,8 @@ const hslToRgb = ({ h, s, l }: Hsl): Rgb => {
               ? [x, 0, c]
               : [c, 0, x];
   const m = lig - c / 2;
-  // Rounded, because the browser rounds: measuring the float landed a token at 4.49:1 on the
-  // page after `readableHsl` had certified it at 4.5. Measure what will actually be painted.
+  // Rounded, because the browser rounds: the float landed a token at 4.49:1 on the page after
+  // `readableHsl` had certified it at 4.5. Measure what will actually be painted.
   return {
     r: Math.round((r1 + m) * 255),
     g: Math.round((g1 + m) * 255),
@@ -88,12 +86,10 @@ export const contrastRatio = (foreground: Rgb, background: Rgb): number => {
 };
 
 /**
- * Walk an `hsl()` colour's lightness toward the readable end until it clears `minimum`.
- *
- * Lightness only — hue and saturation are what make a syntax theme recognisable as itself, and
- * a palette repainted to pass an audit is a different palette. Returns the input unchanged when
- * it already passes, when it is not an `hsl()`, or when even the endpoint cannot reach the bar,
- * because a silent black-or-white substitution would be worse than a reported failure.
+ * Walk an `hsl()` colour's lightness toward the readable end until it clears `minimum` (4.5 by
+ * default). Lightness only — hue and saturation are what make a syntax theme itself. Returned
+ * unchanged when it passes, is not `hsl()`, or cannot reach the bar even at the endpoint: a silent
+ * black-or-white substitution is worse than a reported failure.
  */
 export const readableHsl = (
   color: string,

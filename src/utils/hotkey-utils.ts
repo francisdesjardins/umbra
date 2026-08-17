@@ -2,11 +2,9 @@ import { Key } from './keys.js';
 import type { HotkeyDef } from '../actions/types.js';
 
 /**
- * The modifier set is `ctrl`, deliberately, and stays that way even though the ARIA form below
- * spells it `Control`. The output vocabulary is the platform's and the input vocabulary is the
- * library's: `HotkeyDef` is a closed union whose job is making `'Escpae'` a compile error, so
- * teaching this a second spelling would make the runtime wider than the type. `Key.Control` is
- * also a legitimate plain key, which an alias would blur.
+ * The modifier set spells it `ctrl`, not ARIA's `Control`: the output vocabulary is the platform's
+ * and the input `HotkeyDef`'s, so a second spelling would make the runtime wider than the type —
+ * and `Key.Control` is a legitimate plain key an alias would blur.
  */
 function parse(def: HotkeyDef): {
   readonly key: string;
@@ -16,8 +14,8 @@ function parse(def: HotkeyDef): {
   readonly meta: boolean;
 } {
   const parts = def.split('+');
-  // `split` never answers an empty array, so `pop` never answers `undefined`: the fallback is
-  // `noUncheckedIndexedAccess` tax rather than a case, and is why this line is not fully covered.
+  // `split` never answers an empty array, so this fallback is `noUncheckedIndexedAccess` tax
+  // rather than a case — and is why the line is not fully covered.
   const key = parts.pop() ?? def;
   const mods = new Set(
     parts.map((p) => {
@@ -34,11 +32,9 @@ function parse(def: HotkeyDef): {
 }
 
 /**
- * One key token, in the spelling both serializers agree on.
- *
- * The spacebar is the one key `KeyboardEvent.key` cannot be quoted verbatim for: its value is
- * `' '`, which reads as nothing at all in a label and is unparseable in `aria-keyshortcuts` — a
- * *space-delimited* list. WAI-ARIA names that exception itself and spells it `Space`.
+ * One key token, in the spelling both serializers agree on. The spacebar is the exception:
+ * `KeyboardEvent.key` reports `' '`, which reads as nothing in a label and is unparseable in the
+ * *space-delimited* `aria-keyshortcuts` — so WAI-ARIA names it `Space`.
  */
 function canonicalKey(key: string): string {
   if (key === Key.Space) {
@@ -48,9 +44,8 @@ function canonicalKey(key: string): string {
 }
 
 /**
- * Modifiers first, then the key — the order ARIA requires, in the fixed order both spellings
- * share. One function so the label and the DOM value cannot drift apart in a way only a screen
- * reader would notice.
+ * Modifiers first, then the key — ARIA's required order, in the fixed order both spellings share.
+ * One function, so the label and the DOM value cannot drift where only a screen reader would notice.
  */
 function serialize(def: HotkeyDef, control: 'Ctrl' | 'Control'): string {
   const { key, ctrl, alt, shift, meta } = parse(def);
@@ -72,13 +67,9 @@ function serialize(def: HotkeyDef, control: 'Ctrl' | 'Control'): string {
 }
 
 /**
- * Convert a `HotkeyDef` to a human-readable label (e.g. `"Ctrl+Enter"`) — for a menu item, a
- * tooltip, a keyboard-shortcuts sheet.
- *
- * **Not the `aria-keyshortcuts` value.** That attribute's tokens must be `KeyboardEvent.key`
- * values, where the Control modifier is `"Control"` — see {@link formatAriaKeyshortcuts}, which is
- * what the library writes onto a button. This one is for what a person reads, and `Ctrl` is the
- * spelling on the keycap.
+ * A `HotkeyDef` as a human-readable label (`"Ctrl+Enter"`) — for a menu item, a tooltip, a
+ * shortcuts sheet, `Ctrl` being the spelling on the keycap. **Not** the `aria-keyshortcuts` value;
+ * see {@link formatAriaKeyshortcuts}.
  *
  * @example
  * formatHotkeyLabel('Ctrl+Enter'); // 'Ctrl+Enter'
@@ -89,17 +80,12 @@ export function formatHotkeyLabel(def: HotkeyDef): string {
 }
 
 /**
- * Convert a `HotkeyDef` to the value the DOM's `aria-keyshortcuts` attribute takes.
- *
- * **A different string from {@link formatHotkeyLabel}, and the difference is not cosmetic.** Every
- * token of `aria-keyshortcuts` must be a UI Events `KeyboardEvent.key` value, and the Control
- * modifier's key value is `"Control"` — so `"Ctrl+Enter"` is a label a person reads and
- * `"Control+Enter"` is what assistive technology parses. The spacebar is the spec's own exception:
- * its key value is `' '`, and a space cannot appear in a space-delimited list, so it is `"Space"`.
- *
- * This is the canonical form: what the library writes onto an action's button, what hotkey
- * dispatch queries the DOM by, and what decides whether two hotkeys are the same one. A custom
- * button wrapper that *builds* the attribute rather than forwarding it must build it with this.
+ * A `HotkeyDef` as the DOM's `aria-keyshortcuts` value — **a different string from
+ * {@link formatHotkeyLabel}, and not cosmetically**: every token must be a UI Events
+ * `KeyboardEvent.key` value, so Control is `"Control"`, and the spacebar (key value `' '`, which
+ * cannot appear in a space-delimited list) is the spec's own exception, `"Space"`. The canonical
+ * form — what the library writes onto a button, what hotkey dispatch queries the DOM by, and what
+ * decides whether two hotkeys are one; a wrapper that *builds* the attribute must build it here.
  *
  * @example
  * formatAriaKeyshortcuts('Ctrl+Enter'); // 'Control+Enter'
@@ -110,19 +96,12 @@ export function formatAriaKeyshortcuts(def: HotkeyDef): string {
 }
 
 /**
- * Strict-match a `KeyboardEvent` against a `HotkeyDef` — every declared modifier must be held
- * and every undeclared one must not be.
- *
- * Single-character keys compare case-insensitively. `Key.A` is `'a'` because that is what
- * `KeyboardEvent.key` reports *without* Shift; hold Shift and the browser reports `'S'`, so a
- * literal comparison would make every `Shift+<letter>` hotkey — a combination `HotkeyDef`
- * explicitly offers — silently unmatchable. Case-insensitivity does not blur the two, because
- * the modifier comparison below is still exact: `'s'` requires Shift *up*, `'Shift+s'`
- * requires it down.
- *
- * Shifted *digits* and punctuation are a different problem and not solved here: `Shift+1`
- * reports `'!'` on a US layout and something else elsewhere, so there is no layout-independent
- * mapping to compare against.
+ * Strict-match a `KeyboardEvent` against a `HotkeyDef` — every declared modifier held, every
+ * undeclared one not. Single-character keys compare case-insensitively, `Key.A` being `'a'` because
+ * that is what `KeyboardEvent.key` reports *without* Shift, so a literal comparison would silently
+ * unmatch every `Shift+<letter>`; nothing blurs, the modifier comparison staying exact. Shifted
+ * *digits* and punctuation are a different, unsolved problem — `Shift+1` is `'!'` on a US layout
+ * and something else elsewhere, with no layout-independent mapping.
  *
  * @example
  * element.addEventListener('keydown', (event) => {
@@ -145,10 +124,8 @@ export function matchesHotkey(event: KeyboardEvent, def: HotkeyDef): boolean {
 }
 
 /**
- * The `Key` values, indexed by their lowercase spelling, so a lookup is one map read.
- *
- * Built once from the table rather than restated: a key added to `Key` becomes parseable with no
- * second edit, which is the whole reason the table is the single source.
+ * The `Key` values indexed by lowercase spelling, so a lookup is one map read. Built from the
+ * table rather than restated: a key added to `Key` becomes parseable with no second edit.
  */
 const KEYS_BY_LOWERCASE = new Map(
   Object.values(Key).map((value) => {
@@ -157,20 +134,14 @@ const KEYS_BY_LOWERCASE = new Map(
 );
 
 /**
- * Read a hotkey out of a string, or `undefined` when the string is not one.
+ * Read a hotkey out of a string, or `undefined` when it is not one — **for shortcuts that arrive as
+ * data**: a config file, a user preference, a server value, a library whose own type is `string`,
+ * where the alternative is an unchecked cast exactly where the input is least trustworthy.
  *
- * **For shortcuts that arrive as data** — a configuration file, a user preference, a value from a
- * server, another library whose own type is `string`. In source the closed union makes `'Escpae'`
- * a compile error; crossing that boundary without a parser means an unchecked cast exactly where
- * the input is least trustworthy, or a hand-rolled validator per call site.
- *
- * Nothing is asserted here. The key is *found* in `Key`, so it carries that table's type out with
- * it, and each modifier arrangement is rebuilt from literal pieces. What cannot be built is
- * rejected: the union names fourteen shapes and not every subset of the four modifiers, so
- * `'Alt+Shift+Meta+a'` returns `undefined` rather than inventing a type that does not exist.
- *
- * Case is not significant, matching the type's own rule: `'ctrl+s'`, `'Ctrl+S'` and `'CTRL+s'` are
- * one hotkey, and the canonical spelling comes back out.
+ * Nothing is asserted: the key is *found* in `Key`, carrying that table's type out, and each
+ * modifier arrangement is rebuilt from literal pieces — what cannot be built is rejected, the union
+ * naming fourteen shapes rather than every subset. Case is not significant, matching the type, and
+ * the canonical spelling comes back out.
  *
  * @example
  * parseHotkey('Ctrl+S'); // 'Ctrl+s'

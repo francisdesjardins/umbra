@@ -1,5 +1,5 @@
 /* oxlint-disable no-console -- demo mock: console output is the point */
-// Simulate API call with random failure (30% chance)
+// Fails at random, 30% of the time.
 export const simulateApiCall = async (operation: string, delay = 1500) => {
   console.log(`[API] Starting ${operation}...`);
   await new Promise((resolve) => {

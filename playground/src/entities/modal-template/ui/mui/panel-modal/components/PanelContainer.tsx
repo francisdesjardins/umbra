@@ -8,9 +8,8 @@ export type PanelContainerProps = {
 };
 
 /**
- * Full-size container for big/complex modals (wizards, large forms, tables).
- * A plain flex-column frame — border, background, and nothing else. All
- * internal layout (dividers, spacing) is composed explicitly by the caller:
+ * Full-size container for big/complex modals (wizards, large forms, tables): a flex-column frame
+ * with a border and background, leaving dividers and spacing to the caller.
  *
  * ```tsx
  * <PanelModal.PanelContainer sx={{ width: 600 }}>

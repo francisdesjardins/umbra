@@ -4,11 +4,8 @@ import styles from '@/entities/modal-template/ui/vanilla/form-modal/styles.modul
 type VanillaFieldErrorProps = {
   readonly children: ReactNode;
   /**
-   * Takes an `id` for the same reason every `Title` here does: something has to point at it.
-   *
-   * A field's `aria-describedby` names the element carrying its message, so a message element
-   * that cannot be given an id is one no control can reference — the error is on screen and
-   * absent from the accessibility tree.
+   * What a field's `aria-describedby` points at — a message element with no id is one no control
+   * can reference, leaving the error on screen and absent from the accessibility tree.
    */
   readonly id?: string | undefined;
 };

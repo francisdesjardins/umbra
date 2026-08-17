@@ -1,6 +1,6 @@
 /**
  * DOM event shapes for the unit project, which has no DOM — the one place the no-`as` rule gives
- * way. Shared, because a second copy that forgot `metaKey` would make a hotkey look like it matched.
+ * way. Shared, because a copy that forgot `metaKey` would make a hotkey look like it matched.
  */
 
 /** A `KeyboardEvent` carrying exactly what `matchesHotkey` and the action engine read. */

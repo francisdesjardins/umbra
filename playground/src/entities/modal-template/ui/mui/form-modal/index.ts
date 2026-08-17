@@ -1,6 +1,4 @@
-// Namespace components for composition
 export { Content } from '@/entities/modal-template/ui/mui/form-modal/components/Content';
-// Namespace components for composition
 export { FieldError } from '@/entities/modal-template/ui/mui/form-modal/components/FieldError';
 export { Footer } from '@/entities/modal-template/ui/mui/form-modal/components/Footer';
 export {

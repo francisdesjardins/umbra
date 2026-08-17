@@ -1,11 +1,9 @@
-// Named exports for direct import
 export { HeaderActionLayout } from '@/entities/modal-template/ui/mui/panel-modal/components/HeaderActionLayout';
 export { PanelContainer } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContainer';
 export { PanelContent } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContent';
 export { PanelFooter } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelFooter';
 export { PanelHeader } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelHeader';
 
-// Type exports
 export type { HeaderActionLayoutProps } from '@/entities/modal-template/ui/mui/panel-modal/components/HeaderActionLayout';
 export type { PanelContainerProps } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContainer';
 export type { PanelContentProps } from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContent';

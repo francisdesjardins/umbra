@@ -8,15 +8,9 @@ type SurfaceCardProps = {
 };
 
 /**
- * The playground's one card surface.
- *
- * Example cards, story cards and template rows are the same object at three sizes; each was
- * re-declaring the same outlined border, dark-mode background and hover lift, so a tweak to
- * one silently diverged from the others.
- *
- * No `sx` passthrough on purpose: nothing needs to override this, and adding the escape hatch
- * is how the three variants drifted apart in the first place. Layout belongs to the caller's
- * `CardContent`.
+ * The playground's one card surface — example cards, story cards and template rows are the same
+ * object at three sizes, and each re-declaring the border, dark-mode background and hover lift is
+ * how they diverged. No `sx` passthrough: that escape hatch is what let them drift.
  */
 export const SurfaceCard = ({ interactive, children }: SurfaceCardProps) => {
   return (

@@ -27,19 +27,13 @@ type TextMessageModalConfig = {
 
 // ── Public builder interface ──────────────────────────────────────────────────
 
-/**
- * Fluent builder passed to the `createModal` factory in `createTextMessageModal`.
- * Chain methods to configure the modal declaratively — all methods return `this`.
- */
+/** Fluent builder passed to `createTextMessageModal`; every method returns `this`. */
 export type TextMessageModalBuilder = {
   setTitle(title: ReactNode): TextMessageModalBuilder;
   /**
-   * The dialog's accessible name, for a modal that has no title to point at.
-   *
-   * With a title set, the hook wires `ariaLabelledBy` to it and this is not needed — a name
-   * written twice is a name that drifts. It exists because `setTitle` takes a `ReactNode`, which
-   * cannot be reused as a string, so a titleless modal has nothing to derive a name from and
-   * would otherwise be announced as just "dialog".
+   * The accessible name for a modal with no title to point at. With a title the hook wires
+   * `ariaLabelledBy` to it instead, since a name written twice drifts; this exists because
+   * `setTitle` takes a `ReactNode`, which a titleless modal cannot derive a string name from.
    */
   setAriaLabel(label: string): TextMessageModalBuilder;
   setMessage(message: ReactNode): TextMessageModalBuilder;
@@ -53,10 +47,7 @@ export type TextMessageModalBuilder = {
 
 // ── Definition (pure data, no hooks) ─────────────────────────────────────────
 
-/**
- * Opaque definition created by `createTextMessageModal`.
- * Pass to `useTextMessageModal` inside a component to instantiate the modal.
- */
+/** Opaque definition; pass to `useTextMessageModal` inside a component to instantiate it. */
 export type TextMessageModalDefinition = {
   readonly _type: 'text-message-modal';
   readonly id: string;
@@ -115,25 +106,11 @@ function buildConfig(
 // ── Factory (pure — safe at module level) ─────────────────────────────────────
 
 /**
- * Creates a `TextMessageModal` definition from a builder chain.
- *
- * This is a **pure function** with no React hooks — safe to call at module level
- * for truly imperative usage, or inside a component when reactive handlers
- * (e.g. `onClose` closing over `setState`) are needed.
- *
- * Pass the returned definition to `useTextMessageModal` to instantiate the modal.
+ * Creates a `TextMessageModal` definition from a builder chain, then pass it to
+ * `useTextMessageModal`. Pure and hook-free, so it is safe at module level for imperative usage or
+ * inside a component when handlers must close over reactive state.
  *
  * @example
- * // Module level — static handlers, opened imperatively via dialogManager:
- * const confirmDeleteDef = createTextMessageModal('confirm-delete', {
- *   createModal: (b) =>
- *     b.setTitle('Delete item')
- *      .setMessage('This action cannot be undone.')
- *      .confirm(async () => { await api.delete(); })
- *      .cancel(),
- * });
- *
- * // Component level — reactive handlers (close over setState):
  * const def = createTextMessageModal('confirm-delete', {
  *   createModal: (b) =>
  *     b.setTitle('Delete item')
@@ -159,14 +136,10 @@ export function createTextMessageModal(
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 /**
- * Instantiates a `TextMessageModalDefinition` as a live modal.
- *
- * Must be called at the top level of a React component. The definition can be
- * created at module scope (for static/imperative usage) or inside the component
- * (when handlers need to close over reactive state).
+ * Instantiates a `TextMessageModalDefinition` as a live modal. Call at the top level of a
+ * component; the definition itself may live at module scope or inside the component.
  *
  * @example
- * // Module-level definition (open via dialogManager from anywhere):
  * const confirmDef = createTextMessageModal('confirm', {
  *   createModal: (b) => b.setTitle('Confirm').confirm().cancel(),
  * });
@@ -180,18 +153,6 @@ export function createTextMessageModal(
  *     </>
  *   );
  * }
- *
- * // Component-level definition (reactive onClose):
- * function MyComponent() {
- *   const [result, setResult] = useState<string | null>(null);
- *   const def = createTextMessageModal('confirm', {
- *     createModal: (b) =>
- *       b.setTitle('Confirm').confirm().cancel()
- *        .onClose(({ reason }) => setResult(reason)),
- *   });
- *   const { open, Modal } = useTextMessageModal(def);
- *   return <>{Modal}<button onClick={open}>Open</button></>;
- * }
  */
 export function useTextMessageModal(
   definition: TextMessageModalDefinition
@@ -201,9 +162,8 @@ export function useTextMessageModal(
 
   const modal = useMessageModal<void, 'cancel' | 'confirm'>({
     id,
-    // An explicit label wins, because a caller who set one meant it; otherwise the title on
-    // screen is the name, referenced rather than repeated. Passing both would be a silent
-    // no-op — `aria-labelledby` beats `aria-label` in every screen reader.
+    // An explicit label wins; otherwise the on-screen title is the name, referenced rather than
+    // repeated. Passing both is a silent no-op — `aria-labelledby` beats `aria-label` everywhere.
     ...(config.ariaLabel !== undefined
       ? { ariaLabel: config.ariaLabel }
       : config.title !== undefined && { ariaLabelledBy: titleId }),

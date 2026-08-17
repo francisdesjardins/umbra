@@ -1,8 +1,6 @@
 /**
- * Anchor id for a section heading — `"Rendering & events"` → `"rendering-events"`.
- *
- * Shared by `ExampleSection` (which stamps the id) and `SectionNav` (which links to it), so
- * the two can never drift apart.
+ * Anchor id for a section heading — `"Rendering & events"` → `"rendering-events"`. Shared by
+ * `ExampleSection` (which stamps the id) and `SectionNav` (which links to it), so they can't drift.
  */
 export const sectionSlug = (title: string) => {
   return title

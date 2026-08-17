@@ -46,12 +46,8 @@ const MemberType = ({ member }: { readonly member: ApiMember }) => {
 };
 
 /**
- * Parameters, type parameters, props or object members — one shape, because to a reader they
- * are the same thing: a name, the type it holds, and a line on what it is for.
- *
- * One grid for the whole list rather than a row each, so every name lands on the same left
- * edge and the eye can run down the column. Name is monospace and bold, type monospace and
- * muted, prose is the body font: three ranks, no rules needed between them.
+ * Parameters, type parameters, props or members — one shape, each a name, a type and a line on what
+ * it is for. One grid, not a row each, so names share a left edge across three typographic ranks.
  */
 export const MemberList = ({
   title,

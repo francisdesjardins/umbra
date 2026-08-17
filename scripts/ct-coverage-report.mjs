@@ -1,20 +1,10 @@
 #!/usr/bin/env node
 /**
- * Merge and report the component project's coverage.
- *
- * `.nyc_output/` holds one Istanbul object per component test — every counter that test's page
- * incremented, keyed by absolute source path. Merging is summing them: a statement covered by any
- * test is covered, so the union is what a report has to describe.
- *
- * Deliberately not `nyc`. The counters are already Istanbul-shaped, so a report is arithmetic over
- * three maps, and adding a coverage framework to read a format we already have would be a
- * dependency bought for its name.
- *
- * Positions are the source's own, and that took a plugin to arrange: instrumentation happens
- * before anything transforms the file (`scripts/vite-plugin-ct-coverage.mjs`), because the
- * off-the-shelf route instruments stripped output and remaps, which lands every counter below a
- * file's JSDoc block sixteen lines early. A line number here can be trusted; the CHANGELOG for
- * 2026-08-10 has the measurement.
+ * Merge and report the component project's coverage: `.nyc_output/` holds one Istanbul object per
+ * test, keyed by absolute source path, and a statement covered by any test is covered. Not `nyc`,
+ * because the counters are already Istanbul-shaped and a report is arithmetic over three maps.
+ * Line numbers are the source's own thanks to `scripts/vite-plugin-ct-coverage.mjs`. Failure mode:
+ * finding no counters has four causes, printed below rather than left to guesswork.
  *
  * Usage: node scripts/ct-coverage-report.mjs [--json <path>]
  */
@@ -27,13 +17,7 @@ const INPUT_DIR = resolve(ROOT, '.nyc_output');
 const jsonFlag = process.argv.indexOf('--json');
 const jsonOut = jsonFlag !== -1 ? process.argv[jsonFlag + 1] : null;
 
-/**
- * What "no counters" can actually mean — all three have happened, and the flag is only the first.
- *
- * Naming the other two is the whole value of this message: an empty `.nyc_output` says nothing
- * about which stage produced nothing, and reading it as "you forgot the flag" is how an afternoon
- * goes missing.
- */
+/** What "no counters" can mean — all three have happened, and the flag is only the first. */
 const NOTHING_WRITTEN = [
   'No component coverage was written. One of:',
   '  · CT_COVERAGE=1 was not set, so nothing instrumented the bundle;',
@@ -65,16 +49,14 @@ for (const name of files) {
   for (const [path, entry] of Object.entries(data)) {
     const existing = merged.get(path);
     if (!existing) {
-      // Structured-cloned rather than referenced: the counters below are summed in place, and the
-      // first test's object would otherwise become the accumulator for every later one.
+      // Cloned, not referenced: the counters are summed in place, so the first test's object would
+      // otherwise become the accumulator for every later one.
       merged.set(path, structuredClone(entry));
       continue;
     }
-    // `?? 0` on every read, and it is not defensive padding: two files instrumented from
-    // different revisions of the same source have different counter ids, and summing them blind
-    // reads `undefined` and poisons the total with `NaN` — silently, since a NaN percentage
-    // prints as `NaN%` in one row and leaves the summary looking fine. `.nyc_output/` is cleared
-    // per run so this should not arise; if it ever does, an id nobody else counted is zero.
+    // `?? 0` is not padding: two files instrumented from different revisions have different counter
+    // ids, and summing them blind reads `undefined` and poisons the total with `NaN` — quietly, one
+    // `NaN%` row under an otherwise fine summary.
     for (const key of Object.keys(entry.s)) {
       existing.s[key] = (existing.s[key] ?? 0) + entry.s[key];
     }
@@ -99,8 +81,8 @@ const ratio = (covered, total) => {
 const rows = [];
 const totals = { s: [0, 0], b: [0, 0], f: [0, 0] };
 
-// Sorted by path, spelled out: the default comparator would stringify each `[path, entry]` pair
-// and sort on the object's `[object Object]` tail as readily as on the path.
+// Spelled out: the default comparator stringifies each `[path, entry]` pair and would sort on the
+// `[object Object]` tail as readily as on the path.
 const byPath = [...merged].sort(([a], [b]) => {
   return a.localeCompare(b);
 });
@@ -124,8 +106,7 @@ for (const [path, entry] of byPath) {
   totals.b[1] += branches.length;
 
   rows.push({
-    // Forward slashes whatever the platform: this column is read as a path into the repo, and
-    // half a report in `src\core\style.ts` is a report nobody can paste anywhere.
+    // Forward slashes whatever the platform: half a report in `src\core\style.ts` pastes nowhere.
     file: relative(ROOT, path).replaceAll('\\', '/'),
     statements: ratio(covered.s, statements.length),
     missed: statements.length - covered.s,

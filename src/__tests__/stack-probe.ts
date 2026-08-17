@@ -23,7 +23,7 @@ export async function frontDialogId(page: Page): Promise<string | null> {
 /**
  * Every open dialog, bottom first, by the `data-modal-z` stamp — the only durable DOM trace of
  * stack position, so asserting on it also checks the stamp is *rewritten* on reorder. Light DOM
- * only: `querySelectorAll` does not cross a shadow boundary (`vanilla/__tests__/bind-dialog.ct.tsx`).
+ * only: `querySelectorAll` cannot cross a shadow boundary (`vanilla/__tests__/bind-dialog.ct.tsx`).
  */
 export async function paintedStackOrder(page: Page): Promise<string[]> {
   return page.evaluate(() => {

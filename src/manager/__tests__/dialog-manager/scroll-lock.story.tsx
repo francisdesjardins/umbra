@@ -2,15 +2,9 @@ import { useModal } from '../../../react/use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Scroll-lock compensation harness.
- *
- * The page is deliberately taller than the viewport so a classic scrollbar is present, and
- * carries a right-aligned marker: hiding `overflow` without compensating the scrollbar width
- * widens the viewport and shifts that marker — the ~15px "jump" an uncompensated modal causes.
- *
- * Also renders a `position: fixed` bar that opts into `--dialog-scrollbar-width`, proving the
- * published custom property is usable from user-land (the library never touches fixed elements
- * itself).
+ * Scroll-lock compensation harness: taller than the viewport so a classic scrollbar exists, with a
+ * right-aligned marker that moves iff the width is not compensated (the ~15px jump). The fixed bar
+ * opts into `--dialog-scrollbar-width`: user-land can use it, the library never touches it.
  */
 export function ScrollLockHarness() {
   const { Modal, dialogManager } = useModal<void, 'done'>({
@@ -19,8 +13,7 @@ export function ScrollLockHarness() {
       return (
         <div style={dialogStyle}>
           <p>Modal dialog</p>
-          {/* Top-layer rule: a control usable while this modal is open must live inside the
-            render callback, since the native backdrop swallows clicks outside the dialog. */}
+          {/* Top-layer rule: a control usable while this modal is open lives in the render. */}
           <button
             onClick={() => {
               dialogManager.open('scroll-lock-modal-2');
@@ -40,8 +33,7 @@ export function ScrollLockHarness() {
     },
   });
 
-  // Second modal dialog, stacked on the first: both lock, but the compensation must be
-  // applied exactly once.
+  // Stacked on the first: both lock, but the compensation must be applied exactly once.
   const { Modal: Modal2 } = useModal<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
@@ -83,7 +75,6 @@ export function ScrollLockHarness() {
 
   return (
     <div>
-      {/* Taller than any test viewport → guarantees a scrollbar. */}
       <div style={{ height: '250vh' }}>
         <button
           onClick={() => {
@@ -105,7 +96,6 @@ export function ScrollLockHarness() {
           <span data-testid="right-marker">right</span>
         </div>
 
-        {/* User-land fixed element opting into the published compensation. */}
         <div
           data-testid="fixed-bar"
           style={{

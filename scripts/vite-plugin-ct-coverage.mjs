@@ -2,26 +2,12 @@ import { createInstrumenter } from 'istanbul-lib-instrument';
 import { relative, resolve } from 'node:path';
 
 /**
- * Istanbul instrumentation for the component bundle, applied to the **source**.
- *
- * `vite-plugin-istanbul` is the obvious tool and it does not work here: it runs `enforce: 'post'`,
- * so it instruments the output after TypeScript has been stripped, and remaps positions through
- * the combined source map. That map exists and looks sane — 2760 mappings, the right source — and
- * the result is still wrong: on `solid/modal-outlet.ts` every counter below the file's 20-line
- * JSDoc block lands 16 lines early, attributing statements to prose and reporting
- * `export function ModalOutlet` as never executed while sixteen tests walk through it.
- *
- * So this instruments before anything else touches the file, where the positions need no map to be
- * correct: `enforce: 'pre'` hands us the file as written, and Babel parses the TypeScript and JSX
- * directly. Everything downstream — the TS transform, the React compiler, Solid's hyperscript —
- * then treats the injected counters as the ordinary JavaScript they are.
- *
- * **The path filter is separator-normalised, and on Windows that is the difference between
- * measuring and not.** Vite hands module ids with forward slashes, but `path.relative` answers in
- * the platform's own separator — so `relative(root, id)` is `src\core\style.ts` here, and
- * `startsWith('src/')` is false for every file in the library. Nothing is instrumented, no page
- * defines `__coverage__`, nothing is written, and the report says `.nyc_output` is empty — which
- * reads as "you forgot the flag" and is the third way this setup has found to fail quietly.
+ * Istanbul instrumentation for the component bundle, applied to the **source** at `enforce: 'pre'`.
+ * `vite-plugin-istanbul` runs `'post'`, instrumenting stripped output and remapping, which lands
+ * every counter below a file's JSDoc block 16 lines early and reports exercised exports as never
+ * executed. Failure mode: the path filter must be separator-normalised, or on Windows `relative()`
+ * answers `src\core\style.ts`, nothing is instrumented, and the empty report reads as a forgotten
+ * flag. Wired into the CT vite config, gated on `CT_COVERAGE=1`.
  *
  * @param {{ include?: (id: string) => boolean }} [options]
  */
@@ -43,8 +29,7 @@ export const ctCoverage = (options = {}) => {
   const instrumenter = createInstrumenter({
     esModules: true,
     coverageVariable: '__coverage__',
-    // What makes reading the source possible at all: without these Babel meets `: string` and
-    // stops, and the plugin silently instruments nothing.
+    // Without these Babel meets `: string`, stops, and the plugin silently instruments nothing.
     parserPlugins: ['typescript', 'jsx', 'importMeta', 'topLevelAwait'],
   });
 

@@ -1,10 +1,5 @@
-// A plain TypeScript service. Note what is absent: React, components, hooks. It imports the
-// package root — the dialog manager itself — not the `/react` binding, and would compile and
-// run in a project where React is not installed.
-//
-// This is the shape a real service takes: an API client, a router guard, a websocket handler.
-// Code that must ask the user something or report a failure, but has no component to hang a
-// hook off.
+// A plain TypeScript service — no React, no hooks. It imports the package root, not `/react`, so it
+// compiles where React is absent: the shape an API client, router guard or websocket handler takes.
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { dialogManager } from 'umbra';
 
@@ -18,12 +13,8 @@ type Activity = { readonly at: string; readonly text: string };
 // ── Await a user decision from non-React code ────────────────────────────────
 
 /**
- * Open a dialog and resolve with the reason it closed.
- *
- * This is the piece that makes dialogs usable from a service: React callers get
- * `modal.openAndWait()`, and the imperative equivalent is `open()` plus a one-shot
- * `subscribe()`. The listener unsubscribes itself, so a caller that never awaits does not
- * leak a subscription.
+ * The imperative `openAndWait()`: open, resolve with the close reason, and unsubscribe in the
+ * one-shot listener so a caller that never awaits leaks nothing.
  */
 const openAndAwaitClose = (id: string) => {
   return new Promise<string>((resolve) => {
@@ -38,10 +29,8 @@ const openAndAwaitClose = (id: string) => {
 };
 
 // ── Service state ────────────────────────────────────────────────────────────
-//
-// A hand-rolled listener set rather than the library's `createStore`: that lives behind the
-// React barrel, so importing it here would pull React back in and defeat the point. Your own
-// service brings whatever state primitive it already uses.
+// A hand-rolled listener set rather than the library's `createStore` — which is a root export and
+// would work here — because a real service brings the state primitive it already uses.
 
 let activity: readonly Activity[] = [];
 let target: Environment = 'staging';
@@ -62,11 +51,7 @@ const record = (text: string) => {
 
 // ── Public surface ───────────────────────────────────────────────────────────
 
-/**
- * The whole flow, driven from here: ask for confirmation, call the API, then report success
- * or raise the failure dialog. The UI orchestrates none of it — it only registers the two
- * modals this service opens by id.
- */
+/** Confirm, call the API, report success or raise the failure dialog — the UI orchestrates none. */
 const deploy = async (environment: Environment) => {
   target = environment;
   emit();
@@ -88,8 +73,7 @@ const deploy = async (environment: Environment) => {
   }
 };
 
-// Arrow properties, not methods: `subscribe` and the getters are handed straight to
-// `useSyncExternalStore`, which calls them detached from the object.
+// Arrow properties, not methods: `useSyncExternalStore` calls them detached from the object.
 export const deploymentService = {
   /** Subscribe to service state. Returns an unsubscribe, so React can pass it to an effect. */
   subscribe: (listener: () => void) => {

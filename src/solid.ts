@@ -1,33 +1,21 @@
 /**
  * `umbra/solid` — the Solid binding.
  *
- * A sibling of `./react`, not a port of it. Both sit on the same framework-agnostic core: the
- * modal store, the action engine, the manager, the `attach*` DOM wiring, the placement table and
- * the slide geometry are all shared, and what each binding adds is how its framework schedules
- * effects and owns nodes. That is the claim `src/index.ts` makes about React being one binding,
- * cashed a second time.
- *
- * **The surface is React's**, deliberately, so a team running both frameworks writes the same
- * modal twice with the same words. **Three** differences, and all three are the renderer's rather
- * than a choice:
+ * A sibling of `./react`, not a port: both sit on the same core, and each adds only how its
+ * framework schedules effects and owns nodes. **The surface is React's**, deliberately, so a team
+ * running both writes the same modal twice with the same words. Three differences, all renderer:
  *
  * - Live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are **getters** over
- *   signals. `modal.isVisible` reads the same way it does in React; inside JSX it subscribes that
- *   one expression instead of re-rendering a component.
+ *   signals, so inside JSX each subscribes that one expression. Therefore **do not destructure the
+ *   render args** — `render: ({ isPreparing })` freezes the value, as destructuring props does
+ *   anywhere in Solid; read through the context, `render: (ctx) => <Show when={ctx.isPreparing}>…`.
  * - {@link useLookup} returns an accessor, because `ModalInfo` is a discriminated union and an
  *   object of getters cannot be one without losing the narrowing.
- * - `portal: true` leaves `Modal` as `null`: React's `createPortal` returns a node you still have
- *   to render, while a Solid modal owns its element, so the binding mounts it into
- *   `document.body` itself and there is nothing left for the caller to place.
+ * - `portal: true` leaves `Modal` as `null`: a Solid modal owns its element, so the binding mounts
+ *   it into `document.body` and there is nothing left for the caller to place.
  *
- * Because they are getters, **do not destructure the render args** — `render: ({ isPreparing })`
- * reads the value once and freezes it, exactly as destructuring props does anywhere in Solid.
- * Take the context and read through it: `render: (ctx) => <Show when={ctx.isPreparing}>…`.
- *
- * The root is re-exported wholesale below, so a Solid app imports from this one path.
- *
- * Solid is an **optional** peer dependency: this entry point is the only thing in the package
- * that touches it, and the root resolves with it absent — the same bargain `react` gets.
+ * Solid is an **optional** peer dependency — this entry point is the only thing that touches it —
+ * and the root is re-exported wholesale below, so an app imports this one path.
  */
 
 export { useModal } from './solid/use-modal.js';
@@ -41,24 +29,18 @@ export { useDialogManager } from './solid/use-dialog-manager.js';
 export type { DialogManagerSnapshot } from './solid/use-dialog-manager.js';
 export { useLookup } from './solid/use-lookup.js';
 
-// The bridge from the library's store contract to a Solid signal. Public because it is what a
-// consumer needs to read any store this package hands it — the manager's, a modal's — and
-// because the alternative is every app writing the same six lines.
+// The bridge to a Solid signal: what a consumer needs to read any store this package hands it.
 export { fromStore } from './solid/from-store.js';
 
-// The framework-agnostic core, re-exported wholesale: `dialogManager`, `createStore`,
-// `dialogPlacement`, `applyStyle`, `Key`. A Solid consumer needs exactly one import path.
-//
-// Every relative specifier carries its `.js` extension — `tsc` copies them into the emitted
-// `.d.ts` verbatim, and an extensionless one is invalid on `moduleResolution: node16`/`nodenext`.
+// The core, wholesale, so a Solid consumer needs one import path. The `.js` is load-bearing — see
+// the note on `./react`'s copy of this line.
 export * from './index.js';
 
-// `CloseResult`, `ModalPhase` and `ModalStoreSnapshot` are deliberately absent: they are part of
-// the framework-agnostic vocabulary and ship from the root, which this file re-exports wholesale.
+// `CloseResult`, `ModalPhase` and `ModalStoreSnapshot` are absent: the root re-export has them.
 export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from './core/types.js';
 
-// The four the core leaves open, turned to Solid: `DialogStyle` for styles, `JSX.Element` for
-// nodes. Same names as `./react` exports, same meanings, different instantiation.
+// The four the core leaves open, turned to Solid: `DialogStyle` and `JSX.Element` — `./react`'s
+// names and meanings, a different instantiation.
 export type {
   ModalAnimation,
   UseModalBaseOptions,

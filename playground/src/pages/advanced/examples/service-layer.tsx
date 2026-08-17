@@ -12,13 +12,9 @@ import { useSyncExternalStore } from 'react';
 
 export const MODAL_ID = CONFIRM_MODAL_ID;
 
-/**
- * The React half is deliberately thin: it registers the two modals the service opens by id
- * and mirrors the service's state. It orchestrates nothing — no flow logic lives here.
- */
+/** The React half registers the two modals the service opens by id and mirrors its state. */
 export function ServiceLayerExample() {
-  // The service exposes subscribe + getters, which is exactly useSyncExternalStore's
-  // contract — no adapter needed for a store the library did not provide.
+  // The service's subscribe + getters are already `useSyncExternalStore`'s contract.
   const activity = useSyncExternalStore(deploymentService.subscribe, deploymentService.getActivity);
   const target = useSyncExternalStore(deploymentService.subscribe, deploymentService.getTarget);
   const lastError = useSyncExternalStore(
@@ -29,8 +25,7 @@ export function ServiceLayerExample() {
   const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
     id: CONFIRM_MODAL_ID,
     ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
-    // A dialog, not an alertdialog: the user pressed the button that raised it. Contrast the
-    // failure below, which arrives without anyone asking for it.
+    // A dialog, not an alertdialog: the user pressed the button that raised it.
     render: ({ action }) => {
       return (
         <MessageModal.DefaultLayout>
@@ -67,9 +62,7 @@ export function ServiceLayerExample() {
     id: FAILURE_MODAL_ID,
     ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
     ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,
-    // The clearest `alertdialog` on the site: a blocking error the service raised on its own,
-    // which the user did not open and has to act on. The description is the error text, and an
-    // alertdialog is announced with it rather than waiting to be read.
+    // `alertdialog`: a blocking error raised unasked, announced with its description (the error).
     role: 'alertdialog',
     render: ({ action }) => {
       return (

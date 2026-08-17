@@ -13,11 +13,9 @@ const resultStore = createResultStore();
 export function VanillaSlideExample() {
   const { result } = useStore(resultStore);
 
-  // The same three sections, the same controls and the same two reasons its MUI twin declares —
-  // deliberately, and it is the whole point of the pair. What differs is the markup underneath and
-  // the one line of prose naming the flavour; anything else differing turns a comparison into two
-  // unrelated demos. Its `SectionGroup` is the counterpart of MUI's inner `<Stack>`: it groups the
-  // checkboxes, not the section around them.
+  // Same sections, controls and reasons as its MUI twin: only the markup and the flavour line
+  // differ, or the comparison becomes two unrelated demos. `SectionGroup` is MUI's inner `<Stack>`,
+  // grouping the checkboxes rather than the section around them.
   const panel = useSlideModal<void, 'cancel' | 'save'>({
     id: MODAL_ID,
     direction: 'right',

@@ -35,11 +35,8 @@ test.describe('contrastRatio', () => {
     expect(ratio('#d97706', '#ffffff')).toBeCloseTo(ratio('#ffffff', '#d97706'), 6);
   });
 
-  /**
-   * The finding this whole pass started from: the palette's amber cannot carry white text, and
-   * it is worst in dark mode where the flame is brightest. Pinned so a palette edit that
-   * reintroduces it fails here rather than on someone's laptop panel.
-   */
+  // The finding this pass started from: the palette's amber cannot carry white text, worst in dark
+  // mode. Pinned so a palette edit reintroducing it fails here, not on someone's laptop panel.
   test('reports the amber/white pair as the failure it is', () => {
     expect(ratio('#ffffff', '#d97706')).toBeLessThan(4.5);
     expect(ratio('#ffffff', '#f59e0b')).toBeLessThan(3);

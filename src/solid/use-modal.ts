@@ -32,21 +32,15 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
 /**
  * `umbra/solid`'s core hook — the same `useModal` as React's, over the same core.
  *
- * **Written without JSX, on purpose.** Solid's JSX is a compile step (`babel-preset-solid`), and
- * requiring it to build *the library* would put a second toolchain in the way of a package whose
- * whole claim is that a binding is thin. So the binding builds its one `<dialog>` with
- * `document.createElement` and Solid's own `insert` — which is precisely what compiled JSX emits.
- * Consumers write ordinary Solid JSX; their compiler handles it, and what crosses the boundary is
- * a `JSX.Element`, which needs no agreement about tooling.
+ * **Written without JSX, on purpose**: Solid's JSX is a compile step (`babel-preset-solid`), and
+ * requiring it to build *the library* would put a second toolchain in the way. So the `<dialog>`
+ * is built with `document.createElement` and Solid's own `insert`, which is what compiled JSX
+ * emits anyway; consumers write ordinary JSX and only a `JSX.Element` crosses the boundary.
  *
- * The differences from React's binding are the two that follow from the renderer, and no others:
- *
- * - **Nothing re-renders.** The body runs once. Everything live is a getter over a signal, so
- *   `modal.isVisible` inside JSX subscribes that one expression and nothing else.
- * - **An action un-declares itself.** React expires a declaration by re-running `render`
- *   wholesale; here a button removed by its own `<Show>` calls `engine.undeclare` from
- *   `onCleanup`. Without it the hotkey outlives the button and `hasActions()` — which decides
- *   whether a backdrop click dismisses — never goes back to false.
+ * Two differences from React's binding, both the renderer's: nothing re-renders, and an action
+ * un-declares itself — a button removed by its own `<Show>` calls `engine.undeclare` from
+ * `onCleanup`, without which its hotkey lives on and `hasActions()`, which decides whether a
+ * backdrop click dismisses, never returns to false.
  *
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
  * @typeParam TReason - The reasons this modal closes with. Declare them.
@@ -69,8 +63,7 @@ export function useModal<TData = void, TReason extends string = string>(
     placement,
   } = resolveModalOptions(options);
 
-  // Annotated for the reason React's binding gives: an un-annotated fallback leaves a union
-  // whose branches disagree about the style parameter `getDialogAnimationStyles` infers.
+  // Annotated for the reason React's binding gives.
   const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
 
   const manager = useDialogManagerContext();
@@ -80,19 +73,14 @@ export function useModal<TData = void, TReason extends string = string>(
   const snapshot = fromStore(store);
   const actionState = fromStore(engine);
 
-  // ── The element ─────────────────────────────────────────────────────────────
-  //
-  // Built here rather than described and handed to a renderer, which is what removes the ref
-  // dance the React binding needs: `getDialog` can simply close over it.
-
+  // Built here rather than handed to a renderer, so `getDialog` closes over it — no ref dance.
   const dialog = document.createElement('dialog');
   const getDialog: GetDialog = () => {
     return dialog;
   };
 
-  // A render effect rather than a plain one, for the reason the style effect below is: it runs
-  // synchronously at creation, so the element is stamped before anything can insert or show it.
-  // `aria-busy` is why this is an effect at all — the rest of the table never changes.
+  // A render effect, so the element is stamped at creation, before anything can insert or show it.
+  // `aria-busy` is why it is an effect at all — the rest of the table is fixed.
   createRenderEffect(() => {
     setDialogAttributes(
       dialog,
@@ -112,8 +100,7 @@ export function useModal<TData = void, TReason extends string = string>(
   applyStyle(content, { next: DIALOG_CONTENT_STYLE });
   dialog.append(content);
 
-  // The dialog's own styles, recomputed per phase. A render effect rather than an effect, so the
-  // exit/entrance state is written before `syncOpenSequence` shows the dialog in the same flush.
+  // A render effect, so the exit/entrance state is written before `syncOpenSequence` shows it.
   let appliedStyle: DialogStyle | undefined;
   createRenderEffect(() => {
     appliedStyle = applyStyle(dialog, {
@@ -126,8 +113,7 @@ export function useModal<TData = void, TReason extends string = string>(
     });
   });
 
-  // The host `dialogPlacement` asked for, when it asked for one: the dialog's `absolute`
-  // positioning resolves against it, immune to a transformed ancestor above.
+  // The dialog's `absolute` positioning resolves against this host, immune to a transform above.
   let placed: HTMLElement = dialog;
   if (placement.host) {
     const host = document.createElement('div');
@@ -139,22 +125,10 @@ export function useModal<TData = void, TReason extends string = string>(
 
   const baseAction = createActionFactory(engine, actionState);
 
-  /**
-   * The core factory plus the one thing a fine-grained renderer owes it: an expiry.
-   *
-   * The owner here is whatever scope drew the button — the modal's content, or the `<Show>`
-   * branch it sits in — so a button that disappears takes its declaration with it.
-   *
-   * Wrapping the *call* means re-attaching what hangs off it: `isRunning` is a property of the
-   * factory, so an arrow that only forwarded the call would leave Solid with a factory the React
-   * one has and it does not. The `typeof baseAction` annotation is what refuses that — since
-   * `ActionFactory` is an object type with a call signature, a bare arrow is missing a required
-   * property and fails to compile. `binding-parity.test.ts` would not catch it: that one diffs
-   * the entry points' export *names*, and a property of a factory is not one.
-   *
-   * What the type cannot say is that the property stays *live* through the wrapper — that it is
-   * still reading the same `readState` the props do — so a Solid component test asserts it.
-   */
+  // The core factory plus the expiry a fine-grained renderer owes it: the owner is whatever scope
+  // drew the button, so one that disappears takes its declaration with it. `typeof baseAction`
+  // stops a bare arrow dropping `isRunning` off the wrapper, which `binding-parity.test.ts` would
+  // not catch (it diffs export names); a component test asserts it stays *live* through it.
   const action: typeof baseAction = Object.assign(
     (...args: Parameters<typeof baseAction>) => {
       const props = baseAction(...args);
@@ -195,26 +169,20 @@ export function useModal<TData = void, TReason extends string = string>(
     },
   };
 
-  // ── Content ─────────────────────────────────────────────────────────────────
-  //
-  // Keyed on visibility alone, not on the whole snapshot: `isPreparing` reaches the content as a
+  // Keyed on visibility alone, not the whole snapshot: `isPreparing` reaches the content as a
   // getter, so a modal that starts loading updates the part that reads it instead of redrawing.
   insert(content, () => {
     if (!isVisible()) {
       return null;
     }
-    // The declaration window. Actions drawn eagerly land in this pass; ones inside a `<Show>`
-    // run later and declare themselves then — `declare` falls back to the live table for exactly
-    // that case, and `undeclare` above is what retires them.
+    // The declaration window. Actions inside a `<Show>` run after it and declare themselves then,
+    // which is why `declare` falls back to the live table and `undeclare` above retires them.
     return runDeclarationWindow(engine, () => {
       return options.render(renderArgs);
     });
   });
 
-  // ── Backdrop click ──────────────────────────────────────────────────────────
-
-  // The decision — variant, opt-in/opt-out, the shared dismissal gate, and the geometry — is
-  // `modal-runtime.ts`'s, and it is the same call React's binding makes from its `onClick`.
+  // The decision is `modal-runtime.ts`'s — the same call React's binding makes from its `onClick`.
   dialog.addEventListener('click', (event: MouseEvent) => {
     if (
       shouldDismissOnBackdropClick(event, {
@@ -230,16 +198,10 @@ export function useModal<TData = void, TReason extends string = string>(
     }
   });
 
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
-  //
   // One effect, and **no `onCleanup` inside it**: Solid runs an effect's cleanups before every
-  // re-run, which would tear the whole sequence down each pass and leave the director nothing to
-  // diff. Everything it attached comes off in `destroy()` below.
-  //
-  // What the effect tracks is what the body reads — the snapshot, and the option fields, which
-  // Solid props deliver as getters. That is Solid's half of "never a pass behind"; React gets the
-  // same property by having no dependency array at all.
-
+  // re-run, which would tear the sequence down each pass and leave the director nothing to diff —
+  // everything comes off in `destroy()` instead. It tracks what the body reads, the snapshot and
+  // the option getters, which is Solid's half of "never a pass behind".
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
   const director = createModalDirector({ store, getDialog, modalId, manager, engine });
 
@@ -262,15 +224,9 @@ export function useModal<TData = void, TReason extends string = string>(
     });
   });
 
-  // ── Registration + teardown ─────────────────────────────────────────────────
-  //
-  // Setup work, not effect work: a Solid component body runs once, so there is no
-  // double-invocation to defend against and nothing structural can change under the
-  // registration — which is why React's version needs an effect with a dependency list and this
-  // one does not.
-
-  // Always registered, so a callback added to the options object stays reachable; the store's
-  // own `runOnClose` is a no-op when there is nothing to call.
+  // Setup, not effect work: a Solid body runs once, so nothing structural changes under the
+  // registration — which is why React's needs a dependency list. Always registered, so a callback
+  // added later stays reachable; `runOnClose` no-ops when there is none.
   store.setOnClose((result) => {
     return options.onClose?.(result);
   });
@@ -281,8 +237,7 @@ export function useModal<TData = void, TReason extends string = string>(
     nonModal: isNonModal,
     getDialog,
     ...(options.onOpenRequest !== undefined && {
-      // Returned, not swallowed: the manager awaits the handler, so an owner that validates
-      // asynchronously still gets to refuse before `requestOpenAndWait` answers.
+      // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
       onOpenRequest: (
         payload: unknown,
         request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]
@@ -293,26 +248,19 @@ export function useModal<TData = void, TReason extends string = string>(
   });
 
   onCleanup(() => {
-    // Both in one cleanup, in this order, rather than in two: Solid runs an owner's cleanups in
-    // reverse registration order, so two of them would read as the opposite of what they do. The
-    // detachments come off before the modal is unregistered and finalized, which is the order
-    // React's declaration-ordered cleanups give.
+    // One cleanup rather than two: Solid runs an owner's cleanups in reverse registration order,
+    // so a pair would read as the opposite of what it does. Detachments first, as in React.
     director.destroy();
     teardownModal(store, { manager, modalId, dialog: getDialog(), onError: options.onError });
   });
-
-  // ── What the caller places ──────────────────────────────────────────────────
 
   const outlet = useModalOutletContext();
 
   let Modal: JSX.Element = placed;
 
   if (isPortaled) {
-    // **The one place the surface differs from React's, and it is the renderer's difference.**
-    // React's `createPortal` produces a node the caller still has to render; a Solid modal owns
-    // its element, so the binding mounts it here and `Modal` is `null`. Placing it anyway is
-    // harmless, and neither an outlet nor a caller has to do anything for a portaled dialog to
-    // appear — which is why there is no outlet registration on this branch.
+    // The one place the surface differs from React's: a Solid modal owns its element, so the
+    // binding mounts it and `Modal` is `null` — hence no outlet registration on this branch.
     document.body.append(placed);
     onCleanup(() => {
       placed.remove();

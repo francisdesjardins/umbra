@@ -5,12 +5,10 @@ export type MessageProps = {
   readonly children: ReactNode;
   readonly sx?: SxProps | undefined;
   /**
-   * What `ariaDescribedBy` points at, when there is one.
-   *
-   * An `alertdialog` is announced with its description rather than waiting to be read, so the body
-   * has to be addressable for the role to be worth much. Not always though: the APG says to omit
-   * the description when the content has structure — lists, tables, several paragraphs — since it
-   * would be read out as one unbroken string.
+   * What `ariaDescribedBy` points at, when there is one. An `alertdialog` is announced with its
+   * description, so the body must be addressable for the role to be worth much — except that the
+   * APG says to omit the description for structured content (lists, tables, several paragraphs),
+   * which would be read out as one unbroken string.
    */
   readonly id?: string | undefined;
 };

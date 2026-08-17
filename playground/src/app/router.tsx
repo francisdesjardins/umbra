@@ -42,7 +42,7 @@ const apiRoute = createRoute({
   }, 'ApiIndexPage'),
 });
 
-// One page per chapter of the reference — `/api` itself is the map, not a ninety-symbol list.
+// One page per chapter — `/api` itself is the map, not a ninety-symbol list.
 const apiCategoryRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
@@ -153,15 +153,12 @@ const history = import.meta.env['VITE_HASH_ROUTER'] === 'true' ? createHashHisto
 
 export const router = createRouter({
   routeTree,
-  // Every route component is lazy, and without this the chunk is only requested on click — the
-  // whole round trip sits between the press and the first paint. `intent` starts it on hover or
-  // focus, so the common case lands on a module that is already there. The delay is what keeps a
-  // pointer sweeping down the sidebar from pulling all twelve.
+  // Route components are lazy, so without `intent` the chunk's round trip sits between click and
+  // first paint; the delay stops a pointer sweeping the sidebar from pulling all twelve.
   defaultPreload: 'intent',
   defaultPreloadDelay: 50,
-  // For the navigations preloading cannot cover — keyboard, touch, a cold direct link — the
-  // default is to hold the previous page on screen for a full second with nothing to say a click
-  // registered.
+  // For what preloading cannot cover (keyboard, touch, a cold link), the default is to hold the
+  // previous page for a full second with nothing saying the click registered.
   defaultPendingComponent: RoutePending,
   defaultPendingMs: 150,
   ...(history ? { history } : {}),

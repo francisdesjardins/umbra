@@ -9,14 +9,9 @@ import { Key, useMessageModal, useSlideModal } from 'umbra/react';
 export const PANEL_ID = 'stack-panel';
 
 /**
- * Three modals of different kinds, stacked — and the keyboard is the point.
- *
- * Each one is rendered **inside** the one below it, which is not a contrivance: a dialog in the
- * top layer swallows every click outside itself, so anything that opens a second modal has to
- * live in the first one's `render`. Every event raised in the inner dialog therefore bubbles
- * through the outer ones, and the library scopes them back.
- *
- * All three declare `Enter` with a different meaning. Only the one in front may hear it.
+ * Three modals of different kinds, stacked: all three declare `Enter` differently and only the
+ * front one may hear it. Each renders **inside** the one below, because a top-layer dialog swallows
+ * outside clicks, so every inner event bubbles through the outer ones and the library scopes it.
  */
 export function StackedModalsExample() {
   const [log, setLog] = useState<string[]>([]);

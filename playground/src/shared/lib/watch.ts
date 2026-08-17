@@ -1,8 +1,5 @@
 import type { StoreContract } from 'umbra';
 
-// ── watch ─────────────────────────────────────────────────────────────────────
-
-/** What {@link watch} observes, and what it does about it. */
 export type WatchOptions<TSnapshot, TSlice> = {
   /** The slice of the snapshot to watch. */
   readonly select: (snapshot: TSnapshot) => TSlice;
@@ -13,16 +10,11 @@ export type WatchOptions<TSnapshot, TSlice> = {
 };
 
 /**
- * Observe a store outside React: fires `onChange(next, prev)` whenever the
- * selected slice changes. Returns an unsubscribe function. Zero React imports.
+ * Observe a store outside React: fires `onChange(next, prev)` whenever the selected slice changes,
+ * and returns an unsubscribe function. Zero React imports.
  *
  * @example
- * // Outside React: react to one slice, ignore the rest of the snapshot.
- * const stop = watch(cartStore, {
- *   select: (s) => s.items.length,
- *   onChange: (count, previous) => analytics.track('cart_size', { count, previous }),
- * });
- * stop();
+ * const stop = watch(cartStore, { select: (s) => s.items.length, onChange: analytics.track });
  */
 export function watch<TSnapshot, TSlice>(
   store: StoreContract<TSnapshot>,

@@ -4,12 +4,7 @@ import { findCategory } from './api-index';
 
 const ANCHOR_PREFIX = 'api-';
 
-/**
- * Scroll to the symbol named in the URL.
- *
- * Cross-references are router links carrying a hash, so arriving at a category page is
- * routinely a request for one entry two thirds of the way down it.
- */
+/** Scroll to the symbol the URL hash names: cross-references land far down a category page. */
 export const useHashScroll = () => {
   const hash = useRouterState({
     select: (state) => {
@@ -26,10 +21,8 @@ export const useHashScroll = () => {
 };
 
 /**
- * Which symbol the reader is currently on, for the rail.
- *
- * The bottom margin keeps the answer to the top third of the viewport — without it every
- * short entry below the fold counts as "current" and the highlight runs ahead of the reader.
+ * Which symbol the reader is on, for the rail. The bottom margin keeps the answer in the viewport's
+ * top third; without it every short entry below the fold counts and the highlight runs ahead.
  */
 export const useActiveSymbol = (categoryId: string) => {
   const [active, setActive] = useState<string | null>(null);
