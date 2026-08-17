@@ -44,6 +44,14 @@ import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js
  * Nothing is rendered: the markers are zero-sized, carry no text and no role, and are removed on
  * teardown. A binding calls this and passes nothing but the flag.
  *
+ * **And no `aria-hidden`, decided rather than forgotten.** A focusable element inside an
+ * `aria-hidden` subtree is its own audit failure (axe's `aria-hidden-focus`), and the attribute
+ * buys nothing here: an empty zero-sized `<div>` announces nothing to begin with, and focus never
+ * *rests* on a marker — the `focus` handler moves it in the same event. The one way it could —
+ * `focusFirstAvailable` finding nothing at all — is a dialog with `containFocus` and not a single
+ * focusable stop, which the width of `FOCUSABLE` (a `contenteditable` editor is a stop) makes a
+ * dialog with no reason to exist.
+ *
  * @internal Not part of the public API.
  */
 
