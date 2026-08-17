@@ -3,11 +3,12 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
+import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
 import { Box, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { useSlideModal } from 'umbra/react';
+import { Key, useSlideModal } from 'umbra/react';
 
 export const DRAWER_ID = 'slide-preset-drawer';
 export const SHEET_ID = 'slide-preset-sheet';
@@ -171,7 +172,10 @@ const ROWS = [
  * Contained inspector: non-modal, no portal, over a region of the page — not the shared drawer
  * layout (400px wide, viewport height), since a contained panel is only as big as its host box.
  */
-function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
+function useInspectorPreset(
+  selected: (typeof ROWS)[number] | null,
+  onNavigate: (delta: 1 | -1) => void
+) {
   return useSlideModal<void, 'close'>({
     id: INSPECTOR_ID,
     direction: 'right',
@@ -182,6 +186,22 @@ function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
     ariaLabel: 'Row details',
     // A share of the host, not a fixed width: the host is what decides how big this can be.
     style: { width: '62%' },
+    // The library leaves arrow keys alone and this handler only sees presses raised inside the
+    // panel, so ↑/↓ can browse the host's rows while `containFocus` keeps focus parked on Close.
+    // Bare arrows only — a held modifier stays native — and only because nothing in this panel
+    // edits text: an input or a role="listbox" inside would need the arrows for itself.
+    onKeyDown: (event) => {
+      if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+      if (event.key === Key.ArrowDown) {
+        event.preventDefault();
+        onNavigate(1);
+      } else if (event.key === Key.ArrowUp) {
+        event.preventDefault();
+        onNavigate(-1);
+      }
+    },
     render: ({ action }) => {
       return (
         <Stack
@@ -202,7 +222,7 @@ function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto' }}>
             Slides inside the card, not over the page — and the rows behind it stay clickable,
-            because nothing entered the top layer.
+            because nothing entered the top layer. ↑ and ↓ switch rows while focus stays on Close.
           </Typography>
           <Shared.Button
             size="small"
@@ -300,8 +320,22 @@ export function SlidePresetsExample() {
   const drawer = useDrawerPreset();
   const sheet = useSheetPreset();
   const palette = usePalettePreset();
-  const [selected, setSelected] = useState<(typeof ROWS)[number] | null>(null);
-  const inspector = useInspectorPreset(selected);
+  const { announce, region } = useAnnouncer();
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selected = selectedIndex === null ? null : (ROWS[selectedIndex] ?? null);
+
+  const navigate = (delta: 1 | -1) => {
+    const next = Math.min(ROWS.length - 1, Math.max(0, (selectedIndex ?? 0) + delta));
+    const row = ROWS[next];
+    if (row === undefined || next === selectedIndex) {
+      return;
+    }
+    setSelectedIndex(next);
+    // Focus never leaves Close, so without this the panel's new content changes silently.
+    announce(`${row.name} — ${row.detail}`);
+  };
+
+  const inspector = useInspectorPreset(selected, navigate);
 
   return (
     <ExampleLayout
@@ -340,7 +374,7 @@ export function SlidePresetsExample() {
             edge="right"
             dashed
             onOpen={async () => {
-              setSelected(ROWS[0] ?? null);
+              setSelectedIndex(0);
               await inspector.open();
             }}
           />
@@ -349,7 +383,8 @@ export function SlidePresetsExample() {
         {/* A contained panel is only as big as its host, so the host is a real card with rows. */}
         <Box>
           <Typography variant="caption" color="text.secondary">
-            Contained panel — a details pane inside a card, not an overlay on the page:
+            Contained panel — a details pane inside a card, not an overlay on the page. While it is
+            open, ↑ and ↓ move through the rows:
           </Typography>
           <Box
             sx={{
@@ -375,7 +410,7 @@ export function SlidePresetsExample() {
                 scrollPaddingBlock: focusRingSpace,
               }}
             >
-              {ROWS.map((row) => {
+              {ROWS.map((row, index) => {
                 return (
                   <Stack
                     key={row.id}
@@ -401,7 +436,7 @@ export function SlidePresetsExample() {
                       size="small"
                       variant="text"
                       onClick={async () => {
-                        setSelected(row);
+                        setSelectedIndex(index);
                         await inspector.open();
                       }}
                     >
@@ -414,6 +449,9 @@ export function SlidePresetsExample() {
             {inspector.Modal}
           </Box>
         </Box>
+        {/* Outside the dialog on purpose — see useAnnouncer for why a region inside `render`
+            would announce nothing. */}
+        {region}
       </Stack>
     </ExampleLayout>
   );
