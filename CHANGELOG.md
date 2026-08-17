@@ -11,6 +11,18 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Measured — forced colors, and the templates passed on the first probe
+
+Windows High Contrast strips author backgrounds and box-shadows: the library's backdrop is
+replaced by the UA's own system scrim, and a surface drawn by shadow alone loses its silhouette
+entirely. Probed under emulation across the home modal, both message-template flavours and a
+slide drawer: every surface stayed delimited, because each already carries a real `1px` border on
+the edge that matters — the border discipline the contrast pass required for 1.4.11, paying a
+second time. The focus ring comes back in the system Highlight on its own. Nothing to fix; the
+platform fact is a matrix row, the one-sentence consumer rule (a border is the outline, a shadow
+is decoration) is in the README's accessibility chapter, and the browser floor now names its
+Baseline year beside the measured version numbers.
+
 ### Added — WCAG 2.2 as the compatibility matrix's fourth axis
 
 The criteria a dialog _engine_ touches — 2.1.1, 2.1.2, 2.2.1, 2.3.3, 2.4.3, 2.4.7, 2.4.11, 4.1.2 —

@@ -124,6 +124,11 @@ are deliberately yours.
   library _measures_ whether transitions are live and finalizes a close immediately when they are
   not, so the rule cannot hang an exit waiting for a `transitionend` that never comes. Animations
   are defaults you replace; the playground ships that rule itself.
+- **Forced colors keeps the silhouette, if you give it one.** Windows High Contrast strips author
+  backgrounds and shadows: the library's backdrop is replaced by the system's own scrim, and a
+  surface drawn by shadow alone disappears. Measured under emulation: the reference templates all
+  stay delimited, because each carries a real border on the edge that matters — the one rule a
+  consumer needs. The focus ring comes back in the system Highlight on its own.
 
 ## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Using it
 
@@ -148,9 +153,11 @@ JavaScript.
 That floor is what the code actually uses, measured rather than picked: constructed
 `CSSStyleSheet` + `adoptedStyleSheets` sets the Safari bound, `Array.prototype.toSorted` the
 Chrome and Firefox ones, and native `<dialog>` — the headline requirement — has been the widest
-of the three since Firefox 98. Node >= 24 is a **contributor** requirement — see Development
-below; the package is browser code with zero runtime dependencies, so nothing about it cares what
-a consumer builds with.
+of the three since Firefox 98. In [Baseline](https://web.dev/baseline) terms, everything the
+floor rests on has been Baseline since 2023 — the version numbers above are the same fact,
+spelled as the measurement it came from. Node >= 24 is a **contributor** requirement — see
+Development below; the package is browser code with zero runtime dependencies, so nothing about
+it cares what a consumer builds with.
 
 ## <img src="docs/brand/moon-full.svg" width="18" height="18" alt="" /> Quick Start
 
