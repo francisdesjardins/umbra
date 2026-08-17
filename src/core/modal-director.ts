@@ -24,11 +24,9 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 /**
  * Who asks the lifecycle's decisions, in what order, and on which pass.
  *
- * **Every framework-free piece of this library is a decision the core owns** — `canDismiss`,
- * `orderStack`, `chooseActionRunner` — and each is named, documented and tested. The *sequence*
- * those decisions are asked in was the one that was not: it existed only as the order of
- * statements in three binding files, and a sequence nobody named is a sequence nobody can test.
- * This file is that sequence, executed.
+ * The core owns every framework-free decision — `canDismiss`, `orderStack`, `chooseActionRunner` —
+ * but the *sequence* they are asked in existed only as the order of statements in three binding
+ * files, and a sequence nobody names is a sequence nobody can test. This file is that sequence.
  *
  * ## What a binding is left with
  *
@@ -51,48 +49,24 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
  *
  * ## One key per step, not one key for the sequence
  *
- * The obvious executor is a single ordered pass behind a single key — `umbra/vanilla`'s
- * `attachedFor`. It is wrong here, and worth the paragraph because no test would catch it.
- *
- * `focus.sync` carries state across its own attachment: `wasRunning` is how it recognises the
- * running → idle transition that restores focus to the button that ran an action. A single key
- * is the union of every step's inputs, and that union contains `onKeyDown` — which callers pass
- * as an inline arrow, so its identity changes on every render. An action starting *causes* a
- * render, so the union key changes mid-action, the focus step is rebuilt with `wasRunning` back
- * to `false`, the settle is not recognised, and focus is never given back. That is the shape of
- * the WebKit bug this library fixed the day before, reintroduced by a refactor.
- *
- * So each step declares its own inputs, and only the steps whose own inputs changed are rebuilt.
- * `focus.sync` depends on the phase and nothing else, which is the property
- * `modal-director.test.ts` asserts directly rather than leaving to be rediscovered. What this is,
- * in one line: **React's dependency array, made framework-free** — so a binding inherits the
- * granularity instead of transcribing it.
- *
- * Only `syncOpenSequence` runs on every pass. `syncLabellingDiagnostics` is idempotent and could,
- * but it is keyed instead, because keying is what React did and a step that changes how often it
- * runs is a behaviour change wearing a refactor's clothes.
+ * React's dependency array, made framework-free. A single key for the whole pass is the union of
+ * every step's inputs, and that union contains `onKeyDown` — an inline arrow whose identity
+ * changes on every render, including the render an action start causes. `focus.sync` would then
+ * be rebuilt mid-action with `wasRunning` back to `false`, the settle unrecognised and focus never
+ * given back. So each step declares its own inputs; `focus.sync` reads the phase alone, which
+ * `modal-director.test.ts` asserts directly. Only `syncOpenSequence` runs unkeyed.
  *
  * ## What is not here
  *
- * Steps that run during **render** rather than from an effect — `setDialogAttributes` and
- * `getDialogAnimationStyles` — are deliberately absent, because a binding writes them where its
- * renderer runs and no order shared with an effect would mean anything. React calls
- * `getDialogAnimationStyles` in its render body, so it runs before every step below while
- * appearing last in the file.
+ * Render-time steps — `setDialogAttributes`, `getDialogAnimationStyles` — are absent: a binding
+ * writes them where its renderer runs, so no order shared with an effect would mean anything.
  *
- * `umbra/vanilla` does not use this. Its `sync()` runs `syncOpenSequence` **last** where the hook
- * bindings run it first, and adopting the director would move it — a change measured green on
- * three engines and deliberately not taken, because "no test noticed" is enough to close a
- * contract question between two bindings that owe each other a mirror and not enough to move
- * shipped behaviour that owes nobody one. `wiring-order.test.ts` records the difference.
- *
- * **One thing does notice it, and it is worth knowing before that change is reconsidered.** The
- * focus coordinator's `focusin` bookkeeping is armed by `focus.sync`, so running that step before
- * `syncOpenSequence` means it hears the opening focus `showModal()` places and running it after
- * means it does not. So `umbra/vanilla` remembers a `lastFocusInside` the hook bindings leave
- * empty, and a later `reclaimFocus` takes its `preferred` path there while the hook bindings fall
- * to the floor beneath it. Both deliver the same guarantee, which is why nothing failed; the
- * compatibility matrix carries the measurement, on the raise-hands-the-keyboard-back row.
+ * `umbra/vanilla` does not use this; its `sync()` runs `syncOpenSequence` **last** where the hook
+ * bindings run it first, recorded by `wiring-order.test.ts`. One thing notices: `focus.sync` arms
+ * the `focusin` bookkeeping, so running it first means vanilla hears the opening focus and
+ * remembers a `lastFocusInside` the hook bindings leave empty — a later `reclaimFocus` takes its
+ * `preferred` path there and the floor here. Same guarantee either way; the matrix carries the
+ * measurement on the raise-hands-the-keyboard-back row.
  *
  * @internal Not part of the public API. A binding is the only caller.
  */
@@ -100,14 +74,9 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 // ── What the director is handed ──────────────────────────────────────────────
 
 /**
- * The modal being directed — fixed for its whole lifetime, so no step lists any of it.
- *
- * **`modalId` included, and that is a statement rather than an omission.** The store, the action
- * engine and the focus coordinator all take the id when they are built and never look again, so a
- * modal's identity is settled at mount; a step re-reading it would be the only part of the
- * lifecycle pretending otherwise. React's registration effect lists it as a dependency, which is
- * what makes a changed `id` re-register under the new name while everything else keeps the
- * original — see the `id` option's own doc, which says so from the caller's side.
+ * The modal being directed — fixed for its whole lifetime, so no step lists any of it, `modalId`
+ * included: the store, engine and focus coordinator take the id once at build and never look
+ * again. React's registration effect does list it, which is what re-registers a changed `id`.
  */
 export type ModalDirectorContext = {
   readonly store: ModalStore;
@@ -273,18 +242,15 @@ export const MODAL_LIFECYCLE_STEPS = [
   },
   {
     /**
-     * Settle the opening focus, and restore it when an action lands.
-     *
-     * Ahead of the two below because it decides *where focus belongs*, and they only guard it
-     * once it is there. Nothing can observe the difference — it is one flush — but the reading
-     * order is the argument for the writing order.
+     * Settle the opening focus, and restore it when an action lands. Ahead of the two below
+     * because it decides where focus belongs and they only guard it once it is there — one
+     * flush, so nothing observes the difference; the reading order is the argument.
      */
     step: 'focus.sync',
     /**
-     * **The phase, and deliberately nothing else.** This step's attachment owns `wasRunning`, the
-     * flag that recognises an action settling; rebuilding it mid-action loses the transition and
-     * focus is never restored. Every other field here can change during an action — `onKeyDown`
-     * changes on every render — so any of them in this list is that bug. See the file's header.
+     * The phase and deliberately nothing else: this attachment owns `wasRunning`, so rebuilding
+     * it mid-action loses the settle and focus is never restored. Every other field here can
+     * change during an action, so any of them in this list is that bug.
      */
     inputs: (pass) => {
       return [pass.phase];
@@ -338,15 +304,11 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly ModalLifecycleStep[] = MODAL_LIF
 /**
  * Build the director for one modal.
  *
- * It owns the focus coordinator, because that is per-modal state the sequence reads and no
- * binding has another use for it.
- *
- * **The diffing is `createStepRunner`'s and nothing here restates it.** That split is not
- * bookkeeping: the table above is DOM to the last line, which is what kept the rule *reading* it
- * out of the unit project's reach — so "detach everything stale before attaching any of it" and
- * "`destroy` clears the keys as well as running them" were carried by two paragraphs and by
- * nothing that fails. What is left here is the part that is genuinely about modals: which steps
- * there are, what each reads, and the DOM context they share.
+ * It owns the focus coordinator — per-modal state the sequence reads, and no binding's business.
+ * The diffing is `createStepRunner`'s: the table above is DOM to the last line, which kept the
+ * rules reading it ("detach everything stale before attaching any of it", "`destroy` clears the
+ * keys") out of the unit project's reach until they moved there. What stays here is the part
+ * that is about modals — which steps exist, what each reads, and the context they share.
  */
 export function createModalDirector(ctx: ModalDirectorContext) {
   const { store, getDialog, modalId, manager, engine } = ctx;
@@ -365,9 +327,7 @@ export function createModalDirector(ctx: ModalDirectorContext) {
         },
       };
     }),
-    // Once per pass, so every step of a pass sees the same object — the phase is the only field
-    // that moves, and a step reading a different one than its neighbour would be a bug with no
-    // symptom until two steps disagreed about it.
+    // Once per pass, so no two steps can read different phases.
     (pass) => {
       return { store, getDialog, modalId, phase: pass.phase, manager };
     }

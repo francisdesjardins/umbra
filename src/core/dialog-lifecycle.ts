@@ -1,35 +1,26 @@
 /**
  * Framework-agnostic native-`<dialog>` DOM orchestration.
  *
- * These functions operate directly on a `<dialog>` element and know nothing about a store or a
- * phase — `attach-lifecycle.ts` is what wires them to store transitions. The split is what keeps
- * the DOM logic testable in isolation and usable from a binding that owns its own element.
- *
- * Everything here is a `run*`/`show*` verb: it does the thing it names, immediately. The
- * phase-driven decisions of whether to do it at all are `sync*`, next door.
+ * These act on a `<dialog>` element and know nothing about a store or a phase —
+ * `attach-lifecycle.ts` wires them to store transitions, which keeps the DOM logic testable in
+ * isolation. Everything here is a `run*`/`show*` verb: it does the thing it names, immediately;
+ * the phase-driven decision of whether to do it at all is `sync*`, next door.
  */
 
 import { ensureDialogStyles, styleRootOf } from './dialog-styles.js';
 import { SHOW_THE_RING } from './focus-policy.js';
 
 /**
- * Per-element cache for transition-disabled detection, so the closing path never triggers a
- * synchronous `getComputedStyle` reflow at close time. A `WeakMap` lets the entry be GC'd with
- * the element.
- *
- * The entry is per *open*, not per element: a `<dialog>` outlives every open/close cycle, and
- * whether transitions are live can change between them — a stylesheet toggled by a user
- * setting, a `prefers-reduced-motion` change, a theme swap. Caching for the element's lifetime
- * makes the close path act on the first open's answer forever.
+ * Transition-disabled detection, cached so the closing path never forces a synchronous reflow.
+ * Refreshed per *open* rather than per element: a `<dialog>` outlives every cycle and whether
+ * transitions are live can change between them (a theme swap, a `prefers-reduced-motion` change).
  */
 const transitionsDisabledCache = new WeakMap<HTMLDialogElement, boolean>();
 
 /**
- * Measure whether CSS transitions are effectively disabled on `dialog` (e.g.
- * `transition: none !important`) and cache the answer for {@link checkTransitionsDisabled}.
- *
- * Called once per open, while the dialog is already `'open'` — the reflow it costs is paid
- * outside the closing sequence, which is the point of caching at all.
+ * Measure whether transitions are effectively disabled (e.g. `transition: none !important`) and
+ * cache it for {@link checkTransitionsDisabled}. Called once per open, so the reflow it costs is
+ * paid outside the closing sequence.
  */
 export function refreshTransitionsDisabled(dialog: HTMLDialogElement): boolean {
   const duration = getComputedStyle(dialog).transitionDuration;
@@ -48,15 +39,11 @@ export function checkTransitionsDisabled(dialog: HTMLDialogElement): boolean {
 }
 
 /**
- * Who held the keyboard when each dialog was shown — the element the platform's own close restore
- * would return focus to, remembered because the platform's condition for using it can be lost.
- *
- * The close-the-dialog steps restore the previously focused element for `show()` as well as
- * `showModal()` — measured on all three engines with a bare dialog — but only when focus is still
- * inside the dialog at `close()` time. An action-driven close breaks that condition on Chromium:
- * the button is `disabled` while its action settles, the browser blurs a disabled element, and by
- * the time `close()` runs the keyboard is on `<body>` and the platform keeps it there. Per open
- * rather than per element, for the same reason as {@link transitionsDisabledCache}.
+ * Who held the keyboard when each dialog was shown, remembered because the platform's own restore
+ * has a condition that can be lost: the close-the-dialog steps return focus for `show()` as well
+ * as `showModal()` — measured on all three engines — but only when focus is still inside at
+ * `close()` time, and an action-driven close leaves it on `<body>` (Chromium blurs the disabled
+ * button). Per open, like {@link transitionsDisabledCache}.
  */
 const openerFocus = new WeakMap<HTMLDialogElement, HTMLElement>();
 
@@ -70,18 +57,15 @@ export function showDialog(
   dialog: HTMLDialogElement,
   { nonModal, zIndex }: { nonModal: boolean; zIndex: number }
 ): void {
-  // Here rather than only at the manager, because the document is not the only root that needs
-  // the sheet: `adoptedStyleSheets` does not cross a shadow boundary, so a dialog inside a web
-  // component would show the UA's backdrop instead of this library's. This is the one place that
-  // knows which root a given dialog is in, and adoption is idempotent per root.
+  // Here rather than at the manager: `adoptedStyleSheets` does not cross a shadow boundary, and
+  // this is the one place that knows which root a dialog is in. Idempotent per root.
   const styleRoot = styleRootOf(dialog);
   if (styleRoot) {
     ensureDialogStyles(styleRoot);
   }
 
-  // Before the show, which is what makes the answer mean anything: the dialog focusing steps run
-  // for `show()` too, so a read on the next line already finds focus inside the dialog. `<body>`
-  // is recorded as nothing — restoring to it is the failure the floor exists to prevent.
+  // Before the show: the focusing steps run for `show()` too, so a read afterwards would already
+  // find focus inside. `<body>` records as nothing — restoring to it is the failure to prevent.
   const opener = deepActiveElement(dialog.ownerDocument);
   if (opener instanceof HTMLElement && opener !== dialog.ownerDocument.body && opener !== dialog) {
     openerFocus.set(dialog, opener);
@@ -130,9 +114,8 @@ export function restoreOpenerFocus(dialog: HTMLDialogElement): void {
 /**
  * Write the stacking z-index onto a dialog, mirrored onto `data-modal-z` for debugging.
  *
- * Its own function because the stamp outlives the show: a stack policy can reorder dialogs that are
- * already open, and for a **non-modal** one — never in the top layer, so ordered by nothing else —
- * this is the whole of what moving it means.
+ * Its own function because the stamp outlives the show: a policy can reorder open dialogs, and for
+ * a non-modal one — never in the top layer — this is the whole of what moving it means.
  */
 export function stampZIndex(dialog: HTMLElement, zIndex: number): void {
   dialog.style.zIndex = String(zIndex);
@@ -140,11 +123,8 @@ export function stampZIndex(dialog: HTMLElement, zIndex: number): void {
 }
 
 /**
- * The innermost focused element, following shadow boundaries down.
- *
- * `document.activeElement` answers with the *host* when focus is inside a shadow tree, and this
- * library supports a dialog in one — so without the walk, a raise inside a web component would
- * conclude that focus was on some custom element and put it back there.
+ * The innermost focused element, following shadow boundaries down: `document.activeElement`
+ * answers with the *host*, so a raise inside a web component would restore focus to the host.
  */
 function deepActiveElement(root: DocumentOrShadowRoot): Element | null {
   const active = root.activeElement;
@@ -162,8 +142,7 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
       return true;
     }
     const parent: Node | null = node.parentNode;
-    // Out of a shadow tree and on through its host — `contains` stops at the boundary, and a
-    // dialog holding a web component with its own focusable content is not an edge case.
+    // On through the host: `contains` stops at the boundary.
     node = parent instanceof ShadowRoot ? parent.host : parent;
   }
   return false;
@@ -172,28 +151,19 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
 /**
  * Lift an already-open modal dialog to the front of the top layer.
  *
- * Close-and-re-show is not a shortcut, it is the only mechanism: the platform paints top-layer
- * elements in the order they were added, and `z-index` does not apply between them — a dialog
- * stamped `z-index: 9999` still paints under one shown after it. So there is no way to move a
- * dialog within the top layer other than taking it out and putting it back.
+ * Close-and-re-show is the only mechanism: the platform paints top-layer elements in the order
+ * they were added and `z-index` does not apply between them. Three unavoidable consequences:
  *
- * Three consequences a caller should know about, none of them avoidable:
+ * - **The native `close` event still fires**, queued, so it arrives with `dialog.open` back to
+ *   `true` — the only guard a listener has for telling a raise from a real close. Matters most in
+ *   `umbra/vanilla`, where the listener is the caller's.
+ * - **Focus is restored only when this dialog had it**, which mostly means a policy installed
+ *   *late*: the first plan lifts every dialog bottom-first, and the bottom one has been up longest
+ *   and is often the one being typed in. `stack-priority.ct.tsx` pins the caret.
+ * - **CSS keyed on `[open]` re-runs** — `@starting-style`, `dialog[open] { animation }`. The
+ *   library's own entrance is phase-driven and unaffected.
  *
- * - **The element's native `close` event still fires.** `close()` queues it, so it arrives after
- *   the dialog is open again and `dialog.open` is `true` when it does — which is the guard for a
- *   listener that has to tell a raise from a real close. The library's own close reporting is
- *   driven by the store and is not involved. It matters most in `umbra/vanilla`, where the
- *   `<dialog>` and any listener on it are the caller's.
- * - **Focus is restored only when this dialog had it**, which is narrower than it looks: a raise
- *   usually happens to a dialog the newcomer's `showModal()` has already taken the keyboard from.
- *   The case that reaches it is a policy installed **late** — the top layer is untracked until
- *   then, so the first plan lifts every dialog bottom-first, and the bottom one has been up
- *   longest and is frequently the one being typed in. `stack-priority.ct.tsx` pins the caret.
- * - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
- *   `dialog[open] { animation }`. The library's own entrance is driven by phase rather than by
- *   `[open]`, so it is unaffected.
- *
- * @returns `false` when there was nothing to lift, so a caller can skip its own bookkeeping.
+ * @returns `false` when there was nothing to lift.
  */
 export function raiseDialog(dialog: HTMLDialogElement): boolean {
   if (!dialog.open) {
@@ -207,24 +177,19 @@ export function raiseDialog(dialog: HTMLDialogElement): boolean {
   dialog.showModal();
 
   if (holdsFocus && active instanceof HTMLElement && active.isConnected) {
-    // Visibly — the same rule as the other moves the library makes on the user's behalf, and for
-    // the same reason: `showModal()` above has just taken the keyboard, so this is a restore from
-    // nowhere rather than a continuation of anything the user did. A text field shows its ring
-    // either way; a button is the case that would otherwise come back silently.
+    // Visibly: `showModal()` above has just taken the keyboard, so this is a restore from
+    // nowhere — a button would otherwise come back silently.
     active.focus(SHOW_THE_RING);
   }
   return true;
 }
 
 /**
- * Drive the exit animation of an open, transitioning dialog and invoke `onFinish` exactly
- * once when it completes — via `transitionend` on the primary property, or a safety timeout
- * if that never fires. Also animates the `::backdrop` opacity out in sync (modal only, since
- * a non-modal dialog has no backdrop). Returns a teardown that removes the listener, clears
- * the timer, and cancels the backdrop animation.
+ * Drive the exit animation and call `onFinish` when it completes — via `transitionend` on the
+ * primary property, or the safety timeout if that never fires — animating the `::backdrop` out in
+ * sync (modal only). Returns a teardown for the listeners, the timer and the animation.
  *
- * Idempotency of `onFinish` is the caller's responsibility (both the `transitionend` and the
- * timeout call it) — {@link runCloseSequence} is what guards it.
+ * Both paths call `onFinish`, so idempotency is the caller's: {@link runCloseSequence} guards it.
  */
 export function runDialogExit(
   dialog: HTMLDialogElement,
@@ -256,14 +221,9 @@ export function runDialogExit(
     }
   }
 
-  // Safety timeout: finalize if `transitionend` never fires.
-  //
-  // It is armed here and **re-armed from `transitionstart`**, because those are two different
-  // clocks. This runs when the exit style is written; the transition begins at the style
-  // recalculation that follows, and on a busy page that gap is not a rounding error — measured in
-  // a real application, 245 ms between the two while the exit itself lasts 200. The timer then
-  // expires as the slide is starting and cuts it, intermittently, which reads as a jitter rather
-  // than as a timeout. Re-arming puts both on the transition's own clock.
+  // Safety timeout, armed here and re-armed from `transitionstart`, because those are two clocks:
+  // the style write and the recalculation that starts the transition were measured 245 ms apart on
+  // a busy page against a 200 ms exit, so a single timer cut the slide as it began.
   let fallbackTimer = setTimeout(() => {
     onFallbackTimeout?.();
     onFinish();
@@ -299,24 +259,17 @@ export function runDialogExit(
 }
 
 /**
- * The whole exit, decided and driven: which of three ways this dialog ends, and finishing exactly
- * once whichever it was.
+ * The whole exit: which of three ways this dialog ends, finishing exactly once whichever it was.
+ * A binding knows *when* a modal entered `'closing'`; what happens next is a property of
+ * `<dialog>` and the declared animation, so a second binding inherits it rather than re-deriving
+ * three branches and a double-fire guard.
  *
- * Framework-free because none of the decision is React's. A binding knows *when* a modal entered
- * `'closing'`; what happens next is a property of `<dialog>` and of the animation the caller
- * declared, and a second binding should inherit it rather than re-derive three branches and a
- * double-fire guard from scratch.
+ * 1. **The browser already closed it** — the ESC cancel race; nothing to wait for.
+ * 2. **Transitions are off** (`transition: none`, a harness, `prefers-reduced-motion` in user
+ *    land) — `transitionend` will never fire, so waiting would hang the close.
+ * 3. **Otherwise** run the exit, finalizing on whichever of it or the timeout lands first.
  *
- * The three ways, in the order they are checked:
- *
- * 1. **The browser already closed it** — the ESC cancel race. There is no animation left to wait
- *    for, so finalizing immediately is the only correct answer; waiting would hang the close.
- * 2. **Transitions are off** (`transition: none`, a test harness, `prefers-reduced-motion`
- *    handled in user land). `transitionend` will never fire, so waiting for it would hang too.
- * 3. **Otherwise**, run the exit and finalize when it reports done — or when the safety timeout
- *    does, whichever comes first, which is why the guard exists.
- *
- * @returns A teardown for case 3, and `undefined` when the close already finished.
+ * @returns A teardown for case 3, `undefined` when the close already finished.
  */
 export function runCloseSequence(
   dialog: HTMLDialogElement,
