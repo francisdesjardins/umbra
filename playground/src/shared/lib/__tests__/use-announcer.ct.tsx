@@ -33,7 +33,7 @@ test.describe('useAnnouncer', () => {
       const seen: string[] = [];
       Reflect.set(window, '__announcements', seen);
       new MutationObserver(() => {
-        const text = region.textContent ?? '';
+        const text = region.textContent;
         if (text !== '') {
           seen.push(text);
         }

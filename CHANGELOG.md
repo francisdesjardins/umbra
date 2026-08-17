@@ -11,6 +11,78 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-16
 
+### The ARIA pass — a full audit of the core, and what it found
+
+Every attribute the core writes or reads, the focus policy, the keyboard scoping and the
+`<dialog>` semantics, checked against WAI-ARIA, the APG dialog pattern and the HTML spec —
+inventory first, then a counter-validation of the compatibility matrix's a11y cells against the
+test each one cites. The verdict worth recording: the emitted surface was sound (the
+`aria-keyshortcuts` spelling, the owned `aria-busy`, the never-invented name, the absent
+`aria-modal` all held), the matrix had **no mismatched citation and no unprovable ✓**, and the
+real defects were elsewhere — the entries below, each its own commit.
+
+### Fixed — the focus scan did not know every kind of Tab stop
+
+`FOCUSABLE` named the form controls, links, frames and `tabindex` carriers, and nothing else — so
+a `contenteditable` editor, a media element with controls, a `summary` and an image-map link were
+invisible to the wrap, the unconditional Tab recovery and the reclaim floor. The scan forgives a
+false positive (a candidate that refuses focus costs one step), but a kind the list does not name
+is never tried: a dialog whose only stop was an editor was a stuck keyboard on WebKit. The list
+errs wide now, stays private (one source, so a userland-configurable set stays openable without a
+refactor — parked for a future configuration pass), and is pinned at both call sites.
+
+### Fixed — a close could strand the keyboard on `<body>`, and on Chromium the action path did
+
+Measured with a bare dialog on all three engines: the platform's close-the-dialog steps restore
+the previously focused element for `show()` as well as `showModal()` — but only when focus is
+still inside the dialog at `close()` time. An action-driven close broke that condition on
+Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element,
+and by `close()` the keyboard was on `<body>` and stayed there — red on Chromium, green on Firefox
+and WebKit, same harness. `showDialog` now remembers who held the keyboard before the show, and
+the coordinator's closed pass hands it back **only when the close left focus on nothing**, so it
+never competes with the platform's restore and never takes the keyboard from a page a non-modal
+panel never blocked.
+
+### Changed — an alertdialog that is not modal is unwritable, and reported when written anyway
+
+`role` moved from the flat option surface into `ModalVariant`'s branches: the modal branch keeps
+`'dialog' | 'alertdialog'`, the non-modal branch offers `'dialog'` alone — an alertdialog is modal
+by definition (the APG requires `aria-modal`), so announcing one over content the user can still
+reach contradicts itself for assistive technology. No reader changed, the templates inherit the
+lock through the variant they already intersect, and every playground alertdialog was already
+modal. The half the type cannot see — `umbra/vanilla`'s hand-written markup — gets the same
+refusal as the missing name: a third labelling finding, read off the element, silent until
+`setLogLevel`. The matrix's "exactly one pair is `TYPE`" is two pairs now.
+
+### Fixed — the toast claimed an announcement it could not deliver
+
+A live region announces its _changes_, and a `role="status"` rendered inside `render` is mounted
+in the same pass that shows the dialog — born already holding its text, the case screen readers
+miss or announce inconsistently. The corner toast was that case, with a comment asserting the
+opposite. The playground gains `useAnnouncer` (a persistent, visually hidden region mounted beside
+the trigger, whose `announce()` clears and rewrites a frame later so two identical toasts are two
+announcements), the toast runs it, and the matrix carries the platform fact for all three
+bindings. The library still ships nothing here on purpose — `role: 'status'` on a `<dialog>` stays
+refused, and a dialog manager is not where anyone looks for a live region.
+
+### Changed — a matrix cell cites its proofs in the plural, and the a11y cells cite theirs
+
+The counter-validation found no lies and a citation debt: five React ✓ cells with no reference
+while the proving test already existed, one Solid citation that could not tell a quiet diagnostic
+from an absent one (swapped for the positive test twelve lines above it), and eight citations
+proving a weaker claim than their cell — the structural cause being a singular `reference` field
+under prose that says "proven on all three bindings". `references` is an array now, the missing
+citations are in, two capability rows that existed only as tests (`aria-busy`, hotkey dispatch
+through `aria-keyshortcuts`) are rows, and two platform rows record what the audit measured (the
+non-modal close restore, and `aria-modal` as the by-design refusal it is).
+
+### Added — the README's accessibility chapter
+
+What the library keeps intact, what it hands over, what it owns and what it refuses — each claim a
+matrix cell with a cited test. The browser floor gets a Features entry pointing at the measured
+accounting it already had, and the coverage pair was re-measured after the pass (unit **95.46%**,
+component **92.08%** over 54 files), both documents and both badges in one move.
+
 ### Fixed — `yarn test` ran three engines in one worker pool, and was unreliable for it
 
 Locally the suite failed roughly every other full run: one test, a different one each time, always
