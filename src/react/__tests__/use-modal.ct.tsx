@@ -1026,7 +1026,7 @@ test.describe('modals working together', () => {
 });
 
 test.describe('a hotkey belongs to the dialog that declared it', () => {
-  test('an outer modal never dispatches through a nested dialog\u2019s button', async ({
+  test('an outer modal never dispatches through a nested dialog’s button', async ({
     mount,
     page,
   }) => {

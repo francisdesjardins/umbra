@@ -143,6 +143,10 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'Escape defers to the action that claimed it',
       },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'dismissKey: false disables all key-based dismissal',
+      },
     ],
   },
   {
@@ -172,6 +176,14 @@ export const OPTION_ROWS: readonly OptionRow[] = [
       {
         file: 'src/core/__tests__/focus-containment.ct.tsx',
         title: 'a dead-space click leaves the keyboard reachable without containFocus',
+      },
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'wraps Tab from the last stop back to the first',
+      },
+      {
+        file: 'src/core/__tests__/focus-containment.ct.tsx',
+        title: 'lets Tab walk out of it — which is what show() means',
       },
     ],
   },
@@ -211,6 +223,18 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
       },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'closing aborts the work it started',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'a prepare that throws is reported, and the modal still settles',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'a modal with no prepare is not busy to begin with',
+      },
     ],
   },
   {
@@ -223,6 +247,16 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     excludes: ['ariaLabelledBy'],
     enforcement: 'PROSE',
     note: 'Both may be passed and the platform prefers `aria-labelledby`; nothing rejects the pair. Omitted entirely when absent, because `aria-label=""` would hide the omission from an audit.',
+    references: [
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: '`ariaLabel` names the dialog for assistive technology',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'a dialog given no name has none — the library never invents one',
+      },
+    ],
   },
   {
     option: 'ariaLabelledBy',
@@ -234,12 +268,27 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'reports a reference the caller’s markup gets wrong',
       },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'reports an `ariaLabelledBy` that points at no element',
+      },
+      {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'says nothing about a name its prepare had not rendered yet',
+      },
     ],
   },
   {
     option: 'ariaDescribedBy',
     enforcement: 'PROSE',
     note: 'Not required by `role: "alertdialog"`, deliberately: the APG says to omit a description when the content has semantic structure, so a type would turn a conditional recommendation into a rule.',
+    references: [
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title:
+          '`ariaLabelledBy` / `ariaDescribedBy` point at the content, and `role` can interrupt',
+      },
+    ],
   },
   {
     option: 'role',
@@ -527,7 +576,15 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'focusOnOpen',
-    react: { state: 'works' },
+    react: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          title: 'the marked action takes the opening focus from the first focusable',
+        },
+      ],
+    },
     solid: {
       state: 'works',
       references: [
@@ -550,7 +607,15 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'focus restored after a failed action',
-    react: { state: 'works' },
+    react: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          title: 'a different button than the opening one keeps the focus on itself',
+        },
+      ],
+    },
     solid: {
       state: 'partial',
       note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Diagnosed 2026-08-14, and the cause is not what this cell used to say.** It is not the disabled-button race, and not engine-specific — it reproduces on all three. Traced with the coordinator instrumented: at restore time `lastActivated` and `lastFocusInside` both still name the right button and **both report `isConnected === false`**. Solid replaces the element when the action state changes, so the coordinator is holding two references to a button that has left the document; `chooseActionRunner` skips a disconnected candidate — correctly — and there is nothing left to restore to. **The fix is to stop remembering elements**: the reason survives a re-render where the node does not, so the coordinator would have to remember the action and re-query its button at restore time. Not attempted — it is a design change, not a patch.',
@@ -601,13 +666,23 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'the labelling diagnostic',
-    react: { state: 'works' },
-    solid: {
+    react: {
       state: 'works',
       references: [
         {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'reports an `ariaLabelledBy` that points at no element',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      // The positive test, deliberately: the timing test asserts zero warnings, which a diagnostic
+      // that never ran on this binding would satisfy identically.
+      references: [
+        {
           file: 'src/solid/__tests__/solid-modal.ct.tsx',
-          title: 'says nothing about a name its prepare had not rendered yet',
+          title: 'reports a reference that points at no element',
         },
       ],
     },
@@ -617,6 +692,79 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
           title: 'reports a dialog with no accessible name at all',
+        },
+      ],
+    },
+  },
+  {
+    capability: '`aria-busy` while `prepare` runs',
+    react: {
+      state: 'works',
+      note: 'The one attribute the library owns rather than relays — written both ways, `"false"` included, so a dialog is never silently stuck announcing itself as loading.',
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'the dialog says it is loading, and stops saying so',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      note: 'The one live entry of the attribute table, and the reason `setDialogAttributes` runs in an effect there at all.',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'the dialog carries its accessible name and its busy state',
+        },
+      ],
+    },
+    vanilla: {
+      state: 'works',
+      note: 'On markup the caller wrote — which is what says the settle reached the element and not only the store.',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'aria-busy clears when prepare settles',
+        },
+      ],
+    },
+  },
+  {
+    capability: 'an action hotkey, dispatched through `aria-keyshortcuts`',
+    react: {
+      state: 'works',
+      note: 'The attribute is the mechanism, not a decoration: dispatch queries `[aria-keyshortcuts]` and clicks what it finds, so a custom wrapper that drops the prop loses its hotkeys silently — pinned in both directions.',
+      references: [
+        {
+          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          title: 'action buttons have aria-keyshortcuts when hotkey is declared',
+        },
+        {
+          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          title: 'hotkey dispatch works through custom wrapper that forwards aria-keyshortcuts',
+        },
+        {
+          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          title: 'hotkey dispatch fails silently when wrapper drops aria-keyshortcuts',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'an action hotkey runs the same path its button does',
+        },
+      ],
+    },
+    vanilla: {
+      state: 'works',
+      note: '`bindAction` writes the attribute at bind time; the caller’s button carries it like any other markup of theirs.',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'an action’s hotkey runs the same path its button does',
         },
       ],
     },
@@ -663,7 +811,17 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'containFocus',
-    react: { state: 'works' },
+    react: {
+      state: 'works',
+      // A React harness in `core/__tests__` — a genuine React-binding proof, sitting next to what
+      // it tests, per the repo's own rule.
+      references: [
+        {
+          file: 'src/core/__tests__/focus-containment.ct.tsx',
+          title: 'wraps Tab from the last stop back to the first',
+        },
+      ],
+    },
     solid: {
       state: 'works',
       references: [
@@ -730,7 +888,15 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'a custom dismissKey',
-    react: { state: 'works' },
+    react: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'custom dismissKey closes on that key, Escape does not',
+        },
+      ],
+    },
     solid: {
       state: 'works',
       references: [
@@ -906,6 +1072,10 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'a policy installed over it keeps the caret where it was',
       },
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'keeps the keyboard when something opens over it',
+      },
     ],
   },
   {
@@ -917,7 +1087,39 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
         file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
         title: 'a panel opening underneath does not leave focus on the body',
       },
+      {
+        file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
+        title: 'and it is the first control, not the last, inside a shadow root',
+      },
+      {
+        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        title: 'gets the keyboard back when a panel opens underneath',
+      },
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'gets the keyboard back when a panel opens underneath',
+      },
     ],
+  },
+  {
+    fact: 'closing a non-modal panel returns the keyboard to what opened it',
+    state: 'works',
+    why: 'The close-the-dialog steps restore the previously focused element for `show()` as well as `showModal()` — measured on all three engines with a bare dialog — but only when focus is still inside the dialog at `close()` time, and an action-driven close broke that condition on Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element, and by `close()` the keyboard was on `<body>` and stayed there. Firefox and WebKit passed the same harness. `showDialog` now remembers who held the keyboard before the show and the coordinator’s closed pass gives it back — **only when the close left focus on nothing**, so it never competes with the platform’s own restore and never takes the keyboard from a page the panel never blocked.',
+    references: [
+      {
+        file: 'src/core/__tests__/non-modal-close-focus.ct.tsx',
+        title: 'hands the keyboard back to the trigger that opened it',
+      },
+      {
+        file: 'src/core/__tests__/non-modal-close-focus.ct.tsx',
+        title: 'still hands it back when an action closed it',
+      },
+    ],
+  },
+  {
+    fact: '`aria-modal` written onto the `<dialog>`',
+    state: 'no-by-design',
+    why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-modal` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',
@@ -943,6 +1145,10 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
       {
         file: 'src/react/__tests__/use-modal.ct.tsx',
         title: 'the dismiss key unwinds the stack one modal per press, front to back',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'an outer modal never dispatches through a nested dialog’s button',
       },
     ],
   },
