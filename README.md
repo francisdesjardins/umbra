@@ -10,7 +10,7 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
-[![Unit coverage](https://img.shields.io/badge/unit_coverage-96%25-3fb950?style=flat-square)](#development)
+[![Unit coverage](https://img.shields.io/badge/unit_coverage-95%25-3fb950?style=flat-square)](#development)
 [![Component coverage](https://img.shields.io/badge/component_coverage-92%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
@@ -78,7 +78,45 @@ yours and outlives the controller.
 - **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _modal_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
 - **Zero runtime dependencies** — `react` / `react-dom` and `solid-js` are _optional_ peers, each needed only by its own binding; `./vanilla` and the root need neither
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
+- **A measured browser floor** — Chrome/Edge 110+, Safari 16.4+, Firefox 115+, set by what the code actually calls rather than picked; the accounting is under _Using it_ below
 - **Debug logging** — Zero-dep logger with namespace filtering via `localStorage`
+
+## <img src="docs/brand/moon-full.svg" width="18" height="18" alt="" /> Accessibility
+
+The accessible half of a dialog is mostly the platform's, and the library's job is to keep it
+intact — then hand you the one lever only you hold, and refuse the ones that would lie. Every
+claim below is a cell in the compatibility matrix ([API.md → Compatibility](API.md#compatibility)),
+where each cites the test that proves it on which engine and which binding.
+
+- **Native `<dialog>`, natively modal.** `showModal()` puts the dialog in the top layer and makes
+  the rest of the document inert, and that is what assistive technology is told — the library never
+  writes `aria-modal`, because the attribute is redundant on a modal dialog and a lie on a
+  non-modal one.
+- **The name is yours, and never invented.** `ariaLabel` / `ariaLabelledBy` / `ariaDescribedBy`
+  reach the element; an absent option omits the attribute entirely, because `aria-label=""` is the
+  spelling that hides a nameless dialog from an audit. A shipped diagnostic (silent until
+  `setLogLevel`) reports a reference that resolves to nothing, a dialog with no accessible name at
+  all, and `role="alertdialog"` on a non-modal dialog — the one role pairing the type system
+  already refuses on the hook bindings, an alertdialog being modal by definition.
+- **`aria-busy` is the one attribute the library owns.** Written both ways, `"false"` included,
+  tracking `prepare` — a dialog is never left silently announcing itself as loading.
+- **The hotkey attribute is the mechanism.** A hotkey dispatches by querying
+  `[aria-keyshortcuts]` and clicking what it finds, so the attribute a screen reader announces and
+  the behaviour it describes cannot drift apart — and a custom button wrapper that drops the prop
+  loses its hotkeys, which is pinned in both directions.
+- **Focus moves are measured, and visible.** Opening focus (`focusOnOpen`), the restore after a
+  failed action, the reclaim when the stack moves, and the keyboard handed back to the opener when
+  a non-modal panel closes — each is pinned per engine, and every focus move the library makes on
+  the user's behalf shows a `:focus-visible` ring, because input-modality heuristics make a
+  library-made focus invisible on two engines out of three.
+- **`containFocus` buys the Tab wrap; the recovery is unconditional.** Keeping Tab inside is
+  opt-in because on a toast or a popover it is the defect rather than the fix — but recovering a
+  Tab pressed on the `<dialog>` element itself (a dead-space click puts it there, and WebKit
+  swallows the press) works on every dialog, flag or no flag.
+- **A toast is a live region, and it lives outside the dialog.** The library refuses
+  `role="status"` on a `<dialog>` and ships no announcer — a live region only announces reliably
+  when it exists _before_ its content, which is a structural fact no dialog-rendered region can
+  satisfy. The playground's `useAnnouncer` is the copyable pattern, and its corner toast runs it.
 
 ## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Using it
 
@@ -291,11 +329,11 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **95.70%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **95.46%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **92.21%** statements over 54 files. Both measured 2026-08-16, and re-measured
+~45% of the run) — **92.08%** statements over 54 files. Both measured 2026-08-16, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. The badges above are hand-set from those two commands, so treat them as what they
 are: a snapshot, not a gate.
