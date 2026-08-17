@@ -10,7 +10,17 @@ import type { ModalAnimation } from '../core/types.js';
  * three lines that hand them to its own `useModal`.
  */
 
-/** Direction from which the slide panel enters the viewport. */
+/**
+ * Direction from which the slide panel enters the viewport.
+ *
+ * **Physical edges, and that is an open question rather than a settled answer.** In a
+ * right-to-left document, "the drawer slides in from where the navigation is" is a *logical*
+ * statement — `inline-start`, not `left` — and this union cannot say it; a caller shipping RTL
+ * must flip the direction themselves from `dir`. Going logical is a design change of its own
+ * pass: the placement table and both style functions would move to inset-inline/block
+ * properties, the four names here would need a migration, and the decision deserves a real RTL
+ * consumer rather than a guess. Until then the words mean exactly what they say on screen.
+ */
 export type SlideDirection = 'left' | 'right' | 'top' | 'bottom';
 
 /**
