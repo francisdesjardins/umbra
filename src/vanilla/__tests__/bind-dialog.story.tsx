@@ -1232,6 +1232,13 @@ export function VanillaReconcileHarness() {
   const [controller, setController] = useState<Bound<'close'> | null>(null);
   const [wanted, setWanted] = useState(false);
   const [phase, setPhase] = useState<ModalPhase>('closed');
+  /**
+   * Every phase the controller published, not only the latest. Reading the current one loses any
+   * transition that shares a React batch with the next — which is what `'closing'` does when an exit
+   * settles quickly — and deciding on `isVisible` differs from deciding on `phase` **only** while the
+   * phase is `'closing'`. Without this the harness never observes the window the decision turns on.
+   */
+  const [phasesSeen, setPhasesSeen] = useState<ModalPhase[]>([]);
   const [openCount, setOpenCount] = useState(0);
   const [asked, setAsked] = useState<string[]>([]);
 
@@ -1259,7 +1266,12 @@ export function VanillaReconcileHarness() {
       },
     });
     const stop = bound.subscribe(() => {
-      setPhase(bound.getSnapshot().phase);
+      const next = bound.getSnapshot().phase;
+      setPhase(next);
+      // Functional, so a batch cannot swallow the phase that shared it.
+      setPhasesSeen((seen) => {
+        return seen.at(-1) === next ? seen : [...seen, next];
+      });
     });
     setController(bound);
     return () => {
@@ -1292,6 +1304,7 @@ export function VanillaReconcileHarness() {
   return (
     <>
       <span data-testid="phase">{phase}</span>
+      <span data-testid="phases-seen">{phasesSeen.join(',')}</span>
       <span data-testid="wanted">{wanted ? 'true' : 'false'}</span>
       <span data-testid="open-count">{openCount}</span>
       <span data-testid="asked">{asked.join(',')}</span>

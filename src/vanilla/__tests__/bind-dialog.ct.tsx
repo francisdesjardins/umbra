@@ -719,11 +719,16 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     await page.getByTestId('close-and-lower').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // The flag lowered and the dialog gone, with nothing asked twice. It does **not** discriminate
-    // `phase` from `isVisible`: measured, this harness's reconciliation steps `open → closed` without
-    // observing `'closing'`, which is the only pair where the two disagree. React's does — see the
-    // `reconcileOpen` caveat in the compatibility matrix.
+    // The flag lowered and the dialog gone, with nothing asked twice.
     await expect(page.getByTestId('asked')).toHaveText('open');
+
+    // **What this does not prove, pinned so the gap is visible rather than assumed.** Deciding on
+    // `isVisible` rather than `phase` differs on exactly one input pair — `'closing'` with the flag
+    // down — and the controller never publishes that phase here: the accumulator cannot drop a
+    // notification, so this is the store's own sequence and not a batch swallowing one. Until an
+    // exit that reaches `'closing'` is observable through this surface, the assertion above holds
+    // for both forms of the decision. See the `reconcileOpen` caveat in the compatibility matrix.
+    await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closed');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });
