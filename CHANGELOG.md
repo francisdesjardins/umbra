@@ -11,6 +11,22 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — the React harnesses reach the page, fourteen of them
+
+The second slice of the 75, and the last one that is purely mechanical: every React harness lives in
+its own file with a JSDoc naming what it exists to tell apart, so each card is written from the
+source. Three share `labelling-diagnostics.story.tsx` and get three different cards, because the
+three shapes that file holds are the point of it — a reference that resolves to nothing, a name that
+only exists once `prepare` settles, and one delivered a commit late through `ModalOutlet`. The last
+two are what the diagnostic must stay **quiet** about, which no card called "labelling" would say.
+
+Twelve source files registered with the code viewer alongside them. Fourteen cards rendered and
+checked in a browser, console clean.
+
+Fifty-one remain: `solid` (20), `vanilla` (18), `core` (6), `manager` (4), `actions` (3). The Solid
+lot needs a decision before it starts — a Solid harness is a three-line wrapper over `solid-app.ts`,
+so a `?raw` of the story file shows the wrapper and none of the subject.
+
 ### Added — ten of the seventy-five harnesses reach the page, chosen for what they discriminate
 
 The gate made the list authoritative; this is the first of it worked down, and the selection is the

@@ -1,4 +1,20 @@
 import { StrandedFocusHarness } from 'umbra/core/__tests__/stranded-focus.story';
+import { UseLookupPreparingHarness } from 'umbra/react/__tests__/use-lookup.story';
+import { ActionErrorHotkeyRetryHarness } from 'umbra/react/__tests__/use-modal/action-error-hotkey-retry.story';
+import { ContainedOverlayHarness } from 'umbra/react/__tests__/use-modal/contained-overlay.story';
+import { EscAnsweredByNobodyHarness } from 'umbra/react/__tests__/use-modal/esc-answered-by-nobody.story';
+import {
+  DanglingLabelHarness,
+  LateTitleHarness,
+  OutletLabelHarness,
+} from 'umbra/react/__tests__/use-modal/labelling-diagnostics.story';
+import { OnOpenAbortHarness } from 'umbra/react/__tests__/use-modal/on-open-abort.story';
+import { OpenAndWaitOrderingHarness } from 'umbra/react/__tests__/use-modal/open-and-wait-ordering.story';
+import { PrepareFailureHarness } from 'umbra/react/__tests__/use-modal/prepare-failure.story';
+import { ReconcileOpenHarness } from 'umbra/react/__tests__/use-modal/reconcile-open.story';
+import { RestoreNotInFrontHarness } from 'umbra/react/__tests__/use-modal/restore-not-in-front.story';
+import { ShadowRootHarness } from 'umbra/react/__tests__/use-modal/shadow-root.story';
+import { VolatileKeyDownHarness } from 'umbra/react/__tests__/use-modal/volatile-keydown.story';
 import {
   EditableContentHarness,
   EditableOnlyHarness,
@@ -241,6 +257,104 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'applyStyle writes a style object onto an element and clears what the previous one set. An explicit undefined means remove, not write the string "undefined" — the difference between a cleared property and a broken one.',
         component: UndefinedClearsHarness,
         codeKey: 'story-apply-style',
+      },
+      {
+        title: 'Telling “open” from “ready” from outside the modal',
+        description:
+          'phase describes the <dialog>, so opening is one frame wide however long prepare takes — isPreparing is the other axis, and a watcher that conflates them reports ready while the work is still running. prepare is held on a promise released from a button inside the dialog, because the top layer swallows a click anywhere else.',
+        component: UseLookupPreparingHarness,
+        codeKey: 'story-use-lookup-basic',
+      },
+      {
+        title: 'A failed action, retried by its hotkey',
+        description:
+          'The button is the autofocus target and goes disabled while the action runs, so focus falls to the body meanwhile. Unless it is put back inside the dialog once the action settles, the keydown listener never hears the retry — the hotkey is dead and only the mouse still works.',
+        component: ActionErrorHotkeyRetryHarness,
+        codeKey: 'story-action-error-hotkey-retry',
+      },
+      {
+        title: 'A contained dialog covers its host instead of displacing it',
+        description:
+          'A detail pane over the list it belongs to — the case “provide a sized, positioned host” does not cover. A height: 100% block is laid out after the content it is meant to cover, so in normal flow it pushes that content out of a fixed-height box instead of overlaying it.',
+        component: ContainedOverlayHarness,
+        codeKey: 'story-contained-overlay',
+      },
+      {
+        title: 'The one arrangement where nobody answers the dismiss key',
+        description:
+          'A modal with dismissKey: false in front of a non-modal panel. Both halves decline correctly — the panel is no longer the foreground, the modal was told not to listen — and nothing closing is the right outcome, since dismissing the panel behind would close a dialog the user is not looking at.',
+        component: EscAnsweredByNobodyHarness,
+        codeKey: 'story-esc-answered-by-nobody',
+      },
+      {
+        title: 'A name pointing at an element nobody rendered',
+        description:
+          'ariaLabelledBy referencing an id that does not resolve leaves the dialog announced as just “dialog”, and it looks correct in the source. The diagnostic reports it — and stays silent until setLogLevel, because a warning nobody asked for is noise on correct code.',
+        component: DanglingLabelHarness,
+        codeKey: 'story-labelling-diagnostics',
+      },
+      {
+        title: 'A name that only exists once prepare settles',
+        description:
+          'The half the diagnostic must stay quiet about. The heading is not in the DOM while the work runs, so a check asked too early reports a dangling reference on a dialog that is perfectly labelled — which is why the check is deferred rather than run at open.',
+        component: LateTitleHarness,
+        codeKey: 'story-labelling-diagnostics',
+      },
+      {
+        title: 'A name delivered a commit late, through ModalOutlet',
+        description:
+          'The other silence. Rendering through the outlet puts the labelled content in a commit after the dialog’s own, so the same too-early check would fire here too — on markup that arrives correctly, one frame later.',
+        component: OutletLabelHarness,
+        codeKey: 'story-labelling-diagnostics',
+      },
+      {
+        title: 'prepare is handed an AbortSignal that fires on close',
+        description:
+          'Without it a request outlives what asked for it: landing on a closed modal, or still in flight when the next open starts its own — which is how a reopened dialog shows the previous attempt’s answer. The work here settles only through the signal, so nothing can pass by accident.',
+        component: OnOpenAbortHarness,
+        codeKey: 'story-on-open-abort',
+      },
+      {
+        title: 'openAndWait waits for the next close, not a previous one',
+        description:
+          'A close resolver must be registered before the open, because replaying an earlier close is a wrong answer rather than a late one — which is why addCloseResolver is not public. prepare widens the window: a modal dismissed while it runs closes before anything would naively have subscribed.',
+        component: OpenAndWaitOrderingHarness,
+        codeKey: 'story-open-and-wait-ordering',
+      },
+      {
+        title: 'A prepare that throws, and the only way to hear it',
+        description:
+          'The failure is silent by construction: the dialog is already on screen, isPreparing settles either way, aria-busy flips back to false, and the throw reaches log.error, which says nothing unless setLogLevel is on. onError is the reachable half, and both are asserted.',
+        component: PrepareFailureHarness,
+        codeKey: 'story-prepare-failure',
+      },
+      {
+        title: 'A controlled <Panel open={…} />, on a real dialog',
+        description:
+          'Two claims a naive reconciliation gets wrong: the prop is authoritative, so a dialog opened from elsewhere is put back rather than left on screen with no way to close it; and a dismissal from inside settles once, without the prop reopening what the user just dismissed.',
+        component: ReconcileOpenHarness,
+        codeKey: 'story-reconcile-open',
+      },
+      {
+        title: 'An action settling underneath does not take the keyboard',
+        description:
+          'Two non-modal panels, deliberately: behind a modal everything is inert, so the restore’s focus() is a silent no-op and the rule appears to hold whatever the code does. Nothing is inert here, so every engine would steal — and the guard has to be the library’s own.',
+        component: RestoreNotInFrontHarness,
+        codeKey: 'story-restore-not-in-front',
+      },
+      {
+        title: 'A React dialog inside a shadow root',
+        description:
+          'A web component hosting a React tree, or a widget mounted to keep the host page’s CSS out. Both things a shadow boundary breaks fail quietly rather than throwing: adoptedStyleSheets does not cross it, so the dialog falls back to the UA backdrop, and document.activeElement answers with the host.',
+        component: ShadowRootHarness,
+        codeKey: 'story-shadow-root',
+      },
+      {
+        title: 'An inline onKeyDown, which is a new function every render',
+        description:
+          'The regression fixture for the director’s granularity. focus.sync remembers, for one attachment, that an action is running; rebuild that attachment mid-action — which a caller’s inline arrow does on every render — and the memory goes with it, so the settle is missed and focus never comes back.',
+        component: VolatileKeyDownHarness,
+        codeKey: 'story-volatile-keydown',
       },
       {
         title: 'A control that disables itself keeps the keyboard',

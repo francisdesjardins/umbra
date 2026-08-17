@@ -68,6 +68,17 @@ import storyStoreContextSrc from '@/shared/lib/__tests__/create-store-context.st
 import storyDmDomEventsSrc from 'umbra/manager/__tests__/dialog-manager/dom-events.story.tsx?raw';
 import storyDmLookupSrc from 'umbra/manager/__tests__/dialog-manager/lookup.story.tsx?raw';
 import storyUseLookupSrc from 'umbra/react/__tests__/use-lookup.story.tsx?raw';
+import storyActionErrorHotkeyRetrySrc from 'umbra/react/__tests__/use-modal/action-error-hotkey-retry.story.tsx?raw';
+import storyContainedOverlaySrc from 'umbra/react/__tests__/use-modal/contained-overlay.story.tsx?raw';
+import storyEscAnsweredByNobodySrc from 'umbra/react/__tests__/use-modal/esc-answered-by-nobody.story.tsx?raw';
+import storyLabellingDiagnosticsSrc from 'umbra/react/__tests__/use-modal/labelling-diagnostics.story.tsx?raw';
+import storyOnOpenAbortSrc from 'umbra/react/__tests__/use-modal/on-open-abort.story.tsx?raw';
+import storyOpenAndWaitOrderingSrc from 'umbra/react/__tests__/use-modal/open-and-wait-ordering.story.tsx?raw';
+import storyPrepareFailureSrc from 'umbra/react/__tests__/use-modal/prepare-failure.story.tsx?raw';
+import storyReconcileOpenSrc from 'umbra/react/__tests__/use-modal/reconcile-open.story.tsx?raw';
+import storyRestoreNotInFrontSrc from 'umbra/react/__tests__/use-modal/restore-not-in-front.story.tsx?raw';
+import storyShadowRootSrc from 'umbra/react/__tests__/use-modal/shadow-root.story.tsx?raw';
+import storyVolatileKeyDownSrc from 'umbra/react/__tests__/use-modal/volatile-keydown.story.tsx?raw';
 import storyOutletBasicSrc from 'umbra/react/__tests__/modal-outlet/outlet-basic.story.tsx?raw';
 import storyOutletNullModalSrc from 'umbra/react/__tests__/modal-outlet/outlet-null-modal.story.tsx?raw';
 import storyOutletNoOutletSrc from 'umbra/react/__tests__/modal-outlet/no-outlet.story.tsx?raw';
@@ -157,6 +168,17 @@ export const stories: Record<string, string> = {
   'story-dm-lookup-foreground': storyDmLookupSrc,
   'story-dm-lookup-unregistered': storyDmLookupSrc,
   'story-use-lookup-basic': storyUseLookupSrc,
+  'story-action-error-hotkey-retry': storyActionErrorHotkeyRetrySrc,
+  'story-contained-overlay': storyContainedOverlaySrc,
+  'story-esc-answered-by-nobody': storyEscAnsweredByNobodySrc,
+  'story-labelling-diagnostics': storyLabellingDiagnosticsSrc,
+  'story-on-open-abort': storyOnOpenAbortSrc,
+  'story-open-and-wait-ordering': storyOpenAndWaitOrderingSrc,
+  'story-prepare-failure': storyPrepareFailureSrc,
+  'story-reconcile-open': storyReconcileOpenSrc,
+  'story-restore-not-in-front': storyRestoreNotInFrontSrc,
+  'story-shadow-root': storyShadowRootSrc,
+  'story-volatile-keydown': storyVolatileKeyDownSrc,
   'story-use-lookup-unregistered': storyUseLookupSrc,
   'story-use-lookup-foreground': storyUseLookupSrc,
   'story-outlet-basic': storyOutletBasicSrc,

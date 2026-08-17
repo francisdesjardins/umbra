@@ -31,30 +31,18 @@ const STORIES_PAGE = join(REPO, 'playground/src/pages/stories/ui/StoriesPage.tsx
 
 /** Prop-free harnesses the page does not show yet — see this file's doc comment. */
 const NOT_ON_THE_PAGE = new Set([
-  'ActionErrorHotkeyRetryHarness',
   'ActionIsRunningHarness',
   'AsymmetricKeyframesHarness',
-  'ContainedOverlayHarness',
   'ControlledModalHarness',
   'ControlledPanelHarness',
-  'DanglingLabelHarness',
   'DismissKeyOwnershipHarness',
   'DomSafeSpreadHarness',
-  'EscAnsweredByNobodyHarness',
   'KeyClaimProbeHarness',
   'LatePolicyFocusHarness',
-  'LateTitleHarness',
   'MultiRaiseHarness',
   'NameTranslationHarness',
-  'OnOpenAbortHarness',
-  'OpenAndWaitOrderingHarness',
   'OpenEventInDocumentHarness',
   'OpenEventInShadowHarness',
-  'OutletLabelHarness',
-  'PrepareFailureHarness',
-  'ReconcileOpenHarness',
-  'RestoreNotInFrontHarness',
-  'ShadowRootHarness',
   'SolidBasicHarness',
   'SolidBusyHarness',
   'SolidClaimlessReclaimHarness',
@@ -76,7 +64,6 @@ const NOT_ON_THE_PAGE = new Set([
   'SolidSlideHarness',
   'SolidStackPriorityHarness',
   'SpreadContractHarness',
-  'UseLookupPreparingHarness',
   'VanillaBasicHarness',
   'VanillaBusyHarness',
   'VanillaClaimlessReclaimHarness',
@@ -95,7 +82,6 @@ const NOT_ON_THE_PAGE = new Set([
   'VanillaShadowRootHarness',
   'VanillaShadowStackHarness',
   'VanillaUnbindHarness',
-  'VolatileKeyDownHarness',
 ]);
 
 /** Every `*.story.tsx` under the library's `src/`, which is where the page sources its harnesses. */
