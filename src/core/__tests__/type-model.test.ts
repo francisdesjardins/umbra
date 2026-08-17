@@ -8,25 +8,16 @@ import type {
 } from '../../react/templates/use-slide-modal.js';
 import type { useModal } from '../../react/use-modal.js';
 import type { CloseResult, ModalHandle, ModalRenderArgs, ModalVariant } from '../types.js';
-// The React instantiations, not the core model they are built from: the hooks under assertion
-// are React's, so the types they must agree with are the ones with `ReactNode` in them.
+// React's instantiations, not the core model: the hooks asserted are React's, so the types they
+// must agree with are the ones carrying `ReactNode`.
 import type { UseModalBaseOptions, UseModalReturn } from '../../react/types.js';
 
 /**
- * Compile-time assertions on the shape of the public type model.
- *
- * The interesting content of this file is its types, not its bodies: everything below is
- * checked by `yarn type-check` (which compiles `src/**`), and the runtime assertions exist so
- * the file is a test rather than a comment. A relationship that stops holding fails the build.
- *
- * Worth pinning because these relationships are *derivations*. `ModalRenderArgs` is defined
- * once and `UseModalReturn` / `BaseRenderContext` are expressed in terms of it, which is only
- * an improvement over restating them while the derivation is actually load-bearing. Someone
- * flattening one of them back into a literal object type would produce identical-looking code
- * that no longer keeps the three in sync — and nothing else in the suite would notice.
+ * Compile-time assertions on the public type model, checked by `yarn type-check`; the runtime
+ * bodies exist only so the file is a test. These relationships are *derivations* —
+ * `UseModalReturn` and `BaseRenderContext` are expressed in terms of `ModalRenderArgs` — and
+ * flattening one back into a literal object type compiles while silently desyncing the three.
  */
-
-// ── Assertion helpers ────────────────────────────────────────────────────────
 
 /** Compile error unless `T` is assignable to `U`. */
 type Extends<T extends U, U> = T;
@@ -34,56 +25,39 @@ type Extends<T extends U, U> = T;
 /** Compile error unless `A` and `B` are mutually assignable, i.e. the same type. */
 type Equals<A extends B, B extends C, C = A> = A;
 
-// ── The render-time slice ────────────────────────────────────────────────────
-
-// The hook's return contains everything the render callback is given. This is what lets
-// `render` read live state without touching the value the hook is still producing.
+// What lets `render` read live state without touching the value the hook is still producing.
 export type _ReturnProvidesRenderArgs = Extends<UseModalReturn, ModalRenderArgs>;
 
-// A template's render context *is* the core render args, not a parallel copy of them.
 export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, ModalRenderArgs>;
 
-// Template contexts extend that base rather than redefining it, so a field added to
-// `ModalRenderArgs` reaches every template.
+// Extended rather than redefined, so a field added to `ModalRenderArgs` reaches every template.
 export type _SlideContextExtendsBase = Extends<SlideModalRenderContext, BaseRenderContext>;
 
-// The action factory is part of that slice — which is what makes actions declarable from
-// inside `render` without anything being passed in.
 export type _RenderArgsCarryTheFactory = Equals<
   ModalRenderArgs<Payload>['action'],
   ActionFactory<Payload>
 >;
 
-// ── The payload travels ──────────────────────────────────────────────────────
-
 type Payload = { readonly id: number };
 
-// The one thing a payload-typed modal must guarantee: the close handle its render callback is
-// handed accepts that payload and nothing else.
 export type _RenderHandleTakesPayload = Equals<
   Parameters<ModalRenderArgs<Payload>['handle']['close']>,
   [reason?: string | undefined, data?: Payload | undefined]
 >;
 
-// Templates are not a second, looser path to the same handle.
 export type _SlideHandleTakesPayload = Equals<
   SlideModalRenderContext<Payload>['handle'],
   ModalHandle<Payload>
 >;
 
-// A modal that declares no payload rejects one. `void` makes `data` unusable rather than
-// absent, which is the deliberate trade for a shape the checker can see through — so assert
-// the *rejection*, which is the part users rely on.
+// `void` makes `data` unusable rather than absent, so assert the *rejection* — the part users
+// rely on.
 const voidHandle: ModalHandle = { close: () => {} };
 // @ts-expect-error a modal with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 
-// ── Reasons are closed when you close them ───────────────────────────────────
-
-// Declaring the reasons on the hook buys three things a `TReason` left at `string` cannot:
-// a mistyped reason is rejected, `handle.close` is constrained rather than taking any string,
-// and `switch (result.reason)` is exhaustive. `'dismiss'` is always in the union because the
-// library itself produces it — on Escape, on a backdrop click, and on teardown.
+// Declared reasons buy what `string` cannot: a mistyped reason rejected, a constrained
+// `handle.close`, an exhaustive `switch`. `'dismiss'` is always in — the library produces it.
 type Reasons = 'save' | 'cancel';
 
 export type _DismissIsAlwaysAvailable = Equals<
@@ -95,11 +69,8 @@ declare const useModalT: typeof useModal;
 declare const useMessageModalT: typeof useMessageModal;
 declare const useSlideModalT: typeof useSlideModal;
 
-/**
- * Never called, and never rendered: its body is a set of *real* call sites, so the assertions
- * are call-site inference against the real signatures. The hooks are imported type-only, since
- * this is a unit test and nothing here may pull React in at runtime.
- */
+// Never called: its body is real call sites, so inference runs against the real signatures. The
+// hooks are imported type-only — this is a unit test and nothing here may pull React in.
 function useDeclaredReasons() {
   return useModalT<Payload, Reasons>({
     id: 'i',
@@ -137,8 +108,7 @@ function useDeclaredReasons() {
         case 'dismiss':
           return;
         default: {
-          // If `reason` widened to `string`, this assignment stops compiling — which is the
-          // whole assertion. Dropping any case above must break it too.
+          // If `reason` widened to `string` this stops compiling, and so does dropping a case.
           const exhaustive: never = result.reason;
           return exhaustive;
         }
@@ -152,12 +122,8 @@ export type _DeclaredReasonsReachTheReturn = Equals<
   UseModalReturn<Payload, Reasons>
 >;
 
-/**
- * Declaring `'dismiss'` in your own union is legitimate — it is a reason `onClose` sees whether
- * you declare it or not, and writing it out makes the `switch` read honestly. What it must not
- * do is hand back an action you can name, which is the whole reason `ActionReason` is an
- * `Exclude` rather than a comment: without it, this call site compiles.
- */
+// Declaring `'dismiss'` yourself is legitimate — `onClose` sees it either way. It must not yield
+// a nameable action, which is why `ActionReason` is an `Exclude`: without it, this compiles.
 export function useDismissInTheDeclaredUnion() {
   return useModalT<void, 'save' | 'dismiss'>({
     id: 'i',
@@ -172,7 +138,6 @@ export function useDismissInTheDeclaredUnion() {
   });
 }
 
-/** Templates inherit the same guarantee rather than re-deriving it. */
 function useTemplateReasons() {
   return {
     message: useMessageModalT<Payload, Reasons>({
@@ -202,8 +167,7 @@ export type _MessageKeepsReasons = Equals<
 >;
 export type _SlideKeepsReasons = Equals<TemplateReasons['slide'], UseModalReturn<Payload, Reasons>>;
 
-// Left undeclared, a modal accepts any reason — the permissive default, so a modal that closes
-// only through `handle.close` needs no ceremony.
+// Left undeclared, a modal accepts any reason — the permissive default.
 function useLooseReasons() {
   return useModalT<Payload>({
     id: 'i',
@@ -222,30 +186,20 @@ export type _LooseReasonIsString = Equals<
   CloseResult<Payload> | null
 >;
 
-// ── The template surface is a complement, not a list ─────────────────────────
-
-// `TemplateCommonOptions` is defined by what a template *does not* inherit, so an option added
-// to `UseModalBaseOptions` reaches every template hook without being named anywhere. This is
-// the assertion that makes that true rather than merely intended: were it an enumeration of
-// forwarded keys, a newly added core option would reach no template and nothing would fail.
-// Extending the exclusion list is a deliberate edit here.
+// `TemplateCommonOptions` is the *complement*, so a new `UseModalBaseOptions` option reaches every
+// template unnamed. Were it an enumeration, a new core option would reach none and nothing fail.
 export type _TemplateOptionsAreTheComplement = Equals<
   Exclude<keyof UseModalBaseOptions, keyof TemplateCommonOptions>,
   'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 >;
 
-// `Equals` compares assignability, and property modifiers do not affect it — so the assertion
-// above would still hold if the derivation had dropped `readonly` along the way. It does not
-// (`Omit` is homomorphic and preserves modifiers), and this is what says so.
-// A real value, not a `declare const`: this statement runs when the suite imports the file.
+// `Equals` ignores property modifiers, so the assertion above holds even with `readonly` dropped;
+// this is what says `Omit` preserved it. A real value, so the statement runs on import.
 const templateOptions: TemplateCommonOptions = {};
 // @ts-expect-error the forwarded options keep the `readonly` they are derived from
 templateOptions.animation = undefined;
 
-// ── Variant exclusivity ──────────────────────────────────────────────────────
-
-// The union's whole purpose: the dismissal option that does not apply to a variant is a type
-// error rather than a prop that is silently ignored at runtime.
+// A dismissal option that does not apply to a variant is a type error, not a silent no-op.
 const modalVariant: ModalVariant = { dismissOnBackdropClick: true };
 const nonModalVariant: ModalVariant = { nonModal: true, dismissOnClickOutside: true };
 
@@ -255,8 +209,7 @@ const bogusBackdrop: ModalVariant = { nonModal: true, dismissOnBackdropClick: tr
 // @ts-expect-error a modal dialog uses dismissOnBackdropClick, not click-outside
 const bogusClickOutside: ModalVariant = { nonModal: false, dismissOnClickOutside: true };
 
-// The other pair the union holds: an alertdialog is modal by definition, so the non-modal
-// branch offers `'dialog'` alone and the pair below is unwritable rather than merely wrong.
+// An alertdialog is modal by definition, so the non-modal branch offers `'dialog'` alone.
 const modalAlert: ModalVariant = { role: 'alertdialog' };
 const nonModalPlain: ModalVariant = { nonModal: true, role: 'dialog' };
 
@@ -265,8 +218,7 @@ const bogusAlert: ModalVariant = { nonModal: true, role: 'alertdialog' };
 
 test.describe('type model', () => {
   test('the documented variant combinations are the ones that compile', () => {
-    // The assertions are the two `@ts-expect-error` directives above: if either combination
-    // became legal, `tsc` reports the unused directive and the build fails.
+    // The assertions are the `@ts-expect-error` directives above: an unused one fails the build.
     expect(modalVariant.dismissOnBackdropClick).toBe(true);
     expect(nonModalVariant.nonModal).toBe(true);
     expect(modalAlert.role).toBe('alertdialog');
@@ -275,15 +227,11 @@ test.describe('type model', () => {
   });
 
   test('the payload cannot be widened at either end of the close path', () => {
-    // Again the assertions are the `@ts-expect-error` directives — an unused one fails the
-    // build, so this passing means every mismatch above is still rejected.
     expect(typeof voidHandle.close).toBe('function');
   });
 
   test('render args carry exactly the render-time fields', () => {
-    // Guards against the slice quietly growing: anything added to `ModalRenderArgs` lands in
-    // every template render context and in the hook return, so it deserves a deliberate edit
-    // here rather than arriving unnoticed.
+    // Anything added lands in every template context and in the hook return — a deliberate edit.
     const keys: readonly (keyof ModalRenderArgs)[] = [
       'isPreparing',
       'handle',

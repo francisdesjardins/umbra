@@ -1,15 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { chooseActionRunner, preferredRestoreTarget } from '../focus-policy.js';
 
-/**
- * The ordering that decides who a settled action hands focus back to.
- *
- * It is tested here, in Node, because it is a decision rather than a DOM operation — the
- * candidates only have to answer `isConnected`. That is the whole point of the extraction: while
- * this lived as a `??` chain inside the focus scheduler, the only way to observe it was to run a
- * browser and look at where focus ended up, and a wrong-but-truthy first candidate looked
- * exactly like a correct one. WebKit is what eventually noticed.
- */
+// The ordering that decides who a settled action hands focus back to. Tested in Node because it is
+// a decision, not a DOM operation — candidates only answer `isConnected`. As a `??` chain inside
+// the focus scheduler, a wrong-but-truthy first candidate looked exactly like a correct one.
 
 const live = (name: string) => {
   return { isConnected: true, name };
@@ -25,8 +19,7 @@ test.describe('chooseActionRunner', () => {
   });
 
   test('falls through to the activation when nothing holds focus', () => {
-    // WebKit: clicking a button focuses nothing, so the first read has no answer and the button
-    // that was pressed is known only from the click.
+    // WebKit: clicking a button focuses nothing, so the pressed one is known only from the click.
     const activated = live('activated');
     expect(chooseActionRunner(null, activated, live('lastFocused'))).toBe(activated);
   });
@@ -42,9 +35,8 @@ test.describe('chooseActionRunner', () => {
   });
 
   test('skips a disconnected candidate and keeps looking', () => {
-    // The regression this function exists for, one half of it: a runner whose button was
-    // re-rendered away used to be taken and then discarded by the caller, which meant the live
-    // candidate sitting behind it never got asked.
+    // Half the regression this exists for: a runner whose button was re-rendered away is taken
+    // and then discarded by the caller, so the live candidate behind it is never asked.
     const activated = live('activated');
     expect(chooseActionRunner(detached('focused'), activated, live('lastFocused'))).toBe(activated);
   });
@@ -66,22 +58,16 @@ test.describe('chooseActionRunner', () => {
   });
 
   test('is ordered, not merely first-non-null: a live third never beats a live first', () => {
-    // Stated as its own case because the ordering is the contract. Reversing the argument order
-    // at a call site is a real defect and would pass every test above.
+    // The ordering is the contract: reversing the arguments at a call site passes every test above.
     const focused = live('focused');
     const result = chooseActionRunner(focused, live('activated'), live('lastFocused'));
     expect(result?.name).toBe('focused');
   });
 });
 
-/**
- * The other half of the restore decision, and the sibling `chooseActionRunner` names.
- *
- * Its `HTMLElement` signature was never a DOM dependency — `isConnected` is the whole of what it
- * reads — so it sat in a browser-only file with no unit test while the function directly beneath it
- * had nine. The two are asked in sequence at every restore: this one picks between a runner and the
- * opening focus, `chooseActionRunner` decides which candidate is the runner in the first place.
- */
+// The other half of the restore decision. Its `HTMLElement` signature was never a DOM dependency —
+// `isConnected` is all it reads. The two run in sequence at every restore: this picks between a
+// runner and the opening focus, `chooseActionRunner` decides which candidate is the runner.
 test.describe('preferredRestoreTarget', () => {
   test('a connected runner wins over the opening focus', () => {
     const runner = { isConnected: true };
@@ -90,8 +76,7 @@ test.describe('preferredRestoreTarget', () => {
   });
 
   test('a disconnected runner falls through to the opening focus', () => {
-    // The button re-rendered away while its action ran — the case `chooseActionRunner`'s doc
-    // records as the second thing the old `??` chain got wrong.
+    // The button re-rendered away while its action ran — the `??` chain's second mistake.
     const opening = { isConnected: true };
     expect(preferredRestoreTarget({ isConnected: false }, opening)).toBe(opening);
   });
@@ -107,9 +92,8 @@ test.describe('preferredRestoreTarget', () => {
   });
 
   test('the fallback is not itself checked for being connected', () => {
-    // Deliberate, and worth pinning rather than discovering: `restoreFocus` verifies where focus
-    // actually landed and drops back to the dialog, so a stale opening focus costs a no-op rather
-    // than a wrong answer. A check here would be a second guard for one hazard.
+    // Deliberate: `restoreFocus` verifies where focus landed and drops back to the dialog, so a
+    // stale opening focus costs a no-op. A check here would be a second guard for one hazard.
     const opening = { isConnected: false };
     expect(preferredRestoreTarget(null, opening)).toBe(opening);
   });

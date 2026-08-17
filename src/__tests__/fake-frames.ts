@@ -1,11 +1,6 @@
 /**
- * A controllable `requestAnimationFrame`, for the unit project.
- *
- * Node has no rAF at all, so these are *installed* rather than replaced — and that is the first
- * reason this is shared rather than copied: a second copy that forgot the save/restore would
- * leak a fake frame queue into every test that ran after it. The second reason is that frames
- * advance only when a test says so, which is what makes the modal store's open sequence
- * assertable without waiting on a real frame.
+ * A controllable `requestAnimationFrame` for the unit project, shared so no copy forgets the
+ * save/restore and leaks a fake queue into later tests. Frames advance only when a test says so.
  */
 
 export type FrameControl = {
@@ -15,9 +10,8 @@ export type FrameControl = {
 };
 
 export const installFakeFrames = (): FrameControl => {
-  // Node has no rAF, so these are installed rather than replaced. `Record` keeps the
-  // save/restore assignable under `exactOptionalPropertyTypes`, where writing back an
-  // `undefined` original to an optional property is an error.
+  // Node has no rAF, so these are installed rather than replaced. `Record` keeps save/restore
+  // assignable under `exactOptionalPropertyTypes`, which rejects writing an `undefined` back.
   const globals = globalThis as unknown as Record<string, unknown>;
   const originalRequest = globals['requestAnimationFrame'];
   const originalCancel = globals['cancelAnimationFrame'];

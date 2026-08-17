@@ -3,10 +3,7 @@ import { dialogStyle } from '../../__tests__/story-styles.js';
 import { useModal } from '../use-modal.js';
 import { useLookup } from '../use-lookup.js';
 
-/**
- * Tests useLookup(id) reactive behavior.
- * Displays ModalInfo reactively — values update without manual query buttons.
- */
+/** `useLookup(id)` reactivity: ModalInfo values update with no manual query. */
 export function UseLookupHarness() {
   const info = useLookup('reactive-modal');
 
@@ -46,10 +43,7 @@ export function UseLookupHarness() {
   );
 }
 
-/**
- * Tests useLookup(id) for an unregistered modal id.
- * Should return null-object default reactively.
- */
+/** An unregistered id: the null-object default, reactively. */
 export function UseLookupUnregisteredHarness() {
   const info = useLookup('ghost-modal');
 
@@ -65,23 +59,16 @@ export function UseLookupUnregisteredHarness() {
 }
 
 /**
- * Tests that a watcher **outside** the modal can tell "open" from "ready".
- *
- * The question `phase` cannot answer. It describes the `<dialog>` element, so it reaches `'open'`
- * on the animation frame after the dialog is shown — `'opening'` is one frame wide however long
- * the modal actually takes to prepare. Something elsewhere in the app deciding whether to let an
- * action through wants the other axis, and `isPreparing` is it.
- *
- * `prepare` is held on a promise this harness resolves from a button, rather than a timer, so the
- * preparing window is as long as the test needs and never a race. The button lives inside the
- * dialog because the top layer swallows clicks anywhere else.
+ * A watcher outside the modal telling "open" from "ready". `phase` describes the `<dialog>`, so
+ * `'opening'` is one frame wide however long prepare takes; `isPreparing` is the other axis.
+ * `prepare` is held on a promise released from a button inside the dialog — the top layer swallows
+ * clicks anywhere else — so the preparing window is as long as the test needs and never a race.
  */
 export function UseLookupPreparingHarness() {
   const info = useLookup('preparing-modal');
 
-  // Built once, in the initializer, the way `useModal` builds its store: `arm` and `release` close
-  // over one variable and never change identity. Re-armed per open rather than created once, so
-  // reopening this modal prepares again instead of resolving instantly.
+  // Built in the initializer so `arm`/`release` never change identity; re-armed per open, so
+  // reopening prepares again instead of resolving instantly.
   const [gate] = useState(() => {
     let release: () => void = () => {
       return undefined;
@@ -143,9 +130,7 @@ export function UseLookupPreparingHarness() {
   );
 }
 
-/**
- * Tests useLookup(id) foreground tracking with two modals.
- */
+/** Foreground tracking across two modals. */
 export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');

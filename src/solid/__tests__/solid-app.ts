@@ -13,23 +13,13 @@ import { useLookup } from '../use-lookup.js';
 import { useModal } from '../use-modal.js';
 
 /**
- * The Solid half of the binding's component tests.
- *
- * Written with `h` rather than JSX for the same reason the binding is: Solid's JSX needs
- * `babel-preset-solid`, and the CT bundle is React's. Nothing about what is under test depends on
- * that — `h` and compiled JSX produce the same calls, and the props an action returns are tracked
- * either way (hyperscript detects getters through the property descriptor and spreads them).
- *
- * Each harness is wrapped in its own `DialogManagerProvider`, so a Solid test is as isolated as a
- * React one: without it the modals would register with the module-level singleton and leak
- * between tests, since Playwright's global wrapper only provides React's.
+ * The Solid half of the binding's component tests, written with `h` because Solid's JSX needs
+ * `babel-preset-solid` and the CT bundle is React's — harmless, since `h` and compiled JSX produce
+ * the same calls and hyperscript detects action getters through the property descriptor. Each
+ * harness gets its own `DialogManagerProvider`; Playwright's global wrapper provides React's only.
  */
 
-/**
- * What `h` hands back: a thunk, which Solid's `JSX.Element` deliberately does not name — the
- * compiler emits that shape, a JSX author never writes it — even though `insert` runs it like any
- * other dynamic child.
- */
+/** What `h` hands back: a thunk, which Solid's `JSX.Element` deliberately does not name. */
 type Built = ReturnType<typeof h>;
 
 /** Run the thunk where a `JSX.Element` is required. The node it produces is one. */
@@ -42,10 +32,7 @@ const text = (read: () => string, testId: string): Built => {
   return h('span', { 'data-testid': testId }, read);
 };
 
-/**
- * Open, close, dismiss, hotkey, and the live fields — the ordinary surface, asserted through
- * elements *outside* the dialog so a stale read would show.
- */
+/** The ordinary surface, asserted *outside* the dialog so a stale read would show. */
 function BasicApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
   const [slow, setSlow] = createSignal(false);
@@ -60,9 +47,7 @@ function BasicApp(): Built {
         });
       }
     },
-    // Not destructured: the live fields are getters, and pulling them out of the object would
-    // read each one once and freeze it. This is Solid's ordinary props rule, and it applies to
-    // the render args for exactly the same reason.
+    // Not destructured: the live fields are getters, and pulling them out freezes them.
     render: (ctx) => {
       return el(
         h(
@@ -75,9 +60,7 @@ function BasicApp(): Built {
           text(() => {
             return ctx.hasRunningAction ? 'running' : 'idle';
           }, 'running'),
-          // The per-action question, read through the factory rather than off a button. Solid
-          // wraps the core factory to attach an expiry, so these two also assert that the wrapper
-          // carried `isRunning` across — an arrow that only forwarded the call would not have.
+          // Off the factory, which Solid wraps to attach an expiry: `isRunning` had to survive it.
           text(() => {
             return ctx.action.isRunning('confirm') ? 'yes' : 'no';
           }, 'confirm-running'),
@@ -152,11 +135,9 @@ function BasicApp(): Built {
 }
 
 /**
- * The declaration window, which a fine-grained renderer has to close by hand.
- *
- * Backdrop dismissal is opt-out without actions and opt-in with them, so whether the modal has
- * *currently drawn* an action is observable from outside: with the button gone, a backdrop click
- * must dismiss again. Without `engine.undeclare` on the button's cleanup it never would.
+ * The declaration window a fine-grained renderer closes by hand: backdrop dismissal is opt-out
+ * without actions and opt-in with them, so with the button gone a click must dismiss again — which
+ * it never would without `engine.undeclare` on the button's cleanup.
  */
 function DeclarationApp(): Built {
   const [withAction, setWithAction] = createSignal(true);
@@ -170,9 +151,7 @@ function DeclarationApp(): Built {
           'div',
           null,
           h('p', null, 'Toggle the action'),
-          // Inside the render callback, because a `showModal()` dialog owns the top layer and
-          // swallows every click outside itself — the same rule the React stories follow. A plain
-          // button, not an action: declaring one would defeat what the test is measuring.
+          // Inside `render` for the top layer; a plain button, since an action would defeat this.
           h(
             'button',
             {
@@ -241,12 +220,9 @@ function OutletInner(): Built {
 }
 
 /**
- * The slide template, and the one thing only Solid can get wrong about it.
- *
- * `useSlideModal` hands its render callback `args` plus a `direction`, and it composes them with
- * `mergeProps` rather than a spread. A spread would read every getter once and give the template
- * a frozen copy — `direction` would still be right, and `isPreparing` would never come back. So
- * the test reads both, and the second is the assertion.
+ * The slide template, and the one thing only Solid can get wrong: `useSlideModal` composes `args`
+ * with `direction` through `mergeProps`, not a spread. A spread freezes every getter — `direction`
+ * would still be right and `isPreparing` would never come back, so the second is the assertion.
  */
 function SlideApp(): Built {
   const panel = useSlideModal<void, 'close'>({
@@ -275,8 +251,7 @@ function SlideApp(): Built {
     },
   });
 
-  // The manager hooks, read from outside the panel: `useDialogManager` hands back an object whose
-  // fields are getters, `useLookup` an accessor — and both have to be live for these to move.
+  // `useDialogManager` returns an object of getters, `useLookup` an accessor; both must be live.
   const dialogs = useDialogManager();
   const info = useLookup('solid-slide');
 
@@ -286,8 +261,7 @@ function SlideApp(): Built {
     text(() => {
       return String(dialogs.openDialogs.length);
     }, 'open-count'),
-    // The snapshot's other field, and a getter of its own — `openDialogs` moving is not evidence
-    // that `foreground` does, since each is subscribed to separately on this binding.
+    // A getter of its own: `openDialogs` moving is not evidence that `foreground` does.
     text(() => {
       return dialogs.foreground?.id ?? 'none';
     }, 'foreground'),
@@ -351,16 +325,9 @@ function MessageApp(): Built {
 }
 
 /**
- * Disposal, an outlet, and a portal — the three paths the Solid suite never walked.
- *
- * Every one of them is `onCleanup` work the binding does on the way out: unregistering from the
- * manager, retiring the outlet entry, removing a portaled element from `document.body`. React's
- * suite covers all three (it has already regressed on one, when `portal` fell out of the teardown
- * deps and left an orphaned open dialog); nothing here did, which coverage put at 0 executions
- * for `teardownModal`, `outlet.unregister` and the portal branch alike.
- *
- * A child function is what disposes them: hyperscript re-runs it, and the owner of the branch it
- * replaces is disposed — which is exactly what unmounting a component is in Solid.
+ * The binding's three pieces of `onCleanup` work: unregistering from the manager, retiring the outlet
+ * entry, removing a portaled element from `document.body`. A child function disposes them, since
+ * hyperscript re-runs it and disposes the owner of the branch it replaces — Solid's unmount.
  */
 function DisposalInner(props: { readonly dispose: () => void }): Built {
   const modal = useModal<void, 'ok'>({
@@ -372,8 +339,7 @@ function DisposalInner(props: { readonly dispose: () => void }): Built {
           'div',
           null,
           h('p', null, 'Disposable content'),
-          // Inside `render`: the dialog owns the top layer while it is open, so a button outside
-          // it cannot be clicked. Same rule every story here follows.
+          // Inside `render`: an open dialog owns the top layer, so a button outside is unclickable.
           h(
             'button',
             {
@@ -571,16 +537,9 @@ function ContainedApp(): Built {
 }
 
 /**
- * The live fields on the **hook's return**, read from outside the dialog.
- *
- * `hasRunningAction` and `error` reach both the render args and the return, and the reason the
- * second copy exists is a trigger button that has to show a spinner or an error while the modal
- * is the thing doing the work. On this binding they are getters over signals rather than
- * re-rendered values, so "reaches the return" and "stays live once there" are two claims, and only
- * the first is a type error when it breaks.
- *
- * Everything asserted here is therefore *outside* `render`: a frozen getter would read once at
- * setup and never move again, which is exactly what a passing type-check cannot rule out.
+ * The live fields on the **hook's return** — the copy a trigger button reads while the modal works.
+ * Getters over signals here, so "reaches the return" and "stays live" are two claims and only the
+ * first is a type error; all of it is asserted *outside* `render`, where a frozen getter never moves.
  */
 function LiveStateApp(): Built {
   const modal = useModal<void, 'boom'>({
@@ -597,7 +556,7 @@ function LiveStateApp(): Built {
           'div',
           null,
           h('p', null, 'Live state'),
-          // The render args' own `error` getter — the same fact, on the other side of the seam.
+          // The render args' `error` getter — the same fact on the other side of the seam.
           text(() => {
             return ctx.error?.message ?? 'none';
           }, 'inner-error'),
@@ -645,18 +604,12 @@ function LiveStateApp(): Built {
 }
 
 /**
- * The accessible name and `aria-busy`, on the binding where they are most likely to be wrong.
- *
- * Solid owns its `<dialog>` and writes the attributes itself, and `aria-busy` is the one that had
- * to move out of a one-shot loop into a render effect — so "written at all" and "still written on
- * the next transition" are two claims here, not one.
- *
- * The gate is released from a button *inside* the dialog: a `showModal()` dialog is in the top
- * layer, and nothing outside it is clickable while it is open.
+ * The accessible name and `aria-busy`, which Solid writes onto its own `<dialog>` from a render
+ * effect rather than a one-shot loop — so "written at all" and "still written next transition" are
+ * two claims. The gate is released from inside the dialog, which owns the top layer while open.
  */
 function BusyApp(): Built {
-  // A signal rather than a `let`: the gate is set from inside an async callback, and state is
-  // what the compiler's immutability rule asks for there.
+  // A signal, not a `let`: the gate is set from inside an async callback.
   const [release, setRelease] = createSignal<(() => void) | undefined>();
 
   const modal = useModal({
@@ -718,11 +671,8 @@ export const SolidBusyApp = (): JSX.Element => {
 };
 
 /**
- * The labelling diagnostic on the binding that can get it wrong.
- *
- * Solid's lifecycle effect tracks whatever its body reads, so the check only comes back when
- * `prepare` settles because `isPreparing` is passed *in* rather than read behind the function —
- * which is exactly what the late-title half of this harness would catch if that ever changed.
+ * The labelling diagnostic. Solid's lifecycle effect tracks what its body reads, so the check re-runs
+ * when `prepare` settles only because `isPreparing` is passed *in* — the late-title half catches it.
  */
 function LabellingApp(): Built {
   const [release, setRelease] = createSignal<(() => void) | undefined>();
@@ -845,23 +795,15 @@ export const SolidContainedApp = (): JSX.Element => {
 };
 
 /**
- * `prioritize` through Solid — two modal dialogs and a policy that outranks open order.
+ * `prioritize` through Solid — two modal dialogs and a policy that outranks open order. Inherited
+ * through the wholesale re-export, so nothing would fail if a binding stopped reaching it
+ * (`binding-parity.test.ts` compares export *names*): this is the only thing that notices.
+ * `withPolicy` is a factory parameter because `SolidRoot` takes a component, not props; the `false`
+ * half is the baseline, a reorder that never happened looking identical to one not needed.
  *
- * The feature is core and all three bindings inherit it without a line of their own, which is
- * precisely why nothing would fail if one of them stopped reaching it: `binding-parity.test.ts`
- * compares export *names*, and `prioritize` is a method on `DialogManager` reached through the
- * wholesale re-export. So this is the only thing that would notice.
- *
- * `withPolicy` is a parameter of the *factory* rather than a prop, because the React story's channel
- * is the app itself — `SolidRoot` takes a component, not props. The `false` half is the baseline, and
- * it is not padding: a reorder that never happened and a reorder that was not needed look identical
- * from outside.
- *
- * Two details that would silently break this. The policy is installed at **setup**, not in an
- * effect — a Solid component body runs once, so `onCleanup` is where the disposer goes. And the sizes
- * are **strings**: Solid's style is written verbatim through `applyStyle`, so a bare `300` copied from
- * the React harness type-checks and emits an invalid declaration, the two dialogs stop overlapping,
- * and `elementFromPoint` at the centre answers about neither.
+ * Two silent breakers: the policy is installed at **setup**, a Solid body running once, so
+ * `onCleanup` owns the disposer; and the sizes are **strings**, since `applyStyle` writes them
+ * verbatim and a bare `300` type-checks, emits nothing, and stops the dialogs overlapping.
  */
 function stackPriorityApp(withPolicy: boolean): () => Built {
   return () => {
@@ -884,8 +826,6 @@ function stackPriorityApp(withPolicy: boolean): () => Built {
             'div',
             null,
             h('p', null, 'Warning'),
-            // Inside the render callback, because a `showModal()` dialog owns the top layer and
-            // swallows every click outside itself — the same rule every other harness here follows.
             h(
               'button',
               {
@@ -902,7 +842,6 @@ function stackPriorityApp(withPolicy: boolean): () => Built {
     });
 
     if (withPolicy) {
-      // Setup, not an effect: the body of a Solid component runs once, so there is no pass to gate.
       onCleanup(
         warning.dialogManager.prioritize((modal) => {
           return modal.template === 'alert' ? 100 : 0;
@@ -938,16 +877,10 @@ export const SolidOpenOrderApp = (): JSX.Element => {
 };
 
 /**
- * The options only React's suite had exercised: `containFocus`, `dismissOnClickOutside`, a custom
- * `dismissKey`, `prepare` aborted by its own close, and `onOpenRequest`.
- *
- * One app rather than five, because they are all the same claim — that these reach the shared
- * `attach*` functions from this binding's effects too — and five Solid roots would be five copies of
- * the wiring under test with nothing else different. Each is asserted through its own probe.
- *
- * **Non-modal on purpose.** `containFocus` is the Tab wrap `show()` does not give a dialog and is
- * inert for a modal one, and `dismissOnClickOutside` belongs to the same variant — the discriminated
- * union would reject the pair on a modal dialog, which is the one type-level constraint in the model.
+ * `containFocus`, `dismissOnClickOutside`, a custom `dismissKey`, `prepare` aborted by its own close,
+ * and `onOpenRequest` — one app rather than five, since they make the same claim (that these reach
+ * the shared `attach*` functions from this binding's effects), each with its own probe. Non-modal:
+ * `containFocus` is the Tab wrap `show()` does not give, and the union rejects the pair on a modal.
  */
 function NonModalOptionsApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
@@ -960,10 +893,8 @@ function NonModalOptionsApp(): Built {
     id: 'solid-non-modal-options',
     ariaLabel: 'Solid non-modal options',
     nonModal: true,
-    // Instant, and load-bearing for the tests rather than cosmetic: with the default 200 ms exit, a
-    // panel that *is* closing still reads `isVisible` for that window, so "still open just after the
-    // press" would match during a close and the assertion would hold either way. Measured — an
-    // earlier version of this harness passed both an assertion and its opposite.
+    // Instant, and load-bearing: with the default 200 ms exit a closing panel still reads
+    // `isVisible` — measured, an earlier harness passed both an assertion and its opposite.
     animation: {
       entrance: { opacity: '1' },
       exit: { opacity: '0' },
@@ -973,11 +904,8 @@ function NonModalOptionsApp(): Built {
     },
     containFocus: true,
     dismissOnClickOutside: true,
-    // Not Escape, so a press that closed it would have to have gone through the declared key rather
-    // than through the native path a modal dialog gets for free.
+    // Not Escape: a close then has to come through the declared key rather than the native path.
     dismissKey: 'Delete',
-    // Not Escape, so a press that closed it would have to have gone through the declared key rather
-    // than through the native path a modal dialog gets for free.
     prepare: async (signal) => {
       if (!holdPrepare()) {
         return;
@@ -992,8 +920,7 @@ function NonModalOptionsApp(): Built {
       });
       setPrepareOutcome(signal.aborted ? 'aborted' : 'settled');
     },
-    // Two parameters: what the caller sent, then the way to say no. Acceptance is the default —
-    // the manager cannot infer it, because an open is asynchronous on every binding.
+    // Acceptance is the default: the manager cannot infer it, an open being asynchronous.
     onOpenRequest: (_payload, request) => {
       if (refuse()) {
         request.refuse('solid said no');
@@ -1059,8 +986,7 @@ function NonModalOptionsApp(): Built {
           void modal.dialogManager
             .requestOpenAndWait('solid-non-modal-options', createOpenRequest())
             .then((outcome) => {
-              // `reason` is required on the refused branch — the union is what makes that so, and
-              // a `??` fallback here is what the type-aware linter calls out as unreachable.
+              // `reason` is required on the refused branch, so a `??` fallback lints as unreachable.
               setRequestOutcome(outcome.accepted ? 'accepted' : `refused: ${outcome.reason}`);
             });
         },
@@ -1084,14 +1010,8 @@ export const SolidNonModalOptionsApp = (): JSX.Element => {
 };
 
 /**
- * `reconcileOpen` driven from a Solid signal, and the focus restored after a failed action.
- *
- * Together because both are about what happens *after* something settles, and both were exercised on
- * React and on nothing else. The signal is the Solid equivalent of a controlled `open` prop, and
- * `createEffect` is where the reconciliation runs — the same three lines React writes in `useEffect`.
- *
- * Non-modal, so the buttons that drive the signal stay reachable: a `showModal()` dialog puts every
- * click outside itself out of reach.
+ * `reconcileOpen` from a Solid signal — a controlled `open` prop, with `createEffect` where React
+ * writes `useEffect`. Non-modal, so the buttons driving the signal stay reachable outside.
  */
 function ReconcileApp(): Built {
   const [open, setOpen] = createSignal(false);
@@ -1107,8 +1027,7 @@ function ReconcileApp(): Built {
       entrance: { opacity: '1' },
       exit: { opacity: '0' },
       duration: 0,
-      // Long enough that `phase` and `isVisible` disagree for a measurable window, which is the whole
-      // of what deciding on `phase` buys.
+      // Long enough that `phase` and `isVisible` disagree for a measurable window.
       exitDuration: 120,
       transitionProperty: 'opacity',
     },
@@ -1126,8 +1045,7 @@ function ReconcileApp(): Built {
             {
               'data-testid': 'close-and-lower',
               onClick: () => {
-                // Both in one handler: `onClose` runs when the exit finishes, so a call site that only
-                // lowers the signal there never lands inside the disagreement window.
+                // Both at once: `onClose` runs only when the exit finishes.
                 handle.close('close');
                 setOpen(false);
               },
@@ -1214,21 +1132,12 @@ export const SolidReconcileApp = (): JSX.Element => {
 };
 
 /**
- * The focus restored after a failed action, on a **modal** dialog with two focusables in it.
- *
- * Modal and two buttons for the same reason: the restore target is whoever held focus when the action
- * started, so a harness with one focusable cannot tell a restore from focus never having moved, and a
- * non-modal one lets focus sit outside the dialog entirely.
- *
- * The action is async and rejects, which is the shape that escapes: focus can legitimately be
- * elsewhere by the time it settles, and the retry belongs to the button that was pressed.
- *
- * **No test asserts it yet, deliberately.** Measured through this harness, focus lands on the
- * `<dialog>` instead of on the button — on all three engines, so it is not engine-specific. The
- * disabled-button race this was first attributed to is **not** the cause: at restore time the
- * button reports `disabled=false` and takes `focus()` when asked, so nothing is being blurred out
- * from under the coordinator. Shipping a test that asserted the dialog would enshrine the defect;
- * the harness stays because a fix needs it.
+ * Focus restored after a failed action: **modal**, **two** focusables, since the target is whoever
+ * held focus when the action started — one cannot tell a restore from focus never moving, non-modal
+ * lets focus sit outside. Async and rejecting, the shape where focus can be elsewhere when it
+ * settles. **No test asserts it yet**: measured here, focus lands on the `<dialog>` on all three
+ * engines, and the disabled-button race is **not** the cause — at restore time the button reports
+ * `disabled=false` and takes `focus()`. Asserting it enshrines the bug; the harness stays for a fix.
  */
 function FailedActionApp(): Built {
   const [failures, setFailures] = createSignal(0);
@@ -1297,21 +1206,11 @@ export const SolidFailedActionApp = (): JSX.Element => {
 };
 
 /**
- * A modal claiming no opening focus, with a non-modal panel opening underneath it.
- *
- * The floor under `reclaimFocus`, on the second hook binding. Every binding reaches the repair
- * through `createFocusCoordinator`, so the function is shared — but *when* each binding syncs it is
- * not, and Solid's component body runs once where React's re-runs, which is the difference worth a
- * measurement rather than an inference.
- *
- * **Neither action claims `focusOnOpen`, and that is what puts this on the floor's path.** With a
- * claim there is a marker to aim at and the reclaim never reaches past it; `lastFocusInside` is
- * empty too, because the coordinator's `focusin` listener is attached after `showModal()` has
- * already placed the opening focus. So both candidates are absent and the floor is the only thing
- * left — which is exactly the arrangement that used to end at `dialog.focus()`.
- *
- * Two focusable actions, because with one "handed to the first focusable" and "focus never moved"
- * are the same element.
+ * The floor under `reclaimFocus`, on the second hook binding: `createFocusCoordinator` is shared but
+ * *when* each syncs it is not, Solid's body running once where React's re-runs. **Neither action
+ * claims `focusOnOpen`, which puts this on the floor's path** — a claim would give the reclaim a
+ * marker, and `lastFocusInside` is empty too, its `focusin` listener attaching after `showModal()`
+ * placed the opening focus. Two actions, since with one a restore and a stay are the same element.
  */
 function ClaimlessReclaimApp(): Built {
   const modal = useModal<void, 'confirm' | 'cancel'>({
@@ -1333,8 +1232,7 @@ function ClaimlessReclaimApp(): Built {
   const panel = useModal<void, 'close'>({
     id: 'solid-claimless-panel',
     nonModal: true,
-    // Viewport-anchored rather than contained: the contained path lays a library-owned `inset: 0`
-    // wrapper over the nearest sized ancestor, and the trigger below would end up beneath it.
+    // Viewport-anchored: contained would lay an `inset: 0` wrapper over the trigger below.
     portal: true,
     ariaLabel: 'Panel opening underneath',
     render: () => {
@@ -1352,8 +1250,7 @@ function ClaimlessReclaimApp(): Built {
       {
         'data-testid': 'solid-open-both',
         onClick: () => {
-          // Chained rather than two clicks: once the modal is up it owns the top layer and this
-          // button is under its backdrop, so the second open has to be arranged before the first.
+          // Chained, not two clicks: once the modal is up this button is under its backdrop.
           void modal.open().then(() => {
             return panel.open();
           });
@@ -1362,8 +1259,7 @@ function ClaimlessReclaimApp(): Built {
       'Open the modal, then the panel underneath'
     ),
     modal.Modal,
-    // `null` under `portal: true` — the binding mounts the dialog itself. Kept for the symmetry
-    // with the React harness, where it is the node that places the panel.
+    // `null` under `portal: true`; kept for symmetry with React's harness, where it places the panel.
     panel.Modal
   );
 }
@@ -1373,11 +1269,9 @@ export const SolidClaimlessReclaimApp = (): JSX.Element => {
 };
 
 /**
- * A `prepare` that throws, reported through `onError` — the second binding.
- *
- * The wiring differs from React's and that is why this is measured rather than inherited: React
- * reads the callback through a ref so a teardown reports to whichever `onError` is current, while
- * Solid passes `options.onError` straight through. Same guarantee, two schedules.
+ * A `prepare` that throws, reported through `onError`. Measured, not inherited: React reads the
+ * callback through a ref so a teardown reports to whichever `onError` is current, Solid passes
+ * `options.onError` straight through.
  */
 function PrepareFailureApp(): Built {
   const [sources, setSources] = createSignal<string[]>([]);

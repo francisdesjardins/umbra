@@ -3,15 +3,10 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * `prepare` is handed an `AbortSignal` that fires when the modal closes.
- *
- * A dialog dismissed while it is still loading is the ordinary case, not an edge one. Without a
- * signal the request outlives the thing that asked for it: it lands on a closed modal, and a slow
- * one can still be in flight when the next open starts its own — which is how a reopened dialog
- * ends up showing the *previous* attempt's answer.
- *
- * The work here is a promise that only ever settles through the signal, so "was it aborted" is the
- * only thing the outcome can report. A real call site passes the signal to `fetch`.
+ * `prepare` is handed an `AbortSignal` that fires when the modal closes. Without it a request
+ * outlives what asked for it — landing on a closed modal, or still in flight when the next open
+ * starts its own, which is how a reopened dialog shows the previous attempt's answer. The work here
+ * only settles through the signal; a real call site passes it to `fetch`.
  */
 export function OnOpenAbortHarness() {
   const [outcome, setOutcome] = useState('idle');
@@ -22,7 +17,6 @@ export function OnOpenAbortHarness() {
     prepare: (signal) => {
       setOutcome('loading');
       return new Promise<void>((resolve) => {
-        // Never resolves on its own: the only way out is the modal closing.
         signal.addEventListener('abort', () => {
           setAborts((count) => {
             return count + 1;

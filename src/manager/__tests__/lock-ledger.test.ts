@@ -2,12 +2,8 @@ import { expect, test } from '@playwright/test';
 import { createLockLedger, createLockOwner } from '../lock-ledger.js';
 
 /**
- * The claim ledger, on its own.
- *
- * Its rule — claimed per owner, released only when the last claim goes — is the one that stops a
- * second dialog manager from dropping a lock the first is still holding. It was decidable only
- * through a browser with two managers open at once, because it lived inside `lockBodyScroll` behind
- * a `typeof document` guard that the unit project always takes. Nothing here needs a document.
+ * The claim ledger alone: claimed per owner, released only on the last claim, so a second manager
+ * cannot drop a lock the first holds — behind `lockBodyScroll`'s guard, that needed a browser.
  */
 
 test.describe('the first claim and the last release', () => {
@@ -20,9 +16,7 @@ test.describe('the first claim and the last release', () => {
   });
 
   test('a repeat claim by the same owner is not a second edge', () => {
-    // Stacked modals within one manager claim on every open. A second `true` here is a second
-    // application of the lock — for the body scroll lock, a second helping of compensating
-    // padding, which shifts the page the compensation exists to hold still.
+    // Stacked modals claim on every open; a second `true` is a second helping of padding.
     const ledger = createLockLedger();
     const owner = createLockOwner();
 
@@ -30,14 +24,12 @@ test.describe('the first claim and the last release', () => {
     expect(ledger.claim(owner)).toBe(false);
     expect(ledger.claim(owner)).toBe(false);
 
-    // And the ledger did not count them: one release still lets go.
     expect(ledger.release(owner)).toBe(true);
   });
 
   test('a second owner claims without re-applying, and releasing it does not let go', () => {
-    // The defect this ledger exists for. Each manager releases whenever it observes a transition
-    // and finds nothing of its own open; with last-writer-wins, `second` going away would drop a
-    // lock `first` is still holding and the page would scroll behind an open modal.
+    // Each manager releases when it sees nothing of its own open; with last-writer-wins, `second`
+    // going away drops a lock `first` still holds and the page scrolls behind an open modal.
     const ledger = createLockLedger();
     const first = createLockOwner();
     const second = createLockOwner();

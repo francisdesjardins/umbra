@@ -67,9 +67,8 @@ test.describe('resolveAnimation', () => {
   });
 
   test('agrees with the transition the style builder emits', () => {
-    // The exit listener waits on `primaryProperty` for `exitDuration`; both must
-    // match the inline `transition` actually applied to the <dialog>, or the
-    // close never finalizes until the fallback timeout fires.
+    // The exit listener waits on `primaryProperty` for `exitDuration`; a mismatch stalls the close
+    // until the fallback timeout fires.
     const anim: ModalAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
     const { primaryProperty, exitDuration } = resolveAnimation(anim);
     const transition = String(getDialogAnimationStyles('closing', { animation: anim }).transition);
@@ -109,9 +108,7 @@ test.describe('getDialogAnimationStyles', () => {
   });
 
   test('each property in a comma-separated list receives the duration', () => {
-    // "opacity, transform" must expand to "opacity 150ms ease-out, transform 150ms ease-out"
-    // so that every property fires transitionend — a bare "opacity," prefix yields 0s duration
-    // for opacity which never fires transitionend, causing the animation fallback timeout.
+    // A bare "opacity," prefix yields 0s, which never fires transitionend — the fallback timeout.
     const styles = getDialogAnimationStyles('closing', { animation: baseAnimation });
     const transition = String(styles.transition);
     expect(transition).toBe('opacity 150ms ease-out, transform 150ms ease-out');
@@ -144,7 +141,6 @@ test.describe('getDialogAnimationStyles', () => {
   });
 
   test('animation styles override custom styles for the same property', () => {
-    // customStyle sets opacity: 0.5 but exit animation applies opacity: 0 last
     const styles = getDialogAnimationStyles('closing', {
       animation: baseAnimation,
       customStyle: { opacity: 0.5 },
@@ -172,8 +168,7 @@ test.describe('getDialogAnimationStyles', () => {
   });
 
   test('a closed dialog is out of layout, whatever else it was given', () => {
-    // The inline `display: flex` outranks the UA's `dialog:not([open]) { display: none }`, so
-    // without this a closed contained dialog stays a full-region, invisible hit target.
+    // Inline `display: flex` outranks the UA's `dialog:not([open])` rule — a full-region target.
     const closed = getDialogAnimationStyles('closed', {
       animation: baseAnimation,
       customStyle: { width: 200 },
@@ -185,8 +180,7 @@ test.describe('getDialogAnimationStyles', () => {
   });
 
   test('a custom style wins over the placement it would fight', () => {
-    // Template styles are merged after the placement on purpose: a template that wants to
-    // place the dialog itself (a slide panel pinning one edge) has to be able to.
+    // Merged after the placement so a template can pin the dialog itself (a slide panel's edge).
     const styles = getDialogAnimationStyles('closing', {
       animation: baseAnimation,
       customStyle: { position: 'static' },

@@ -1,13 +1,8 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import { ControlledModalHarness, ControlledPanelHarness } from './dismiss-request.story.js';
 
-/**
- * `onDismissRequest` — the dismiss key handed to the owner instead of closing on it.
- *
- * Every gate before that last step is unchanged and is asserted elsewhere; what is measured here is
- * only the step that moved. Each test is written so that the un-optioned behaviour would fail it:
- * a dialog that closed itself is exactly what "still visible after Escape" refuses.
- */
+// `onDismissRequest` — the dismiss key handed to the owner instead of closing on it. Every gate
+// before that step is asserted elsewhere; each test here would fail on the un-optioned behaviour.
 
 const MODAL = 'dialog[data-modal-id="controlled-modal"]';
 const PANEL = 'dialog[data-modal-id="controlled-panel"]';
@@ -47,8 +42,7 @@ test.describe('a modal dialog whose Escape is a request', () => {
 
 test.describe('a non-modal panel whose Escape is a request', () => {
   test('hears the press from outside itself', async ({ mount, page }) => {
-    // The case that cannot be a dialog-level listener: a panel outside the top layer does not keep
-    // focus, so the press is made on a button beside it and has to reach the panel anyway.
+    // Not a dialog-level listener: a panel outside the top layer does not keep focus.
     const component = await mount(<ControlledPanelHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
@@ -62,10 +56,8 @@ test.describe('a non-modal panel whose Escape is a request', () => {
   });
 
   test('a declined press is left travelling', async ({ mount, page }) => {
-    // The negative half, and the reason the return value exists at all: the window listener
-    // captures, so a press it takes is a press the page never sees. Both halves are asserted
-    // from the same harness — one press claimed, the next declined — or "the page saw it" would
-    // pass on a listener that never claimed anything.
+    // Why the return value exists: the window listener captures, so a press it takes is one the
+    // page never sees. Both halves from one harness, or "the page saw it" passes on a dead one.
     const component = await mount(<ControlledPanelHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();

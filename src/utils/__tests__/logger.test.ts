@@ -101,7 +101,6 @@ test.describe('createLogger / setLogLevel', () => {
   test('logger includes namespace prefix in the message', () => {
     setLogLevel('*');
     createLogger('modal')('open');
-    // First argument is a format string containing the namespace
     const firstArg = debugCalls[0]?.[0];
     const formatStr = typeof firstArg === 'string' ? firstArg : JSON.stringify(firstArg ?? '');
     expect(formatStr).toContain('dialog:modal');
@@ -137,8 +136,7 @@ test.describe('createLogger / setLogLevel', () => {
 });
 
 test.describe('persistence and namespace colours', () => {
-  // Same capture the suite above installs: these tests read what reached the console, so they
-  // need the console replaced and the buffers cleared per test.
+  // Playwright hooks are per-describe: without its own capture this reads the last suite's buffer.
   test.beforeEach(() => {
     debugCalls.length = 0;
     console.debug = (...args) => {
@@ -152,9 +150,7 @@ test.describe('persistence and namespace colours', () => {
   });
 
   test('setLogLevel persists through storage when asked, and survives its absence', () => {
-    // The unit project is Node: there is no window, so `getStorage()` answers `null` and every
-    // write short-circuits. That is the path an SSR render and a worker take, and it must be a
-    // no-op rather than a throw — which is the whole assertion.
+    // Node has no window: `getStorage()` answers `null`, so the write is a no-op, not a throw.
     setLogLevel('modal', true);
     createLogger('modal')('enabled and persisted');
     expect(debugCalls).toHaveLength(1);
@@ -165,10 +161,8 @@ test.describe('persistence and namespace colours', () => {
   });
 
   test('a sub-namespace inherits the nearest ancestor that has a colour', () => {
-    // `resolveColor` drops one `:` segment at a time and stops at the first match — so a child of
-    // `modal:lifecycle` takes *its* colour, not `modal`'s, and a namespace two levels below one
-    // that has no entry of its own keeps walking. Both, because the nearest-match rule is the
-    // whole of the behaviour and asserting only the deep walk would pass on a table lookup.
+    // `resolveColor` drops one `:` segment at a time and stops at the first match. Both the near
+    // and the deep walk, since asserting only the deep one would pass on a plain table lookup.
     setLogLevel('*');
     createLogger('modal:lifecycle')('parent');
     createLogger('modal:lifecycle:deep')('child');
@@ -195,18 +189,12 @@ test.describe('persistence and namespace colours', () => {
 });
 
 /**
- * The console has two backgrounds and the page cannot pick between them — it follows the system
- * theme, and can be overridden in devtools independently of that. No single colour is readable on
- * both (the two 4.5:1 bars leave an empty window between luminance 0.183 and 0.237), so a label
- * that colours *text* is unreadable on one console or the other by construction. Every namespace
- * colour here once was, on a light one.
- *
- * The badge is what removes the dependency, so these assert the badge — not the palette. A new
- * namespace picks any colour it likes and fails here only if the label would not read on it.
+ * The console theme is not the page's to pick, and no single ink colour reads on both backgrounds
+ * (the two 4.5:1 bars leave an empty window between luminance 0.183 and 0.237). The badge removes
+ * the dependency, so these assert the badge, not the palette — a new namespace picks any colour it
+ * likes and fails here only if the label would not read on it.
  */
 test.describe('namespace labels do not depend on the console theme', () => {
-  // The capture is per-describe in Playwright, so this block installs its own — without it these
-  // read whatever the previous suite left in the buffer, which is a test that passes by accident.
   test.beforeEach(() => {
     debugCalls.length = 0;
     console.debug = (...args) => {
@@ -258,7 +246,6 @@ test.describe('namespace labels do not depend on the console theme', () => {
       const background = /background:(#[0-9a-f]{6})/i.exec(style)?.[1];
       const ink = /(?:^|;)color:(#[0-9a-f]{6})/i.exec(style)?.[1];
 
-      // Without a background the label is at the mercy of whichever console theme is on.
       expect(background, style).toBeDefined();
       expect(ink, style).toBeDefined();
       expect(contrast(ink ?? '#000000', background ?? '#ffffff')).toBeGreaterThanOrEqual(4.5);

@@ -3,29 +3,16 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The option surface, read out of `core/types.ts` rather than restated.
- *
- * A parser rather than an import for the reason `collect-exports.ts` is one: these names are wanted
- * in the **unit** project, which is Node with no DOM and no framework, and a type has no runtime to
- * import anyway. Static text is the only thing there is to read.
- *
- * It exists so a table *about* the options — the compatibility matrix — cannot fall behind them. A
- * new option lands in `UseModalBaseOptions` and the row for it is missing, which is a failing test
- * rather than a paragraph nobody updated.
- *
+ * The option surface parsed out of `core/types.ts`, like `collect-exports.ts`: the unit project is
+ * Node with no DOM or framework, and a type has no runtime to import anyway. It exists so the
+ * compatibility matrix cannot fall behind — a new option with no row is a failing test.
  * @internal Test helper, not part of the public API.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * The body of `export type <name>`, from its `=` to the brace that closes it.
- *
- * Brace-counted rather than regexed to a line: `ModalVariant` is a union of two object literals and
- * `UseModalBaseOptions` holds nested function types, so "up to the next `};` at column 0" would cut
- * either one in the wrong place — and cutting early is the failure that leaves the caller with a
- * short list it has no way to know is short.
- */
+// The body of `export type <name>`, `=` to closing brace — brace-counted, because `ModalVariant`'s
+// union and `UseModalBaseOptions`'s nested function types make a line-regex cut early, and silently.
 function typeBody(source: string, name: string): string {
   const start = source.indexOf(`export type ${name}`);
   if (start === -1) {
@@ -65,11 +52,9 @@ function membersOf(body: string): string[] {
 }
 
 /**
- * Every option a caller can pass, both halves of it.
- *
- * `UseModalBaseOptions` is the flat surface and `ModalVariant` is the modal/non-modal discriminated
- * union the three dismissal options live in — a consumer sees one object (`UseModalOptions` is their
- * intersection), so the matrix asks about one list.
+ * Every option a caller can pass: `UseModalBaseOptions`'s flat surface plus `ModalVariant`, the
+ * modal/non-modal union holding the three dismissal options. A consumer sees one object — their
+ * intersection, `UseModalOptions` — so the matrix asks about one list.
  */
 export function collectOptionNames(): string[] {
   const source = readFileSync(resolve(SRC_ROOT, 'core', 'types.ts'), 'utf8');

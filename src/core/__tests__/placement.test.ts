@@ -7,8 +7,7 @@ test.describe('dialogPlacement', () => {
     expect(dialogPlacement({ nonModal: false, portal: true })).toEqual({
       host: null,
       dialog: {},
-      // The browser draws this one, in the top layer, where nothing can come between it and the
-      // page. A scrim of our own would be a second one, below the dialog it belongs to.
+      // The browser draws this in the top layer; a scrim of ours would sit below its own dialog.
       backdrop: null,
     });
   });
@@ -29,12 +28,9 @@ test.describe('dialogPlacement', () => {
   test('a contained non-modal dialog anchors to a host it fills', () => {
     const { host, dialog } = dialogPlacement({ nonModal: true });
 
-    // `absolute` against a host the library owns is the point: the closest positioned ancestor
-    // wins, so a transformed ancestor higher up cannot hijack the containing block.
+    // `absolute` against a host we own, so a transformed ancestor cannot hijack the block.
     expect(dialog).toMatchObject({ position: 'absolute', inset: 0 });
-    // The host is absolute too, and that is not a detail: a block in the flow is laid out after
-    // whatever it was meant to cover, so opening the dialog would push the region's own content
-    // out of it. `inset: 0` fills the same box without taking a place in the layout.
+    // The host is absolute too: in flow it would lay out after what it must cover, and push it out.
     expect(host).toMatchObject({
       position: 'absolute',
       inset: 0,
@@ -45,9 +41,7 @@ test.describe('dialogPlacement', () => {
   test('the host is not a hit target; the dialog inside it is', () => {
     const { host, dialog } = dialogPlacement({ nonModal: true });
 
-    // The host covers its whole region for the lifetime of the modal, closed included. Without
-    // this pair, everything behind it — the trigger that opens the dialog, most of all — stops
-    // being clickable the moment a contained dialog is mounted.
+    // The host covers its region for the modal's whole life; this pair keeps the trigger clickable.
     expect(host).toMatchObject({ pointerEvents: 'none' });
     expect(dialog).toMatchObject({ pointerEvents: 'auto' });
   });
@@ -76,8 +70,7 @@ test.describe('dialogPlacement', () => {
 
 test.describe('the scrim a non-modal dialog has to draw itself', () => {
   test('is positioned the way the dialog it covers is', () => {
-    // The pair is the whole point: a `fixed` scrim under an `absolute` dialog covers the viewport
-    // instead of the region, and an `absolute` one under a `fixed` dialog scrolls away from it.
+    // A `fixed` scrim under an `absolute` dialog covers the viewport, not the region — and back.
     expect(dialogPlacement({ nonModal: true, portal: true }).backdrop).toMatchObject({
       position: 'fixed',
     });
@@ -85,16 +78,14 @@ test.describe('the scrim a non-modal dialog has to draw itself', () => {
   });
 
   test('reads the same custom property the native backdrop does', () => {
-    // So a theme moves both, and a non-modal panel is not a different shade from a modal dialog
-    // beside it.
+    // So a theme moves both, and a panel is not a different shade from a modal beside it.
     for (const options of [{ nonModal: true }, { nonModal: true, portal: true }]) {
       expect(dialogPlacement(options).backdrop?.background).toContain('--dialog-backdrop');
     }
   });
 
   test('carries no z-index, because the placement is not what decides the stack', () => {
-    // `getZIndex(id)` is the manager's answer and it depends on how many dialogs are open, which a
-    // static table cannot know.
+    // `getZIndex(id)` is the manager's answer, and it depends on how many dialogs are open.
     expect(dialogPlacement({ nonModal: true }).backdrop).not.toHaveProperty('zIndex');
   });
 });

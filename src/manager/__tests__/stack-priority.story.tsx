@@ -3,23 +3,12 @@ import { useModal } from '../../react/use-modal.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
 /**
- * Two modal dialogs racing for the front, with and without a stack policy.
- *
- * The shape is the one `prioritize` exists for: an interruption is already up (`sp-warning`) when
- * something else raises a panel (`sp-panel`) — a deep link, a route, another feature that knows
- * nothing about the warning. The panel's `showModal()` lands last, so the platform paints it in
- * front and the warning ends up under its backdrop: inert, dimmed, unreadable.
- *
- * `withPolicy` is what the pair of tests turns on and off, and the `false` half is not padding — a
- * reorder that never happened and a reorder that was not needed look identical from the outside, so
- * the baseline is what proves the assertion can fail.
- *
- * Both dialogs are sized alike and a modal `<dialog>` is centred by the UA, so they overlap: the
- * tests ask `elementFromPoint` at the viewport centre which one is really in front, rather than
- * believing the library's own snapshot about it.
- *
- * The button that opens the panel is inside the warning's `render` because it has to be — a modal
- * dialog is in the top layer and swallows every click outside itself.
+ * Two modal dialogs racing for the front, with and without a stack policy. `sp-panel`'s
+ * `showModal()` lands after `sp-warning`'s, so the platform paints it in front and the warning
+ * falls under its backdrop. The `withPolicy: false` half is the baseline — a reorder that never
+ * happened looks like one that was not needed. Both are sized alike and UA-centred, so they
+ * overlap and the tests hit-test the viewport centre, not the library's snapshot; the open-panel
+ * button sits inside the warning's `render` because the top layer swallows outside clicks.
  */
 export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
   const { Modal: Panel } = useModal<void, 'close'>({
@@ -80,8 +69,7 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
     if (!withPolicy) {
       return undefined;
     }
-    // Once, at start-up, which is the whole point of the surface: one rule, installed in one place,
-    // for parts of the app that never learn about each other.
+    // Once at start-up: one rule, one place, for parts of the app that never learn about each other.
     return dialogManager.prioritize((modal) => {
       return modal.template === 'alert' ? 100 : 0;
     });
@@ -104,20 +92,13 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
 }
 
 /**
- * Three modal dialogs, and a policy installed after they are already on screen.
- *
- * Two things nothing else reaches. **A plan with more than one raise in it**: with three dialogs the
- * newcomer can belong at the *bottom*, which means everything above it has to lift, and `planRaises`
- * returning two ids has until now only ever been checked as a pure function. And **installing the
- * policy late**, which is the half of `prioritize` that reorders what is already painted rather than
- * what opens next — in Node that path stops at `syncStackOrder`'s `document` guard, so a browser is
- * the only place it runs at all.
- *
- * Every open is programmatic and staggered on a timer rather than driven by a click, and that is
- * forced rather than stylistic: under a policy the dialog a test would need to click is the one the
- * policy just put *underneath*, so the top layer would swallow the press. The toggle below is on the
- * page for the same reason — the tests dispatch its click directly, since what is being measured is
- * the policy's effect on an open stack, not whether a button under a backdrop is reachable.
+ * Three modal dialogs, and a policy installed after they are on screen — two paths nothing else
+ * reaches. `planRaises` returning two ids had until now only ever been checked as a pure function;
+ * and a *late* install reorders what is already painted rather than what opens next, a path that
+ * stops at `syncStackOrder`'s `document` guard in Node, so only a browser runs it. Opens are
+ * programmatic and staggered on a timer because under a policy the dialog a test would click is the
+ * one just put *underneath*, so the top layer would swallow the press — the tests dispatch the
+ * toggle's click directly for the same reason.
  */
 export function MultiRaiseHarness() {
   const [policyOn, setPolicyOn] = useState(false);
@@ -163,8 +144,7 @@ export function MultiRaiseHarness() {
       <button
         data-testid="mr-open-all"
         onClick={() => {
-          // Opened high → mid → low, so the *last* one to arrive is the one that belongs at the
-          // bottom. That is what makes the plan two raises long instead of one.
+          // high → mid → low, so the *last* to arrive belongs at the bottom: two raises, not one.
           dialogManager.open('mr-high');
           setTimeout(() => {
             dialogManager.open('mr-mid');
@@ -197,18 +177,11 @@ export function MultiRaiseHarness() {
 }
 
 /**
- * One dialog, already up with a caret in it, and a policy arriving late.
- *
- * The smallest arrangement that reaches `raiseDialog`'s focus restore — and the reasoning that said
- * nothing could reach it was wrong, which is why this exists. The path is the *late* install: until
- * `prioritize` is called the manager never tracks the top layer, so the first sync compares the
- * desired order against an empty one and the plan lifts **everything**, starting from the bottom.
- * The bottom dialog is the one that has been up longest, and here it is also the one holding the
- * keyboard.
- *
- * So a raise really can happen to the dialog that has focus, and what the restore buys is exactly
- * this: the caret survives a policy being installed under it. Without it, `showModal()` picks the
- * dialog's first focusable and the position is gone.
+ * One dialog already up with a caret in it, and a policy arriving late — the smallest arrangement
+ * reaching `raiseDialog`'s focus restore. Until `prioritize` is called the manager never tracks the
+ * top layer, so the first sync compares the desired order against an empty one and lifts
+ * **everything** from the bottom; the bottom dialog is the longest up, here also the one holding
+ * the keyboard. Without the restore, `showModal()` picks the first focusable and the caret is gone.
  */
 export function LatePolicyFocusHarness() {
   const [policyOn, setPolicyOn] = useState(false);

@@ -3,13 +3,9 @@ import { useModal } from '../../use-modal.js';
 import { useSlideModal } from '../../templates/use-slide-modal.js';
 
 /**
- * The surface a consumer styles a dialog through, with nothing else in the way:
- *
- * - `--dialog-backdrop` — the library's one visual opinion, as an inherited custom property,
- *   so overriding it is a declaration rather than a specificity fight.
- * - `data-modal-id` / `data-modal-type` — how CSS reaches one dialog, or every non-modal one,
- *   without knowing where it renders.
- * - `style` — the size of the `<dialog>` box itself, which the library never decides.
+ * The styling surface: `--dialog-backdrop` (inherited, so overriding is a declaration, not a
+ * specificity fight), `data-modal-id`/`data-modal-type` (CSS reaching one dialog or all non-modal
+ * ones), and `style`, merged over a template's placement so a drawer's `left: 0` survives.
  */
 export function StylingSurfaceHarness() {
   const sized = useModal({
@@ -21,8 +17,6 @@ export function StylingSurfaceHarness() {
     },
   });
 
-  // A template picks the placement; the caller still picks the size — its `style` is merged
-  // over the template's rather than replacing it, so `left: 0` survives and the width does not.
   const drawer = useSlideModal({
     id: 'styling-surface-slide',
     direction: 'left',
@@ -33,8 +27,7 @@ export function StylingSurfaceHarness() {
   });
 
   return (
-    // The property is inherited, so it can be set anywhere above the dialog — the top layer
-    // changes where a dialog paints, not what it inherits.
+    // Set anywhere above: the top layer changes where a dialog paints, not what it inherits.
     <div style={{ '--dialog-backdrop': 'rgb(0, 128, 0)' } as CSSProperties}>
       <button
         onClick={async () => {

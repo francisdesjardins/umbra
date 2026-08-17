@@ -7,17 +7,10 @@ import {
 } from './stack-priority.story.js';
 
 /**
- * `prioritize` in a real top layer, which is the only place the claim can be checked.
- *
- * The manager's own answers are asserted in `stack-priority.test.ts`. What needs a browser is that
- * the *paint* order moved, because the mechanism is not a number: the platform paints top-layer
- * elements in the order they were added and `z-index` does not apply between them — measured, a
- * dialog stamped `z-index: 9999` still paints under one shown after it — so the only way to lift one
- * is to close and re-show it. A test that read `openDialogs` would pass over a library that stamped
- * a z-index and changed nothing on screen.
- *
- * `elementFromPoint` at the centre is the question asked, because it is the same question the mouse
- * asks.
+ * `prioritize` in a real top layer, the only place the claim can be checked — the manager's own
+ * answers are in `stack-priority.test.ts`. The platform paints top-layer elements in insertion
+ * order and `z-index` does not apply between them — measured: `z-index: 9999` still paints under a
+ * later show — so lifting one means close-and-re-show, and the probe is `elementFromPoint`.
  */
 
 test('without a policy the dialog that opened last is in front', async ({ mount, page }) => {
@@ -26,7 +19,7 @@ test('without a policy the dialog that opened last is in front', async ({ mount,
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
 
-  // The baseline, and the reason the next test means something: this is the defect, reproduced.
+  // The baseline the next test needs: the defect, reproduced.
   await expect
     .poll(() => {
       return frontDialogId(page);
@@ -49,8 +42,7 @@ test('with a policy the high-priority dialog stays in front of a later open', as
     })
     .toBe('sp-warning');
 
-  // Both are still open — a raise is a re-show, not a close, and the dialog that was pushed under
-  // is still there to be dealt with once the warning is answered.
+  // A raise is a re-show, not a close: the dialog pushed under is still there to be dealt with.
   await expect(page.locator('dialog[data-modal-id="sp-panel"]')).toHaveAttribute('open', '');
   await expect(page.locator('dialog[data-modal-id="sp-warning"]')).toHaveAttribute('open', '');
 });
@@ -64,12 +56,10 @@ test('being in front means being the one the mouse and the keyboard reach', asyn
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
 
-  // A real click, hit-tested: it lands only if the warning is genuinely on top. Under the panel's
-  // backdrop this times out, which is exactly what the bug feels like to a user.
+  // A hit-tested click: under the panel's backdrop it would time out rather than land.
   await component.getByTestId('acknowledge').click();
 
   await expect(page.locator('dialog[data-modal-id="sp-warning"]')).not.toHaveAttribute('open', '');
-  // Answering the warning hands the page back to the panel underneath.
   await expect
     .poll(() => {
       return frontDialogId(page);
@@ -83,9 +73,8 @@ test('the raise leaves focus in the dialog it put in front', async ({ mount, pag
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
 
-  // `showModal()` runs the focusing steps on every show, so a reorder that ignored focus would
-  // leave the keyboard in the dialog underneath — visibly stuck, since only the topmost modal
-  // dialog is not inert.
+  // `showModal()` refocuses on every show, so a reorder ignoring focus strands the keyboard in the
+  // inert dialog underneath.
   await expect
     .poll(() => {
       return focusedDialogId(page);
@@ -105,8 +94,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await component.getByTestId('mr-open-all').click();
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
 
-    // `mr-low` arrived last and ranks lowest, so the plan is two raises — `mr-mid` then `mr-high` —
-    // and this is the only place that loop runs with more than one entry in it.
+    // `mr-low` arrived last and ranks lowest: two raises, the only place that loop runs with two.
     await expect
       .poll(() => {
         return frontDialogId(page);
@@ -118,7 +106,6 @@ test.describe('three dialogs, and a policy that arrives late', () => {
       })
       .toEqual(['mr-low', 'mr-mid', 'mr-high']);
 
-    // Raises are re-shows, so nothing closed on the way.
     await expect(page.locator('dialog[open]')).toHaveCount(3);
   });
 
@@ -136,8 +123,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
 
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
 
-    // The paint order moved under three dialogs that were already up — the half of `prioritize` a
-    // snapshot assertion cannot see, since in Node this path stops at the `document` guard.
+    // Paint order moving under dialogs already up: in Node this path stops at the `document` guard.
     await expect(page.locator('dialog[data-modal-id="mr-high"]')).toBeVisible();
     await expect
       .poll(() => {
@@ -165,8 +151,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('mr-policy')).toHaveText('off');
 
-    // Back to open order — and this is the only thing that exercises the clause keeping
-    // `syncStackOrder` awake for one sync after the policy is gone.
+    // The only thing exercising the clause that keeps `syncStackOrder` awake one sync past removal.
     await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
     await expect
       .poll(() => {
@@ -191,9 +176,7 @@ test.describe('a policy installed under an open dialog', () => {
     await page.getByTestId('lp-input').fill('mid-sentence');
     await expect(page.getByTestId('lp-input')).toBeFocused();
 
-    // The dialog is re-shown here, and this is the one arrangement that does it to a dialog holding
-    // focus: until `prioritize` is called the top layer is not tracked, so the first plan compares
-    // against nothing and lifts everything, bottom-most first — which is this dialog.
+    // Until `prioritize` is called the top layer is untracked, so the first plan lifts everything.
     await component.getByTestId('lp-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('lp-policy')).toHaveText('on');
 

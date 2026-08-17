@@ -142,10 +142,8 @@ test.describe('actions declared by use', () => {
     mount,
     page,
   }) => {
-    // Both halves in one test on purpose. The attribute assertion alone passes if the dispatch
-    // selector was left on the old spelling; the dispatch assertion alone passes if *both* were.
-    // Only a modified hotkey can tell them apart — `Enter` and `Escape` serialise identically
-    // either way — and the failure mode is a hotkey that silently does nothing.
+    // Both halves in one test: `Enter`/`Escape` serialise identically either way, so only a
+    // modified hotkey catches a stale spelling in the attribute or in the dispatch selector.
     await mount(<HotkeyActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
@@ -163,12 +161,10 @@ test.describe('actions declared by use', () => {
     await mount(<FocusRestorationHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-ctrl-focus')).toBeVisible();
-    // Ok is the first button — native autofocus lands here
     await expect(page.getByTestId('ok-btn')).toBeFocused();
-    // The failing action disables its own button while it runs, so focus falls to the body.
+    // The failing action disables its own button, so focus falls to the body first.
     await page.getByTestId('bad-btn').click();
-    // It must come back inside the dialog — otherwise the modal has no keyboard at all. Which
-    // button it lands on is decided by who ran the action; that is pinned separately.
+    // Must land back inside the dialog — otherwise no keyboard. Which button is pinned separately.
     expect(
       await page.evaluate(() => {
         const dialog = document.querySelector('[data-testid="modal-ctrl-focus"]');
@@ -228,7 +224,6 @@ test.describe('callable actions', () => {
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('is-running')).toHaveText('true');
-    // Cancel button should be disabled while confirm is running
     await expect(page.getByTestId('cancel-btn')).toBeDisabled();
   });
 
@@ -291,7 +286,6 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     await mount(<BrokenAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('modal-broken-aria')).toBeVisible();
-    // BrokenButton intentionally does not forward aria-keyshortcuts
     await expect(page.getByRole('button', { name: 'Confirm' })).not.toHaveAttribute(
       'aria-keyshortcuts'
     );
@@ -306,24 +300,16 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
   }) => {
     await mount(<BrokenAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    // Enter hotkey should NOT trigger confirm because aria-keyshortcuts is missing
+    // Without aria-keyshortcuts neither hotkey dispatches, and Escape still routes to the action
+    // path rather than native dismiss — so the modal stays open on both.
     await page.keyboard.press('Enter');
-    // Modal should still be open — hotkey had no effect
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    // Escape is claimed by the cancel action but without aria-keyshortcuts
-    // the action dispatch fails — dismiss-key collision detection still routes
-    // to the action path (not native dismiss), so the modal stays open
     await expect(page.getByTestId('modal-broken-aria')).toBeVisible();
   });
 });
 
 test.describe('action lifecycle logging', () => {
-  /**
-   * Resolve every console argument across captured messages to real JS values —
-   * message format strings and the structured data objects alike. Inspecting
-   * actual values (not `msg.text()`) makes the payload-absence check robust
-   * regardless of how Playwright renders object args.
-   */
+  /** Real JS values, not `msg.text()`, so the payload check ignores Playwright's arg rendering. */
   async function loggedValues(messages: ConsoleMessage[]): Promise<unknown[]> {
     const values: unknown[] = [];
     for (const msg of messages) {
@@ -366,7 +352,6 @@ test.describe('action lifecycle logging', () => {
     expect(logged(values, 'Action close')).toBe(true);
     expect(logged(values, 'Action completed')).toBe(true);
 
-    // Every action log carries the modal id, like the other namespaces do.
     expect(
       values.some((v) => {
         return typeof v === 'object' && v !== null && 'id' in v && v.id === 'ctrl-logging';
@@ -387,7 +372,6 @@ test.describe('action lifecycle logging', () => {
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Fail' }).click();
 
-    // A thrown handler leaves the modal open and logs the failure.
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     const values = await loggedValues(messages);
@@ -457,8 +441,7 @@ test.describe('the props an action spreads onto a button', () => {
     });
     await mount(<SpreadContractHarness />);
     await page.getByRole('button', { name: 'Open Spread' }).click();
-    // Sample while the action runs: `loading` is `false` at rest, and React omits a false
-    // boolean-ish attribute, so a resting button cannot answer the question.
+    // Sample mid-action: `loading` is false at rest and React omits it, so rest proves nothing.
     await page.getByTestId('slow-btn').click();
     await expect(page.getByTestId('entries')).toHaveText('1');
 
@@ -467,8 +450,7 @@ test.describe('the props an action spreads onto a button', () => {
         return `${a.name}=${a.value}`;
       });
     });
-    // `loading` is for a button *component*; React does not write it to a DOM element, so the
-    // plain button gets the same state as `data-loading` and can be styled on it.
+    // `loading` is a component prop React never writes to DOM; `data-loading` carries it instead.
     expect(attrs, 'the running state did not reach the element').toContain('data-loading=true');
     expect(
       attrs.filter((attr) => {
@@ -509,7 +491,6 @@ test.describe('the props an action spreads onto a button', () => {
     await page.getByRole('button', { name: 'Open Dom Spread' }).click();
 
     const dom = page.getByTestId('dom-btn');
-    // The half that is easy to get right: nothing React refuses to put on an element.
     const attrs = await dom.evaluate((node) => {
       return [...node.attributes].map((a) => {
         return a.name;
@@ -518,16 +499,13 @@ test.describe('the props an action spreads onto a button', () => {
     expect(attrs, 'a non-DOM prop reached the element').not.toContain('loading');
     expect(warnings.join(' '), 'React complained about the spread').not.toMatch(/loading/i);
 
-    // The half a happy-path test would miss: DOM-safe must not mean trimmed. These two are what
-    // make the hotkey and the opening focus work with no wrapper at all.
+    // DOM-safe must not mean trimmed: these are what make hotkey and opening focus work bare.
     await expect(dom).toHaveAttribute('aria-keyshortcuts', 'Enter');
     await expect(dom).toHaveAttribute('data-focus-on-open', 'true');
     await expect(dom).toHaveAttribute('type', 'button');
     await expect(dom).toBeFocused();
-    // The running state, in the only form the library can honestly ship.
     await expect(dom).toHaveAttribute('data-loading', 'false');
 
-    // And it still runs: the action closes the modal with its own reason.
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('modal-dom-safe-spread')).not.toBeVisible();
   });
@@ -546,8 +524,7 @@ test.describe('the props an action spreads onto a button', () => {
     await page.getByTestId('slow-btn').click();
     await expect(page.getByTestId('entries')).toHaveText('1');
 
-    // Mid-action the button is disabled, which is what makes the second click impossible
-    // rather than merely discouraged, and `aria-busy` says so to assistive technology.
+    // Disabled mid-action is what makes the second click impossible; `aria-busy` says so to AT.
     await expect(page.getByTestId('slow-btn')).toBeDisabled();
     await expect(page.getByTestId('slow-btn')).toHaveAttribute('aria-busy', 'true');
 
@@ -556,7 +533,6 @@ test.describe('the props an action spreads onto a button', () => {
     await page.waitForTimeout(200);
     await expect(page.getByTestId('entries')).toHaveText('1');
 
-    // It comes back once the handler settles.
     await page.getByRole('button', { name: 'Finish Slow' }).click();
     await expect(page.getByTestId('slow-btn')).toBeEnabled();
   });
@@ -594,8 +570,7 @@ test.describe('focusOnOpen', () => {
     mount,
     page,
   }) => {
-    // The input is first in the DOM, so it is what showModal() picks unaided: focus landing on
-    // Cancel is the option working, not the browser agreeing by accident.
+    // The input is first in the DOM and what showModal() picks unaided, so Cancel is not luck.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
@@ -608,13 +583,10 @@ test.describe('focusOnOpen', () => {
   });
 
   test('the opening focus is visibly focused, claimed or not', async ({ mount, page }) => {
-    // `:focus-visible` follows input modality, and the click that opens a dialog is pointer input —
-    // so the ring is missing on Chromium and Firefox and present on WebKit, for the same focus. A
-    // modal the user cannot see the keyboard inside is one where Enter is a guess.
-    //
-    // The subtlety that makes this worth pinning: `showModal()` often focuses the claimed element
-    // first, and refocusing an element that already has focus is a no-op on all three engines —
-    // flags included. So the fix only works because focus is dropped before it is taken.
+    // `:focus-visible` follows input modality and the opening click is pointer input — the ring is
+    // absent on Chromium/Firefox, present on WebKit, for the same focus. It works only because
+    // focus is dropped before it is taken: refocusing an already-focused element is a no-op on all
+    // three engines, flags included.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
@@ -630,8 +602,7 @@ test.describe('focusOnOpen', () => {
   });
 
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
-    // The claimed button decides where the modal *opens*. Where it returns after a failure is
-    // a different question, answered by whoever ran the action — the retry is under their hand.
+    // The claimed button decides where the modal opens; after a failure, whoever ran the action.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
     await expect
@@ -657,9 +628,7 @@ test.describe('focus after a failed action follows the button that ran it', () =
     mount,
     page,
   }) => {
-    // Open (focus starts on Cancel because it claimed it), Tab to Delete, press Enter, and the
-    // action fails. The retry is on Delete — the button the user is standing on — so sending
-    // focus back to Cancel would be the modal arguing with them.
+    // Focus starts on Cancel; failing from Confirm must leave focus there, not argue it back.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
     await expect
@@ -689,14 +658,9 @@ test.describe('focus after a failed action follows the button that ran it', () =
 
 test.describe('the restore after a failed action announces itself', () => {
   test('the button it returns to is visibly focused, not silently', async ({ mount, page }) => {
-    // **A mouse-driven failure, which is the case that hides it.** The button is `disabled` while
-    // its action runs, the browser blurs a disabled element, and focus is on `<body>` by the time
-    // the action settles — so putting it back is a move the library makes from nowhere, several
-    // hundred milliseconds after the click ended. Without a ring the dialog reads as having lost
-    // the keyboard, and the retry the docs promise sits under a hand that cannot see it.
-    //
-    // Clicked rather than pressed on purpose: a keyboard-driven failure already carries the ring
-    // through input modality, so it would pass whatever the library does.
+    // Mouse-driven on purpose: the button is `disabled` while its action runs, so focus is on
+    // `<body>` when it settles and the library puts it back from nowhere. A keyboard failure would
+    // carry the ring through input modality and pass whatever the library does.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Modal' }).click();
 
@@ -722,8 +686,7 @@ test.describe('action.isRunning — the per-action question, away from the butto
     mount,
     page,
   }) => {
-    // The header, the field and the cancel readout all sit outside the props of the action that
-    // is running. Before this they had `hasRunningAction` — true, and silent about which.
+    // Header, field and cancel readout all sit outside the props of the action that is running.
     await mount(<ActionIsRunningHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
 
@@ -741,8 +704,7 @@ test.describe('action.isRunning — the per-action question, away from the butto
     // Inside the dialog: the top layer swallows a click on anything outside it.
     await page.getByTestId('release-btn').click();
 
-    // The handler closes on its own reason once released, so the modal goes and takes its
-    // readouts with it — which is also the running state ending.
+    // Released, the handler closes on its own reason and takes the readouts with it.
     await expect(page.getByTestId('modal-action-is-running')).not.toBeVisible();
   });
 });

@@ -3,18 +3,11 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Regression harness for backdrop-click hit testing.
- *
- * A backdrop click is identified by its **target** (the `<dialog>` itself), not by
- * coordinates alone. Two cases the coordinate test gets wrong on its own:
- *
- * 1. **Keyboard activation** — pressing Enter on a button dispatches a click with
- *    `clientX`/`clientY` of `0`, which lies outside a centred dialog's rect and would
- *    read as a backdrop click, dismissing the modal mid-interaction.
- * 2. **Ancestor click handlers** — content clicks must still bubble out of the dialog
- *    so user-land handlers above it keep working; the library must not swallow them.
- *
- * `bubbled-clicks` counts clicks that reached the host element wrapping `{Modal}`.
+ * A backdrop click is identified by its target (the `<dialog>` itself), not by coordinates alone.
+ * Two cases coordinates get wrong: keyboard activation dispatches a click at `clientX`/`clientY` 0,
+ * outside a centred dialog's rect, which would dismiss mid-interaction; and content clicks must
+ * still bubble out so user-land handlers above the dialog keep working. `bubbled-clicks` counts
+ * what reached the host wrapping `{Modal}`.
  */
 export function BackdropHitTestHarness() {
   const [lastReason, setLastReason] = useState('');
@@ -56,7 +49,6 @@ export function BackdropHitTestHarness() {
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="activated">{activated}</span>
       <span data-testid="bubbled-clicks">{bubbled}</span>
-      {/* Only clicks originating inside the dialog reach this host. */}
       <div
         onClick={() => {
           setBubbled((n) => {

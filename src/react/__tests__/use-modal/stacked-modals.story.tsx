@@ -6,19 +6,11 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Three modals of different kinds, stacked, each rendered **inside** the one below it.
- *
- * That nesting is not a contrivance: a modal in the top layer swallows every click outside
- * itself, so anything that opens a second modal has to live in the first one's `render` — and a
- * component used there (a picker, a wizard step) brings its own `useModal` with it. The second
- * `<dialog>` then sits in the first one's subtree, and every event raised in the inner one
- * bubbles through the outer.
- *
- * All three declare `Enter`, which is the overlap under test: the same key means something
- * different at each level, and only the level in front should hear it.
- *
- * The log records what closed, in order, so a test can assert that a dismiss key unwinds the
- * stack one modal per press rather than collapsing it.
+ * Three modals of different kinds, stacked, each rendered inside the one below it — not a
+ * contrivance: a modal in the top layer swallows every click outside itself, so whatever opens a
+ * second modal lives in the first one's `render`, and every event in the inner one bubbles through
+ * the outer. All three declare `Enter`, the overlap under test: only the level in front hears it.
+ * The log records what closed, in order, so a dismiss key can be shown to unwind one per press.
  */
 export function StackedModalsHarness() {
   const [log, setLog] = useState<string[]>([]);
@@ -31,7 +23,6 @@ export function StackedModalsHarness() {
     });
   };
 
-  // ── Innermost: a message modal ─────────────────────────────────────────────
   const message = useMessageModal<void, 'ack'>({
     id: 'stack-message',
     ariaLabel: 'Message',
@@ -60,7 +51,7 @@ export function StackedModalsHarness() {
     },
   });
 
-  // ── Middle: a modal dialog, holding the message modal in its own subtree ──
+  // Middle: holds the message modal in its own subtree.
   const middle = useModal<void, 'save'>({
     id: 'stack-middle',
     ariaLabel: 'Middle',
@@ -98,15 +89,14 @@ export function StackedModalsHarness() {
     },
   });
 
-  // ── Bottom: a non-modal slide panel, holding the modal in its own subtree ───
+  // Bottom: a non-modal slide panel, holding the modal in its own subtree.
   const panel = useSlideModal<void, 'close'>({
     id: 'stack-panel',
     ariaLabel: 'Panel',
     direction: 'right',
     nonModal: true,
     portal: true,
-    // On, so a click landing anywhere else is a real question rather than a no-op: with a modal
-    // on top of it, the panel has to stand down even though nothing blocks the pointer for it.
+    // On, so a click elsewhere is a real question: the panel stands down though nothing blocks it.
     dismissOnClickOutside: true,
     render: ({ action }) => {
       return (

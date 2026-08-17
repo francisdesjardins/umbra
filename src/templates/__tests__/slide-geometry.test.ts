@@ -6,13 +6,8 @@ import {
   type SlideDirection,
 } from '../slide-geometry.js';
 
-/**
- * The slide panel's geometry, now that both bindings read it from one table.
- *
- * That is exactly why it is worth unit-testing rather than leaving to the component tests: a
- * regression here is a regression in two templates at once, and the component suite only covers
- * one of them.
- */
+// Both bindings read the slide geometry from one table, so a regression here hits two templates
+// while the component suite covers only one of them.
 
 const DIRECTIONS: readonly SlideDirection[] = ['left', 'right', 'top', 'bottom'];
 
@@ -29,9 +24,8 @@ test.describe('slideAnimation', () => {
   });
 
   test('align: center folds its cross-axis shift into BOTH keyframes', () => {
-    // Transform is one property and the slide owns it, so a separately-set cross-axis translate
-    // would be overwritten the moment the slide ran. Present in only one keyframe, the panel
-    // would jump half its size at the start or the end of the animation.
+    // Transform is one property and the slide owns it, so a separate cross-axis translate would be
+    // overwritten; present in only one keyframe, the panel jumps half its size.
     const horizontal = slideAnimation('right', 'center');
     expect(horizontal.entrance.transform).toContain('translateY(-50%)');
     expect(horizontal.exit.transform).toContain('translateY(-50%)');
@@ -50,9 +44,8 @@ test.describe('slideAnimation', () => {
 
 test.describe('slideDialogStyle', () => {
   test('pins the edge the panel slides in from, and sets the other three to auto', () => {
-    // All four insets are set explicitly because a non-modal dialog receives `inset: 0` from the
-    // placement layer; leaving the opposite edge unset lets that `0` leak in and over-constrain
-    // the box — `right: 0` plus a leaked `left: 0` is a full-width panel, not a content-width one.
+    // All four insets are set explicitly: a non-modal dialog gets `inset: 0` from the placement
+    // layer, and a leaked `left: 0` beside `right: 0` is a full-width panel, not a content one.
     for (const direction of DIRECTIONS) {
       const style = slideDialogStyle({ direction, contained: false, align: 'start' });
       expect(style[direction]).toBe(0);
@@ -98,8 +91,7 @@ test.describe('slideDialogStyle', () => {
       slideDialogStyle({ direction: 'right', contained: false, align: 'center' })
     ).toMatchObject({ top: '50%' });
 
-    // The other axis, because "the cross axis" swaps with the direction: a panel sliding up from
-    // the bottom is aligned left/right, not top/bottom, and the two pairs are separate branches.
+    // The cross axis swaps with the direction (a bottom panel aligns left/right): two branches.
     const verticalStart = slideDialogStyle({
       direction: 'bottom',
       contained: false,

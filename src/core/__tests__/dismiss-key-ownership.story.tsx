@@ -2,16 +2,9 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { isKeyClaimedByPopup, useModal } from '../../react.js';
 
-/**
- * A non-modal panel holding the two shapes an open overlay comes in.
- *
- * The window-level dismiss listener captures, so it runs before every other handler in the page.
- * These two harness states are the cases where running first is wrong: a control that reports its
- * own open list, and a popup portaled out of the dialog that holds focus itself.
- *
- * Both are declared with the attributes a real widget declares — `aria-expanded` and a popup role —
- * rather than by simulating a library, because the attributes are what the guard reads.
- */
+// The two shapes an open overlay comes in, where the capturing window listener running first is
+// wrong: a control reporting its own open list, and a popup portaled out of the dialog holding
+// focus. Declared with `aria-expanded` and a popup role, because those are what the guard reads.
 export function DismissKeyOwnershipHarness() {
   const [listOpen, setListOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -83,12 +76,8 @@ export function DismissKeyOwnershipHarness() {
   );
 }
 
-/**
- * The predicate on its own, now that it is public.
- *
- * Asked directly rather than only through a dismissal, because a caller that imports it gets the
- * function and not the listener around it — and the two clauses are what that caller is relying on.
- */
+// The predicate on its own, asked directly rather than through a dismissal: a caller that imports
+// it gets the function and not the listener around it.
 export function KeyClaimProbeHarness() {
   const [answers, setAnswers] = useState<string>('');
 

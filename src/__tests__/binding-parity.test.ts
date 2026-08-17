@@ -4,33 +4,20 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The bindings that promise the same surface expose the same surface, and this is what says so.
- *
- * There are two **kinds**. `./react` and `./solid` are *hook* bindings: they render, so they share
- * a surface down to the file names, and any divergence between them is a bug. `./vanilla` is a
- * *controller*: it drives a `<dialog>` the caller wrote, so it has no `render`, no `Modal` and no
- * outlet — and asserting it mirrored the other two would be asserting the wrong thing. Its own
- * test below records what it must and must not have, so "fixing the inconsistency" fails loudly.
- *
- * "Same hook names, same options, same return" is the claim `umbra/solid` exists to support, and
- * it is the kind of claim that decays one export at a time: a hook added to `./react` and
- * forgotten on `./solid` breaks nothing, fails nothing, and is only discovered by whoever
- * reaches for it. So the two entry points are diffed here instead.
- *
- * Only *names* are compared. Whether they mean the same thing is the type model's job — the
- * shared core in `core/types.ts` with two instantiations, pinned by `core/__tests__/type-model.test.ts`.
- *
- * Parsed rather than imported: the unit project runs in plain Node, and importing a hook entry
- * point pulls a framework and JSX it cannot transform.
+ * The bindings that promise the same surface expose the same surface. `./react` and `./solid` are
+ * *hook* bindings: they render, so they share a surface down to the file names, and any divergence
+ * is a bug that decays one export at a time — added to one, forgotten on the other, breaking
+ * nothing until someone reaches for it. `./vanilla` is a *controller* with no `render`, `Modal` or
+ * outlet, so its own test below records what it must and must not have instead. Only *names* are
+ * compared; whether they mean the same thing is the shared type model's job, pinned by
+ * `core/__tests__/type-model.test.ts`. Parsed rather than imported, because the unit project runs
+ * in plain Node and can transform neither a framework nor JSX.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * Names an entry file exports directly. `export * from './index.js'` is deliberately not
- * followed: both bindings re-export the root wholesale, so the root's names are equal on both
- * sides by construction and would only pad the comparison.
- */
+// Names an entry file exports directly. `export * from './index.js'` is deliberately not followed:
+// both re-export the root, so its names are equal by construction and would only pad the comparison.
 const directExports = (entryFile: string): Set<string> => {
   const source = readFileSync(resolve(SRC_ROOT, entryFile), 'utf8');
   const names = new Set<string>();
@@ -51,15 +38,11 @@ const directExports = (entryFile: string): Set<string> => {
   return names;
 };
 
-/**
- * What one binding may have that the other does not, and why.
- *
- * Adding to this list is a decision: it says the difference is the *renderer's*, not an
- * oversight. Anything else showing up here means the surfaces have drifted.
- */
+// What one binding may have that the other does not. Adding here says the difference is the
+// renderer's, not an oversight; anything else showing up means the surfaces have drifted.
 const ALLOWED_ASYMMETRY: Readonly<Record<string, string>> = {
-  // React reads a store through `useSyncExternalStore`, which takes the library's
-  // `subscribe`/`getSnapshot` pair with no adapter at all. Solid needs the bridge, so it ships it.
+  // `useSyncExternalStore` takes the library's `subscribe`/`getSnapshot` pair unadapted; Solid
+  // needs the bridge, so it ships one.
   fromStore: 'solid',
 };
 
@@ -84,8 +67,7 @@ test.describe('binding parity', () => {
   });
 
   test('every documented asymmetry is real', () => {
-    // The allowlist must not outlive what it excuses: an entry for a name neither binding
-    // exports would silently keep excusing a gap that has moved somewhere else.
+    // An entry for a name neither binding exports keeps excusing a gap that has moved elsewhere.
     const byEntry = { react: directExports('react.ts'), solid: directExports('solid.ts') };
 
     for (const [name, owner] of Object.entries(ALLOWED_ASYMMETRY)) {
@@ -97,15 +79,13 @@ test.describe('binding parity', () => {
   });
 
   test('the two bindings mirror each other file for file', () => {
-    // The surfaces can match while the folders do not, and that is how "there is no slide modal
-    // in Solid" gets believed: the export was there, the file next to `modal-outlet` was not.
+    // Surfaces can match while folders do not — the export is there, the file beside it is not.
     const react = readFileSync(resolve(SRC_ROOT, 'react.ts'), 'utf8');
     const solid = readFileSync(resolve(SRC_ROOT, 'solid.ts'), 'utf8');
 
     const moduleNames = (source: string, folder: string) => {
       return new Set(
-        // The path, not just the basename: `templates/use-slide-modal` and `use-slide-modal`
-        // are different answers to "where does a reader look for it".
+        // The path, not the basename: `templates/use-slide-modal` and `use-slide-modal` differ.
         [...source.matchAll(new RegExp(`from '\\./${folder}/([\\w/-]+)\\.js'`, 'g'))].map(
           (match) => {
             return match[1];
@@ -134,21 +114,18 @@ test.describe('the controller binding', () => {
   test('./vanilla carries the doors, and none of the rendering surface', () => {
     const vanilla = directExports('vanilla.ts');
 
-    // What it is: a controller over an element the caller owns.
     expect(vanilla.has('bindDialog')).toBe(true);
     expect(vanilla.has('BindDialogOptions')).toBe(true);
     expect(vanilla.has('DialogController')).toBe(true);
 
-    // What it deliberately is not. Every one of these presumes a renderer, and a vanilla binding
-    // that shipped one would be shipping the UI this library exists to not ship.
+    // Each of these presumes a renderer — shipping one here ships the UI the library refuses to.
     for (const rendering of ['useModal', 'useMessageModal', 'useSlideModal', 'ModalOutlet']) {
       expect(vanilla.has(rendering), `./vanilla should not export ${rendering}`).toBe(false);
     }
   });
 
   test('every binding re-exports the root, so an app needs one import path', () => {
-    // `export * from './index.js'` is what makes `dialogManager`, `Key` and `createStore` reachable
-    // from any of the three. It is a one-line edit to lose, and nothing else would fail.
+    // Makes `dialogManager`, `Key`, `createStore` reachable from all three; losing it fails nothing.
     for (const entry of ['react.ts', 'solid.ts', 'vanilla.ts']) {
       const source = readFileSync(resolve(SRC_ROOT, entry), 'utf8');
       expect(source, `${entry} must re-export the root`).toContain("export * from './index.js'");

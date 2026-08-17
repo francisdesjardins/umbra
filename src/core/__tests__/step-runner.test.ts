@@ -1,17 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { createStepRunner, sameInputs, type SyncStep } from '../step-runner.js';
 
-/**
- * The lifecycle executor, against a table that records instead of touching the DOM.
- *
- * **These assertions did not exist while the rule lived inside `createModalDirector`**, because the
- * only table it could be handed was the real one and every step of that is a `<dialog>`. The two
- * invariants below were each carried by a paragraph explaining a failure that no test could
- * produce: a listener order that quietly changes, and a modal that works on mount and is inert
- * after a remount. A fake table is all either of them ever needed.
- */
+// The lifecycle executor, against a table that records instead of touching the DOM — which is what
+// these assertions needed: inside `createModalDirector` the only table is real `<dialog>`s, so a
+// listener order that quietly changes and a modal inert after a remount were prose, not tests.
 
-/** What a run produced: which steps attached, tore down, and in what order. */
 type Log = string[];
 
 /** A step that records itself. `reads` names the one pass field its `inputs` looks at. */
@@ -55,8 +48,8 @@ test.describe('sameInputs', () => {
   });
 
   test('two functions that do the same thing are two inputs', () => {
-    // The hazard the whole per-step design exists for: a caller's inline arrow is a fresh identity
-    // every render, so any step listing one is rebuilt on every render — see `modal-director.ts`.
+    // The hazard the per-step design exists for: an inline arrow is a fresh identity every render,
+    // so any step listing one is rebuilt every render — see `modal-director.ts`.
     const fn = () => {
       return undefined;
     };
@@ -154,12 +147,9 @@ test.describe('only what moved is rebuilt', () => {
 });
 
 test.describe('everything stale goes down before anything comes up', () => {
-  /**
-   * **The invariant the design is built on, and the one nothing could assert before.** Rebuilding
-   * each step in place would interleave — `detach:a, attach:a, detach:b, attach:b` — and listener
-   * dispatch follows the order listeners were added, so a step that survived would silently change
-   * places with one that did not.
-   */
+  // **The invariant the design is built on.** Rebuilding in place would interleave —
+  // `detach:a, attach:a, detach:b, attach:b` — and dispatch follows the order listeners were
+  // added, so a surviving step silently changes places with a rebuilt one.
   test('two steps rebuilding together detach as a group', () => {
     const log: Log = [];
     const runner = createStepRunner(
@@ -211,12 +201,9 @@ test.describe('a step with no inputs', () => {
     expect(log).toEqual(['attach:always:ctx', 'attach:always:ctx', 'attach:always:ctx']);
   });
 
-  /**
-   * The contract stated on {@link SyncStep}, pinned because it is invisible today: the real table's
-   * only such step returns `void`, so nothing would notice if this changed. A teardown returned
-   * here is overwritten on the next pass and never called — a leak, and the reason such a step must
-   * not return one.
-   */
+  // The contract on {@link SyncStep}, pinned because it is invisible today: the real table's only
+  // such step returns `void`. A teardown returned here is overwritten on the next pass and never
+  // called — a leak, and the reason such a step must not return one.
   test('a teardown it returns is replaced rather than run — which is why it must not return one', () => {
     const log: Log = [];
     const runner = createStepRunner(
@@ -261,12 +248,9 @@ test.describe('destroy', () => {
     expect(log).toEqual(['detach:a', 'detach:b']);
   });
 
-  /**
-   * **The other invariant with no assertion.** A runner that only ran its teardowns would still
-   * believe every step attached, so the next `sync` — same pass, so nothing looks stale — would
-   * rebuild nothing. That is a modal that works on mount and is inert after a remount, and it
-   * passes in one React mode.
-   */
+  // **The other invariant with no assertion.** A runner that only ran its teardowns would still
+  // believe every step attached, so the next identical `sync` rebuilds nothing: a modal that works
+  // on mount and is inert after a remount, and it passes in one React mode.
   test('clears the keys, so an identical pass afterwards attaches again', () => {
     const log: Log = [];
     const runner = createStepRunner([step('a', { reads: 'x', log })], () => {

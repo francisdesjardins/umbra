@@ -24,17 +24,10 @@ import {
 } from './solid-app.js';
 
 /**
- * A Solid application, mounted inside a React component test.
- *
- * The component-test runner is React's, and there is no Solid one that tracks this Playwright
- * version — so rather than leave the second binding covered by nothing, the harness hosts a real
- * Solid root in a `<div>` React owns. What is under test is entirely Solid's: `render` creates
- * its own reactive graph, and the dispose function it returns is the React cleanup, so a test's
- * modals are torn down with its mount.
- *
- * This is not a mixed-framework pattern anyone should copy into an app. It is a test harness, and
- * the thing it buys is that the two bindings are asserted against the same browser, the same real
- * `<dialog>` and the same top layer.
+ * A Solid application hosted in a `<div>` React owns, because the component-test runner is React's
+ * and no Solid one tracks this Playwright version. What is under test is entirely Solid's: `render`
+ * builds its own reactive graph and returns the disposer this effect cleans up with. Not a pattern
+ * to copy into an app — a harness, bought so both bindings face the same browser and top layer.
  */
 function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -44,7 +37,6 @@ function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
     if (!host) {
       return;
     }
-    // `render` hands back its own disposer — exactly the shape an effect cleanup wants.
     return render(app, host);
   }, [app]);
 
@@ -52,12 +44,9 @@ function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
 }
 
 /**
- * The same Solid root, mounted **inside a shadow root**.
- *
- * A separate component rather than a prop on `SolidRoot`, because the mount target is the whole
- * subject: a Solid app rendered into a shadow root is how a widget keeps the host page's CSS out,
- * and it is the case that breaks the two things a shadow boundary breaks — `adoptedStyleSheets`
- * does not cross it, and `document.activeElement` answers with the host.
+ * The same root **inside a shadow root** — a widget keeping the host page's CSS out, and the case
+ * where `adoptedStyleSheets` does not cross and `document.activeElement` answers with the host. Its
+ * own component rather than a prop, because the mount target is the whole subject.
  */
 function SolidShadowRoot({ app }: { readonly app: () => JSX.Element }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -153,12 +142,7 @@ export function SolidFailedActionHarness() {
   return <SolidRoot app={SolidFailedActionApp} />;
 }
 
-/**
- * A modal that claims no opening focus, with a panel opening underneath it.
- *
- * The Solid half of the reclaim floor — see the app for why an absent claim is what puts it on
- * that path rather than on the marker above it.
- */
+/** The Solid half of the reclaim floor — see the app for why an absent claim reaches it. */
 export function SolidClaimlessReclaimHarness() {
   return <SolidRoot app={SolidClaimlessReclaimApp} />;
 }

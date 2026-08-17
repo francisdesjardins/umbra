@@ -3,13 +3,8 @@ import type { AwaitedClose, ModalPhase } from '../../core/types.js';
 import { createDialogManager } from '../dialog-manager.js';
 
 /**
- * What a stack policy changes about the manager's own answers.
- *
- * Reordering the DOM needs a browser and is asserted in `stack-priority.ct.tsx`. Everything here is
- * the half that does not: the snapshot's order, which dialog is the foreground, and the z-index each
- * one is stamped with. That half matters on its own — `isForeground` is what decides which dialog
- * answers the dismiss key and which one a click-outside belongs to, so a policy that moved the
- * paint order and left those behind would put the visible dialog behind the one that owns Escape.
+ * What a policy changes about the manager's own answers — snapshot order, foreground, z-index; the
+ * DOM reorder is in `stack-priority.ct.tsx`. `isForeground` decides who answers the dismiss key.
  */
 function createFakeStore() {
   const listeners = new Set<() => void>();
@@ -75,8 +70,7 @@ test.describe('prioritize', () => {
     manager.open('warning');
     manager.open('panel');
 
-    // Without the policy this is ['warning', 'panel'] and the panel is in front — the race this
-    // exists to settle, where a deep link's panel lands on top of an interruption.
+    // Without the policy this is ['warning', 'panel'] and the later panel is in front.
     expect(stackOf(manager)).toEqual(['panel', 'warning']);
     expect(manager.getSnapshot().foreground?.id).toBe('warning');
     expect(manager.lookup().isForeground('warning')).toBe(true);
@@ -94,7 +88,6 @@ test.describe('prioritize', () => {
     manager.open('warning');
     manager.open('panel');
 
-    // It is what orders a *non-modal* dialog, which is never in the top layer.
     expect(manager.getZIndex('panel')).toBe(manager.zIndexBase);
     expect(manager.getZIndex('warning')).toBe(manager.zIndexBase + 1);
   });
@@ -146,8 +139,7 @@ test.describe('prioritize', () => {
     manager.open('b');
     expect(stackOf(manager)).toEqual(['a', 'b']);
 
-    // One project-wide rule, not a stack of them: the replaced policy's disposer must not put the
-    // manager back to open order behind the live policy's back.
+    // One project-wide rule, not a stack: a stale disposer must not undo the live policy.
     stopFirst();
 
     expect(stackOf(manager)).toEqual(['a', 'b']);
@@ -194,9 +186,7 @@ test.describe('prioritize', () => {
     const manager = createDialogManager();
     manager.register('modal', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide', nonModal: true });
-    // A policy shouting for the panel. It orders the panel against the other panels and moves it no
-    // nearer the user — the platform paints top-layer elements above ordinary ones and no `z-index`
-    // reaches between them, so an order claiming otherwise would be false rather than debatable.
+    // A big number ranks the panel against other panels only: no `z-index` reaches the top layer.
     manager.prioritize((modal) => {
       return modal.nonModal ? 1000 : 0;
     });
@@ -206,9 +196,7 @@ test.describe('prioritize', () => {
 
     expect(stackOf(manager)).toEqual(['panel', 'modal']);
     expect(manager.getSnapshot().foreground?.id).toBe('modal');
-    // The consequence that made this a defect rather than a cosmetic ordering: `isForeground` is what
-    // decides who answers the dismiss key, so naming the panel sent Escape to the dialog underneath
-    // while the user was looking at the one above it.
+    // Not cosmetic: naming the panel foreground sends Escape to the dialog underneath.
     expect(manager.lookup().isForeground('panel')).toBe(false);
     expect(manager.getZIndex('panel')).toBe(manager.zIndexBase);
     expect(manager.getZIndex('modal')).toBe(manager.zIndexBase + 1);
@@ -247,8 +235,7 @@ test.describe('prioritize', () => {
     manager.register('a', { store: createFakeStore() });
     manager.open('a');
 
-    // The lifecycle calls it after every `showModal()`, including for dialogs whose manager has no
-    // policy at all — so it has to be a no-op rather than a throw.
+    // The lifecycle calls it after every `showModal()`, policy or not — a no-op, not a throw.
     expect(() => {
       manager.syncStackOrder();
       manager.syncStackOrder('a');

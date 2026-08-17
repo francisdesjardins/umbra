@@ -2,12 +2,9 @@ import { expect, test } from '@playwright/test';
 import { orderStack, planRaises, type StackCandidate, type StackPriority } from '../stack-order.js';
 
 /**
- * The two decisions behind `prioritize`, tested where they are pure.
- *
- * `orderStack` answers what the order should be; `planRaises` answers what has to move. The second
- * is the one worth being strict about: every entry it returns is a `<dialog>` closed and re-shown in
- * the browser — the element's native `close` event fires and CSS keyed on `[open]` re-runs — so a
- * plan one item longer than necessary is a visible cost, not a wasted cycle.
+ * The two decisions behind `prioritize`, tested where they are pure: `orderStack` says what the
+ * order should be, `planRaises` what has to move. Every entry the second returns is a `<dialog>`
+ * closed and re-shown — `close` fires, `[open]` CSS re-runs — so an over-long plan is visible.
  */
 
 function candidate(id: string, over: Partial<StackCandidate> & { openSequence: number }) {
@@ -19,8 +16,6 @@ function ids(candidates: readonly StackCandidate[]): string[] {
     return c.id;
   });
 }
-
-// ── orderStack ───────────────────────────────────────────────────────────────
 
 test.describe('orderStack', () => {
   test('with no policy it is the open order, whatever order the registry iterates in', () => {
@@ -37,11 +32,8 @@ test.describe('orderStack', () => {
   });
 
   test('a non-modal dialog is under every modal one, whatever the open order', () => {
-    // Not a policy: the platform paints every top-layer dialog above every ordinary one, and no
-    // `z-index` reaches between them. So an order claiming a later non-modal is in front would be
-    // false rather than opinionated. Measured in a real application before it was understood — an
-    // interruption raised over a side panel read as the foreground while Escape went to the panel,
-    // because the panel had opened half a second later.
+    // The platform paints every top-layer dialog above every ordinary one and no `z-index` reaches
+    // between them: an order claiming a later non-modal is in front would be false, not opinionated.
     const ordered = orderStack(
       [
         candidate('panel', { openSequence: 2, nonModal: true }),
@@ -54,9 +46,7 @@ test.describe('orderStack', () => {
   });
 
   test('a policy cannot lift a non-modal dialog over a modal one', () => {
-    // The rule `prioritize` documents, enforced instead of advised. A policy that tries is not
-    // wrong to *want* it — it is asking for something the top layer will not perform, and
-    // `planRaises` would otherwise plan a lift that cannot happen.
+    // A policy asking this wants what the top layer cannot do — `planRaises` would plan the lift.
     const ordered = orderStack(
       [
         candidate('panel', { openSequence: 1, nonModal: true }),
@@ -71,7 +61,6 @@ test.describe('orderStack', () => {
   });
 
   test('the policy still orders within each family', () => {
-    // What is left to it, and it is the whole of what the platform leaves open.
     const ordered = orderStack(
       [
         candidate('panel-a', { openSequence: 1, nonModal: true }),
@@ -134,8 +123,7 @@ test.describe('orderStack', () => {
       priority
     );
 
-    // Once each — a comparator that called the policy would ask O(n log n) times, and a policy is
-    // allowed to be a lookup rather than arithmetic.
+    // Once each: a comparator would ask O(n log n) times, and a policy may be a lookup.
     expect(seen).toEqual(['a/slide/false', 'b/modal/true', 'c/modal/false']);
   });
 
@@ -147,8 +135,7 @@ test.describe('orderStack', () => {
       return modal.id === 'top' ? 5 : 0;
     };
 
-    // The alternative is the registry's snapshot recomputation throwing, on every transition of
-    // every dialog, for a dialog that has nothing wrong with it.
+    // The alternative is snapshot recomputation throwing on every transition of every dialog.
     const ordered = orderStack(
       [
         candidate('boom', { openSequence: 1 }),
@@ -179,17 +166,14 @@ test.describe('orderStack', () => {
   });
 });
 
-// ── planRaises ───────────────────────────────────────────────────────────────
-
 test.describe('planRaises', () => {
   test('nothing moves when the order already reads as the desired one', () => {
     expect(planRaises(['a', 'b', 'c'], ['a', 'b', 'c'])).toEqual([]);
   });
 
   test('swapping two dialogs lifts one, not both', () => {
-    // The subsequence rule rather than the common-prefix one: `b` is already lowest and nothing
-    // could make it lower, so lifting `a` over it is the whole move. A common-prefix plan would
-    // re-show both and cost a round-trip for no change.
+    // The subsequence rule, not common-prefix: `b` is already lowest, so lifting `a` over it is
+    // the whole move; a common-prefix plan would re-show both for no change.
     expect(planRaises(['b', 'a'], ['a', 'b'])).toEqual(['a']);
   });
 
@@ -202,8 +186,7 @@ test.describe('planRaises', () => {
   });
 
   test('a dialog the tracking never saw is lifted rather than trusted', () => {
-    // Costs a round-trip it may not have needed; never leaves the order wrong, which is the trade
-    // the manager relies on when a show reaches the DOM without reporting itself.
+    // Costs a needless round-trip, never leaves the order wrong — for a show that went unreported.
     expect(planRaises(['x', 'y'], ['y'])).toEqual(['x', 'y']);
   });
 

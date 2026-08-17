@@ -4,16 +4,9 @@ import { Key, useModal } from '../../react.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
 /**
- * A non-modal panel opening underneath a modal dialog that holds focus.
- *
- * The arrangement the fleet produces on its own: an interruption is up (a connection warning, in
- * the top layer, focused), and a route settles a side panel underneath it. The panel's opening is
- * real and wanted — what it must not do is take the keyboard from the dialog the user is looking
- * at. The panel claims `focusOnOpen` deliberately, so the test cannot pass because nothing asked
- * for focus: it passes only if the claim is refused while another dialog is in front.
- *
- * The panel is opened from inside the modal's render because the top layer swallows outside
- * clicks — the trigger is placement, not the scenario; the report's own trigger was a route.
+ * A non-modal panel opening underneath a modal that holds focus. The panel claims `focusOnOpen`
+ * deliberately, so the test cannot pass because nothing asked for focus. It opens from inside the
+ * modal's render only because the top layer swallows outside clicks — the trigger is placement.
  */
 export function OpeningFocusForegroundHarness() {
   const panel = useModal<void, 'ok'>({
@@ -37,10 +30,8 @@ export function OpeningFocusForegroundHarness() {
     render: ({ action }) => {
       return (
         <div style={dialogStyle}>
-          {/* No `focusOnOpen` here, deliberately. A dialog that claimed one can be handed back
-              exactly what it claimed; a dialog with none — which is most of them, and is the
-              connection warning the report came from — needs the return to have a floor. With a
-              claim on this button the test passed against a version that returned nothing. */}
+          {/* No `focusOnOpen`, deliberately: a dialog with none needs the return to have a floor.
+              With a claim here the test passed against a version that returned nothing. */}
           <button {...action('stay')} data-testid="off-stay">
             Stay
           </button>
@@ -86,27 +77,13 @@ export function OpeningFocusForegroundHarness() {
 }
 
 /**
- * Taking the focus back, in the two shapes the declining half leaves behind.
- *
- * Separate from the harness above rather than folded into it, because the two need opposite things
- * from the dialog in front: that one deliberately claims no `focusOnOpen`, so the return has to have
- * a floor, and this one *must* claim one — it is the only way to tell "handed back where focus was"
- * apart from "re-honoured the claim", which is the whole of what the precision is about.
- *
- * `behindIsModal` picks which of the two ways a dialog can end up underneath, because they exercise
- * different code and only one of them existed before:
- *
- * - `false` — a **non-modal** panel arriving under a modal dialog. The platform settles that, so
- *   nothing is re-shown and the reclaim is the only thing that can put the focus back. This is the
- *   reported case.
- * - `true` — a **modal** dialog kept underneath by a `prioritize` policy, which is the arrangement
- *   the two features produce together. Here the newcomer really does reach the top layer first and
- *   the policy lifts the front dialog back over it, so `raiseDialog` runs as well.
- *
- * The one behind opens on a **timer** rather than from a click, and that is load-bearing: a click
- * would move focus to the button that did the opening, and then "focus did not move" would be true
- * for the wrong reason. A timer is also the honest reproduction — the report's own trigger was a
- * route settling, not a press.
+ * Taking the focus back, in the two shapes the declining half leaves behind. Separate from the
+ * harness above because the two need opposite things: that one claims no `focusOnOpen`, this one
+ * *must* — the only way to tell "handed back where focus was" from "re-honoured the claim".
+ * `behindIsModal` picks how the dialog ends up underneath: `false` is a non-modal panel the
+ * platform settles, so the reclaim alone restores focus (the reported case); `true` is a modal kept
+ * down by `prioritize`, where the newcomer reaches the top layer first and `raiseDialog` runs too.
+ * It opens on a **timer** — a click would move focus to the opener and pass for the wrong reason.
  */
 export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean }) {
   const behind = useModal<void, 'ack'>({
@@ -193,16 +170,10 @@ export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean 
 }
 
 /**
- * A modal that claims nothing, with a non-modal panel opening underneath it.
- *
- * The arrangement a microfrontend shell produces and no example did: a blocking dialog is already
- * up — the shell's own "agent not detected" warning — and a route opening beneath it raises a
- * non-modal panel. The panel's `show()` runs the platform's focusing steps and takes the keyboard
- * from the modal, which is exactly what `reclaimFocus` exists to undo.
- *
- * **Neither button claims `focusOnOpen`, and that is the point.** With a claim there is something
- * to aim at and the repair works; without one the reclaim used to fall through to `dialog.focus()`,
- * which an open `<dialog>` refuses — so the keyboard was left on `<body>` with the modal on screen.
+ * A modal claiming nothing with a non-modal panel opening underneath — the shape a shell produces:
+ * the panel's `show()` takes the keyboard, which `reclaimFocus` exists to undo. **Neither button
+ * claims `focusOnOpen`**, which pins the defect: a reclaim aimed only at that marker falls through
+ * to `dialog.focus()`, which an open `<dialog>` refuses, leaving the keyboard on `<body>`.
  */
 export function ReclaimWithoutClaimHarness() {
   const modal = useModal({
@@ -255,13 +226,9 @@ export function ReclaimWithoutClaimHarness() {
 }
 
 /**
- * The same arrangement, in a **shadow root** — which is where the shell that produced it lives.
- *
- * The floor under the reclaim is "the first thing inside the dialog that will take focus", and it
- * is reached by focusing a candidate and then asking who holds it. Asking `document` is the wrong
- * question here — it answers with the *host* — so the confirmation fails on a candidate that took
- * focus perfectly well, the scan walks on, and the dialog ends up on its **last** control instead
- * of its first. Two focusable buttons is the smallest arrangement that can tell those apart.
+ * The same arrangement in a **shadow root**. The floor focuses a candidate then asks who holds it;
+ * asked of `document` a shadow root answers with the *host*, so a candidate that took focus fails
+ * and the scan walks on to the dialog's **last** control. Two buttons is the smallest witness.
  */
 export function ShadowReclaimWithoutClaimHarness() {
   const hostRef = useRef<HTMLDivElement>(null);

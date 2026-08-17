@@ -5,8 +5,7 @@ const stageStyle: CSSProperties = {
   position: 'relative',
   width: 480,
   height: 320,
-  // Offset from the viewport origin so a viewport-anchored ('fixed') dialog would
-  // land somewhere other than the stage — makes the containment assertion meaningful.
+  // Offset from the viewport origin so a `fixed` dialog would land off the stage.
   marginLeft: 120,
   marginTop: 80,
   overflow: 'hidden',
@@ -22,13 +21,9 @@ const panelStyle: CSSProperties = {
 };
 
 /**
- * Non-modal + no-portal ("contained") slide rendered inside a transformed ancestor.
- *
- * Regression: a `position: fixed` inline non-modal dialog resolves against the nearest
- * transformed ancestor, so a hover `transform` (here made permanent) hijacked the
- * containing block — the panel jumped to the ancestor's box / flickered. Contained mode
- * anchors the dialog to an owned `position: relative` wrapper via `position: absolute`,
- * so the transformed ancestor no longer affects it.
+ * Contained (non-modal + no-portal) slide inside a transformed ancestor. Regression: a `fixed`
+ * inline dialog resolves against the nearest transformed ancestor, which hijacked the containing
+ * block and made the panel jump; contained mode anchors to an owned `relative` wrapper instead.
  */
 export function ContainedPositioningSlideHarness({
   direction = 'bottom',
@@ -41,7 +36,6 @@ export function ContainedPositioningSlideHarness({
     id: 'contained-positioning-slide',
     direction,
     nonModal: true,
-    // portal omitted (false) → contained mode
     render: () => {
       return (
         <div style={panelStyle}>
@@ -52,8 +46,6 @@ export function ContainedPositioningSlideHarness({
   });
 
   return (
-    // Transformed ancestor: without the fix this becomes the containing block for a
-    // `fixed` dialog. Contained mode must ignore it.
     <div style={{ transform: 'translateY(-2px)' }}>
       <button
         onClick={async () => {

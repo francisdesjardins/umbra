@@ -1,13 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { findLabellingProblems } from '../dialog-labelling.js';
 
-/**
- * The rule behind the runtime diagnostic, asserted without a browser.
- *
- * Worth pinning here rather than only through a component test, because several of these are
- * *non*-findings — cases the check must stay quiet about — and a guard that only ever fires would
- * pass a suite made of positive cases while warning on every correct dialog in the world.
- */
+// The rule behind the runtime diagnostic, without a browser. Several of these are *non*-findings:
+// a guard that only ever fires passes a suite of positive cases while warning on every good dialog.
 
 /** Resolution as a set: whatever is in here exists, everything else does not. */
 const resolver = (...present: string[]) => {
@@ -44,8 +39,7 @@ test.describe('findLabellingProblems', () => {
   });
 
   test('reports a reference that points at no element', () => {
-    // The failure mode this whole diagnostic exists for: the attribute is written, the element is
-    // not, and the dialog is anonymous while looking named.
+    // The failure it exists for: attribute written, element not — anonymous while looking named.
     const problems = findLabellingProblems(attributes({ labelledBy: 'confirm-title' }), resolver());
 
     expect(problems).toHaveLength(1);
@@ -64,8 +58,7 @@ test.describe('findLabellingProblems', () => {
   });
 
   test('checks a space-delimited list element by element', () => {
-    // `aria-labelledby` takes IDREFS, which the option's `string` type permits. Treating the value
-    // as one id would call every multi-target reference broken.
+    // `aria-labelledby` takes IDREFS; treating it as one id calls every multi-target ref broken.
     const problems = findLabellingProblems(
       attributes({ labelledBy: 'brand  heading missing' }),
       resolver('brand', 'heading')
@@ -84,8 +77,7 @@ test.describe('findLabellingProblems', () => {
   });
 
   test('does not add the missing-name finding on top of a broken reference', () => {
-    // Both are true at once here, and saying so twice helps nobody: the dangling reference is
-    // already the reason the name is missing, and it is the one that says what to fix.
+    // Both are true at once; the dangling reference is the cause and the one that says what to fix.
     const problems = findLabellingProblems(attributes({ labelledBy: 'gone' }), resolver());
 
     expect(problems).toHaveLength(1);
@@ -93,9 +85,7 @@ test.describe('findLabellingProblems', () => {
   });
 
   test('reports an alertdialog on a non-modal dialog', () => {
-    // The contradiction the hook bindings reject at the type level, caught here for the markup
-    // `umbra/vanilla` cannot type-check: an alertdialog is modal by definition, and announcing one
-    // over content the user can still reach contradicts itself for assistive technology.
+    // Rejected at the type level by the hooks; caught here for markup `umbra/vanilla` cannot check.
     const problems = findLabellingProblems(
       attributes({ label: 'Deployment failed', role: 'alertdialog', nonModal: true }),
       resolver()
@@ -109,11 +99,8 @@ test.describe('findLabellingProblems', () => {
 
 test.describe('what it deliberately stays quiet about', () => {
   test('an alertdialog with no description is not a finding', () => {
-    // Deliberate, and it must stay that way. WAI-ARIA Practices: "It is advisable to omit
-    // specifying aria-describedby if the dialog content includes semantic structures, such as
-    // lists, tables, or multiple paragraphs, that need to be perceived in order to easily
-    // understand the content." Warning here would push people toward the pattern the spec tells
-    // them to avoid — where the modality contradiction is unconditional, this one is not.
+    // Deliberate: WAI-ARIA Practices advises omitting `aria-describedby` when the content has
+    // semantic structures that must be perceived — warning would push toward what the spec avoids.
     expect(
       findLabellingProblems(
         attributes({ label: 'Deployment failed', role: 'alertdialog' }),
@@ -133,8 +120,7 @@ test.describe('what it deliberately stays quiet about', () => {
   });
 
   test('an empty attribute is treated as absent rather than as a broken reference', () => {
-    // `aria-labelledby=""` carries no id, so there is nothing to resolve. It still leaves the
-    // dialog unnamed, which is the finding that does fire.
+    // `aria-labelledby=""` carries no id to resolve; the missing-name finding is what fires.
     const problems = findLabellingProblems(attributes({ labelledBy: '  ' }), resolver());
 
     expect(problems).toHaveLength(1);

@@ -2,12 +2,8 @@ import { expect, test } from '../../__tests__/ct-coverage.js';
 import { RefusesEverythingHarness, OpenRequestHarness } from './open-request.story';
 
 /**
- * `onOpenRequest` through the React binding.
- *
- * The unit suite next door proves the registry routes and moves nothing. What only a browser can
- * show is the part that matters to a call site: the owner's own state is what decides, the request
- * never reaches the screen unless it agrees, and its own `open()` is not affected by having
- * declared a handler.
+ * `onOpenRequest` in the browser: the owner's own state decides, nothing reaches the screen unless
+ * it agrees, and its own `open()` is unaffected by having declared a handler.
  */
 
 /** Long enough for an open to have happened, so "still closed" is an observation, not a race. */
@@ -23,14 +19,12 @@ test.describe('a dialog asked to open by someone else', () => {
 
     await expect(component.getByTestId('trail')).toHaveText('acceptée (mfa1)');
     await expect(component.getByTestId('phase')).toHaveText('open');
-    // Set by the handler before it opened, which is the ordering a caller depends on: the dialog
-    // renders once, with the data, rather than opening empty and filling in.
+    // Set by the handler before it opened: the dialog renders once with the data, not empty.
     await expect(component.getByTestId('accepted')).toHaveText('42');
   });
 
   test('refuses a payload it does not recognise, and nothing moves', async ({ mount, page }) => {
-    // The owner's schema is the boundary. A request that fails it is logged and dropped — this is
-    // the case that makes exposing the door safe at all.
+    // The owner's schema is the boundary, and the refusal is what makes the door safe to expose.
     const component = await mount(<OpenRequestHarness />);
 
     await component.getByTestId('ask-invalid').click();
@@ -42,8 +36,7 @@ test.describe('a dialog asked to open by someone else', () => {
   });
 
   test('its own `open()` does not go through the handler', async ({ mount, page }) => {
-    // The loop this design has to avoid: if declaring a handler made every open a request, a
-    // dialog accepting by calling `open()` would ask itself forever.
+    // The loop to avoid: if a handler made every open a request, accepting would recurse forever.
     const component = await mount(<OpenRequestHarness />);
 
     await component.getByTestId('own-open').click();
@@ -53,8 +46,6 @@ test.describe('a dialog asked to open by someone else', () => {
   });
 
   test('`dialogManager.open(id)` still instructs, handler or not', async ({ mount, page }) => {
-    // The blunt door is unchanged. Every imperative open already in the fleet keeps meaning what
-    // it meant — which is what makes this addition safe to land.
     const component = await mount(<OpenRequestHarness />);
 
     await component.getByTestId('instruct').click();

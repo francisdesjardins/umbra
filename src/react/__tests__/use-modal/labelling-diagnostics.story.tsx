@@ -5,16 +5,10 @@ import { setLogLevel } from '../../../utils/logger.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * The three shapes the labelling diagnostic has to tell apart.
- *
- * Two of them are dialogs it must stay **quiet** about, and they are the reason the check is
- * deferred and gated the way it is: a name that only exists once `prepare` has settled, and a
- * dialog rendered through `ModalOutlet`, whose content reaches the DOM one commit behind the hook
- * that references it. A check that warned on either would be worse than no check, because the
- * noise is on correct code.
- *
- * The diagnostic is gated behind the logger like every other warning the library emits, so each
- * harness turns it on for its own lifetime.
+ * The three shapes the labelling diagnostic must tell apart. Two it has to stay quiet about — a
+ * name that exists only once `prepare` settles, and one delivered a commit late through
+ * `ModalOutlet` — which is why the check is deferred and gated behind the logger; noise on correct
+ * code is worse than no check.
  */
 
 /** Enable every namespace while mounted, so the warning is emitted at all. */
@@ -35,7 +29,6 @@ export function DanglingLabelHarness() {
     id: 'labelling-dangling',
     ariaLabelledBy: 'labelling-dangling-title',
     render: () => {
-      // No element carries that id. The attribute is written; the dialog is anonymous.
       return <p style={dialogStyle}>Named by nothing at all.</p>;
     },
   });
@@ -54,7 +47,6 @@ export function DanglingLabelHarness() {
   );
 }
 
-/** The heading arrives only once `prepare` settles — correct, and must not warn. */
 export function LateTitleHarness() {
   useDebugLogging();
   const [release, setRelease] = useState<(() => void) | null>(null);
@@ -128,7 +120,6 @@ function OutletInner() {
   );
 }
 
-/** Correctly labelled, but delivered a commit late — the deferral is what saves this one. */
 export function OutletLabelHarness() {
   useDebugLogging();
 

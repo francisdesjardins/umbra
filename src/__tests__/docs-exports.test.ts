@@ -5,18 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { collectExports } from './collect-exports.js';
 
 /**
- * The docs claim specific symbols come from specific entry points. This checks that they do.
- *
- * `API.md` opens with "handwritten and must be kept in sync with the library source manually",
- * which is an accurate description of a file that will drift. Renaming an export updates every
- * call site and every test, and leaves 1300 lines of documentation quietly wrong — and a wrong
- * import line in a README is the first thing a new consumer copies.
- *
- * Scope and its limits: only *value* imports are checked, because type-only symbols leave no
- * runtime trace to assert against. The asymmetry works in our favour on the case that actually
- * breaks people — `./react` re-exports the root, so a core symbol documented under `./react`
- * still resolves, while a React symbol wrongly documented on the root does not resolve at all,
- * and that is the direction this catches.
+ * The docs claim specific symbols come from specific entry points; this checks they do. `API.md` is
+ * handwritten, so a rename leaves 1300 lines quietly wrong. Only *value* imports are checked —
+ * type-only symbols leave no runtime trace — which catches the breaking direction: a React symbol
+ * on the root does not resolve, while a core one under `./react` does — `./react` re-exports it.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,13 +17,10 @@ const REPO_ROOT = resolve(SRC_ROOT, '..');
 const DOCS = ['README.md', 'API.md'] as const;
 
 /**
- * `import { a, type B } from '<specifier>';` — captures the type-only marker and the names.
- *
- * **All four entry points**, and the alternation is not padding: matching only the two most-used
- * ones left every `umbra/solid` and `umbra/vanilla` snippet checked by nothing, which is how
- * `bindAction` came to be documented as an export of `./vanilla` when it is a member of the
- * controller. An unknown specifier is a failure rather than a skip, so a fifth binding cannot
- * arrive with its snippets silently unguarded.
+ * `import { a, type B } from '<specifier>';` — the type marker and the names, for **all four**
+ * entry points: matching only the two most-used left every Solid and vanilla snippet unchecked,
+ * which is how `bindAction` was documented as an export of `./vanilla` when it is a controller
+ * member. An unknown specifier fails rather than skips, so a fifth binding cannot arrive unguarded.
  */
 const IMPORT_PATTERN =
   /import(\s+type)?\s*\{([^}]*)\}\s*from\s*'(umbra(?:\/(?:react|solid|vanilla))?)';/g;
@@ -65,7 +54,6 @@ const collectDocumentedImports = (): DocumentedImport[] => {
         doc,
         line: text.slice(0, match.index).split('\n').length,
         specifier: match[3] ?? '',
-        // Inline `type X` markers are erased too, so both forms are excluded.
         valueNames: statementIsTypeOnly
           ? []
           : names.filter((name) => {
@@ -118,10 +106,7 @@ test.describe('documented imports', () => {
   });
 
   test('every binding re-exports the whole root', () => {
-    // The docs tell each binding's consumers they can use one import path for everything. That
-    // promise is what lets every root-specifier snippet in API.md also be valid from './react',
-    // './solid' and './vanilla' — so it is asserted for all three rather than for the one whose
-    // snippets happen to outnumber the others.
+    // All three, not just the busiest: every root snippet in API.md must work from each binding.
     const missingFromBinding = Object.entries({
       'umbra/react': reactExports,
       'umbra/solid': solidExports,
@@ -139,8 +124,7 @@ test.describe('documented imports', () => {
   });
 
   test('the root exports no React bindings', () => {
-    // Complements entry-isolation.test.ts: that one proves the root does not *import* React,
-    // this one proves no hook leaked onto it, which would be a resolvable-but-wrong export.
+    // entry-isolation proves the root does not *import* React; this proves no hook leaked onto it.
     const hookLike = rootExports.filter((name) => {
       return /^use[A-Z]/.test(name);
     });

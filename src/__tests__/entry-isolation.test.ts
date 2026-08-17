@@ -4,20 +4,11 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Each entry point must reach exactly its own framework, and no other.
- *
- * The package root is the framework-agnostic dialog manager: it resolves and runs with React and
- * Solid both absent. The two bindings are optional layers, published on `./react` and `./solid`,
- * and `peerDependenciesMeta` marks both peers optional on that promise.
- *
- * A single value import of a framework in the wrong graph breaks it, and nothing else in the
- * pipeline notices: it type-checks, it builds, and the failure surfaces only as a consumer
- * crashing on import — a Solid app pulling React in, or a service-side caller pulling either.
- *
- * So: walk the real import graph from each entry and fail here instead.
- *
- * The walker deliberately follows *value* edges only. Type-only imports are erased by the
- * compiler, so `import type { CSSProperties } from 'react'` is legitimate anywhere.
+ * Each entry point must reach exactly its own framework, and no other. The root runs with React
+ * and Solid both absent — what `peerDependenciesMeta`'s optional peers promise — and one *value*
+ * import in the wrong graph breaks that while nothing else notices: it type-checks, it builds, and
+ * surfaces only as a consumer crashing on import. So the real graph is walked. Type-only edges are
+ * erased by the compiler, so `import type { CSSProperties } from 'react'` is legitimate anywhere.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,9 +31,8 @@ const ownsSpecifier = (framework: Framework, specifier: string) => {
 };
 
 /**
- * Source specifiers carry the `.js` extension the emitted declarations need (see
- * `tsconfig.build.json`), so map it back to the `.ts`/`.tsx` file that actually holds the code.
- * Extensionless specifiers still resolve, so this keeps working if one slips in.
+ * Specifiers carry the `.js` the emitted declarations need, so map back to the real `.ts`/`.tsx`;
+ * extensionless ones still resolve, so this keeps working if one slips in.
  */
 const readModule = (absPath: string) => {
   const absPathWithoutExt = absPath.replace(/\.js$/, '');
@@ -57,11 +47,7 @@ const readModule = (absPath: string) => {
   return null;
 };
 
-/**
- * Every `import`/`export ... from '<specifier>'` in a module, with the leading
- * `import type` / `export type` form flagged — those are erased by the compiler and so
- * cannot drag a runtime dependency in.
- */
+/** Every `import`/`export ... from` edge in a module, with the erased type-only form flagged. */
 const parseImports = (source: string) => {
   // Matches `import ... from 'x'`, `export ... from 'x'`, and bare `import 'x'`.
   const pattern = /(?:^|\n)\s*(import|export)(\s+type)?\b([^;'"]*?)from\s*['"]([^'"]+)['"]/g;
@@ -80,11 +66,7 @@ const parseImports = (source: string) => {
   return results;
 };
 
-/**
- * A framework import is harmless when it is fully erased: `import type { X } from 'react'`, or a
- * clause whose every named binding carries an inline `type` marker. Anything else — a default
- * import, a namespace import, or one un-marked binding — survives to runtime.
- */
+/** Erased only by `import type`, or by every named binding carrying an inline `type` marker. */
 const isErasedImport = (entry: { typeOnly: boolean; clause: string }) => {
   if (entry.typeOnly) {
     return true;
@@ -140,11 +122,9 @@ const collectGraph = (entryAbsPath: string) => {
       }
 
       if (!entry.specifier.startsWith('.')) {
-        // A bare specifier owned by no framework — not part of the source graph.
         continue;
       }
 
-      // Type-only edges are erased; they cannot pull a runtime dependency along.
       if (entry.typeOnly) {
         continue;
       }
@@ -163,8 +143,7 @@ const collectGraph = (entryAbsPath: string) => {
 const frameworksReachedFrom = (entryFile: string) => {
   const { visited, offenders } = collectGraph(resolve(SRC_ROOT, entryFile));
 
-  // Sanity: the walker actually traversed something. A resolution bug that silently visited only
-  // the entry file would make every assertion below pass for the wrong reason.
+  // Sanity: a resolution bug that visited only the entry file would pass every assertion below.
   expect(visited.size).toBeGreaterThan(3);
 
   return {
@@ -186,8 +165,7 @@ test.describe('entry point isolation', () => {
   });
 
   test('./react reaches React and nothing else', () => {
-    // The positive half is what stops the assertions above from passing vacuously: if the walker
-    // silently failed to resolve anything, the root would look clean for the wrong reason.
+    // The positive half: without it, a walker resolving nothing leaves the root looking clean.
     const { reached, detail } = frameworksReachedFrom('react.ts');
     expect(reached.has('react')).toBe(true);
     expect(reached.has('solid'), `React binding pulled Solid in:\n${detail.join('\n')}`).toBe(
@@ -204,33 +182,28 @@ test.describe('entry point isolation', () => {
   });
 
   test('./vanilla reaches no framework at all', () => {
-    // The third binding is a *controller* rather than a renderer, so it has no framework to reach
-    // for — it resolves in exactly the environments the root does. Worth a test rather than a
-    // sentence: one convenience import of a hook would end it, and nothing else would notice.
+    // A controller, not a renderer: it resolves wherever the root does, and one convenience import
+    // of a hook would end that with nothing else noticing.
     const { detail } = frameworksReachedFrom('vanilla.ts');
     expect(detail).toEqual([]);
   });
 
   test('the walker would catch a framework import (meta-test)', () => {
-    // Guards the guard: if `isErasedImport` or the regex ever stopped matching, the tests above
-    // would pass vacuously. These are the shapes that must be rejected...
+    // Guards the guard: `isErasedImport` or the regex failing to match passes every test above.
     expect(isErasedImport({ typeOnly: false, clause: ' { useState } ' })).toBe(false);
     expect(isErasedImport({ typeOnly: false, clause: ' React ' })).toBe(false);
     expect(isErasedImport({ typeOnly: false, clause: ' * as React ' })).toBe(false);
     expect(isErasedImport({ typeOnly: false, clause: ' React, { useState } ' })).toBe(false);
     expect(isErasedImport({ typeOnly: false, clause: ' { type X, useState } ' })).toBe(false);
 
-    // ...and the shapes that are genuinely erased.
     expect(isErasedImport({ typeOnly: true, clause: ' { CSSProperties } ' })).toBe(true);
     expect(isErasedImport({ typeOnly: false, clause: ' { type CSSProperties } ' })).toBe(true);
     expect(isErasedImport({ typeOnly: false, clause: ' { type A, type B } ' })).toBe(true);
 
-    // Both frameworks are recognised, including their sub-paths.
     expect(ownsSpecifier('react', 'react-dom')).toBe(true);
     expect(ownsSpecifier('solid', 'solid-js/web')).toBe(true);
     expect(ownsSpecifier('solid', 'solid-json')).toBe(false);
 
-    // The regex must see both `import ... from` and `export ... from` edges.
     const parsed = parseImports(
       [
         "import { a } from './a';",

@@ -11,15 +11,13 @@ import {
 } from './focus-containment.story.js';
 
 /**
- * `containFocus` — the Tab wrap a non-modal dialog does not get from the browser.
- *
- * Every assertion here is about `document.activeElement` after real key presses, because that is
- * the only witness: a listener that looks correct and never fires reads identically in the source.
+ * `containFocus` — the Tab wrap a non-modal dialog does not get from the browser. Asserted on
+ * `document.activeElement` after real presses, the only witness: a listener that looks correct
+ * and never fires reads identically in the source.
  */
 
 const PANEL = 'dialog[data-modal-id="focus-containment"]';
 
-/** What has focus, by test id — or the tag, for anything that has none. */
 async function focused(page: Page): Promise<string> {
   return page.evaluate(() => {
     const active = document.activeElement;
@@ -29,8 +27,7 @@ async function focused(page: Page): Promise<string> {
 
 test.describe('a non-modal dialog with containFocus off', () => {
   test('lets Tab walk out of it — which is what show() means', async ({ mount, page }) => {
-    // The negative half, and the reason the option exists. Without it the panel is an ordinary
-    // part of the page and the keyboard leaves after the last stop.
+    // The negative half: without it the panel is ordinary page content and the keyboard leaves.
     const component = await mount(<FocusContainmentHarness containFocus={false} />);
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
@@ -65,8 +62,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
   });
 
   test('leaves an ordinary Tab between two stops alone', async ({ mount, page }) => {
-    // The listener has to be inert everywhere but the two ends, or it would fight the browser for
-    // every press inside the dialog.
+    // The listener must be inert everywhere but the two ends, or it fights the browser inside.
     const component = await mount(<FocusContainmentHarness containFocus />);
     await component.getByTestId('open').click();
 
@@ -77,17 +73,9 @@ test.describe('a non-modal dialog with containFocus on', () => {
   });
 
   test('sends Tab inward when the click landed on nothing focusable', async ({ mount, page }) => {
-    // Reported from a real panel: click the empty area under the last button, press Tab, and the
-    // keyboard is in the page behind. Clicking non-focusable content focuses the nearest
-    // *click-focusable* ancestor, and an open `<dialog>` is one — so focus is legitimately on the
-    // element itself, and from there the browser may skip the whole subtree rather than descend
-    // into it, leaving the markers unvisited.
-    //
-    // Both assertions have to be exact. The click one pins the mechanism the fix answers, and
-    // `inside-first` is what discriminates: this Chromium *does* descend, so without the handler
-    // focus reaches the start marker with the dialog as `relatedTarget`, is read as leaving, and
-    // wraps to `inside-last`. A "did not leave the panel" assertion passes either way and guards
-    // nothing.
+    // Clicking non-focusable content focuses the nearest *click-focusable* ancestor — an open
+    // `<dialog>` — from where the browser may skip the subtree. `inside-first` discriminates: this
+    // Chromium *does* descend, so unhandled, focus reaches the start marker and wraps backwards.
     const component = await mount(<FocusContainmentHarness containFocus />);
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
@@ -113,8 +101,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
 
   test('does not pull focus back once something outside has taken it', async ({ mount, page }) => {
     // The deliberate limit: this answers Tab, it does not enforce focus. A `focusin` enforcer
-    // would pass this test and, in a page where dialogs outside the top layer coexist with this
-    // one, would fight every legitimate focus target beyond it.
+    // would pass this test and fight every legitimate focus target beyond the dialog.
     const component = await mount(<FocusContainmentHarness containFocus />);
     await component.getByTestId('open').click();
 
@@ -126,11 +113,8 @@ test.describe('a non-modal dialog with containFocus on', () => {
 
 test.describe('what counts as a stop', () => {
   test('an element the browser skips is not the end of the dialog', async ({ mount, page }) => {
-    // The failure this exists for, measured in a real application before it was understood: a
-    // roving-tabindex toolbar contributed twenty elements the selector matched and the browser
-    // never stopped on, so the "last" being compared against was unreachable, the wrap never fired
-    // and the keyboard walked out of the dialog. Ordinary buttons cannot show it — every one of
-    // them is a stop.
+    // Measured in a real application: a roving-tabindex toolbar contributes elements the selector
+    // matches and the browser never stops on, so the "last" compared against is unreachable.
     const component = await mount(<RovingToolbarHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-modal-id="focus-containment-toolbar"]')).toBeVisible();
@@ -142,9 +126,8 @@ test.describe('what counts as a stop', () => {
   });
 
   test('a frame at the end does not let the keyboard out through it', async ({ mount, page }) => {
-    // A press inside an `<iframe>` reaches no listener in the parent document, so a `keydown`
-    // approach cannot answer the Tab that leaves an editor. The marker is reached by the browser
-    // instead of being told about, which is the whole reason it is a marker.
+    // A press inside an `<iframe>` reaches no listener in the parent, so a `keydown` approach
+    // cannot answer it — the marker is reached by the browser rather than told about.
     const component = await mount(<FramedContentHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-modal-id="focus-containment-frame"]')).toBeVisible();
@@ -160,8 +143,7 @@ test.describe('what counts as a stop', () => {
     mount,
     page,
   }) => {
-    // `display: none` rather than `disabled`: the selector already drops a disabled control, so
-    // that variant would pass without visibility ever being consulted.
+    // `display: none`, not `disabled`: the selector already drops a disabled control.
     const component = await mount(<HiddenStopHarness />);
     await component.getByTestId('open').click();
     await component.getByTestId('hide-middle').click();
@@ -173,10 +155,8 @@ test.describe('what counts as a stop', () => {
   });
 
   test('a contenteditable region is a stop, and the wrap lands on it', async ({ mount, page }) => {
-    // An editable region is a Tab stop with no `tabindex`, no `href` and no control tag, so a
-    // selector made of those never proposes it. Discriminating on every engine: with the editor
-    // missing from the scan, the wrap's only candidate is `inside-first` and focus is handed
-    // straight back to where the press started.
+    // An editable region is a Tab stop with no `tabindex`, `href` or control tag. Discriminating on
+    // every engine: missing from the scan, the wrap's only candidate is where the press started.
     const component = await mount(<EditableContentHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-modal-id="focus-containment-editable"]')).toBeVisible();
@@ -191,10 +171,8 @@ test.describe('what counts as a stop', () => {
     mount,
     page,
   }) => {
-    // The worst case of the same miss, on the unconditional half rather than the wrap: a
-    // dead-space click puts focus on the `<dialog>` element, and with nothing the scan can find
-    // the recovery declines the press. Chromium and Firefox descend on their own; WebKit does
-    // not, and the keyboard is stuck on the element — the exact bug the recovery exists to fix.
+    // The unconditional half: a dead-space click focuses the `<dialog>` element and with nothing
+    // for the scan to find the recovery declines. Chromium and Firefox descend; WebKit sticks.
     const component = await mount(<EditableOnlyHarness />);
     await component.getByTestId('open').click();
     await expect(
@@ -211,19 +189,11 @@ test.describe('what counts as a stop', () => {
 });
 
 test.describe('the dead-space click, whatever containFocus says', () => {
-  // **The recovery is unconditional and this is the pair that holds it there.** Clicking a
-  // panel's empty space focuses the `<dialog>` element itself; from there Chromium and Firefox
-  // move Tab into the content and **WebKit swallows the press**, leaving the keyboard on the
-  // element with nothing but the mouse to get it back. Behind `containFocus` that cost the
-  // keyboard in every dialog that had not opted into an option about something else — modal ones
-  // especially, where the wrap it also buys is redundant and the option reads as irrelevant.
-  //
-  // Run for both variants and both flag values on purpose: the flag must make no difference here,
-  // and a test that only covered the `true` case would pass on the day someone puts it back.
-  // Cited by the matrix, and spelled out rather than generated: the gate matches a cell's test
-  // title verbatim in the source, so a title built from a template literal is one it cannot find.
-  // This is the discriminating case of the sweep below — the one that fails the moment the
-  // recovery goes back behind the flag.
+  // **The recovery is unconditional and this pair holds it there.** A dead-space click focuses the
+  // `<dialog>` element; Chromium and Firefox move Tab into the content, **WebKit swallows it**.
+  // Run for both variants and both flag values on purpose — the flag must make no difference, and
+  // a `true`-only test would pass the day someone puts the recovery back behind it. The title is
+  // spelled out, not generated: the matrix gate matches it verbatim and cannot find a template.
   test('a dead-space click leaves the keyboard reachable without containFocus', async ({
     mount,
     page,
@@ -278,12 +248,9 @@ test.describe('the dead-space click, whatever containFocus says', () => {
 });
 
 /**
- * Whether the Tab recovery's scan stays inside the dialog it belongs to.
- *
- * The open question the compatibility matrix carries against the reclaim floor, asked of the other
- * caller that shares the scan. It is written as a measurement rather than a claim in either
- * direction: `focusFirstAvailable` walks a plain `querySelectorAll` where every other lookup in
- * `focus-policy.ts` uses `queryOwn`, and whether that is reachable is the whole question.
+ * Whether the recovery scan stays inside the dialog it belongs to — the matrix's open question
+ * against the reclaim floor. Written as a measurement, not a claim: `focusFirstAvailable` walks a
+ * plain `querySelectorAll` where every other `focus-policy.ts` lookup uses `queryOwn`.
  */
 test.describe('the recovery scan and a dialog nested inside this one', () => {
   test('Shift+Tab from the dialog element stays on this dialog’s own last stop', async ({
@@ -297,15 +264,14 @@ test.describe('the recovery scan and a dialog nested inside this one', () => {
     await page.getByTestId('outer-open-panel').click();
     await expect(page.locator('dialog[data-modal-id="nested-scan-panel"]')).toBeVisible();
 
-    // Low in the dead space, clear of the panel overlaying the top of the region. This is the
-    // ordinary way focus lands on a `<dialog>` element, and the only press the markers cannot see.
+    // Low in the dead space, clear of the panel overlaying the top of the region — the ordinary
+    // way focus lands on a `<dialog>` element.
     await page.getByTestId('outer-dead-space').click({ position: { x: 200, y: 230 } });
     expect(await focused(page)).toBe('modal-nested-scan-outer');
 
     await page.keyboard.press('Shift+Tab');
 
-    // Reversed, the scan reaches the panel's button before any of the outer's own — so this is the
-    // assertion that can tell a scoped scan from an unscoped one.
+    // Reversed, the scan reaches the panel's button first — this tells scoped from unscoped.
     expect(await focused(page)).toBe('outer-last');
   });
 });

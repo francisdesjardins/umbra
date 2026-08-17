@@ -2,16 +2,10 @@ import { useState } from 'react';
 import { useDialogManagerContext, useLookup, useModal, type OpenRequest } from '../../react.js';
 
 /**
- * A dialog asked to open by code that does not own it.
- *
- * The two roles are deliberately kept apart on screen: the **owner** declares
- * `onOpenRequest` and decides, the **caller** only knows an id and a payload. That is the shape
- * across a microfrontend boundary, and it is the one the option exists for — a controlled dialog
- * whose `open` belongs to the component that renders it cannot be instructed without being
- * immediately put back, so it has to be asked instead.
- *
- * The owner validates. Here that is a deliberately petty schema — an object with a numeric `id` —
- * because the interesting case is the request it turns down, not the one it accepts.
+ * A dialog asked to open by code that does not own it: the owner declares `onOpenRequest` and
+ * validates (a petty numeric-`id` schema — the refusal is the interesting case), the caller knows
+ * only an id. A controlled dialog's `open` cannot be instructed without being put straight back,
+ * which is the microfrontend shape the option exists for.
  */
 export function OpenRequestHarness() {
   const [accepted, setAccepted] = useState<number | null>(null);
@@ -68,17 +62,11 @@ export function OpenRequestHarness() {
   );
 }
 
-/**
- * The other side, holding nothing but an id.
- *
- * Its readouts come from `useLookup`, which is how a caller learns what its request produced —
- * `requestOpen` returns nothing, because what the owner decides may not be synchronous.
- */
+/** The other side, holding only an id — `requestOpen` returns nothing, so it reads `useLookup`. */
 function Caller() {
   const info = useLookup('asked');
-  // The manager from context, not the singleton: every CT mount gets its own, and a caller that
-  // reached past the provider would be asking a registry this dialog never registered with.
-  // `useDialogManagerContext` is the imperative one — `useDialogManager` returns a snapshot.
+  // Context, not the singleton: every CT mount gets its own registry. `useDialogManagerContext` is
+  // the imperative one — `useDialogManager` returns a snapshot.
   const dialogManager = useDialogManagerContext();
 
   return (

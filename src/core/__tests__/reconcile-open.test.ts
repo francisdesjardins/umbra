@@ -2,13 +2,8 @@ import { expect, test } from '@playwright/test';
 import { reconcileOpen } from '../reconcile-open.js';
 import type { ModalPhase } from '../types.js';
 
-/**
- * `reconcileOpen` — the whole decision, over every input it can be handed.
- *
- * Four phases and two booleans is eight cases, so the table is exhaustive rather than
- * representative: the value of this function is that nobody has to think about the corners again,
- * and a spot check would leave one of them free to drift.
- */
+// `reconcileOpen` over every input it can be handed. Four phases and two booleans is eight cases,
+// so the table is exhaustive rather than representative — a spot check leaves a corner to drift.
 
 const CASES: readonly (readonly [ModalPhase, boolean, 'open' | 'close' | 'none'])[] = [
   // Closed and asked to open: the only case that opens.
@@ -22,13 +17,9 @@ const CASES: readonly (readonly [ModalPhase, boolean, 'open' | 'close' | 'none']
   ['open', true, 'none'],
   ['open', false, 'close'],
 
-  // Closing is left alone whichever way the prop moves. Closing it again would cut the exit; opening it now
-  // would race the close that is still finalizing — the phase changes when it lands, and this runs
-  // again on that.
-  //
-  // Only the first of the two discriminates: drop the `'closing'` guard and `open: false` still
-  // answers `'none'`, because a closing dialog is not open and the prop agrees. So the row worth
-  // reading is `['closing', true]` — that is the one that goes red when the guard goes.
+  // Closing is left alone either way: closing again would cut the exit, opening now would race the
+  // finalize. Only `['closing', true]` discriminates — drop the guard and `open: false` still
+  // answers `'none'`, because a closing dialog is not open and the prop agrees.
   ['closing', true, 'none'],
   ['closing', false, 'none'],
 ];

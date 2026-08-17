@@ -4,20 +4,11 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A modal whose `onKeyDown` is an inline arrow — a new function on every render — with an action
- * that renders while it runs.
- *
- * **The regression fixture for the director's granularity.** `focus.sync` remembers, for the life
- * of one attachment, that an action is running; that memory is what recognises the running → idle
- * transition and gives focus back to the button that ran it. A director keyed on the union of
- * every step's inputs would rebuild that attachment whenever *any* option changed identity — and
- * `onKeyDown` written this way changes on every render, while an action starting is itself a
- * render. The memory would be wiped mid-action, the settle would go unrecognised, and focus would
- * be left on the `<dialog>` instead of on the button.
- *
- * Written the way an application writes it, deliberately: an inline arrow is the normal spelling,
- * so the hazard is the default case rather than an exotic one. `modal-director.test.ts` states the
- * same rule as a property of the step table; this is it happening to a user.
+ * A modal whose `onKeyDown` is an inline arrow — a new function every render, the normal spelling —
+ * with an action that renders while it runs. The regression fixture for the director's granularity:
+ * `focus.sync` remembers for one attachment that an action is running, and that memory recognises
+ * running → idle and returns focus to the button. A director keyed on the union of every step's
+ * inputs would rebuild the attachment on any identity change, wiping the memory mid-action.
  */
 export function VolatileKeyDownHarness() {
   const [keys, setKeys] = useState(0);
@@ -25,8 +16,7 @@ export function VolatileKeyDownHarness() {
 
   const { open, isVisible, Modal } = useModal<void, 'save'>({
     id: 'volatile-keydown',
-    // A fresh closure every render, over state it actually reads — so React cannot hoist it and
-    // the identity really does change.
+    // A fresh closure every render over state it reads, so React cannot hoist it.
     onKeyDown: (event: KeyboardEvent) => {
       if (event.key === Key.ArrowDown) {
         setKeys(keys + 1);
@@ -36,8 +26,7 @@ export function VolatileKeyDownHarness() {
       const save = action('save', {
         focusOnOpen: true,
         onAction: async () => {
-          // Two renders while the action runs: one from `hasRunningAction` flipping, one from
-          // this. Each hands `useModal` a new `onKeyDown`.
+          // Two renders while the action runs, each handing `useModal` a new `onKeyDown`.
           setKeys((n) => {
             return n + 1;
           });

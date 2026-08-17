@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { applyStyle, type DialogStyle } from '../style.js';
 
-/**
- * A target element and a queue of styles to write onto it, one press at a time.
- *
- * `applyStyle` needs a real `CSSStyleDeclaration` — a computed style is the only witness that
- * says whether a property was actually set, hyphenated correctly, or cleared — so it is exercised
- * here rather than in the unit project.
- */
+// A target element and a queue of styles, one press at a time. `applyStyle` needs a real
+// `CSSStyleDeclaration`: a computed style is the only witness that a property landed or cleared.
 function ApplyStyleStage({ steps }: { readonly steps: readonly DialogStyle[] }) {
   const targetRef = useRef<HTMLDivElement>(null);
   const appliedRef = useRef<DialogStyle | undefined>(undefined);
@@ -40,11 +35,8 @@ function ApplyStyleStage({ steps }: { readonly steps: readonly DialogStyle[] }) 
   );
 }
 
-/**
- * The case the clearing half exists for: entrance and exit keyframes that do not carry the same
- * properties. Without the clear, `transform` written by the exit would survive into the entrance
- * and the dialog would stay scaled down while fully opaque.
- */
+// The case the clearing half exists for: entrance and exit keyframes carrying different
+// properties. Without the clear the dialog stays scaled down while fully opaque.
 export function AsymmetricKeyframesHarness() {
   return <ApplyStyleStage steps={[{ opacity: 0, transform: 'scale(0.5)' }, { opacity: 1 }]} />;
 }
@@ -56,16 +48,9 @@ export function UndefinedClearsHarness() {
   );
 }
 
-/**
- * Name translation: camelCase to hyphenated, a vendor prefix getting its leading dash back, and
- * a custom property passing through untouched. `setProperty` silently ignores a name it does not
- * recognise, so a wrong translation is invisible until something reads the computed value.
- */
-/**
- * Add a CSS custom property, which `DialogStyle`'s key set does not name — it is derived from
- * `CSSStyleDeclaration`, and `--anything` is not a member of that. A computed key carries it in
- * without an assertion, which is also how a caller would reach `--dialog-backdrop`.
- */
+// Name translation: camelCase to hyphenated, a vendor prefix getting its dash back, and a custom
+// property passing through — `setProperty` ignores a name it does not know, so a wrong translation
+// is invisible. `DialogStyle` maps `CSSStyleDeclaration`, so a computed key is how `--x` gets in.
 const withCustomProperty = (
   style: DialogStyle,
   property: { readonly name: string; readonly value: string }

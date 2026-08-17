@@ -131,7 +131,6 @@ test.describe('createStore — domain (builder)', () => {
     counter.clear();
     expect(counter.getSnapshot().count).toBe(0);
 
-    // The built-in mutators are NOT exposed on a domain store instance.
     expect((counter as Record<string, unknown>)['set']).toBeUndefined();
     expect((counter as Record<string, unknown>)['reset']).toBeUndefined();
   });
@@ -142,7 +141,6 @@ test.describe('createStore — domain (builder)', () => {
       {
         builder: () => {
           return {
-            // deliberately shadow a contract key
             getSnapshot: () => {
               return 'nope';
             },
@@ -150,7 +148,6 @@ test.describe('createStore — domain (builder)', () => {
         },
       }
     );
-    // built-in getSnapshot survives and returns the real snapshot
     expect(store.getSnapshot()).toEqual({ n: 0 });
   });
 
@@ -177,30 +174,18 @@ test.describe('createStore — domain (builder)', () => {
   });
 
   test('context is a builder concept — a builderless store does not accept one', () => {
-    // Nothing could read it: `getContext` is handed to the builder, and the instance exposes no
-    // context accessor. The `@ts-expect-error` is the assertion — an unused directive fails the
-    // build, so this stays true only while the option really is rejected.
+    // Nothing could read it; the unused-directive rule makes the directive itself the assertion.
     // @ts-expect-error a store with no builder has nothing that could read a context
     const store = createStore({ value: 0 }, { context: { multiplier: 3 } });
     expect(store.getSnapshot()).toEqual({ value: 0 });
   });
 });
 
-// ── Overload resolution ───────────────────────────────────────────────────────
-//
-// `createStore` is overloaded on its second parameter, and both forms now take an options
-// object: `<TSnapshot, TMethods, TContext>(initial, { builder, … })` and
-// `<TSnapshot, TContext>(initial, options?)`. The two differ in type-parameter arity, which
-// invites the suspicion that an explicitly-instantiated `createStore<Snap, Methods>(initial, …)`
-// matches the *generic* overload by arity and silently binds `TContext = Methods`.
-//
-// It does not, and these pin why: the **domain overload is declared first and requires
-// `builder`**, so a call carrying one matches it before arity is consulted, and a call without
-// one fails it and falls through to the generic form. Declaration order is what makes that
-// robust rather than a freshness accident — excess-property checking would reject a stray
-// `builder` on an object *literal* handed to the generic overload, but not on a variable. The
-// assertions are the types themselves — `Equals` fails the build if either overload starts
-// capturing a call meant for the other.
+// Both overloads take an options object and differ in type-parameter arity, so an explicit
+// `createStore<Snap, Methods>(initial, …)` looks like it could match the *generic* one and bind
+// `TContext = Methods`. It cannot: the domain overload is declared first and requires `builder`,
+// so a call carrying one matches before arity is consulted. Declaration order is what makes that
+// hold — excess-property checking rejects a stray `builder` on a literal, but not on a variable.
 
 /** Compile error unless `A` and `B` are mutually assignable. */
 type Equals<A extends B, B extends C, C = A> = A;
@@ -244,8 +229,7 @@ export type _ExplicitBuilderIsDomain = Equals<typeof explicitDomain, Store<Snap,
 export type _ExplicitOptionsIsGeneric = Equals<typeof explicitGeneric, GenericStore<Snap>>;
 export type _BareIsGeneric = Equals<ReturnType<typeof createStore<Snap>>, GenericStore<Snap>>;
 
-// Context reaches the builder's `api` and stays off the returned instance — it is read through
-// `getContext()`, never off the store, which is why `Store` carries no context type parameter.
+// Read through `getContext()`, never off the store — which is why `Store` has no context param.
 const domainWithContext = createStore<Snap, Methods, Ctx>(
   { count: 0 },
   {
@@ -266,8 +250,7 @@ export type _ContextDoesNotReachTheInstance = Equals<
 
 test.describe('createStore — overload resolution', () => {
   test('a builder reaches the domain overload however it is instantiated', () => {
-    // The assertions are the four type aliases above; these calls prove the resolved types
-    // describe the object actually returned, rather than a shape nothing constructs.
+    // The type aliases above are the assertions; these calls prove the shape is really constructed.
     inferredDomain.inc();
     explicitDomain.inc();
     expect(inferredDomain.getSnapshot()).toEqual({ count: 1 });

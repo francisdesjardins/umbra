@@ -4,30 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
 /**
- * The agent-instruction files have a size budget, and it is a test because nothing else notices.
- *
- * Every `CLAUDE.md` is loaded in full into the context of every session, so a paragraph added here
- * costs on every task forever — and the cost is invisible at the moment of writing, which is the
- * shape of failure a gate is for. These files reached 15 300 words by growing a little at a time,
- * each addition obviously worth it on its own.
- *
- * **The budget is not a style preference, it is the routing rule made enforceable.** A fact belongs
- * where it can be checked, in this order:
- *
- * 1. **A test or a gate** — `entry-isolation`, `binding-parity`, `docs-exports`, the compatibility
- *    matrix. It cannot drift, so it is always the best home.
- * 2. **JSDoc on the thing it constrains** — the "why" travels with the code and shows up in an
- *    editor at the moment it is needed. This is where most of what used to be here belongs.
- * 3. **`CLAUDE.md`** — only what is attached to no single file: the folder rule, the vocabulary, the
- *    commands, and pointers to the two above.
- *
- * So the way to pass this test is almost never to delete a fact. It is to move it to (1) or (2), or —
- * for anything historical — to recognise that the CHANGELOG already owns it, since the repo's own
- * convention is that comments never narrate the past.
- *
- * The limits are the sizes reached by doing exactly that, rounded up to leave room for a real
- * addition. **Raising one is a decision to state out loud**, not a way to make a failing test pass:
- * if a file has genuinely earned more, say so in the commit that raises it.
+ * The agent-instruction files have a size budget, because nothing else notices: every `CLAUDE.md`
+ * loads in full into every session, so a paragraph costs on every task forever and costs nothing
+ * visible when written — which is how these reached 15 300 words a little at a time. The budget is
+ * the routing rule made enforceable: a fact belongs first in a test or gate (it cannot drift), then
+ * in JSDoc on the thing it constrains, and in `CLAUDE.md` only when it attaches to no single file —
+ * the folder rule, the vocabulary, the commands, pointers to the first two. So passing is almost
+ * never deleting a fact: move it, or let the CHANGELOG own the historical ones. The limits are the
+ * sizes reached by doing that, so raising one is a decision for the commit that raises it.
  */
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -71,8 +55,7 @@ test.describe('the agent instructions have a budget', () => {
       return sum + wordsIn(path);
     }, 0);
 
-    // The per-file budgets sum higher than this on purpose: one file may take room from another, and
-    // what actually costs a session is the sum of all four.
+    // The per-file budgets sum higher on purpose: what costs a session is the sum of all four.
     expect(
       total,
       `Every CLAUDE.md loads in full, every session: ${String(total)} words against ${String(TOTAL_BUDGET)}.`
@@ -80,14 +63,13 @@ test.describe('the agent instructions have a budget', () => {
   });
 
   test('every budgeted file exists, and every CLAUDE.md is budgeted', () => {
-    // Guards the guard both ways. A renamed file would make the assertions above pass by reading
-    // nothing, and a *new* `CLAUDE.md` would be the cheapest possible way around the budget.
+    // Both ways: a rename makes the above pass on nothing, a *new* file is the cheapest way round.
     for (const path of Object.keys(BUDGETS)) {
       expect(wordsIn(path), `${path} is empty or missing`).toBeGreaterThan(50);
     }
 
-    // Discovered rather than listed, because a hand-kept index is the thing the budget would then be
-    // kept out of. `SKIP` is the set no session loads from.
+    // Discovered, not listed — a hand-kept index is what a new file gets left off. `SKIP` is the
+    // set no session loads from.
     const SKIP = new Set([
       'node_modules',
       'dist',
@@ -112,11 +94,8 @@ test.describe('the agent instructions have a budget', () => {
   });
 
   test('every path these files point at exists', () => {
-    // The budget's own mechanism is to replace prose with a pointer, which trades one failure mode
-    // for another: a paragraph cannot go stale by being moved, but a link can. Three were already
-    // broken when this was written — `react/use-message-modal.tsx` and two siblings, from before the
-    // template hooks moved into `templates/` — so the pointers are only cheaper than the prose if
-    // something checks them.
+    // Replacing prose with a pointer trades one stale mode for another: a moved paragraph cannot
+    // go stale, a link can — three were already broken when this was written.
     const LINK = /\[[^\]]+\]\(([^)#\s]+)(?:#[^)\s]*)?\)/g;
     const broken: string[] = [];
 

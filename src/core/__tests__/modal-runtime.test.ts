@@ -10,14 +10,8 @@ import {
   teardownModal,
 } from '../modal-runtime.js';
 
-/**
- * The parts of a modal both bindings share, tested where they live rather than twice through two
- * renderers.
- *
- * That is the point of them being here at all: before the second binding, every one of these
- * answers was only ever exercised through React, so "does the Solid binding narrow the variant
- * the same way" had no answer short of reading both files.
- */
+// The parts of a modal both bindings share, tested where they live rather than twice through two
+// renderers — before the second binding, every answer here was only exercised through React.
 
 // The store cancels a pending frame on every close, and Node has none — see `fake-frames.ts`.
 let frames: FrameControl;
@@ -36,18 +30,15 @@ test.describe('resolveModalOptions', () => {
       dismissWhilePreparing: true,
       dismissKey: 'Escape',
       template: 'modal',
-      // `undefined`, not `false`: it means "decide from whether any action was drawn", which is
-      // a third state the backdrop rule needs and a boolean could not carry.
+      // `undefined`, not `false`: "decide from whether any action was drawn", a third state.
       dismissOnBackdropClick: undefined,
       dismissOnClickOutside: false,
     });
   });
 
   test('a value the caller passed wins over every default', () => {
-    // The defaults above were the only thing asserted, and a resolver that ignored its argument
-    // entirely — returning the table verbatim — passed all of it. These four are the arms with a
-    // `??` behind them, which is exactly where an option gets silently dropped: the failure is not
-    // an error anywhere, it is `containFocus: true` doing nothing at a keyboard.
+    // A resolver returning the table verbatim passed the defaults test; these four sit behind a
+    // `??`, where an option is dropped silently — `containFocus: true` doing nothing, not an error.
     expect(
       resolveModalOptions({
         dismissWhilePreparing: false,
@@ -66,8 +57,7 @@ test.describe('resolveModalOptions', () => {
   test('reads dismissOnBackdropClick only on the modal branch', () => {
     expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(true);
 
-    // A non-modal dialog has no backdrop. The option cannot be passed (it is `never` there), and
-    // one arriving anyway — from an untyped caller — must not be honoured.
+    // No backdrop to click. The option is `never` here, and one from an untyped caller is ignored.
     expect(
       resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnBackdropClick
     ).toBeUndefined();
@@ -77,16 +67,13 @@ test.describe('resolveModalOptions', () => {
     expect(
       resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnClickOutside
     ).toBe(true);
-    // Defaults to false even on its own branch: a panel that dismisses on any outside click is
-    // an opt-in, because it sits over a live page.
+    // Opt-in even on its own branch, because the panel sits over a live page.
     expect(resolveModalOptions({ nonModal: true }).dismissOnClickOutside).toBe(false);
     expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(false);
   });
 
   test('an explicit nonModal: false reads the same as leaving it out', () => {
-    // `nonModal` is optional *and* has a `false` branch in the union, so a caller may write it
-    // either way — and a resolution that only handled the absent case would silently drop the
-    // backdrop option for everyone who spelled it out.
+    // `nonModal` is optional *and* has a `false` branch, so both spellings must resolve alike.
     expect(
       resolveModalOptions({ nonModal: false, dismissOnBackdropClick: true }).dismissOnBackdropClick
     ).toBe(true);
@@ -95,8 +82,7 @@ test.describe('resolveModalOptions', () => {
   });
 
   test('dismissKey: false survives, because it is not "unset"', () => {
-    // `?? Key.Escape` and not `|| Key.Escape` — `false` disables key dismissal entirely, and a
-    // truthiness check would silently turn it back on.
+    // `??`, not `||` — `false` disables key dismissal and truthiness would turn it back on.
     expect(resolveModalOptions({ dismissKey: false }).dismissKey).toBe(false);
     expect(resolveModalOptions({ dismissKey: 'Ctrl+k' }).dismissKey).toBe('Ctrl+k');
   });
@@ -132,8 +118,7 @@ test.describe('createModalRuntime', () => {
   test('openAndWait() registers its resolver before requesting the open', async () => {
     const { store, openAndWait } = createModalRuntime<string, 'save'>('runtime-wait');
 
-    // The close lands *inside* the open — the window `prepare` opens, and the one a resolver
-    // added on the next line would fall into.
+    // The close lands *inside* the open — the window a resolver added on the next line would miss.
     const closed = openAndWait();
     store.close('save', 'payload');
     store.finalize();
@@ -213,18 +198,15 @@ test.describe('teardownModal', () => {
       onError: undefined,
     });
 
-    // Not the abandoned branch: the modal *was* open, so the teardown closes it for real and the
-    // waiter gets the reason the library produces on teardown rather than an error.
+    // Not the abandoned branch: the modal *was* open, so the waiter gets a reason, not an error.
     const [error, result] = await closed;
     expect(error).toBeNull();
     expect(result).toEqual({ reason: 'dismiss' });
   });
 
   test('settles a waiter on a modal that is destroyed while closed', async () => {
-    // The case the unconditional `abandon()` exists for. A close resolver answers the *next*
-    // close, so one still queued on a modal that never opens again would stay pending for the
-    // life of the process — holding its continuation, and everything that closure captures,
-    // alive while the awaiting code silently never resumes.
+    // Why `abandon()` is unconditional: a resolver answers the *next* close, so one queued on a
+    // modal that never reopens stays pending for the life of the process.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-closed');
     dm.register('teardown-closed', { store, template: 'modal', nonModal: false });
@@ -258,11 +240,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   /** A click on the dialog itself, well outside its box: the geometry says "backdrop". */
   const onBackdrop = { target: surface, currentTarget: surface, clientX: 0, clientY: 0 };
 
-  /**
-   * A real engine in the two states the chain asks about — no fake, because the engine is
-   * framework-free and driving it is what makes "has actions" and "one is running" mean here
-   * exactly what they mean in a binding.
-   */
+  // A real engine, not a fake: framework-free, so "running" means what it means in a binding.
   const gate = (options: { hasActions: boolean; hasRunningAction?: boolean }) => {
     const engine = createActionEngine<void, 'save'>('backdrop-gate');
     if (options.hasActions) {
@@ -294,8 +272,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 
   test('defaults to opt-out with no actions, and opt-in with them', () => {
-    // A modal offering buttons wants to be dismissed through one, so drawing an action flips the
-    // default. Both halves here, because the default is the whole subtlety.
+    // Drawing an action flips the default — both halves, because the default is the subtlety.
     const frames = installFakeFrames();
     try {
       const { store } = createModalRuntime('backdrop-default');
@@ -356,8 +333,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 
   test('a running action holds the backdrop shut', () => {
-    // The shared gate, reached only after the first two questions pass — the same predicate the
-    // dismiss key and click-outside ask.
+    // The shared gate the dismiss key and click-outside also ask, reached after the first two.
     const frames = installFakeFrames();
     try {
       const { store } = createModalRuntime('backdrop-running');
@@ -436,9 +412,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
 
 test.describe('teardownModal reports a failing onClose', () => {
   test('logs instead of losing an error thrown during cleanup', async () => {
-    // Teardown runs while the component is going away, so a throwing `onClose` has nobody left to
-    // catch it — `fireAndForget` hands it here, and here it becomes a log line rather than an
-    // unhandled rejection in whatever unmounted the modal.
+    // Teardown has nobody left to catch a throwing `onClose`; `fireAndForget` logs it instead.
     const dm = createDialogManager();
     const { store } = createModalRuntime<void, 'save'>('teardown-throws');
     dm.register('teardown-throws', { store, template: 'modal', nonModal: false });
@@ -481,9 +455,7 @@ test.describe('teardownModal reports a failing onClose', () => {
 
 test.describe('teardownModal reports through onError', () => {
   test('an onClose that throws on unmount reaches onError, like one that throws on close', async () => {
-    // The gap this closes: `onClose` failures reached `onError` on the close path and not on the
-    // unmount path, so the same callback throwing was reported or silent depending on how the
-    // modal happened to end. A modal unmounted while open is the ordinary React case, not an edge.
+    // The gap: `onClose` failures reached `onError` on the close path but not on unmount.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-on-error');
     dm.register('teardown-on-error', { store, template: 'modal', nonModal: false });
@@ -509,8 +481,7 @@ test.describe('teardownModal reports through onError', () => {
   });
 
   test('a clean unmount reports nothing', async () => {
-    // The channel is for failures only — a consumer wiring it to a reporter must not get an event
-    // for every modal that unmounts normally.
+    // Failures only — a consumer wiring a reporter must not get an event per normal unmount.
     const dm = createDialogManager();
     const { store } = createModalRuntime('teardown-quiet');
     dm.register('teardown-quiet', { store, template: 'modal', nonModal: false });

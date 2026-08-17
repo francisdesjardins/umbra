@@ -11,23 +11,12 @@ const INSTANT = {
 } as const;
 
 /**
- * The one configuration in which **no dialog answers the dismiss key**, which is the intersection two
- * well-tested halves leave uncovered.
- *
- * A non-modal panel answers Escape through `attachWindowDismissKey` wherever focus is, and stands down
- * when it is not the foreground. A modal dialog answers through its own scoped keydown and the native
- * `cancel`. Both are tested. Put a modal with `dismissKey: false` in front of the panel and each half
- * correctly declines: the panel is no longer the foreground, and the modal was told not to listen.
- *
- * **Nothing closing is the right outcome**, and that is worth stating rather than assuming. The front
- * dialog is what the user is looking at and it opted out of the key; dismissing the panel *behind* it
- * instead would close something they cannot even see. So the question this harness exists to answer is
- * not "does something close" but **"is the press still available to the page"** — because a library
- * that swallows a key it then refuses to act on leaves the application with a dead keyboard, which is
- * the reasoning `attachWindowDismissKey` already carries for the case where it declines.
- *
- * The counter is a **bubble-phase** listener on `document`, so it is the last thing that could hear
- * the press: if it never fires, something upstream consumed it.
+ * The one configuration in which no dialog answers the dismiss key: a modal with
+ * `dismissKey: false` in front of a non-modal panel. Each half correctly declines — the panel is no
+ * longer the foreground, the modal was told not to listen — and nothing closing is the right
+ * outcome, since dismissing the panel behind would close what the user cannot see. So the question
+ * is not "does something close" but "is the press still available to the page": a library that
+ * swallows a key it refuses to act on leaves the application with a dead keyboard.
  */
 export function EscAnsweredByNobodyHarness() {
   const [pressesSeenByPage, setPressesSeenByPage] = useState(0);
@@ -40,8 +29,7 @@ export function EscAnsweredByNobodyHarness() {
         });
       }
     };
-    // Bubble phase, on `document`: the last listener that could hear the press. The library's window
-    // listener captures, so anything it consumes never arrives here.
+    // Bubble phase on `document`, the last listener that could hear it; the library's captures.
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);

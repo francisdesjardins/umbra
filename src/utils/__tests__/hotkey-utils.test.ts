@@ -45,8 +45,7 @@ test.describe('formatHotkeyLabel', () => {
 
 test.describe('formatAriaKeyshortcuts', () => {
   test('spells the Control modifier the way the platform does', () => {
-    // Every token of `aria-keyshortcuts` is a `KeyboardEvent.key` value, and Control's is
-    // `'Control'` — `'Ctrl'` is a keycap, not a key value, so it names no key to a screen reader.
+    // Every `aria-keyshortcuts` token is a `KeyboardEvent.key` value; `Ctrl` is a keycap, not one.
     expect(formatAriaKeyshortcuts('Ctrl+Enter')).toBe('Control+Enter');
     expect(formatAriaKeyshortcuts('Ctrl+Shift+S')).toBe('Control+Shift+S');
   });
@@ -59,30 +58,26 @@ test.describe('formatAriaKeyshortcuts', () => {
   });
 
   test('writes the spacebar as Space, which the spec asks for by name', () => {
-    // The attribute takes a space-*delimited* list, so the one key whose value is a space cannot
-    // be quoted verbatim. WAI-ARIA states that exception itself.
+    // The attribute is a space-delimited list, so WAI-ARIA excepts the key whose value is a space.
     expect(formatAriaKeyshortcuts(Key.Space)).toBe('Space');
     expect(formatAriaKeyshortcuts('Ctrl+ ')).toBe('Control+Space');
   });
 
   test('never produces a token containing a space', () => {
-    // The property the grammar actually needs, asserted as a property: a future key whose value
-    // contains a space fails here without anyone remembering to add a case for it.
+    // Asserted as a property, so a future key whose value contains a space fails with no new case.
     for (const def of [Key.Space, 'Ctrl+ ', 'Shift+ ', 'Ctrl+Alt+Shift+ '] as const) {
       expect(formatAriaKeyshortcuts(def)).not.toContain(' ');
     }
   });
 
   test('is unchanged for the unmodified keys everything else asserts', () => {
-    // `Enter` and `Escape` are identical under both spellings, which is exactly why they cannot
-    // be the only hotkeys a suite exercises.
+    // `Enter` and `Escape` spell identically either way, so they cannot be a suite's only hotkeys.
     expect(formatAriaKeyshortcuts('Enter')).toBe('Enter');
     expect(formatAriaKeyshortcuts('Escape')).toBe('Escape');
     expect(formatAriaKeyshortcuts('s')).toBe('S');
   });
 
   test('is a different string from the label, on purpose', () => {
-    // Two audiences, two spellings. Collapsing them is what put `Ctrl` in the DOM.
     expect(formatHotkeyLabel('Ctrl+Enter')).toBe('Ctrl+Enter');
     expect(formatAriaKeyshortcuts('Ctrl+Enter')).not.toBe(formatHotkeyLabel('Ctrl+Enter'));
   });
@@ -90,9 +85,7 @@ test.describe('formatAriaKeyshortcuts', () => {
 
 test.describe('the ARIA spelling is an output, not an input', () => {
   test('`Control+…` is neither a HotkeyDef nor a match for one', () => {
-    // The output vocabulary is the platform's and the input vocabulary is the library's; the
-    // `@ts-expect-error` is half the assertion, and fails the build if `HotkeyDef` ever grows the
-    // ARIA spelling. Without it `parse` would degrade `'Control+Enter'` to a plain `Enter`.
+    // Without this, `parse` would degrade `'Control+Enter'` to a plain `Enter`.
     // @ts-expect-error — `Control` is the ARIA modifier token; the input spelling is `Ctrl`.
     expect(matchesHotkey(makeEvent('Enter', { ctrlKey: true }), 'Control+Enter')).toBe(false);
   });
@@ -141,10 +134,7 @@ test.describe('matchesHotkey', () => {
   });
 
   test('letter case is not significant — the modifiers do the discriminating', () => {
-    // `'s'` and `'S'` name the same physical key. Treating them as different keys made
-    // `'S'` mean "S with no modifiers", which a keyboard only produces with CapsLock on —
-    // so CapsLock silently changed which hotkey fired. Both spellings now match, and
-    // whether Shift is held is decided by the modifier list, exactly.
+    // `'s'` and `'S'` are one key; treating them apart let CapsLock change which hotkey fired.
     expect(matchesHotkey(makeEvent('s'), 'S')).toBe(true);
     expect(matchesHotkey(makeEvent('S'), 's')).toBe(true);
     expect(matchesHotkey(makeEvent('S', { shiftKey: true }), 'S')).toBe(false);
@@ -153,9 +143,7 @@ test.describe('matchesHotkey', () => {
 
 test.describe('matchesHotkey — Shift + letter', () => {
   test('matches the uppercase key the browser reports when Shift is held', () => {
-    // `Key.A` is `'a'` because that is what `KeyboardEvent.key` reports *without* Shift.
-    // With Shift held the browser reports `'S'`, so a literal comparison against the
-    // declared `'s'` can never match and a `Shift+<letter>` hotkey silently never fires.
+    // With Shift held the browser reports `'S'`, so a literal compare never fires `Shift+<letter>`.
     expect(matchesHotkey(makeEvent('S', { shiftKey: true }), 'Shift+s')).toBe(true);
   });
 
@@ -166,8 +154,7 @@ test.describe('matchesHotkey — Shift + letter', () => {
   });
 
   test('still requires the declared modifiers exactly', () => {
-    // The case-insensitive comparison must not turn `'s'` into "any S press": Shift is not
-    // declared here, so a shifted press is a different hotkey.
+    // Case-insensitivity must not mean "any S press": Shift undeclared is a different hotkey.
     expect(matchesHotkey(makeEvent('S', { shiftKey: true }), 's')).toBe(false);
     expect(matchesHotkey(makeEvent('s'), 'Shift+s')).toBe(false);
   });

@@ -3,18 +3,10 @@ import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frame
 import { createModalStore } from '../modal-store.js';
 import type { AwaitedClose } from '../types.js';
 
-/**
- * Unit coverage for the modal state machine.
- *
- * The store is the whole of `useModal`'s logic with React removed, so every transition here
- * is assertable without a browser, a component, or a `<dialog>`. Component tests exercise
- * these paths too, but only in combination — a broken edge shows up there as a mysterious
- * UI symptom, and here as one failing line.
- *
- * The store schedules its own animation frame, so these tests install a controllable
- * `requestAnimationFrame` rather than a real one: frames advance only when the test says so,
- * which is what makes the "close cancels a pending open frame" assertions deterministic.
- */
+// The modal state machine — `useModal`'s logic with React removed, so every transition is
+// assertable without a browser. The store schedules its own animation frame, so these tests
+// install a controllable `requestAnimationFrame`: frames advance only when the test says so,
+// which is what makes the "close cancels a pending open frame" assertions deterministic.
 
 let frames: FrameControl;
 
@@ -25,8 +17,6 @@ test.beforeEach(() => {
 test.afterEach(() => {
   frames.restore();
 });
-
-// ── Opening ──────────────────────────────────────────────────────────────────
 
 test.describe('createModalStore — opening', () => {
   test('starts closed and idle', () => {
@@ -81,7 +71,7 @@ test.describe('createModalStore — opening', () => {
     store.beginOpen(() => {
       settled = true;
     });
-    // Regression: this used to hang, because no further transition was coming to release it.
+    // No further transition is coming to release it, so it settles here rather than hanging.
     expect(settled).toBe(true);
   });
 
@@ -126,8 +116,6 @@ test.describe('createModalStore — opening', () => {
     expect(store.getSnapshot().phase).toBe('opening');
   });
 });
-
-// ── Closing ──────────────────────────────────────────────────────────────────
 
 test.describe('createModalStore — closing', () => {
   test('close records the reason and enters the closing phase', () => {
@@ -210,9 +198,8 @@ test.describe('createModalStore — closing', () => {
       settled.push(result);
     });
 
-    // The modal is torn down having never opened. Without this, the promise returned by
-    // the resolver stays pending for the life of the process: the awaiting code never
-    // resumes and the resolver keeps its closure alive.
+    // Torn down having never opened: without this the promise stays pending for the life of the
+    // process, the awaiting code never resumes and the resolver keeps its closure alive.
     store.abandon();
 
     expect(settled).toHaveLength(1);
@@ -227,8 +214,7 @@ test.describe('createModalStore — closing', () => {
     store.close('confirm');
     store.finalize();
 
-    // a resolver registered after a close waits for the *next* one. When that never comes,
-    // it must report abandonment rather than replay the retained 'confirm' result.
+    // Waiting for the *next* close, this must report abandonment, not replay the retained result.
     const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
@@ -278,9 +264,7 @@ test.describe('prepareSignal', () => {
 
     store.close('dismiss');
 
-    // Not at `finalize()`: nobody is waiting for that request the moment the dialog starts
-    // leaving, so holding the abort until the exit animation ends would keep it in flight for
-    // the whole 200ms for no one.
+    // Not at `finalize()`: nobody waits on it once the exit begins, so 200ms in flight for no one.
     expect(signal.aborted).toBe(true);
   });
 
@@ -294,8 +278,7 @@ test.describe('prepareSignal', () => {
     store.beginOpen();
     const second = store.prepareSignal();
 
-    // Inheriting the old controller would cancel the new load before it began — the failure this
-    // separation exists to make impossible.
+    // Inheriting the old controller would cancel the new load before it began.
     expect(first.aborted).toBe(true);
     expect(second.aborted).toBe(false);
     expect(second).not.toBe(first);
@@ -317,13 +300,8 @@ test.describe('prepareSignal', () => {
   });
 });
 
-/**
- * The invariant `openAndWait` exists to satisfy — and the reason `addCloseResolver` is internal.
- *
- * A resolver answers the *next* close. Registered after one has already landed it waits for a
- * close that will never come: no error, no timeout, nothing in the console. The public surface
- * therefore never lets a caller choose the order — `openAndWait` registers first, always.
- */
+// Why `addCloseResolver` is internal: a resolver answers the *next* close, so one registered after
+// one has landed waits forever with no error, no timeout, nothing. `openAndWait` registers first.
 test.describe('close resolvers and the order they must be registered in', () => {
   test('a resolver registered after the close never settles', async () => {
     const store = createModalStore<void, 'ok'>('resolver-late');

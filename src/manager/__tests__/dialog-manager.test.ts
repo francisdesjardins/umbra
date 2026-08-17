@@ -10,10 +10,9 @@ import {
 } from '../dialog-manager.js';
 
 /**
- * The `DocumentEventMap` augmentation is written with string literals, because an interface
- * key cannot be a computed `typeof MODAL_OPEN_EVENT`. Indexing the map *through* the constants
- * is what ties the two together: rename an event and one of these stops resolving, which is a
- * type error rather than a listener that silently falls back to a bare `Event`.
+ * `DocumentEventMap` is augmented with string literals — an interface key cannot be a computed
+ * `typeof MODAL_OPEN_EVENT`. Indexing the map *through* the constants ties the two together: a
+ * renamed event stops resolving, a type error rather than a listener falling back to bare `Event`.
  */
 type Equals<A extends B, B extends C, C = A> = A;
 
@@ -27,9 +26,8 @@ export type _CloseEventIsMapped = Equals<
 >;
 
 /**
- * Minimal stand-in for the modal store, satisfying the manager's
- * `RegisteredStore` contract. `transition()` drives the phase machine the way
- * the real store does (including retaining the close reason through 'closed').
+ * Minimal stand-in for the modal store, satisfying `RegisteredStore`. `transition()` drives the
+ * phase machine as the real store does, including retaining the close reason through 'closed'.
  */
 function createFakeStore() {
   const listeners = new Set<() => void>();
@@ -45,8 +43,7 @@ function createFakeStore() {
   };
 
   return {
-    // The manager's port includes a one-shot close resolver, so `requestOpenAndWait` can hand
-    // back a close it does not own. The fake drains its queue from `close`, like the real store.
+    // A one-shot close resolver, so `requestOpenAndWait` can hand back a close it does not own.
     addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
       closeResolvers.push(resolve);
     },
@@ -75,24 +72,19 @@ function createFakeStore() {
       };
     },
     getSnapshot: () => {
-      // Mirrors the real store: closeResult is retained through 'closed' so the
-      // manager can still read the reason when it emits its close event.
+      // Like the real store, closeResult survives 'closed' so the close event still has a reason.
       return {
         phase,
         isPreparing,
         closeResult: closeReason === undefined ? null : { reason: closeReason },
       };
     },
-    /** Test control: drive a phase transition like the real modal store does. */
     transition(next: ModalPhase, opening = false): void {
       phase = next;
       isPreparing = opening;
       notify();
     },
-    /**
-     * Test control: notify without moving the phase, the way the real store does when something
-     * the manager does not track changes — an action starting, a close resolver being added.
-     */
+    /** Test control: notify without moving the phase, as the real store does on an action start. */
     touch(): void {
       notify();
     },
@@ -101,7 +93,6 @@ function createFakeStore() {
 
 type FakeStore = ReturnType<typeof createFakeStore>;
 
-/** Drive a registered store through the full opening sequence. */
 function openFully(store: FakeStore): void {
   store.beginOpen();
   store.transition('open', true);
@@ -112,8 +103,7 @@ const realNow = Date.now;
 
 test.describe('createDialogManager', () => {
   test.beforeEach(() => {
-    // Deterministic, strictly increasing openedAt timestamps — registrations
-    // in the same real millisecond would otherwise tie in stack ordering.
+    // Deterministic, increasing openedAt — same-millisecond registrations would tie in stack order.
     let t = 1_000;
     Date.now = () => {
       return ++t;
@@ -187,11 +177,8 @@ test.describe('createDialogManager', () => {
   });
 
   test('unregistering an open dialog reports the close, so nothing outside leaks', () => {
-    // A dialog torn down while open is a close that no observer would otherwise hear: `close()`
-    // is never called, so the phase never reaches `'closed'` and neither the subscription nor the
-    // document event fires. Anything counting opens from outside — a coexistence bridge pushing
-    // onto a shared stack, a shell disabling its shortcuts while a modal is up — is then stuck
-    // one open ahead, permanently, with nothing on screen to explain it.
+    // A dialog torn down while open never calls `close()`, so the phase never reaches `'closed'`
+    // and nothing fires — anything counting opens from outside is stuck one ahead, permanently.
     const dm = createDialogManager();
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
@@ -208,14 +195,11 @@ test.describe('createDialogManager', () => {
       { type: 'open', id: 'm' },
       { type: 'close', id: 'm', reason: 'dismiss' },
     ]);
-    // The `modal:close` document event goes out on the same branch; there is no DOM in this
-    // project, so it is checked where its absence actually hurt — `complib-bridge.ct.tsx`, whose
-    // shared stack is what leaks when it does not fire.
+    // The `modal:close` event shares this branch; no DOM here, so see `complib-bridge.ct.tsx`.
   });
 
   test('unregistering a closed dialog reports nothing', () => {
-    // The ordinary path: a modal that closed and then unmounted has already been reported, and a
-    // second close would put the same observers one *behind*.
+    // A modal that closed then unmounted is already reported; a second close puts observers behind.
     const dm = createDialogManager();
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
@@ -263,21 +247,16 @@ test.describe('createDialogManager', () => {
   });
 
   test('the lookup answers for a dialog that is not open, rather than for nothing', () => {
-    // The empty-state half of the same two questions, and the one a consumer hits first: a
-    // component asks `isForeground` before anything has opened, and asks `getZIndex` to style a
-    // dialog it is about to show. Neither may answer `undefined` — one feeds a boolean prop and
-    // the other a CSS value, and `z-index: undefined` is a dialog with no stacking at all.
+    // `isForeground` feeds a boolean prop and `getZIndex` a CSS value — `undefined` is no stacking.
     const dm = createDialogManager();
     const registered = createFakeStore();
     dm.register('registered', { store: registered });
 
-    // Nothing open at all: there is no foreground, and the question still has an answer.
     expect(dm.getSnapshot().foreground).toBeUndefined();
     expect(dm.lookup().isForeground('registered')).toBe(false);
     expect(dm.lookup().isForeground('never-registered')).toBe(false);
 
-    // A closed dialog sits at the base rather than off the bottom of the stack, so a dialog
-    // styled from this before it opens does not jump when it does.
+    // A closed dialog sits at the base, so one styled from this before it opens does not jump.
     expect(dm.getZIndex('registered')).toBe(dm.zIndexBase);
     expect(dm.getZIndex('never-registered')).toBe(dm.zIndexBase);
 
@@ -358,9 +337,7 @@ test.describe('createDialogManager', () => {
   });
 
   test('unregistering an id that was never registered is a safe no-op', () => {
-    // The teardown path a binding runs unconditionally: an effect that never got as far as
-    // registering still unregisters on cleanup, and must not take the reporting branch below —
-    // an unknown id has no open to report.
+    // An effect that never registered still unregisters on cleanup — no open to report.
     const dm = createDialogManager();
     const events: DialogManagerEvent[] = [];
     dm.subscribe((event) => {
@@ -374,9 +351,7 @@ test.describe('createDialogManager', () => {
   });
 
   test('lookup().isVisible asks the snapshot, not the registry', () => {
-    // The collection-level query, distinct from `lookup(id).isVisible`: this one reads
-    // `openDialogs`, so a registered-but-closed modal is absent from it rather than reported
-    // closed. Both spellings exist and only one of them was exercised.
+    // Unlike `lookup(id).isVisible`, this reads `openDialogs` — a closed modal is absent from it.
     const dm = createDialogManager();
     const open = createFakeStore();
     const idle = createFakeStore();
@@ -395,10 +370,8 @@ test.describe('createDialogManager', () => {
   });
 
   test('a store notification that moves no phase is not a transition', () => {
-    // The manager subscribes to the whole store, but only phase and `isPreparing` concern it —
-    // everything else a store notifies about (an action starting, a resolver queued) must not
-    // re-emit an open. Without the guard, a modal with a running action reports one open per
-    // keystroke to anything counting them.
+    // Only phase and `isPreparing` concern the manager; without the guard a modal with a running
+    // action reports one open per keystroke to anything counting them.
     const dm = createDialogManager();
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];

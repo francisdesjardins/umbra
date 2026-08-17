@@ -94,10 +94,8 @@ test.describe('useModal', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('modal-reopen-modal')).toBeVisible();
     await expect(page.getByTestId('settle-count')).toHaveText('1');
-    // Second open() while already open must resolve, not hang forever.
     await page.getByRole('button', { name: 'Reopen' }).click();
     await expect(page.getByTestId('settle-count')).toHaveText('2');
-    // The modal stays open and functional.
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByTestId('modal-reopen-modal')).not.toBeVisible();
   });
@@ -114,9 +112,7 @@ test.describe('useModal', () => {
     await mount(<OpenAndWaitOrderingHarness />);
     await page.getByTestId('open-and-wait').click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
-    // Dismissed before `prepare` ever settles — the window a close resolver registered on the
-    // line *after* the open would fall into, waiting for a close that already happened. The
-    // store-side invariant that makes that a real hazard is in `modal-store.test.ts`.
+    // Dismissed before `prepare` settles: a resolver registered after the open waits forever.
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('outcome')).toHaveText('settled:dismiss');
   });
@@ -188,7 +184,6 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Click on the outside button — should work and NOT close the dialog
     await page.getByTestId('outside-button').click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -199,7 +194,6 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('modal-non-modal-dialog')).toBeVisible();
 
-    // Focus the dialog content, then press Escape
     await page.getByRole('button', { name: 'Confirm' }).focus();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -219,7 +213,6 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open First' }).click();
     await expect(page.getByTestId('modal-non-modal-first')).toBeVisible();
 
-    // Open second from inside the first
     await page.getByRole('button', { name: 'Open Second' }).click();
     await expect(page.getByTestId('modal-non-modal-second')).toBeVisible();
 
@@ -231,7 +224,6 @@ test.describe('useModal — nonModal', () => {
     );
     expect(secondZ).toBeGreaterThan(firstZ);
 
-    // Body scroll should not be locked
     await expect(page.getByTestId('body-overflow')).toHaveText('free');
   });
 
@@ -249,7 +241,6 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('modal-non-modal-dialog')).toBeVisible();
 
-    // Move focus outside the dialog
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Escape');
 
@@ -262,14 +253,12 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-esc-isolation-panel')).toBeVisible();
 
-    // Focus an element outside the dialog
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Escape');
 
-    // Panel should be closed
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
-    // ESC must not have leaked to the document bubble listener
+    // The press must not reach the document bubble listener.
     await expect(page.getByTestId('leak-count')).toHaveText('0');
   });
 
@@ -278,16 +267,13 @@ test.describe('useModal — nonModal', () => {
     await page.getByRole('button', { name: 'Open First' }).click();
     await expect(page.getByTestId('modal-non-modal-first')).toBeVisible();
 
-    // Open second from inside first
     await page.getByRole('button', { name: 'Open Second' }).click();
     await expect(page.getByTestId('modal-non-modal-second')).toBeVisible();
 
-    // ESC should close only the topmost (second)
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('modal-non-modal-second')).not.toBeVisible();
     await expect(page.getByTestId('modal-non-modal-first')).toBeVisible();
 
-    // ESC again should close the first
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('modal-non-modal-first')).not.toBeVisible();
   });
@@ -299,11 +285,9 @@ test.describe('useModal — dismissKey', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Escape should NOT close — dismissKey is Delete
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Delete should close with 'dismiss'
     await page.keyboard.press('Delete');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
@@ -320,7 +304,6 @@ test.describe('useModal — dismissKey', () => {
     await page.keyboard.press('Delete');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Only the explicit Close button works
     await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('close');
@@ -334,12 +317,11 @@ test.describe('useModal — dismissKey', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Focus outside and press Delete — should close
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Delete');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
-    // Delete must not have leaked to the document bubble listener
+    // The press must not reach the document bubble listener.
     await expect(page.getByTestId('leak-count')).toHaveText('0');
   });
 
@@ -429,16 +411,13 @@ test.describe('useModal — portal', () => {
     await page.getByRole('button', { name: 'Open', exact: true }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Flip `portal` while open — the dialog must remount into a new structure, so the
-    // modal has to close rather than leave a stuck, still-open dialog blocking the page.
+    // A remount into a new structure must close, not leave a stuck dialog blocking the page.
     await page.getByTestId('toggle-portal').click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
-    // Exactly one dialog element, and it is not open.
     await expect(page.getByTestId('modal-structural-toggle')).toHaveCount(1);
     await expect(page.getByTestId('modal-structural-toggle')).not.toBeVisible();
 
-    // And it can be reopened (state fully reset).
     await page.getByRole('button', { name: 'Open', exact: true }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('modal-structural-toggle')).toBeVisible();
@@ -454,7 +433,6 @@ test.describe('useModal — dismissWhilePreparing', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
 
-    // Focus inside the dialog, then press ESC — must be blocked while prepare runs
     await page.getByTestId('resolve-loading').focus();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -469,11 +447,9 @@ test.describe('useModal — dismissWhilePreparing', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
 
-    // Resolve loading
     await page.getByTestId('resolve-loading').click();
     await expect(page.getByTestId('loading-state')).toHaveText('ready');
 
-    // ESC now allowed
     await page.getByTestId('resolve-loading').focus();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -488,7 +464,6 @@ test.describe('useModal — dismissWhilePreparing', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('loading-state')).toHaveText('loading');
 
-    // ESC during loading — default is true, so dismiss is allowed
     await page.getByRole('button', { name: 'Confirm' }).focus();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -502,7 +477,6 @@ test.describe('useModal — dismissOnClickOutside', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Click outside the dialog
     await page.getByTestId('outside-button').click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
@@ -513,7 +487,6 @@ test.describe('useModal — dismissOnClickOutside', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Click inside the dialog content
     await page.getByText('Click outside to dismiss').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
@@ -535,7 +508,6 @@ test.describe('useModal — dismissOnClickOutside', () => {
     await page.getByTestId('outside-button').click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
-    // Reopen
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
   });
@@ -574,16 +546,13 @@ test.describe('useModal — backdrop click hit testing', () => {
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // Enter on a focused button dispatches a click at (0, 0) — outside the dialog's
-    // rect. Only the target check keeps it from reading as a backdrop dismissal.
+    // Enter dispatches a click at (0, 0), outside the dialog's rect; only the target check saves it.
     await page.getByTestId('content-button').focus();
     await page.keyboard.press('Enter');
 
     await expect(page.getByTestId('activated')).toHaveText('yes');
 
-    // `is-visible` reports `phase !== 'closed'`, so it still reads 'open' for the whole
-    // exit animation — asserting it immediately would pass even on a dismissal that
-    // is already under way. Settle past the exit duration first, then assert.
+    // `is-visible` is `phase !== 'closed'`, so settle past the exit or a dismissal under way passes.
     await page.waitForTimeout(400);
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('last-reason')).toHaveText('');
@@ -618,10 +587,8 @@ test.describe('useModal — backdrop click hit testing', () => {
     mount,
     page,
   }) => {
-    // The cached answer decides how the close path finalizes: immediately, or after waiting
-    // for a `transitionend`. Caching it for the element's lifetime means a modal whose
-    // transitions are switched off between opens still waits for an event that can never
-    // fire, and only finalizes on the safety timeout — which logs this warning.
+    // The answer decides whether the close finalizes at once or on `transitionend`; cached per
+    // element, transitions switched off between opens leave it on the safety timeout, which warns.
     const warnings: string[] = [];
     page.on('console', (message) => {
       if (message.text().includes('Animation fallback timeout')) {
@@ -656,9 +623,7 @@ test.describe('a non-modal panel and the page keyboard', () => {
     mount,
     page,
   }) => {
-    // Claiming the key when the panel closes is right — the app should not also react to the
-    // press that closed it. Claiming it and then declining to close is not: the key is gone
-    // and nothing happened, which in an app with its own shortcuts reads as a dead keyboard.
+    // Claiming the key and then declining to close is a dead keyboard: gone, and nothing happened.
     await mount(<KeyPassthroughHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('panel-preparing')).toHaveText('preparing');
@@ -687,9 +652,7 @@ test.describe('ESC does not depend on where focus is', () => {
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
     await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
 
-    // Focus outside the dialog is ordinary: `showModal()` has nowhere to put it when nothing
-    // in the content is focusable, and content that swaps after opening (a loading panel
-    // giving way to the real thing) drops whatever held it. Reproduced directly here.
+    // Focus outside is ordinary: nothing focusable in the content, or content that swapped after open.
     await page.evaluate(() => {
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
@@ -711,9 +674,7 @@ test.describe('ESC does not depend on where focus is', () => {
     mount,
     page,
   }) => {
-    // The failure this guards: the browser's own cancel closes the `<dialog>` behind the
-    // store's back. The element keeps rendering — but out of the top layer, so it reappears
-    // wherever it sits in the tree, backdrop gone.
+    // A native cancel behind the store's back leaves the element rendering out of the top layer.
     await mount(<EscWithoutFocusHarness />);
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
     await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
@@ -740,10 +701,7 @@ test.describe('ESC does not depend on where focus is', () => {
 
 test.describe('focus survives a failed action', () => {
   test('the hotkey still fires on the retry', async ({ mount, page }) => {
-    // The failure this guards: the action's button is the autofocus target and goes `disabled`
-    // while it runs, so focus lands on `<body>`. Restoring it in the same tick the engine
-    // reports the failure focuses a button React has not re-enabled yet — a silent no-op that
-    // leaves the modal with no keyboard at all.
+    // The autofocus target goes `disabled` mid-action, so a same-tick restore silently no-ops.
     await mount(<ActionErrorHotkeyRetryHarness />);
     await page.getByRole('button', { name: 'Open Retry' }).click();
     await expect(page.getByTestId('retry-is-visible')).toHaveText('open');
@@ -752,9 +710,7 @@ test.describe('focus survives a failed action', () => {
     await expect(page.getByTestId('retry-error')).toHaveText('Save failed');
     await expect(page.getByTestId('retry-attempts')).toHaveText('1');
 
-    // Polled, not read once: the restore is deliberately deferred to the next animation frame —
-    // that delay *is* the fix — while the assertion above settles as soon as React commits the
-    // attempt count. Reading synchronously here raced that frame and failed about one run in ten.
+    // Polled: the restore is deferred a frame (that delay *is* the fix); reading once flaked.
     await expect
       .poll(() => {
         return page.evaluate(() => {
@@ -772,11 +728,9 @@ test.describe('focus survives a failed action', () => {
     mount,
     page,
   }) => {
-    // **The gate on the director's granularity.** The focus step's attachment is what remembers
-    // that an action is running; rebuild it while one does and the settle goes unrecognised. A
-    // director keyed on the union of every step's inputs would do exactly that here, because
-    // `onKeyDown` is an inline arrow and an action starting is itself a render. See
-    // `core/modal-director.ts`.
+    // **The gate on the director's granularity** (`core/modal-director.ts`): the focus step's
+    // attachment remembers a running action, and a director keyed on every step's inputs would
+    // rebuild it here — `onKeyDown` being an inline arrow and an action starting a render.
     await mount(<VolatileKeyDownHarness />);
     await page.getByRole('button', { name: 'Open Volatile' }).click();
     await expect(page.getByTestId('volatile-is-visible')).toHaveText('open');
@@ -784,15 +738,12 @@ test.describe('focus survives a failed action', () => {
     const save = page.getByTestId('volatile-save');
     await expect(save).toBeFocused();
     await save.click();
-    // The action's own completion, not its busy state: a 20ms action can settle between two polls
-    // and `data-loading` is never observed — which is a flake in the test rather than a finding.
+    // Its completion, not its busy state: a 20 ms action can settle between two polls.
     await expect(page.getByTestId('volatile-settled')).toHaveText('1');
     // …and it re-rendered while it ran, which is what hands `useModal` a new `onKeyDown`.
     await expect(page.getByTestId('volatile-renders')).toHaveText('1');
 
-    // **On the button, not merely inside the dialog** — and that is the whole discrimination. The
-    // broken variant leaves focus on the `<dialog>` itself, which a `contains` check accepts. The
-    // restore is deferred a frame on purpose, so this polls rather than reads once.
+    // **On the button, not merely inside**: the broken variant leaves focus on the `<dialog>`.
     await expect
       .poll(() => {
         return page.evaluate(() => {
@@ -811,15 +762,13 @@ test.describe('the styling surface', () => {
     await mount(<StylingSurfaceHarness />);
     await page.getByRole('button', { name: 'Open Sized' }).click();
 
-    // One selector reaches one dialog, by the id its author gave it — no test id, no class
-    // the consumer has to invent, no knowledge of where in the tree it renders.
+    // One selector, by the id its author gave it — no test id, no class, no knowledge of the tree.
     await expect(page.locator('dialog[data-modal-id="styling-surface"]')).toBeVisible();
     await expect(page.locator('dialog[data-modal-id="styling-surface"]')).toHaveAttribute(
       'data-modal-type',
       'modal'
     );
-    // And the variant attribute pairs with it: `dialog[data-modal-type='non-modal']` is every
-    // non-modal dialog at once.
+    // The variant attribute pairs with it: `dialog[data-modal-type='non-modal']` reaches all at once.
     await expect(page.locator('dialog[data-modal-id="styling-surface-slide"]')).toHaveCount(1);
   });
 
@@ -842,8 +791,7 @@ test.describe('the styling surface', () => {
     await mount(<StylingSurfaceHarness />);
     await page.getByRole('button', { name: 'Open Sized' }).click();
 
-    // Computed, not measured: a bounding box during the entrance transition reports the
-    // animated transform, which is the animation's answer rather than the style's.
+    // Computed, not measured: a bounding box mid-entrance reports the animated transform.
     const size = await page.locator('dialog[data-modal-id="styling-surface"]').evaluate((node) => {
       const style = getComputedStyle(node);
       return { width: style.width, height: style.height };
@@ -862,8 +810,7 @@ test.describe('the styling surface', () => {
       const computed = getComputedStyle(node);
       return { width: computed.width, left: computed.left, height: computed.height };
     });
-    // The caller's width won; the template's left-edge placement and full height survived the
-    // merge, which is the whole point of merging rather than replacing.
+    // The caller's width won, the template's left edge and full height survived: merged, not replaced.
     expect(style.width).toBe('240px');
     expect(style.left).toBe('0px');
     expect(style.height).not.toBe('240px');
@@ -913,8 +860,7 @@ test.describe('aria-busy while prepare runs', () => {
 
     const dialog = page.locator('dialog[data-modal-id="busy-slow"]');
     await expect(dialog).toBeVisible();
-    // Asserted alongside the hook's own `isPreparing`, so the test cannot pass on a dialog that
-    // never got as far as preparing anything.
+    // Alongside `isPreparing`, so this cannot pass on a dialog that never got as far as preparing.
     await expect(page.getByTestId('slow-preparing')).toHaveText('preparing');
     await expect(dialog).toHaveAttribute('aria-busy', 'true');
 
@@ -924,8 +870,7 @@ test.describe('aria-busy while prepare runs', () => {
   });
 
   test('a modal with no prepare is not busy to begin with', async ({ mount, page }) => {
-    // The off state is written rather than merely absent, so it is assertable — which is what
-    // stops "never busy" and "busy forever" from looking the same to a test.
+    // Written, not merely absent, so "never busy" and "busy forever" cannot look the same.
     await mount(<BusyWhilePreparingHarness />);
     await page.getByRole('button', { name: 'Open Instant' }).click();
 
@@ -943,8 +888,7 @@ test.describe('prepare is told when the modal goes away', () => {
 
     await page.keyboard.press('Escape');
 
-    // The promise only ever settles through the signal, so this text is the abort firing and
-    // nothing else. Without it the request would outlive the dialog that asked for it.
+    // The promise settles only through the signal, so this text is the abort firing and nothing else.
     await expect(component.getByTestId('outcome')).toHaveText('aborted');
   });
 
@@ -959,8 +903,7 @@ test.describe('prepare is told when the modal goes away', () => {
     await expect(component.getByTestId('aborts')).toHaveText('1');
 
     await component.getByRole('button', { name: 'Open' }).click();
-    // Loading again rather than still 'aborted': the second open is not holding the first
-    // controller, which is what would make a reopened dialog abort itself instantly.
+    // Loading, not still 'aborted': holding the first controller would abort a reopen instantly.
     await expect(component.getByTestId('outcome')).toHaveText('loading');
 
     await page.keyboard.press('Escape');
@@ -998,8 +941,7 @@ test.describe('modals working together', () => {
   });
 
   test('a hotkey fires on the modal in front, and only there', async ({ mount, page }) => {
-    // All three declare Enter. The message modal is in front, so its action is the only one
-    // that may run — the modals underneath hold the same key for their own meaning.
+    // All three declare Enter; only the front one may run it.
     await mount(<StackedModalsHarness />);
     await openAllThree(page);
 
@@ -1030,8 +972,7 @@ test.describe('a hotkey belongs to the dialog that declared it', () => {
     mount,
     page,
   }) => {
-    // The nested panel's button carries the same `aria-keyshortcuts` and comes first in
-    // document order, so an unscoped lookup finds it and runs the wrong action.
+    // The nested button holds the same `aria-keyshortcuts` and comes first in document order.
     await mount(<NestedHotkeyScopeHarness />);
     await page.getByRole('button', { name: 'Open Outer' }).click();
     await page.getByTestId('nested-open-inner').click();
@@ -1055,8 +996,8 @@ test.describe('the mouse across a stack', () => {
     await page.getByTestId('panel-open-middle').click();
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
-    // A click in the corner lands on the modal's backdrop. The panel dismisses on click-outside
-    // and nothing blocks the pointer for it — it has to stand down because it is not in front.
+    // The corner is the modal's backdrop; nothing blocks the pointer for the panel, which dismisses
+    // on click-outside — it stands down only because it is not in front.
     await page.mouse.click(20, 20);
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
@@ -1091,11 +1032,7 @@ test.describe('the stack and the no-focus Escape path', () => {
     mount,
     page,
   }) => {
-    // Focus outside an open modal is ordinary — `showModal()` has nowhere to put it when nothing
-    // in the content is focusable, and content that swaps after opening drops whatever held it.
-    // The keydown listener never hears that press; the browser's own `cancel` does, and it fires
-    // on the dialog. Nothing above suppresses it, so this is the one path where a nested stack
-    // could still collapse in a single press.
+    // With focus outside, only the native `cancel` hears the press — the one unsuppressed path.
     await mount(<StackedModalsHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
@@ -1120,25 +1057,19 @@ test.describe('focus while another modal is in front', () => {
     await mount(<FocusUnderAnotherModalHarness />);
     await page.getByRole('button', { name: 'Open Underneath' }).click();
 
-    // Start the slow save, then open the second modal over it while it is still in flight.
     await page.getByTestId('under-save').click();
     await page.getByTestId('under-open-child').click();
     await page.getByTestId('over-field').focus();
     await expect(page.getByTestId('over-field')).toBeFocused();
 
-    // The save lands. The modal underneath restores focus when its action settles — but the
-    // user is in the modal in front, and that is not its focus to move.
+    // The modal underneath restores focus when its action settles, but that is not its focus to move.
     await expect(page.getByTestId('under-done')).toHaveText('1');
     await expect(page.getByTestId('over-field')).toBeFocused();
   });
 
   test('and the guard is the library’s, not the top layer’s', async ({ mount, page }) => {
-    // The same claim between two **non-modal** panels, which is what makes it answerable here.
-    // Above, the modal in front renders the one underneath inert, so Chromium turns the restore's
-    // `focus()` into a silent no-op and that test passes whether or not the library checks anything —
-    // WebKit does not, and CI found the missing check as an engine difference. Nothing is inert here,
-    // so a restore that forgot to ask whether it is in front really does steal the keyboard, on every
-    // engine.
+    // Two **non-modal** panels: above, inertness makes Chromium no-op the restore's `focus()` so the
+    // test passes either way, while WebKit does not. Nothing is inert here, so every engine steals.
     await mount(<RestoreNotInFrontHarness />);
     await page.getByTestId('open-behind').click();
 
@@ -1157,11 +1088,8 @@ test.describe('a contained dialog covers its host rather than displacing it', ()
     mount,
     page,
   }) => {
-    // The failure this guards: the host the library renders is a `height: 100%` block, so in
-    // normal flow it is laid out *after* the content it was meant to cover — pushing that
-    // content out of a fixed-height, clipped region the moment the dialog opens. A detail pane
-    // sliding over a list is the ordinary use of contained placement, and it must not require
-    // the caller to discover that their list has to leave the flow.
+    // An in-flow `height: 100%` host is laid out *after* the content it should cover, pushing it out
+    // of a clipped region — a detail pane over a list must not force the list out of the flow.
     await mount(<ContainedOverlayHarness />);
     const rowBefore = await page.getByTestId('overlay-row').boundingBox();
 
@@ -1176,11 +1104,9 @@ test.describe('a contained dialog covers its host rather than displacing it', ()
 });
 
 /**
- * The runtime diagnostic for a labelling reference that resolves to nothing.
- *
- * Two of these three are dialogs it must stay **quiet** about, and they are the tests that
- * matter: a check that warned on correct code would be worse than no check, because the noise
- * lands on the people who did the work right.
+ * The runtime diagnostic for a labelling reference that resolves to nothing. Two of the three are
+ * dialogs it must stay **quiet** about, and those are the tests that matter: a check that warned on
+ * correct code lands its noise on the people who did the work right.
  */
 test.describe('the labelling diagnostic', () => {
   /** Every warning the page emitted, as text. */
@@ -1211,8 +1137,8 @@ test.describe('the labelling diagnostic', () => {
   });
 
   test('says nothing about a name its `prepare` had not rendered yet', async ({ mount, page }) => {
-    // A modal that shows a spinner while it loads is the documented normal case. Checking before
-    // `prepare` settles would report every one of them as broken.
+    // A spinner while it loads is the documented normal case; checking before `prepare` settles
+    // would report every one of them as broken.
     const warnings = warningsOn(page);
 
     await mount(<LateTitleHarness />);
@@ -1233,10 +1159,8 @@ test.describe('the labelling diagnostic', () => {
   });
 
   test('says nothing about a dialog rendered through the outlet', async ({ mount, page }) => {
-    // The path most likely to lag: `ModalOutlet` registers its node from an effect, so the content
-    // reaches the DOM a commit behind the hook that names it. Measured, the lag does not reach the
-    // check — the phase gets to `'open'` on its own frame, after the outlet has rendered — so this
-    // asserts the outcome rather than the mechanism, and would catch a future change to either.
+    // The path most likely to lag: `ModalOutlet` registers from an effect, a commit behind the hook
+    // that names it. Measured, the phase reaches `'open'` after the outlet rendered.
     const warnings = warningsOn(page);
 
     await mount(<OutletLabelHarness />);
@@ -1254,10 +1178,8 @@ test.describe('the labelling diagnostic', () => {
 
 /**
  * The intersection two well-covered halves leave open: a stack in which **nothing** answers the
- * dismiss key.
- *
- * Its own describe because it is not a test of either half — both are already pinned — but of what
- * their composition does, which is the class of gap the compatibility matrix exists to surface.
+ * dismiss key. Its own describe because both halves are already pinned; what is untested is their
+ * composition, the class of gap the compatibility matrix exists to surface.
  */
 test.describe('useModal — the dismiss key answered by nobody', () => {
   test('a deaf modal in front leaves the panel behind alone, and the press reaches the page', async ({
@@ -1268,51 +1190,40 @@ test.describe('useModal — the dismiss key answered by nobody', () => {
     await page.getByTestId('open-panel').click();
     await expect(page.getByTestId('panel-visible')).toHaveText('open');
 
-    // Opened from inside the panel's own render, which is the only place a button stays clickable
-    // once a `showModal()` dialog is up.
+    // From inside the panel's render, the only place a button stays clickable under a modal.
     await page.getByTestId('open-modal').click();
     await expect(page.getByTestId('modal-visible')).toHaveText('open');
 
     await page.keyboard.press('Escape');
 
-    // **Neither closes, and that is the right answer.** The modal in front was told not to listen,
-    // and the panel behind is no longer the foreground — dismissing it instead would close the one
-    // thing the user cannot see. A library that fell through to it would be guessing.
+    // **Neither closes**: falling through to the panel behind would close what the user cannot see.
     await expect(page.getByTestId('modal-visible')).toHaveText('open');
     await expect(page.getByTestId('panel-visible')).toHaveText('open');
     await expect(page.getByTestId('panel-reason')).toHaveText('');
     await expect(page.getByTestId('modal-reason')).toHaveText('');
 
-    // **And the press is still the page's to handle**, which is the assertion that makes "nobody
-    // answered" acceptable rather than a dead keyboard: the panel's window listener captures, so if
-    // it swallowed a press it had already declined, this bubble-phase counter would never move.
+    // **Still the page's press**: the panel's listener captures, so one it swallowed never lands here.
     await expect(page.getByTestId('presses-seen')).toHaveText('1');
 
-    // The modal still closes the way it was given to: `dismissKey: false` turns off the key, not
-    // the dialog.
+    // `dismissKey: false` turns off the key, not the dialog.
     await page.getByTestId('close-modal').click();
     await expect(page.getByTestId('modal-visible')).toHaveText('closed');
     await expect(page.getByTestId('modal-reason')).toHaveText('confirm');
 
-    // And with the front dialog gone the panel is the foreground again, so its own Escape works —
-    // the stand-down was for the duration of the stack, not a state it got stuck in.
+    // Foreground again, so the stand-down lasted the stack rather than sticking.
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('panel-visible')).toHaveText('closed');
     await expect(page.getByTestId('panel-reason')).toHaveText('dismiss');
 
-    // **Still 1**, and this is what makes the counter mean something both ways: the press
-    // that the panel *did* claim was stopped at the capture phase and never reached the page, while
-    // the one nobody claimed did. A counter that only ever went up would have been consistent with a
-    // library that swallows nothing and with one that swallows everything.
+    // **Still 1** — the claimed press was stopped at capture and the unclaimed one was not, which
+    // is what makes the counter discriminating in both directions.
     await expect(page.getByTestId('presses-seen')).toHaveText('1');
   });
 });
 
 /**
- * `reconcileOpen`, through the pattern it documents.
- *
- * The helper had a unit test over its decision table and no binding exercising it, so what nothing
- * checked was the thing it exists for: a controlled `<Panel open={…} />` on a real `<dialog>`.
+ * `reconcileOpen` through the pattern it documents — a controlled `<Panel open={…} />` on a real
+ * `<dialog>`, which its unit test over the decision table cannot reach.
  */
 test.describe('reconcileOpen — a controlled panel', () => {
   test('the prop drives the dialog, and stays authoritative over an imperative open', async ({
@@ -1329,9 +1240,8 @@ test.describe('reconcileOpen — a controlled panel', () => {
     await page.getByTestId('lower-prop').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // Opened by id with the prop still false — the case the doc calls "a dialog opened from somewhere
-    // else". The reconciliation has to put it back, or the call site is left believing a dialog on
-    // screen is closed and has no way to close it.
+    // Opened by id with the prop still false: the reconciliation has to put it back, or the call
+    // site believes a dialog on screen is closed and has no way to close it.
     await page.getByTestId('open-behind-its-back').click();
     await expect(page.getByTestId('prop')).toHaveText('false');
     await expect(page.getByTestId('phase')).toHaveText('closed');
@@ -1344,20 +1254,17 @@ test.describe('reconcileOpen — a controlled panel', () => {
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    // The dialog closes itself, `onClose` lowers the prop, and the reconciliation runs across the
-    // exit — the window in which `isVisible` and `phase` disagree, which is the whole point of the
-    // helper deciding on `phase`.
+    // `onClose` lowers the prop and the reconciliation runs across the exit — the window where
+    // `isVisible` and `phase` disagree.
     await page.getByTestId('close-from-inside').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
     await expect(page.getByTestId('prop')).toHaveText('false');
 
-    // **Still 1.** A reconciliation reading `isVisible` would have seen "prop false, dialog open"
-    // during the 120 ms exit and closed a dialog already leaving; one racing the other way would have
-    // re-opened it. Either shows up here.
+    // **Still 1.** Reading `isVisible` would see "prop false, dialog open" across the 120 ms exit
+    // and close a dialog already leaving; racing the other way would re-open it.
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    // And it is still usable afterwards: the prop opens it again, which a stuck reconciliation would
-    // not.
+    // Still usable, which a stuck reconciliation would not be.
     await page.getByTestId('raise-prop').click();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('2');
@@ -1372,16 +1279,13 @@ test.describe('reconcileOpen — a controlled panel', () => {
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('reconciliations')).toHaveText('open');
 
-    // Closes *and* lowers the prop in one handler, which is the only way to land inside the window
-    // where `phase` is `'closing'` and `isVisible` is still true — `onClose` runs when the exit
-    // finishes, so a call site that only lowers the prop there never gets there.
+    // Both in one handler, the only way into the window where `phase` is `'closing'` and
+    // `isVisible` is still true: `onClose` runs when the exit finishes.
     await page.getByTestId('close-and-lower').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // **Still just the one `open`.** A reconciliation deciding on `isVisible` reads "prop says closed,
-    // dialog says open" during those 120 ms and asks for a `close` — a second close on a dialog
-    // already leaving, which is the cut animation the helper's doc describes. Deciding on `phase`
-    // answers `'none'` because `'closing'` is neither open nor closed, so nothing is recorded here.
+    // **Still just the one `open`.** Deciding on `isVisible` would ask for a second `close` across
+    // those 120 ms (the cut animation); `'closing'` is neither, so `phase` answers `'none'`.
     await expect(page.getByTestId('reconciliations')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });
@@ -1389,11 +1293,8 @@ test.describe('reconcileOpen — a controlled panel', () => {
 
 test.describe('a dialog inside a shadow root', () => {
   test('gets the library backdrop and its opening focus', async ({ mount, page }) => {
-    // Two things a shadow boundary breaks, and both fail quietly rather than throwing:
-    // `adoptedStyleSheets` does not cross it, so the dialog would show the UA backdrop; and
-    // `document.activeElement` answers with the *host*, so a focus policy reading it concludes
-    // focus left the dialog on every check. The core asks `getRootNode()` for both — and this is
-    // React's half of that claim, which until now rested on `umbra/vanilla`'s test alone.
+    // A shadow boundary blocks `adoptedStyleSheets` (UA backdrop) and makes `document.activeElement`
+    // answer with the *host* (focus reads as gone); the core asks `getRootNode()` for both.
     await mount(<ShadowRootHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -1418,12 +1319,9 @@ test.describe('a dialog inside a shadow root', () => {
 });
 
 /**
- * `onError` — the two userland failures with nowhere else to go.
- *
- * Its own describe because the option is not about rendering: it reports a callback of the
- * caller's that threw, and the point is that everything else carries on. Each assertion pair is
- * "the failure was reported" **and** "the modal settled anyway" — checking only the first would
- * pass on an implementation that left the dialog stuck announcing itself busy.
+ * `onError` — a caller's callback that threw, reported while everything else carries on. Each
+ * assertion pair is "the failure was reported" **and** "the modal settled anyway"; the first alone
+ * would pass on a dialog left stuck announcing itself busy.
  */
 test.describe('onError', () => {
   test('a prepare that throws is reported, and the modal still settles', async ({
@@ -1438,8 +1336,8 @@ test.describe('onError', () => {
     await expect(component.getByTestId('pf-sources')).toHaveText('prepare');
     await expect(component.getByTestId('pf-message')).toHaveText('report is unavailable');
 
-    // The half that was invisible: without `onError` the state below is all a caller could see,
-    // and it reads as success. A report, not a veto.
+    // Without `onError` the state below is all a caller sees, and it reads as success: a report,
+    // not a veto.
     await expect(component.getByTestId('pf-visible')).toHaveText('open');
     await expect(component.getByTestId('pf-preparing')).toHaveText('ready');
     await expect(page.locator('dialog[data-modal-id="prepare-failure"]')).toHaveAttribute(

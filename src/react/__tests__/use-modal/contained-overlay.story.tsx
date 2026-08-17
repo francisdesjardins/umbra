@@ -1,15 +1,10 @@
 import { useModal } from '../../use-modal.js';
 
 /**
- * A contained dialog opening over content that is already in its host.
- *
- * This is the ordinary shape — a detail pane sliding over the list it belongs to — and the one
- * the "provide a sized, positioned host" rule does not say anything about: the host the library
- * renders is a `height: 100%` block, so in normal flow it lands *after* whatever it was meant to
- * cover and pushes it out of a fixed-height box.
- *
- * The list below is deliberately laid out in the ordinary way (in flow), because that is what a
- * caller writes before they know otherwise.
+ * A contained dialog opening over content already in its host — a detail pane over its list. The
+ * case "provide a sized, positioned host" does not cover: the library's host is a `height: 100%`
+ * block, so in normal flow it lands after what it was meant to cover and pushes it out of a
+ * fixed-height box. The row below is laid out in flow, the way a caller writes it first.
  */
 export function ContainedOverlayHarness() {
   const { open, isVisible, Modal } = useModal<void, 'close'>({
@@ -44,13 +39,10 @@ export function ContainedOverlayHarness() {
         Open Contained
       </button>
       <span data-testid="overlay-is-visible">{isVisible ? 'open' : 'closed'}</span>
-      {/* The host region: sized and positioned, as the contract requires. */}
       <div
         data-testid="overlay-host"
         style={{ position: 'relative', height: 200, overflow: 'hidden', border: '1px solid' }}
       >
-        {/* Fills the region, the way a list inside a card does — which is when the host block
-            added after it has nowhere left to go. */}
         <div data-testid="overlay-row" style={{ height: '100%' }}>
           A row the panel is supposed to cover
         </div>

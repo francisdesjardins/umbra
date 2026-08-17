@@ -7,13 +7,8 @@ import {
 } from '../modal-director.js';
 import { sameInputs } from '../step-runner.js';
 
-/**
- * The director's framework-free half: which step reads what, and what counts as unchanged.
- *
- * The executor is `step-runner.ts`'s and is tested there, against a table of its own — what is
- * left here is the part that is about modals: which step reads what, which is where the design's
- * one real hazard lives.
- */
+// The director's framework-free half: which step reads what, and what counts as unchanged. The
+// executor is `step-runner.ts`'s and tested there; what a step reads is where the hazard lives.
 
 const BASE: ModalLifecyclePass = {
   phase: 'open',
@@ -41,12 +36,10 @@ function inputsOf(step: ModalLifecycleStep, pass: ModalLifecyclePass): readonly 
   return spec.inputs === null ? null : spec.inputs(pass);
 }
 
-/** Whether this step would be rebuilt going from one pass to the next. */
 function rebuilds(step: ModalLifecycleStep, next: Partial<ModalLifecyclePass>): boolean {
   const before = inputsOf(step, BASE);
   if (before === null) {
-    // A step with no inputs runs on every pass and is never torn down, so "rebuilt" does not
-    // apply — the tests below never ask it of one.
+    // A step with no inputs runs every pass and is never torn down, so it is never asked below.
     throw new Error(`${step} runs on every pass`);
   }
   return !sameInputs(before, inputsOf(step, { ...BASE, ...next }) ?? []);
@@ -60,19 +53,15 @@ test.describe('what each step reads', () => {
   });
 
   test('focus.sync reads the phase and nothing else', () => {
-    // **The design's one real hazard, as a gate.** This step's attachment owns `wasRunning`, the
-    // flag that recognises an action settling and gives focus back to the button that ran it.
-    // Widen this list and the step is rebuilt mid-action — `hasRunningAction` flipping forces a
-    // render, and a caller's inline `onKeyDown` arrow gets a new identity on every one of them —
-    // so the settle is not recognised and focus is never restored. That is the WebKit focus bug's
-    // exact shape, and no test in this repo would fail on it. This one does.
+    // **The one real hazard, as a gate.** This attachment owns `wasRunning`, which recognises an
+    // action settling and gives focus back. Widen the list and the step is rebuilt mid-action —
+    // a caller's inline arrow re-identifies each render — so the settle is missed: the WebKit bug.
     expect(inputsOf('focus.sync', BASE)).toEqual(['open']);
 
     expect(rebuilds('focus.sync', { phase: 'closing' })).toBe(true);
     for (const changed of [
       { onKeyDown: () => {} },
-      // The same hazard from a second direction: `onDismissRequest` is the option a *controlled*
-      // surface passes, and a controlled surface re-renders on its owner's state.
+      // The same hazard from a second direction: a *controlled* surface re-renders on its owner.
       { onDismissRequest: () => {} },
       { isPreparing: true },
       { dismissKey: 'Enter' },
@@ -91,15 +80,13 @@ test.describe('what each step reads', () => {
   });
 
   test('the labelling diagnostic comes back when prepare settles', () => {
-    // A phase-only key would never re-ask: the check stays quiet while `prepare` runs, because a
-    // name may point at a heading the caller has not been able to render yet.
+    // A phase-only key would never re-ask: a name may point at a heading `prepare` has not drawn.
     expect(rebuilds('syncLabellingDiagnostics', { isPreparing: true })).toBe(true);
   });
 
   test('the three keydown listeners read exactly the same thing', () => {
-    // They share an option object to the letter, so a difference here would mean one of them
-    // re-attaching without the others — three listeners disagreeing about which dismiss key is
-    // live.
+    // They share an option object to the letter, so a difference means one re-attaching without
+    // the others — three listeners disagreeing about which dismiss key is live.
     const keydown = [
       'attachDialogKeydown',
       'attachDialogCancel',
@@ -111,16 +98,14 @@ test.describe('what each step reads', () => {
     }
     expect(rebuilds('attachDialogKeydown', { onKeyDown: () => {} })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { dismissKey: false })).toBe(true);
-    // The listeners are what call it, so a new handler has to reach them — an owner whose
-    // `onDismissRequest` closes over fresh state would otherwise be answered by a stale one.
+    // The listeners call it, so a stale `onDismissRequest` would answer an owner's fresh state.
     expect(rebuilds('attachDialogKeydown', { onDismissRequest: () => {} })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { containFocus: true })).toBe(false);
   });
 
   test('an option only its own step reads only rebuilds that step', () => {
-    // The point of one key per step rather than one key for the sequence: toggling `containFocus`
-    // re-attaches the Tab wrap and leaves the keyboard, the focus policy and the exit listeners
-    // exactly where they were.
+    // The point of one key per step: toggling `containFocus` re-attaches the Tab wrap and leaves
+    // the keyboard, the focus policy and the exit listeners where they were.
     expect(rebuilds('attachFocusContainment', { containFocus: true })).toBe(true);
     for (const step of [
       'syncLabellingDiagnostics',
@@ -134,8 +119,7 @@ test.describe('what each step reads', () => {
   });
 
   test('the phase rebuilds everything that can be rebuilt', () => {
-    // Every step is phase-driven — that is what `sync*` means here — so nothing may sit out a
-    // phase change. A step that did would keep listeners from the previous phase alive.
+    // Every step is phase-driven, so one sitting out a phase change keeps stale listeners alive.
     for (const step of MODAL_LIFECYCLE_SEQUENCE) {
       if (inputsOf(step, BASE) === null) {
         continue;
@@ -145,10 +129,8 @@ test.describe('what each step reads', () => {
   });
 
   test('no step reads a value the pass does not carry', () => {
-    // A step reading something off a closure instead of the pass is a dependency the director
-    // cannot diff, so it would silently never re-attach. Every input has to be traceable to a
-    // field of the pass — checked by giving every field a distinct value and requiring each input
-    // to be one of them.
+    // A step reading off a closure instead of the pass is a dependency the director cannot diff,
+    // so it would silently never re-attach — checked by giving every field a distinct value.
     const distinct: ModalLifecyclePass = {
       phase: 'opening',
       isPreparing: true,

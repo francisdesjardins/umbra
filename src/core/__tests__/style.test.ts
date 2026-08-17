@@ -1,19 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { applyStyle } from '../style.js';
 
-/**
- * `applyStyle`, without an element.
- *
- * The interesting half of this function is not the writing — a renderer does that — it is the
- * *clearing*: a style object is recomputed per phase, so a property that appears only in the
- * entrance keyframe has to be removed when the exit one does not name it. Get that wrong and a
- * dialog keeps a transform it was meant to drop, which reads as an animation bug three layers
- * away from here.
- *
- * All of it is bookkeeping over two method calls, and `StyleTarget` is what lets it be asserted
- * as such. The component test beside this one covers what only a browser can answer: that the
- * computed style actually lands.
- */
+// `applyStyle`, without an element. The interesting half is the *clearing*: a style object is
+// recomputed per phase, so a property named only in the entrance keyframe has to be removed when
+// the exit one omits it — otherwise a dialog keeps a transform, reading as an animation bug three
+// layers away. `StyleTarget` is what lets that bookkeeping be asserted without a browser.
 
 /** Records what was written and removed, in order. */
 const spyTarget = () => {
@@ -42,8 +33,7 @@ test.describe('applyStyle', () => {
   });
 
   test('prefixes a vendor property with the dash CSS expects', () => {
-    // `webkitLineClamp` hyphenates to `webkit-line-clamp`, which is not a property —
-    // `-webkit-line-clamp` is. The leading dash is the whole of the special case.
+    // `webkitLineClamp` hyphenates to `webkit-line-clamp`, which is not a property; the dash is.
     const target = spyTarget();
 
     applyStyle(target, { next: { webkitLineClamp: '2' } });
@@ -52,8 +42,7 @@ test.describe('applyStyle', () => {
   });
 
   test('removes what the previous style set and this one does not name', () => {
-    // The reason this exists rather than an `Object.assign`: the exit keyframe does not mention
-    // `transform`, so the entrance's has to go — otherwise the dialog leaves scaled.
+    // Not an `Object.assign`: the exit omits `transform`, so the dialog would leave scaled.
     const target = spyTarget();
     const entrance = applyStyle(target, { next: { opacity: 1, transform: 'scale(1)' } });
     target.calls.length = 0;
@@ -74,8 +63,7 @@ test.describe('applyStyle', () => {
   });
 
   test('an explicit `undefined` removes rather than writing the word', () => {
-    // `exactOptionalPropertyTypes` lets a caller build `{ transform: undefined }` deliberately,
-    // and `String(undefined)` would set the literal text "undefined" on the element.
+    // A caller can build `{ transform: undefined }`; `String(undefined)` would write the word.
     const target = spyTarget();
 
     applyStyle(target, { next: { opacity: 1, transform: undefined } });
@@ -100,21 +88,15 @@ test.describe('applyStyle', () => {
   });
 
   test('a custom property goes through untouched, both writing and clearing', () => {
-    // `--dialog-backdrop` is the one styling lever the library documents, and `umbra/vanilla` is
-    // used from plain JavaScript, where nothing narrows the object on the way in. A
-    // `Record<string, string>` is that situation written in TypeScript: `DialogStyle` is a mapped
-    // type over `CSSStyleDeclaration`'s keys, so a custom property is not one of them and an
-    // object *literal* carrying one is rejected — but the record is assignable, and it is what a
-    // caller assembling a style at runtime actually holds.
-    //
-    // The hyphenation must not touch it: `--dialog-backdrop` is already the name `setProperty`
-    // wants, and the camelCase rule would leave it alone only by accident.
+    // `--dialog-backdrop` is the documented styling lever, and `umbra/vanilla` is called from
+    // plain JS. `DialogStyle` maps `CSSStyleDeclaration`'s keys, so an object *literal* carrying a
+    // custom property is rejected while a `Record<string, string>` is assignable — what a caller
+    // assembling a style at runtime holds. The hyphenation must not touch a name already correct.
     const target = spyTarget();
     const custom: Record<string, string> = { '--dialog-backdrop': 'rgba(0, 0, 0, 0.7)' };
 
     const applied = applyStyle(target, { next: custom });
-    // And clearing reaches the same branch, which is the half that would strand a backdrop colour
-    // on the element after the style that set it stopped naming it.
+    // Clearing reaches the same branch — the half that would strand a backdrop colour behind.
     applyStyle(target, { next: { opacity: 1 }, previous: applied });
 
     expect(target.calls).toEqual([

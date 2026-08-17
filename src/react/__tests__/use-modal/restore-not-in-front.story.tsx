@@ -3,18 +3,10 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * An action settling in a panel that is **not** the one in front.
- *
- * The same claim as `FocusUnderAnotherModalHarness` — a settling action has no claim on the keyboard
- * when the user is looking at something else — asked in the one arrangement where **Chromium can
- * answer it**. There, a modal dialog renders everything behind it inert, so the restore's `focus()`
- * is a silent no-op and the rule appears to hold whether or not the library implements it. WebKit
- * does not make it a no-op, which is how CI found the missing guard: the same assertion, green on one
- * engine and red on another.
- *
- * Two **non-modal** panels take the platform out of it. Neither is inert, so a restore that failed to
- * check whether it is in front really does steal focus, on every engine — and the test fails without
- * the guard rather than only on Safari.
+ * An action settling in a panel that is not in front — `FocusUnderAnotherModalHarness`'s claim, in
+ * the arrangement Chromium can answer. Behind a modal dialog everything is inert, so the restore's
+ * `focus()` is a silent no-op and the rule seems to hold either way; WebKit does not make it one,
+ * which is how CI found the missing guard. Two non-modal panels take the platform out of it.
  */
 export function RestoreNotInFrontHarness() {
   const [settled, setSettled] = useState(0);

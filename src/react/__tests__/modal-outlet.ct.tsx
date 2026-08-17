@@ -56,7 +56,6 @@ test.describe('ModalOutlet', () => {
   test('multiple modals in one outlet all render', async ({ mount, page }) => {
     await mount(<OutletMultiHarness />);
 
-    // Open and close A
     await page.getByRole('button', { name: 'Open A' }).click();
     await expect(page.getByTestId('is-visible-a')).toHaveText('open');
     await expect(page.getByTestId('modal-outlet-multi-a')).toBeVisible();
@@ -64,7 +63,6 @@ test.describe('ModalOutlet', () => {
     await expect(page.getByTestId('is-visible-a')).toHaveText('closed');
     await expect(page.getByTestId('modal-outlet-multi-a')).not.toBeVisible();
 
-    // Open and close B
     await page.getByRole('button', { name: 'Open B', exact: true }).click();
     await expect(page.getByTestId('is-visible-b')).toHaveText('open');
     await expect(page.getByTestId('modal-outlet-multi-b')).toBeVisible();
@@ -132,9 +130,8 @@ test.describe('ModalOutlet — paint timing', () => {
 
     await page.getByRole('button', { name: 'Increment' }).click();
 
-    // What the dialog's DOM said at the next animation frame — i.e. the frame the
-    // user was about to see. The outlet hop must complete within it, so this has to
-    // already match `count` rather than trailing one behind.
+    // The dialog's DOM at the next frame — the one the user was about to see. The outlet hop must
+    // complete within it, so this already matches `count` rather than trailing behind.
     await expect(page.getByTestId('count')).toHaveText('1');
     await expect(page.getByTestId('painted-count')).toHaveText('1');
   });
@@ -142,10 +139,8 @@ test.describe('ModalOutlet — paint timing', () => {
 
 test.describe('ModalOutlet — teardown', () => {
   test('a modal that unmounts while open is dropped from the outlet', async ({ mount, page }) => {
-    // Registration is what every test above exercises; this is the other half of the map. A
-    // modal whose component goes away has to be unregistered, or the outlet keeps rendering a
-    // `<dialog>` for a hook that no longer exists — on screen, in the top layer, and driven by
-    // nothing.
+    // A modal whose component goes away must unregister, or the outlet keeps rendering a
+    // `<dialog>` for a hook that no longer exists — on screen, in the top layer, driven by nothing.
     await mount(<OutletTeardownHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -154,11 +149,9 @@ test.describe('ModalOutlet — teardown', () => {
     await page.getByTestId('remove').click();
 
     await expect(page.getByTestId('mounted')).toHaveText('no');
-    // Gone from the document, not merely hidden: the outlet dropped the node rather than
-    // rendering a modal nobody owns.
+    // Gone from the document, not merely hidden: the outlet dropped the node.
     await expect(page.getByTestId('modal-outlet-teardown')).toHaveCount(0);
-    // And the top layer went with it — a leaked `showModal()` dialog would keep swallowing every
-    // click on the page behind it.
+    // And the top layer with it — a leaked `showModal()` dialog swallows every click behind it.
     await expect(page.locator('dialog:modal')).toHaveCount(0);
   });
 });

@@ -15,30 +15,16 @@ import { collectOptionNames } from './option-surface.js';
 /**
  * The compatibility matrix, held to the source it describes.
  *
- * A table of what-works-with-what is only worth having if it cannot quietly fall behind. Three things
- * are checked here, and each answers a way this kind of document has already gone wrong in this repo:
- *
- * 1. **Every option has a row, and every row names a real option.** A new option arrives in
- *    `UseModalBaseOptions` and the matrix says nothing about it — that is a failing test rather than a
- *    paragraph nobody thought to update.
- * 2. **Every test a cell cites resolves**, file and title. Renaming a test is how a matrix becomes
- *    false while looking maintained, and a rename touches the test and nothing else.
- * 3. **`API.md` carries the rendered table byte for byte.** Two hand-kept copies disagree in one of
- *    them; there is one copy, and the doc holds a render of it.
- *
- * What it cannot check, stated here rather than left to be assumed: **that the cited test proves the
- * cell.** A `✓` next to a resolving title is a human claim. Same scope limit `docs-exports.test.ts`
- * keeps about type-only imports — a gate that overstates itself is worse than a smaller one.
+ * Three checks, each answering a way this document has already gone stale: every option has a row
+ * and every row a real option; every cited test resolves by file and title; `API.md` carries the
+ * rendered table byte for byte. What it cannot check — that a cited test *proves* its cell — stays
+ * a human claim, the same scope limit `docs-exports.test.ts` keeps about type-only imports.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(SRC_ROOT, '..');
 
-/**
- * Options deliberately absent from `API.md`'s `### Options` table, each with the reason it is.
- *
- * A set rather than a filter in the test, so adding to it is a visible decision.
- */
+/** Options kept out of `API.md`'s `### Options` table — a set, so adding one is a visible choice. */
 const OPTIONS_TABLE_EXEMPT = new Set([
   // Documented with an example in the Dialog Manager chapter, where the asking door belongs.
   'onOpenRequest',
@@ -50,16 +36,9 @@ const BEGIN = '<!-- BEGIN COMPATIBILITY MATRIX -->';
 const END = '<!-- END COMPATIBILITY MATRIX -->';
 
 /**
- * The rendered block, formatted exactly as `yarn docs:matrix` would write it.
- *
- * Through prettier rather than compared raw, because prettier owns the layout of this repository's
- * markdown — it pads every column to its widest cell and normalises `*em*` to `_em_`. The script does
- * the same before writing, so this is a byte comparison against what the script produces: if it
- * passes, running `docs:matrix` changes nothing.
- *
- * It used to be a whitespace normaliser instead, which was a workaround for the script writing
- * unformatted output — a arrangement that left `API.md` dirty after every run, and rewrote the
- * document as a side effect of merely *listing* the worklist.
+ * The rendered block, formatted exactly as `yarn docs:matrix` writes it. Through prettier rather
+ * than raw, because prettier owns this repo's markdown layout — column padding, `*em*` → `_em_` —
+ * and the script formats before writing, so a pass means running `docs:matrix` changes nothing.
  */
 async function renderedBlock(): Promise<string> {
   const formatted = await prettier.format(`${BEGIN}\n\n${renderMatrix().trim()}\n\n${END}\n`, {
@@ -73,8 +52,7 @@ test.describe('the compatibility matrix', () => {
   test('every option a caller can pass has exactly one row', () => {
     const options = collectOptionNames();
 
-    // Guards the guard: a parser that stopped matching would make both checks below pass on an
-    // empty list, which is the exact silent failure this file exists to prevent.
+    // Guards the guard: a parser that stopped matching passes both checks below on an empty list.
     expect(options.length).toBeGreaterThan(15);
 
     const rows = OPTION_ROWS.map((row) => {
@@ -134,8 +112,7 @@ test.describe('the compatibility matrix', () => {
       readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8')
     ) as { exports: Record<string, unknown> };
 
-    // The root is not a column: it is what every binding re-exports, so a capability row about it
-    // would be three identical cells.
+    // The root is no column: every binding re-exports it, so its rows would be identical cells.
     const bindings = Object.keys(manifest.exports)
       .filter((specifier) => {
         return specifier !== '.';
@@ -150,12 +127,9 @@ test.describe('the compatibility matrix', () => {
       'A binding was added or removed — BindingRow needs a column for it, and `renderMatrix` a header.'
     ).toEqual(['react', 'solid', 'vanilla']);
 
-    // Every row answers for all three — the type already holds that, so what is checked here is the
-    // part it cannot: **a refusal owes a reason, and a half-answer owes its limit.** `✗ by design` and
-    // `~` are the two states whose whole content is the explanation, so a bare symbol in either is a
-    // cell that tells a reader nothing they could act on. `✓ untested` is deliberately exempt: its
-    // meaning is complete without prose, and demanding a note there would produce twenty
-    // restatements of "nothing verifies this".
+    // The type holds that every row answers for all three; what it cannot hold is that a refusal
+    // owes a reason. `✗ by design` and `~` are the states whose whole content is the explanation.
+    // `✓ untested` is exempt — a note there is twenty restatements of "nothing verifies this".
     const unexplained = BINDING_ROWS.flatMap((row) => {
       return (
         [
@@ -179,18 +153,10 @@ test.describe('the compatibility matrix', () => {
   });
 
   /**
-   * The hand-written option table, held to the same source the matrix is.
-   *
-   * The matrix chapter is generated, so a new option reaches `API.md` the moment it has a row —
-   * and reaches it in a table a reader looking up "what can I pass" does not open. The **prose**
-   * table under `### Options` is the one they read, nothing regenerates it, and nothing asked for
-   * it: `onError` shipped documented in the chapter and absent from the table, which is the drift
-   * the handoff predicted in the abstract before it happened in the concrete.
-   *
-   * Narrow on purpose. It asks one question — is every option a caller can pass named in the table
-   * a caller reads — and the two exceptions are written here rather than left as silence. The
-   * broader gate (a root export `API.md` never mentions) would fail on about twenty names today,
-   * most of them types, and needs a decision about what it should demand before it can exist.
+   * The hand-written `### Options` table, held to the same source the generated matrix is: a row
+   * in the matrix reaches a chapter nobody looking up "what can I pass" opens, and nothing
+   * regenerates the prose table (`onError` shipped in one and not the other). Narrow on purpose —
+   * the broader gate, a root export `API.md` never names, would fail on ~20 names, mostly types.
    */
   test('the Options table names every option a caller can pass', () => {
     const doc = readFileSync(resolve(REPO_ROOT, 'API.md'), 'utf8');
@@ -232,15 +198,13 @@ test.describe('the compatibility matrix', () => {
   test('the open cells are the worklist', () => {
     const open = worklist();
 
-    // Not a threshold to satisfy — the list is the output. Printing it is what makes the matrix a
-    // backlog rather than a description, and `✓ untested` and `~` are declared states precisely so
-    // they can be enumerated instead of found by reading.
+    // The list is the output, not a threshold: printing it makes the matrix a backlog, which is
+    // why `✓ untested` and `~` are declared states rather than something found by reading.
     console.log(
       `\ncompatibility matrix — ${String(open.length)} open cells:\n${open.join('\n')}\n`
     );
 
-    // One assertion, and it is about honesty rather than count: an open cell has to say something
-    // about itself, or it is a symbol with no way to act on it.
+    // About honesty, not count: an open cell that says nothing is a symbol nobody can act on.
     expect(
       open.every((entry) => {
         return entry.includes('—') || entry.length > 20;

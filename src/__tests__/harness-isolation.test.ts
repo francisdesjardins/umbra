@@ -4,27 +4,15 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Every harness that builds a modal has to say which manager it registers with.
- *
- * **The isolation is real and it is held by three different habits.** A React CT mount is wrapped
- * in a `DialogManagerProvider` by `playwright/index.tsx`, so a React story needs to do nothing. A
- * Solid harness is not covered by that wrapper — it is a Solid root hosted inside a React story —
- * so it wraps itself. A `umbra/vanilla` harness has no provider at all and passes
- * `manager: createDialogManager()` to `bindDialog`.
- *
- * Nothing enforced any of it. A new Solid or vanilla harness that forgets does not fail: it
- * registers with the module-level singleton and leaks into every other test in the run, and the
- * symptom is a test that passes alone and fails in the suite — or worse, one that passes in the
- * suite for a reason it did not write down.
- *
- * So the two bindings the global wrapper cannot reach are checked here, statically. The rule is
- * narrow on purpose: a file that **imports a modal constructor** must **name a manager**. A file
- * that only mounts something another file built (`solid-modal.story.tsx` hosting the apps from
- * `solid-app.ts`) imports no constructor and is not asked to.
- *
- * Static rather than behavioural for the same reason `collect-exports.ts` is: a runtime check
- * would need every harness mounted to observe the leak, which is the whole suite, and it would
- * report the symptom rather than the file to edit.
+ * Every harness that builds a modal has to say which manager it registers with. React CT mounts are
+ * wrapped in a `DialogManagerProvider` by `playwright/index.tsx`; a Solid harness is a Solid root
+ * inside a React story, so it wraps itself; a vanilla one has no provider and passes its own
+ * `manager: createDialogManager()` to `bindDialog`. Forgetting registers with the module-level
+ * singleton and leaks across the run — a test that passes alone and fails in the suite — so the two
+ * bindings that wrapper cannot reach are checked statically: a file that *imports a modal
+ * constructor* must *name a manager*, and one that only mounts what another built is not asked to.
+ * Static, because a runtime check needs the whole suite mounted and reports the symptom rather than
+ * the file to edit.
  */
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -33,23 +21,15 @@ const srcRoot = resolve(here, '..');
 /** The two binding trees the React CT wrapper does not cover. */
 const UNWRAPPED_BINDINGS = ['solid', 'vanilla'] as const;
 
-/**
- * Importing one of these means the file builds a modal of its own, so it owns the question of
- * which registry that modal lands in.
- */
+/** Importing one of these means the file builds a modal, so it owns which registry it lands in. */
 const BUILDS_A_MODAL =
   /from '(?:\.\.\/(?:bind-dialog|use-modal)\.js|\.\.\/templates\/[^']+\.js|\.\.\/\.\.\/(?:solid|vanilla)\.js)'/;
 
 /** Either way of naming one: Solid wraps a provider, vanilla passes the instance. */
 const NAMES_A_MANAGER = /createDialogManager|DialogManagerProvider/;
 
-/**
- * Comments do not count as naming a manager.
- *
- * Found while mutation-checking this file: a first attempt removed the import and the option and
- * the gate stayed green, because the prose above them still said `createDialogManager`. A rule
- * satisfied by a sentence about the rule is not a rule.
- */
+// Comments do not count as naming a manager: a mutation check removed the import and the option
+// and the gate stayed green, because the prose above them still said `createDialogManager`.
 function stripComments(source: string): string {
   return source.replaceAll(/\/\*[\s\S]*?\*\//g, ' ').replaceAll(/\/\/[^\n]*/g, ' ');
 }
@@ -91,9 +71,8 @@ test.describe('harness isolation', () => {
   });
 
   test('the rule is matching something — both bindings have a harness it applies to', () => {
-    // The check above passes trivially if the patterns stop matching, which is the failure mode a
-    // rename produces and the one nobody notices. Each binding must have at least one file the
-    // rule actually judged.
+    // The check above passes trivially if the patterns stop matching — the failure a rename
+    // produces. Each binding must have at least one file the rule actually judged.
     const judged = Object.fromEntries(
       UNWRAPPED_BINDINGS.map((binding) => {
         return [

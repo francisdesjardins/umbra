@@ -4,19 +4,11 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 import type { ModalErrorSource } from '../../../core/types.js';
 
 /**
- * A `prepare` that throws, and the `onError` that is the only way to hear about it.
- *
- * The failure this covers is a silent one, which is why the harness reports so much: the dialog is
- * already on screen when `prepare` runs, `isPreparing` settles either way, and `aria-busy` flips
- * back to `false`. A modal whose content failed to load presents as one that loaded fine — the
- * throw reaches `log.error`, which is silent unless `setLogLevel` is on.
- *
- * So the assertions are about **both halves**: that the failure is reported, with its `source`, and
- * that everything else still settles. `onError` is a report and not a veto, and a test that only
- * checked the report would pass on an implementation that left the modal stuck at `aria-busy`.
- *
- * The reason is read through `ModalErrorSource` rather than compared as a string, which is the
- * annotation a consumer writes — and which is only possible because the type reaches the root.
+ * A `prepare` that throws, and the `onError` that is the only way to hear about it. The failure is
+ * silent: the dialog is already on screen, `isPreparing` settles either way, `aria-busy` flips back
+ * to `false`, and the throw reaches `log.error`, silent unless `setLogLevel` is on. Both halves are
+ * asserted — reported with its `source`, and everything else still settling, since `onError` is a
+ * report not a veto. `source` is read through `ModalErrorSource`, which only the root can export.
  */
 export function PrepareFailureHarness() {
   const [failures, setFailures] = useState<ModalErrorSource[]>([]);

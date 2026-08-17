@@ -7,15 +7,9 @@ import type { ModalPhase } from '../../core/types.js';
 import type { DialogController } from '../types.js';
 
 /**
- * The vanilla binding, driven from a React component test.
- *
- * React's only job here is to put a `<dialog>` on the page and hand it over — after that nothing
- * it does is under test. That is a fair harness precisely because the binding never renders:
- * whoever wrote the markup is irrelevant to it, which is the property being demonstrated.
- *
- * Each harness gets its own `createDialogManager()`, passed as the `manager` option. That is the
- * vanilla answer to `DialogManagerProvider` — no tree, so the instance is passed rather than
- * provided — and without it these would register with the singleton and leak between tests.
+ * The vanilla binding, driven from a React component test — fair precisely because the binding never
+ * renders: React only hands over a `<dialog>`. Each harness passes its own `createDialogManager()`,
+ * the vanilla answer to `DialogManagerProvider`, or they would leak through the singleton.
  */
 
 type Bound<TReason extends string> = DialogController<void, TReason>;
@@ -64,9 +58,7 @@ export function VanillaBasicHarness() {
       }),
     ];
 
-    // Nothing re-renders the caller's markup, so state reaches the page the vanilla way. The
-    // subscription covers the actions as well as the phases, which is what makes the per-action
-    // reads below live without a second listener.
+    // One subscription covers phases *and* actions, so the per-action reads stay live.
     const stop = bound.subscribe(() => {
       setVisible(bound.getSnapshot().isVisible ? 'open' : 'closed');
       setConfirmRunning(bound.isActionRunning('confirm') ? 'yes' : 'no');
@@ -110,7 +102,6 @@ export function VanillaBasicHarness() {
         Open and wait
       </button>
 
-      {/* The markup is the caller's, entirely. The binding never writes into it. */}
       <dialog ref={dialogRef}>
         <p>Vanilla content</p>
         <button ref={cancelRef}>Cancel</button>
@@ -148,8 +139,7 @@ export function VanillaUnbindHarness() {
 
     let unbindConfirm: (() => void) | null = bound.bindAction(confirm, { reason: 'confirm' });
 
-    // Inside the dialog, because a `showModal()` dialog owns the top layer — the same rule the
-    // React and Solid stories follow. A plain listener, not an action.
+    // A plain listener, not an action; inside the dialog, which owns the top layer.
     const handleDrop = () => {
       unbindConfirm?.();
       unbindConfirm = null;
@@ -196,17 +186,9 @@ export function VanillaUnbindHarness() {
 }
 
 /**
- * Where focus lands after an action **fails** — the retry belongs under the hand that pressed it.
- *
- * The controller is the binding where that is hardest, and it is why this harness exists rather
- * than a Solid or React twin: `bindAction` writes `disabled` from its own synchronous engine
- * subscriber, and the caller binds actions *after* `bindDialog` has returned, so that subscriber
- * is registered ahead of the focus coordinator's. The browser blurs a disabled element, so
- * reading who held focus when the action started finds nothing — and the retry lands on the
- * dialog instead of on the button.
- *
- * Nothing about that needs a shadow root or a second framework; it is plain markup here on
- * purpose, because the bug was never about either.
+ * Where focus lands after an action **fails** — hardest here: actions bind *after* `bindDialog`
+ * returns, so `bindAction`'s synchronous `disabled` write runs ahead of the focus coordinator's
+ * subscriber, and the browser blurs a disabled element before anyone reads who held focus.
  */
 export function VanillaFailingActionHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -230,8 +212,7 @@ export function VanillaFailingActionHarness() {
       manager: createDialogManager(),
     });
 
-    // `focusOnOpen` on the *other* button, so "focus went back to the runner" cannot be confused
-    // with "focus never moved": the opening focus is Cancel and the runner is Submit.
+    // `focusOnOpen` on Cancel, Submit runs: "back to the runner" is not "focus never moved".
     const unbindCancel = bound.bindAction(cancel, { reason: 'cancel', focusOnOpen: true });
     const unbindFail = bound.bindAction(fail, {
       reason: 'submit',
@@ -279,16 +260,10 @@ export function VanillaFailingActionHarness() {
 }
 
 /**
- * A **contained** non-modal panel — `nonModal: true` without `portal`.
- *
- * The one variant that needs something from the caller beyond the dialog: it is positioned
- * `absolute` against a host, and a binding that owns no markup has to be pointed at one. The
- * default is the dialog's parent, which is what this harness exercises; the host is styled by the
- * library and so must sit inside a *sized, positioned* region, or the panel collapses to nothing
- * and every assertion about it passes vacuously.
- *
- * Nothing enters the top layer here, so the region behind the panel stays clickable — which is the
- * property `pointerEvents` on the host exists to preserve, and the one asserted below.
+ * A **contained** non-modal panel — `nonModal: true` without `portal` — against the default host, the
+ * dialog's parent, which must sit in a *sized, positioned* region or the panel collapses and
+ * assertions pass vacuously. Nothing enters the top layer, so the region behind stays clickable:
+ * what `pointerEvents` on the host preserves.
  */
 export function VanillaContainedHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -340,7 +315,6 @@ export function VanillaContainedHarness() {
         Open
       </button>
 
-      {/* The sized, positioned region the placement contract requires of the caller. */}
       <div data-testid="region" style={{ position: 'relative', width: 400, height: 300 }}>
         <button
           data-testid="behind"
@@ -353,7 +327,6 @@ export function VanillaContainedHarness() {
         >
           Behind the panel
         </button>
-        {/* The host: the dialog's parent, which is what the binding defaults to. */}
         <div data-testid="host">
           <dialog ref={dialogRef}>
             <p>Contained content</p>
@@ -368,10 +341,8 @@ export function VanillaContainedHarness() {
 }
 
 /**
- * The same variant, told explicitly which element to position against.
- *
- * The dialog's parent is a plain wrapper here and the host is its grandparent, so a passing
- * assertion cannot be the default branch answering by coincidence.
+ * The same variant with an explicit `host`: the dialog's parent is a plain wrapper and the host is
+ * its grandparent, so a pass cannot be the default branch answering by coincidence.
  */
 export function VanillaExplicitHostHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -427,12 +398,8 @@ export function VanillaExplicitHostHarness() {
 }
 
 /**
- * A contained dialog with nothing to position against — the branch that has to degrade rather
- * than throw.
- *
- * The dialog is never appended, so it has no parent and no host was named. The binding warns and
- * carries on: a controller that threw here would take down the caller's render over a positioning
- * problem, and one that silently styled `document.body` would be worse.
+ * A contained dialog with no parent and no named host — the branch that must warn and carry on
+ * rather than throw down the caller's render or silently style `document.body`.
  */
 export function VanillaNoHostHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -445,8 +412,7 @@ export function VanillaNoHostHarness() {
       return;
     }
 
-    // Detached *before* binding, because the host is resolved once at bind time: this is the
-    // branch where `dialog.parentElement` is null and no `host` was named.
+    // Detached *before* binding: the host is resolved once, at bind time.
     dialog.remove();
 
     const bound = bindDialog<void, 'close'>({
@@ -472,8 +438,8 @@ export function VanillaNoHostHarness() {
   return (
     <>
       <span data-testid="phase">{phase}</span>
-      {/* Read on demand rather than seeded from the effect: a controller that survived the
-          missing host still answers, which is what "degrades rather than throws" has to mean. */}
+      {/* Read on demand, not seeded from the effect: a controller that still answers is what
+          "degrades rather than throws" has to mean. */}
       <button
         data-testid="probe"
         onClick={() => {
@@ -482,7 +448,6 @@ export function VanillaNoHostHarness() {
       >
         Probe
       </button>
-      {/* Rendered so React has an element to hand over; the effect detaches it immediately. */}
       <dialog ref={dialogRef}>
         <p>No host to position against</p>
       </dialog>
@@ -491,11 +456,8 @@ export function VanillaNoHostHarness() {
 }
 
 /**
- * `destroy()` under the test's own control, rather than at unmount.
- *
- * It has to be a button on the page: the coverage fixture reads its counters after the test body
- * and before React's cleanup, so a teardown that only ever runs at unmount is a teardown no
- * assertion has watched. That is the same reason the Solid suite unmounts from inside the page.
+ * `destroy()` from a button rather than at unmount: the coverage fixture reads its counters after
+ * the test body and before React's cleanup, so an unmount-only teardown is one no assertion watched.
  */
 export function VanillaDestroyHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -519,10 +481,8 @@ export function VanillaDestroyHarness() {
       manager,
     });
 
-    // A flag rather than a notification count: the open sequence settles over two transitions, so
-    // any count read from the test is a race with the second one. What the assertion actually
-    // wants is "did this listener hear anything *after* it was stopped", and that is a fact the
-    // listener itself can record.
+    // A flag, not a count: the open sequence settles over two transitions, so a count races the
+    // second; what matters is whether this listener heard anything after it stopped.
     let destroyed = false;
 
     let stop: (() => void) | null = bound.subscribe(() => {
@@ -535,9 +495,7 @@ export function VanillaDestroyHarness() {
     setController(bound);
 
     const teardown = () => {
-      // The subscription's own unsubscribe, then the controller's: two teardowns, and the point
-      // is that neither leaves the other holding a reference. `destroy()` closes an open dialog,
-      // so a leaked subscription has something to hear here.
+      // `destroy()` closes an open dialog, so a leaked subscription has something to hear.
       destroyed = true;
       stop?.();
       stop = null;
@@ -568,8 +526,8 @@ export function VanillaDestroyHarness() {
       >
         Open
       </button>
-      {/* Inside the dialog, because destroying it while it is *open* is the case worth watching
-          and a `showModal()` dialog owns the top layer — a button outside it is unclickable. */}
+      {/* Inside the dialog: destroying it while *open* is the case worth watching, and a
+          `showModal()` dialog owns the top layer. */}
       <dialog ref={dialogRef}>
         <p>Destroy me</p>
         <button
@@ -586,10 +544,8 @@ export function VanillaDestroyHarness() {
 }
 
 /**
- * The manager's asking door, through the controller.
- *
- * `onOpenRequest` is forwarded to the manager rather than handled here, so a request refused by
- * the owner is refused before anything opens — and `requestOpenAndWait` reports which.
+ * The manager's asking door: `onOpenRequest` is forwarded to the manager, so a request the owner
+ * refuses is refused before anything opens, and `requestOpenAndWait` reports which.
  */
 export function VanillaOpenRequestHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -603,9 +559,7 @@ export function VanillaOpenRequestHarness() {
     }
 
     const instance = createDialogManager();
-    // Assigned right below: the handler is declared inside the options `bindDialog` is being
-    // called with, and it is what has to do the opening — the manager never opens on the owner's
-    // behalf, because acceptance is not something it can infer.
+    // Assigned below: the manager never opens on the owner's behalf, so the handler must.
     let controller: Bound<'close'> | null = null;
 
     const bound = bindDialog<void, 'close'>({
@@ -614,12 +568,11 @@ export function VanillaOpenRequestHarness() {
       ariaLabel: 'Vanilla open request',
       manager: instance,
       onOpenRequest: async (payload, request) => {
-        // Refuse anything that is not the password, so both branches are reachable from the page.
         if (payload !== 'please') {
           request.refuse('wrong payload');
           return;
         }
-        // Opening is the yes. Awaited so the accepted outcome cannot resolve ahead of the dialog.
+        // Opening is the yes; awaited so the accepted outcome cannot resolve ahead of the dialog.
         await controller?.open();
       },
     });
@@ -669,15 +622,9 @@ export function VanillaOpenRequestHarness() {
 }
 
 /**
- * A `<dialog>` inside a shadow root, which is the one tree the library cannot reach into.
- *
- * Two things it changes and both were wrong before: `adoptedStyleSheets` does not cross the
- * boundary, so the library's own `dialog::backdrop` never applied and the dialog fell back to the
- * UA's; and `document.activeElement` answers with the *host*, so every focus check concluded that
- * focus had left the dialog.
- *
- * React's only job is to make the host — everything inside is plain DOM, which is the shape a web
- * component has anyway.
+ * A `<dialog>` in a shadow root. `adoptedStyleSheets` does not cross the boundary, so the library's
+ * `dialog::backdrop` never applies; `document.activeElement` answers with the *host*, so a
+ * document-scoped focus check concludes focus left. React only makes the host; inside is plain DOM.
  */
 export function VanillaShadowRootHarness() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -690,8 +637,7 @@ export function VanillaShadowRootHarness() {
       return;
     }
 
-    // `open` so the test can select into it — a closed root would also hide the dialog from the
-    // assertions, and what is under test is the library's reach, not the tree's opacity.
+    // `open` so the test can select in: under test is the library's reach, not the tree's opacity.
     const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
     root.innerHTML = `
       <dialog data-testid="shadow-dialog">
@@ -745,13 +691,9 @@ export function VanillaShadowRootHarness() {
 }
 
 /**
- * What unbinding hands back.
- *
- * `bindAction` writes onto a button this binding did not create, and unlike the two hook bindings
- * it cannot rely on the button going away — the markup is the caller's and outlives the
- * controller. So the writes have to be undone, and *restored* rather than cleared: the second
- * button here is disabled in the markup before it is ever bound, which is the case a naive
- * `removeAttribute` gets wrong by switching it on.
+ * What unbinding hands back. The caller's markup outlives the controller, so `bindAction`'s writes
+ * must be *restored* rather than cleared: the second button is disabled before it is ever bound,
+ * which a naive `removeAttribute` gets wrong by switching it on.
  */
 export function VanillaRestoreOnUnbindHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -777,8 +719,7 @@ export function VanillaRestoreOnUnbindHarness() {
       manager: createDialogManager(),
     });
 
-    // Never resolves: the action stays running so the unbind lands mid-flight, which is the state
-    // that used to weld `disabled` and `aria-busy` onto the caller's button for good.
+    // Never resolves, so the unbind lands mid-flight, with `disabled` and `aria-busy` still on.
     const unbindSlow = bound.bindAction(slow, {
       reason: 'save',
       hotkey: 'Ctrl+s',
@@ -826,7 +767,6 @@ export function VanillaRestoreOnUnbindHarness() {
         <button ref={slowRef} data-testid="slow-action">
           Save
         </button>
-        {/* Disabled by the caller, before anything binds it. */}
         <button ref={alreadyOffRef} data-testid="already-off" disabled>
           Other
         </button>
@@ -839,12 +779,9 @@ export function VanillaRestoreOnUnbindHarness() {
 }
 
 /**
- * `aria-busy` on a `<dialog>` the controller does not own — including the teardown that used to
- * leave it welded on.
- *
- * `destroy()` unsubscribes before it tears the store down, so a controller destroyed while
- * `prepare` is still running never gets the notification that would clear the attribute. The
- * element survives the controller here, which is what makes that observable at all.
+ * `aria-busy` on a `<dialog>` the controller does not own. `destroy()` unsubscribes before tearing
+ * the store down, so a controller destroyed mid-`prepare` never hears the notification that would
+ * clear the attribute — observable only because the element survives the controller.
  */
 export function VanillaBusyHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -917,12 +854,9 @@ export function VanillaBusyHarness() {
 }
 
 /**
- * The labelling diagnostic against markup the binding did not write.
- *
- * This is the binding it matters most in and the only one where the failure is *ordinary*: the
- * `id` and the `aria-labelledby` that references it are both hand-written, in two places, by
- * someone who will not see the result. Note that neither dialog below passes any aria option —
- * the check reads the element, which is the whole reason it can see these at all.
+ * The labelling diagnostic against markup the binding did not write — the only binding where the
+ * failure is ordinary, the `id` and its `aria-labelledby` being hand-written in two places. Neither
+ * dialog passes an aria option: the check reads the element, which is why it sees these at all.
  */
 export function VanillaLabellingHarness() {
   const brokenRef = useRef<HTMLDialogElement>(null);
@@ -982,12 +916,10 @@ export function VanillaLabellingHarness() {
         Open nameless
       </button>
 
-      {/* The id it names is nowhere in this tree — the ordinary hand-written mistake. */}
       <dialog ref={brokenRef} aria-labelledby="vanilla-broken-title">
         <h2 id="a-different-id">Broken reference</h2>
       </dialog>
 
-      {/* No name at all, by either route. */}
       <dialog ref={namelessRef}>
         <p>Nothing names this one.</p>
       </dialog>
@@ -996,29 +928,15 @@ export function VanillaLabellingHarness() {
 }
 
 /**
- * A shadow-root dialog and a light-DOM one, one manager, one stack policy.
- *
- * The composition of two harnesses above, and it exists to reach three things nothing else does.
- *
- * **The reclaim across a shadow boundary.** When something opens over the front dialog, that dialog
- * takes the focus back itself — and the only shadow-aware question in that path is `activeWithin`,
- * which asks the dialog's *own* root rather than the document. A dialog in a shadow root is where a
- * document-scoped answer would silently be "focus left" forever, and the microfrontend demo has one.
- *
- * **The native `close` event a raise fires.** Moving a modal dialog is `close()` + `showModal()`, so
- * the element emits a `close` nobody asked for. `close()` *queues* it, so it arrives with
- * `dialog.open` already back to `true` — which is the only way a listener can tell a raise from a
- * real close, and the counter below records both halves. It matters here and nowhere else: in
- * `umbra/vanilla` the `<dialog>` and every listener on it are the caller's.
- *
- * **`prioritize` through a binding that is not React.** The policy is core and all three bindings
- * inherit it without a line of their own, which is exactly why nothing would fail if one of them
- * stopped reaching it — `binding-parity.test.ts` compares export names, and `prioritize` is a method
- * on `DialogManager`.
- *
- * The manager is hoisted into a variable rather than constructed inline, because two controllers have
- * to share it. The policy toggle sits on the page and the tests dispatch its click directly: under
- * the policy the light-DOM dialog is the one underneath, so a real press would land on a backdrop.
+ * A shadow-root dialog and a light-DOM one, one manager, one stack policy — three things nothing else
+ * reaches. **Reclaim across a shadow boundary**: `activeWithin` asks the dialog's *own* root, where a
+ * document-scoped answer would be "focus left" forever. **The native `close` a raise fires**: a raise
+ * is `close()` + `showModal()`, and `close()` *queues* its event, so it arrives with `dialog.open`
+ * already `true` — the only way a caller's listener tells a raise from a real close. **`prioritize`
+ * through a non-React binding**: the policy is core, so nothing would fail if a binding stopped
+ * reaching it, `binding-parity.test.ts` comparing only export names. The manager is hoisted so two
+ * controllers share it; tests dispatch the policy toggle's click directly, since under the policy the
+ * light-DOM dialog is underneath and a real press would hit a backdrop.
  */
 export function VanillaShadowStackHarness() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -1029,7 +947,6 @@ export function VanillaShadowStackHarness() {
   } | null>(null);
   const [policyOn, setPolicyOn] = useState(false);
   const [manager, setManager] = useState<ReturnType<typeof createDialogManager> | null>(null);
-  /** How many native `close` events the shadow dialog has emitted, and whether it was open then. */
   const [closes, setCloses] = useState('0');
   const [openWhenClosed, setOpenWhenClosed] = useState('n/a');
 
@@ -1059,13 +976,12 @@ export function VanillaShadowStackHarness() {
       return;
     }
 
-    // A listener the *caller* owns, which is the situation the contract is written for.
+    // A listener the *caller* owns — the situation the contract is written for.
     let seen = 0;
     const handleNativeClose = () => {
       seen += 1;
       setCloses(String(seen));
-      // Read inside the listener, because that is when the answer is load-bearing: a raise has
-      // already re-shown the dialog by the time this runs, and this is what tells the two apart.
+      // Read inside the listener: a raise has already re-shown the dialog by the time this runs.
       setOpenWhenClosed(dialog.open ? 'still-open' : 'really-closed');
     };
     dialog.addEventListener('close', handleNativeClose);
@@ -1105,7 +1021,6 @@ export function VanillaShadowStackHarness() {
     if (!policyOn || !manager) {
       return undefined;
     }
-    // The shadow dialog outranks the one that opens over it.
     return manager.prioritize((modal) => {
       return modal.id === 'vanilla-shadow-front' ? 10 : 0;
     });
@@ -1151,13 +1066,9 @@ export function VanillaShadowStackHarness() {
 }
 
 /**
- * `nonModal: true, portal: true` — the placement without the relocation.
- *
- * The other two bindings answer this option by *moving* the dialog to `document.body`; a controller
- * cannot, because the element is markup the caller wrote. So the option is a placement here and the
- * harness is built to prove which half arrived: the `<dialog>` sits inside a marked wrapper, and
- * that wrapper is inside a `transform`ed ancestor — which is the containing block `fixed` resolves
- * against instead of the viewport, and therefore the visible consequence a caller has to know about.
+ * `nonModal: true, portal: true` — the placement without the relocation, since a controller cannot
+ * move markup the caller wrote. The dialog sits in a wrapper inside a `transform`ed ancestor: the
+ * containing block `fixed` resolves against instead of the viewport, so which half arrived shows.
  */
 export function VanillaPortalHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -1208,8 +1119,6 @@ export function VanillaPortalHarness() {
         Open
       </button>
 
-      {/* The ancestor that hijacks a `fixed` containing block. Sized and offset so a panel
-          resolving against it is unmistakably not resolving against the viewport. */}
       <div
         data-testid="transformed"
         style={{
@@ -1235,17 +1144,10 @@ export function VanillaPortalHarness() {
 }
 
 /**
- * The three options React's suite exercised and this binding's did not: `containFocus`,
- * `dismissOnClickOutside` and a custom `dismissKey`.
- *
- * Non-modal, because that is the variant all three belong to — `containFocus` is the Tab wrap
- * `show()` does not give a dialog, and the discriminated union would reject the dismissal option on a
- * modal one. The dialog is `portal: true` so it needs no host, which keeps the harness about the three
- * options and nothing else.
- *
- * The instant animation is load-bearing rather than cosmetic: with the default 200 ms exit a panel that
- * *is* closing still reports `isVisible` for that window, so "still open just after the press" would
- * match during a close and an assertion could hold either way.
+ * `containFocus`, `dismissOnClickOutside` and a custom `dismissKey` — all non-modal (`containFocus`
+ * is the Tab wrap `show()` does not give, and the union rejects dismissal on a modal dialog);
+ * `portal: true` so no host is needed. The instant animation is load-bearing: with the default 200 ms
+ * exit a closing panel still reports `isVisible`, so "still open after the press" matches a close.
  */
 export function VanillaNonModalOptionsHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -1267,8 +1169,7 @@ export function VanillaNonModalOptionsHarness() {
       portal: true,
       containFocus: true,
       dismissOnClickOutside: true,
-      // Not Escape: a non-modal dialog gets no native `cancel`, so a panel closing on Escape here
-      // could only mean the declared key was ignored.
+      // Not Escape: no native `cancel` here, so an Escape close would mean the key was ignored.
       dismissKey: 'Delete',
       animation: {
         entrance: { opacity: '1' },
@@ -1322,14 +1223,9 @@ export function VanillaNonModalOptionsHarness() {
 }
 
 /**
- * `reconcileOpen` driven from the controller's own snapshot.
- *
- * The other two bindings read `phase` through `useLookup`; here it is on the snapshot the controller
- * already publishes — which is why `phase` is exposed on this binding and on neither of the others.
- * There is no render pass to be the clock, so the snapshot is the only one there is.
- *
- * The exit is 120 ms on purpose: the window where `phase` is `'closing'` and `isVisible` is still true
- * is the whole of what deciding on `phase` buys, and a zero-duration exit closes it.
+ * `reconcileOpen` from the controller's own snapshot — why `phase` is exposed on this binding alone:
+ * there is no render pass to be the clock. The 120 ms exit is deliberate, since the window where
+ * `phase` is `'closing'` while `isVisible` is still true is the whole point.
  */
 export function VanillaReconcileHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -1429,8 +1325,7 @@ export function VanillaReconcileHarness() {
         <button
           data-testid="close-and-lower"
           onClick={() => {
-            // Both at once: the only way into the window where `phase` and `isVisible` disagree,
-            // because `onClose` runs when the exit finishes.
+            // Both at once: `onClose` runs only when the exit finishes.
             controller?.handle.close('close');
             setWanted(false);
           }}
@@ -1443,12 +1338,9 @@ export function VanillaReconcileHarness() {
 }
 
 /**
- * A `<dialog open>` the server sent, adopted by `bindDialog` after the fact.
- *
- * The hydration gap an SSR page actually has: the markup is on screen before any script runs, and
- * the binding arrives to a dialog that is already open. `nonModal` is the harness's prop because
- * the two answers are different and both are correct — a non-modal dialog is adopted where it
- * stands, a modal one cannot be, since the top layer is only enterable from script.
+ * A `<dialog open>` the server sent, adopted after the fact — the SSR hydration gap. `nonModal` is a
+ * prop because both answers are correct: a non-modal dialog is adopted where it stands, a modal one
+ * cannot be, since the top layer is only enterable from script.
  */
 export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: boolean }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -1459,7 +1351,6 @@ export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: bool
     if (!dialog) {
       return;
     }
-    // What the server sent: an open dialog, before any binding existed.
     dialog.setAttribute('open', '');
 
     const bound = nonModal
@@ -1502,16 +1393,10 @@ export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: bool
 }
 
 /**
- * A modal that claims no opening focus, with a non-modal panel opening underneath it.
- *
- * The claimless half of {@link VanillaShadowStackHarness}, and the distinction is the whole point:
- * that one binds `focusOnOpen` to its confirm button, so the reclaim has a marker to aim at and
- * never reaches the floor beneath it. Most dialogs claim nothing — including the shell warning the
- * arrangement came from — and for those the reclaim used to end at `dialog.focus()`, which an open
- * `<dialog>` refuses.
- *
- * Two focusable buttons, because with one "handed back to the first focusable" and "focus never
- * moved" are the same element and no assertion can tell them apart.
+ * A modal claiming no opening focus, a non-modal panel opening underneath — the claimless half of
+ * {@link VanillaShadowStackHarness}, whose `focusOnOpen` gives the reclaim a marker to aim at.
+ * Without one it falls through to `dialog.focus()`, which an open `<dialog>` refuses. Two focusables,
+ * because with one "handed back to the first focusable" and "focus never moved" are one element.
  */
 export function VanillaClaimlessReclaimHarness() {
   const modalRef = useRef<HTMLDialogElement>(null);
@@ -1545,15 +1430,13 @@ export function VanillaClaimlessReclaimHarness() {
       dialog: panelEl,
       ariaLabel: 'Panel opening underneath',
       nonModal: true,
-      // Viewport-anchored rather than contained: the contained path puts a library-owned
-      // `inset: 0` wrapper over the nearest sized ancestor, which here is the page, and the
-      // harness's own trigger ends up underneath it.
+      // Viewport-anchored: contained would lay an `inset: 0` wrapper over the harness's trigger.
       portal: true,
       manager: instance,
       style: { width: '200px', height: '160px' },
     });
 
-    // Bound without `focusOnOpen` on either, which is what puts this harness on the floor's path.
+    // Neither takes `focusOnOpen`, which is what puts this harness on the floor's path.
     const unbindCancel = modal.bindAction(cancel, { reason: 'cancel' });
     const unbindConfirm = modal.bindAction(confirm, { reason: 'confirm' });
 
@@ -1602,13 +1485,9 @@ export function VanillaClaimlessReclaimHarness() {
 }
 
 /**
- * A `prepare` that throws, reported through `onError` — the controller binding.
- *
- * Worth its own harness rather than inheriting the hook bindings' proof, because there is no
- * render pass here: the reported state has to reach the page through the caller's own listener,
- * which is the shape a consumer of this binding actually writes. `aria-busy` is the library's one
- * owned attribute and it is written onto markup the caller wrote, so it is the assertion that says
- * the settle reached the element rather than only the store.
+ * A `prepare` that throws, reported through `onError`. Its own harness because there is no render
+ * pass: the state reaches the page through the caller's own listener. `aria-busy` — the library's one
+ * owned attribute on the caller's markup — says the settle reached the element, not only the store.
  */
 export function VanillaPrepareFailureHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);

@@ -1,14 +1,9 @@
 import { useState } from 'react';
 import { useModal } from '../../react.js';
 
-/**
- * A modal dialog whose Escape is a *request*.
- *
- * The owner is the `open` state here, as it is in any controlled wrapper: the dialog never closes
- * itself, it reports, and the state above it decides. That distinction is invisible in a screenshot
- * and total in behaviour — a dialog that closed itself would leave the boolean above it saying
- * `true`, and the next render would put it straight back.
- */
+// A modal dialog whose Escape is a *request*: the dialog reports and the state above it decides,
+// as in any controlled wrapper. A dialog that closed itself would leave that boolean saying `true`,
+// and the next render would put it straight back.
 export function ControlledModalHarness() {
   const [requests, setRequests] = useState(0);
   const [allow, setAllow] = useState(false);
@@ -64,14 +59,9 @@ export function ControlledModalHarness() {
   );
 }
 
-/**
- * A non-modal panel whose Escape is a request, and which may decline the press.
- *
- * Two things only this variant can show. The panel is outside the top layer, so focus is ordinary
- * and the press is made from a button *beside* it — a dialog-level listener would never hear it.
- * And declining leaves the press travelling: the window listener captures, so a press it swallows
- * is one the page never sees, and an owner that did nothing must not cost the page its keyboard.
- */
+// A non-modal panel whose Escape is a request and which may decline. Outside the top layer, so the
+// press comes from a button *beside* it, which a dialog-level listener would never hear. The window
+// listener captures, so a press it swallows is one the page never sees.
 export function ControlledPanelHarness() {
   const [requests, setRequests] = useState(0);
   const [declining, setDeclining] = useState(false);
@@ -103,8 +93,7 @@ export function ControlledPanelHarness() {
     <div
       data-testid="page"
       onKeyDownCapture={(event) => {
-        // The page's own listener, standing in for everything a real application binds. It is what
-        // a swallowed press costs, so it is what the decline path has to leave working.
+        // What a swallowed press costs, so what the decline path has to leave working.
         if (event.key === 'Escape') {
           setPageSaw((count) => {
             return count + 1;

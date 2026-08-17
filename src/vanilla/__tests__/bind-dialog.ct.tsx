@@ -24,13 +24,9 @@ import {
 } from './bind-dialog.story';
 
 /**
- * `umbra/vanilla`, against a real browser and a `<dialog>` the caller wrote.
- *
- * Deliberately the same assertions the other two bindings' suites make, because the claim is that
- * a dialog driven this way is not a lesser dialog — the top layer, the dismiss key, the hotkeys,
- * the opening focus and the typed close are all the ones the hook bindings run. Where a test has
- * no counterpart, it is testing what only a controller has: binding an action to a button that
- * already exists, and unbinding it.
+ * `umbra/vanilla`, against a real browser and a `<dialog>` the caller wrote — deliberately the same
+ * assertions the hook bindings make. Tests with no counterpart cover what only a controller has:
+ * binding and unbinding an action on a button that already exists.
  */
 
 test.describe('bindDialog', () => {
@@ -48,10 +44,8 @@ test.describe('bindDialog', () => {
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    // `showModal()`, not `show()` — the same default variant the hook bindings have.
+    // `showModal()`, not `show()` — the hook bindings' default variant.
     await expect(page.locator('dialog[data-modal-id="vanilla-basic"]:modal')).toHaveCount(1);
-    // The attributes user-land CSS reaches a dialog by, written onto markup the binding did not
-    // create.
     await expect(page.getByTestId('modal-vanilla-basic')).toHaveAttribute(
       'data-modal-type',
       'modal'
@@ -87,8 +81,7 @@ test.describe('bindDialog', () => {
 
     await page.keyboard.press('Escape');
 
-    // Not `dismiss`: Cancel declared Escape as its hotkey, so the action wins — the same
-    // precedence the hook bindings give it.
+    // Not `dismiss`: Cancel declared Escape as its hotkey, so the action wins.
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
   });
 
@@ -103,8 +96,7 @@ test.describe('bindDialog', () => {
   });
 
   test('a running action is pushed onto every bound button', async ({ mount, page }) => {
-    // The half a renderer does elsewhere: with nothing re-rendering, `bindAction` subscribes and
-    // writes `disabled` / `data-loading` / `aria-busy` itself.
+    // No renderer: `bindAction` writes `disabled` / `data-loading` (CSS) / `aria-busy` (AT) itself.
     await mount(<VanillaBasicHarness />);
     await page.getByTestId('open').click();
 
@@ -114,8 +106,6 @@ test.describe('bindDialog', () => {
       'data-loading',
       'true'
     );
-    // The one the comment above names and nothing asserted: `data-loading` is for CSS, this is
-    // the half assistive technology reads.
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
       'aria-busy',
       'true'
@@ -127,8 +117,6 @@ test.describe('bindDialog', () => {
   });
 
   test('isActionRunning answers for one action, off the button', async ({ mount, page }) => {
-    // `bindAction` keeps the button itself in step; this is the same fact for everything that is
-    // not the button, which here is markup the binding has never touched.
     await mount(<VanillaBasicHarness />);
     await page.getByTestId('open').click();
 
@@ -155,9 +143,7 @@ test.describe('bindDialog', () => {
     mount,
     page,
   }) => {
-    // The controller's counterpart to React's render pass and Solid's `onCleanup`: here the
-    // caller says when an action is gone, and the unbind is what says it. `hasActions()` decides
-    // whether a backdrop click dismisses, which is what makes it observable from outside.
+    // The unbind is how a caller retires an action, and `hasActions()` gates backdrop dismissal.
     await mount(<VanillaUnbindHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('modal-vanilla-unbind')).toBeVisible();
@@ -173,11 +159,9 @@ test.describe('bindDialog', () => {
   });
 
   test('a failed action hands focus back to the button that ran it', async ({ mount, page }) => {
-    // Regression: `bindAction` disables the button from its own synchronous engine subscriber,
-    // and the caller registers that subscriber before the focus coordinator exists — so reading
-    // `activeElement` when the action starts found an already-blurred button and the retry landed
-    // on the dialog. Found by putting a dialog in a shadow root, but never a shadow-root problem:
-    // this harness is plain markup.
+    // `bindAction` disables the button from a subscriber registered ahead of the focus coordinator,
+    // so `activeElement` at action start is already blurred. Plain markup: the shadow root it was
+    // found in was never the cause.
     await mount(<VanillaFailingActionHarness />);
     await page.getByTestId('open').click();
 
@@ -193,9 +177,7 @@ test.describe('bindDialog', () => {
     mount,
     page,
   }) => {
-    // `adoptedStyleSheets` does not cross a shadow boundary and `document.activeElement`
-    // answers with the host, so both of these were silently wrong: the dialog fell back to the
-    // UA backdrop, and the focus policy concluded focus had left the dialog on every check.
+    // Quiet failures: `adoptedStyleSheets` stops at the boundary, `document.activeElement` is the host.
     await mount(<VanillaShadowRootHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -211,20 +193,15 @@ test.describe('bindDialog', () => {
     });
 
     expect(measured.inTopLayer).toBe(true);
-    // The library own value, not merely "something painted" — Chrome ships a UA default, so a
-    // non-transparent result would pass while proving nothing.
+    // The library's own value: Chrome ships a UA default, so "something painted" proves nothing.
     expect(measured.backdrop).toBe('rgba(0, 0, 0, 0.7)');
     expect(measured.focused).toBe('confirm');
   });
 });
 
 /**
- * The contained variant — `nonModal: true` without `portal`, the one that needs the caller to
- * supply a region.
- *
- * A controller owns no markup, so where the other two bindings render a host this one has to be
- * pointed at one, and every branch of that resolution is here: the parent by default, an explicit
- * `host`, and neither.
+ * The contained variant — `nonModal: true` without `portal`. A controller owns no markup, so it must
+ * be pointed at a host where the hook bindings render one; every branch of that resolution is here.
  */
 test.describe('bindDialog — contained placement', () => {
   test('positions the panel against the dialog’s parent by default', async ({ mount, page }) => {
@@ -233,7 +210,6 @@ test.describe('bindDialog — contained placement', () => {
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     const host = page.getByTestId('host');
-    // The marker CSS reaches the host by, and the id it carries is the panel's.
     await expect(host).toHaveAttribute('data-modal-container', 'vanilla-contained');
 
     const measured = await page.evaluate(() => {
@@ -245,13 +221,11 @@ test.describe('bindDialog — contained placement', () => {
       const region = document.querySelector('[data-testid="region"]');
       return {
         hostPosition: getComputedStyle(hostEl).position,
-        // The host exists to be a containing block and nothing else, so it must not be a hit
-        // target — the region behind it stays as clickable as it was.
+        // A containing block and nothing else, so never a hit target.
         hostPointerEvents: getComputedStyle(hostEl).pointerEvents,
         dialogPosition: getComputedStyle(dialog).position,
         dialogPointerEvents: getComputedStyle(dialog).pointerEvents,
-        // Never the top layer: that is what `nonModal` buys, and what makes containment mean
-        // anything at all.
+        // Never the top layer, which is what makes containment mean anything.
         inTopLayer: dialog.matches(':modal'),
         hostBox: hostEl.getBoundingClientRect().width,
         regionBox: region?.getBoundingClientRect().width ?? 0,
@@ -264,17 +238,13 @@ test.describe('bindDialog — contained placement', () => {
     expect(measured?.dialogPosition).toBe('absolute');
     expect(measured?.dialogPointerEvents).toBe('auto');
     expect(measured?.inTopLayer).toBe(false);
-    // The host fills the sized region it was given — the precondition the whole variant rests on,
-    // and the one whose failure makes every other assertion here pass vacuously.
+    // The host fills its sized region: without this precondition every assertion above is vacuous.
     expect(measured?.hostBox).toBe(400);
     expect(measured?.regionBox).toBe(400);
   });
 
   test('the host overlays its region without becoming a hit target', async ({ mount, page }) => {
-    // The host is styled at bind time and is `inset: 0` over the whole region from then on — so
-    // for as long as the panel is closed it is an invisible sheet across everything behind it.
-    // `pointerEvents: none` is what keeps that from killing the region's own controls, and this
-    // is the assertion that notices if it ever stops being applied.
+    // The host is an `inset: 0` sheet over the region even closed; `pointerEvents: none` saves it.
     await mount(<VanillaContainedHarness />);
     await expect(page.getByTestId('host')).toHaveAttribute(
       'data-modal-container',
@@ -285,8 +255,7 @@ test.describe('bindDialog — contained placement', () => {
     await page.getByTestId('behind').click();
     await expect(page.getByTestId('behind-clicks')).toHaveText('1');
 
-    // Open, and the panel itself does cover the region — `pointerEvents: auto` is on the dialog,
-    // which is the half that has to capture. Containment would mean nothing otherwise.
+    // Open, the dialog does cover the region: `pointerEvents: auto` is the half that must capture.
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     const covered = await page.evaluate(() => {
@@ -305,8 +274,7 @@ test.describe('bindDialog — contained placement', () => {
     await mount(<VanillaExplicitHostHarness />);
     await page.getByTestId('open').click();
 
-    // The dialog's parent is `wrapper`; the named host is its grandparent. A pass here cannot be
-    // the default branch answering by coincidence.
+    // The parent is `wrapper` and the named host its grandparent, so the default branch cannot pass.
     await expect(page.getByTestId('host')).toHaveAttribute(
       'data-modal-container',
       'vanilla-explicit-host'
@@ -317,29 +285,21 @@ test.describe('bindDialog — contained placement', () => {
   test('degrades rather than throwing when there is no host at all', async ({ mount, page }) => {
     await mount(<VanillaNoHostHarness />);
 
-    // Bound despite the missing host: the controller answers, which is the whole claim.
     await page.getByTestId('probe').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // And it styled nothing on the way past — a binding that fell back to `document.body` would
-    // position an unrelated element and be far worse than the warning it logs instead.
+    // And styled nothing: a fallback to `document.body` would position an unrelated element.
     await expect(page.locator('[data-modal-container]')).toHaveCount(0);
   });
 
   test('portal places without relocating', async ({ mount, page }) => {
-    // The one option whose meaning is *narrower* here than in the hook bindings, and the reason it
-    // needs a test rather than a sentence: the type accepts it, the placement half arrives, and
-    // nothing in the code path would have told you the other half does not. React portals its
-    // dialog into `document.body` and Solid mounts its own there; this binding was handed markup
-    // the caller wrote, and moving that would take its ids, its stylesheet scope and its listeners
-    // with it. So `portal: true` selects `fixed` and leaves the element alone — which means the
-    // caller, not the library, owns whether `fixed` reaches the viewport.
+    // Narrower here: moving the caller's markup would take its ids, stylesheet scope and listeners,
+    // so `portal: true` only selects `fixed` — the caller owns whether that reaches the viewport.
     await mount(<VanillaPortalHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // No host is styled: the portaled variant has none, so a `data-modal-container` here would mean
-    // the contained branch had been taken instead.
+    // A `data-modal-container` here would mean the contained branch had been taken instead.
     await expect(page.locator('[data-modal-container]')).toHaveCount(0);
 
     const measured = await page.evaluate(() => {
@@ -352,7 +312,7 @@ test.describe('bindDialog — contained placement', () => {
       const ancestor = transformed.getBoundingClientRect();
       return {
         position: getComputedStyle(dialog).position,
-        // Where it lives, not where it is painted: the assertion that the element was not moved.
+        // Where it lives, not where it paints: the proof the element was not moved.
         parentTestId: dialog.parentElement?.dataset['testid'] ?? null,
         inBody: dialog.parentElement === document.body,
         inTopLayer: dialog.matches(':modal'),
@@ -368,13 +328,9 @@ test.describe('bindDialog — contained placement', () => {
     expect(measured?.inBody).toBe(false);
     expect(measured?.inTopLayer).toBe(false);
 
-    // And the consequence, measured rather than asserted in prose: the containing block `fixed`
-    // resolved against is the **transformed ancestor**, not the viewport. Read through the centres,
-    // because `inset: 0` does not stretch a `<dialog>` — the UA keeps `width: fit-content` and
-    // `margin: auto`, so the panel is content-sized and centred in whatever block won. This is why
-    // the option's doc tells a vanilla caller to place the `<dialog>` outside such an ancestor
-    // themselves: the library cannot, and a test that only checked `position: fixed` would report
-    // this arrangement as working.
+    // Measured: `fixed` resolved against the **transformed ancestor**, not the viewport — why the doc
+    // tells a vanilla caller to place the `<dialog>` outside one. Through the centres, the UA keeping
+    // `width: fit-content` and `margin: auto` so `inset: 0` never stretches it.
     const box = measured?.box;
     const ancestor = measured?.ancestor;
     const viewport = measured?.viewport;
@@ -384,17 +340,14 @@ test.describe('bindDialog — contained placement', () => {
     }
     expect(box.x + box.width / 2).toBeCloseTo(ancestor.x + ancestor.width / 2, 1);
     expect(box.y + box.height / 2).toBeCloseTo(ancestor.y + ancestor.height / 2, 1);
-    // Guards the guard: the two centres have to disagree, or the assertion above would pass on a
-    // panel that was viewport-anchored after all.
+    // Guards the guard: the centres must disagree, or the above passes on a viewport-anchored panel.
     expect(Math.abs(ancestor.x + ancestor.width / 2 - viewport.width / 2)).toBeGreaterThan(50);
   });
 });
 
 /**
- * The controller's two remaining doors: the reactive surface, and the teardown.
- *
- * Both are driven from the page rather than from unmount — the coverage fixture reads its counters
- * before React's cleanup runs, so a teardown watched only at unmount is a teardown nothing asserted.
+ * The reactive surface and the teardown, driven from the page: the coverage fixture reads its
+ * counters before React's cleanup, so an unmount-only teardown is unasserted.
  */
 test.describe('bindDialog — subscription and teardown', () => {
   test('destroy unregisters the dialog and stops the subscription', async ({ mount, page }) => {
@@ -406,20 +359,15 @@ test.describe('bindDialog — subscription and teardown', () => {
 
     await page.getByTestId('destroy').click();
 
-    // Gone from the registry: a manager still holding it would keep answering lookups for a
-    // dialog whose listeners have all been detached.
+    // A manager still holding it would answer lookups for a dialog with no listeners left.
     await expect(page.getByTestId('registered')).toHaveText('no');
-    // `destroy()` closes what it unregisters, so a subscription the unsubscribe failed to detach
-    // has a transition to hear right here.
+    // `destroy()` closes what it unregisters, so a leaked subscription has a transition to hear.
     await expect(page.getByTestId('after-destroy')).toHaveText('no');
     await expect(page.locator('dialog[data-modal-id="vanilla-destroy"][open]')).toHaveCount(0);
   });
 });
 
-/**
- * `onOpenRequest` through the controller — the manager's asking door, forwarded rather than
- * reimplemented.
- */
+/** `onOpenRequest` through the controller — forwarded to the manager, not reimplemented. */
 test.describe('bindDialog — open requests', () => {
   test('an accepted request opens the dialog', async ({ mount, page }) => {
     await mount(<VanillaOpenRequestHarness />);
@@ -430,8 +378,7 @@ test.describe('bindDialog — open requests', () => {
   });
 
   test('a refused request reports why, and nothing opens', async ({ mount, page }) => {
-    // Refusal is explicit and acceptance is the default — the manager cannot infer either, so
-    // this is the branch that proves the handler was actually consulted.
+    // Refusal is explicit where acceptance is the default, so this branch proves the handler ran.
     await mount(<VanillaOpenRequestHarness />);
     await page.getByTestId('ask-rudely').click();
 
@@ -441,8 +388,8 @@ test.describe('bindDialog — open requests', () => {
 });
 
 /**
- * The two things a controller has to clean up that a renderer would have done by unmounting: the
- * writes on a button it does not own, and the attribute on a dialog it does not own.
+ * What a renderer would clean up by unmounting: the writes on a button the controller does not own,
+ * and the attribute on a dialog it does not own.
  */
 test.describe('bindDialog — what teardown hands back', () => {
   test('unbinding restores the caller’s button, mid-action included', async ({ mount, page }) => {
@@ -452,15 +399,14 @@ test.describe('bindDialog — what teardown hands back', () => {
     const slow = page.getByTestId('slow-action');
     await expect(slow).toHaveAttribute('aria-keyshortcuts', 'Control+S');
 
-    // Start an action that never settles, so the unbind lands while the button is stuck.
+    // Never settles, so the unbind lands while the button is stuck.
     await slow.click();
     await expect(slow).toBeDisabled();
     await expect(slow).toHaveAttribute('aria-busy', 'true');
 
     await page.getByTestId('unbind').click();
 
-    // Not a stale attribute — a dead control in the caller's page, which is why this is a fix and
-    // not a tidy-up.
+    // Not a stale attribute but a dead control in the caller's page.
     await expect(slow).toBeEnabled();
     await expect(slow).not.toHaveAttribute('aria-busy', /.*/);
     await expect(slow).not.toHaveAttribute('data-loading', /.*/);
@@ -468,11 +414,9 @@ test.describe('bindDialog — what teardown hands back', () => {
     // `bindAction` writes `type`, and a button that had none must not come back with one.
     await expect(slow).not.toHaveAttribute('type', /.*/);
 
-    // Restored, not cleared: this one was disabled in the markup before anything bound it, and an
-    // unbind that switched it on would be handing back something the caller never wrote.
+    // Restored, not cleared: disabled in the markup before binding, so switching it on is wrong.
     await expect(page.getByTestId('already-off')).toBeDisabled();
 
-    // The hotkey went with the attribute.
     await page.keyboard.press('Control+s');
     await expect(slow).toBeEnabled();
   });
@@ -481,8 +425,7 @@ test.describe('bindDialog — what teardown hands back', () => {
     mount,
     page,
   }) => {
-    // `destroy()` unsubscribes first, so the notification that would clear `aria-busy` never
-    // arrives — and the element is the caller's, so it outlives the controller wearing it.
+    // `destroy()` unsubscribes first, so nothing clears `aria-busy` off the surviving element.
     await mount(<VanillaBusyHarness />);
     await page.getByTestId('open').click();
 
@@ -506,12 +449,9 @@ test.describe('bindDialog — what teardown hands back', () => {
 });
 
 /**
- * The labelling diagnostic, on the binding it was designed around.
- *
- * Neither dialog here passes an aria option — both carry their attributes (or their absence) in
- * the caller's own markup. That is the case reading `options.ariaLabelledBy` would be blind to,
- * and it is the ordinary one in this binding: the `id` and the reference to it are written by
- * hand, in two places, by someone who never sees the result.
+ * The labelling diagnostic, on the binding it was designed around. Neither dialog passes an aria
+ * option — both carry their attributes, or their absence, in the caller's own markup, which reading
+ * `options.ariaLabelledBy` would be blind to.
  */
 test.describe('bindDialog — the labelling diagnostic', () => {
   const labellingWarnings = (page: Page) => {
@@ -537,8 +477,7 @@ test.describe('bindDialog — the labelling diagnostic', () => {
   });
 
   test('reports a dialog with no accessible name at all', async ({ mount, page }) => {
-    // The finding that never fires in the playground any more, so this is the only place it is
-    // exercised end to end rather than as a pure function.
+    // Never fires in the playground now, so this is its only end-to-end exercise.
     const warnings = labellingWarnings(page);
 
     await mount(<VanillaLabellingHarness />);
@@ -553,11 +492,8 @@ test.describe('bindDialog — the labelling diagnostic', () => {
 
 test.describe('a shadow-root dialog in a stack', () => {
   /**
-   * The front dialog, asked through the shadow root as well as the document.
-   *
-   * `document.elementFromPoint` stops at a shadow host — it hands back the host, not what is inside —
-   * so the shared probe cannot see a dialog in one. Piercing here rather than in the shared helper,
-   * because this is the only suite with a shadow root in it and the helper says so.
+   * `document.elementFromPoint` stops at a shadow host, so the shared probe cannot see a dialog in
+   * one. Pierced here rather than in that helper, this being the only suite with a shadow root.
    */
   async function frontDialogIdDeep(page: Page): Promise<string | null> {
     return page.evaluate(() => {
@@ -575,7 +511,6 @@ test.describe('a shadow-root dialog in a stack', () => {
     });
   }
 
-  /** What holds focus inside the shadow root, by id. */
   async function focusedInShadow(page: Page): Promise<string | null> {
     return page.evaluate(() => {
       const root = document.querySelector('[data-testid="shadow-stack-host"]')?.shadowRoot;
@@ -584,11 +519,8 @@ test.describe('a shadow-root dialog in a stack', () => {
   }
 
   /**
-   * Which dialog holds the keyboard, asked from inside the shadow root.
-   *
-   * The coarser question, and the one the library actually answers. *Which control* inside that dialog
-   * is focused after a raise is engine-dependent — see the test below — so a probe that returns an
-   * element id can only be used where the position is the claim.
+   * Which dialog holds the keyboard — the coarser question, and the one the library answers. *Which
+   * control* is engine-dependent after a raise, so the id probe above only fits where position is.
    */
   async function focusedDialogInShadow(page: Page): Promise<string | null> {
     return page.evaluate(() => {
@@ -606,14 +538,11 @@ test.describe('a shadow-root dialog in a stack', () => {
     await expect(component.getByTestId('policy')).toHaveText('on');
 
     await component.getByTestId('open-shadow-front').click();
-    // Dispatched rather than clicked: the shadow dialog is modal and in the top layer, so the page
-    // behind it — this button included — is under its backdrop.
+    // Dispatched, not clicked: the shadow dialog is modal, so this button is under its backdrop.
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
 
-    // `prioritize` lives on the manager and every binding inherits it without a line of its own,
-    // which is exactly why nothing would fail if one of them stopped reaching it: the parity test
-    // compares export names, and this is a method.
+    // `prioritize` is inherited, so nothing else would fail if a binding stopped reaching it.
     await expect
       .poll(() => {
         return frontDialogIdDeep(page);
@@ -646,24 +575,17 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
 
-    // The claim, and it is about the **dialog** rather than the control: the one in front still has
-    // the keyboard, from inside a shadow root — where `document.activeElement` answers with the host
-    // and a document-scoped check would read "focus left" forever.
+    // About the **dialog**, not the control, and from a root where a document check reads "gone".
     await expect
       .poll(() => {
         return focusedDialogInShadow(page);
       })
       .toBe('vanilla-shadow-front');
 
-    // **Which control it lands on is the engine's, not the library's, and asserting one of them is
-    // what broke CI.** Chromium puts focus on the dialog's first focusable: the newcomer's
-    // `showModal()` takes the keyboard first, so the raise cannot see where it was, and the raise's
-    // own `showModal()` fires a `focusin` that overwrites the coordinator's memory before the reclaim
-    // reads it. WebKit preserves the field. Neither is wrong — the library guarantees the dialog keeps
-    // the keyboard and documents the position as a known limit, so a test that pinned `shadow-confirm`
-    // was pinning one engine's version of a limit. Fixing the limit itself means teaching the
-    // `focusin` bookkeeping to ignore focus the library moves during a raise; see the guard in
-    // `core/attach-focus.ts`, and the matrix cell that carries it.
+    // **Which control it lands on is the engine's, and pinning one broke CI.** Chromium lands on the
+    // first focusable — the newcomer's `showModal()` takes the keyboard before the raise can read
+    // where it was, and the raise's own fires a `focusin` over the coordinator's memory; WebKit keeps
+    // the field. A documented limit — see the guard in `core/attach-focus.ts` and its matrix cell.
     expect(['shadow-confirm', 'shadow-note']).toContain(await focusedInShadow(page));
   });
 
@@ -678,10 +600,8 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('shadow-note');
 
-    // The late install: nothing is tracked yet, so the first plan lifts everything bottom-first —
-    // this dialog, while it holds the keyboard. That is the one arrangement reaching `raiseDialog`'s
-    // focus restore, and here it also drives the walk into the shadow root, since
-    // `document.activeElement` is the host and the real answer is one tree down.
+    // A late install tracks nothing, so the first plan lifts everything bottom-first — this dialog
+    // while it holds the keyboard, the one arrangement reaching `raiseDialog`'s focus restore.
     await component.getByTestId('toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('policy')).toHaveText('on');
 
@@ -705,20 +625,16 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
 
-    // Moving a modal dialog is `close()` + `showModal()`, so the element emits a `close` nobody asked
-    // for. `close()` *queues* it, which is what leaves `dialog.open` back at `true` by the time a
-    // listener runs — the only way a listener can tell a raise from a real close. This matters here
-    // and nowhere else: the `<dialog>` and this listener are the caller's.
+    // A raise is `close()` + `showModal()`, and `close()` *queues* its event, so `dialog.open` is back
+    // at `true` when the caller's own listener runs — the only way to tell a raise from a real close.
     await expect(component.getByTestId('native-closes')).toHaveText('1');
     await expect(component.getByTestId('open-when-closed')).toHaveText('still-open');
   });
 });
 
 /**
- * The three options React's suite exercised and this one did not.
- *
- * Its own describe because they are not controller-specific behaviour — each is a shared `attach*`
- * function — and the point is that a binding with no render pass reaches them the same way.
+ * Three options React's suite exercised and this one did not — each a shared `attach*` function, so
+ * the claim is that a binding with no render pass reaches them the same way.
  */
 test.describe('bindDialog — the options only React had exercised', () => {
   test('containFocus wraps Tab inside the panel', async ({ mount, page }) => {
@@ -746,8 +662,7 @@ test.describe('bindDialog — the options only React had exercised', () => {
 
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    // The reason, not just visibility: `isVisible` alone stays true through an exit animation, so on
-    // its own it would match a panel that closed as well as one that did not.
+    // The reason too: `isVisible` stays true through an exit, so it matches a closing panel as well.
     await expect(page.getByTestId('last-reason')).toHaveText('none');
 
     await page.keyboard.press('Delete');
@@ -772,11 +687,8 @@ test.describe('bindDialog — the options only React had exercised', () => {
 });
 
 /**
- * `reconcileOpen`, from the controller's own snapshot.
- *
- * The other two bindings read `phase` through `useLookup`; here it comes off the snapshot the
- * controller publishes, which is why `phase` is on this binding's surface and on neither of the
- * others — with no render pass, it is the only clock a caller has.
+ * `reconcileOpen` from the controller's snapshot — why `phase` is on this binding's surface alone:
+ * with no render pass, the snapshot is the only clock a caller has.
  */
 test.describe('bindDialog — reconcileOpen from the snapshot', () => {
   test('the flag drives the dialog, and stays authoritative over an imperative open', async ({
@@ -807,8 +719,7 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     await page.getByTestId('close-and-lower').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // Deciding on `isVisible` would read "flag says closed, dialog says open" across the 120 ms exit
-    // and ask for a second close on a dialog already leaving.
+    // Deciding on `isVisible` would ask for a second close across the 120 ms exit.
     await expect(page.getByTestId('asked')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });
@@ -829,9 +740,7 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
   };
 
   test('a non-modal one is adopted where it stands', async ({ mount, page }) => {
-    // The store used to start at `closed` against an element that was open, and the first pass
-    // wrote `display: none` over it — so the DOM said open, the store said closed, and the user
-    // saw nothing. Adoption is what makes the three agree.
+    // Without adoption the store starts `closed` and the first pass writes `display: none` over it.
     const component = await mount(<VanillaServerOpenHarness nonModal />);
 
     await expect(component.getByTestId('phase')).toHaveText('open');
@@ -842,9 +751,7 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
     mount,
     page,
   }) => {
-    // Not a refusal to implement: `showModal()` from script is the only way into the top layer, so
-    // an `open` attribute in served HTML is by definition a *non-modal* open. Adopting it as modal
-    // would claim a backdrop and an inert page that the element does not have.
+    // Only script reaches the top layer, so a served `open` is a *non-modal* open with no backdrop.
     const component = await mount(<VanillaServerOpenHarness nonModal={false} />);
 
     await expect(component.getByTestId('phase')).toHaveText('closed');
@@ -853,12 +760,8 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
 });
 
 /**
- * The floor under the reclaim, on a binding that renders nothing.
- *
- * `reclaimFocus` is core and every binding reaches it through `createFocusCoordinator` — which the
- * director builds for the hook pair and which `bindDialog` builds for itself, at a different point
- * in its own sync. That second route is the reason this is worth measuring rather than inferring:
- * the shared function is shared, the scheduling around it is not.
+ * The floor under the reclaim, on a binding that renders nothing. `createFocusCoordinator` is shared,
+ * but the director builds it for the hook pair and `bindDialog` builds its own at a different point.
  */
 test.describe('bindDialog — a dialog that claimed no opening focus', () => {
   test('gets the keyboard back when a panel opens underneath', async ({ mount, page }) => {
@@ -868,14 +771,13 @@ test.describe('bindDialog — a dialog that claimed no opening focus', () => {
     await expect(page.locator('dialog[data-modal-id="vanilla-claimless"]')).toBeVisible();
     await expect(page.locator('dialog[data-modal-id="vanilla-claimless-panel"]')).toBeVisible();
 
-    // Nothing outside the modal holds it, which is the guarantee — the modal is in the top layer
-    // and a keyboard on `<body>` there is a dialog nobody can reach.
+    // Nothing outside the modal holds it: a keyboard on `<body>` under the top layer is unreachable.
     await expect(
       page.locator(
         ':focus:not(dialog[data-modal-id="vanilla-claimless"], dialog[data-modal-id="vanilla-claimless"] *)'
       )
     ).toHaveCount(0);
-    // And it is the *first* focusable, not the last — the half that only two buttons can show.
+    // The *first* focusable, not the last — the half only two buttons can show.
     await expect(page.getByTestId('vanilla-claimless-cancel')).toBeFocused();
   });
 });
@@ -893,8 +795,7 @@ test.describe('bindDialog — onError', () => {
     await expect(component.getByTestId('vpf-sources')).toHaveText('prepare');
     await expect(component.getByTestId('vpf-message')).toHaveText('report is unavailable');
 
-    // A report, not a veto. `aria-busy` is the library's one owned attribute, written onto markup
-    // the caller wrote — so it says the settle reached the element and not only the store.
+    // A report, not a veto. `aria-busy`, on the caller's markup, says the settle reached the element.
     await expect(component.getByTestId('vpf-preparing')).toHaveText('ready');
     await expect(page.locator('dialog[data-modal-id="vanilla-prepare-failure"]')).toHaveAttribute(
       'aria-busy',

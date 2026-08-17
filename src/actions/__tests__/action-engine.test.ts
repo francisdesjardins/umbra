@@ -3,15 +3,8 @@ import { keyboardEvent } from '../../__tests__/fake-events.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { createActionEngine, runDeclarationWindow } from '../action-engine.js';
 
-/**
- * The action engine, on its own.
- *
- * It had no unit test: everything it does was reached through a React component test, which is a
- * browser and a render pass away from the question being asked. But the engine is a store and a
- * handler runner with no DOM in it at all — the declaration window, the hotkey table, the
- * aggregation and the error capture are decidable here, and they are the rules **both** bindings
- * depend on.
- */
+// The action engine alone — a store and a handler runner with no DOM, so the declaration window,
+// the hotkey table, aggregation and error capture are decidable here, shared by both bindings.
 
 test.describe('running an action', () => {
   test('reports a run through the aggregate, and settles back to idle', async () => {
@@ -31,8 +24,7 @@ test.describe('running an action', () => {
   test('captures what a handler throws instead of letting it escape', async () => {
     const engine = createActionEngine<void>('throw');
 
-    // Not re-thrown: the button is spread onto user markup, and an unhandled rejection there is
-    // a broken modal rather than a reported one. It surfaces on `error`.
+    // Not re-thrown: a rejection in user markup breaks the modal. It surfaces on `error` instead.
     await engine.run('save', () => {
       throw new Error('nope');
     });
@@ -78,8 +70,7 @@ test.describe('running an action', () => {
   });
 
   test('one running action is visible to every other', async () => {
-    // What `disabled` on every button is computed from: the aggregate is the modal's, not the
-    // action's, so a second action cannot start while the first is in flight.
+    // What `disabled` on every button reads: the aggregate is the modal's, not the action's.
     const engine = createActionEngine<void>('overlap');
     let seen = false;
 
@@ -103,8 +94,7 @@ test.describe('the declaration window', () => {
     expect(engine.hasActions()).toBe(true);
     expect(engine.ownsHotkey('Escape')).toBe(true);
 
-    // The pass that no longer draws Cancel must retire its hotkey — otherwise it goes on
-    // suppressing the dismiss key for a button nobody can see.
+    // A pass that no longer draws Cancel must retire its hotkey, or it keeps suppressing dismiss.
     engine.beginRender();
     engine.declare('save', 'Enter');
     engine.endRender();
@@ -113,8 +103,7 @@ test.describe('the declaration window', () => {
   });
 
   test('a declaration made outside a pass lands on the live table', () => {
-    // This is the fine-grained renderer's path: Solid never re-runs the parent, so a button
-    // inside a `<Show>` declares itself after `endRender` has already swapped.
+    // Solid's fine-grained path: a button inside a `<Show>` declares after `endRender` swapped.
     const engine = createActionEngine<void>('late');
     engine.beginRender();
     engine.endRender();
@@ -125,8 +114,7 @@ test.describe('the declaration window', () => {
   });
 
   test('undeclare retires an action, and with it the backdrop opt-in', () => {
-    // `hasActions()` is what decides whether a backdrop click dismisses, so this is not merely a
-    // stale hotkey: without it a modal that has drawn its last action stays silently opt-in.
+    // `hasActions()` gates backdrop dismiss, so a stale one leaves a spent modal silently opt-in.
     const engine = createActionEngine<void>('undeclare');
     engine.declare('confirm', 'Enter');
     expect(engine.hasActions()).toBe(true);
@@ -144,13 +132,8 @@ test.describe('the declaration window', () => {
   });
 });
 
-/**
- * `runDeclarationWindow` — four lines with two reasons to exist, and neither had an assertion.
- *
- * Both hook bindings wrap their `render` in it, so it is the shape of every declaration pass the
- * library performs; the whole of what it adds over calling `beginRender` and `endRender` in a row
- * is what happens when the call between them throws.
- */
+// Both hook bindings wrap their `render` in `runDeclarationWindow`; all it adds over calling
+// `beginRender`/`endRender` in a row is what happens when the call between them throws.
 test.describe('the declaration window as a wrapper', () => {
   test('hands the render’s value back, having opened and closed the window around it', () => {
     const engine = createActionEngine<void, 'save'>('wrap');
@@ -180,9 +163,8 @@ test.describe('the declaration window as a wrapper', () => {
   });
 
   test('a render that throws closes the window anyway, and the throw is not swallowed', () => {
-    // The `finally` is the whole point, asserted through what it costs rather than through a flag:
-    // `endRender` is what swaps the pending table in, so a window left open means every later
-    // `hasActions()` — the backdrop-click opt-in — answers from a pass that never finished.
+    // The `finally` is the point, asserted through what it costs: `endRender` swaps the pending
+    // table in, so a window left open leaves `hasActions()` answering from an unfinished pass.
     const engine = createActionEngine<void, 'save' | 'cancel'>('abandoned');
 
     runDeclarationWindow(engine, () => {
@@ -198,8 +180,7 @@ test.describe('the declaration window as a wrapper', () => {
       });
     }).toThrow('half a pass');
 
-    // The interrupted pass declared `save` and nothing else, and that is exactly what is live:
-    // the swap happened, so `cancel` is retired rather than surviving on a stale table.
+    // The swap happened: the interrupted pass declared `save` only, so `cancel` is retired.
     expect(engine.ownsHotkey('Enter')).toBe(true);
     expect(engine.ownsHotkey('Escape')).toBe(false);
     expect(engine.hasActions()).toBe(true);
@@ -222,8 +203,7 @@ test.describe('hotkeys', () => {
   });
 
   test('ownsHotkey compares the canonical form, not raw strings', () => {
-    // `'Shift+s'` and `'Shift+S'` are one hotkey — the modifier list discriminates, and CapsLock
-    // must not change which one fires. The dismiss-key gate in `attach-keydown` relies on exactly this.
+    // `Shift+s` and `Shift+S` are one hotkey, CapsLock included; `attach-keydown`'s gate needs it.
     const engine = createActionEngine<void>('labels');
     engine.declare('shout', 'Shift+s');
 
@@ -233,9 +213,7 @@ test.describe('hotkeys', () => {
   });
 
   test('ownsHotkey survived the move to the ARIA spelling', () => {
-    // It canonicalises through `formatAriaKeyshortcuts` now, so that one function is what the
-    // attribute, the dispatch selector and this comparison all speak. What must not change is the
-    // equivalence: a modified hotkey is still owned, and a different key still is not.
+    // Canonicalised through `formatAriaKeyshortcuts`, so attribute, dispatch and this all agree.
     const engine = createActionEngine<void>('aria-form');
     engine.declare('save', 'Ctrl+s');
 
@@ -260,8 +238,7 @@ test.describe('subscription', () => {
 
     await engine.run('save', () => {});
 
-    // Started and settled: the focus coordinator watches for exactly this running → idle edge,
-    // and a single coalesced notification would lose it.
+    // Focus restoration watches the running → idle edge, so a coalesced notification loses it.
     expect(notifications).toBeGreaterThanOrEqual(2);
 
     unsubscribe();
@@ -272,9 +249,8 @@ test.describe('subscription', () => {
 
 test.describe('the edges', () => {
   test('warns when a second action starts while one is running', () => {
-    // Every binding disables every button while an action runs, so overlap means something
-    // bypassed that — a caller's own wrapper dropping `disabled`, or a programmatic run. The
-    // engine does not refuse it (it has no business vetoing the caller) but it says so.
+    // Every binding disables every button while an action runs, so overlap means something bypassed
+    // that — a wrapper dropping `disabled`, or a programmatic run. Warned, never vetoed.
     const engine = createActionEngine<void, 'save' | 'other'>('overlap');
     const warnings: unknown[][] = [];
     const originalWarn = console.warn;
@@ -282,13 +258,11 @@ test.describe('the edges', () => {
     console.warn = (...args) => {
       warnings.push(args);
     };
-    // Swallowed rather than left to print: enabling the namespace turns on its `debug` lines too,
-    // and a passing test should not write four of them to the run's output.
+    // Swallowed: enabling the namespace turns on its `debug` lines too, which need not print.
     console.debug = () => {
       return;
     };
-    // The logger is silent until a pattern says otherwise, warnings included — so a test that
-    // asserts on one has to turn it on, or it asserts on the logger being off.
+    // The logger is silent until a pattern says otherwise, warnings included — so turn it on.
     setLogLevel('action');
 
     try {
@@ -318,10 +292,8 @@ test.describe('the edges', () => {
   });
 
   test('warns once when an action is declared with the reserved dismiss reason', () => {
-    // `ActionReason` excludes `'dismiss'`, but `Exclude<string, 'dismiss'>` is `string` — so the
-    // modal that left `TReason` at its default (the one this warning is for) gets no type error.
-    // Declared here with that default on purpose: annotating the union is what would make this
-    // unreachable, and then the test would be asserting the checker rather than the guard.
+    // `ActionReason` excludes `'dismiss'`, but `Exclude<string, 'dismiss'>` is `string`, so the
+    // default `TReason` — used here on purpose — gets no type error and needs the runtime guard.
     const engine = createActionEngine<void>('reserved');
     const warnings: unknown[][] = [];
     const originalWarn = console.warn;
@@ -344,8 +316,7 @@ test.describe('the edges', () => {
       expect(warnings).toHaveLength(1);
       expect(String(warnings[0]?.[0])).toContain('reserved dismiss reason');
 
-      // Warned, not refused: the declaration still lands, so the button keeps working and
-      // `hasActions()` still counts it.
+      // Warned, not refused: the declaration still lands and `hasActions()` still counts it.
       expect(engine.hasActions()).toBe(true);
     } finally {
       console.warn = originalWarn;
@@ -355,8 +326,7 @@ test.describe('the edges', () => {
   });
 
   test('a named action never trips the reserved-reason warning', () => {
-    // The negative half: a guard that only ever fires would pass this suite while warning on
-    // every action anyone declares.
+    // The negative half: a guard that always fires would pass while warning on every action.
     const engine = createActionEngine<void, 'save' | 'cancel'>('not-reserved');
     const warnings: unknown[][] = [];
     const originalWarn = console.warn;
@@ -388,9 +358,8 @@ test.describe('the edges', () => {
   });
 
   test('undeclaring mid-pass retires from the pass, not from the live table', () => {
-    // `undeclare` writes to whichever table is open — the pending one during a render pass, the
-    // live one outside it. A fine-grained binding removes a button inside a pass, and the
-    // declaration has to leave with the pass rather than reach back into what is on screen.
+    // `undeclare` writes to whichever table is open — pending during a pass, live outside it — so a
+    // button removed mid-pass leaves with the pass instead of reaching what is on screen.
     const engine = createActionEngine<void, 'save'>('undeclare-pending');
 
     engine.declare('save', 'Enter');
@@ -399,7 +368,6 @@ test.describe('the edges', () => {
     engine.beginRender();
     engine.declare('save', 'Enter');
     engine.undeclare('save');
-    // Still the previous pass's table: nothing has been swapped in yet.
     expect(engine.ownsHotkey('Enter')).toBe(true);
 
     engine.endRender();

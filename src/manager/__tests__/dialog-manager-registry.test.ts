@@ -3,12 +3,9 @@ import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, type DialogManagerEvent } from '../dialog-manager.js';
 
 /**
- * Registry invariants that only bite in long-lived apps.
- *
- * The happy paths are well covered by `dialog-manager.test.ts` and the component suite. These
- * are the edges that stay silent until something has been mounting and unmounting for a while:
- * a leaked subscription, a listener that fires during its own registration, a stacking order
- * that depends on how fast the machine is.
+ * Registry edges that stay silent until an app has been mounting and unmounting for a while: a
+ * leaked subscription, a listener firing during its own registration, a speed-dependent stack
+ * order. The happy paths are in `dialog-manager.test.ts` and the component suite.
  */
 
 function createFakeStore() {
@@ -27,8 +24,7 @@ function createFakeStore() {
   };
 
   return {
-    // The manager's port includes a one-shot close resolver, so `requestOpenAndWait` can hand
-    // back a close it does not own. The fake drains its queue from `close`, like the real store.
+    // A one-shot close resolver, so `requestOpenAndWait` can hand back a close it does not own.
     addCloseResolver(resolve: (result: AwaitedClose<unknown>) => void): void {
       closeResolvers.push(resolve);
     },
@@ -75,8 +71,6 @@ function createFakeStore() {
   };
 }
 
-// ── Duplicate ids ────────────────────────────────────────────────────────────
-
 test.describe('registering the same id twice', () => {
   test('releases the previous store subscription', () => {
     const dm = createDialogManager();
@@ -86,12 +80,10 @@ test.describe('registering the same id twice', () => {
     dm.register('dupe', { store: first });
     expect(first.subscriberCount()).toBe(1);
 
-    // Two components mounting with the same modal id — a routine user mistake.
     dm.register('dupe', { store: second });
 
-    // Without an explicit release the first subscription outlives its registry entry:
-    // `unregister('dupe')` can only ever reach the second one, so the first leaks for the
-    // lifetime of the manager and keeps driving snapshot recomputation from off-registry.
+    // Without an explicit release, `unregister('dupe')` can only reach the second: the first leaks
+    // for the manager's lifetime, driving snapshot recomputation from off-registry.
     expect(first.subscriberCount()).toBe(0);
     expect(second.subscriberCount()).toBe(1);
   });
@@ -109,12 +101,10 @@ test.describe('registering the same id twice', () => {
       events.push(event);
     });
 
-    // The displaced store is no longer anybody's modal; its transitions must be invisible.
     first.beginOpen();
     expect(events).toEqual([]);
     expect(dm.lookup().getOpen()).toEqual([]);
 
-    // The store that actually holds the id still works.
     second.beginOpen();
     expect(events).toEqual([{ type: 'open', id: 'dupe' }]);
   });
@@ -134,8 +124,6 @@ test.describe('registering the same id twice', () => {
   });
 });
 
-// ── Re-entrant subscription ──────────────────────────────────────────────────
-
 test.describe('event emission', () => {
   test('a listener added while an event is dispatching does not receive that event', () => {
     const dm = createDialogManager();
@@ -144,8 +132,7 @@ test.describe('event emission', () => {
 
     const lateEvents: DialogManagerEvent[] = [];
     dm.subscribe(() => {
-      // A listener that installs another listener — e.g. a subscriber that lazily attaches
-      // per-modal tracking on the first event it sees.
+      // A subscriber that lazily attaches per-modal tracking on the first event it sees.
       dm.subscribe((event) => {
         lateEvents.push(event);
       });
@@ -153,12 +140,10 @@ test.describe('event emission', () => {
 
     store.beginOpen();
 
-    // Iterating the live Set would call the just-added listener with the very event that
-    // caused it to be added, which reads as a duplicate to anything counting opens.
+    // Iterating the live Set would deliver the causing event, a duplicate to anything counting.
     expect(lateEvents).toEqual([]);
 
     store.close('confirm');
-    // ...but it does receive the next one.
     expect(lateEvents).toEqual([{ type: 'close', id: 'm', reason: 'confirm' }]);
   });
 
@@ -180,18 +165,14 @@ test.describe('event emission', () => {
   });
 });
 
-// ── Stacking order ───────────────────────────────────────────────────────────
-
 test.describe('stack ordering', () => {
   test('modals opened in the same millisecond stack in open order, not registration order', () => {
     const dm = createDialogManager();
     const bottom = createFakeStore();
     const top = createFakeStore();
 
-    // Registration order deliberately reversed relative to open order. Opening two modals in
-    // one synchronous block — a confirm raised from inside another modal — routinely lands
-    // both in the same millisecond, at which point a `Date.now()` timestamp cannot separate
-    // them and the sort falls back to registry insertion order.
+    // Registration order reversed against open order: two modals opened in one synchronous block
+    // land in the same millisecond, where `Date.now()` cannot separate them.
     dm.register('top', { store: top });
     dm.register('bottom', { store: bottom });
 

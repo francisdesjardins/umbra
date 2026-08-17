@@ -4,20 +4,11 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A React modal whose `<dialog>` lives in a **shadow root**.
- *
- * The shape a real application hits: a web component hosting a React tree, or a widget mounted
- * into a shadow root to keep the host page's CSS out. `createPortal` is what React offers for it —
- * the component tree stays where it is and the DOM node goes somewhere else, which is exactly the
- * case that breaks the two things a shadow boundary breaks.
- *
- * **Both were silently wrong before the core learned about roots**, and both fail quietly rather
- * than throwing: `adoptedStyleSheets` does not cross the boundary, so the dialog falls back to the
- * UA backdrop, and `document.activeElement` answers with the *host* element, so a focus policy
- * reading it concludes focus has left the dialog on every check.
- *
- * `umbra/vanilla` has carried a test for this since the microfrontend frame found it. React
- * claimed the same support with nothing verifying it, which is what this closes.
+ * A React modal whose `<dialog>` lives in a shadow root — a web component hosting a React tree, or
+ * a widget mounted to keep the host page's CSS out. Both things a shadow boundary breaks fail
+ * quietly rather than throwing: `adoptedStyleSheets` does not cross it, so the dialog falls back to
+ * the UA backdrop, and `document.activeElement` answers with the host, so a focus policy reading it
+ * concludes focus has left the dialog on every check.
  */
 export function ShadowRootHarness() {
   const hostRef = useRef<HTMLDivElement>(null);

@@ -1,14 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { dialogAttributes, isBackdropClick, setDialogAttributes } from '../dialog-props.js';
 
-/**
- * The attribute table both bindings spread onto their `<dialog>`.
- *
- * Worth pinning because two of these are a *contract*: `data-modal-id` and `data-modal-type` are
- * how user-land CSS reaches one dialog or every non-modal one, so renaming either breaks
- * stylesheets that never imported anything. And the aria fields must stay `undefined` rather than
- * empty — a binding that defaulted them would hide a missing accessible name from an audit.
- */
+// The attribute table both bindings spread onto their `<dialog>`. `data-modal-id` and
+// `data-modal-type` are a *contract* — user-land CSS reaches dialogs through them. The aria fields
+// stay `undefined` rather than empty, or a binding would hide a missing name from an audit.
 
 test.describe('dialogAttributes', () => {
   test('carries the styling contract and the test id', () => {
@@ -28,10 +23,8 @@ test.describe('dialogAttributes', () => {
   });
 
   test('says whether the dialog is still loading, and says it both ways', () => {
-    // The one attribute here the library owns outright, and the one that toggles: a dialog on
-    // screen while `prepare` runs is the normal state of a loading modal, and so is the state it
-    // leaves. `'false'` is written rather than omitted because `setDialogAttributes` skips
-    // `undefined` — the off half has to be a value or it could never be reached.
+    // The one attribute the library owns outright, and the one that toggles. `'false'` is written
+    // rather than omitted because `setDialogAttributes` skips `undefined`.
     expect(
       dialogAttributes({ modalId: 'slow', nonModal: false, isPreparing: true })['aria-busy']
     ).toBe('true');
@@ -47,9 +40,8 @@ test.describe('dialogAttributes', () => {
       isPreparing: false,
     });
 
-    // Not `''`: both bindings omit an attribute whose value is `undefined`, so an unnamed dialog
-    // stays visibly unnamed. `aria-label=""` would satisfy an automated check and tell a screen
-    // reader nothing.
+    // Not `''`: both bindings omit an `undefined` attribute, so an unnamed dialog stays visibly
+    // unnamed. `aria-label=""` satisfies an automated check and tells a screen reader nothing.
     expect(attributes['aria-label']).toBeUndefined();
     expect(attributes['aria-labelledby']).toBeUndefined();
     expect(attributes['aria-describedby']).toBeUndefined();
@@ -77,10 +69,7 @@ test.describe('dialogAttributes', () => {
 });
 
 test.describe('setDialogAttributes', () => {
-  /**
-   * An element is a `setAttribute` here, which is all the function asks for — the reason its
-   * parameter is narrowed, and the reason this is a unit test and not a browser one.
-   */
+  // A `setAttribute` is all the function asks for — why the parameter is narrowed, and a unit test.
   const recorder = () => {
     const written = new Map<string, string>();
     return {
@@ -105,9 +94,8 @@ test.describe('setDialogAttributes', () => {
   });
 
   test('skips what the caller named nothing for, rather than emptying it', () => {
-    // The reason this is a contract and not an optimisation: in `umbra/vanilla` the element is the
-    // caller's own markup, so an `aria-labelledby` they wrote must survive an option they never
-    // passed. Writing `''` — or removing — would erase it.
+    // A contract, not an optimisation: in `umbra/vanilla` the element is the caller's own markup,
+    // so an `aria-labelledby` they wrote must survive an option they never passed.
     const element = recorder();
     setDialogAttributes(
       element,
@@ -121,8 +109,7 @@ test.describe('setDialogAttributes', () => {
   });
 
   test('writes aria-busy even when it is false', () => {
-    // Which is the half the skip above would otherwise swallow: a dialog that finished loading
-    // would keep `aria-busy="true"` welded to it.
+    // The half the skip above would swallow: a loaded dialog keeping `aria-busy="true"` welded on.
     const element = recorder();
     setDialogAttributes(
       element,
@@ -134,7 +121,6 @@ test.describe('setDialogAttributes', () => {
 });
 
 test.describe('isBackdropClick', () => {
-  /** A dialog is a rect here, which is all the test needs it to be. */
   const dialogAt = (box: { left: number; right: number; top: number; bottom: number }) => {
     return {
       getBoundingClientRect: () => {
@@ -144,22 +130,20 @@ test.describe('isBackdropClick', () => {
   };
 
   const rect = dialogAt({ left: 100, right: 300, top: 100, bottom: 200 });
-  // Real ones: Node ships `EventTarget`, so the fixture satisfies the type instead of
-  // approximating it — identity is all the target test compares.
+  // Real ones: Node ships `EventTarget`, and identity is all the target test compares.
   const surface = new EventTarget();
   const inside = new EventTarget();
 
   test('a click that started inside the content is never a backdrop click', () => {
-    // Checked before the geometry, and the order is what makes the geometry safe: anything
-    // originating in the content bubbles up with a descendant as its target.
+    // Checked before the geometry: anything from the content bubbles up with a descendant target.
     expect(
       isBackdropClick({ target: inside, currentTarget: surface, clientX: 0, clientY: 0 }, rect)
     ).toBe(false);
   });
 
   test('a keyboard-activated button reports 0,0 and must not dismiss', () => {
-    // The reason the target test comes first. `clientX`/`clientY` of 0 lies outside a centred
-    // dialog's rect, so on geometry alone Enter on a button would read as a backdrop click.
+    // Why the target test comes first: 0,0 lies outside a centred dialog's rect, so on geometry
+    // alone Enter on a button would read as a backdrop click.
     expect(
       isBackdropClick({ target: inside, currentTarget: surface, clientX: 0, clientY: 0 }, rect)
     ).toBe(false);
@@ -182,8 +166,7 @@ test.describe('isBackdropClick', () => {
   });
 
   test('a click on the dialog itself, inside its box, is not', () => {
-    // The dialog's box can extend past the panel a user sees — padding, a template's sizing — so
-    // targeting the element is not on its own enough.
+    // The box can extend past the panel a user sees, so targeting the element is not enough.
     expect(
       isBackdropClick({ target: surface, currentTarget: surface, clientX: 200, clientY: 150 }, rect)
     ).toBe(false);

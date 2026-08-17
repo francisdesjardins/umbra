@@ -75,8 +75,7 @@ test.describe('useSlideModal', () => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('modal-non-modal-esc-hotkey-slide')).toBeVisible();
 
-    // Move focus outside the dialog — the window capture listener must delegate
-    // to the controller's cancel action rather than silently swallowing ESC.
+    // Focus outside: the window capture listener must delegate to cancel, not swallow ESC.
     await page.getByTestId('outside-button').focus();
     await page.keyboard.press('Escape');
 
@@ -106,9 +105,8 @@ test.describe('useSlideModal', () => {
     await mount(<ContainedPositioningSlideHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
-    // Two layers had to be got out of the way for this click to land: the host, which is
-    // `absolute; inset: 0` over the stage whether or not the dialog is open, and the closed
-    // dialog itself, which the library's inline `display: flex` was keeping in layout.
+    // Two layers had to move for this click to land: the host (`absolute; inset: 0` over the stage
+    // whether open or not) and the closed dialog, kept in layout by the inline `display: flex`.
     await expect(page.getByTestId('modal-contained-positioning-slide')).toHaveCSS(
       'display',
       'none'
@@ -127,32 +125,26 @@ test.describe('useSlideModal', () => {
     const dialog = page.getByTestId('modal-contained-positioning-slide');
     await expect(dialog).toBeVisible();
 
-    // Contained mode: absolute positioning + container-relative units, never viewport ones.
     const style = await dialog.getAttribute('style');
     expect(style).toContain('position: absolute');
     expect(style).not.toContain('position: fixed');
     expect(style).not.toContain('dvw');
     expect(style).not.toContain('dvh');
 
-    // The dialog is wrapped in the owned relative container that establishes the
-    // stable containing block.
+    // The owned relative container is what establishes the stable containing block.
     const wrapper = page.locator('[data-modal-container="contained-positioning-slide"]');
     await expect(wrapper).toHaveCount(1);
 
-    // The wrapper must clip its overflow. Regression: an off-screen (positive-translate)
-    // panel — `right`/`bottom` — would otherwise expand the document's scrollable overflow
-    // and shift the layout, canceling the slide so it "pops" in place instead of animating.
-    // Must be `clip` (not `hidden`, which still lets a transformed descendant grow the
-    // scroll area).
+    // Must be `clip`, not `hidden`: a transformed descendant still grows the scroll area under
+    // `hidden`, shifting layout so an off-screen `right`/`bottom` panel pops instead of sliding.
     const overflow = await wrapper.evaluate((el) => {
       return getComputedStyle(el).overflow;
     });
     expect(overflow).toBe('clip');
   });
 
-  // Each direction must anchor to (and slide from) the correct edge of its container.
-  // Regression: core's `inset: 0` leaked the opposite edge, collapsing `right` to zero
-  // width and `bottom` to zero height — so those directions never animated.
+  // Regression: core's `inset: 0` leaked the opposite edge, collapsing `right` to zero width and
+  // `bottom` to zero height, so those directions never animated.
   for (const { direction, edge } of [
     { direction: 'left', edge: 'left' },
     { direction: 'right', edge: 'right' },
@@ -168,7 +160,6 @@ test.describe('useSlideModal', () => {
 
       const dialog = page.getByTestId('modal-contained-positioning-slide');
       await expect(dialog).toBeVisible();
-      // Let the entrance transition settle before measuring.
       await page.waitForTimeout(400);
 
       const stageBox = await page.getByTestId('stage').boundingBox();
@@ -179,12 +170,10 @@ test.describe('useSlideModal', () => {
         return;
       }
 
-      // The collapse bug produced a zero-width (`right`) or zero-height (`bottom`) box.
       expect(dialogBox.width).toBeGreaterThan(1);
       expect(dialogBox.height).toBeGreaterThan(1);
 
-      // The panel must rest against the matching edge of the stage, within it —
-      // never at the page origin (the old transformed-ancestor / viewport hijack).
+      // Must rest against the matching stage edge, never at the page origin (the viewport hijack).
       const tol = 2;
       switch (edge) {
         case 'left':
@@ -205,9 +194,7 @@ test.describe('useSlideModal', () => {
           break;
       }
 
-      // At rest the panel sits fully in — identity transform. Each direction anchors to
-      // its own edge and slides by 100% of its own size, so "open" is always translate 0.
-      // (Regression guard against far-edge positioning that offset the resting panel.)
+      // At rest, fully in: each slides 100% of its own size, so open is always translate 0.
       const transform = await dialog.evaluate((el) => {
         return getComputedStyle(el).transform;
       });
@@ -215,9 +202,7 @@ test.describe('useSlideModal', () => {
     });
   }
 
-  // ── Cross-axis alignment ──────────────────────────────────────────────────
-  // `stretch` (default) fills the cross axis; start/center/end pin a content-sized panel.
-  // The panel in the harness is 260x160, the viewport is Playwright CT's default.
+  // `stretch` fills the cross axis; start/center/end pin the harness's 260x160 content-sized panel.
   for (const { direction, align } of [
     { direction: 'right', align: 'start' },
     { direction: 'right', align: 'center' },
@@ -246,7 +231,6 @@ test.describe('useSlideModal', () => {
       }
 
       const horizontalSlide = direction === 'right';
-      // Content-sized on the cross axis — NOT stretched to the full viewport extent.
       const crossSize = horizontalSlide ? box.height : box.width;
       const crossViewport = horizontalSlide ? viewport.height : viewport.width;
       expect(crossSize).toBeLessThan(crossViewport);
@@ -311,7 +295,6 @@ test.describe('useSlideModal', () => {
     // Many distinct x positions → it slid. A jump/pop would yield one or two.
     expect(new Set(positions).size).toBeGreaterThan(5);
 
-    // And the resting transform keeps the centering shift on the cross axis only.
     const transform = await page.getByTestId('modal-align-slide').evaluate((el) => {
       return getComputedStyle(el).transform;
     });

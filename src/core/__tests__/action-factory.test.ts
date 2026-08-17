@@ -3,14 +3,9 @@ import { createActionEngine, type ActionEngineSnapshot } from '../../actions/act
 import { createActionFactory } from '../action-factory.js';
 import type { ActionClickEvent } from '../../actions/types.js';
 
-/**
- * The `action` factory — one function, two bindings, and no DOM in it at all.
- *
- * The design under test is the `readState` parameter: the factory reads the engine's state
- * through a callback the *binding* supplies, rather than from the engine's own getters. That is
- * what lets React hand it a `useSyncExternalStore` value and Solid a signal, and it is why the
- * three live props are getters. Both halves are assertable here, with neither framework present.
- */
+// The `action` factory — one function, two bindings, no DOM. `readState` is the design under test:
+// engine state read through a binding-supplied callback (React's store value, Solid's signal),
+// which is what makes the three live props getters. Assertable with neither framework present.
 
 const idle: ActionEngineSnapshot = { states: {}, hasRunningAction: false, error: null };
 
@@ -45,8 +40,7 @@ const deferred = () => {
 
 test.describe('the props an action returns', () => {
   test('are all DOM props, and default `type` to button', () => {
-    // A `<button>` inside a `<form>` defaults to `type="submit"`, so an action button in a form
-    // modal would submit the form *and* run its handler. The default makes the spread safe.
+    // A `<button>` in a `<form>` defaults to `submit` and would submit *and* run its handler.
     const engine = createActionEngine<void>('props');
     const action = createActionFactory(engine, () => {
       return idle;
@@ -57,9 +51,7 @@ test.describe('the props an action returns', () => {
   });
 
   test('carry the ARIA spelling of the hotkey, not the string as written', () => {
-    // `aria-keyshortcuts` is what hotkey dispatch finds the button by, and what
-    // `engine.ownsHotkey` compares against — so all three read `formatAriaKeyshortcuts` and
-    // agree by construction. `Ctrl` is the keycap; `Control` is the key value the attribute takes.
+    // Dispatch and `ownsHotkey` read this too; `Ctrl` is the keycap, `Control` the attribute value.
     const engine = createActionEngine<void>('label');
     const action = createActionFactory(engine, () => {
       return idle;
@@ -83,8 +75,7 @@ test.describe('the props an action returns', () => {
 
 test.describe('the live props', () => {
   test('read the snapshot the binding supplies, not the engine directly', () => {
-    // The whole reason `readState` is a parameter. Swap what it returns and the *same* props
-    // object reports the new value — which is a re-render for React and a tracked read for Solid.
+    // Why `readState` is a parameter: swap its return and the *same* props object reports anew.
     const engine = createActionEngine<void>('live');
     let snapshot: ActionEngineSnapshot = idle;
     const action = createActionFactory(engine, () => {
@@ -107,8 +98,7 @@ test.describe('the live props', () => {
   });
 
   test('disable this button while *another* action runs', () => {
-    // `data-loading` is this action's; `disabled` is the modal's. Two different scopes, which is
-    // why they are two props rather than one.
+    // `data-loading` is this action's, `disabled` is the modal's — two scopes, so two props.
     const engine = createActionEngine<void>('other');
     const snapshot: ActionEngineSnapshot = {
       states: { other: { isRunning: true, error: null } },
@@ -137,8 +127,7 @@ test.describe('the live props', () => {
 
 test.describe('isRunning', () => {
   test('answers for one action, anywhere but its own props', () => {
-    // `data-loading` is this same fact on the button. This is it for everything that is not the
-    // button — and it reads the binding's snapshot, so it is live wherever the props are.
+    // `data-loading` for everything that is not the button, and equally live — same snapshot.
     const engine = createActionEngine<void>('per-action');
     let snapshot: ActionEngineSnapshot = idle;
     const action = createActionFactory(engine, () => {
@@ -168,9 +157,7 @@ test.describe('isRunning', () => {
   });
 
   test('asking does not declare', () => {
-    // Only calling the factory declares. If asking did too, a status line reading the state of
-    // a button it does not draw would keep that button's hotkey alive and suppress the dismiss
-    // key — and `hasActions()` decides whether a backdrop click dismisses at all.
+    // Only calling the factory declares — asking would keep a hotkey alive and gate the backdrop.
     const engine = createActionEngine<void>('ask');
     const action = createActionFactory(engine, () => {
       return idle;
@@ -182,9 +169,7 @@ test.describe('isRunning', () => {
   });
 
   test('tracks a real run, not just a swapped snapshot', async () => {
-    // The other tests here drive `readState` by hand, which proves the plumbing but not the
-    // engine. This one runs an actual handler and holds it open, so the true → false is the
-    // engine's own two writes — the same pair a binding subscribes to.
+    // The others drive `readState` by hand; this runs a real handler, so the writes are real.
     const engine = createActionEngine<void, 'ok'>('real-run');
     const action = createActionFactory(engine, engine.getSnapshot);
     const gate = deferred();

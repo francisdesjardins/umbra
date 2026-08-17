@@ -3,17 +3,10 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * `openAndWait` against the window that makes it necessary.
- *
- * A close resolver waits for the *next* close — replaying a previous one would be a wrong answer
- * rather than a late one — so it has to be registered before anything can close. `prepare` is
- * what makes that window wide enough to fall into: a modal dismissed while it runs closes before
- * an open that resolves after `prepare` has returned, and a resolver added on the following line
- * would wait for a close that already happened.
- *
- * `openAndWait` registers first, which is why the store's `addCloseResolver` is not part of the
- * public surface. The invariant on the store side is pinned in `modal-store.test.ts`; this
- * harness is the same claim through the real React binding and a real `<dialog>`.
+ * `openAndWait` against the window that makes it necessary: a close resolver waits for the *next*
+ * close (replaying a previous one is a wrong answer, not a late one), so it must be registered
+ * first — which is why `addCloseResolver` is not public. `prepare` widens the window: a modal
+ * dismissed while it runs closes before an open that resolves after `prepare` returns.
  */
 export function OpenAndWaitOrderingHarness() {
   const [outcome, setOutcome] = useState('');

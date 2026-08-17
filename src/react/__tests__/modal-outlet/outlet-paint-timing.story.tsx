@@ -4,15 +4,9 @@ import { useModal } from '../../use-modal.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Pins the *paint timing* of outlet-rendered content.
- *
- * The dialog node is built by this component but rendered by the `ModalOutlet`, so it
- * reaches the DOM only once the outlet re-renders — one hop later than for a modal the
- * consumer places itself. This harness bounds that hop: content published to the outlet
- * must land within the same frame, never trailing one the user can see.
- *
- * `painted-count` records what the dialog's DOM said at the next animation frame after
- * the click — i.e. what the user was about to see. It must already match `count`.
+ * The dialog node is built here but rendered by `ModalOutlet`, so it reaches the DOM one hop later.
+ * `painted-count` records what the dialog's DOM said at the next animation frame after the click —
+ * what the user was about to see — and it must already match `count`, never trail a visible frame.
  */
 function Inner() {
   const [count, setCount] = useState(0);
