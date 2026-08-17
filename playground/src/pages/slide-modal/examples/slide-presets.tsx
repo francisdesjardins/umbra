@@ -82,7 +82,7 @@ function useDrawerPreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
+            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
               Done
             </Shared.Button>
           </SlideModal.Footer>
@@ -113,7 +113,7 @@ function useSheetPreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
+            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
               Done
             </Shared.Button>
           </SlideModal.Footer>
@@ -148,11 +148,9 @@ function usePalettePreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            {/* `focusOnOpen`, because this palette's content overflows: the scroll region is a
-                declared Tab stop (see `useScrollRegion`) and sits first in the DOM, so without a
-                claim `showModal()` opens the dialog focused on the reading area instead of the
-                control. The pairing rule: a dialog whose region scrolls says where its opening
-                focus belongs. */}
+            {/* All four presets claim the control: this palette's overflowing scroll region
+                (`useScrollRegion`) would otherwise win the opening focus, and the other three
+                match it. */}
             <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
               Close
             </Shared.Button>
@@ -214,7 +212,11 @@ function useInspectorPreset(selected: (typeof ROWS)[number] | null) {
             Slides inside the card, not over the page — and the rows behind it stay clickable,
             because nothing entered the top layer.
           </Typography>
-          <Shared.Button size="small" variant="outlined" {...action('close')}>
+          <Shared.Button
+            size="small"
+            variant="outlined"
+            {...action('close', { focusOnOpen: true })}
+          >
             Close
           </Shared.Button>
         </Stack>
