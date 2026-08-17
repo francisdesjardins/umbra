@@ -144,8 +144,18 @@ type ModalLifecycleStepSpec = {
 
 // ── The sequence ─────────────────────────────────────────────────────────────
 
-/** The three keydown listeners share an option object to the letter, so they share its builder. */
-const keydownOptions = (pass: ModalLifecyclePass, engine: ActionGate): DialogKeydownOptions => {
+/**
+ * The three keydown listeners share an option object to the letter, so they share its builder.
+ *
+ * Exported for the test that reads it: every field is forwarded from the pass, and a dropped one
+ * disables a dismissal rule in all three listeners at once while every step still attaches.
+ *
+ * @internal
+ */
+export const keydownOptions = (
+  pass: ModalLifecyclePass,
+  engine: ActionGate
+): DialogKeydownOptions => {
   return {
     isPreparing: pass.isPreparing,
     onKeyDown: pass.onKeyDown,

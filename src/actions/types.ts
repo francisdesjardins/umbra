@@ -92,6 +92,16 @@ export type ActionButtonProps = {
   'aria-keyshortcuts'?: string | undefined;
   /** The modal's opening focus, set when the action declared `focusOnOpen` — see its doc. */
   'data-focus-on-open'?: true | undefined;
+  /**
+   * The action's reason, so its button can be **found again** rather than remembered.
+   *
+   * The focus restore after an action needs the button that ran it, and a remembered element is not
+   * that button on a renderer that replaces the node when the action's state changes — every
+   * captured candidate answers `isConnected === false`, which drops the restore to the dialog. The
+   * reason outlives the node, so the coordinator re-queries by this instead. A custom button wrapper
+   * **must forward it**, the rule `aria-keyshortcuts` and `data-focus-on-open` also carry.
+   */
+  'data-action-reason': string;
 };
 
 /**

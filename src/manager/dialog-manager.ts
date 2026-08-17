@@ -473,19 +473,6 @@ export type DialogManager = {
   getSnapshot: () => DialogManagerSnapshot;
 };
 
-// ── CSS injection (shared across instances) ─────────────────────────────────
-//
-// The sheet itself lives in `core/dialog-styles.ts`, because the document is not the only root
-// that needs it: a dialog inside a shadow root has to adopt it too, and `showDialog` is what
-// knows which root that is. This is the document's half.
-
-function ensureStyles() {
-  if (typeof document === 'undefined') {
-    return;
-  }
-  ensureDialogStyles(document);
-}
-
 // ── Store registry types ────────────────────────────────────────────────────
 
 type RegistryEntry = {
@@ -665,7 +652,10 @@ export function createDialogManager(): DialogManager {
       return;
     }
 
-    ensureStyles();
+    // The document's half of the sheet — `core/dialog-styles.ts` owns it because a dialog in a
+    // shadow root has to adopt it too, and `showDialog` is what knows which root that is. Reached
+    // only past the guard above, so it needs no document check of its own.
+    ensureDialogStyles(document);
 
     // Non-modal dialogs never lock scrolling — only modal ones do.
     const hasModalOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {

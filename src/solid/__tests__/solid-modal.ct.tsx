@@ -4,6 +4,7 @@ import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
   SolidClaimlessReclaimHarness,
+  SolidFailedActionHarness,
   SolidPrepareFailureHarness,
   SolidShadowRootHarness,
   SolidBusyHarness,
@@ -490,11 +491,31 @@ test.describe('umbra/solid — the options only React had exercised', () => {
   });
 });
 
+test.describe('umbra/solid — focus after a failed action', () => {
+  test('lands on the button that ran it, which Solid had already replaced', async ({
+    mount,
+    page,
+  }) => {
+    // The discriminating arrangement: the opening focus is `other` (first focusable, no claim), so a
+    // restore that falls to its floor is visible as *not* landing on `fail`. Solid replaces the
+    // button when the action's state changes, so every element the coordinator captured is detached
+    // by the time this settles — it re-queries `[data-action-reason]` instead of trusting a node.
+    await mount(<SolidFailedActionHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('is-visible')).toHaveText('open');
+    await expect(page.getByTestId('other')).toBeFocused();
+
+    await page.getByTestId('fail').click();
+    await expect(page.getByTestId('failures')).toHaveText('1');
+    await expect(page.getByTestId('error')).toHaveText('solid action failed');
+
+    await expect(page.getByTestId('fail')).toBeFocused();
+  });
+});
+
 /**
  * `reconcileOpen` from a Solid signal — the same three lines, in `createEffect` instead of
- * `useEffect`, which is the claim: the helper is framework-free and only the binding changes. The
- * failed-action restore is the matrix's `~` cell; its harness (`SolidFailedActionHarness`) waits for
- * the design change that would make a test pass.
+ * `useEffect`, which is the claim: the helper is framework-free and only the binding changes.
  */
 test.describe('umbra/solid — reconcileOpen', () => {
   test('the signal drives the dialog, and stays authoritative over an imperative open', async ({

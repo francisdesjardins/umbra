@@ -96,7 +96,7 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-17: **92.20% over 54 files**, against unit's **95.46%**. Never add them; re-measure both or neither — **and the
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-17: **92.24% over 55 files**, against unit's **96.73%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points and three files behind,
 which is why **`yarn coverage:update` now does the whole move**: both measurements, both documents,
@@ -153,7 +153,7 @@ invalidates neither CT cache, so delete `playwright/.cache-coverage/` by hand fo
 
 - **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): No `useMemo`/`useCallback`/`React.memo`. No ref writes during render. No property assignment on `useState` values. See [src/CLAUDE.md](src/CLAUDE.md#react-compiler) for full rules.
 - **TypeScript strict**: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature`
-- **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward `aria-keyshortcuts`** (and `data-focus-on-open`, which `action('cancel', { focusOnOpen: true })` sets to claim the modal's opening focus). See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
+- **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward three props**: `aria-keyshortcuts`, `data-focus-on-open` (which `action('cancel', { focusOnOpen: true })` sets to claim the modal's opening focus) and `data-action-reason` (always set, and how the post-action focus restore finds the button again once a renderer has replaced the node). All three are queried out of the DOM, so a wrapper that drops one makes that feature silently do nothing. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
 - **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. `isForeground` moves with the order, which is why it matters beyond paint: it decides who answers the dismiss key. The policy's rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), and what a policy cannot do is in the compatibility matrix.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.

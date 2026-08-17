@@ -14,6 +14,9 @@ type VanillaButtonProps = {
   readonly 'data-loading'?: boolean | undefined;
   // Forwarded, not dropped: `focusOnOpen` finds its button by this attribute.
   readonly 'data-focus-on-open'?: true | undefined;
+  // How the focus restore finds this button once the action settles, on a renderer that replaces
+  // the node rather than updating it.
+  readonly 'data-action-reason'?: string | undefined;
   // Forwarded for the same reason as `aria-keyshortcuts`: dropping an ARIA prop is silent.
   readonly 'aria-busy'?: boolean | undefined;
 };
@@ -29,6 +32,7 @@ export function VanillaButton({
   'aria-busy': ariaBusy,
   'data-loading': dataLoading,
   'data-focus-on-open': dataFocusOnOpen,
+  'data-action-reason': dataActionReason,
 }: VanillaButtonProps) {
   // The same seam as the MUI wrapper: the library ships `data-loading`, this decides what it
   // means for its own markup — here, a class.
@@ -51,6 +55,7 @@ export function VanillaButton({
       {...(ariaKeyshortcuts !== undefined && { 'aria-keyshortcuts': ariaKeyshortcuts })}
       {...(ariaBusy !== undefined && { 'aria-busy': ariaBusy })}
       {...(dataFocusOnOpen !== undefined && { 'data-focus-on-open': dataFocusOnOpen })}
+      {...(dataActionReason !== undefined && { 'data-action-reason': dataActionReason })}
     >
       {children}
       {hotkeyLabel && (

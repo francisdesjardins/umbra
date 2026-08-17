@@ -2,10 +2,12 @@ import { expect, test } from '@playwright/test';
 import {
   MODAL_LIFECYCLE_SEQUENCE,
   MODAL_LIFECYCLE_STEPS,
+  keydownOptions,
   type ModalLifecyclePass,
   type ModalLifecycleStep,
 } from '../modal-director.js';
 import { sameInputs } from '../step-runner.js';
+import { createActionEngine } from '../../actions/action-engine.js';
 
 // The director's framework-free half: which step reads what, and what counts as unchanged. The
 // executor is `step-runner.ts`'s and tested there; what a step reads is where the hazard lives.
@@ -101,6 +103,36 @@ test.describe('what each step reads', () => {
     // The listeners call it, so a stale `onDismissRequest` would answer an owner's fresh state.
     expect(rebuilds('attachDialogKeydown', { onDismissRequest: () => {} })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { containFocus: true })).toBe(false);
+  });
+
+  test('the option object the three of them share forwards every field it is given', () => {
+    // The companion to the test above: that one proves the three rebuild together, this one proves
+    // what they are rebuilt *with*. A field dropped here disables a dismissal rule in all three
+    // listeners at once, and every step still attaches — so nothing else in this file would fail.
+    const engine = createActionEngine<void>('director-options');
+    const onKeyDown = () => {};
+    const onDismissRequest = () => {
+      return false;
+    };
+    const pass: ModalLifecyclePass = {
+      ...BASE,
+      isPreparing: true,
+      onKeyDown,
+      dismissKey: 'Enter',
+      nonModal: true,
+      dismissWhilePreparing: false,
+      onDismissRequest,
+    };
+
+    expect(keydownOptions(pass, engine)).toEqual({
+      isPreparing: true,
+      onKeyDown,
+      dismissKey: 'Enter',
+      engine,
+      nonModal: true,
+      dismissWhilePreparing: false,
+      onDismissRequest,
+    });
   });
 
   test('an option only its own step reads only rebuilds that step', () => {

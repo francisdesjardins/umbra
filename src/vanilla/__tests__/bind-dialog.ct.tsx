@@ -719,7 +719,10 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     await page.getByTestId('close-and-lower').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    // Deciding on `isVisible` would ask for a second close across the 120 ms exit.
+    // The flag lowered and the dialog gone, with nothing asked twice. It does **not** discriminate
+    // `phase` from `isVisible`: measured, this harness's reconciliation steps `open → closed` without
+    // observing `'closing'`, which is the only pair where the two disagree. React's does — see the
+    // `reconcileOpen` caveat in the compatibility matrix.
     await expect(page.getByTestId('asked')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });

@@ -378,7 +378,7 @@ asks the engine to match the event → the button is found by `aria-keyshortcuts
 same path a real click does.
 
 **`aria-keyshortcuts` forwarding**: a custom button wrapper **must** forward the prop to the
-`<button>`, or its hotkeys silently fail. Same for `data-focus-on-open`.
+`<button>`, or its hotkeys silently fail. Same for `data-focus-on-open` and `data-action-reason`.
 
 **The attribute is not the label.** `formatAriaKeyshortcuts` produces the `KeyboardEvent.key` form
 that reaches the DOM, and the dispatch selector and `engine.ownsHotkey` are both built from it —
@@ -399,9 +399,16 @@ native `autofocus` attribute in the DOM (probed, not assumed) and `showModal()`'
 read exactly that attribute, so the library applies the focus itself once the dialog is open.
 
 The restore target after an action is _not_ that button by default — `chooseActionRunner`
-([core/focus-policy.ts](core/focus-policy.ts)) narrows through three reads to find who actually ran
-it, and only falls back to the claimed one. Why there are three, and which engine needs each, is on
-that function and on the coordinator in [core/attach-focus.ts](core/attach-focus.ts).
+([utils/focus-restore-policy.ts](utils/focus-restore-policy.ts), the decisions; the DOM functions
+that act on them are [core/focus-policy.ts](core/focus-policy.ts)) narrows through three reads to
+find who actually ran it, and only falls back to the claimed one. Why there are three, and which
+engine needs each, is on that function and on the coordinator in
+[core/attach-focus.ts](core/attach-focus.ts).
+
+**A remembered element is not enough**, and that is why every action's props carry
+`data-action-reason`: a fine-grained renderer replaces the button when the action's state changes, so
+all three reads can name a detached node. The coordinator reads the running reason off the engine and
+re-queries with `findActionButton` when the captured one is stale.
 
 ## Type System
 

@@ -11,6 +11,87 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Fixed — the focus restore finds the button again instead of remembering it, which is what Solid needed
+
+The matrix's longest-standing `~`: after a failed action on `umbra/solid`, focus landed on the
+`<dialog>` rather than on the button that ran it. Not the disabled-button race and not
+engine-specific — traced with the coordinator instrumented, `lastActivated` and `lastFocusInside`
+both still named the right button and both reported `isConnected === false`. Solid replaces the
+element when the action's state changes, so every candidate the coordinator held had left the
+document, and `preferredRestoreTarget` handed back a detached `openingFocus` whose `focus()` is a
+no-op — `restoreFocus`'s own verification then ended on the dialog.
+
+The reason outlives the node. `ActionButtonProps` carries `data-action-reason` on every action,
+`createFocusCoordinator` reads which action is running off the engine at the moment it starts, and
+`findActionButton` re-queries the dialog's own subtree when the captured element is stale.
+`chooseActionRunner` needed no change: it already skips a disconnected candidate at any position, so
+the re-queried button is simply a second candidate behind the first.
+
+**It is the third prop a custom button wrapper must forward**, beside `aria-keyshortcuts` and
+`data-focus-on-open` — all three are queried out of the DOM, so dropping one silently disables the
+feature it carries. `VanillaButton` in the playground forwards an explicit whitelist and needed the
+addition; `MuiButton` spreads and did not. The Solid harness that had been waiting for this
+(`FailedActionApp`, kept deliberately unasserted) now carries the test, mutation-checked.
+
+### Fixed — the component suite's flakiness was a per-test ceiling, not an assertion
+
+One WebKit test in a full local run, a different one each time, always a timeout on an ordinary
+`click` or actionability wait. A probe settled what it was not: the element being waited on is
+unobstructed once the page settles, `pointer-events: none` on the contained host and all.
+
+It is contention. Locally the suite runs `cpus/2` workers where CI runs one, and the 10s budget was
+tighter than a loaded machine needs — `use-modal.ct.tsx` ×15 on WebKit, 1245 runs, is **1 red at 10s
+and 0 red at 30s at the same wall clock** (2.6 min against 2.8), because a ceiling is only reached by
+a run that was going to fail anyway. The three component projects carry `COMPONENT_TIMEOUT` (30s,
+Playwright's own default); the unit project keeps 10s, where it is three orders of magnitude of slack.
+
+`retries` stay at 0 locally, and the distinction is the point: a retry takes the second answer from a
+test that gave a wrong first one, where a ceiling only stops a correct run from being cut off.
+
+### Added — the SSR contract is asserted, and six of the seven guards were already covered
+
+`manager/__tests__/ssr.test.ts` states what a server render may do: build a manager, register,
+open, close, read the snapshot, install a stack policy, claim and release the scroll lock — with no
+`document` in scope. It opens by asserting the project really has none, without which every
+assertion after it is vacuously true.
+
+Worth recording because the standing claim was wrong: the unit project runs in Node, so
+`typeof document === 'undefined'` is the branch it _always_ takes, and six of the guards were
+covered incidentally by every other manager test. What was missing was a test that says so. The
+seventh was unreachable — `ensureStyles`' only caller had already checked — so it is inlined into
+`syncBodyScrollLock` and the guard is gone.
+
+### Changed — `focus-policy.ts` held two kinds, and the coverage number was reading the seam
+
+Unit function coverage had fallen to 89.44% from 93.83 while statements and branches rose. The cause
+was one file: `core/focus-policy.ts` mixed seven DOM operations with two pure decisions
+(`preferredRestoreTarget`, `chooseActionRunner`), both written generic over `{ isConnected }`
+precisely so they could be unit tests — so the unit project reached the file and could not reach most
+of it.
+
+The decisions are `utils/focus-restore-policy.ts` now, beside `dismiss-gate.ts` and for its reason: a
+predicate every caller of a DOM operation shares, kept where it can be asked without one. What they
+left has no Node-reachable runtime and joins the `attach*` modules in `.c8rc.json`. `keydownOptions`
+gained a test of the claim its comment makes — every field forwarded, since a dropped one disables a
+dismissal rule in all three keydown listeners at once while every step still attaches.
+
+All four unit metrics now sit above the previous measurement: statements 96.73%, branches 97.26%,
+functions 94.18%. The 18 functions the unit project still cannot reach are covered by the component
+project — `focus-policy.ts` 10/10, `modal-director.ts` 23/23 — which is the check that makes
+"untestable in Node" a claim rather than an excuse.
+
+### Documented — the `reconcileOpen` caveat is explained, and one vanilla test says less than it claimed
+
+The two forms of the decision differ on exactly one input pair: `phase === 'closing'` with
+`open === false`. Every other pair is identical, `isVisible` being `phase !== 'closed'`. Logging each
+reconciliation pass under the mutated form shows `./vanilla`'s harness stepping
+`closed → open → closed` without ever observing `'closing'`, so the window that discriminates never
+opens there and the mutation passes — where React's harness, on the same animation config, fails.
+
+The asymmetry is the harness's, not the binding's. The vanilla exit test's comment claimed it would
+catch a decision moved to `isVisible`; it says what it actually proves now, and the caveat names what
+closing it would take.
+
 ### Fixed — the Tab stop on the command palette's "separator" was a nameless scroller, on one engine of three
 
 Reported from the playground: Tab in the slide presets' command palette stops on the separator

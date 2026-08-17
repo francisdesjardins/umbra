@@ -1135,9 +1135,12 @@ export const SolidReconcileApp = (): JSX.Element => {
  * Focus restored after a failed action: **modal**, **two** focusables, since the target is whoever
  * held focus when the action started — one cannot tell a restore from focus never moving, non-modal
  * lets focus sit outside. Async and rejecting, the shape where focus can be elsewhere when it
- * settles. **No test asserts it yet**: measured here, focus lands on the `<dialog>` on all three
- * engines, and the disabled-button race is **not** the cause — at restore time the button reports
- * `disabled=false` and takes `focus()`. Asserting it enshrines the bug; the harness stays for a fix.
+ * settles.
+ *
+ * The opening focus is `other`, deliberately: it is the floor the restore falls to, so a test can
+ * tell "landed on the button that ran it" from "landed on whatever it could". Solid replaces `fail`
+ * when the action's state changes, which leaves every element the coordinator captured detached —
+ * so this harness is what holds the re-query by `[data-action-reason]` honest.
  */
 function FailedActionApp(): Built {
   const [failures, setFailures] = createSignal(0);

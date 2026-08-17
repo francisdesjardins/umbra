@@ -1,8 +1,10 @@
 import { queryAllOwn, queryOwn } from '../utils/dialog-scope.js';
+import { preferredRestoreTarget } from '../utils/focus-restore-policy.js';
 
 /**
  * Where a dialog's focus goes, as plain DOM functions — a binding decides *when* to ask, the
- * answers are the same in every framework.
+ * answers are the same in every framework. The decisions they act on are
+ * `utils/focus-restore-policy.ts`, which is the half that needs no browser.
  *
  * Every read of who holds focus goes through {@link activeWithin}: asking the `document` is wrong
  * inside a shadow root, so a focus function living elsewhere is that question waiting to be asked
@@ -11,6 +13,20 @@ import { queryAllOwn, queryOwn } from '../utils/dialog-scope.js';
 
 /** The marker an action sets with `focusOnOpen` — see `ActionButtonProps`. */
 const FOCUS_ON_OPEN_SELECTOR = '[data-focus-on-open]';
+
+/**
+ * The button an action declared, found by the action's reason.
+ *
+ * The restore's second answer, and the only one that survives a renderer replacing the node: a
+ * captured element goes stale, the reason does not. Scoped with `queryOwn` like every other lookup
+ * here, so a nested dialog's identically-named action is never the answer. `CSS.escape` because the
+ * reason is the caller's string.
+ *
+ * @internal
+ */
+export function findActionButton(dialog: HTMLElement, reason: string): HTMLElement | null {
+  return queryOwn(dialog, `[data-action-reason="${CSS.escape(reason)}"]`);
+}
 
 /**
  * Focus, and show the ring, for every move the library makes on the user's behalf: input modality
@@ -200,44 +216,4 @@ export function restoreFocus(dialog: HTMLDialogElement, preferred: HTMLElement |
   if (!dialog.contains(activeWithin(dialog))) {
     dialog.focus();
   }
-}
-
-/**
- * The target a settled action should return focus to: whoever ran it, or the opening focus as
- * the floor. A runner that has left the DOM (its button re-rendered away) is not a target.
- *
- * Generic over `{ isConnected }` rather than `HTMLElement`: that member is the whole of what it
- * reads, so the decision is a unit test rather than a browser one.
- *
- * @internal
- */
-export function preferredRestoreTarget<T extends { isConnected: boolean }>(
-  runner: T | null,
-  openingFocus: T | null
-): T | null {
-  return runner?.isConnected === true ? runner : openingFocus;
-}
-
-/**
- * Who ran the action, chosen from the candidates in order of how specific each answer is.
- *
- * The ordering is the policy, hence a named function rather than a `??` chain: a truthy-but-wrong
- * candidate silently disables every fallback behind it, and only a disagreeing engine surfaces
- * that (WebKit does not focus a clicked `<button>`). Callers pass who holds focus, who was last
- * activated, who held it last; a disconnected candidate is skipped at every position, since
- * checking only the winner drops past a live one sitting behind a dead one.
- *
- * Generic over `{ isConnected }` so the ordering is a unit test rather than a browser one.
- *
- * @internal
- */
-export function chooseActionRunner<T extends { isConnected: boolean }>(
-  ...candidates: readonly (T | null | undefined)[]
-): T | null {
-  for (const candidate of candidates) {
-    if (candidate !== null && candidate !== undefined && candidate.isConnected) {
-      return candidate;
-    }
-  }
-  return null;
 }

@@ -70,6 +70,9 @@ export function createActionFactory<TData, TReason extends string = string>(
 
     return {
       type: opts?.type ?? 'button',
+      // Not a getter: the reason is the action's identity and cannot change for a given button, and
+      // the focus restore has to be able to find it again — see `ActionButtonProps`.
+      'data-action-reason': reason,
       onClick: async (event) => {
         // The caller's handler goes first and owns the veto, so composing a click never has to
         // mean replacing the action's. Same protocol as `onKeyDown`.

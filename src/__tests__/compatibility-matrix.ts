@@ -629,8 +629,14 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       ],
     },
     solid: {
-      state: 'partial',
-      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Diagnosed 2026-08-14, and the cause is not what this cell used to say.** It is not the disabled-button race, and not engine-specific — it reproduces on all three. Traced with the coordinator instrumented: at restore time `lastActivated` and `lastFocusInside` both still name the right button and **both report `isConnected === false`**. Solid replaces the element when the action state changes, so the coordinator is holding two references to a button that has left the document; `chooseActionRunner` skips a disconnected candidate — correctly — and there is nothing left to restore to. One hop more than that, precisely: `preferredRestoreTarget` checks `isConnected` on the runner and not on the `openingFocus` fallback, so the disconnected opening focus is *returned*, its `focus()` is a no-op, and it is `restoreFocus`’s own verification that ends on the dialog — same outcome, reached through the floor rather than through “nothing to restore to”. **The fix is to stop remembering elements**: the reason survives a re-render where the node does not, so the coordinator would have to remember the action and re-query its button at restore time. Not attempted — it is a design change, not a patch.',
+      state: 'works',
+      note: 'Restored by **finding the button, not remembering it**. Solid replaces the element when the action state changes, so all three of the coordinator’s reads name a node that answers `isConnected === false`, and a remembered element drops the restore through `preferredRestoreTarget`’s `openingFocus` floor onto the `<dialog>`. The reason outlives the node: the coordinator reads which action is running off the engine and re-queries `[data-action-reason]` (`findActionButton`, scoped with `queryOwn`) whenever the captured element is stale. `ActionButtonProps` carries that attribute for every action, which makes it the third prop a custom button wrapper must forward.',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          title: 'lands on the button that ran it, which Solid had already replaced',
+        },
+      ],
     },
     vanilla: {
       state: 'works',
@@ -974,7 +980,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others.',
       caveat:
-        'The `phase`-versus-`isVisible` half is proven on React only: moving the decision to `isVisible` fails there and does not here, and why it does not is unexplained rather than accounted for.',
+        'The `phase`-versus-`isVisible` half is proven on React only, and the asymmetry belongs to the **harness** rather than to the binding. The two forms of the decision differ on exactly one input pair — `phase === "closing"` with `open === false`; every other pair is identical, since `isVisible` is `phase !== "closed"`. Measured by logging each reconciliation pass under the mutated form: this harness goes `closed → open → closed` and **never observes `"closing"`**, so the one discriminating window never opens and the mutation passes. React’s harness, on the same animation config, does observe it. Closing this means making the exit observable where the reconciliation reads it — the controller’s own snapshot here, `useLookup` there — not changing `reconcileOpen`.',
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',

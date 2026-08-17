@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseActionRunner, preferredRestoreTarget } from '../focus-policy.js';
+import { chooseActionRunner, preferredRestoreTarget } from '../focus-restore-policy.js';
 
 // The ordering that decides who a settled action hands focus back to. Tested in Node because it is
 // a decision, not a DOM operation — candidates only answer `isConnected`. As a `??` chain inside

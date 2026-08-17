@@ -3,12 +3,12 @@ import { restoreOpenerFocus } from './dialog-lifecycle.js';
 import {
   activeWithin,
   captureActionRunner,
-  chooseActionRunner,
-  preferredRestoreTarget,
+  findActionButton,
   reclaimFocus,
   restoreFocus,
   settleOpeningFocus,
 } from './focus-policy.js';
+import { chooseActionRunner, preferredRestoreTarget } from '../utils/focus-restore-policy.js';
 import type { FocusCoordinatorOptions, ModalDomContext } from './attach-types.js';
 import type { ModalPhase } from './types.js';
 
@@ -44,6 +44,23 @@ export function createFocusCoordinator(
    * both answer with whatever held focus before the press. A `click` names it on every engine.
    */
   let lastActivated: HTMLElement | null = null;
+
+  /**
+   * Which action is running, by reason.
+   *
+   * The identity that outlives its button: a fine-grained renderer replaces the node when the
+   * action's state changes, so every element the reads below capture can be detached by the time the
+   * restore runs. Asked of the engine rather than read off an element, so it answers for an action
+   * nothing pressed too.
+   */
+  const runningReason = (): string | null => {
+    for (const [reason, state] of Object.entries(engine.getSnapshot().states)) {
+      if (state.isRunning) {
+        return reason;
+      }
+    }
+    return null;
+  };
 
   return {
     /**
@@ -82,6 +99,8 @@ export function createFocusCoordinator(
       // whether or not the binding re-renders; both flags are per-attachment.
       let wasRunning = false;
       let runner: HTMLElement | null = null;
+      /** The reason behind `runner`, kept so the button can be found again if the node went away. */
+      let runnerReason: string | null = null;
       let frame = 0;
 
       // A frame later, because the engine notifies synchronously while the button is still
@@ -100,7 +119,14 @@ export function createFocusCoordinator(
           if (!manager.lookup().isForeground(modalId)) {
             return;
           }
-          restoreFocus(dialog, preferredRestoreTarget(runner, openingFocus));
+          // The captured element first — it is the one that actually ran the action — then the same
+          // button found again by reason, which is the answer when the renderer replaced the node.
+          // `chooseActionRunner` skips a detached candidate at either position.
+          const found = runnerReason === null ? null : findActionButton(dialog, runnerReason);
+          restoreFocus(
+            dialog,
+            preferredRestoreTarget(chooseActionRunner(runner, found), openingFocus)
+          );
         });
       };
 
@@ -122,6 +148,9 @@ export function createFocusCoordinator(
               lastActivated,
               lastFocusInside
             );
+            // Read at the same instant and for the same reason: this is the one moment the engine
+            // names the running action, and the only identity that survives to the restore.
+            runnerReason = runningReason();
           }
           wasRunning = true;
           return;

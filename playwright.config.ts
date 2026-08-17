@@ -42,6 +42,22 @@ const vitePlugins: any[] = [
 ];
 
 /**
+ * What one component test may take, and it is a **contention** budget rather than a behaviour one.
+ *
+ * A browser test locally shares the machine with `cpus/2` siblings, and Playwright's actionability
+ * wait — visible, enabled, stable — is wall-clock: a page that would settle in 400ms alone can miss
+ * a 10s deadline when eight workers are compiling and painting at once, and the failure arrives as a
+ * timeout on an ordinary click rather than as a wrong answer. Measured on `use-modal.ct.tsx`
+ * ×15 on WebKit — 1245 tests: **1 red at 10s, 0 red at 30s, and no slower** (2.6 min against 2.8),
+ * because the budget is a ceiling and green runs never touch it.
+ *
+ * A ceiling is not the lever `retries` is, and `retries` stay at 0 locally on purpose: a retry takes
+ * the second answer from a test that gave a wrong first one, where a ceiling only keeps a correct run
+ * from being cut off. 30s is Playwright's own default, and a component test that reaches it is hung.
+ */
+const COMPONENT_TIMEOUT = 30 * 1000;
+
+/**
  * Unified Playwright configuration for both unit and component tests.
  *
  * Projects:
@@ -61,6 +77,9 @@ export default defineConfig({
   // file for why stale counters are worse than missing ones.
   globalSetup: './scripts/ct-coverage-reset.mjs',
   snapshotDir: './__snapshots__',
+  // The unit project's budget: pure logic, so 10s is already three orders of magnitude of slack and
+  // a test that reaches it is hung rather than slow. The three component projects raise it — see the
+  // `timeout` on each, which is where the reason lives.
   timeout: 10 * 1000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -123,6 +142,7 @@ export default defineConfig({
       testDir: './',
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Chrome'] },
+      timeout: COMPONENT_TIMEOUT,
     },
     // Gecko and WebKit run the same harnesses as Chromium. The declared floor names Firefox 115
     // and Safari 16.4, and a support claim nothing exercises is a guess with a version number on
@@ -133,6 +153,7 @@ export default defineConfig({
       testDir: './',
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Firefox'] },
+      timeout: COMPONENT_TIMEOUT,
     },
     // WebKit, which is the engine that found the focus bug rather than merely tripping over it —
     // see `captureActionRunner`. It is in the default list because it passes, and because the
@@ -143,6 +164,7 @@ export default defineConfig({
       testDir: './',
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Safari'] },
+      timeout: COMPONENT_TIMEOUT,
     },
   ],
 });
