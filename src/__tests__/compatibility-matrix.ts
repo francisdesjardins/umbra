@@ -277,6 +277,10 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         file: 'src/solid/__tests__/solid-modal.ct.tsx',
         title: 'says nothing about a name its prepare had not rendered yet',
       },
+      {
+        file: 'src/utils/__tests__/logger.test.ts',
+        title: 'logger is silent when no pattern is set',
+      },
     ],
   },
   {
@@ -626,7 +630,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     solid: {
       state: 'partial',
-      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Diagnosed 2026-08-14, and the cause is not what this cell used to say.** It is not the disabled-button race, and not engine-specific — it reproduces on all three. Traced with the coordinator instrumented: at restore time `lastActivated` and `lastFocusInside` both still name the right button and **both report `isConnected === false`**. Solid replaces the element when the action state changes, so the coordinator is holding two references to a button that has left the document; `chooseActionRunner` skips a disconnected candidate — correctly — and there is nothing left to restore to. **The fix is to stop remembering elements**: the reason survives a re-render where the node does not, so the coordinator would have to remember the action and re-query its button at restore time. Not attempted — it is a design change, not a patch.',
+      note: 'Focus lands on the `<dialog>` rather than on the button that ran the action. **Diagnosed 2026-08-14, and the cause is not what this cell used to say.** It is not the disabled-button race, and not engine-specific — it reproduces on all three. Traced with the coordinator instrumented: at restore time `lastActivated` and `lastFocusInside` both still name the right button and **both report `isConnected === false`**. Solid replaces the element when the action state changes, so the coordinator is holding two references to a button that has left the document; `chooseActionRunner` skips a disconnected candidate — correctly — and there is nothing left to restore to. One hop more than that, precisely: `preferredRestoreTarget` checks `isConnected` on the runner and not on the `openingFocus` fallback, so the disconnected opening focus is *returned*, its `focus()` is a no-op, and it is `restoreFocus`’s own verification that ends on the dialog — same outcome, reached through the floor rather than through “nothing to restore to”. **The fix is to stop remembering elements**: the reason survives a re-render where the node does not, so the coordinator would have to remember the action and re-query its button at restore time. Not attempted — it is a design change, not a patch.',
     },
     vanilla: {
       state: 'works',

@@ -546,7 +546,9 @@ test.describe('umbra/solid — the options only React had exercised', () => {
  * `createEffect` instead of `useEffect` — which is the claim: the helper is framework-free and the
  * binding is the only thing that changes.
  */
-test.describe('umbra/solid — reconcileOpen and the failed-action restore', () => {
+// Only `reconcileOpen`: the failed-action restore is the matrix's `~` cell, whose harness
+// (`SolidFailedActionHarness`) waits for the design change that would make its test pass.
+test.describe('umbra/solid — reconcileOpen', () => {
   test('the signal drives the dialog, and stays authoritative over an imperative open', async ({
     mount,
     page,
