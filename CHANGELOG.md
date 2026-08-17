@@ -11,6 +11,40 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Fixed — a control that disables itself no longer strands the modal's keyboard
+
+Reported from the async-open example: the Refetch button loses its focus ring. Measured, it is not
+the ring — focus is on `<body>`. A control that disables itself while its work runs is blurred by
+the engine, nothing hands the keyboard back, and Tab appears to resume from the button only because
+the browser keeps a sequential-navigation starting point where it was. It is the state the raise
+path already calls a defect in the matrix: "the modal stayed on screen with focus on `<body>` and
+every hotkey but Escape dead", Escape surviving on the platform's own `cancel`, which ignores focus.
+
+`createFocusCoordinator` already had the repair — `reclaimIfInFront`, with the modal-only rule and
+the in-front guard — driven only by the manager's snapshot, so a userland control produced no
+notification and it never ran. It now also listens for `focusout` where `relatedTarget` is `null`,
+which is what distinguishes _stranded_ from _moved_: focus going to another element is somebody's
+choice and carries its destination, while focus going nowhere is what the engine does when the
+thing holding it stops being focusable.
+
+**It gives the keyboard back to that control and to nothing else**, and the first attempt proved why
+that has to be the rule. Reclaiming to the dialog's first focusable is what a stack raise does, and
+applied here it parked an ordinary "saving…" on the **confirm** button, where the next Enter commits
+the dialog — caught by eye in the playground before it went anywhere near a commit. So the control
+is remembered and handed the keyboard when it is focusable again, watched through a `MutationObserver`
+on its `disabled` attribute; a strand this cannot undo is left exactly as it was.
+
+Three tests, mutation-checked by detaching the listener and confirming the positive one goes red:
+the keyboard comes back to the control, it is never answered by moving focus elsewhere, and an
+ordinary Tab between two controls is left alone. Green on all three engines.
+
+### Fixed — the story that would have been invisible
+
+`StrandedFocusHarness` is prop-free, so by the playground's own rule it belongs on `/stories`, and it
+was not there. Registered across the three places the rule names. Worth recording because the audit
+it prompted found **76 prop-free harnesses off that page** out of 157 — the convention is prose and
+nothing gates it, which is the shape of every other drift this repo has fixed by writing a test.
+
 ### Fixed — `umbra/react` survives a server render, which it could not do at all
 
 Probed against the built artifact rather than reasoned about: `renderToString` on **every** React

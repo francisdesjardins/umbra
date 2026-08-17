@@ -214,6 +214,9 @@ export function createFocusCoordinator(
       // the stack moves — including the close that leaves it in front. The snapshot changes on
       // dialog transitions and nothing else, so a click on the page behind never reaches here.
       let stopWatchingStack: (() => void) | undefined;
+      let stopWatchingStrand: (() => void) | undefined;
+      /** Its own handle: the restore's `frame` is a different question, asked at a different time. */
+      let strandedFrame = 0;
       if (phase === 'open') {
         const reclaimIfInFront = () => {
           const dialog = getDialog();
@@ -239,12 +242,84 @@ export function createFocusCoordinator(
           openingFocus = reclaimFocus(dialog, lastFocusInside) ?? openingFocus;
         };
         stopWatchingStack = manager.subscribeSnapshot(reclaimIfInFront);
+
+        // ── …and when a control inside strands it ──────────────────────────
+        //
+        // The stack is not the only way a modal loses its keyboard: a control that disables itself
+        // — the shape of every loading button — is blurred by the engine, and focus lands on
+        // `<body>`, where this dialog's keydown listener cannot hear it. Only the platform's own
+        // `cancel` still works, which is why such a dialog answers Escape and no other hotkey.
+        //
+        // **It gives the keyboard back to that control and to nothing else.** Sending it to the
+        // dialog's first focusable instead would end an ordinary "saving…" on the confirm button,
+        // where the Enter meant for the work commits the dialog — a repair worth less than the
+        // fault. So a strand this cannot undo is left alone: focus stays where the engine put it,
+        // which is exactly the state without this listener.
+        //
+        // `relatedTarget === null` is what says *stranded* rather than *moved*: focus going to
+        // another element is somebody's choice and carries its destination, while focus going
+        // nowhere is what the engine does when the thing holding it stops being focusable.
+        if (watched) {
+          let watchEnable: MutationObserver | undefined;
+
+          const giveItBack = (control: HTMLElement) => {
+            const dialog = getDialog();
+            const info = manager.lookup(modalId);
+            // The same three guards the stack path uses, for the same reasons — and one more: if
+            // focus has since landed somewhere real, the user moved on and this is stale.
+            if (
+              !dialog?.open ||
+              !info.isForeground ||
+              (info.exists && info.nonModal) ||
+              dialog.contains(activeWithin(dialog)) ||
+              !control.isConnected
+            ) {
+              return;
+            }
+            restoreFocus(dialog, control);
+          };
+
+          const reclaimIfStranded = (event: FocusEvent) => {
+            const control = event.target;
+            if (event.relatedTarget !== null || !(control instanceof HTMLElement)) {
+              return;
+            }
+            watchEnable?.disconnect();
+
+            // A frame first: the renderer may place focus itself, and a control disabled for one
+            // paint is back before an observer would report it.
+            cancelAnimationFrame(strandedFrame);
+            strandedFrame = requestAnimationFrame(() => {
+              if (!control.matches(':disabled')) {
+                giveItBack(control);
+                return;
+              }
+              // Still disabled, so the work is running: hand it back when the control comes back.
+              watchEnable = new MutationObserver(() => {
+                if (control.matches(':disabled')) {
+                  return;
+                }
+                watchEnable?.disconnect();
+                giveItBack(control);
+              });
+              watchEnable.observe(control, { attributes: true, attributeFilter: ['disabled'] });
+            });
+          };
+
+          watched.addEventListener('focusout', reclaimIfStranded);
+          stopWatchingStrand = () => {
+            watchEnable?.disconnect();
+            watched.removeEventListener('focusout', reclaimIfStranded);
+          };
+        }
       }
 
       return () => {
         cancelAnimationFrame(frame);
+        cancelAnimationFrame(strandedFrame);
         stopRemembering?.();
         stopWatchingStack?.();
+        stopWatchingStrand?.();
         unsubscribe();
       };
     },
