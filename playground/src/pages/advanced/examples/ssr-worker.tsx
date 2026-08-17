@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
-import { Alert, Button, Chip, Stack, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { Alert, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createElement } from 'react';
 import { hydrateRoot, type Root } from 'react-dom/client';
 import { SsrWorkerApp } from './ssr-worker-app';
@@ -17,6 +17,7 @@ import type { RenderReply, RenderRequest } from './ssr-worker.worker';
  * of it.
  */
 export function SsrWorkerExample() {
+  const theme = useTheme();
   const hostRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<Root | null>(null);
 
@@ -133,8 +134,22 @@ export function SsrWorkerExample() {
           </Alert>
         )}
 
-        {/* React owns this node once hydrated, so nothing else writes into it after that. */}
-        <div ref={hostRef} data-testid="ssr-worker-host" />
+        {/*
+          React owns this node once hydrated, so nothing else writes into it after that. The theme
+          reaches the rendered component through these variables rather than through props: the
+          worker emits the same markup either way, which is what keeps hydration silent.
+        */}
+        <div
+          ref={hostRef}
+          data-testid="ssr-worker-host"
+          style={
+            {
+              '--ssr-surface': theme.palette.background.paper,
+              '--ssr-ink': theme.palette.text.primary,
+              '--ssr-line': theme.palette.divider,
+            } as CSSProperties
+          }
+        />
       </Stack>
     </ExampleLayout>
   );

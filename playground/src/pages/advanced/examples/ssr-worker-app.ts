@@ -14,10 +14,20 @@ import { useModal } from 'umbra/react';
 
 export const SSR_MODAL_ID = 'ssr-worker-demo';
 
+// Colours arrive as CSS variables the page sets on the host, never as values computed here: the
+// worker and the page have to emit byte-identical markup or hydration reports a mismatch, and a
+// theme is exactly the sort of thing the worker cannot know. The fallbacks are what the worker's own
+// markup shows before any page adopts it.
+//
+// The library ships no UI, so a dialog with no background is a transparent one over the backdrop —
+// this is the consumer's half, front page included.
 const surface = {
   padding: 16,
-  border: '1px solid currentColor',
+  background: 'var(--ssr-surface, #ffffff)',
+  color: 'var(--ssr-ink, #1a1a1a)',
+  border: '1px solid var(--ssr-line, rgba(0, 0, 0, 0.23))',
   borderRadius: 8,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.24)',
   display: 'flex',
   flexDirection: 'column',
   gap: 12,
