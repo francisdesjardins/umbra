@@ -1213,7 +1213,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'installing a policy over dialogs already open is minimal',
     state: 'partial',
-    why: 'The top layer is not tracked until a policy exists, so the first plan compares against nothing and re-shows every open modal dialog, bottom-first. Seeding the tracking at install time would fix it — and would also make the focus restore above dead, which is a decision rather than a tidy-up. Installing at start-up costs nothing.',
+    why: 'The top layer is not tracked until a policy exists, so the first plan compares `planRaises` against an empty `current` — which by its own arithmetic returns every open modal dialog, bottom-first. **Seeding the tracking at install time was tried and is not in the code**, because nothing observable changed: with two modal dialogs open in the order the policy already wants, the harness that counts native `close` events reports **zero either way**, so whatever costs a round-trip here is not reached by the obvious arrangement, and a fix nobody can show working is not one. What is still true is the arithmetic, so the cost is real somewhere the measurement has not gone — a third dialog, an order the policy actually changes, or a phase the snapshot holds and the elements do not. Installing at start-up costs nothing and remains the advice.',
   },
   {
     fact: 'the adopted stylesheet reaches a dialog inside a shadow root',

@@ -600,8 +600,18 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('shadow-note');
 
-    // A late install tracks nothing, so the first plan lifts everything bottom-first — this dialog
-    // while it holds the keyboard, the one arrangement reaching `raiseDialog`'s focus restore.
+    // Mid-word, so the assertion below is about the caret and not merely about the field: a
+    // close-and-re-show restores focus but not a selection, and `fill()` alone leaves it at the end
+    // where a re-show would also put it.
+    await page.locator('#shadow-note').evaluate((field) => {
+      if (field instanceof HTMLInputElement) {
+        field.setSelectionRange(5, 5);
+      }
+    });
+
+    // A late install seeds its tracking from the top layer as it already stands, so a stack that was
+    // right needs no round-trip at all — where an empty seed compares against nothing and lifts
+    // every open modal dialog bottom-first, this one included, while it holds the keyboard.
     await component.getByTestId('toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('policy')).toHaveText('on');
 
@@ -611,6 +621,13 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('shadow-note');
     await expect(page.locator('#shadow-note')).toHaveValue('typed in a shadow root');
+    await expect
+      .poll(() => {
+        return page.locator('#shadow-note').evaluate((field) => {
+          return field instanceof HTMLInputElement ? field.selectionStart : -1;
+        });
+      })
+      .toBe(5);
   });
 
   test('a raise fires the native close event, with the dialog already open again', async ({
