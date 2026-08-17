@@ -1,6 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
+import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloseIcon from '@mui/icons-material/Close';
@@ -40,8 +41,16 @@ const TICK_MS = 100;
  * `<dialog>` carries an implicit `role="dialog"`: a surface the user is meant to attend to and
  * dismiss. A toast is a passing status message — nobody navigates to it, and taking focus for
  * it would be hostile. So the element here is a shell (positioning, the slide, the lifecycle,
- * the typed close) and the *semantics* live inside it: `role="status"` with `aria-live` is what
- * makes a screen reader announce "Changes saved" without moving the user anywhere.
+ * the typed close) and the announcement goes through a live region that is **not inside it**.
+ *
+ * **Not inside it, because a live region announces *changes*.** A region rendered by `render`
+ * is mounted in the same pass that shows the dialog, so it enters the accessibility tree already
+ * holding its text — the case screen readers miss or announce inconsistently, and this example
+ * used to be exactly that case while claiming otherwise. `useAnnouncer` mounts a visually hidden
+ * `role="status"` region beside the trigger on the page's first render, long before there is
+ * anything to say, and `announce('Changes saved')` at open time is what a screen reader actually
+ * hears. The same rule reaches every binding: vanilla markup inside a closed dialog sits under
+ * `display: none`, out of the tree, and becomes an insertion when it opens.
  *
  * **The element does not agree, and that has to be handled rather than asserted.** The dialog
  * focusing steps run on `show()` too, not only on `showModal()` — measured here: focus lands on
@@ -52,10 +61,10 @@ const TICK_MS = 100;
  * The same reasoning is why `useModal`'s `role` option is `'dialog' | 'alertdialog'` and not
  * every ARIA role: a role that contradicts its own element is not a fix.
  *
- * **It is still named**, and the two facts do not conflict. The announcement comes from the live
- * region; the name is for the other way in — the element stays in the accessibility tree, so a
- * screen reader's virtual cursor can land on it minutes later, and "dialog" is not a useful thing
- * to find there.
+ * **It is still named**, and the two facts do not conflict. The announcement comes from the
+ * external region; the name is for the other way in — the element stays in the accessibility
+ * tree, so a screen reader's virtual cursor can land on it minutes later, and "dialog" is not a
+ * useful thing to find there.
  *
  * **What changes once the toast carries actions.** Everything above assumes a passing status
  * message. Put a link or a set of choices in it and three things stop being optional:
@@ -63,7 +72,7 @@ const TICK_MS = 100;
  * - The timer must pause on **focus** as well as hover — a keyboard user tabbing to the action
  *   is exactly the person the countdown would rob (WCAG 2.2.1). That is why this one listens to
  *   both, though its only control is Dismiss.
- * - The actions have to be *reachable*. A live region announces text; it does not put anything
+ * - The actions have to be *reachable*. The live region announces text; it does not put anything
  *   in the tab order at a predictable moment, and a toast that leaves after five seconds is a
  *   control the keyboard may never arrive at. Either it stops auto-dismissing once it has an
  *   action, or the app gives the notification region a shortcut to jump to.
@@ -74,6 +83,7 @@ const TICK_MS = 100;
  */
 export function SlideCornerToastExample() {
   const { result } = useStore(resultStore);
+  const { announce, region } = useAnnouncer();
   /** Where focus was when the toast was raised — a status message has no business taking it. */
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const [remaining, setRemaining] = useState(LIFETIME_MS);
@@ -96,12 +106,10 @@ export function SlideCornerToastExample() {
     render: ({ handle }) => {
       return (
         <Box
-          // The announcement, and the only thing here assistive technology reacts to.
-          // `polite` waits for a pause rather than interrupting; `atomic` reads the whole
-          // toast rather than the words that changed.
-          role="status"
-          aria-live="polite"
-          aria-atomic
+          // No `role="status"` here, deliberately: this Box is mounted in the same pass that
+          // shows the dialog, so a live region here is born already holding its text — the case
+          // screen readers miss. The announcement goes through `useAnnouncer`'s persistent
+          // region, mounted beside the trigger; this is only the visual shell.
           onPointerEnter={() => {
             setHovered(true);
           }}
@@ -225,11 +233,14 @@ export function SlideCornerToastExample() {
           setFocusedInside(false);
           returnFocusTo.current =
             document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          // Through the persistent region, not the toast's own markup — see the essay above.
+          announce('Changes saved');
           await toast.open();
         }}
       >
         Show Toast
       </Shared.Button>
+      {region}
       <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
         direction: right · align: start · non-modal + portal
       </Typography>

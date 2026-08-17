@@ -1125,6 +1125,11 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     ],
   },
   {
+    fact: 'a live region rendered inside `render` announces its first content',
+    state: 'no-platform',
+    why: 'Screen readers announce a live region’s *changes*; a region inserted into the accessibility tree already holding its text is the case they miss or announce inconsistently — and `render` mounts its content in the same pass that shows the `<dialog>`, so a `role="status"` in there is born full. The same fact reaches every binding: `umbra/vanilla` markup inside a closed dialog sits under `display: none`, out of the tree, and becomes an insertion when it opens. The pattern that works is structural — a persistent, visually hidden region **outside** the dialog, written to at open time. The playground’s `useAnnouncer` (shared/lib) is that pattern, and the corner toast runs it; the library deliberately ships nothing here, for the same reason `role: "status"` is not on the option surface.',
+  },
+  {
     fact: '`aria-modal` written onto the `<dialog>`',
     state: 'no-by-design',
     why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-modal` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',

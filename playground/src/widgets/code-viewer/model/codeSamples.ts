@@ -28,6 +28,7 @@ import asyncOpenSrc from '@/pages/getting-started/examples/async-open.tsx?raw';
 import prepareFailureSrc from '@/pages/getting-started/examples/prepare-failure.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibUseFormSrc from '@/shared/lib/use-form.ts?raw';
+import sharedLibUseAnnouncerSrc from '@/shared/lib/use-announcer.tsx?raw';
 import sharedLibAsyncStateSrc from '@/shared/lib/async-state.ts?raw';
 import sharedLibSafeAwaitSrc from '@/shared/lib/safe-await.ts?raw';
 import sharedLibMutexSrc from '@/shared/lib/mutex.ts?raw';
@@ -435,6 +436,7 @@ export const codeSamples: Record<string, string> = {
   'shared-component-loading-button': sharedComponentLoadingButtonSrc,
   'shared-lib-use-query': sharedLibUseQuerySrc,
   'shared-lib-use-form': sharedLibUseFormSrc,
+  'shared-lib-use-announcer': sharedLibUseAnnouncerSrc,
   'shared-lib-async-state': sharedLibAsyncStateSrc,
   'shared-lib-safe-await': sharedLibSafeAwaitSrc,
   'shared-lib-mutex': sharedLibMutexSrc,

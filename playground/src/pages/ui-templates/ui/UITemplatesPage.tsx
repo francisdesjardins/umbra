@@ -163,9 +163,9 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
 ];
 
 /**
- * The third flavour, and the honest one: none of it renders anything, so it works under either
- * of the other two. These are the patterns the library deliberately does not ship, so that a
- * dialog manager stays a dialog manager.
+ * The third flavour, and the honest one: none of it renders anything visible, so it works under
+ * either of the other two — the announcer's hidden live region included. These are the patterns
+ * the library deliberately does not ship, so that a dialog manager stays a dialog manager.
  */
 const PATTERNS_GROUP: TemplateGroup = {
   title: 'Patterns the library does not ship',
@@ -179,6 +179,7 @@ const PATTERNS_GROUP: TemplateGroup = {
     { name: 'createImmerStore', codeKey: 'shared-lib-immer-store' },
     { name: 'useQuery (stand-in)', codeKey: 'shared-lib-use-query' },
     { name: 'useForm (stand-in)', codeKey: 'shared-lib-use-form' },
+    { name: 'useAnnouncer', codeKey: 'shared-lib-use-announcer' },
   ],
 };
 
