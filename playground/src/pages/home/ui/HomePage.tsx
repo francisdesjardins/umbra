@@ -176,6 +176,9 @@ export const HomePage = () => {
             <Chip size="small" label="typed close payloads" />
             <Chip size="small" label="React · Solid · vanilla" />
             <Chip size="small" label="React Compiler ready" />
+            {/* "Measured" is the claim, not "accessible": the README's Accessibility chapter and
+                the WCAG rows of the compatibility matrix cite the test behind each cell. */}
+            <Chip size="small" label="WCAG 2.2 · measured" />
           </Stack>
 
           <Stack direction="row" sx={{ gap: 1.5, mt: 3, flexWrap: 'wrap' }}>
