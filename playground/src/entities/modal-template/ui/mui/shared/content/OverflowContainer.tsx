@@ -1,7 +1,7 @@
 import { Box, type BoxProps, type SxProps } from '@mui/material';
-import { useRef, type ReactNode } from 'react';
-import { useIsOverflowing } from '@/shared/lib/use-overflow';
+import type { ReactNode } from 'react';
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
 import { sizes } from '@/entities/modal-template/ui/shared/tokens';
 
 export type OverflowContainerProps = {
@@ -18,21 +18,27 @@ export type OverflowContainerProps = {
    * Use this for right padding, subtle background, etc.
    */
   readonly overflowSx?: SxProps | undefined;
+
+  /** Accessible name the region announces when it scrolls — see `useScrollRegion`. */
+  readonly label?: string | undefined;
 } & Omit<BoxProps, 'sx' | 'style' | 'children' | 'overflow' | 'overflowX' | 'overflowY'>;
 
 export const OverflowContainer = ({
   children,
   sx,
   overflowSx,
+  label,
   ...boxRest
 }: OverflowContainerProps) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { isOverflowing, scrollbarWidth } = useIsOverflowing(ref);
+  const { ref, isOverflowing, scrollbarWidth, regionProps } = useScrollRegion<HTMLDivElement>(
+    label ?? 'Scrollable content'
+  );
 
   return (
     <Box
       {...boxRest}
       ref={ref}
+      {...regionProps}
       sx={mergeSx(
         {
           maxHeight: sizes.maxHeight,

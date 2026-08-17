@@ -39,6 +39,7 @@ import templateSharedOverflowContainerSrc from '@/entities/modal-template/ui/mui
 import templateSharedContentTransitionSrc from '@/entities/modal-template/ui/mui/shared/content/ContentTransition.tsx?raw';
 import templateSharedMuiButtonSrc from '@/entities/modal-template/ui/mui/shared/MuiButton.tsx?raw';
 import templateUtilSxUtilsSrc from '@/entities/modal-template/ui/shared/sxUtils.ts?raw';
+import templateUtilScrollRegionSrc from '@/entities/modal-template/ui/shared/scroll-region.ts?raw';
 import templateUtilTokensSrc from '@/entities/modal-template/ui/shared/tokens.ts?raw';
 import templateUtilTypesSrc from '@/entities/modal-template/ui/shared/types.ts?raw';
 import templateUtilLoadingOverlaySrc from '@/entities/modal-template/ui/shared/LoadingOverlay.tsx?raw';
@@ -127,6 +128,7 @@ export const templates: Record<string, string> = {
   'template-shared-content-transition': templateSharedContentTransitionSrc,
   'template-shared-mui-button': templateSharedMuiButtonSrc,
   'template-util-sx-utils': templateUtilSxUtilsSrc,
+  'template-util-scroll-region': templateUtilScrollRegionSrc,
   'template-util-tokens': templateUtilTokensSrc,
   'template-util-types': templateUtilTypesSrc,
   'template-util-loading-overlay': templateUtilLoadingOverlaySrc,

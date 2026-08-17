@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react';
-import { spacing } from '@/entities/modal-template/ui/shared/tokens';
 import styles from '@/entities/modal-template/ui/vanilla/message-modal/styles.module.css';
+import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
 
 type VanillaContentProps = {
   readonly children: ReactNode;
+  /** Accessible name the region announces when it scrolls — see `useScrollRegion`. */
+  readonly label?: string | undefined;
 };
 
-export function VanillaContent({ children }: VanillaContentProps) {
+export function VanillaContent({ children, label }: VanillaContentProps) {
+  const { ref, regionProps } = useScrollRegion<HTMLDivElement>(label ?? 'Dialog content');
+
   return (
-    <div
-      className={styles['modalContent']}
-      style={{ display: 'flex', flexDirection: 'column', gap: `${String(spacing.content)}px` }}
-    >
+    <div className={styles['modalContent']} ref={ref} {...regionProps}>
       {children}
     </div>
   );

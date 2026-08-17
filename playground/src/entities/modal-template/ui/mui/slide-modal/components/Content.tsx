@@ -1,21 +1,25 @@
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
-import { useIsOverflowing } from '@/shared/lib/use-overflow';
+import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
 import { Box, type SxProps } from '@mui/material';
-import { useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export type ContentProps = {
   readonly children: ReactNode;
   readonly sx?: SxProps | undefined;
   readonly overflowSx?: SxProps | undefined;
+  /** Accessible name the region announces when it scrolls — see `useScrollRegion`. */
+  readonly label?: string | undefined;
 };
 
-export const Content = ({ children, sx, overflowSx }: ContentProps) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { isOverflowing, scrollbarWidth } = useIsOverflowing(ref);
+export const Content = ({ children, sx, overflowSx, label }: ContentProps) => {
+  const { ref, isOverflowing, scrollbarWidth, regionProps } = useScrollRegion<HTMLDivElement>(
+    label ?? 'Dialog content'
+  );
 
   return (
     <Box
       ref={ref}
+      {...regionProps}
       sx={mergeSx(
         {
           flex: 1,

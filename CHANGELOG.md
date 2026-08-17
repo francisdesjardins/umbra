@@ -11,6 +11,25 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Fixed — the Tab stop on the command palette's "separator" was a nameless scroller, on one engine of three
+
+Reported from the playground: Tab in the slide presets' command palette stops on the separator
+above the Close button. Measured, the stop is real and the separator is not it — the palette's
+content area scrolls, contains nothing focusable, and Chromium and Firefox put such scrollers in
+the tab order themselves so the keyboard can scroll them (WCAG 2.1.1, applied by the engine). Two
+defects hid inside that behaviour: the stop announced itself as an anonymous block of text, and
+WebKit — which grants no such stop — had scrollable text no keyboard could reach at all.
+
+The norm is to declare the stop rather than inherit it: `tabindex="0"`, `role="region"`, an
+accessible name, applied only while the content actually overflows. `useScrollRegion` is that
+pattern once, in the templates' shared utilities, and every designated content scroller in both
+flavours carries it — slide, message, panel and form contents, plus the two overflow containers.
+Probed on both engines: Chromium's stop now announces "Dialog content", and WebKit gained the
+stop it never had. Deliberately userland, templates included: the scroller is the caller's
+markup, a selector cannot name an engine-granted stop, and the defaults are opinions a copied
+template is meant to have edited. The explicit `tabindex` is also what makes the region visible
+to the core's own focus scan — an engine-implicit stop never would be.
+
 ### Changed — the viewer downloads the samples for the route you are on, and no others
 
 Deferring the sample text to the first open left one module of 548 kB, three quarters of which

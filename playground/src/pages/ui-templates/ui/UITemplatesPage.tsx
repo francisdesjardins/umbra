@@ -91,6 +91,7 @@ const MUI_GROUPS: readonly TemplateGroup[] = [
     items: [
       { name: 'Button', codeKey: 'template-shared-mui-button' },
       { name: 'mergeSx / sxToObject', codeKey: 'template-util-sx-utils' },
+      { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
       { name: 'tokens', codeKey: 'template-util-tokens' },
       { name: 'types', codeKey: 'template-util-types' },
       { name: 'LoadingOverlay', codeKey: 'template-util-loading-overlay' },
