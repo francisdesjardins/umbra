@@ -74,12 +74,9 @@ export type OpenRequest = {
  * Build an {@link OpenRequest} — the envelope handed to {@link DialogManager.requestOpen}.
  *
  * `requestOpen(id, { payload, context })` works and always will; this exists because the call site
- * is a **boundary**, where an object literal is worst: the keys have to be remembered exactly, the
- * two halves mean different things, and the shape is where a protocol would grow — a version, a
- * correlation id — without every caller being edited.
- *
- * It validates nothing and cannot: the payload is `unknown` on the way out, and the dialog that
- * receives it is the only side that knows what a good one looks like.
+ * is a boundary, where remembering keys exactly is worst — and because a protocol would grow here
+ * (a version, a correlation id) without every caller being edited. It validates nothing and
+ * cannot: only the receiving dialog knows what a good payload looks like.
  *
  * @example
  * // The two halves, named, at the boundary.
@@ -210,13 +207,10 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
 /**
  * DOM event name dispatched on document at the start of the opening sequence.
  *
- * **Why this exists next to {@link DialogManager.subscribe}, which reports the same moments.**
- * `subscribe` binds to one manager instance; these are dispatched on `document`, so a listener
- * hears every dialog on the page — including ones raised by a *different copy of this library*, in
- * another bundle. It is the only mechanism here that crosses that line, and the observation half of
- * {@link DialogManager.requestOpen}.
- *
- * Inside one app, `subscribe` is the better tool: same moments, no globals, no string names.
+ * Reports the same moments as {@link DialogManager.subscribe}, but dispatched on `document`, so a
+ * listener hears every dialog on the page — including ones raised by a different copy of this
+ * library in another bundle. That crossing is the only reason to prefer it; inside one app
+ * `subscribe` is better (no globals, no string names).
  *
  * @example
  * // `event.detail` is typed: the library augments `DocumentEventMap`, so no cast.
@@ -342,22 +336,14 @@ export type DialogManager = {
    * **Ask** a modal to open, and let it say no.
    *
    * The door for code that does not own the dialog: another microfrontend, a shell, a deep link.
-   * `open(id)` is an instruction and this is a request, and the difference matters most for a
-   * *controlled* dialog — one whose `open` prop belongs to the component that renders it. Instruct
-   * one of those and it opens for a moment and is put back by its own reconciliation, which is a
-   * flash on screen, a spurious open/close through {@link DialogManager.subscribe}, and a stack
-   * entry that appears and vanishes for anything watching. Ask instead and none of that happens:
-   * the dialog's own code decides, and if it says no, nothing moved.
+   * `open(id)` instructs; this asks, which matters most for a *controlled* dialog — instruct one
+   * of those and it opens for a moment before its own reconciliation puts it back, flashing on
+   * screen and emitting a spurious open/close pair.
    *
-   * **A dialog that declares no handler refuses.** Not "opens anyway" — the request reaches a
-   * dialog that never agreed to be opened from outside, and the honest answer to that is no. It is
-   * logged, so a caller wondering why nothing happened can find out. `open(id)` is unaffected and
-   * still opens anything registered; the two doors are separate on purpose, so adding this one
-   * changes the behaviour of no existing call.
+   * **A dialog that declares no handler refuses**, logged, rather than opening anyway: the request
+   * reached a dialog that never agreed to be opened from outside. `open(id)` is unaffected.
    *
-   * Returns nothing: this is the fire-and-forget door. When the answer matters — and across an
-   * ownership boundary it usually does, since a refusal the asker never hears is a dead end —
-   * use {@link DialogManager.requestOpenAndWait}.
+   * Fire-and-forget; when the answer matters use {@link DialogManager.requestOpenAndWait}.
    *
    * @param id The dialog to ask.
    * @param request What to hand its handler. Both halves are untrusted — see {@link OpenRequest}.
@@ -374,15 +360,10 @@ export type DialogManager = {
   /**
    * The same ask, with the answer — and, if it was a yes, the close that follows.
    *
-   * {@link DialogManager.requestOpen} tells the owner and walks away. This waits for the owner's
-   * decision, which is what a caller across a boundary needs: a microfrontend that asks for a
-   * dialog it does not own and never learns it was refused cannot tell the user why nothing
-   * happened. The three refuses the manager produces itself — no such dialog, a dialog that
-   * accepts no requests, an explicit `refuse` — all arrive here as a reason instead of only in
-   * the console.
-   *
-   * Acceptance is the default and refusal is explicit — see {@link OpenRequestDispatch}, whose
-   * `refuse` says why the manager cannot infer it. The handler may be `async`, and this waits.
+   * {@link DialogManager.requestOpen} tells the owner and walks away; this waits for the decision,
+   * which is what a caller across a boundary needs — a refusal it never hears is a dead end. All
+   * three refusals (no such dialog, no handler, an explicit `refuse`) arrive here as a reason
+   * rather than only in the console. Acceptance is the default; the handler may be `async`.
    *
    * @example
    * const outcome = await dialogManager.requestOpenAndWait(
@@ -400,10 +381,8 @@ export type DialogManager = {
   /**
    * Close a modal imperatively by id, with a reason.
    *
-   * Reason only, no payload: the registry is keyed by string, so nothing here knows a given
-   * modal's `TData` and a payload passed through this door could not be checked against it.
-   * A typed payload goes through the typed doors — `handle.close(reason, data)` or an
-   * action's `close(data)`, both of which know the modal they belong to.
+   * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
+   * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
    */
   close(id: string, reason?: string): void;
 
@@ -422,35 +401,23 @@ export type DialogManager = {
   /**
    * Decide the stack order yourself, instead of letting whoever opened last win.
    *
-   * **The problem it solves.** A dialog's place in the stack is the order its `showModal()` landed
-   * in, and that order is a race between parts of an app that do not know about each other: a
-   * consent notice raised after a fetch settles, a slide-over opened by a deep link, a session
-   * warning on a timer. Lose the race and the notice is *behind* a panel — under its backdrop,
-   * inert, unreadable, while the user works on something the app was trying to interrupt. Nothing
-   * is broken, and the wrong thing is in front. That is the common shape in an app assembled from
-   * independent features, where no single place decides who interrupts whom.
+   * Without one, a dialog's place is the order its `showModal()` landed in — a race between
+   * features that do not know about each other, and losing it puts a session warning *behind* a
+   * panel, inert under its backdrop.
    *
-   * **What it does.** One policy, installed once, for the whole manager: a function from a dialog
-   * to a number, higher meaning nearer the user, ties keeping open order. So a policy only has to
-   * say where it disagrees. It applies to dialogs already on screen — a low-priority dialog that
-   * opens over a high-priority one is put back underneath it before the frame is painted, and the
-   * snapshot, `foreground`, `isForeground` and `getZIndex` all move with it.
+   * One policy for the whole manager: a dialog to a number, higher meaning nearer the user, ties
+   * keeping open order, so a policy only says where it disagrees. It applies to dialogs already on
+   * screen, before the frame is painted, and the snapshot, `foreground`, `isForeground` and
+   * `getZIndex` move with it. What a reorder costs is `raiseDialog`'s subject: `close()` +
+   * `showModal()`, so the native `close` fires and CSS keyed on `[open]` re-runs.
    *
-   * **What a reorder costs** is `raiseDialog`'s subject in `core/dialog-lifecycle.ts`: moving a
-   * dialog inside the top layer is `close()` + `showModal()`, so it fires the element's native
-   * `close` and re-runs CSS keyed on `[open]`.
+   * **A policy orders each family, never across them** — modality is settled before it is asked,
+   * so a big number on a panel moves it no nearer the user. Opt-in, dormant until called, and
+   * replaced rather than stacked by a second call. Installing it over dialogs already open is the
+   * one reorder that is not minimal: the top layer is untracked until then, so the first plan
+   * re-shows every open modal. Both facts are in the compatibility matrix.
    *
-   * **A policy orders each family, never across them.** Modality is settled before the policy is
-   * asked, so a huge number on a panel ranks it against the other panels and moves it no nearer the
-   * user — a platform law rather than a choice, in the compatibility matrix.
-   *
-   * Opt-in and dormant until called; calling it again replaces the policy rather than stacking one.
-   * **Installing it over dialogs that are already open is the one reorder that is not minimal** —
-   * the top layer is untracked until a policy exists, so the first plan re-shows every open modal
-   * dialog. At start-up it costs nothing. Also in the matrix, which is where that stays open.
-   *
-   * @returns A disposer that puts the order back to what it would be with no policy — within each
-   *   family, since the modality rule is not the policy's to begin with — and reorders what is on
+   * @returns A disposer restoring the no-policy order within each family, reordering what is on
    *   screen to match. It does nothing if a later `prioritize` already replaced the policy.
    *
    * @example
@@ -467,16 +434,14 @@ export type DialogManager = {
   /**
    * Put the open dialogs where the policy from {@link DialogManager.prioritize} says they belong.
    *
-   * Idempotent, and a no-op until a policy exists — the manager calls it itself on every change it
-   * observes, so an application normally never does. It is public because the manager's own clock
-   * runs one step ahead of the DOM's: a store reaching `'opening'` is not a dialog that has been
-   * shown, so the moment that matters is the one right after `showModal()`, which is a binding's to
-   * report.
+   * Idempotent, a no-op until a policy exists, and called by the manager on every change it
+   * observes — public only because its clock runs a step ahead of the DOM's: a store reaching
+   * `'opening'` is not a dialog that has been shown, so the moment that matters is a binding's
+   * to report.
    *
-   * @param shownId The dialog whose element was *just* shown, when the call is reporting one.
-   *   Recorded rather than inferred: every show in this library goes through the one lifecycle seam
-   *   that calls this, so at most one dialog can have entered the top layer between two calls, and
-   *   that is what lets the manager know the real order instead of guessing it.
+   * @param shownId The dialog whose element was *just* shown. Recorded rather than inferred:
+   *   every show goes through the one seam that calls this, so at most one dialog can have
+   *   entered the top layer between two calls.
    */
   syncStackOrder(shownId?: string): void;
 
