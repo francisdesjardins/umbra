@@ -11,6 +11,56 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Changed — the playground shipped its code viewer to everyone who never opened it
+
+**1829 kB of the 2347 kB bundle was downloaded before the first click — 78% of the app, and more
+than half of it existed to display source code.** The routes were already lazy, so the cost was
+never the pages; it was what the shell dragged in behind them.
+
+`widgets/code-viewer/index.ts` re-exported `codeSamples` and `CodeModalContent`, and `RootLayout`
+imports that barrel. A static re-export makes a module reachable from the entry, so rolldown put
+all 195 `?raw` sources **in the entry chunk** — 570 kB of it — and the `import('./codeSamples')`
+that was supposed to defer them resolved to something already downloaded. The same re-export would
+have defeated a `React.lazy` on the content component. Both names are gone from the barrel now;
+the hook is the whole surface, and the note there says why.
+
+The samples load on **`prepare`** rather than on mount — the library's own window for exactly this,
+which leaves `open`'s identity alone (`RootLayout` uses it as an effect dependency) and gives the
+body an `isPreparing` to render "Loading source…" against, distinct from "No code available":
+reporting _no code_ during a fetch accuses the caller of a registration they did make.
+`dismissWhilePreparing` already defaults to `true`, so Escape stays live through the download.
+
+`CodeBlock` reached `react-syntax-highlighter` and `styles/prism` through the package's own
+barrels, which re-export the full Prism build and all 47 themes — **1.25 MB of pre-bundled
+highlighter plus a 192 kB style barrel in dev**, 615 kB in the bundle, for four grammars. Subpath
+imports and four `registerLanguage` calls: `tsx`, `bash`, `css`, `markup`, which is the closed set
+every call site asks for. An unregistered grammar falls back to plain text and raises nothing, so
+the list carries a note naming those call sites.
+
+`defaultPreload: 'intent'` was missing, so a section's chunk was only requested on click, with the
+whole round trip between the press and the paint; and no `defaultPendingComponent`, so the previous
+page sat there for up to a second saying nothing. Both set. In dev the lag is a different animal —
+Vite transforms a route's whole subtree the first time it is opened — so `server.warmup` names
+every page barrel, not just the shell.
+
+|                                   | before  | after      |
+| --------------------------------- | ------- | ---------- |
+| loaded before any click           | 1829 kB | **674 kB** |
+| `vendor-syntax`                   | 615 kB  | **58 kB**  |
+| entry chunk                       | 570 kB  | **30 kB**  |
+| dev requests, cold load           | 610     | **116**    |
+| dev, first visit to four sections | 3552 ms | **616 ms** |
+
+Verified against the built artifact, hash-router build included: `yarn smoke` all green in dev and
+on the bundle, and `wcag-audit` clean on the open viewer in both schemes — the token colours move
+with the theme objects, and `readableSyntaxStyle` still corrects them against `CODE_SURFACE`.
+
+One wrinkle worth recording: `@types/react-syntax-highlighter` declares every subpath, and the
+compiler still reports TS7016 for each — the specifier resolves to the shipped `.js`, and a
+resolution that succeeds is not reconsidered against an ambient declaration elsewhere. The
+declarations are restated in `playground/src/react-syntax-highlighter-subpaths.d.ts`. The `paths`
+catch-all was the obvious suspect and is not the cause; removing it changes nothing.
+
 ### Changed — the coverage tour found one branch no project could reach, and made it pure
 
 Both halves re-measured file by file, and the cross-reference held everywhere but one place. The

@@ -1,9 +1,9 @@
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
-import { useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useCodePane } from '@/shared/lib/code-pane-context';
-import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModal';
+import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModalLazy';
 
 /** Declared once and passed both ways, since the heading and the reference are in two files. */
 const CODE_VIEWER_TITLE_ID = 'code-viewer-title';
@@ -14,11 +14,6 @@ export const useCodeModal = () => {
   const currentPath = routerState.location.pathname;
 
   const [codeSamples, setCodeSamples] = useState<Record<string, string>>({});
-  useEffect(() => {
-    void import('./codeSamples').then((m) => {
-      setCodeSamples(m.codeSamples);
-    });
-  }, []);
 
   const routeKey = currentPath.replace('/', '') || 'basic';
   const codeKey = selectedExample ?? routeKey;
@@ -28,7 +23,14 @@ export const useCodeModal = () => {
     id: 'code-viewer',
     direction: 'right',
     ariaLabelledBy: CODE_VIEWER_TITLE_ID,
-    render: ({ handle }) => {
+    // Every example's source as text is a third of the bundle, and a visitor who never opens this
+    // panel needs none of it. `prepare` is the window the library already provides for that: the
+    // panel is on screen before it runs, and `isPreparing` is what the body renders against.
+    prepare: async () => {
+      const module = await import('./codeSamples');
+      setCodeSamples(module.codeSamples);
+    },
+    render: ({ handle, isPreparing }) => {
       return (
         <Box
           sx={{
@@ -45,14 +47,30 @@ export const useCodeModal = () => {
             overflow: 'hidden',
           }}
         >
-          <CodeModalContent
-            code={code}
-            codeKey={codeKey}
-            exampleActions={exampleActions}
-            handle={handle}
-            title="Source Code"
-            titleId={CODE_VIEWER_TITLE_ID}
-          />
+          <Suspense
+            fallback={
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <CircularProgress size={28} />
+              </Box>
+            }
+          >
+            <CodeModalContent
+              code={code}
+              codeKey={codeKey}
+              exampleActions={exampleActions}
+              handle={handle}
+              isLoading={isPreparing}
+              title="Source Code"
+              titleId={CODE_VIEWER_TITLE_ID}
+            />
+          </Suspense>
         </Box>
       );
     },

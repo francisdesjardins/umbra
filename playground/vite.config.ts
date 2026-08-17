@@ -31,10 +31,46 @@ export default defineConfig({
       '@': resolve(import.meta.dirname, 'src'),
     },
   },
+  optimizeDeps: {
+    // Named up front rather than left to discovery. Vite pre-bundles a dependency the first time
+    // it sees one imported, and discovering one mid-session re-runs the optimizer and reloads the
+    // page — which lands, by construction, on the first visit to whichever section introduced it.
+    // The highlighter's subpaths are here because `CodeBlock` reaches them past the package's own
+    // entry, so nothing points at them until the code viewer is first opened.
+    include: [
+      '@mui/material',
+      '@mui/material/styles',
+      '@tanstack/react-router',
+      'immer',
+      'react-syntax-highlighter/dist/esm/prism-light',
+      'react-syntax-highlighter/dist/esm/languages/prism/bash',
+      'react-syntax-highlighter/dist/esm/languages/prism/css',
+      'react-syntax-highlighter/dist/esm/languages/prism/markup',
+      'react-syntax-highlighter/dist/esm/languages/prism/tsx',
+      'react-syntax-highlighter/dist/esm/styles/prism/one-dark',
+      'react-syntax-highlighter/dist/esm/styles/prism/one-light',
+    ],
+    // The library is the source next door, not a dependency — pre-bundling it would freeze it
+    // behind an optimizer cache and stop an edit in `src/` from showing up here.
+    exclude: ['umbra'],
+  },
   server: {
     port: 3000,
     open: true,
     allowedHosts: ['.ngrok-free.app', '.ngrok.io'],
+    // Transformed at startup rather than on the click that needs it. Each route is a lazy chunk,
+    // so in dev its whole subtree — page, examples, templates — is transformed the first time it
+    // is opened and instantly on every visit after: the lag is per section, once, which is
+    // precisely the shape being complained about. Every page barrel is listed because a section
+    // left off is a section that keeps its stall.
+    warmup: {
+      clientFiles: [
+        './src/app/main.tsx',
+        './src/app/router.tsx',
+        './src/widgets/root-layout/ui/RootLayout.tsx',
+        './src/pages/*/index.ts',
+      ],
+    },
     fs: {
       strict: false,
       allow: ['..'],

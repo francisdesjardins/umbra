@@ -1,4 +1,5 @@
 import { AppRoot } from '@/app/AppRoot';
+import { RoutePending } from '@/app/RoutePending';
 import {
   createHashHistory,
   createRootRoute,
@@ -150,7 +151,21 @@ const routeTree = rootRoute.addChildren([
 // Use hash-based history when built for file:// (VITE_HASH_ROUTER=true)
 const history = import.meta.env['VITE_HASH_ROUTER'] === 'true' ? createHashHistory() : undefined;
 
-export const router = createRouter({ routeTree, ...(history ? { history } : {}) });
+export const router = createRouter({
+  routeTree,
+  // Every route component is lazy, and without this the chunk is only requested on click — the
+  // whole round trip sits between the press and the first paint. `intent` starts it on hover or
+  // focus, so the common case lands on a module that is already there. The delay is what keeps a
+  // pointer sweeping down the sidebar from pulling all twelve.
+  defaultPreload: 'intent',
+  defaultPreloadDelay: 50,
+  // For the navigations preloading cannot cover — keyboard, touch, a cold direct link — the
+  // default is to hold the previous page on screen for a full second with nothing to say a click
+  // registered.
+  defaultPendingComponent: RoutePending,
+  defaultPendingMs: 150,
+  ...(history ? { history } : {}),
+});
 
 declare module '@tanstack/react-router' {
   interface Register {

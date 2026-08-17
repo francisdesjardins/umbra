@@ -1,6 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import CodeIcon from '@mui/icons-material/Code';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
 import type { ModalHandle } from 'umbra/react';
 import type { ReactNode } from 'react';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
@@ -25,6 +25,7 @@ export const CodeModalContent = ({
   codeKey,
   exampleActions,
   handle,
+  isLoading,
   title,
   titleId,
 }: {
@@ -32,6 +33,12 @@ export const CodeModalContent = ({
   codeKey: string;
   exampleActions: ReactNode;
   handle: ModalHandle;
+  /**
+   * Whether the samples are still arriving. Distinct from an empty `code`, which means the key
+   * names no sample — reporting "no code" while it is still downloading accuses the caller of a
+   * missing registration that is really just a fetch in flight.
+   */
+  isLoading: boolean;
   title: string;
   /**
    * What the panel's `ariaLabelledBy` points at. It has to be threaded rather than derived,
@@ -137,11 +144,19 @@ export const CodeModalContent = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 1.5,
               flex: 1,
             }}
           >
+            {/*
+              No live region here: this whole branch unmounts the moment the code arrives, so a
+              region declared on it would be born with its text and replaced rather than updated —
+              which announces nothing. The panel takes focus on open and is named by its heading,
+              which is what a screen reader reads on arrival.
+            */}
+            {isLoading && <CircularProgress size={18} />}
             <Typography variant="body2" color="text.secondary">
-              No code available
+              {isLoading ? 'Loading source…' : 'No code available'}
             </Typography>
           </Box>
         )}

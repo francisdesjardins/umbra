@@ -3,8 +3,32 @@ import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, useTheme } from '@mui/material';
 import { useCallback, useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+// Deep paths rather than the package barrels, and both halves matter. `react-syntax-highlighter`
+// re-exports `Prism` — every grammar refractor ships — beside `PrismLight`, and
+// `styles/prism` re-exports all 47 themes; Vite serves modules unbundled in dev, so importing
+// through either barrel pulls the whole of it whatever the named import says.
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
+import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
+
+/**
+ * The four grammars this app asks for, and the whole list — `language` defaults to `tsx` below,
+ * `HomePage` passes `bash` and `tsx`, `SymbolArticle` passes `tsx`, and `languageForCodeKey` in
+ * the code viewer returns `css`, `markup` or `tsx`.
+ *
+ * An unregistered grammar renders as plain text and raises nothing, so a fifth `language` value
+ * would be a silent downgrade — add it here in the same commit that introduces it. The
+ * dependencies come free: refractor's `tsx` registers `jsx` and `typescript`, which pull `markup`,
+ * `javascript` and `clike`.
+ */
+SyntaxHighlighter.registerLanguage('tsx', tsx);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('markup', markup);
 
 /**
  * The surface code is painted on — named once, because two things depend on it agreeing.
