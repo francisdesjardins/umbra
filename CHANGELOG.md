@@ -11,6 +11,20 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Fixed — `public/` has no importable address, and both spellings of that were wrong
+
+The code viewer shows the microfrontend frame's hand-written files — `host.html` and the four
+`mfa*.js` — and reached them by climbing into `public/`, which made Vite warn on every dev page
+load. Its suggested fix is worse than the warning: `/mfe/host.html?raw` silences it and then fails
+the build with `UNRESOLVED_IMPORT`, because public files are copied rather than bundled. There is
+no spelling that satisfies both halves, because `public/` is mounted at `/` and the directory
+genuinely has no address.
+
+`mfeUmbraPlugin` already owns `/mfe/`, so it reads the five files off disk and serves them as
+`virtual:mfe-sources`, with `addWatchFile` to keep an edit reaching the viewer in dev. What the
+viewer shows is still byte-for-byte what the browser runs, which was the only property worth
+protecting.
+
 ### Changed — the playground shipped its code viewer to everyone who never opened it
 
 **1829 kB of the 2347 kB bundle was downloaded before the first click — 78% of the app, and more

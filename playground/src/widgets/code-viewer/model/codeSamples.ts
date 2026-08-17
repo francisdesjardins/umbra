@@ -15,11 +15,18 @@ import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw'
 // The microfrontend demo's own files. Not under `src/`, and that is the point: they are served
 // verbatim from `public/`, so what the viewer shows is byte-for-byte what the browser runs — no
 // alias, no JSX, no build step between the two.
-import mfeHostSrc from '../../../../public/mfe/host.html?raw';
-import mfeCheckoutSrc from '../../../../public/mfe/mfa1.js?raw';
-import mfeBillingSrc from '../../../../public/mfe/mfa2.js?raw';
-import mfeSupportSrc from '../../../../public/mfe/mfa3.js?raw';
-import mfeAuditSrc from '../../../../public/mfe/mfa4.js?raw';
+//
+// Read by `mfeUmbraPlugin` rather than imported with `?raw`, because `public/` is mounted at `/`
+// and so has no address a module can name — the relative climb warns on every dev page load, and
+// the root form Vite suggests instead fails the build. The plugin owns `/mfe/` already; the note
+// on `VIRTUAL_SOURCES` there has the detail.
+import {
+  audit as mfeAuditSrc,
+  billing as mfeBillingSrc,
+  checkout as mfeCheckoutSrc,
+  host as mfeHostSrc,
+  support as mfeSupportSrc,
+} from 'virtual:mfe-sources';
 
 // The build behind the import map. Not a file a user copies — it is the answer to "how do three
 // independently-written scripts end up with one manager", which is the demo's whole subject.

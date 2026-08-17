@@ -1,11 +1,36 @@
 import { rolldown } from 'rolldown';
-import { dirname, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENTRY_DIR = resolve(HERE, '../mfe-src');
 const LIB_ROOT = resolve(HERE, '../../src');
+const PUBLIC_DIR = resolve(HERE, '../public/mfe');
+
+/**
+ * The hand-written half of the frame, as text, for the code viewer to display.
+ *
+ * These five files live in `public/`, and `public/` is mounted at `/` — so it has no address a
+ * module can import. Both spellings fail, each in its own half of the pipeline: a relative climb
+ * (`../../../public/mfe/host.html?raw`) builds but makes Vite warn on every dev page load, and the
+ * root form it recommends (`/mfe/host.html?raw`) silences the warning and then fails the build with
+ * `UNRESOLVED_IMPORT`, because public files are copied rather than bundled. Reading them here is
+ * the spelling that works in both, and it keeps the property that matters: the viewer shows the
+ * same bytes the browser runs.
+ */
+const VIRTUAL_SOURCES = 'virtual:mfe-sources';
+const RESOLVED_SOURCES = `\0${VIRTUAL_SOURCES}`;
+
+/** Export name → file under `public/mfe/`. */
+const SOURCE_FILES: Readonly<Record<string, string>> = {
+  host: 'host.html',
+  checkout: 'mfa1.js',
+  billing: 'mfa2.js',
+  support: 'mfa3.js',
+  audit: 'mfa4.js',
+};
 
 /** Everything the host's import map names, and the module that answers for each. */
 const ENTRIES = [
@@ -71,6 +96,26 @@ export function mfeUmbraPlugin(): Plugin {
 
   return {
     name: 'umbra:mfe-bundle',
+
+    resolveId(id) {
+      return id === VIRTUAL_SOURCES ? RESOLVED_SOURCES : null;
+    },
+
+    async load(id) {
+      if (id !== RESOLVED_SOURCES) {
+        return null;
+      }
+      const exports = await Promise.all(
+        Object.entries(SOURCE_FILES).map(async ([name, file]) => {
+          const text = await readFile(join(PUBLIC_DIR, file), 'utf8');
+          // `addWatchFile` is what makes an edit to one of these reach the viewer in dev; the
+          // module is virtual, so nothing else ties it to a file on disk.
+          this.addWatchFile(join(PUBLIC_DIR, file));
+          return `export const ${name} = ${JSON.stringify(text)};`;
+        })
+      );
+      return exports.join('\n');
+    },
 
     configureServer(server) {
       // Rebuild whenever the library or one of the entry modules changes, the way the API
