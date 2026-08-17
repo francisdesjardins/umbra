@@ -119,6 +119,11 @@ are deliberately yours.
   `role="status"` on a `<dialog>` and ships no announcer — a live region only announces reliably
   when it exists _before_ its content, which is a structural fact no dialog-rendered region can
   satisfy. The playground's `useAnnouncer` is the copyable pattern, and its corner toast runs it.
+- **Reduced motion is one CSS rule, and the close path is built to meet it.**
+  `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — the
+  library _measures_ whether transitions are live and finalizes a close immediately when they are
+  not, so the rule cannot hang an exit waiting for a `transitionend` that never comes. Animations
+  are defaults you replace; the playground ships that rule itself.
 
 ## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Using it
 

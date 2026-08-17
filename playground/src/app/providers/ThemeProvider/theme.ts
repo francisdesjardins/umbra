@@ -274,6 +274,16 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
             'html:has(dialog[open][data-modal-type="modal"])': {
               overflow: 'hidden',
             },
+            // WCAG 2.3.3 — the one-rule off-switch the library's close path is built to meet:
+            // `checkTransitionsDisabled` measures a 0s duration and finalizes immediately, so a
+            // reduced-motion dialog snaps instead of waiting for a `transitionend` that never
+            // comes. On the dialog element only: the slide/fade defaults live there as inline
+            // transitions, which is why the `!important` is required and safe.
+            '@media (prefers-reduced-motion: reduce)': {
+              'dialog[data-modal-id]': {
+                transition: 'none !important',
+              },
+            },
           };
         },
       },

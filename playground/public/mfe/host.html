@@ -388,6 +388,13 @@
         font-size: 12px;
         margin: 0;
       }
+      /* WCAG 2.3.3 — same one-rule off-switch the main app declares in its theme: the library's
+         close path measures a 0s duration and finalizes immediately, so nothing hangs. */
+      @media (prefers-reduced-motion: reduce) {
+        dialog[data-modal-id] {
+          transition: none !important;
+        }
+      }
     </style>
   </head>
 
