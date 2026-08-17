@@ -59,6 +59,7 @@ yarn format             # Format code
 yarn docs:examples      # Format, type-check and lint every JSDoc @example (part of `yarn check`)
 yarn docs:examples:fix  # Rewrite those examples through prettier, in place
 yarn verify:all         # Full validation (lint + type-check + build + package checks)
+yarn coverage:update    # Run both coverage measurements and rewrite README + CLAUDE.md + badges
 ```
 
 ## Testing
@@ -95,10 +96,11 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-16: **92.08%
-over 54 files**, against unit's **95.46%**. Never add them; re-measure both or neither — **and the
-pair is quoted twice**, here and in [README.md](README.md#development), which also hand-sets two
-badges from it. Moving one copy is how the README came to be two points and three files behind.
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-17: **92.20% over 54 files**, against unit's **95.46%**. Never add them; re-measure both or neither — **and the
+pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
+badges from it. Moving one copy is how the README came to be two points and three files behind,
+which is why **`yarn coverage:update` now does the whole move**: both measurements, both documents,
+both badges, one command — its patterns fail loudly if this prose is reworded.
 
 **So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.** Two
 moves have paid off repeatedly and are the first thing to try:

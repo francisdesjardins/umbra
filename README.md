@@ -340,10 +340,11 @@ half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) 
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **92.08%** statements over 54 files. Both measured 2026-08-16, and re-measured
+~45% of the run) — **92.20%** statements over 54 files. Both measured 2026-08-17, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
-different days. The badges above are hand-set from those two commands, so treat them as what they
-are: a snapshot, not a gate.
+different days. `yarn coverage:update` is that rule made mechanical: it runs both commands and
+rewrites this paragraph, the badges above and CLAUDE.md's copy in one move — still a snapshot, not
+a gate.
 
 The same pair is quoted in [CLAUDE.md](CLAUDE.md#what-coverage-measures), which is the other half of
 "together": this file drifted two points behind it by moving one copy and not the other, which is the

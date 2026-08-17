@@ -103,6 +103,7 @@
     "test:component:ui": "playwright test -c playwright.config.ts --project=component --ui",
     "test:component:webkit": "playwright test -c playwright.config.ts --project=component-webkit",
     "test:component:firefox": "playwright test -c playwright.config.ts --project=component-firefox",
+    "coverage:update": "node scripts/update-coverage.mjs",
     "test:component:coverage": "cross-env CT_COVERAGE=1 playwright test -c playwright.config.ts --project=component && node scripts/ct-coverage-report.mjs",
     "type-check:watch": "node node_modules/typescript-7/bin/tsc --noEmit --watch",
     "type-check": "node node_modules/typescript-7/bin/tsc --noEmit && node node_modules/typescript-7/bin/tsc -p playground/tsconfig.json --noEmit",
