@@ -40,7 +40,15 @@ what it usually means here, in a comment.
 | Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`     |
 | The work an open waits on      | **`prepare` / `isPreparing`** | `onOpen` (that one reports; this is awaited) |
 | A caller who may refuse        | **`on…Request`**              | a plain `on…` that reads a return value      |
+| A flag covering every item     | **the name states the scope** | hanging it off the object that names one     |
 | Which edge a panel slides from | **`direction`**               | anything else calling itself a direction     |
+
+**A per-item flag is one word; an aggregate names its scope.** `action.isRunning(reason)` is one
+word because the argument says whose it is. `hasRunningAction` says its own, because a bare boolean
+has nothing to say it for — and it keeps that name on all four layers that publish it: the engine
+snapshot, `ActionGate`/`DismissGate`, the render args, and `umbra/vanilla`'s `ModalSnapshot`. So the
+aggregate does **not** move under `action`: the controller binding has no factory to move it to, and
+one fact would end up with two names across the seam built to give it one.
 
 **`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
 edges, so the word is spent. Tab order is _forwards / backwards_ or _from an end_; the positive and
