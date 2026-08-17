@@ -9,6 +9,55 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-17
+
+### Added — WCAG 2.2 as the compatibility matrix's fourth axis
+
+The criteria a dialog _engine_ touches — 2.1.1, 2.1.2, 2.2.1, 2.3.3, 2.4.3, 2.4.7, 2.4.11, 4.1.2 —
+in the same vocabulary as the rest of the table, and deliberately **not** a separate conformance
+document: a second answer to "what is proven" is the drifting document this file was created to
+end. Each row says which half is the library's (with the test that proves it), which is the
+platform's, and which is deliberately the caller's. A ✓ meets the same bar as everywhere else —
+a named test — and `yarn todo` enumerates these rows like any other.
+
+### Fixed — reduced motion is honoured where the playground's dialogs animate
+
+One rule, declared twice (the app's `CssBaseline`, the MFE frame's own stylesheet):
+`prefers-reduced-motion` turns dialog transitions off, and the library's close path _measures_ the
+`0s` duration and finalizes immediately instead of waiting for a `transitionend` that never comes.
+Probed under emulation: computed duration `0s`, close in 82 ms. Parts of the playground (the
+moons, `cosmic-override`) already honoured the query — the dialogs themselves were the gap, which
+is the wrong place for a library whose templates get copied. The recipe is in the README's
+accessibility chapter and the reasoning on the matrix's 2.3.3 row.
+
+### Added — `yarn coverage:update`, the re-measure-both rule made mechanical
+
+Two commands, four call sites (two badges and a paragraph in `README.md`, the pair in
+`CLAUDE.md`), and the drift arrived exactly as predicted — twice, in both directions. The script
+runs both measurements, parses the numbers out of their own reports, and rewrites every quote of
+the pair plus the date in one move, through prettier so a no-op run is a no-op, with edits
+anchored on the prose and required to match exactly once each. Running it twice measured the
+instrumented suite's own jitter (92.08% then 92.20% on identical code), which is why the README
+calls the badges a snapshot rather than a gate.
+
+### Added — SECURITY.md and CONTRIBUTING.md, and one chip on the landing page
+
+The security page says what the package actually is — no npm artifact, no runtime dependency
+tree, `main` as the only line — and routes reports through GitHub's private advisories. The
+contributing page leads with the frame the README already states and the two commands that gate a
+PR. The playground homepage claims the accessibility work in one chip — "WCAG 2.2 · measured" —
+because _measured_ is the claim the matrix can back, and a landing page that said more would be
+saying less.
+
+### Noted — `SlideDirection`'s physical edges are an open question
+
+In a right-to-left document, "the drawer slides in from where the navigation is" is a _logical_
+statement — `inline-start`, not `left` — and the union cannot say it; a caller shipping RTL flips
+the direction themselves from `dir`. Going logical is a pass of its own (the placement table and
+both style functions move to inset-inline/block properties, the four names migrate) and deserves a
+real RTL consumer before it is decided. Said on the type, where the next reader of `direction`
+will look.
+
 ## 2026-08-16
 
 ### The ARIA pass — a full audit of the core, and what it found
