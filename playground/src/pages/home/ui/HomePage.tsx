@@ -1,7 +1,16 @@
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
-import { Box, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Chip,
+  FormControlLabel,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
@@ -17,18 +26,39 @@ import { useModal } from 'umbra/react';  // the React binding
 import { useModal } from 'umbra/solid';  // …or the Solid one, same surface
 import { bindDialog } from 'umbra/vanilla'; // …or none: drive your own <dialog>`;
 
-const HELLO = `const modal = useModal<void, 'confirm' | 'cancel'>({
+const HELLO = `// The first type argument is what this modal closes *with*; the second, the
+// reasons it may close for. Both come back to \`onClose\`, both are exhaustive.
+const modal = useModal<{ remember: boolean }, 'confirm' | 'cancel'>({
   id: 'hello',
   ariaLabel: 'Hello',
   // Every field an action returns is a DOM prop, so this spread fits a bare
   // <button>, MUI's, or your own. Running state rides as \`data-loading\`.
   render: ({ action }) => (
     <>
+      <label>
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={(e) => setRemember(e.target.checked)}
+        />
+        Remember this
+      </label>
       <button {...action('cancel', { focusOnOpen: true })}>Not now</button>
-      <button {...action('confirm', { hotkey: Key.Enter })}>Confirm</button>
+      <button
+        {...action('confirm', {
+          hotkey: Key.Enter,
+          // A handler is what carries a payload out; without one an action just
+          // closes with its own reason.
+          onAction: (close) => close({ remember }),
+        })}
+      >
+        Confirm
+      </button>
     </>
   ),
-  onClose: (result) => report(result.reason), // 'confirm' | 'cancel' | 'dismiss'
+  // reason: 'confirm' | 'cancel' | 'dismiss' — data: { remember: boolean } | undefined,
+  // undefined being the honest answer for a dismissal nobody handed anything to.
+  onClose: ({ reason, data }) => report(reason, data?.remember),
 });`;
 
 /** What the site says before it starts explaining: what this is, how to get it, and one live modal. */
@@ -36,22 +66,26 @@ export const HomePage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
-  const [lastReason, setLastReason] = useState<string | null>(null);
+  const [lastClose, setLastClose] = useState<string | null>(null);
+  // The value the dialog produces, which is the whole reason a close carries a payload: `reason`
+  // says which door, `data` says what came through it.
+  const [remember, setRemember] = useState(false);
 
-  const hello = useMessageModal<void, 'confirm' | 'cancel'>({
+  const hello = useMessageModal<{ remember: boolean }, 'confirm' | 'cancel'>({
     id: 'home-hello',
     ariaLabelledBy: 'home-hello-title',
     onClose: (result) => {
-      // Shows the panel's claim rather than asserting it: the reason is typed and exhaustive.
+      // Shows the panel's claim rather than asserting it: the reason is typed and exhaustive, and
+      // only the branch that was handed a payload has one — `data` is optional for that reason.
       switch (result.reason) {
         case 'confirm':
-          setLastReason('confirm');
+          setLastClose(`confirm · data.remember === ${String(result.data?.remember ?? false)}`);
           return;
         case 'cancel':
-          setLastReason('cancel');
+          setLastClose('cancel · no data — nothing was confirmed');
           return;
         case 'dismiss':
-          setLastReason('dismiss (Escape or the backdrop)');
+          setLastClose('dismiss (Escape or the backdrop) · no data');
           return;
       }
     },
@@ -83,13 +117,40 @@ export const HomePage = () => {
             <em>Not now</em> because that action asked for it. <kbd>Enter</kbd> confirms,{' '}
             <kbd>Escape</kbd> dismisses.
           </Typography>
+          <FormControlLabel
+            sx={{ mt: 0.5 }}
+            control={
+              <Checkbox
+                size="small"
+                checked={remember}
+                onChange={(event) => {
+                  setRemember(event.target.checked);
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" color="text.secondary">
+                Remember this choice
+              </Typography>
+            }
+          />
           <Stack direction="row" sx={{ gap: 1, justifyContent: 'flex-end', mt: 1 }}>
             <Button size="small" {...action('cancel', { focusOnOpen: true })}>
               Not now
             </Button>
             {/* No `onClick` of our own: after the spread it would replace the action's and the
-                action would never run. A handler-less action closes with its own reason. */}
-            <Button size="small" variant="contained" {...action('confirm', { hotkey: Key.Enter })}>
+                action would never run. The payload rides on `onAction`, which is the only door
+                out — an action without one closes carrying its reason and nothing else. */}
+            <Button
+              size="small"
+              variant="contained"
+              {...action('confirm', {
+                hotkey: Key.Enter,
+                onAction: (close) => {
+                  close({ remember });
+                },
+              })}
+            >
               Confirm
             </Button>
           </Stack>
@@ -156,12 +217,12 @@ export const HomePage = () => {
             way: the markup, the animation and the styling stay yours.
           </Typography>
 
-          {lastReason ? (
+          {lastClose ? (
             <Typography
               variant="caption"
               sx={{ display: 'block', mt: 2, fontFamily: 'monospace', color: 'accent.onSurface' }}
             >
-              onClose → result.reason === &apos;{lastReason}&apos;
+              onClose → {lastClose}
             </Typography>
           ) : null}
 
@@ -180,7 +241,10 @@ export const HomePage = () => {
             <Button
               variant="contained"
               onClick={async () => {
-                setLastReason(null);
+                // Cleared together, so each run starts from the same place and the readout below
+                // is always about the open the visitor just watched.
+                setLastClose(null);
+                setRemember(false);
                 await hello.open();
               }}
             >
