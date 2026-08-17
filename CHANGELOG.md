@@ -11,6 +11,20 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Changed — the coverage tour found one branch no project could reach, and made it pure
+
+Both halves re-measured file by file, and the cross-reference held everywhere but one place. The
+expected shapes were all present and correct: `focus-policy` and `modal-director` partially
+covered in Node because their other halves are DOM (component-covered), `hotkey-utils`,
+`safe-storage`, `logger` and `create-store` low in the browser because they are 100% in Node —
+the two projects covering each other's blind side, as designed. The exception was
+`scroll-lock`'s padding branch: headless Chromium uses overlay scrollbars, so `reclaimed` is
+always `0` in the component suite, and Node never passes the document guard — the parse of the
+page's own computed `padding-right`, `NaN` fallback included, was reachable by **no** test at
+all. Same move as `computeScrollCompensation` next to it: the decision is `compensationPadding`
+now, pure and pinned (the `NaN` case included — `NaNpx` on the body was the failure it guards),
+and the branch keeps only the DOM writes. Every function in the file is unit-covered.
+
 ### Measured — forced colors, and the templates passed on the first probe
 
 Windows High Contrast strips author backgrounds and box-shadows: the library's backdrop is

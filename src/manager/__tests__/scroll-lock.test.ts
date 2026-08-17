@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  compensationPadding,
   computeScrollCompensation,
   getScrollbarWidth,
   lockBodyScroll,
@@ -33,6 +34,32 @@ test.describe('computeScrollCompensation', () => {
 
   test('partial reclaim compensates only the difference', () => {
     expect(computeScrollCompensation(15, 5)).toBe(10);
+  });
+});
+
+/**
+ * The other pure half of the lock, and the one no browser project reaches: headless Chromium
+ * uses overlay scrollbars, so `reclaimed` is always `0` there and the padding branch never runs.
+ * The arithmetic and the `NaN` fallback live here so they are pinned anyway.
+ */
+test.describe('compensationPadding', () => {
+  test('adds the reclaimed width to the padding the page already has', () => {
+    expect(compensationPadding('16px', 15)).toBe('31px');
+  });
+
+  test('a page with no padding gets exactly the reclaimed width', () => {
+    expect(compensationPadding('0px', 15)).toBe('15px');
+  });
+
+  test('a computed value parseFloat cannot read falls back to zero, not NaN', () => {
+    // `NaNpx` on the body is the failure this guards: an unparseable computed value must
+    // degrade to "no existing padding", never poison the sum.
+    expect(compensationPadding('', 15)).toBe('15px');
+    expect(compensationPadding('auto', 15)).toBe('15px');
+  });
+
+  test('fractional padding survives the addition', () => {
+    expect(compensationPadding('7.5px', 15)).toBe('22.5px');
   });
 });
 

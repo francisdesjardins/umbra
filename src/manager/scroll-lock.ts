@@ -82,6 +82,22 @@ export function computeScrollCompensation(gutterBefore: number, gutterAfter: num
 }
 
 /**
+ * The inline `padding-right` the lock writes when it reclaimed space: the page's own computed
+ * padding plus the reclaimed width.
+ *
+ * Pure for the same reason {@link computeScrollCompensation} is, and it is the other half of the
+ * same measurement problem: headless Chromium uses overlay scrollbars, so the branch that pads
+ * was reachable by **no** test project at all — and the interesting part of it is exactly here,
+ * the parse of a computed `padding-right` that can be `'16px'`, `'0px'` or a shape
+ * `Number.parseFloat` turns into `NaN`. Called only when `reclaimed > 0`; the zero case is
+ * {@link computeScrollCompensation}'s answer, not this one's.
+ */
+export function compensationPadding(computedPaddingRight: string, reclaimed: number): string {
+  const existing = Number.parseFloat(computedPaddingRight) || 0;
+  return `${String(existing + reclaimed)}px`;
+}
+
+/**
  * Claim the body scroll lock for `owner`, applying it if this is the first claim.
  *
  * Idempotent per owner, so stacked modals within one manager never double-pad, and repeat
@@ -117,8 +133,7 @@ export function lockBodyScroll(owner: LockOwner): void {
   if (reclaimed > 0) {
     // Add to whatever padding the page already has rather than replacing it.
     restorePaddingRight = body.style.paddingRight;
-    const existing = Number.parseFloat(getComputedStyle(body).paddingRight) || 0;
-    body.style.paddingRight = `${String(existing + reclaimed)}px`;
+    body.style.paddingRight = compensationPadding(getComputedStyle(body).paddingRight, reclaimed);
   }
 }
 
