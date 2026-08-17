@@ -589,12 +589,12 @@ const { Modal, dialogManager } = useModal({ id: 'my-modal', ... });
 dialogManager.open('other-modal'); // ✅ context-aware
 ```
 
-**Harness rules**: Declare at module scope (not inside `test()`). Follow React Compiler constraints.
+**Harness rules**: declare at module scope, not inside `test()`; follow React Compiler constraints.
 
-**Stories page registration**: Export from barrel → add `StoryEntry` in `StoriesPage.tsx` → register `?raw` import in `codeSamples.ts`. A story that is not on the page is invisible — the file still builds and still runs in CT, and nobody can reach it.
+**Stories page registration**: Export from barrel → add `StoryEntry` in `StoriesPage.tsx` → register `?raw` import in `codeSamples.ts`. A story off the page is invisible: it builds, runs in CT, and nobody reaches it — **gated** by `stories-registration.test.ts`, which holds the 75 missing so a new one is deliberate.
 
-The exception is a **parameterised** harness: `StoryEntry.component` is a `ComponentType` with no props, so a harness taking required props (`ActionLoggingHarness`, `AlignSlideHarness`, `ContainedPositioningSlideHarness`) is a test fixture rather than a demo and is deliberately absent. Give it a prop-free default if it is worth showing.
+The exception is a **parameterised** harness: `StoryEntry.component` takes no props, so one requiring them is a fixture rather than a demo, and the gate skips it for that reason — give it a prop-free default if it is worth showing.
 
-**Selectors**: `<dialog data-testid="modal-{id}">`. Use `getByTestId`/`getByRole` over CSS selectors. Use `{ exact: true }` for partial label matches.
+**Selectors**: `<dialog data-testid="modal-{id}">`; prefer `getByTestId`/`getByRole` to CSS. Use `{ exact: true }` for partial label matches.
 
 Public API: [index.ts](index.ts).

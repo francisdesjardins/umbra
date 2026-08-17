@@ -11,6 +11,27 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — the stories page has a gate, and it found 75 harnesses nobody could reach
+
+The rule was prose in `playground/CLAUDE.md` — export from the barrel, add a `StoryEntry`, register
+the `?raw` import — and nothing enforced it. Asked whether it had drifted, the answer was **75 of
+158** prop-free harnesses absent from `/stories`: each still builds, still type-checks, still runs in
+the component suite, and is reachable by nobody. Nothing failed; the demo simply did not exist for
+readers. The same shape of silence the compatibility matrix and the doc budget were each written to
+break.
+
+`playground/src/__tests__/stories-registration.test.ts` parses `export function X()` with an empty
+parameter list — the only shape `StoryEntry.component` can hold, which is why a fixture taking
+required props is out of scope and always was — and fails on any that is neither on the page nor in
+an explicit `NOT_ON_THE_PAGE` set.
+
+**That set is a debt, not a design.** It is the state the gate found, written down so that adding a
+harness becomes a decision rather than an omission. It fails three ways, and the last two are what
+stop it becoming a second source of truth: a new harness that is neither placed nor listed, a listed
+name that is no longer a prop-free harness, and a listed name that has since been placed. So it
+empties itself as the backlog is worked. Checked by adding a throwaway harness (red, naming it) and
+a ghost entry (red, naming that too).
+
 ### Added — server rendering, demonstrated by a page that has no server
 
 `/advanced` can now render a modal with **no DOM in scope and no server involved**: a Worker runs the
