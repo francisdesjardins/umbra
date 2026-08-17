@@ -140,7 +140,11 @@ test.describe('the compatibility matrix', () => {
       )
         .filter(([, value]) => {
           const owes = value.state === 'no-by-design' || value.state === 'partial';
-          return owes && value.note === undefined && value.references === undefined;
+          // `why`, not "anything at all": a reference proves a behaviour and says nothing about why
+          // it is the behaviour, and a `note` is what a `✓` carries when it feels like it. The two
+          // states here have no content *but* the explanation, so the field that names it is the
+          // one they must fill.
+          return owes && value.why === undefined;
         })
         .map(([binding]) => {
           return `${row.capability} (${binding})`;
@@ -148,7 +152,7 @@ test.describe('the compatibility matrix', () => {
     });
     expect(
       unexplained,
-      'A `✗ by design` or `~` cell needs a note or a reference — the reason is the cell.'
+      'A `✗ by design` or `~` cell needs a `why` — the reason is the cell.'
     ).toEqual([]);
   });
 

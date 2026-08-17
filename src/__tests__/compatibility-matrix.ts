@@ -53,6 +53,17 @@ export type TestReference = {
 
 export type Cell = {
   readonly state: CellState;
+  /**
+   * Why the cell is what it is — **required of a refusal and of a `~`**, whose whole content is the
+   * explanation, and checked as such by the gate.
+   *
+   * Split from {@link Cell.note} because the two are different obligations wearing one word: a `✓`
+   * may carry a note or carry nothing, while `✗ by design` and `~` owe an answer and a reader who
+   * does not get one has been told a feature is missing and not why. `PlatformRow` has always
+   * spelled this `why`; a cell is the same claim at a smaller scale.
+   */
+  readonly why?: string;
+  /** Elaboration a `✓` does not owe — how it works, what it costs, what it is not. */
   readonly note?: string;
   readonly references?: readonly TestReference[];
   /**
@@ -431,7 +442,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'no-by-design',
-      note: 'A controller does not render. Shipping one would mean shipping UI, which is the library’s one refusal.',
+      why: 'A controller does not render. Shipping one would mean shipping UI, which is the library’s one refusal.',
     },
   },
   {
@@ -449,7 +460,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'partial',
-      note: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor.',
+      why: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor.',
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
@@ -478,7 +489,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         },
       ],
     },
-    vanilla: { state: 'no-by-design', note: 'No render pass, so nothing for an outlet to place.' },
+    vanilla: { state: 'no-by-design', why: 'No render pass, so nothing for an outlet to place.' },
   },
   {
     capability: 'the action factory (action(reason, …))',
@@ -495,7 +506,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'no-by-design',
-      note: 'No declaration window. `bindAction(button, { reason })` attaches to a button that already exists and its unbind retires it.',
+      why: 'No declaration window. `bindAction(button, { reason })` attaches to a button that already exists and its unbind retires it.',
     },
   },
   {
@@ -544,11 +555,11 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'phase, exposed to the caller',
     react: {
       state: 'no-by-design',
-      note: 'A phase moves while the dialog is up; exposing it invites logic keyed on a transition. `isVisible` and `isPreparing` are the two answers a caller needs.',
+      why: 'A phase moves while the dialog is up; exposing it invites logic keyed on a transition. `isVisible` and `isPreparing` are the two answers a caller needs.',
     },
     solid: {
       state: 'no-by-design',
-      note: 'Same reason, and the getters make it worse: a phase read inside JSX would subscribe that expression to every transition.',
+      why: 'Same reason, and the getters make it worse: a phase read inside JSX would subscribe that expression to every transition.',
     },
     vanilla: {
       state: 'works',
@@ -990,6 +1001,21 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'a server render (`renderToString`)',
+    react: {
+      state: 'works',
+      note: 'Every hook reads its store through `useSyncExternalStore`, which **throws** rather than degrades when given no server reader — one missing argument takes down the render of any page that mounts a modal. All five pass their ordinary `getSnapshot` as the server one, which is sound because the stores are in-memory and DOM-free: the server reads a freshly-closed modal and hydration reads the identical thing. What it emits is a closed `<dialog>`, the only honest answer, since the top layer is enterable from `showModal()` alone. Asserted by `verify:package` on the built artifact — and it inspects the markup, because a hook that rendered nothing would also not throw.',
+    },
+    solid: {
+      state: 'no-by-design',
+      why: 'The binding builds its `<dialog>` with `document.createElement` at hook-call time — that *is* the design, and what compiled JSX would do anyway. There is no render tree to serialise, so a server pass fails on the document rather than on a missing snapshot, and a guard would produce a hook that returns nothing rather than one that server-renders. Supporting it means constructing through Solid’s JSX instead, which is a different binding, not a patch.',
+    },
+    vanilla: {
+      state: 'n-a',
+      note: 'The controller renders nothing: the `<dialog>` is markup the caller’s server already emitted. The question it answers instead is what happens to a dialog that arrives open — see the platform rows.',
+    },
+  },
+  {
     capability: 'a dialog inside a shadow root',
     react: {
       state: 'works',
@@ -1069,6 +1095,11 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
         title: 'a modal one is closed instead, because the top layer is not enterable from HTML',
       },
     ],
+  },
+  {
+    fact: '`portal: true` survives a server render',
+    state: 'no-platform',
+    why: '`createPortal` needs a live container — `document.body` — and a server pass has no document at all, so the render throws where the default and the contained arrangement both succeed. Nothing an implementation can do: the option exists to place a node somewhere the render tree does not reach, and on a server there is no such somewhere. A page that server-renders should leave the dialog in the tree and portal after hydration if it needs to.',
   },
   {
     fact: 'a raise avoids firing the element’s native close event',
@@ -1423,7 +1454,8 @@ const escapeCell = (text: string): string => {
 };
 
 const cell = (value: Cell): string => {
-  const note = value.note === undefined ? '' : ` — ${value.note}`;
+  const reason = value.why ?? value.note;
+  const note = reason === undefined ? '' : ` — ${reason}`;
   // The caveat is rendered too, or the document would hide what `yarn todo` prints — and a reader of
   // the table is exactly who needs to know a ✓ has a hole in it.
   const caveat = value.caveat === undefined ? '' : ` **Still open:** ${value.caveat}`;

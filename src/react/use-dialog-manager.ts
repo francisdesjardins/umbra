@@ -24,5 +24,7 @@ export type { DialogManagerSnapshot };
  */
 export function useDialogManager(): DialogManagerSnapshot {
   const manager = useDialogManagerContext();
-  return useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
+  // The registry is in-memory, so the server reads it too — see `useModal` for why the third
+  // argument is the same reader and what omitting it costs.
+  return useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot, manager.getSnapshot);
 }

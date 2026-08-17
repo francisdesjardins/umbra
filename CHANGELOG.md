@@ -11,6 +11,57 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Fixed — `umbra/react` survives a server render, which it could not do at all
+
+Probed against the built artifact rather than reasoned about: `renderToString` on **every** React
+entry point threw `Missing getServerSnapshot`. Five `useSyncExternalStore` calls, none of them
+passing a third argument, and React's answer to that is to throw rather than degrade — so a single
+missing argument took down the render of any page that mounted a modal, in the consumer's app.
+
+All five pass their ordinary `getSnapshot` as the server reader, which is sound rather than a
+shortcut: the modal store, the action engine and the manager registry are in-memory and DOM-free, so
+a server pass reads a freshly-closed modal and hydration's first pass reads the identical thing. What
+`useModal` emits is a closed `<dialog>` with its attributes — the only honest answer, since the top
+layer is enterable from `showModal()` alone and no served HTML can hand back an open modal one.
+
+`verify:package` asserts it on the built artifact, and inspects the markup rather than merely
+awaiting the call: a hook that rendered nothing would also fail to throw. Two limits came out of the
+same probe and are matrix rows now — `portal: true` cannot server-render (`createPortal` wants a
+`document.body` a server has not got), and `umbra/solid` cannot either, because that binding builds
+its `<dialog>` with `document.createElement` at hook-call time, which is the design rather than an
+oversight.
+
+### Changed — a refusal owes a `why`, and the field is called that now
+
+The matrix's own gate comment said it: "`✗ by design` and `~` are the states whose whole content is
+the explanation." `PlatformRow` has always spelled that field `why`; `Cell` spelled it `note`, the
+same word a `✓` uses for elaboration it does not owe — one word for two obligations, in a file whose
+premise is that vocabulary is load-bearing.
+
+`Cell.why` is separate from `Cell.note` now, and the gate asks for `why` specifically rather than
+for a note _or_ a reference. That is stricter in a way that immediately paid: a reference proves a
+behaviour and says nothing about why it is the behaviour, and the newly-strict gate caught a
+`✗ by design` cell whose reason was on one line and had been missed by the move.
+
+### Added — `yarn bench`, so the performance claims stop being a reading of the source
+
+Four claims that had never been run. Dependency-free and against `dist/`, reporting **ratios**
+rather than throughput, because every claim here is structural: absolute ops/sec on one laptop
+travels nowhere, while "200 actions costs what 1 action costs" is the promise.
+
+What it says: a `set` returning the same reference notifies **0 listeners across 9M calls** — the
+assertion that matters, since a no-op that still woke every subscriber would be fast and wrong;
+`aggregated()` is **5.3 ns at one action and 5.8 ns at two hundred**; the stack orders four dialogs
+in ~143 ns and fifty in 2.7 µs. It also prices the one thing that is _not_ free and had been
+described as though it were: installing a stack policy costs one call per dialog, which on four
+dialogs is 1.88× — `orderStack` ranking up front is what keeps that off O(n log n), not what makes
+it nothing.
+
+Local like `coverage:update`, and for the same reason: nothing renders the result, and a figure
+produced on CI's shared runner would be noise with a version number on it. The two DOM-side claims —
+the cached store slice, the `WeakMap` transition probe — a Node harness cannot reach, and they are
+still read rather than run.
+
 ### Fixed — the focus restore finds the button again instead of remembering it, which is what Solid needed
 
 The matrix's longest-standing `~`: after a failed action on `umbra/solid`, focus landed on the

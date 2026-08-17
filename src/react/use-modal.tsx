@@ -97,8 +97,12 @@ export function useModal<TData = void, TReason extends string = string>(
     return createModalDirector({ store, getDialog, modalId, manager, engine });
   });
 
-  const snap = useSyncExternalStore(store.subscribe, store.getSnapshot);
-  const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
+  // The same reader serves the server: both stores are in-memory and DOM-free, so a server pass and
+  // hydration's first pass read the identical freshly-closed modal. Required rather than optional —
+  // `useSyncExternalStore` throws without a third argument, taking the server render of any page
+  // that mounts a modal down with it.
+  const snap = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
 
   // The only place an action is ever declared; built per render, over that render's snapshot.
   const action = createActionFactory(engine, () => {

@@ -21,7 +21,7 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(REPO, 'dist');
@@ -332,6 +332,48 @@ const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-modal.js'), 'ut
 report(!solidSource.includes('compiler-runtime'), {
   label: 'the Solid binding is not compiled — no compiler-runtime in it',
 });
+
+// ── The React binding survives a server render ───────────────────────────────
+//
+// Every hook here reads its store through `useSyncExternalStore`, which throws outright when no
+// server reader is given — so a single missing third argument takes down the whole render of any
+// page that mounts a modal, and does it in the consumer's app rather than in this repo. Asserted on
+// the built artifact for the reason the compiler checks are: the source cannot show whether what
+// shipped still does it.
+//
+// The output is inspected rather than merely awaited, because a hook that rendered nothing would
+// also "not throw" — the same blindness the import walker's positive halves exist to catch.
+{
+  const { renderToString } = await import('react-dom/server');
+  const { createElement } = await import('react');
+  const { useModal } = await import(pathToFileURL(join(DIST, 'esm', 'react.js')).href);
+
+  let html = '';
+  let threw = '';
+  try {
+    html = renderToString(
+      createElement(() => {
+        return useModal({
+          id: 'ssr-check',
+          ariaLabel: 'SSR check',
+          render: () => {
+            return null;
+          },
+        }).Modal;
+      })
+    );
+  } catch (error) {
+    threw = error instanceof Error ? error.message : String(error);
+  }
+
+  // A closed dialog, and closed is the only honest server answer: the top layer is enterable from
+  // `showModal()` alone, so no served HTML can hand back an open modal one.
+  const rendered = html.includes('<dialog') && html.includes('data-modal-id="ssr-check"');
+  report(threw === '' && rendered && !html.includes(' open'), {
+    label: 'the React binding server-renders — a closed <dialog>, with no DOM in scope',
+    detail: threw !== '' ? threw : rendered ? '' : `rendered nothing useful: ${html.slice(0, 80)}`,
+  });
+}
 
 console.log(failures === 0 ? '\nPACKAGE OK' : `\n${failures} PACKAGE CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

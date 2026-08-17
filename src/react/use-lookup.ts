@@ -35,7 +35,12 @@ function lookupIn(
 
 export function useLookup(id: string): ModalInfo {
   const manager = useDialogManagerContext();
-  const snapshot = useSyncExternalStore(manager.subscribeSnapshot, manager.getSnapshot);
+  // Server-readable for the reason on `useModal`: nothing here asks the DOM anything.
+  const snapshot = useSyncExternalStore(
+    manager.subscribeSnapshot,
+    manager.getSnapshot,
+    manager.getSnapshot
+  );
 
   // `snapshot` is passed rather than read inside, and it is the difference between working and
   // silently freezing: the closed branch reads mutable state through `manager.lookup(id)`, so

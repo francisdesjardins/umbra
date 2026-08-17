@@ -121,7 +121,12 @@ export function ModalOutlet({ children }: { readonly children: ReactNode }) {
     return { store, ctx };
   });
 
-  const snap = useSyncExternalStore(init.store.subscribe, init.store.getSnapshot);
+  // Server-readable for the reason on `useModal`: the outlet's store is built above and holds no DOM.
+  const snap = useSyncExternalStore(
+    init.store.subscribe,
+    init.store.getSnapshot,
+    init.store.getSnapshot
+  );
 
   return (
     <ModalOutletContext value={init.ctx}>
