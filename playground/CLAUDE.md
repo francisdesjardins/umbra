@@ -73,9 +73,9 @@ barrel already exported the name. **A context two layers both read belongs in `s
 
 Two exemptions, each a decision rather than a leak:
 
-- **`?raw` imports are asset reads.** `codeSamples.ts` names every example's source _as text_; it
-  calls and renders nothing. The alternative is a generated registry to regenerate on every
-  example added.
+- **`?raw` imports are asset reads.** The `code-samples/` modules name every example's source _as
+  text_; they call and render nothing. The alternative is a generated registry to regenerate on
+  every example added.
 - **`entities/modal-template` has no public entry on purpose** — its own barrel says so and
   re-exports nothing. The templates are a directory tree because that is the shape they are copied
   out in, and `import * as MessageModal from '…/mui/message-modal'` is the form that names the
@@ -256,7 +256,13 @@ Single file per example — component + "View Code" source.
 1. **Create** `src/pages/<route>/examples/<name>.tsx` — import hooks from `umbra/react`,
    templates from `@/entities/modal-template/ui/{mui,vanilla}/...`, wrap in `ExampleLayout`
    from `@/entities/example`. Use unique modal `id` values.
-2. **Register** the `?raw` import in [codeSamples.ts](src/widgets/code-viewer/model/codeSamples.ts).
+2. **Register** the `?raw` import in
+   [code-samples/examples.ts](src/widgets/code-viewer/model/code-samples/examples.ts) — a route's
+   own example always goes there. The samples are cut into three modules the viewer loads one of,
+   and **the cut is by where a sample comes from, not by how its key is spelled**: anything under
+   `entities/modal-template`, `shared/ui` or `shared/lib` goes in `templates.ts`, a `*.story.tsx`
+   in `stories.ts`. [codeSamples.ts](src/widgets/code-viewer/model/codeSamples.ts) is the selector
+   and needs no edit — it keys off the route, so there is no per-sample index to keep in step.
 3. **Add** an `<ExampleCard>` inside an `<ExampleSection>` on the route's page component.
 
 Step 3 is not optional. An example registered in `codeSamples` but not placed on a page is
@@ -315,8 +321,11 @@ correct in the source and leaves the dialog anonymous.
 
 Keep the **UI Templates** page (`src/pages/ui-templates/ui/UITemplatesPage.tsx`) in sync:
 
-1. Add the `?raw` import in `codeSamples.ts`. Key convention: `template-<group>-<name>` for
-   MUI, `vanilla-<group>-<name>` for vanilla, `shared-component-<name>` for playground UI.
+1. Add the `?raw` import in `code-samples/templates.ts` — that module is this page's group. Key
+   convention: `template-<group>-<name>` for MUI, `vanilla-<group>-<name>` for vanilla,
+   `shared-component-<name>` for playground UI. **The key is a label, not the routing**: the three
+   `/ui-integrations` examples are keyed `vanilla-form`, `vanilla-message`, `vanilla-slide` and
+   belong in `examples.ts`, because what decides the module is the path the source is read from.
 2. Add the entry to the matching group in `MUI_GROUPS`, `VANILLA_GROUPS`, or — if it renders
    nothing and therefore works under either flavour — `PATTERNS_GROUP`, which the **Shared** tab
    shows alongside `PLAYGROUND_GROUP`. Three tabs, and the third is the honest home for

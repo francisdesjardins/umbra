@@ -24,11 +24,12 @@ export const useCodeModal = () => {
     direction: 'right',
     ariaLabelledBy: CODE_VIEWER_TITLE_ID,
     // Every example's source as text is a third of the bundle, and a visitor who never opens this
-    // panel needs none of it. `prepare` is the window the library already provides for that: the
-    // panel is on screen before it runs, and `isPreparing` is what the body renders against.
+    // panel needs none of it — nor, once open, the two thirds belonging to other routes. `prepare`
+    // is the window the library already provides for that: the panel is on screen before it runs,
+    // and `isPreparing` is what the body renders against.
     prepare: async () => {
-      const module = await import('./codeSamples');
-      setCodeSamples(module.codeSamples);
+      const { loadCodeSamples } = await import('./codeSamples');
+      setCodeSamples(await loadCodeSamples(currentPath, codeKey));
     },
     render: ({ handle, isPreparing }) => {
       return (

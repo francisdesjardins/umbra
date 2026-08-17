@@ -11,6 +11,29 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Changed — the viewer downloads the samples for the route you are on, and no others
+
+Deferring the sample text to the first open left one module of 548 kB, three quarters of which
+serves two routes: `/stories` shows 82 test harnesses and `/ui-templates` a catalogue of 86
+components. Reading one file on `/getting-started` fetched the other two hundred.
+
+Three modules now — `code-samples/{examples,templates,stories}.ts` — and `codeSamples.ts` is the
+selector. Worst case on open falls from 548 kB to **263 kB**; `/ui-templates` pays 132 kB and
+`/stories` 154 kB. Nothing moves in the eager payload, which stays at 674 kB.
+
+**The cut is by where a sample is read from, not by how its key is spelled**, and that distinction
+is the whole reason the obvious version would have been wrong: `vanilla-form` is a
+`/ui-integrations` example while `vanilla-msg-title` is a template, so a prefix rule files the
+example in the catalogue. Only the import path separates them.
+
+The selector keys off the **route**, not off a per-sample index. An index would be a second list to
+keep in step with the module a sample lives in, and nothing would fail when the two drifted — the
+sample would just quietly load the wrong 150 kB. A route map is three entries and adding an example
+does not touch it. A key that turns out not to be in its route's group falls back to the others
+rather than reporting "No code available".
+
+Verified in a browser across six routes: each pulls exactly its own group and nothing else.
+
 ### Fixed — `public/` has no importable address, and both spellings of that were wrong
 
 The code viewer shows the microfrontend frame's hand-written files — `host.html` and the four
