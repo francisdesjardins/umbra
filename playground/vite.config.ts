@@ -25,7 +25,7 @@ export default defineConfig({
       // "Invalid hook call" the moment Solid runs it. `/stories` renders those harnesses, so this
       // is the playground's copy of the scoping `scripts/vite-plugin-react-compiler.mjs` states for
       // the library build. Restating the default keeps `node_modules` out.
-      exclude: [/[\\/]node_modules[\\/]/, /[\\/]src[\\/]solid[\\/]/],
+      exclude: [/node_modules/, /src\/solid\//],
       // Pinned, not defaulted: the library build and the component-test bundle both pass
       // `{ target: '19' }`, and a demo compiled under a different target would stop being
       // evidence of how the shipped code behaves. The plugin's own default matches today —
