@@ -1,10 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
@@ -50,36 +49,34 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="error" sx={{ mb: 0 }} />
-            <Typography id={`${MODAL_ID}-title`} variant="h6">
-              Delete Item
-            </Typography>
+            <MessageModal.Icon variant="error" />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>Delete Item</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack spacing={2}>
-              <Typography id={`${MODAL_ID}-body`}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Shared.Message id={`${MODAL_ID}-body`}>
                 Are you sure you want to delete <strong>&quot;{itemName}&quot;</strong>?
-              </Typography>
-              <Shared.AlertContent severity="warning">
-                This action cannot be undone.
-              </Shared.AlertContent>
-              {error && <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>}
-              <Typography
-                variant="caption"
-                sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
+              </Shared.Message>
+              <Shared.Alert severity="warning">This action cannot be undone.</Shared.Alert>
+              {error && <Shared.Alert severity="error">{error.message}</Shared.Alert>}
+              <span
+                style={{
+                  padding: 8,
+                  borderRadius: 4,
+                  border: '1px solid var(--modal-border)',
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--modal-text-secondary)',
+                }}
               >
                 Status: {hasRunningAction ? 'Running...' : 'Idle'}
                 {error && ` | Error: ${error.message}`}
-              </Typography>
-            </Stack>
+              </span>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('cancel', { hotkey: 'Escape' })}>
-              Cancel
-            </Shared.Button>
+            <Shared.Button {...action('cancel', { hotkey: 'Escape' })}>Cancel</Shared.Button>
             <Shared.Button
-              variant="contained"
-              color="error"
+              variant="primary"
               {...action('delete', {
                 hotkey: 'Enter',
                 onAction: async (close) => {
@@ -124,7 +121,7 @@ export function DeleteItemModalExample() {
 
   return (
     <ExampleLayout result={result} modals={deleteModal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         color="error"
         onClick={async () => {
@@ -138,8 +135,8 @@ export function DeleteItemModalExample() {
         }}
       >
         Delete Document
-      </Shared.Button>
-      <Shared.Button
+      </Button>
+      <Button
         variant="contained"
         color="error"
         onClick={async () => {
@@ -150,7 +147,7 @@ export function DeleteItemModalExample() {
         }}
       >
         Delete Archive
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }

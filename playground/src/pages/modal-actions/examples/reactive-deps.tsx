@@ -1,14 +1,10 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import type { ReactNode } from 'react';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -67,159 +63,110 @@ const resultStore = createResultStore();
 
 // ── Live Controls ─────────────────────────────────────────────────────────
 
+/** A caption over its control, the shape all three columns share. */
+function ControlColumn({
+  caption,
+  children,
+}: {
+  readonly caption: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 140 }}>
+      <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500 }}>{caption}</span>
+      {children}
+    </div>
+  );
+}
+
 function useLiveControls() {
   const { count, message, severity } = useStore(reactiveStore);
 
   const LiveControls = (
-    <Paper
-      elevation={3}
-      sx={{
+    <div
+      style={{
         width: '100%',
-        p: 2,
-        bgcolor: 'action.hover',
-        border: 1,
-        borderColor: 'divider',
+        padding: 16,
+        border: '1px solid var(--modal-border)',
+        borderRadius: 6,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
       }}
     >
-      <Box sx={{ textAlign: 'left' }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }} align="left">
-          Live Controls
-        </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          align="left"
-          sx={{ mb: 2, display: 'block' }}
-        >
-          Change values in real-time
-        </Typography>
-      </Box>
+      <div>
+        <Shared.Heading>Live Controls</Shared.Heading>
+        <Shared.Hint>Change values in real-time</Shared.Hint>
+      </div>
 
-      {/* Three columns in one row is a desktop shape. On a phone the dialog is 337px and the
-          third column's buttons ended up 82px past its right edge — a row that cannot wrap has
-          to push something out. Stacked below `sm`; unchanged above it. */}
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={3}
-        sx={{ width: '100%', alignItems: 'flex-start' }}
-      >
-        {/* Counter Controls */}
-        <Stack direction="column" spacing={1} sx={{ flex: 1, alignItems: 'center' }}>
-          <Typography
-            variant="caption"
-            gutterBottom
-            align="left"
-            sx={{ fontWeight: 500, display: 'block' }}
-          >
-            Counter: {count}
-          </Typography>
-          <Stack direction="row" spacing={1}>
+      {/* `flex-wrap`, so on a narrow dialog the columns stack instead of pushing past the edge. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+        <ControlColumn caption={`Counter: ${String(count)}`}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <Shared.Button
-              variant="outlined"
-              size="small"
               onClick={() => {
                 reactiveStore.decrementCount();
               }}
-              sx={{ minWidth: 36, px: 0 }}
             >
               −
             </Shared.Button>
             <Shared.Button
-              variant="outlined"
-              size="small"
               onClick={() => {
                 reactiveStore.incrementCount();
               }}
-              sx={{ minWidth: 36, px: 0 }}
             >
               +
             </Shared.Button>
             <Shared.Button
-              variant="outlined"
-              size="small"
               onClick={() => {
                 reactiveStore.setCount(0);
               }}
-              sx={{ minWidth: 36, px: 0 }}
             >
               0
             </Shared.Button>
-          </Stack>
-        </Stack>
+          </div>
+        </ControlColumn>
 
-        {/* Message Input */}
-        <Stack direction="column" spacing={1} sx={{ flex: 2, alignItems: 'center' }}>
-          <Typography
-            variant="caption"
-            gutterBottom
-            align="left"
-            sx={{ fontWeight: 500, display: 'block' }}
-          >
-            Message
-          </Typography>
-          <TextField
+        <ControlColumn caption="Message">
+          <textarea
             value={message}
             onChange={(e) => {
               reactiveStore.setMessage(e.target.value);
             }}
-            fullWidth
-            size="small"
-            multiline
             rows={2}
-            sx={{ flexGrow: 1, minWidth: 'min(220px, 100%)', maxWidth: 400 }}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid var(--modal-control-border)',
+              borderRadius: 4,
+              fontFamily: 'var(--font-family)',
+              fontSize: 'var(--font-size-sm)',
+              background: 'inherit',
+              color: 'inherit',
+              resize: 'vertical',
+              width: '100%',
+            }}
           />
-        </Stack>
+        </ControlColumn>
 
-        {/* Severity Controls */}
-        <Stack direction="column" spacing={1} sx={{ flex: 1, alignItems: 'center' }}>
-          <Typography
-            variant="caption"
-            gutterBottom
-            align="left"
-            sx={{ fontWeight: 500, display: 'block' }}
-          >
-            Severity
-          </Typography>
-          <Stack direction="column" spacing={1} sx={{ width: '100%' }}>
-            <Shared.Button
-              variant={severity === 'info' ? 'contained' : 'outlined'}
-              size="medium"
-              onClick={() => {
-                reactiveStore.setSeverity('info');
-              }}
-              fullWidth
-              sx={{ minHeight: 36 }}
-            >
-              Info
-            </Shared.Button>
-            <Shared.Button
-              variant={severity === 'warning' ? 'contained' : 'outlined'}
-              size="medium"
-              onClick={() => {
-                reactiveStore.setSeverity('warning');
-              }}
-              color="warning"
-              fullWidth
-              sx={{ minHeight: 36 }}
-            >
-              Warning
-            </Shared.Button>
-            <Shared.Button
-              variant={severity === 'error' ? 'contained' : 'outlined'}
-              size="medium"
-              onClick={() => {
-                reactiveStore.setSeverity('error');
-              }}
-              color="error"
-              fullWidth
-              sx={{ minHeight: 36 }}
-            >
-              Error
-            </Shared.Button>
-          </Stack>
-        </Stack>
-      </Stack>
-    </Paper>
+        <ControlColumn caption="Severity">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(['info', 'warning', 'error'] as const).map((level) => {
+              return (
+                <Shared.Button
+                  key={level}
+                  variant={severity === level ? 'primary' : 'default'}
+                  onClick={() => {
+                    reactiveStore.setSeverity(level);
+                  }}
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </Shared.Button>
+              );
+            })}
+          </div>
+        </ControlColumn>
+      </div>
+    </div>
   );
 
   return { LiveControls };
@@ -237,50 +184,37 @@ export function ReactiveDepsExample() {
     dismissOnBackdropClick: false,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout
-          slotProps={{ container: { sx: { width: 'min(600px, 100%)' } } }}
-        >
+        <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type={severity} sx={{ mb: 0 }} />
-            <Typography id={`${MODAL_ID}-title`} variant="h6">
+            <MessageModal.Icon variant={severity} />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>
               Reactive Dependencies Demo
-            </Typography>
+            </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', gap: 3 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1" gutterBottom>
-                    {message}
-                  </Typography>
-                  <Alert severity={severity} sx={{ my: 2 }}>
-                    Counter value: <strong>{count}</strong>
-                  </Alert>
-                  <Typography variant="caption" color="text.secondary">
-                    This modal content updates automatically when count, message, or severity
-                    change. Use the controls below to test reactivity!
-                  </Typography>
-                </Box>
-              </Box>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Shared.Message>{message}</Shared.Message>
+              <Shared.Alert severity={severity}>
+                Counter value: <strong>{count}</strong>
+              </Shared.Alert>
+              <Shared.Hint>
+                This modal content updates automatically when count, message, or severity change.
+                Use the controls below to test reactivity!
+              </Shared.Hint>
 
               {LiveControls}
-            </Stack>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
             <Shared.Button
-              variant="outlined"
-              color="secondary"
               onClick={() => {
                 reactiveStore.reset();
               }}
-              sx={{ mr: 1 }}
             >
               Reset
             </Shared.Button>
-            <Shared.Button variant="outlined" {...action('cancel')}>
-              Cancel
-            </Shared.Button>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
+            <Shared.Button variant="primary" {...action('confirm')}>
               Confirm
             </Shared.Button>
           </MessageModal.Footer>
@@ -291,7 +225,7 @@ export function ReactiveDepsExample() {
 
   return (
     <ExampleLayout result={result} modals={reactiveModal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -300,7 +234,7 @@ export function ReactiveDepsExample() {
         }}
       >
         Open Modal & Test Reactivity
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }

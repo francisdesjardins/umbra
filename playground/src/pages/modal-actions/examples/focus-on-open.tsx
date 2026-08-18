@@ -1,10 +1,10 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import Box from '@mui/material/Box';
+import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
@@ -60,48 +60,41 @@ export function FocusOnOpenExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-            <Typography id={`${MODAL_ID}-title`} variant="h6">
-              Delete this file?
-            </Typography>
+            <MessageModal.Icon variant="warning" />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>Delete this file?</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack spacing={2}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Shared.Message>
                 The field below is first in the DOM, so it is what the browser would focus on its
                 own. Focus is on <strong>Keep</strong> instead, because that action asked for it.
               </Shared.Message>
-              <TextField
-                size="small"
-                label="Reason (optional)"
-                fullWidth
-                sx={{ maxWidth: '100%' }}
-              />
-              <Box
-                sx={{
-                  p: 1,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <FormModal.Label htmlFor={`${MODAL_ID}-reason`}>Reason (optional)</FormModal.Label>
+                <FormModal.Input id={`${MODAL_ID}-reason`} />
+              </div>
+              <span
+                style={{
+                  padding: 8,
+                  borderRadius: 4,
+                  border: '1px solid var(--modal-border)',
                   fontFamily: 'monospace',
                   fontSize: '0.78rem',
                 }}
               >
                 document.activeElement → {focused}
-              </Box>
+              </span>
               {error ? (
-                <Shared.AlertContent severity="error">
+                <Shared.Alert severity="error">
                   {error.message} — focus came back to Keep, which is where the retry lives.
-                </Shared.AlertContent>
+                </Shared.Alert>
               ) : null}
-            </Stack>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('keep', { focusOnOpen: true })}>
-              Keep
-            </Shared.Button>
+            <Shared.Button {...action('keep', { focusOnOpen: true })}>Keep</Shared.Button>
             <Shared.Button
-              variant="contained"
-              color="error"
+              variant="primary"
               {...action('delete', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
@@ -133,16 +126,17 @@ export function FocusOnOpenExample() {
   return (
     <ExampleLayout result={outcome} modals={modal.Modal}>
       <Stack sx={{ gap: 1.5, width: '100%' }}>
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
+          sx={{ alignSelf: 'flex-start' }}
           onClick={async () => {
             setOutcome(null);
             await modal.open();
           }}
         >
           Delete a file
-        </Shared.Button>
+        </Button>
         <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
           <Chip size="small" label={`focus: ${isVisible ? focused : 'modal closed'}`} />
           <Chip size="small" label={`delete attempts: ${String(attempts)}`} />

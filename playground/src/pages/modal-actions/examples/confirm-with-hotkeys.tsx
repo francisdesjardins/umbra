@@ -1,9 +1,8 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -24,36 +23,37 @@ export function ConfirmWithHotkeysExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="info" sx={{ mb: 0 }} />
-            <Typography id={`${MODAL_ID}-title`} variant="h6">
-              Confirm Action
-            </Typography>
+            <MessageModal.Icon variant="info" />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>Confirm Action</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack spacing={2}>
-              <Typography>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Shared.Message>
                 This will perform an important action. Are you sure you want to continue?
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </Shared.Message>
+              <Shared.Hint>
                 Press <kbd>Enter</kbd> to confirm or <kbd>Escape</kbd> to cancel. Hotkeys are
                 declared on the action itself.
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
+              </Shared.Hint>
+              <span
+                style={{
+                  padding: 8,
+                  borderRadius: 4,
+                  border: '1px solid var(--modal-border)',
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--modal-text-secondary)',
+                }}
               >
                 Status: {hasRunningAction ? 'Running...' : 'Idle'}
                 {error ? ` | Error: ${error.message}` : ''}
-              </Typography>
-              {error && <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>}
-            </Stack>
+              </span>
+              {error && <Shared.Alert severity="error">{error.message}</Shared.Alert>}
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('cancel', { hotkey: Key.Escape })}>
-              Cancel
-            </Shared.Button>
+            <Shared.Button {...action('cancel', { hotkey: Key.Escape })}>Cancel</Shared.Button>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('confirm', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
@@ -78,7 +78,7 @@ export function ConfirmWithHotkeysExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         disabled={modal.hasRunningAction}
@@ -88,7 +88,7 @@ export function ConfirmWithHotkeysExample() {
         }}
       >
         Open Confirm Modal
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }
