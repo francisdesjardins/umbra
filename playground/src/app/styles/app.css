@@ -1,0 +1,127 @@
+/**
+ * The app's own design tokens and global rules — the shell's foundation, owned by no component
+ * library. The palette is the mascot's five eclipse colours (see ThemeProvider/theme.ts, which
+ * still projects the same values into the scoped MUI island), and every contrast decision here
+ * was measured, not chosen: see playground/CLAUDE.md, "Colour is measured, not chosen".
+ */
+
+/* ========== Tokens ========== */
+:root {
+  /* Light mode — the mascot's palette. Light takes the deeper amber: a bright page needs less
+     glow to register. */
+  --app-flame: #d97706;
+  --app-flame-edge: #92400e;
+  --app-body: #1e293b;
+  --app-body-edge: #475569;
+  --app-ink: #fcd34d;
+  /* Amber as *text* is this token, never --app-flame: #d97706 is 3.19:1 on white — a fill, not
+     an ink. Light reads the deep edge, dark the bright ink. */
+  --app-accent: #92400e;
+  --app-ring: #92400e;
+  /* What sits on the flame: the eclipse's own body. Fire is the background you read the dark
+     body against, never the reverse — so a filled primary hovers *brighter*, not deeper. */
+  --app-primary-ink: #0f172a;
+  --app-primary-hover: #f59e0b;
+
+  --app-bg: #fafafa;
+  --app-paper: #ffffff;
+  --app-text: rgba(0, 0, 0, 0.87);
+  --app-text-secondary: rgba(0, 0, 0, 0.6);
+  /* MUI's 0.38 "disabled" is an inactive-control tone; this app spends the third step as
+     tertiary *text* (counts, hints, placeholders), so it is raised to clear 4.5:1. */
+  --app-text-tertiary: rgba(0, 0, 0, 0.55);
+  --app-divider: rgba(0, 0, 0, 0.12);
+
+  --app-scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --app-scrollbar-track: transparent;
+  --app-scrollbar-width: 10px;
+}
+
+/* Dark mode */
+:root[data-color-scheme='dark'] {
+  --app-flame: #f59e0b;
+  --app-flame-edge: #b45309;
+  --app-body: #0f172a;
+  --app-body-edge: #334155;
+  --app-ink: #fbbf24;
+  --app-accent: #fbbf24;
+  --app-ring: #fbbf24;
+  --app-primary-hover: #fbbf24;
+
+  /* The mascot's body, not pure black: amber on #000 is a warning label, on slate dusk. */
+  --app-bg: #0f172a;
+  --app-paper: #111c30;
+  --app-text: #ffffff;
+  --app-text-secondary: rgba(255, 255, 255, 0.7);
+  --app-text-tertiary: rgba(255, 255, 255, 0.6);
+  --app-divider: rgba(255, 255, 255, 0.12);
+
+  --app-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+}
+
+/* ========== Scrollbars ========== */
+/* Firefox */
+*,
+*::before,
+*::after {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-scrollbar-thumb) var(--app-scrollbar-track);
+}
+
+/* Webkit */
+*::-webkit-scrollbar {
+  width: var(--app-scrollbar-width);
+  height: var(--app-scrollbar-width);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--app-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--app-scrollbar-thumb);
+  border-radius: 8px;
+  border: 2px solid var(--app-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--app-scrollbar-thumb) 90%, transparent);
+}
+
+/* ========== Keyboard focus ========== */
+/* One keyboard focus ring, for everything. `ButtonBase` zeroes the UA outline and marks focus
+   with `.Mui-focusVisible`, which resolves to no visual change at all (measured: outline,
+   box-shadow, border, background and both pseudo-elements byte-identical focused and not).
+   Declared globally because the custom link surfaces are plain <a>; the 2px offset puts the
+   ring on the page rather than the control, which keeps it readable over the amber fill.
+
+   `body ` is load-bearing: `.MuiButtonBase-root` zeroes the outline at the same specificity as
+   a bare `:focus-visible`, so the descendant selector is what lifts this above it — measured,
+   with the bare selector the plain links got a ring and every MUI button silently did not. */
+body :focus-visible {
+  outline: 2px solid var(--app-ring);
+  outline-offset: 2px;
+}
+
+/* ========== Dialogs ========== */
+/* The UA stylesheet sets `color: black` on <dialog> explicitly, overriding the colour the page
+   puts on body. */
+dialog {
+  color: inherit;
+}
+
+/* Background scroll while a modal is open — critical on mobile, where touch-scrolling passes
+   through the native backdrop. Non-modal dialogs leave scroll intact. */
+html:has(dialog[open][data-modal-type='modal']) {
+  overflow: hidden;
+}
+
+/* WCAG 2.3.3: `checkTransitionsDisabled` measures a 0s duration and finalizes at once, so a
+   reduced-motion dialog snaps rather than awaiting a `transitionend` that never comes. Dialog
+   element only — the slide/fade defaults are inline there, which is why the `!important` is
+   required and safe. */
+@media (prefers-reduced-motion: reduce) {
+  dialog[data-modal-id] {
+    transition: none !important;
+  }
+}

@@ -1,37 +1,13 @@
-import { alpha, createTheme, type Theme } from '@mui/material/styles';
+import { createTheme } from '@mui/material/styles';
 
 declare module '@mui/material/styles' {
-  interface Theme {
-    scrollbar: {
-      thumb: string;
-      track: string;
-      width?: string | undefined;
-    };
-  }
-  interface ThemeOptions {
-    scrollbar?: {
-      thumb?: string | undefined;
-      track?: string | undefined;
-      width?: string | undefined;
-    };
-  }
   interface Palette {
-    scrollbar: {
-      thumb: string;
-      track: string;
-      width?: string | undefined;
-    };
     accent: {
       onSurface: string;
       ring: string;
     };
   }
   interface PaletteOptions {
-    scrollbar?: {
-      thumb?: string | undefined;
-      track?: string | undefined;
-      width?: string | undefined;
-    };
     accent?: {
       onSurface?: string | undefined;
       ring?: string | undefined;
@@ -78,12 +54,6 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
   const accent = mode === 'dark' ? mascot.ink : mascot.flameEdge;
 
   return createTheme({
-    // Read by the global styles below.
-    scrollbar: {
-      thumb: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
-      track: 'transparent',
-      width: '10px',
-    },
     palette: {
       mode,
       // MUI's default 3 is AA for *large* text only, so white scores 3.19 on `#d97706`, clears the
@@ -182,69 +152,6 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
       MuiFormControlLabel: {
         styleOverrides: {
           root: { marginLeft: 0 },
-        },
-      },
-      MuiCssBaseline: {
-        styleOverrides: (theme: Theme) => {
-          return {
-            '*, *::before, *::after': {
-              // Firefox
-              scrollbarWidth: 'thin',
-              scrollbarColor: `${theme.scrollbar.thumb} ${theme.scrollbar.track}`,
-            },
-            // Webkit
-            '*::-webkit-scrollbar': {
-              width: theme.scrollbar.width,
-              height: theme.scrollbar.width,
-            },
-            '*::-webkit-scrollbar-track': {
-              background: theme.scrollbar.track,
-            },
-            '*::-webkit-scrollbar-thumb': {
-              backgroundColor: theme.scrollbar.thumb,
-              borderRadius: 8,
-              border: `2px solid ${theme.scrollbar.track}`,
-            },
-            '*::-webkit-scrollbar-thumb:hover': {
-              backgroundColor: alpha(theme.scrollbar.thumb, 0.9),
-            },
-            /**
-             * One keyboard focus ring, for everything. `ButtonBase` zeroes the UA outline and
-             * marks focus with `.Mui-focusVisible`, which in this theme resolves to no visual
-             * change at all (measured: outline, box-shadow, border, background and both
-             * pseudo-elements byte-identical focused and not). Declared globally because the
-             * custom link surfaces are plain `<a>`; the 2px offset puts the ring on the page
-             * rather than the control, which keeps it readable over the amber fill.
-             *
-             * `body ` is load-bearing: `.MuiButtonBase-root` zeroes the outline at the same
-             * specificity as a bare `:focus-visible` and is injected after this, so it won. The
-             * descendant selector lifts this above it — measured, with the bare selector the plain
-             * links got a ring and every MUI button silently did not.
-             */
-            'body :focus-visible': {
-              outline: `2px solid ${theme.palette.accent.ring}`,
-              outlineOffset: '2px',
-            },
-            // The UA stylesheet sets `color: black` on <dialog> explicitly, overriding the theme
-            // colour CssBaseline puts on body.
-            dialog: {
-              color: 'inherit',
-            },
-            // Background scroll while a modal is open — critical on mobile, where touch-scrolling
-            // passes through the native backdrop. Non-modal dialogs leave scroll intact.
-            'html:has(dialog[open][data-modal-type="modal"])': {
-              overflow: 'hidden',
-            },
-            // WCAG 2.3.3: `checkTransitionsDisabled` measures a 0s duration and finalizes at once,
-            // so a reduced-motion dialog snaps rather than awaiting a `transitionend` that never
-            // comes. Dialog element only — the slide/fade defaults are inline there, which is why
-            // the `!important` is required and safe.
-            '@media (prefers-reduced-motion: reduce)': {
-              'dialog[data-modal-id]': {
-                transition: 'none !important',
-              },
-            },
-          };
         },
       },
     },

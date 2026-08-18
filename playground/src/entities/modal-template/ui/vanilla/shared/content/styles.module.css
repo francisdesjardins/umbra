@@ -23,7 +23,7 @@
 }
 
 /* Dark mode */
-:root[data-mui-color-scheme='dark'] {
+:root[data-color-scheme='dark'] {
   --content-text-primary: rgba(255, 255, 255, 0.87);
   --content-text-secondary: rgba(255, 255, 255, 0.6);
   /* 0.38 is 3.57:1 on the dark surface — the same hint, the same miss, the other mode. */

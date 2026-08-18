@@ -51,7 +51,7 @@
 }
 
 /* Dark mode colors */
-:root[data-mui-color-scheme='dark'] {
+:root[data-color-scheme='dark'] {
   --modal-bg: #121212;
   --modal-text: rgba(255, 255, 255, 0.87);
   --modal-text-secondary: rgba(255, 255, 255, 0.6);

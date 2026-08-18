@@ -30,7 +30,7 @@
 }
 
 /* Dark mode */
-:root[data-mui-color-scheme='dark'] {
+:root[data-color-scheme='dark'] {
   --form-bg: #121212;
   --form-text: rgba(255, 255, 255, 0.87);
   --form-text-secondary: rgba(255, 255, 255, 0.6);

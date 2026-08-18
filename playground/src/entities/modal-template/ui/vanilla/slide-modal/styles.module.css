@@ -14,7 +14,7 @@
 }
 
 /* Dark mode */
-:root[data-mui-color-scheme='dark'] {
+:root[data-color-scheme='dark'] {
   --slide-bg: #121212;
   --slide-text: rgba(255, 255, 255, 0.87);
   --slide-border: #424242;
