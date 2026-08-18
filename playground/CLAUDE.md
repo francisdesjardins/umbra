@@ -1,6 +1,10 @@
 # Playground — Templates & Examples
 
-Interactive demo app with MUI and vanilla HTML/CSS reference implementations.
+Interactive demo app, vanilla-first: the learning routes (`/getting-started`, `/modal-actions`,
+`/slide-modal`, `/advanced`) render their dialog interiors with the vanilla HTML/CSS templates —
+the library is headless, and the demos should not suggest it goes with a component library. MUI is
+the demonstrated _exception_: `/ui-integrations` (whose subject it is), the MUI tab of
+`/ui-templates`, and the MUI twin of the panel wizard.
 
 `umbra-playground` — a private Yarn workspace, never published. **Its UI dependencies
 live here, not in the root manifest**, which is the published package's dependency list: MUI,
