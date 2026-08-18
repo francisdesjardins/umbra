@@ -1,6 +1,10 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
 import { MODAL_ID as MUI_FORM_ID, MuiFormExample } from '@/pages/ui-integrations/examples/mui-form';
 import {
+  MODAL_ID as MUI_PANEL_ID,
+  MuiPanelExample,
+} from '@/pages/ui-integrations/examples/mui-panel';
+import {
   MODAL_ID as MUI_MESSAGE_ID,
   MuiMessageExample,
 } from '@/pages/ui-integrations/examples/mui-message';
@@ -90,6 +94,21 @@ export const UIIntegrationsPage = () => {
             codeKey="vanilla-form"
             modalId={VANILLA_FORM_ID}
             example={<VanillaFormExample />}
+          />
+        </ExampleGrid>
+      </ExampleSection>
+
+      <ExampleSection
+        title="Panel wizard"
+        description="The heavyweight case: a three-step wizard in a full panel, MUI selects, radios and a Tooltip throughout. Its vanilla twin — same store, same steps, native controls — lives on the Advanced page; between the two files, only the markup disagrees."
+      >
+        <ExampleGrid columns={1}>
+          <ExampleCard
+            title="MUI Panel Wizard"
+            description="Composable panel header with truncating title, a jump-to Select, step navigation in a space-between footer — and two actions that do not close the modal at all."
+            codeKey="mui-panel"
+            modalId={MUI_PANEL_ID}
+            example={<MuiPanelExample />}
           />
         </ExampleGrid>
       </ExampleSection>
