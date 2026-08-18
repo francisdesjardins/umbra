@@ -20,6 +20,12 @@ export default defineConfig({
     // the automatic runtime, and Fast Refresh over the library's own source is not what anyone edits.
     react({ exclude: [/src\/react\//, /ssr-worker/] }),
     babel({
+      // The compiler decides what a component is by naming convention, so `BasicApp` in the Solid
+      // binding reads as one: left in, it gets `react/compiler-runtime` injected and throws
+      // "Invalid hook call" the moment Solid runs it. `/stories` renders those harnesses, so this
+      // is the playground's copy of the scoping `scripts/vite-plugin-react-compiler.mjs` states for
+      // the library build. Restating the default keeps `node_modules` out.
+      exclude: [/[\\/]node_modules[\\/]/, /[\\/]src[\\/]solid[\\/]/],
       // Pinned, not defaulted: the library build and the component-test bundle both pass
       // `{ target: '19' }`, and a demo compiled under a different target would stop being
       // evidence of how the shipped code behaves. The plugin's own default matches today —

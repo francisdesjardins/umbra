@@ -12,9 +12,13 @@ It consumes the library through the same public specifiers as any user: `umbra/r
 for hooks and components, and `umbra` (the root) for anything that must work without
 React — see `pages/advanced/examples/deployment-service.ts`. Vite aliases both to `../src`.
 
-**The app itself is React, and stays React.** `umbra/solid` is exercised in the one place it can
-be without putting a second compiler in this build: the microfrontend frame, which has no build
-step at all — see below.
+**The app itself is React, and stays React** — and `umbra/solid` still costs it no second compiler.
+Two places reach it: the microfrontend frame, which has no build step at all (see below), and
+`/stories`, whose Solid harnesses are written with `h` for exactly that reason. **What they do cost
+is a scope**: the React Compiler decides what a component is by naming convention, so `BasicApp` in
+the Solid binding reads as one and gets `react/compiler-runtime` injected — "Invalid hook call" the
+moment Solid runs it. `vite.config.ts` excludes `src/solid/` from the babel pass, the playground's
+copy of the scoping the library build states in `scripts/vite-plugin-react-compiler.mjs`.
 
 ## The microfrontend frame (`public/mfe/` + `mfe-src/` + `vite-plugins/mfe-umbra.ts`)
 
