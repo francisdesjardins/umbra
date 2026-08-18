@@ -21,6 +21,10 @@ import {
   VanillaMessageExample,
 } from '@/pages/ui-integrations/examples/vanilla-message';
 import {
+  MODAL_ID as VANILLA_PANEL_ID,
+  VanillaPanelExample,
+} from '@/pages/ui-integrations/examples/vanilla-panel';
+import {
   MODAL_ID as VANILLA_SLIDE_ID,
   VanillaSlideExample,
 } from '@/pages/ui-integrations/examples/vanilla-slide';
@@ -100,15 +104,22 @@ export const UIIntegrationsPage = () => {
 
       <ExampleSection
         title="Panel wizard"
-        description="The heavyweight case: a three-step wizard in a full panel, MUI selects, radios and a Tooltip throughout. Its vanilla twin — same store, same steps, native controls — lives on the Advanced page; between the two files, only the markup disagrees."
+        description="The heavyweight case: a three-step wizard in a full panel — same store, same steps, same actions in both stacks. Composable header with a truncating title, a jump-to dropdown, step navigation in a space-between footer, and two actions that do not close the modal at all. Between the two files, only the markup disagrees."
       >
-        <ExampleGrid columns={1}>
+        <ExampleGrid>
           <ExampleCard
             title="MUI Panel Wizard"
-            description="Composable panel header with truncating title, a jump-to Select, step navigation in a space-between footer — and two actions that do not close the modal at all."
+            description="MUI selects, radios, a Tooltip on the recommended-settings button, and the MUI panel templates."
             codeKey="mui-panel"
             modalId={MUI_PANEL_ID}
             example={<MuiPanelExample />}
+          />
+          <ExampleCard
+            title="Vanilla Panel Wizard"
+            description="The vanilla panel-modal templates, native select/radio/checkbox, a self-drawn chevron, and a native title where MUI ships a Tooltip."
+            codeKey="vanilla-panel"
+            modalId={VANILLA_PANEL_ID}
+            example={<VanillaPanelExample />}
           />
         </ExampleGrid>
       </ExampleSection>
