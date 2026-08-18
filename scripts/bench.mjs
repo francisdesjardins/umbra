@@ -54,9 +54,24 @@ const measure = (run, said) => {
   return ns;
 };
 
+/**
+ * Claims that failed their bound. A structural claim the harness only *prints* is prose with a
+ * number beside it — the multiple this document quoted drifted to nearly twice the measured one
+ * before anyone re-ran it. Bounds are deliberately loose: the ratios sit at 1.1× and the absolutes
+ * swing 2× under load, so a ceiling at 2× catches a sort gone O(n log n) and never the scheduler.
+ */
+const broken = [];
+
 const ratio = (said) => {
-  const { label, of, against, expectation } = said;
-  console.log(`  → ${label}: ${(of / against).toFixed(2)}× — ${expectation}\n`);
+  const { label, of, against, expectation, atMost, atLeast } = said;
+  const measured = of / against;
+  console.log(`  → ${label}: ${measured.toFixed(2)}× — ${expectation}\n`);
+  if (atMost !== undefined && measured > atMost) {
+    broken.push(`${label}: ${measured.toFixed(2)}× over its ${String(atMost)}× ceiling`);
+  }
+  if (atLeast !== undefined && measured < atLeast) {
+    broken.push(`${label}: ${measured.toFixed(2)}× under its ${String(atLeast)}× floor`);
+  }
 };
 
 console.log('\numbra — the performance claims, measured\n');
@@ -94,6 +109,11 @@ console.log('A store commit is gated by `equals`, so a set that changes nothing 
   console.log(
     `  → the gated path notified ${String(notifiedByNoops)} listeners across ${String(BATCHES)}M calls (must be 0)`
   );
+  if (notifiedByNoops !== 0) {
+    broken.push(
+      `the gated path notified ${String(notifiedByNoops)} listeners — it must notify none`
+    );
+  }
   // An order of magnitude on purpose: at ~1 cycle the no-op is at or under this harness's
   // resolution, and an optimiser that can see the commit never happens is entitled to most of it.
   // "Free" is the claim; a precise multiple would be measuring the JIT.
@@ -102,36 +122,45 @@ console.log('A store commit is gated by `equals`, so a set that changes nothing 
     of: commit,
     against: noop,
     expectation: 'free to within measurement',
+    atLeast: 5,
   });
 }
 
 // ── 2. Aggregated action state is precomputed ────────────────────────────────
 console.log('Aggregated action state is computed at write time, so reads are O(1) in action count');
 {
-  const build = (actions) => {
+  // Each declared action is also **run once**, because `declare` writes the hotkey map and nothing
+  // else: an engine that only declared would hold an empty `states` in both arms, and the ratio
+  // would compare two identical objects and report 1.0× whatever `aggregated` did.
+  const build = async (actions) => {
     const engine = createActionEngine('bench');
     engine.beginRender();
     for (let i = 0; i < actions; i++) {
       engine.declare(`action-${String(i)}`, undefined);
     }
     engine.endRender();
+    for (let i = 0; i < actions; i++) {
+      await engine.run(`action-${String(i)}`, () => {
+        return undefined;
+      });
+    }
     return engine;
   };
 
-  const one = build(1);
-  const many = build(200);
+  const one = await build(1);
+  const many = await build(200);
 
   const readOne = measure(
     () => {
       return one.aggregated();
     },
-    { label: 'aggregated() with 1 declared action', iterations: 2_000_000 }
+    { label: 'aggregated() with 1 action’s state held', iterations: 2_000_000 }
   );
   const readMany = measure(
     () => {
       return many.aggregated();
     },
-    { label: 'aggregated() with 200 declared actions', iterations: 2_000_000 }
+    { label: 'aggregated() with 200 actions’ states held', iterations: 2_000_000 }
   );
 
   ratio({
@@ -139,6 +168,7 @@ console.log('Aggregated action state is computed at write time, so reads are O(1
     of: readMany,
     against: readOne,
     expectation: 'O(1) holds at ≈1.0×',
+    atMost: 1.5,
   });
 }
 
@@ -162,6 +192,19 @@ console.log('The stack order is three keys over `toSorted`, and runs on every sn
     return modal.nonModal ? 1 : 2;
   };
 
+  // The load-bearing half, and a **count** rather than a duration: "one call per dialog, not one per
+  // comparison" is what `orderStack` ranking up front buys, and timing cannot tell the two apart on
+  // a small stack — four dialogs cost the same either way. A counting policy answers exactly.
+  let calls = 0;
+  orderStack(fifty, (modal) => {
+    calls += 1;
+    return policy(modal);
+  });
+  console.log(`  the policy was asked ${String(calls)} times for 50 dialogs (must be 50)`);
+  if (calls !== fifty.length) {
+    broken.push(`the policy ran ${String(calls)} times for ${String(fifty.length)} dialogs`);
+  }
+
   const plain = measure(
     () => {
       return orderStack(four, undefined);
@@ -182,15 +225,21 @@ console.log('The stack order is three keys over `toSorted`, and runs on every sn
   );
 
   // One call per dialog, not one per comparison — `orderStack` ranks up front precisely so a policy
-  // allowed to be a lookup is not asked O(n log n) times. It is still work: on four dialogs it
-  // roughly doubles a 143 ns operation, which is the honest reading of the ratio below.
+  // allowed to be a lookup is not asked O(n log n) times. It is still work — one extra pass over
+  // the stack — so the ratio is a small constant that does not grow with it, rather than nothing.
   ratio({
     label: 'a policy against no policy, same stack',
     of: policed,
     against: plain,
-    expectation: 'n calls, not n log n — doubling a very small number',
+    expectation: 'n calls, not n log n — a constant addition, not a free option',
+    atMost: 2,
   });
   console.log(`  → 50 dialogs costs ${(many / 1000).toFixed(2)} µs — a stack nobody has, priced\n`);
 }
 
 console.log('Ratios are the claim; absolute figures are this machine on this day.\n');
+
+if (broken.length > 0) {
+  console.error(`BENCH FAILED\n  ${broken.join('\n  ')}\n`);
+  process.exit(1);
+}

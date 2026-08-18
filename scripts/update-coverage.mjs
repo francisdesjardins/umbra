@@ -45,7 +45,9 @@ if (fileCount === 0) {
   process.exit(1);
 }
 
-const today = new Date().toISOString().slice(0, 10);
+// Local, not `toISOString()`: that one is UTC, so a run any evening west of Greenwich stamps the
+// measurement with tomorrow's date — and the CHANGELOG beside it is organised by the day's work.
+const today = new Date().toLocaleDateString('en-CA');
 console.log(`coverage: unit ${unit}% · component ${component}% over ${fileCount} files · ${today}`);
 
 /** Each edit must apply exactly once — a pattern that stopped matching means the prose moved. */
