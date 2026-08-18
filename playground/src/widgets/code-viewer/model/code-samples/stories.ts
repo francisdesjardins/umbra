@@ -2,6 +2,8 @@
  * The library's component-test harnesses, rendered live by `/stories` and shown here as source —
  * the largest of the three groups, for the one route that needs it. See `codeSamples.ts`.
  */
+import { sliceExport } from '@/shared/lib/slice-export';
+
 import storyUseModalBasicSrc from 'umbra/react/__tests__/use-modal/basic.story.tsx?raw';
 import storyUseModalOpenAndWaitSrc from 'umbra/react/__tests__/use-modal/open-and-wait.story.tsx?raw';
 import storyUseModalNonModalSrc from 'umbra/react/__tests__/use-modal/non-modal.story.tsx?raw';
@@ -38,6 +40,7 @@ import storyDismissKeyOwnershipSrc from 'umbra/core/__tests__/dismiss-key-owners
 import storyFocusContainmentSrc from 'umbra/core/__tests__/focus-containment.story.tsx?raw';
 import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.story.tsx?raw';
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
+import storyVanillaBindSrc from 'umbra/vanilla/__tests__/bind-dialog.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-modal/busy-while-preparing.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-modal/styling-surface.story.tsx?raw';
@@ -99,7 +102,37 @@ import storySlideOpenAndWaitSrc from 'umbra/react/__tests__/use-slide-modal/open
 import storySlideMultiDirectionSrc from 'umbra/react/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
 import storySlideNonModalEscHotkeySrc from 'umbra/react/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
 
+/**
+ * The `bindDialog` harnesses share one file, so each card is cut from it by name — eighteen cards
+ * pointed at the same sixteen hundred lines would show the reader everything except the subject.
+ */
+const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> = [
+  ['story-vanilla-basic', 'VanillaBasicHarness'],
+  ['story-vanilla-unbind', 'VanillaUnbindHarness'],
+  ['story-vanilla-failing-action', 'VanillaFailingActionHarness'],
+  ['story-vanilla-contained', 'VanillaContainedHarness'],
+  ['story-vanilla-explicit-host', 'VanillaExplicitHostHarness'],
+  ['story-vanilla-no-host', 'VanillaNoHostHarness'],
+  ['story-vanilla-destroy', 'VanillaDestroyHarness'],
+  ['story-vanilla-open-request', 'VanillaOpenRequestHarness'],
+  ['story-vanilla-shadow-root', 'VanillaShadowRootHarness'],
+  ['story-vanilla-restore-on-unbind', 'VanillaRestoreOnUnbindHarness'],
+  ['story-vanilla-busy', 'VanillaBusyHarness'],
+  ['story-vanilla-labelling', 'VanillaLabellingHarness'],
+  ['story-vanilla-shadow-stack', 'VanillaShadowStackHarness'],
+  ['story-vanilla-portal', 'VanillaPortalHarness'],
+  ['story-vanilla-non-modal-options', 'VanillaNonModalOptionsHarness'],
+  ['story-vanilla-reconcile', 'VanillaReconcileHarness'],
+  ['story-vanilla-claimless-reclaim', 'VanillaClaimlessReclaimHarness'],
+  ['story-vanilla-prepare-failure', 'VanillaPrepareFailureHarness'],
+];
+
 export const stories: Record<string, string> = {
+  ...Object.fromEntries(
+    VANILLA_CARDS.map(([key, exportName]) => {
+      return [key, sliceExport(storyVanillaBindSrc, exportName)];
+    })
+  ),
   'story-use-modal-basic': storyUseModalBasicSrc,
   'story-use-modal-open-and-wait': storyUseModalOpenAndWaitSrc,
   'story-use-modal-non-modal': storyUseModalNonModalSrc,

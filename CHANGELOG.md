@@ -11,6 +11,35 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — the eighteen `bindDialog` harnesses, cut out of the file they share
+
+The lot that needed a decision, and the decision was to slice rather than split. All eighteen live in
+one 1567-line `bind-dialog.story.tsx`, so pointing every card at the whole file would show a reader
+everything except the subject — and splitting the file into eighteen would rewrite the CT imports,
+the blame and the matrix citations to buy the same outcome. `sliceExport(source, name)` cuts one
+exported declaration with its doc comment, line-anchored rather than parsed, because prettier already
+guarantees the only grammar it needs: a top-level `export` at column 0. It **throws** on a name
+nothing exports, since a card pointing at a renamed symbol is exactly the drift a whole-file fallback
+would hide behind a panel that still renders.
+
+They get a group of their own — the binding is what they are about, not the option each one reaches
+— and the swap card moves into it from _Rendering without `{Modal}`_, which is the outlet's group now
+that there is a better home. `VanillaServerOpenHarness` stays off: it takes a prop, both answers
+being correct, so the gate skips it as a fixture rather than a demo.
+
+### Fixed — a harness claims the log level for one open, not for as long as it is mounted
+
+Found by measuring the console rather than reading it: `/stories` was emitting **335 debug lines and
+two warnings before anyone touched a card**. `setLogLevel` is global, and four harnesses turned every
+namespace on in a mount effect — correct in a component test, where the harness is the only thing on
+the page, and wrong on a route hosting a hundred of them, where the level goes on at load and stays
+on. One of the two warnings was the contained-dialog-with-no-host warning, printing at load from a
+card nobody had opened.
+
+Claimed in the open handler and dropped in `onClose` now, with the unmount cleanup kept for a harness
+torn down with its dialog still open. `ActionLoggingHarness` keeps the mount form: it takes a prop,
+so the gate skips it and it never shares a page.
+
 ### Added — the last decision-free lot: `core`, `manager` and `actions`, thirteen cards
 
 What remained that needed no judgement call, done in one pass. Six of the thirteen pair off inside a

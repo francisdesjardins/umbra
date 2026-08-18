@@ -53,6 +53,26 @@ import {
 } from 'umbra/core/__tests__/opening-focus-foreground.story';
 import { UndefinedClearsHarness } from 'umbra/core/__tests__/apply-style.story';
 import { VanillaSwapHarness } from 'umbra/vanilla/__tests__/swap.story';
+import {
+  VanillaBasicHarness,
+  VanillaBusyHarness,
+  VanillaClaimlessReclaimHarness,
+  VanillaContainedHarness,
+  VanillaDestroyHarness,
+  VanillaExplicitHostHarness,
+  VanillaFailingActionHarness,
+  VanillaLabellingHarness,
+  VanillaNoHostHarness,
+  VanillaNonModalOptionsHarness,
+  VanillaOpenRequestHarness,
+  VanillaPortalHarness,
+  VanillaPrepareFailureHarness,
+  VanillaReconcileHarness,
+  VanillaRestoreOnUnbindHarness,
+  VanillaShadowRootHarness,
+  VanillaShadowStackHarness,
+  VanillaUnbindHarness,
+} from 'umbra/vanilla/__tests__/bind-dialog.story';
 import { ExampleGrid, ExampleSection, StoryCard } from '@/entities/example';
 import { sectionSlug } from '@/shared/lib/section-slug';
 import { PageLayout } from '@/shared/ui/PageLayout';
@@ -832,13 +852,6 @@ const STORY_GROUPS: readonly StoryGroup[] = [
     label: 'Rendering without {Modal}',
     stories: [
       {
-        title: 'A fragment swapped underneath the controller',
-        description:
-          'The hypermedia case: a <dialog> arrives as server-written markup and is later replaced wholesale, the way htmx or Turbo swap a fragment. "Swap only" leaves the controller driving the node it was handed — the dialog on screen is a plain <dialog> again, carrying none of the library’s attributes, and Open does nothing. "Swap and rebind" runs the pair a caller owes: destroy(), then bind over what arrived.',
-        component: VanillaSwapHarness,
-        codeKey: 'story-vanilla-swap',
-      },
-      {
         title: 'Basic Outlet',
         description: 'Modal renders via ModalOutlet — no {Modal} placed in JSX.',
         component: OutletBasicHarness,
@@ -882,6 +895,144 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'A modal that unmounts while open must be dropped from the outlet’s map. Left registered, the outlet goes on rendering a <dialog> for a hook that no longer exists — on screen, in the top layer, and driven by nothing.',
         component: OutletTeardownHarness,
         codeKey: 'story-outlet-teardown',
+      },
+    ],
+  },
+  {
+    label: 'The vanilla controller: a <dialog> you wrote yourself',
+    stories: [
+      {
+        title: 'A fragment swapped underneath the controller',
+        description:
+          'The hypermedia case: a <dialog> arrives as server-written markup and is later replaced wholesale, the way htmx or Turbo swap a fragment. "Swap only" leaves the controller driving the node it was handed — the dialog on screen is a plain <dialog> again, carrying none of the library’s attributes, and Open does nothing. "Swap and rebind" runs the pair a caller owes: destroy(), then bind over what arrived.',
+        component: VanillaSwapHarness,
+        codeKey: 'story-vanilla-swap',
+      },
+      {
+        title: 'The ordinary surface, on a <dialog> React only handed over',
+        description:
+          'Open, close, dismiss, hotkeys and the running state, driven by bindDialog over markup the caller wrote. Fair as a React component test precisely because the binding never renders: React makes the element and nothing else. Each harness passes its own createDialogManager() — the vanilla answer to DialogManagerProvider — or they leak into each other through the singleton.',
+        component: VanillaBasicHarness,
+        codeKey: 'story-vanilla-basic',
+      },
+      {
+        title: 'Unbinding an action retires its declaration',
+        description:
+          'Backdrop dismissal is what makes it observable: it is opt-out with no actions declared and opt-in once there are. A declaration outliving its button would keep the dialog from dismissing, with nothing on screen to explain why.',
+        component: VanillaUnbindHarness,
+        codeKey: 'story-vanilla-unbind',
+      },
+      {
+        title: 'Where focus lands after an action fails',
+        description:
+          'The hardest arrangement of the three bindings. Actions bind after bindDialog returns, so bindAction’s synchronous disabled write runs ahead of the focus coordinator’s subscriber — and the browser blurs a disabled element before anyone has read who was holding focus.',
+        component: VanillaFailingActionHarness,
+        codeKey: 'story-vanilla-failing-action',
+      },
+      {
+        title: 'A contained panel against the default host',
+        description:
+          'nonModal: true without portal, positioned against the dialog’s parent — which must be a sized, positioned region or the panel collapses and every assertion passes vacuously. Nothing enters the top layer, so the region behind stays clickable: what pointerEvents on the host preserves.',
+        component: VanillaContainedHarness,
+        codeKey: 'story-vanilla-contained',
+      },
+      {
+        title: 'The same panel, with the host named rather than inferred',
+        description:
+          'The dialog’s parent is a plain wrapper and the host is its grandparent, so a pass cannot be the default branch answering correctly by coincidence.',
+        component: VanillaExplicitHostHarness,
+        codeKey: 'story-vanilla-explicit-host',
+      },
+      {
+        title: 'A contained dialog with nowhere to be contained',
+        description:
+          'No parent and no named host. The branch has to warn and carry on — throwing down the caller’s render, or silently styling document.body, are both worse than a panel that does not appear.',
+        component: VanillaNoHostHarness,
+        codeKey: 'story-vanilla-no-host',
+      },
+      {
+        title: 'destroy() called from a button, not at unmount',
+        description:
+          'The coverage fixture reads its counters after the test body and before React’s cleanup, so teardown that only happens at unmount is teardown no assertion ever watched.',
+        component: VanillaDestroyHarness,
+        codeKey: 'story-vanilla-destroy',
+      },
+      {
+        title: 'The manager’s asking door, from a binding with no hooks',
+        description:
+          'onOpenRequest is forwarded to the manager, so a request the owner refuses is refused before anything opens — and requestOpenAndWait reports which of the two happened.',
+        component: VanillaOpenRequestHarness,
+        codeKey: 'story-vanilla-open-request',
+      },
+      {
+        title: 'A hand-written <dialog> inside a shadow root',
+        description:
+          'Both things the boundary breaks fail quietly. adoptedStyleSheets does not cross it, so the library’s dialog::backdrop never applies; document.activeElement answers with the host, so a document-scoped focus check concludes focus left. React makes the host and nothing inside it.',
+        component: VanillaShadowRootHarness,
+        codeKey: 'story-vanilla-shadow-root',
+      },
+      {
+        title: 'What unbinding hands back',
+        description:
+          'The caller’s markup outlives the controller, so bindAction’s writes are restored rather than cleared. The second button is disabled before it is ever bound — which a naive removeAttribute gets wrong by switching it on.',
+        component: VanillaRestoreOnUnbindHarness,
+        codeKey: 'story-vanilla-restore-on-unbind',
+      },
+      {
+        title: 'aria-busy on a dialog the controller does not own',
+        description:
+          'destroy() unsubscribes before tearing the store down, so a controller destroyed mid-prepare never hears the notification that would clear the attribute. Observable only because the element outlives the controller.',
+        component: VanillaBusyHarness,
+        codeKey: 'story-vanilla-busy',
+      },
+      {
+        title: 'The labelling diagnostic on markup the binding did not write',
+        description:
+          'The only binding where the failure is ordinary — the id and the aria-labelledby pointing at it are hand-written in two places. Neither dialog passes an aria option, which is the point: the check reads the element, so it sees these at all.',
+        component: VanillaLabellingHarness,
+        codeKey: 'story-vanilla-labelling',
+      },
+      {
+        title: 'One manager over a shadow dialog and a light-DOM one',
+        description:
+          'Three things nothing else reaches. Reclaim across a shadow boundary asks the dialog’s own root, where a document-scoped answer is “focus left” forever. A raise is close() + showModal(), and close() queues its event — so it arrives with dialog.open already true, the only way a listener tells a raise from a real close. And prioritize through a non-React binding, which nothing else would fail on: the policy is core and binding-parity.test.ts compares export names.',
+        component: VanillaShadowStackHarness,
+        codeKey: 'story-vanilla-shadow-stack',
+      },
+      {
+        title: 'The portal placement, without the relocation',
+        description:
+          'A controller cannot move markup the caller wrote, so portal: true here is the positioning alone. The dialog sits in a wrapper inside a transformed ancestor — the containing block fixed resolves against instead of the viewport — so which of the two halves arrived is visible.',
+        component: VanillaPortalHarness,
+        codeKey: 'story-vanilla-portal',
+      },
+      {
+        title: 'containFocus, click-outside and a custom dismiss key, all non-modal',
+        description:
+          'containFocus is the Tab wrap show() does not give, and the union rejects dismissal on a modal dialog. The instant animation is load-bearing: with the default 200 ms exit a closing panel still reports isVisible, so “still open after the press” and “closed” look the same.',
+        component: VanillaNonModalOptionsHarness,
+        codeKey: 'story-vanilla-non-modal-options',
+      },
+      {
+        title: 'reconcileOpen driven from the controller’s own snapshot',
+        description:
+          "Why phase is exposed on this binding alone: there is no render pass to be the clock. The 120 ms exit is deliberate — the window where phase is 'closing' while isVisible is still true is the whole subject.",
+        component: VanillaReconcileHarness,
+        codeKey: 'story-vanilla-reconcile',
+      },
+      {
+        title: 'A modal that claimed no opening focus',
+        description:
+          'A non-modal panel opens underneath it. With no focusOnOpen marker to aim at, the reclaim falls through to dialog.focus(), which an open <dialog> refuses. Two focusables, because with one “handed back to the first focusable” and “focus never moved” are the same element.',
+        component: VanillaClaimlessReclaimHarness,
+        codeKey: 'story-vanilla-claimless-reclaim',
+      },
+      {
+        title: 'A prepare that throws, heard through onError',
+        description:
+          'Its own harness because there is no render pass — the state reaches the page through the caller’s own listener. aria-busy, the library’s one owned attribute sitting on the caller’s markup, says the settle reached the element and not only the store.',
+        component: VanillaPrepareFailureHarness,
+        codeKey: 'story-vanilla-prepare-failure',
       },
     ],
   },
