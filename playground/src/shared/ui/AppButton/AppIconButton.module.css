@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: var(--app-space-2);
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -22,10 +22,10 @@
 }
 
 .small {
-  padding: 4px;
+  padding: var(--app-space-1);
 }
 
 .small svg {
-  width: 20px;
-  height: 20px;
+  width: var(--app-icon-sm);
+  height: var(--app-icon-sm);
 }

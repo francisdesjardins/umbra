@@ -2,28 +2,29 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: var(--app-space-6);
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--app-space-2);
+  margin-bottom: var(--app-space-2);
 }
 
 .title {
   margin: 0;
   flex: 1;
   font-weight: 600;
+  /* Off-scale: between --app-text-base and --app-text-lg. */
   font-size: 1.05rem;
   line-height: 1.6;
   letter-spacing: -0.01em;
 }
 
 .description {
-  margin: 0 0 16px;
-  font-size: 0.875rem;
+  margin: 0 0 var(--app-space-4);
+  font-size: var(--app-text-md);
   line-height: 1.6;
   color: var(--app-text-secondary);
 }
@@ -32,7 +33,7 @@
    is applied from out here rather than by prettifying the fixtures. */
 .harness {
   margin-top: auto;
-  padding-top: 16px;
+  padding-top: var(--app-space-4);
   border-top: 1px solid var(--app-divider);
   display: flex;
   flex-direction: column;
@@ -45,14 +46,14 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--app-space-2);
 }
 
 .harness button {
   font: inherit;
-  font-size: 0.8125rem;
-  padding: 4px 12px;
-  border-radius: 6px;
+  font-size: var(--app-text-sm);
+  padding: var(--app-space-1) var(--app-space-3);
+  border-radius: var(--app-radius-md);
   border: 1px solid var(--app-divider);
   background: var(--app-paper);
   color: var(--app-text);
@@ -75,9 +76,9 @@
 /* The state readouts a test asserts on, as monospace pills so they read as distinct. */
 .harness span[data-testid] {
   font-family: monospace;
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--app-radius);
   background: var(--app-hover);
   color: var(--app-text-secondary);
 }
@@ -85,9 +86,9 @@
 .harness input,
 .harness select {
   font: inherit;
-  font-size: 0.8125rem;
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-size: var(--app-text-sm);
+  padding: var(--app-space-1) var(--app-space-2);
+  border-radius: var(--app-radius);
   border: 1px solid var(--app-divider);
   background: var(--app-paper);
   color: var(--app-text);

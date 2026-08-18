@@ -72,7 +72,15 @@ function ControlColumn({
   readonly children: ReactNode;
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 140 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--app-space-2)',
+        flex: 1,
+        minWidth: 140,
+      }}
+    >
       <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500 }}>{caption}</span>
       {children}
     </div>
@@ -86,12 +94,12 @@ function useLiveControls() {
     <div
       style={{
         width: '100%',
-        padding: 16,
+        padding: 'var(--app-space-4)',
         border: '1px solid var(--modal-border)',
         borderRadius: 6,
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 'var(--app-space-3)',
       }}
     >
       <div>
@@ -100,9 +108,9 @@ function useLiveControls() {
       </div>
 
       {/* `flex-wrap`, so on a narrow dialog the columns stack instead of pushing past the edge. */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--app-space-6)' }}>
         <ControlColumn caption={`Counter: ${String(count)}`}>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--app-space-2)' }}>
             <Shared.Button
               onClick={() => {
                 reactiveStore.decrementCount();
@@ -135,7 +143,7 @@ function useLiveControls() {
             }}
             rows={2}
             style={{
-              padding: '8px 12px',
+              padding: 'var(--app-space-2) var(--app-space-3)',
               border: '1px solid var(--modal-control-border)',
               borderRadius: 4,
               fontFamily: 'var(--font-family)',
@@ -149,7 +157,7 @@ function useLiveControls() {
         </ControlColumn>
 
         <ControlColumn caption="Severity">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-2)' }}>
             {(['info', 'warning', 'error'] as const).map((level) => {
               return (
                 <Shared.Button
@@ -192,7 +200,7 @@ export function ReactiveDepsExample() {
             </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message>{message}</Shared.Message>
               <Shared.Alert severity={severity}>
                 Counter value: <strong>{count}</strong>

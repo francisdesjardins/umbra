@@ -27,7 +27,7 @@ export function ConfirmWithHotkeysExample() {
             <MessageModal.Title id={`${MODAL_ID}-title`}>Confirm Action</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message>
                 This will perform an important action. Are you sure you want to continue?
               </Shared.Message>
@@ -37,7 +37,7 @@ export function ConfirmWithHotkeysExample() {
               </Shared.Hint>
               <span
                 style={{
-                  padding: 8,
+                  padding: 'var(--app-space-2)',
                   borderRadius: 4,
                   border: '1px solid var(--modal-border)',
                   fontSize: 'var(--font-size-xs)',

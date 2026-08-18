@@ -33,7 +33,12 @@
     top: calc(var(--app-topbar-height) + var(--app-space-4));
     max-height: calc(100dvh - var(--app-topbar-height) - var(--app-space-10));
     overflow-y: auto;
+    overflow-x: hidden;
     padding-right: var(--app-space-2);
+    /* Ring room: a scroll container clips at its padding box, and the links' focus rings draw
+       2px outside at 2px offset — measured clipped left without this. */
+    padding-left: var(--app-space-1);
+    margin-left: calc(-1 * var(--app-space-1));
   }
 
   .mobileSearch {

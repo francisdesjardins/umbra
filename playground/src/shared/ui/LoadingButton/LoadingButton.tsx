@@ -10,6 +10,7 @@ export const LoadingButton = ({ loading, disabled, children, ...rest }: LoadingB
     <AppButton {...rest} disabled={disabled || loading}>
       {loading ? (
         // SMIL, not keyframes: the rotation rides the markup, so the spinner needs no stylesheet.
+        // Off-scale 18px: inline with the button's label, not on the icon grid.
         <svg viewBox="0 0 24 24" aria-hidden style={{ width: 18, height: 18, flexShrink: 0 }}>
           <circle
             cx="12"

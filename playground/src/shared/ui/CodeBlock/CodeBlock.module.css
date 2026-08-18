@@ -11,8 +11,8 @@
    because --app-hover's light value is a different alpha. 5px padding keeps the 30px hit box. */
 .copyButton {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: var(--app-space-4);
+  right: var(--app-space-4);
   z-index: 1;
   padding: 5px;
   border: 1px solid var(--app-divider);
@@ -62,7 +62,7 @@
 
 .scroll code {
   display: block !important;
-  padding: 24px !important;
+  padding: var(--app-space-6) !important;
   border-radius: 0 !important;
   /* The theme paints its own background on the <code>, and a background on a scroll
      container stays put while content moves, sliding the code off its own colour. */

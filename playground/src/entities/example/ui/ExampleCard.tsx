@@ -32,6 +32,7 @@ export const ExampleCard = ({
         dialogManager.open(modalId);
       }}
     >
+      {/* Off-scale 18px: inline with the small button's label, not on the icon grid. */}
       <PlayArrowIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
       {tryLabel}
     </AppButton>
@@ -40,12 +41,22 @@ export const ExampleCard = ({
   const actions = tryButton ?? children;
   return (
     <SurfaceCard interactive>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+      <div
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'var(--app-space-6)' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--app-space-2)',
+            marginBottom: 'var(--app-space-2)',
+          }}
+        >
           <h6
             style={{
               margin: 0,
               fontWeight: 600,
+              // Off-scale: between --app-text-base and --app-text-lg.
               fontSize: '1.1rem',
               lineHeight: 1.6,
               letterSpacing: '-0.01em',
@@ -59,8 +70,8 @@ export const ExampleCard = ({
         {description && (
           <p
             style={{
-              margin: '0 0 24px',
-              fontSize: '0.875rem',
+              margin: '0 0 var(--app-space-6)',
+              fontSize: 'var(--app-text-md)',
               lineHeight: 1.6,
               color: 'var(--app-text-secondary)',
               flex: 1,
@@ -72,7 +83,14 @@ export const ExampleCard = ({
         {example ? (
           <div style={{ marginTop: 'auto' }}>{example}</div>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 'auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 'var(--app-space-3)',
+              marginTop: 'auto',
+            }}
+          >
             {children}
           </div>
         )}

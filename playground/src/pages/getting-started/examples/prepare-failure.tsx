@@ -47,7 +47,7 @@ export function PrepareFailureExample() {
             <MessageModal.Title>Profile</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-3)' }}>
               {isPreparing ? (
                 <Shared.Detail>Fetching profile…</Shared.Detail>
               ) : failure ? (
@@ -103,7 +103,7 @@ export function PrepareFailureExample() {
             alignItems: 'center',
             gap: 'var(--app-space-2)',
             cursor: 'pointer',
-            minHeight: 24,
+            minHeight: 'var(--app-space-6)',
           }}
         >
           <input

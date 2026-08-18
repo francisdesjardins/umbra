@@ -6,11 +6,11 @@
 }
 
 .header {
-  padding: 16px 24px;
+  padding: var(--app-space-4) var(--app-space-6);
   border-bottom: 1px solid var(--app-divider);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-space-3);
   flex-shrink: 0;
   background: #fafafa;
 }
@@ -21,8 +21,8 @@
 
 /* The glyph is decoration on a named panel; the flame clears 1.4.11's 3:1 for non-text. */
 .headerIcon {
-  width: 20px;
-  height: 20px;
+  width: var(--app-icon-sm);
+  height: var(--app-icon-sm);
   color: var(--app-flame);
   flex-shrink: 0;
 }
@@ -30,20 +30,20 @@
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-space-3);
   flex: 1;
 }
 
 .title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--app-text-lg);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .keyBadge {
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: var(--app-space-1) var(--app-space-3);
+  border-radius: var(--app-radius);
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid var(--app-divider);
   font-family: monospace;
@@ -59,7 +59,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--app-space-2);
   align-items: center;
 }
 
@@ -71,13 +71,13 @@
 }
 
 .emptyState {
-  padding: 24px;
+  padding: var(--app-space-6);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--app-space-3);
   flex: 1;
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   color: var(--app-text-secondary);
 }

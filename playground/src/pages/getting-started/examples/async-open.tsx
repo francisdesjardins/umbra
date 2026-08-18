@@ -63,8 +63,8 @@ export function AsyncOpenExample() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 16,
-                  padding: '24px 0',
+                  gap: 'var(--app-space-4)',
+                  padding: 'var(--app-space-6) 0',
                 }}
               >
                 <Shared.Message>Fetching profile…</Shared.Message>
@@ -79,7 +79,7 @@ export function AsyncOpenExample() {
               <MessageModal.Title>{data?.name ?? 'Profile'}</MessageModal.Title>
             </MessageModal.Header>
             <MessageModal.Content>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-3)' }}>
                 <Shared.Message>
                   Plan: <strong>{data?.plan}</strong> — fetched at {data?.fetchedAt}
                 </Shared.Message>

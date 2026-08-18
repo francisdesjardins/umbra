@@ -71,18 +71,18 @@ export function FocusOnOpenExample() {
             <MessageModal.Title id={`${MODAL_ID}-title`}>Delete this file?</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message>
                 The field below is first in the DOM, so it is what the browser would focus on its
                 own. Focus is on <strong>Keep</strong> instead, because that action asked for it.
               </Shared.Message>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
                 <FormModal.Label htmlFor={`${MODAL_ID}-reason`}>Reason (optional)</FormModal.Label>
                 <FormModal.Input id={`${MODAL_ID}-reason`} />
               </div>
               <span
                 style={{
-                  padding: 8,
+                  padding: 'var(--app-space-2)',
                   borderRadius: 4,
                   border: '1px solid var(--modal-border)',
                   fontFamily: 'monospace',

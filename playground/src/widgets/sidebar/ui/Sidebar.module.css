@@ -1,7 +1,7 @@
 /* Desktop: a fixed panel with a same-width placeholder holding its space in the flex row —
    the shape MUI's permanent Drawer rendered, spelled out. */
 .placeholder {
-  width: 232px;
+  width: var(--app-sidebar-width);
   flex-shrink: 0;
 }
 
@@ -10,14 +10,14 @@
   top: 0;
   bottom: 0;
   left: 0;
-  width: 232px;
+  width: var(--app-sidebar-width);
   box-sizing: border-box;
   border-right: 1px solid var(--app-divider);
   background: var(--app-bg);
   display: flex;
   flex-direction: column;
   /* Below the top bar's 1201 and the dialogs' 1300+. */
-  z-index: 1200;
+  z-index: var(--app-z-sidebar);
 }
 
 /* Mobile: the same panel, slid off-canvas and kept mounted, with a backdrop that owns the
@@ -35,7 +35,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1199;
+  z-index: var(--app-z-backdrop);
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
@@ -50,27 +50,27 @@
 }
 
 .toolbarSpacer {
-  height: 64px;
+  height: var(--app-topbar-height);
   flex-shrink: 0;
 }
 
 .nav {
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 0;
+  padding: var(--app-space-4) 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--app-space-5);
 }
 
 .groupLabel {
-  padding: 0 16px;
+  padding: 0 var(--app-space-4);
   display: block;
-  margin: 0 0 4px;
+  margin: 0 0 var(--app-space-1);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   color: var(--app-text-tertiary);
 }
 
@@ -83,12 +83,12 @@
 .item {
   display: flex;
   align-items: center;
-  margin: 0 8px 4px;
-  padding: 6px 16px;
-  border-radius: 4px;
+  margin: 0 var(--app-space-2) var(--app-space-1);
+  padding: 6px var(--app-space-4);
+  border-radius: var(--app-radius);
   text-decoration: none;
   color: var(--app-text);
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   line-height: 1.43;
   transition: background-color 150ms;
 }
@@ -117,6 +117,6 @@
 }
 
 .itemIcon svg {
-  width: 20px;
-  height: 20px;
+  width: var(--app-icon-sm);
+  height: var(--app-icon-sm);
 }

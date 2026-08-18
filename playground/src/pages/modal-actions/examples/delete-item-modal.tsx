@@ -53,7 +53,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
             <MessageModal.Title id={`${MODAL_ID}-title`}>Delete Item</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message id={`${MODAL_ID}-body`}>
                 Are you sure you want to delete <strong>&quot;{itemName}&quot;</strong>?
               </Shared.Message>
@@ -61,7 +61,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
               {error && <Shared.Alert severity="error">{error.message}</Shared.Alert>}
               <span
                 style={{
-                  padding: 8,
+                  padding: 'var(--app-space-2)',
                   borderRadius: 4,
                   border: '1px solid var(--modal-border)',
                   fontSize: 'var(--font-size-xs)',

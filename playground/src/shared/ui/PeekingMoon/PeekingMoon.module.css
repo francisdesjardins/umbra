@@ -2,7 +2,7 @@
    embed the visit key), so the element carries it inline plus a <style> of its own. */
 .moon {
   position: fixed;
-  z-index: 1200;
+  z-index: var(--app-z-mascot);
   cursor: pointer;
 }
 

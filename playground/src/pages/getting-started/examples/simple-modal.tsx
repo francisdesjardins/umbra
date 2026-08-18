@@ -28,7 +28,7 @@ export function SimpleModalExample() {
           <MessageModal.Content>
             <Shared.OverflowContainer style={{ maxHeight: '20vh' }}>
               {/* The paragraphs own their spacing — a vanilla template ships no layout to inherit. */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
                 <Shared.Message>
                   This modal uses MessageModal.Content with a scrollable container to handle
                   overflow text. When the content exceeds the available height, the container

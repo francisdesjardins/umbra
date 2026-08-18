@@ -73,9 +73,9 @@ export function PerActionStateExample() {
           </MessageModal.Header>
 
           <MessageModal.Content>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               {/* Not an action's button: it locks for publish only, so a draft still takes edits. */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
                 <FormModal.Label htmlFor={`${MODAL_ID}-note`}>Release note</FormModal.Label>
                 <textarea
                   id={`${MODAL_ID}-note`}
@@ -83,7 +83,7 @@ export function PerActionStateExample() {
                   disabled={publishing}
                   defaultValue="Ship the per-action state."
                   style={{
-                    padding: '8px 12px',
+                    padding: 'var(--app-space-2) var(--app-space-3)',
                     border: '1px solid var(--form-control-border, var(--modal-control-border))',
                     borderRadius: 4,
                     fontFamily: 'var(--font-family)',

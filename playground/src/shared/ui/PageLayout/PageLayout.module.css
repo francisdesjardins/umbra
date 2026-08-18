@@ -9,15 +9,15 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  gap: var(--app-space-4);
+  margin-bottom: var(--app-space-6);
+  padding-bottom: var(--app-space-4);
   border-bottom: 1px solid var(--app-divider);
 }
 
 @media (min-width: 900px) {
   .header {
-    margin-bottom: 32px;
+    margin-bottom: var(--app-space-8);
   }
 }
 
@@ -31,16 +31,16 @@
    desktop rendered too. Line-height is the h4 variant's. */
 .title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--app-text-xl);
   font-weight: 700;
   line-height: 1.235;
   letter-spacing: -0.02em;
 }
 
 .description {
-  margin: 8px 0 0;
+  margin: var(--app-space-2) 0 0;
   max-width: 720px;
-  font-size: 1rem;
+  font-size: var(--app-text-base);
   line-height: 1.5;
   letter-spacing: 0.00938em;
   color: var(--app-text-secondary);
@@ -51,5 +51,5 @@
 }
 
 .result {
-  margin-bottom: 24px;
+  margin-bottom: var(--app-space-6);
 }

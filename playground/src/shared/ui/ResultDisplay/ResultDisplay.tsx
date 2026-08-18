@@ -6,8 +6,8 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
   return (
     <div
       style={{
-        padding: 12,
-        borderRadius: 4,
+        padding: 'var(--app-space-3)',
+        borderRadius: 'var(--app-radius)',
         // Token-derived, not written out: the border beside it is the flame, and a literal here
         // left a fuchsia wash inside an amber border the moment the palette moved.
         background: result
@@ -21,7 +21,7 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
         style={{
           margin: 0,
           fontFamily: '"Fira Code", "Consolas", monospace',
-          fontSize: '0.8125rem',
+          fontSize: 'var(--app-text-sm)',
           lineHeight: 1.43,
         }}
       >

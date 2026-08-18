@@ -4,38 +4,38 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1201;
+  z-index: var(--app-z-topbar);
   border-bottom: 1px solid var(--app-divider);
   background: var(--app-paper);
   color: var(--app-text);
 }
 
 .toolbar {
-  height: 64px;
+  height: var(--app-topbar-height);
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 var(--app-space-4);
 }
 
 @media (min-width: 600px) {
   .toolbar {
-    padding: 0 24px;
+    padding: 0 var(--app-space-6);
   }
 }
 
 /* `edge="start"`'s job: the icon's padding hangs into the gutter so the glyph aligns with content. */
 .menuButton {
   margin-left: -8px;
-  margin-right: 8px;
+  margin-right: var(--app-space-2);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-space-3);
   text-decoration: none;
   color: inherit;
-  border-radius: 4px;
+  border-radius: var(--app-radius);
 }
 
 .brand:hover .wordmark {
@@ -43,9 +43,9 @@
 }
 
 .badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: var(--app-space-8);
+  height: var(--app-space-8);
+  border-radius: var(--app-radius);
   background: var(--app-flame);
   color: var(--app-primary-ink);
   display: flex;
@@ -54,18 +54,18 @@
 }
 
 .wordmark {
-  font-size: 1.25rem;
+  font-size: var(--app-text-lg);
   font-weight: 600;
   transition: color 120ms;
 }
 
 .pill {
   display: none;
-  padding: 2px 8px;
-  border-radius: 2px;
+  padding: 2px var(--app-space-2);
+  border-radius: var(--app-radius-sm);
   background: var(--app-hover);
   color: var(--app-text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   font-weight: 500;
 }
 

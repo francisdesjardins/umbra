@@ -16,7 +16,7 @@
 
 /* The fixed bar's height, reserved in flow. */
 .toolbarSpacer {
-  height: 64px;
+  height: var(--app-topbar-height);
   flex-shrink: 0;
 }
 
@@ -24,14 +24,14 @@
    nearest scrolling ancestor, silently killing `position: sticky` on every jump bar inside. */
 .content {
   flex: 1;
-  padding: 16px;
-  max-width: 1400px;
+  padding: var(--app-space-4);
+  max-width: var(--app-content-max-width);
   margin: 0 auto;
   width: 100%;
 }
 
 @media (min-width: 900px) {
   .content {
-    padding: 32px;
+    padding: var(--app-space-8);
   }
 }

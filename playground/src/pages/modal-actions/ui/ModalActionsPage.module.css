@@ -2,10 +2,10 @@
    page and vice versa, so the dark scheme swaps both halves rather than dimming one. */
 .banner {
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 32px;
+  gap: var(--app-space-3);
+  padding: var(--app-space-3);
+  border-radius: var(--app-radius-md);
+  margin-bottom: var(--app-space-8);
   background: rgba(2, 136, 209, 0.1);
   color: #01579b;
 }
@@ -16,6 +16,7 @@
 }
 
 .bannerIcon {
+  /* 22px: off-scale — the Alert glyph's rendered size, between the two icon steps. */
   width: 22px;
   height: 22px;
   flex-shrink: 0;
@@ -23,6 +24,6 @@
 
 .bannerText {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   line-height: 1.43;
 }

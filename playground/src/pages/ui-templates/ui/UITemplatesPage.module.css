@@ -1,6 +1,6 @@
 .blurb {
-  margin: 0 0 32px;
-  font-size: 0.875rem;
+  margin: 0 0 var(--app-space-8);
+  font-size: var(--app-text-md);
   line-height: 1.43;
   color: var(--app-text-secondary);
   max-width: 720px;
@@ -13,12 +13,12 @@
 }
 
 .segment {
-  padding: 7px 12px;
+  padding: 7px var(--app-space-3);
   border: 1px solid var(--app-divider);
   background: transparent;
   color: var(--app-text-secondary);
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--app-text-sm);
   font-weight: 500;
   line-height: 1.75;
   letter-spacing: 0.02857em;
@@ -34,11 +34,11 @@
 }
 
 .segment:first-child {
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--app-radius) 0 0 var(--app-radius);
 }
 
 .segment:last-child {
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--app-radius) var(--app-radius) 0;
 }
 
 .segment:hover {
@@ -55,14 +55,14 @@
 .itemRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--app-space-2);
+  padding: var(--app-space-3);
 }
 
 .itemName {
   margin: 0;
   font-family: monospace;
-  font-size: 0.8125rem;
+  font-size: var(--app-text-sm);
   line-height: 1.43;
   flex: 1;
   min-width: 0;
@@ -71,7 +71,7 @@
 .cardGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: var(--app-space-2);
 }
 
 @media (min-width: 600px) {

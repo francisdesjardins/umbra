@@ -107,9 +107,9 @@ export function SlideCornerToastExample() {
           <div
             style={{
               display: 'flex',
-              gap: 12,
+              gap: 'var(--app-space-3)',
               alignItems: 'flex-start',
-              padding: '16px 16px 12px',
+              padding: 'var(--app-space-4) var(--app-space-4) var(--app-space-3)',
             }}
           >
             <svg
@@ -125,7 +125,15 @@ export function SlideCornerToastExample() {
             >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
             </svg>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--app-space-1)',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
               <strong style={{ fontSize: 'var(--font-size-sm)' }}>Changes saved</strong>
               <Shared.Detail>
                 The page stays fully interactive — scroll and click while this is open. Hover here
@@ -154,7 +162,7 @@ export function SlideCornerToastExample() {
                 background: 'transparent',
                 color: 'var(--modal-text-secondary)',
                 cursor: 'pointer',
-                padding: 4,
+                padding: 'var(--app-space-1)',
                 marginTop: -4,
                 marginRight: -4,
                 display: 'inline-flex',
@@ -170,7 +178,12 @@ export function SlideCornerToastExample() {
             </button>
           </div>
           <div
-            style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '0 16px 12px' }}
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 'var(--app-space-2)',
+              padding: '0 var(--app-space-4) var(--app-space-3)',
+            }}
           >
             {/* `handle.close('dismiss')`, not `action('dismiss')`: a close you *report* rather
                 than an action you declare, wanting no hotkey, running state or disabling. */}

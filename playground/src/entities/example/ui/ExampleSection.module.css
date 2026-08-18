@@ -1,5 +1,5 @@
 .section {
-  margin-bottom: 40px;
+  margin-bottom: var(--app-space-10);
   /* Anchor jumps must clear the fixed 64px top bar. */
   scroll-margin-top: 80px;
 }
@@ -11,7 +11,7 @@
 .title {
   display: block;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.1em;
@@ -20,13 +20,13 @@
 }
 
 .description {
-  margin: 4px 0 0;
+  margin: var(--app-space-1) 0 0;
   max-width: 680px;
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   line-height: 1.43;
   color: var(--app-text-secondary);
 }
 
 .content {
-  margin-top: 16px;
+  margin-top: var(--app-space-4);
 }

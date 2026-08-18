@@ -9,8 +9,15 @@ type ExampleLayoutProps = {
 
 export function ExampleLayout({ result, children, modals }: ExampleLayoutProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 'var(--app-space-2)',
+          flexWrap: 'wrap',
+        }}
+      >
         {children}
       </div>
       <ResultDisplay result={result} />

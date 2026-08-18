@@ -2,13 +2,13 @@
    background pair below are load-bearing. */
 .nav {
   position: sticky;
-  top: 64px;
+  top: var(--app-topbar-height);
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding-block: 12px;
-  margin-bottom: 24px;
+  padding-block: var(--app-space-3);
+  margin-bottom: var(--app-space-6);
   /* The light page ground is MUI's `background.default` (#fff — the theme only overrides the
      dark pair), so the bar matches it rather than --app-bg's #fafafa, which would band. */
   background: #ffffff;

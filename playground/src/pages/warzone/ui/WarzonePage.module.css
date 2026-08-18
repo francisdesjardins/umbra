@@ -3,9 +3,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 24px;
-  padding-top: 48px;
-  padding-bottom: 48px;
+  gap: var(--app-space-6);
+  padding-top: var(--app-space-12);
+  padding-bottom: var(--app-space-12);
 }
 
 /* The corona paints past the SVG's box, so the art is inset in a square that clips
@@ -27,7 +27,7 @@
 
 .lede {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--app-text-xl);
   line-height: 1.334;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -35,7 +35,7 @@
 
 .blurb {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--app-text-base);
   line-height: 1.5;
   color: var(--app-text-secondary);
   max-width: 560px;
@@ -43,6 +43,7 @@
 
 @media (min-width: 900px) {
   .stage {
+    /* 80px: off-scale — the spacing steps stop at 56px. */
     padding-top: 80px;
     padding-bottom: 80px;
   }

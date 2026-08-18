@@ -7,9 +7,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding-top: 32px;
-  padding-bottom: 32px;
+  gap: var(--app-space-6);
+  padding-top: var(--app-space-8);
+  padding-bottom: var(--app-space-8);
   min-width: 0;
 }
 
@@ -36,13 +36,14 @@
 
 .heroTitle {
   margin: 0;
+  /* Off-scale: between --app-text-xl and --app-text-2xl, the narrow-viewport step of the 3rem hero. */
   font-size: 2rem;
   line-height: 1.167;
   font-weight: 800;
   letter-spacing: -0.03em;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-space-3);
 }
 
 /* Sized to the heading's two steps: the mark is part of the lockup, not a bullet. */
@@ -55,16 +56,16 @@
 }
 
 .heroSubtitle {
-  margin: 8px 0 0;
-  font-size: 1.25rem;
+  margin: var(--app-space-2) 0 0;
+  font-size: var(--app-text-lg);
   line-height: 1.6;
   font-weight: 500;
   color: var(--app-text-secondary);
 }
 
 .heroBody {
-  margin: 16px 0 0;
-  font-size: 1rem;
+  margin: var(--app-space-4) 0 0;
+  font-size: var(--app-text-base);
   line-height: 1.5;
   color: var(--app-text-secondary);
   max-width: 560px;
@@ -72,9 +73,9 @@
 
 .lastClose {
   display: block;
-  margin: 16px 0 0;
+  margin: var(--app-space-4) 0 0;
   font-family: monospace;
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   line-height: 1.66;
   color: var(--app-accent);
 }
@@ -82,14 +83,15 @@
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--app-space-2);
+  margin-top: var(--app-space-4);
 }
 
 .chip {
-  padding: 3px 8px;
+  padding: 3px var(--app-space-2);
+  /* Off-scale 12px: the chip's own rounding, half its height — not a step of the radius scale. */
   border-radius: 12px;
-  font-size: 0.8125rem;
+  font-size: var(--app-text-sm);
   background: var(--app-hover);
   color: var(--app-text);
 }
@@ -97,8 +99,8 @@
 .ctaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
+  gap: var(--app-space-3);
+  margin-top: var(--app-space-6);
 }
 
 /* Links dressed as buttons — AppButton's metrics on an anchor, because a real <a> keeps
@@ -107,12 +109,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--app-space-2);
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 6px 16px;
+  border-radius: var(--app-radius);
+  padding: 6px var(--app-space-4);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   font-weight: 500;
   letter-spacing: 0.02857em;
   text-transform: uppercase;
@@ -143,8 +145,8 @@
 .snippets {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: var(--app-space-6);
+  margin-bottom: var(--app-space-10);
   min-width: 0;
 }
 
@@ -154,7 +156,7 @@
 
 .overline {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: var(--app-text-xs);
   line-height: 2.66;
   font-weight: 400;
   letter-spacing: 0.08333em;
@@ -168,14 +170,14 @@
 .nextRow {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-bottom: 48px;
+  gap: var(--app-space-4);
+  padding-bottom: var(--app-space-12);
 }
 
 .nextCard {
   flex: 1;
-  padding: 20px;
-  border-radius: 8px;
+  padding: var(--app-space-5);
+  border-radius: var(--app-radius-lg);
   border: 1px solid var(--app-divider);
   text-decoration: none;
   color: inherit;
@@ -191,25 +193,25 @@
 
 .nextTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--app-text-base);
   line-height: 1.75;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--app-space-2);
 }
 
 .nextBody {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
+  margin: var(--app-space-1) 0 0;
+  font-size: var(--app-text-md);
   line-height: 1.43;
   color: var(--app-text-secondary);
 }
 
 .moonRow {
   display: flex;
-  gap: 12px;
-  padding-bottom: 32px;
+  gap: var(--app-space-3);
+  padding-bottom: var(--app-space-8);
   color: var(--app-text-secondary);
   justify-content: center;
 }
@@ -218,15 +220,15 @@
    Page-owned on purpose — the library ships no UI, so the front page brings its own, on the
    same tokens as the shell. The shadow is a dialog's: the one place this shell keeps elevation. */
 .helloCard {
-  padding: 24px;
+  padding: var(--app-space-6);
   max-width: min(420px, 88vw);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--app-space-3);
   background: var(--app-paper);
   color: var(--app-text);
   border: 1px solid var(--app-divider);
-  border-radius: 8px;
+  border-radius: var(--app-radius-lg);
   box-shadow:
     0px 5px 5px -3px rgba(0, 0, 0, 0.2),
     0px 8px 10px 1px rgba(0, 0, 0, 0.14),
@@ -235,24 +237,24 @@
 
 .helloTitle {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--app-text-lg);
   line-height: 1.6;
   font-weight: 700;
 }
 
 .helloBody {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--app-text-md);
   line-height: 1.43;
   color: var(--app-text-secondary);
 }
 
 .helloRemember {
-  margin-top: 4px;
+  margin-top: var(--app-space-1);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
+  gap: var(--app-space-2);
+  font-size: var(--app-text-md);
   line-height: 1.43;
   color: var(--app-text-secondary);
   cursor: pointer;
@@ -261,15 +263,15 @@
 /* A fill, so the browser picks the check ink against the flame. */
 .helloCheckbox {
   accent-color: var(--app-flame);
-  width: 16px;
-  height: 16px;
+  width: var(--app-space-4);
+  height: var(--app-space-4);
 }
 
 .helloFooter {
   display: flex;
-  gap: 8px;
+  gap: var(--app-space-2);
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: var(--app-space-2);
 }
 
 /* Bare <button>s, not AppButton: an action's spread must land on a native button so
@@ -279,12 +281,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--app-space-2);
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 4px 10px;
+  border-radius: var(--app-radius);
+  padding: var(--app-space-1) 10px;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--app-text-sm);
   font-weight: 500;
   letter-spacing: 0.02857em;
   text-transform: uppercase;
@@ -328,9 +330,9 @@
 @media (min-width: 900px) {
   .hero {
     flex-direction: row;
-    gap: 48px;
-    padding-top: 56px;
-    padding-bottom: 56px;
+    gap: var(--app-space-12);
+    padding-top: var(--app-space-14);
+    padding-bottom: var(--app-space-14);
   }
 
   .heroArt {
@@ -338,7 +340,7 @@
   }
 
   .heroTitle {
-    font-size: 3rem;
+    font-size: var(--app-text-3xl);
   }
 
   .markWide {
