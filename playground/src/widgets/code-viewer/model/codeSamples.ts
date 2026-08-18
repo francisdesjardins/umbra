@@ -1,6 +1,6 @@
 /**
- * Which samples the viewer downloads, and when: ~550 kB of source text, three quarters of it for two
- * routes (`/stories`: 82 harnesses, `/ui-templates`: 86 components), so one module fetched everything.
+ * Which samples the viewer downloads, and when: ~600 kB of source text, two thirds of it for the two
+ * routes that index things — `/stories` and `/ui-templates` — so one module fetched everything.
  * **Groups are cut by where a sample comes from, not how its key is spelled** — `vanilla-form` is a
  * `/ui-integrations` example, `vanilla-msg-title` a template. Add a `?raw` import to `examples.ts`
  * (a route's own), `templates.ts` (`entities/modal-template`, `shared/*`) or `stories.ts` (`*.story.tsx`).

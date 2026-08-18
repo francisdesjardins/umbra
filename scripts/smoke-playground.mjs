@@ -161,11 +161,23 @@ const flows = {
 
   /** The source viewer resolves a code sample. */
   async codeviewer(page) {
+    const checks = [];
     await gotoRoute(page, '/getting-started');
     await page.getByRole('button', { name: 'View source code' }).first().click();
     await page.waitForTimeout(800);
     const text = (await page.locator('dialog[open]').first().textContent()) ?? '';
-    return [[text.includes('import'), 'code viewer shows source', `${text.length} chars`]];
+    checks.push([text.includes('import'), 'code viewer shows source', `${text.length} chars`]);
+
+    // `/stories` is the group whose samples are *cut* out of shared files, by name, at module
+    // evaluation — so a renamed declaration type-checks, passes the stories gate and CT, and throws
+    // here on the first click. One panel is enough: opening any of them runs every slice.
+    await page.keyboard.press('Escape');
+    await gotoRoute(page, '/stories');
+    await page.getByRole('button', { name: 'View source code' }).first().click();
+    await page.waitForTimeout(800);
+    const sliced = (await page.locator('dialog[open]').first().textContent()) ?? '';
+    checks.push([sliced.length > 200, 'every harness slice resolves', `${sliced.length} chars`]);
+    return checks;
   },
 
   /** The framework-agnostic service drives confirm → API → outcome without a component. */
