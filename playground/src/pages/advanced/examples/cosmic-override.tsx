@@ -2,10 +2,9 @@ import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { dialogPlacement } from 'umbra';
 import { Key, useModal } from 'umbra/react';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 
 export const GATE_ID = 'cosmic-gate';
 export const WARP_ID = 'cosmic-warp';
@@ -18,6 +17,8 @@ export const WARP_ID = 'cosmic-warp';
 /**
  * `--dialog-backdrop` is the library's one visual opinion, so theming it is a declaration rather
  * than a specificity fight; `data-modal-id` reaches one dialog without knowing where it renders.
+ * The `.cosmic-*` classes below carry the parts of the interiors an inline style cannot: pseudo
+ * elements, `:hover`/`:disabled`, keyframes and media queries.
  */
 const COSMIC_CSS = `
   dialog[data-modal-id="${WARP_ID}"] {
@@ -74,51 +75,99 @@ const COSMIC_CSS = `
     50% { box-shadow: 0 0 90px 22px rgba(245, 158, 11, 0.5); }
   }
 
+  /* The mascot's silhouette in CSS: a dark body with the corona escaping around its rim.
+     A class rather than an inline style because the ring and the umbra are pseudo-elements. */
+  .cosmic-eclipse {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+
+  .cosmic-eclipse::before,
+  .cosmic-eclipse::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  /* Masked to a ring so the flames only ever clear the rim. */
+  .cosmic-eclipse::after {
+    inset: 0;
+    background: conic-gradient(from 0deg, #b45309, #f59e0b, #fde68a, #f59e0b, #b45309);
+    /* Both spellings by hand: Emotion's prefixer added the -webkit- one, a raw <style> does not,
+       and the browser floor (Chrome/Edge 110) predates the unprefixed property. */
+    -webkit-mask-image: radial-gradient(circle, transparent 62%, #000 66%);
+    mask-image: radial-gradient(circle, transparent 62%, #000 66%);
+    animation: cosmic-corona 9s linear infinite;
+  }
+
+  /* The umbra, lit off-centre the way the mascot's disc is. */
+  .cosmic-eclipse::before {
+    inset: 9%;
+    background: radial-gradient(circle at 38% 32%, #334155, #0f172a 72%);
+    animation: cosmic-flare 3.6s ease-in-out infinite;
+  }
+
+  /* The dialogs' half of \`buttonSx\`: same values, as a class, because the interiors are plain
+     markup and \`:hover\`/\`:disabled\` cannot ride an inline style. Change one, change both. */
+  .cosmic-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(245,158,11,0.6);
+    background: rgba(245,158,11,0.14);
+    color: #fcd34d;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .cosmic-button:hover {
+    background: rgba(245,158,11,0.3);
+  }
+
+  .cosmic-button:disabled {
+    opacity: 0.55;
+    cursor: progress;
+  }
+
+  /* Full height on a phone (\`panelStyle\` centres the content), because the pulse is a 90px
+     \`box-shadow\` and the \`<dialog>\` clips as a scroll container: content-sized, the disc
+     sat within 30px of the top and the glow was cut off in a straight line above it.
+     \`60vh\` is the desktop proportion but a trap under 400px, where the content overflows
+     and centred overflow spills out of both ends. 900px is MUI's \`md\`, restated as a literal
+     because this class lives outside the theme. */
+  .cosmic-warp-panel {
+    height: 100dvh;
+  }
+
+  @media (min-width: 900px) {
+    .cosmic-warp-panel {
+      height: 60vh;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    dialog[data-modal-id="${WARP_ID}"]::backdrop { animation: none; }
+    dialog[data-modal-id="${WARP_ID}"]::backdrop,
+    .cosmic-eclipse::before,
+    .cosmic-eclipse::after {
+      animation: none;
+    }
   }
 `;
 
-/** The mascot's silhouette in CSS: a dark body with the corona escaping around its rim. */
-const eclipseSx = {
-  position: 'relative',
-  width: 110,
-  height: 110,
-  flexShrink: 0,
-  '&::before, &::after': {
-    content: '""',
-    position: 'absolute',
-    borderRadius: '50%',
-  },
-  // Masked to a ring so the flames only ever clear the rim.
-  '&::after': {
-    inset: 0,
-    background: 'conic-gradient(from 0deg, #b45309, #f59e0b, #fde68a, #f59e0b, #b45309)',
-    maskImage: 'radial-gradient(circle, transparent 62%, #000 66%)',
-    animation: 'cosmic-corona 9s linear infinite',
-    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-  },
-  // The umbra, lit off-centre the way the mascot's disc is.
-  '&::before': {
-    inset: '9%',
-    background: 'radial-gradient(circle at 38% 32%, #334155, #0f172a 72%)',
-    animation: 'cosmic-flare 3.6s ease-in-out infinite',
-    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-  },
-};
-
-const panelSx = {
+const panelStyle: CSSProperties = {
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 2,
-  p: 3,
+  gap: 16,
+  padding: 24,
   color: '#e2e8f0',
   textAlign: 'center',
 };
 
+// The card's trigger only — the dialog interiors carry the same values as `.cosmic-button` above.
 const buttonSx = {
   px: 2,
   py: 1,
@@ -191,52 +240,65 @@ export function CosmicOverrideExample() {
       });
 
       return (
-        <Box
-          sx={{
-            ...panelSx,
+        <div
+          className="cosmic-warp-panel"
+          style={{
+            ...panelStyle,
             width: '80vw',
             maxWidth: 560,
-            // Full height on a phone (`panelSx` centres the content), because the pulse is a 90px
-            // `box-shadow` and the `<dialog>` clips as a scroll container: content-sized, the disc
-            // sat within 30px of the top and the glow was cut off in a straight line above it.
-            // `60vh` is the desktop proportion but a trap under 400px, where the content overflows
-            // and centred overflow spills out of both ends.
-            height: { xs: '100dvh', md: '60vh' },
+            // Height comes from `.cosmic-warp-panel` — 100dvh on a phone, 60vh from `md` up —
+            // so the shared `height: 100%` is unset here or the inline style would beat the class.
+            height: undefined,
           }}
         >
-          <Box sx={eclipseSx} />
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, letterSpacing: '0.12em', color: '#fcd34d' }}
+          <div className="cosmic-eclipse" />
+          <h5
+            style={{
+              margin: 0,
+              fontSize: '1.5rem',
+              lineHeight: 1.334,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              color: '#fcd34d',
+            }}
           >
             WARP CORE ONLINE
-          </Typography>
-          <Typography variant="body2" sx={{ maxWidth: 460, opacity: 0.85 }}>
+          </h5>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.875rem',
+              lineHeight: 1.43,
+              maxWidth: 460,
+              opacity: 0.85,
+            }}
+          >
             The corona burning behind this panel is the browser&apos;s own <code>::backdrop</code>,
             restyled by one selector in this file — clicking it does nothing, because this modal
             refuses that dismissal. Escape still works, and Enter engages, because the action
             declared the hotkey and nothing else had to.
-          </Typography>
-          <Stack direction="row" sx={{ gap: 1.5 }}>
-            <Box component="button" sx={buttonSx} {...engage}>
+          </p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {/* No `type` of its own: the action spread already carries `type="button"`. */}
+            <button className="cosmic-button" {...engage}>
               {engage['data-loading'] ? 'Charging…' : <>Engage</>}
-            </Box>
-            <Box
-              component="button"
-              sx={buttonSx}
+            </button>
+            <button
+              type="button"
+              className="cosmic-button"
               onClick={() => {
                 handle.close('abort');
               }}
             >
               Abort
-            </Box>
-          </Stack>
+            </button>
+          </div>
           {error && (
-            <Typography variant="caption" role="alert" sx={{ color: '#fca5a5' }}>
+            <span role="alert" style={{ fontSize: '0.75rem', lineHeight: 1.66, color: '#fca5a5' }}>
               ⚠ {error.message} — core held, try again.
-            </Typography>
+            </span>
           )}
-        </Box>
+        </div>
       );
     },
     onClose: (closeResult) => {
@@ -280,14 +342,14 @@ export function CosmicOverrideExample() {
     style: { margin: 0, width: 'auto', height: 'auto' },
     render: ({ handle }) => {
       return (
-        <Box
-          sx={{
-            ...panelSx,
-            gap: 1.5,
+        <div
+          style={{
+            ...panelStyle,
+            gap: 12,
             // 20px, not the shared 24: `height: 100%` resolves against a host with no height of
             // its own, so the panel is content-sized and a 24px band at each end pushed it past
             // the clipping dialog, taking the rim with it — top and bottom only, never the sides.
-            p: 2.5,
+            padding: 20,
             overflow: 'hidden',
             background: 'linear-gradient(160deg, rgba(30,41,59,0.92), rgba(2,6,23,0.96))',
             /**
@@ -298,43 +360,49 @@ export function CosmicOverrideExample() {
              * vanishes. Geometry belongs to the ancestors; alpha is the fixable half.
              */
             boxShadow: 'inset 0 0 0 1px rgba(245,158,11,0.9)',
-            borderRadius: 3,
+            borderRadius: 12,
           }}
         >
-          <Box sx={{ ...eclipseSx, width: 72, height: 72 }} />
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: 700, letterSpacing: '0.1em', color: '#fcd34d' }}
+          <div className="cosmic-eclipse" style={{ width: 72, height: 72 }} />
+          <h6
+            style={{
+              margin: 0,
+              fontSize: '1rem',
+              lineHeight: 1.75,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              color: '#fcd34d',
+            }}
           >
             GATE OPEN
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.8, maxWidth: 420 }}>
+          </h6>
+          <span style={{ fontSize: '0.75rem', lineHeight: 1.66, opacity: 0.8, maxWidth: 420 }}>
             Positioned <code>{String(placement.dialog.position)}</code> against a host the library
             owns, so it answers to this sector rather than the viewport and no transformed ancestor
             can drag it away. Sized by its own content. Click-outside is refused, so it closes on
             the button.
-          </Typography>
-          <Stack direction="row" sx={{ gap: 1.5 }}>
-            <Box
-              component="button"
-              sx={buttonSx}
+          </span>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              type="button"
+              className="cosmic-button"
               onClick={() => {
                 void warp.open();
               }}
             >
               Enter
-            </Box>
-            <Box
-              component="button"
-              sx={buttonSx}
+            </button>
+            <button
+              type="button"
+              className="cosmic-button"
               onClick={() => {
                 handle.close('closed');
               }}
             >
               Close
-            </Box>
-          </Stack>
-        </Box>
+            </button>
+          </div>
+        </div>
       );
     },
     onClose: (closeResult) => {

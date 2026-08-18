@@ -1,8 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageModal, useSlideModal } from 'umbra/react';
@@ -38,15 +39,13 @@ export function DomEventsExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Typography id={`${ALERT_ID}-title`} variant="h6">
-              Message Modal
-            </Typography>
+            <MessageModal.Title id={`${ALERT_ID}-title`}>Message Modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Typography>A regular modal — type will be &quot;modal&quot;.</Typography>
+            <Shared.Message>A regular modal — type will be &quot;modal&quot;.</Shared.Message>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('ok')}>
+            <Shared.Button variant="primary" {...action('ok')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>
@@ -66,10 +65,10 @@ export function DomEventsExample() {
             <SlideModal.Title id={`${PANEL_ID}-title`}>Slide Panel</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Typography>A slide modal — type will be &quot;slide&quot;.</Typography>
+            <Shared.Message>A slide modal — type will be &quot;slide&quot;.</Shared.Message>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('ok')}>
+            <Shared.Button variant="primary" {...action('ok')}>
               Close
             </Shared.Button>
           </SlideModal.Footer>
@@ -149,7 +148,7 @@ export function DomEventsExample() {
         }
         result={null}
       >
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
           onClick={() => {
@@ -157,16 +156,16 @@ export function DomEventsExample() {
           }}
         >
           Open Modal
-        </Shared.Button>
-        <Shared.Button
-          variant="outlined"
+        </Button>
+        <Button
+          variant="contained"
           size="small"
           onClick={() => {
             return void panel.open();
           }}
         >
           Open Slide Panel
-        </Shared.Button>
+        </Button>
       </ExampleLayout>
     </Stack>
   );

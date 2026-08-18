@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { Key, useMessageModal, useSlideModal } from 'umbra/react';
 
@@ -39,7 +39,7 @@ export function StackedModalsExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Typography variant="h6">Level 3 — message modal</Typography>
+            <MessageModal.Title>Level 3 — message modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.Message>
@@ -49,7 +49,7 @@ export function StackedModalsExample() {
           </MessageModal.Content>
           <MessageModal.Footer>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('ack', {
                 focusOnOpen: true,
                 hotkey: Key.Enter,
@@ -77,7 +77,7 @@ export function StackedModalsExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Typography variant="h6">Level 2 — modal</Typography>
+            <MessageModal.Title>Level 2 — modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.Message>
@@ -87,7 +87,6 @@ export function StackedModalsExample() {
           </MessageModal.Content>
           <MessageModal.Footer>
             <Shared.Button
-              variant="outlined"
               onClick={async () => {
                 await inner.open();
               }}
@@ -95,7 +94,7 @@ export function StackedModalsExample() {
               Open level 3
             </Shared.Button>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('save', {
                 hotkey: Key.Enter,
                 onAction: (close) => {
@@ -128,24 +127,23 @@ export function StackedModalsExample() {
             <SlideModal.Title>Level 1 — slide panel</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Stack sx={{ gap: 2 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Shared.Message>
                 Open the levels above, then press <kbd>Escape</kbd> three times. One press closes
                 one modal, front to back — the counters below say which level heard what.
               </Shared.Message>
               <Shared.Button
-                variant="contained"
+                variant="primary"
                 onClick={async () => {
                   await middle.open();
                 }}
               >
                 Open level 2
               </Shared.Button>
-            </Stack>
+            </div>
           </SlideModal.Content>
           <SlideModal.Footer>
             <Shared.Button
-              variant="outlined"
               {...action('close', {
                 hotkey: Key.Enter,
                 onAction: (close) => {
@@ -169,7 +167,7 @@ export function StackedModalsExample() {
   return (
     <ExampleLayout result={log.at(-1) ?? null} modals={panel.Modal}>
       <Stack sx={{ gap: 2, width: '100%' }}>
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
           onClick={async () => {
@@ -179,7 +177,7 @@ export function StackedModalsExample() {
           }}
         >
           Start the stack
-        </Shared.Button>
+        </Button>
 
         <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
           <Chip size="small" label={`Enter heard by level 1: ${String(counts.panel)}`} />

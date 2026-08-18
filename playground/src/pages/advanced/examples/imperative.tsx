@@ -1,8 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import Button from '@mui/material/Button';
 import { dialogManager, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
@@ -41,39 +40,40 @@ export function ImperativeExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="success" sx={{ mb: 0 }} />
-            <Typography id="imperative-demo-title" variant="h6">
-              Imperative Modal
-            </Typography>
+            <MessageModal.Icon variant="success" />
+            <MessageModal.Title id="imperative-demo-title">Imperative Modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack spacing={2}>
-              <Typography>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Shared.Message>
                 Opened via <code>dialogManager.open()</code> — no React ref or state needed.
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Shared.Message>
+              <Shared.Detail>
                 State lives at module scope via <code>createStore</code>. React Compiler tracks
                 dependencies automatically.
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, display: 'block' }}
+              </Shared.Detail>
+              <span
+                style={{
+                  padding: 8,
+                  borderRadius: 4,
+                  border: '1px solid var(--modal-border)',
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--modal-text-secondary)',
+                }}
               >
                 Total opens: {openCount}
-              </Typography>
-            </Stack>
+              </span>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
             <Shared.Button
-              variant="outlined"
-              size="small"
               onClick={() => {
                 dialogManager.close('imperative-demo');
               }}
             >
               Close via dialogManager
             </Shared.Button>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button variant="primary" {...action('confirm')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -92,7 +92,7 @@ export function ImperativeExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={() => {
@@ -100,7 +100,7 @@ export function ImperativeExample() {
         }}
       >
         Open via dialogManager
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }

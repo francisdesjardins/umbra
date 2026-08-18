@@ -22,6 +22,7 @@ import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
 import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
 import muiPanelSrc from '@/pages/advanced/examples/mui-panel.tsx?raw';
+import vanillaPanelSrc from '@/pages/advanced/examples/vanilla-panel.tsx?raw';
 import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
 import openRequestSrc from '@/pages/advanced/examples/open-request.tsx?raw';
 import controlledPanelSrc from '@/pages/advanced/examples/controlled-panel.tsx?raw';
@@ -65,6 +66,7 @@ export const examples: Record<string, string> = {
   'dom-events': domEventsSrc,
   'grocery-list': groceryListSrc,
   'mui-panel': muiPanelSrc,
+  'vanilla-panel': vanillaPanelSrc,
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
   'controlled-panel': controlledPanelSrc,

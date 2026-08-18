@@ -66,6 +66,7 @@
 .slideContent {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--slide-spacing-lg);
   min-height: 0;
   display: flex;

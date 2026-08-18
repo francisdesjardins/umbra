@@ -199,6 +199,7 @@
 .overflowContainer {
   max-height: 70vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-block: var(--content-spacing-sm);
   /* Ring room for the controls inside; no negative margin to cancel it — this box is itself
      focusable when it overflows, and its own ring needs the parent's reserve, which a negative

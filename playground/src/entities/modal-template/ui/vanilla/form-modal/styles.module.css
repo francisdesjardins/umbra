@@ -209,6 +209,10 @@
 .formContent {
   flex: 1;
   overflow-y: auto;
+  /* Paired with the auto the line above would otherwise compute for the other axis: the
+     app themes scrollbars, so they take width, and a vertical bar arriving is what made a
+     horizontal one appear under panels that never scroll sideways. */
+  overflow-x: hidden;
   min-height: 0;
   display: flex;
   flex-direction: column;

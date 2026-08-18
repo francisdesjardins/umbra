@@ -1,7 +1,8 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
@@ -53,6 +54,43 @@ function PolicySwitch({
   );
 }
 
+/** The same control for the dialog interiors, on plain markup — the card keeps the MUI switch. */
+function DialogPolicySwitch({
+  enabled,
+  onChange,
+}: {
+  readonly enabled: boolean;
+  readonly onChange: (next: boolean) => void;
+}) {
+  return (
+    <label
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        cursor: 'pointer',
+        fontSize: 'var(--font-size-sm)',
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(event) => {
+          onChange(event.target.checked);
+        }}
+        style={{
+          width: 18,
+          height: 18,
+          margin: 0,
+          flexShrink: 0,
+          accentColor: 'var(--color-primary)',
+        }}
+      />
+      Priority policy
+    </label>
+  );
+}
+
 export function StackPriorityExample() {
   const [enabled, setEnabled] = useState(false);
   const { openDialogs, foreground } = useDialogManager();
@@ -69,23 +107,28 @@ export function StackPriorityExample() {
             <SlideModal.Title id={`${PANEL_ID}-title`}>Order #4812</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Stack sx={{ gap: 2, alignItems: 'flex-start' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                alignItems: 'flex-start',
+              }}
+            >
               <Shared.Message>
                 This panel opened last, so the platform paints it in front — the warning is under
                 its backdrop right now. Turn the policy on and the warning comes back, without this
                 panel closing.
               </Shared.Message>
-              <PolicySwitch enabled={enabled} onChange={setEnabled} />
+              <DialogPolicySwitch enabled={enabled} onChange={setEnabled} />
               <Shared.Hint>
                 Moving a modal dialog means closing and re-showing it: the top layer paints in the
                 order elements were added and ignores z-index between them entirely.
               </Shared.Hint>
-            </Stack>
+            </div>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...action('close', { hotkey: Key.Escape })}>
-              Close panel
-            </Shared.Button>
+            <Shared.Button {...action('close', { hotkey: Key.Escape })}>Close panel</Shared.Button>
           </SlideModal.Footer>
         </SlideModal.DefaultLayout>
       );
@@ -105,21 +148,26 @@ export function StackPriorityExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-              <MessageModal.Title id={`${WARNING_ID}-title`}>
-                Your session expires in 2 minutes
-              </MessageModal.Title>
-            </Stack>
+            <MessageModal.Icon variant="warning" />
+            <MessageModal.Title id={`${WARNING_ID}-title`}>
+              Your session expires in 2 minutes
+            </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.Message id={`${WARNING_ID}-body`}>
               Now let something else raise a panel, the way a deep link would. With the policy off
               it lands on top of this warning and you lose it.
             </Shared.Message>
-            <Stack sx={{ mt: 2, gap: 1, alignItems: 'flex-start' }}>
+            <div
+              style={{
+                marginTop: 16,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                alignItems: 'flex-start',
+              }}
+            >
               <Shared.Button
-                variant="outlined"
                 onClick={() => {
                   // `open(id)`, not `panel.open()` — the door a router guard would use.
                   dialogManager.open(PANEL_ID);
@@ -127,12 +175,12 @@ export function StackPriorityExample() {
               >
                 A deep link opens a panel
               </Shared.Button>
-              <PolicySwitch enabled={enabled} onChange={setEnabled} />
-            </Stack>
+              <DialogPolicySwitch enabled={enabled} onChange={setEnabled} />
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('acknowledge', { focusOnOpen: true, hotkey: Key.Enter })}
             >
               Extend my session
@@ -177,7 +225,7 @@ export function StackPriorityExample() {
       }
     >
       <Stack sx={{ gap: 1.5, alignItems: 'flex-start' }}>
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
           onClick={async () => {
@@ -185,7 +233,7 @@ export function StackPriorityExample() {
           }}
         >
           Session warning fires
-        </Shared.Button>
+        </Button>
         <PolicySwitch enabled={enabled} onChange={setEnabled} />
         <Chip
           size="small"

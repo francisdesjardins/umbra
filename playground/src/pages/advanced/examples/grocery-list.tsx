@@ -1,11 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { Key, useMessageModal, useSlideModal } from 'umbra/react';
@@ -49,25 +47,19 @@ export function GroceryListExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-            <Typography id="grocery-confirm-title" variant="h6">
-              Send the list?
-            </Typography>
+            <MessageModal.Icon variant="warning" />
+            <MessageModal.Title id="grocery-confirm-title">Send the list?</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.Message>
               {checked.length} item{checked.length === 1 ? '' : 's'} will be sent to the store.
             </Shared.Message>
-            {error ? (
-              <Shared.AlertContent severity="error">{error.message}</Shared.AlertContent>
-            ) : null}
+            {error ? <Shared.Alert severity="error">{error.message}</Shared.Alert> : null}
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('cancel', { focusOnOpen: true })}>
-              Keep editing
-            </Shared.Button>
+            <Shared.Button {...action('cancel', { focusOnOpen: true })}>Keep editing</Shared.Button>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('send', {
                 hotkey: Key.Enter,
                 onAction: async (close) => {
@@ -97,34 +89,43 @@ export function GroceryListExample() {
             <SlideModal.Title id={`${LIST_ID}-title`}>Grocery list</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Stack sx={{ gap: 0.5 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {ITEMS.map((item) => {
                 return (
-                  <Stack key={item.id} direction="row" sx={{ alignItems: 'center', gap: 1 }}>
-                    <Checkbox
-                      size="small"
-                      checked={checked.includes(item.id)}
-                      onChange={() => {
-                        toggle(item.id);
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {/* The wrapping label names the checkbox, so no `aria-label` is repeated. */}
+                    <SlideModal.CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={checked.includes(item.id)}
+                        onChange={() => {
+                          toggle(item.id);
+                        }}
+                      />
+                      <Shared.Detail>{item.name}</Shared.Detail>
+                    </SlideModal.CheckboxLabel>
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        border: '1px solid var(--slide-border)',
+                        fontSize: 'var(--font-size-xs)',
+                        color: 'var(--modal-text-secondary)',
                       }}
-                      slotProps={{ input: { 'aria-label': item.name } }}
-                    />
-                    <Typography variant="body2" sx={{ flex: 1 }}>
-                      {item.name}
-                    </Typography>
-                    <Chip size="small" label={item.aisle} />
-                  </Stack>
+                    >
+                      {item.aisle}
+                    </span>
+                  </div>
                 );
               })}
-            </Stack>
+            </div>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="outlined" {...action('close')}>
-              Close
-            </Shared.Button>
+            <Shared.Button {...action('close')}>Close</Shared.Button>
             {/* Inside the panel's render: what keeps it clickable once the confirm is open. */}
             <Shared.Button
-              variant="contained"
+              variant="primary"
               disabled={checked.length === 0}
               onClick={async () => {
                 const [, result] = await confirm.openAndWait();
@@ -151,7 +152,7 @@ export function GroceryListExample() {
 
   return (
     <ExampleLayout result={outcome} modals={list.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -161,7 +162,7 @@ export function GroceryListExample() {
         }}
       >
         Open the list
-      </Shared.Button>
+      </Button>
       <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
         panel → confirm → async send → typed payload back
       </Typography>

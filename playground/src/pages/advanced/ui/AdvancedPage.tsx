@@ -19,6 +19,10 @@ import {
   ModalOutletExample,
 } from '@/pages/advanced/examples/modal-outlet';
 import { MODAL_ID as PANEL_MODAL_ID, MuiPanelExample } from '@/pages/advanced/examples/mui-panel';
+import {
+  MODAL_ID as VANILLA_PANEL_MODAL_ID,
+  VanillaPanelExample,
+} from '@/pages/advanced/examples/vanilla-panel';
 import { ServiceLayerExample } from '@/pages/advanced/examples/service-layer';
 import { SsrWorkerExample } from '@/pages/advanced/examples/ssr-worker';
 import {
@@ -157,7 +161,14 @@ export const AdvancedPage = () => {
           />
           <ExampleCard
             title="Panel modal with steps"
-            description="A large, content-heavy dialog: a composable header whose title truncates when the actions beside it grow, step navigation in a space-between footer, and — the part worth reading — two actions that do not close the modal at all. An action is a named intent, not necessarily a dismissal."
+            description="The same wizard, twice. This one is the vanilla flavour: the panel-modal templates, native select/radio/checkbox, a native title where MUI ships a Tooltip — proof the pattern needs no component library."
+            codeKey="vanilla-panel"
+            modalId={VANILLA_PANEL_MODAL_ID}
+            example={<VanillaPanelExample />}
+          />
+          <ExampleCard
+            title="Panel modal with steps — MUI"
+            description="A large, content-heavy dialog: a composable header whose title truncates when the actions beside it grow, step navigation in a space-between footer, and — the part worth reading — two actions that do not close the modal at all. An action is a named intent, not necessarily a dismissal. This is the MUI integration twin of the vanilla wizard above."
             codeKey="mui-panel"
             modalId={PANEL_MODAL_ID}
             example={<MuiPanelExample />}

@@ -1,12 +1,13 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import {
   CONFIRM_MODAL_ID,
   FAILURE_MODAL_ID,
   deploymentService,
 } from '@/pages/advanced/examples/deployment-service';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useMessageModal } from 'umbra/react';
@@ -32,26 +33,24 @@ export function ServiceLayerExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <MessageModal.Icon type="warning" sx={{ mb: 0 }} />
-              <Typography id={`${CONFIRM_MODAL_ID}-title`} variant="h6">
-                Confirm deployment
-              </Typography>
-            </Stack>
+            <MessageModal.Icon variant="warning" />
+            <MessageModal.Title id={`${CONFIRM_MODAL_ID}-title`}>
+              Confirm deployment
+            </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.Message>
-              Deploy the current build to <strong>{target}</strong>?
-            </Shared.Message>
-            <Shared.Hint>
-              The service is awaiting this dialog&apos;s close reason before it calls the API.
-            </Shared.Hint>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Shared.Message>
+                Deploy the current build to <strong>{target}</strong>?
+              </Shared.Message>
+              <Shared.Hint>
+                The service is awaiting this dialog&apos;s close reason before it calls the API.
+              </Shared.Hint>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('cancel')}>
-              Cancel
-            </Shared.Button>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
+            <Shared.Button variant="primary" {...action('confirm')}>
               Deploy
             </Shared.Button>
           </MessageModal.Footer>
@@ -70,25 +69,23 @@ export function ServiceLayerExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <MessageModal.Icon type="error" sx={{ mb: 0 }} />
-              <Typography id={`${FAILURE_MODAL_ID}-title`} variant="h6">
-                Deployment failed
-              </Typography>
-            </Stack>
+            <MessageModal.Icon variant="error" />
+            <MessageModal.Title id={`${FAILURE_MODAL_ID}-title`}>
+              Deployment failed
+            </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.Message id={`${FAILURE_MODAL_ID}-body`}>{lastError}</Shared.Message>
-            <Shared.Hint>
-              Raised by the service after the API call rejected — no component was involved.
-            </Shared.Hint>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Shared.Message id={`${FAILURE_MODAL_ID}-body`}>{lastError}</Shared.Message>
+              <Shared.Hint>
+                Raised by the service after the API call rejected — no component was involved.
+              </Shared.Hint>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('acknowledge')}>
-              Dismiss
-            </Shared.Button>
+            <Shared.Button {...action('acknowledge')}>Dismiss</Shared.Button>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               onClick={() => {
                 void deploymentService.retry();
               }}
@@ -141,7 +138,7 @@ export function ServiceLayerExample() {
           </>
         }
       >
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
           onClick={() => {
@@ -149,8 +146,8 @@ export function ServiceLayerExample() {
           }}
         >
           Deploy to staging
-        </Shared.Button>
-        <Shared.Button
+        </Button>
+        <Button
           variant="contained"
           size="small"
           color="error"
@@ -159,7 +156,7 @@ export function ServiceLayerExample() {
           }}
         >
           Deploy to production
-        </Shared.Button>
+        </Button>
       </ExampleLayout>
     </Stack>
   );

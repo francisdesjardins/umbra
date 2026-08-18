@@ -1,9 +1,9 @@
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { ModalOutlet, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -23,22 +23,18 @@ function ConfirmDialog() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-              <MessageModal.Icon type="info" sx={{ mb: 0 }} />
-              <MessageModal.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageModal.Title>
-            </Stack>
+            <MessageModal.Icon variant="info" />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Typography>
+            <Shared.Message>
               This modal renders via <code>{'<ModalOutlet>'}</code> — there is no{' '}
               <code>{'{modal.Modal}'}</code> in the component JSX.
-            </Typography>
+            </Shared.Message>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="outlined" {...action('cancel')}>
-              Cancel
-            </Shared.Button>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
+            <Shared.Button variant="primary" {...action('confirm')}>
               Confirm
             </Shared.Button>
           </MessageModal.Footer>
@@ -52,7 +48,7 @@ function ConfirmDialog() {
 
   return (
     <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -61,7 +57,7 @@ function ConfirmDialog() {
         }}
       >
         Open
-      </Shared.Button>
+      </Button>
     </Stack>
   );
 }

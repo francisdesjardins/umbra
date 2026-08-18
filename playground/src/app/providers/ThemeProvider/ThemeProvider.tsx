@@ -24,8 +24,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const theme = createAppTheme(mode);
 
   // `data-mui-color-scheme` on the document is what the vanilla CSS modules key off.
+  // `color-scheme` rides along because CSS cannot reach what the UA paints on its own — the
+  // popup of a native <select> most visibly: without it, dark mode served white option lists.
   useEffect(() => {
     document.documentElement.setAttribute('data-mui-color-scheme', mode);
+    document.documentElement.style.colorScheme = mode;
   }, [mode]);
 
   // Open dialogs pick these up through custom-property inheritance from :root, so no per-dialog sync.

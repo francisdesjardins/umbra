@@ -109,6 +109,7 @@
 .modalContent {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
   padding: var(--modal-focus-ring-space);
   /* Cancels the padding's offset, so the content sits where it did. */
@@ -128,6 +129,7 @@
 .modalContainer {
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ========== Icon ========== */

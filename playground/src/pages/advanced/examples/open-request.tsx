@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
 import { dialogManager, useMessageModal } from 'umbra/react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 
 /**
  * An open the dialog may refuse: `open(id)` instructs, `requestOpen` asks and the dialog decides —
@@ -76,22 +76,20 @@ export function OpenRequestExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon sx={{ mb: 0 }} type="warning" />
-            <Typography id="open-request-demo-title" variant="h6">
+            <MessageModal.Icon variant="warning" />
+            <MessageModal.Title id="open-request-demo-title">
               Archiver la salle {room}?
-            </Typography>
+            </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Typography color="text.secondary" variant="body2">
+            <Shared.Detail>
               Ouverte par une demande venue d’ailleurs, que ce dialogue a validée avant d’accepter.
-            </Typography>
+            </Shared.Detail>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button size="small" variant="outlined" {...action('cancel')}>
-              Annuler
-            </Shared.Button>
+            <Shared.Button {...action('cancel')}>Annuler</Shared.Button>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('confirm', (close) => {
                 // `TData` on the hook checks it here; it reaches the caller as `unknown`.
                 close({ room: room ?? '—', archivedAt: new Date().toISOString() });
@@ -165,7 +163,7 @@ export function OpenRequestExample() {
           <code>deep-link</code> et que <code>data</code> porte une <code>room</code> non vide.
         </Alert>
         <Stack direction="row" spacing={1}>
-          <Shared.Button
+          <Button
             onClick={() => {
               void ask();
             }}
@@ -173,18 +171,18 @@ export function OpenRequestExample() {
             variant="contained"
           >
             Demander l’ouverture
-          </Shared.Button>
-          <Shared.Button
+          </Button>
+          <Button
             onClick={() => {
               setLog(null);
               // The other door: no asking, no validation, and `room` is whatever it last was.
               dialogManager.open('open-request-demo');
             }}
             size="small"
-            variant="outlined"
+            variant="contained"
           >
             Ordonner (open)
-          </Shared.Button>
+          </Button>
         </Stack>
       </Stack>
     </ExampleLayout>

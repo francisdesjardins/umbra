@@ -78,6 +78,7 @@
 .panelContent {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-block: var(--panel-spacing-lg);
   scroll-padding: var(--panel-focus-ring-space);
 }

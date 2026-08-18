@@ -1,12 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
+import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { dialogManager, reconcileOpen, useLookup, useSlideModal } from 'umbra/react';
 
@@ -54,19 +53,19 @@ export function ControlledPanelExample() {
             <SlideModal.Title id={`${PANEL_ID}-title`}>Filters</SlideModal.Title>
           </SlideModal.Header>
           <SlideModal.Content>
-            <Stack sx={{ gap: 1.5, p: 2, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <Shared.Message>
                 Escape, the button below, and the switch on the card all end in the same place: the
                 owner&apos;s state.
               </Shared.Message>
-              <Typography variant="body2" color="text.secondary">
+              <Shared.Detail>
                 Nothing in here calls <code>close()</code>.
-              </Typography>
-            </Stack>
+              </Shared.Detail>
+            </div>
           </SlideModal.Content>
           <SlideModal.Footer>
             <Shared.Button
-              variant="contained"
+              variant="primary"
               {...action('close', {
                 // No `close` call, so the action settles and the dialog stays. The owner decides.
                 onAction: () => {
@@ -116,7 +115,8 @@ export function ControlledPanelExample() {
         }
         label="Filters open"
       />
-      <Shared.Button
+      {/* Outlined on purpose: this is the wrong door, visually demoted next to the switch. */}
+      <Button
         variant="outlined"
         size="small"
         onClick={() => {
@@ -127,7 +127,7 @@ export function ControlledPanelExample() {
         }}
       >
         Open it from outside
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }
