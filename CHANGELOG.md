@@ -11,6 +11,35 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Changed — RATING reassessed, and the reassessment is why the score did not move
+
+Every figure re-taken by running the gate, exit code read on its own: `test` (1664), `check`,
+`build`, `verify:package`, `docs:matrix`, `coverage:update`, `smoke` and `bench`, all **0**. Source
+66 files / 10,323 LOC; built output 108.5 kB over 58 modules; unit coverage 96.73 / 97.28 / 94.18 and
+component 92.50% over 55 files — neither fell. The public surface is unchanged at 96 distinct names.
+
+Testing goes to 9.9 and Developer Experience and Performance to 9.8. **Overall stays at 9.9**, and
+the reason is the section below: a document whose premise is "figures come from running the gates"
+found that one of its figures was never measured and another was quoted from noise. That is a
+caution, not a win.
+
+### Fixed — `yarn bench` proved an O(1) claim against two identical objects
+
+`declare()` writes the hotkey map and nothing else, so an engine that only declared held an empty
+`states` in both arms of the aggregate test. "1 action against 200" was comparing two identical
+objects: it reported ≈1.0× and would have reported ≈1.0× for any implementation at all. Each declared
+action is run once now, so the record really holds two hundred entries — and making `aggregated()`
+iterate them reads **29.90×**.
+
+The claims are **bounds the command exits 1 on**, mutation-checked in both directions rather than
+printed. One of them could not be a duration: "one policy call per dialog, not one per comparison" is
+invisible to timing on a four-dialog stack, so it is a **count** — 50 for 50 dialogs, against 340
+when the policy is ranked inside the comparator. Which is also how the old reading fell over: this
+document recorded the policy at 1.88× from one noisy run, against 1.06–1.29× across four.
+
+`update-coverage` stamps a local date while here. `toISOString()` is UTC, so any evening run west of
+Greenwich dated the measurement tomorrow.
+
 ### Added — the last twenty, and the exemption list is empty
 
 The Solid lot, and the one that made the slicer earn its keep twice: a Solid harness is three lines
