@@ -1,11 +1,12 @@
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
+import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
@@ -36,25 +37,24 @@ function Panel({
   readonly children?: ReactNode;
 }) {
   return (
-    <Stack sx={{ gap: 1.5, p: 2, minWidth: 0 }}>
-      <Typography variant="h6">{title}</Typography>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, minWidth: 0 }}>
+      <Shared.Heading>{title}</Shared.Heading>
       {children}
-      <Box
-        component="pre"
-        sx={{
-          m: 0,
-          p: 1.5,
-          borderRadius: 1,
-          bgcolor: 'action.hover',
+      <pre
+        style={{
+          margin: 0,
+          padding: 12,
+          borderRadius: 6,
+          border: '1px solid var(--slide-border)',
           fontFamily: 'monospace',
           fontSize: '0.75rem',
           overflowX: 'auto',
-          color: 'text.secondary',
+          color: 'var(--slide-text-secondary, var(--modal-text-secondary))',
         }}
       >
         {options}
-      </Box>
-    </Stack>
+      </pre>
+    </div>
   );
 }
 
@@ -82,7 +82,7 @@ function useDrawerPreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
+            <Shared.Button variant="primary" {...action('close', { focusOnOpen: true })}>
               Done
             </Shared.Button>
           </SlideModal.Footer>
@@ -113,7 +113,7 @@ function useSheetPreset() {
             </Panel>
           </SlideModal.Content>
           <SlideModal.Footer>
-            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
+            <Shared.Button variant="primary" {...action('close', { focusOnOpen: true })}>
               Done
             </Shared.Button>
           </SlideModal.Footer>
@@ -150,7 +150,7 @@ function usePalettePreset() {
           <SlideModal.Footer>
             {/* Claimed because this palette's overflowing scroll region (`useScrollRegion`) would
                 otherwise win the opening focus; the other three match it. */}
-            <Shared.Button variant="contained" {...action('close', { focusOnOpen: true })}>
+            <Shared.Button variant="primary" {...action('close', { focusOnOpen: true })}>
               Close
             </Shared.Button>
           </SlideModal.Footer>
@@ -206,34 +206,31 @@ function useInspectorPreset(
     },
     render: ({ action }) => {
       return (
-        <Stack
-          sx={{
+        <div
+          style={{
             height: '100%',
             width: '100%',
-            p: 2,
-            gap: 1,
-            bgcolor: 'background.paper',
-            borderLeft: 1,
-            borderColor: 'divider',
-            boxShadow: 3,
+            padding: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            background: 'var(--slide-bg)',
+            color: 'var(--slide-text)',
+            fontFamily: 'var(--font-family)',
+            borderLeft: '1px solid var(--slide-border)',
+            boxShadow: 'var(--modal-shadow)',
           }}
         >
-          <Typography variant="subtitle2">{selected?.name ?? 'Details'}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {selected?.detail ?? '—'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 'auto' }}>
-            Slides inside the card, not over the page — and the rows behind it stay clickable,
-            because nothing entered the top layer. ↑ and ↓ switch rows while focus stays on Close.
-          </Typography>
-          <Shared.Button
-            size="small"
-            variant="outlined"
-            {...action('close', { focusOnOpen: true })}
-          >
-            Close
-          </Shared.Button>
-        </Stack>
+          <Shared.Heading>{selected?.name ?? 'Details'}</Shared.Heading>
+          <Shared.Detail>{selected?.detail ?? '—'}</Shared.Detail>
+          <div style={{ marginTop: 'auto' }}>
+            <Shared.Hint>
+              Slides inside the card, not over the page — and the rows behind it stay clickable,
+              because nothing entered the top layer. ↑ and ↓ switch rows while focus stays on Close.
+            </Shared.Hint>
+          </div>
+          <Shared.Button {...action('close', { focusOnOpen: true })}>Close</Shared.Button>
+        </div>
       );
     },
     onClose: (r) => {
@@ -434,7 +431,7 @@ export function SlidePresetsExample() {
                       </Typography>
                     </Stack>
                     {/* Still clickable while the panel is open — nothing entered the top layer. */}
-                    <Shared.Button
+                    <Button
                       size="small"
                       variant="text"
                       onClick={async () => {
@@ -443,7 +440,7 @@ export function SlidePresetsExample() {
                       }}
                     >
                       Details
-                    </Shared.Button>
+                    </Button>
                   </Stack>
                 );
               })}

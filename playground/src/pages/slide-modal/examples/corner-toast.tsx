@@ -1,14 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CloseIcon from '@mui/icons-material/Close';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
-import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
 import { useSlideModal } from 'umbra/react';
@@ -80,7 +75,7 @@ export function SlideCornerToastExample() {
     },
     render: ({ handle }) => {
       return (
-        <Box
+        <div
           // No `role="status"` here: mounted in the same pass that shows the dialog, it would be
           // born already holding its text — `useAnnouncer`'s persistent region does the announcing.
           onPointerEnter={() => {
@@ -97,65 +92,109 @@ export function SlideCornerToastExample() {
           onBlurCapture={() => {
             setFocusedInside(false);
           }}
-          sx={{
+          style={{
             // Content-sized on the cross axis (align: start) — the toast defines its own box.
-            width: { xs: '86vw', sm: 360 },
-            m: 2,
-            borderRadius: 2,
-            border: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'var(--modal-bg)',
-            color: 'text.primary',
-            boxShadow: 6,
+            width: 'min(86vw, 360px)',
+            margin: 16,
+            borderRadius: 8,
+            border: '1px solid var(--modal-border)',
+            background: 'var(--modal-bg)',
+            color: 'var(--modal-text)',
+            fontFamily: 'var(--font-family)',
+            boxShadow: 'var(--modal-shadow)',
             overflow: 'hidden',
           }}
         >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', p: 2, pb: 1.5 }}>
-            <CheckCircleIcon color="success" fontSize="small" sx={{ mt: 0.25 }} />
-            <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2">Changes saved</Typography>
-              <Typography variant="body2" color="text.secondary">
+          <div
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start',
+              padding: '16px 16px 12px',
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden
+              style={{
+                width: 20,
+                height: 20,
+                flexShrink: 0,
+                marginTop: 2,
+                fill: 'var(--color-success)',
+              }}
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+              <strong style={{ fontSize: 'var(--font-size-sm)' }}>Changes saved</strong>
+              <Shared.Detail>
                 The page stays fully interactive — scroll and click while this is open. Hover here
                 and the countdown holds.
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+              </Shared.Detail>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--modal-text-secondary)',
+                }}
+              >
                 {isPaused
                   ? `paused — ${focusedInside ? 'focused' : 'reading'}`
                   : `closing in ${(remaining / 1000).toFixed(1)}s`}
-              </Typography>
-            </Stack>
-            <IconButton
-              size="small"
+              </span>
+            </div>
+            <button
+              type="button"
               aria-label="Dismiss notification"
               onClick={() => {
                 handle.close('dismiss');
               }}
-              sx={{ mt: -0.5, mr: -0.5 }}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--modal-text-secondary)',
+                cursor: 'pointer',
+                padding: 4,
+                marginTop: -4,
+                marginRight: -4,
+                display: 'inline-flex',
+              }}
             >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Stack>
-          <Stack direction="row" sx={{ px: 2, pb: 1.5, gap: 1, justifyContent: 'flex-end' }}>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden
+                style={{ width: 18, height: 18, fill: 'currentColor' }}
+              >
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+          </div>
+          <div
+            style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '0 16px 12px' }}
+          >
             {/* `handle.close('dismiss')`, not `action('dismiss')`: a close you *report* rather
                 than an action you declare, wanting no hotkey, running state or disabling. */}
             <Shared.Button
-              size="small"
-              variant="text"
               onClick={() => {
                 handle.close('dismiss');
               }}
             >
               Dismiss
             </Shared.Button>
-          </Stack>
-          {/* The timer made visible — otherwise "it pauses on hover" is a claim, not a demo. */}
-          <LinearProgress
-            variant="determinate"
-            value={(remaining / LIFETIME_MS) * 100}
-            color={isPaused ? 'warning' : 'primary'}
-            sx={{ height: 3 }}
-          />
-        </Box>
+          </div>
+          {/* The timer made visible — otherwise "it pauses on hover" is a claim, not a demo.
+              A track and a scaled fill: three lines of CSS where a component library ships a bar. */}
+          <div aria-hidden style={{ height: 3, background: 'var(--modal-border)' }}>
+            <div
+              style={{
+                height: '100%',
+                width: `${String((remaining / LIFETIME_MS) * 100)}%`,
+                background: isPaused ? 'var(--color-warning)' : 'var(--color-primary)',
+              }}
+            />
+          </div>
+        </div>
       );
     },
     onClose: (closeResult) => {
@@ -192,7 +231,7 @@ export function SlideCornerToastExample() {
 
   return (
     <ExampleLayout result={result} modals={toast.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -207,7 +246,7 @@ export function SlideCornerToastExample() {
         }}
       >
         Show Toast
-      </Shared.Button>
+      </Button>
       {region}
       <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
         direction: right · align: start · non-modal + portal
