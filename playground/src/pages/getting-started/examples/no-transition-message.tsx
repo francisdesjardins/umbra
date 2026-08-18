@@ -1,8 +1,8 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -32,13 +32,13 @@ export function NoTransitionMessageExample() {
             <MessageModal.Title id={`${MODAL_ID}-title`}>No Transition</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Typography>
+            <Shared.Message>
               This modal opens and closes instantly — no fade animation. Useful when your PO insists
               transitions feel slow.
-            </Typography>
+            </Shared.Message>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button variant="primary" {...action('confirm')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>
@@ -52,7 +52,7 @@ export function NoTransitionMessageExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -61,7 +61,7 @@ export function NoTransitionMessageExample() {
         }}
       >
         Open
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }

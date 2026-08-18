@@ -301,7 +301,11 @@ const flows = {
           const started = performance.now();
           const tick = () => {
             const dialog = document.querySelector('[data-testid="modal-async-open"]');
-            const layer = dialog?.querySelector('div[style*="grid"] > div');
+            // Either flavour's ContentTransition: vanilla carries its grid as a hashed class,
+            // MUI writes it inline.
+            const layer = dialog?.querySelector(
+              'div[class*="transitionGrid"] > div, div[style*="grid"] > div'
+            );
             if (layer) seen.push(Number(getComputedStyle(layer).opacity));
             if (performance.now() - started < 600) requestAnimationFrame(tick);
             else done(Math.max(...seen, 0));

@@ -240,11 +240,15 @@
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 0.6s linear infinite;
-  color: inherit;
+  /* Named, not `inherit`: the loading state hides the label with `color: transparent`, and a
+     spinner drawn in `currentColor` inherits that same transparent — a busy button with nothing
+     visible in it. */
+  color: var(--modal-text);
 }
 
 .buttonPrimary.loading::after {
-  color: white;
+  /* The primary fill keeps its own ink for the same reason the label uses it. */
+  color: var(--color-primary-ink);
 }
 
 @keyframes spin {

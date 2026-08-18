@@ -1,9 +1,8 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -23,39 +22,33 @@ export function SimpleModalExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type="success" sx={{ mb: 0 }} />
-            <Typography id={`${MODAL_ID}-title`} variant="h6">
-              Simple Modal
-            </Typography>
+            <MessageModal.Icon variant="success" />
+            <MessageModal.Title id={`${MODAL_ID}-title`}>Simple Modal</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Shared.OverflowContainer
-              sx={{ maxHeight: '20vh' }}
-              overflowSx={{
-                pr: 'calc(24px - var(--scrollbar-width))',
-              }}
-            >
-              <Stack spacing={2}>
-                <Typography>
-                  This modal uses MessageModal.Content with a scrollable Container to handle
+            <Shared.OverflowContainer style={{ maxHeight: '20vh' }}>
+              {/* The paragraphs own their spacing — a vanilla template ships no layout to inherit. */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Shared.Message>
+                  This modal uses MessageModal.Content with a scrollable container to handle
                   overflow text. When the content exceeds the available height, the container
                   becomes scrollable while the title and footer remain fixed.
-                </Typography>
-                <Typography>
+                </Shared.Message>
+                <Shared.Message>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
                   incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
                   exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </Typography>
-                <Typography>
+                </Shared.Message>
+                <Shared.Message>
                   Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
                   fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
                   culpa qui officia deserunt mollit anim id est laborum.
-                </Typography>
-              </Stack>
+                </Shared.Message>
+              </div>
             </Shared.OverflowContainer>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('confirm')}>
+            <Shared.Button variant="primary" {...action('confirm')}>
               OK
             </Shared.Button>
           </MessageModal.Footer>
@@ -69,7 +62,7 @@ export function SimpleModalExample() {
 
   return (
     <ExampleLayout result={result} modals={simpleModal.Modal}>
-      <Shared.Button
+      <Button
         variant="contained"
         size="small"
         onClick={async () => {
@@ -78,7 +71,7 @@ export function SimpleModalExample() {
         }}
       >
         Open
-      </Shared.Button>
+      </Button>
     </ExampleLayout>
   );
 }

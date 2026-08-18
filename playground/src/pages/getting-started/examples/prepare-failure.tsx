@@ -1,13 +1,12 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
-import * as Shared from '@/entities/modal-template/ui/mui/shared';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
-import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useMessageModal } from 'umbra/react';
 import type { ModalFailure } from 'umbra/react';
@@ -47,29 +46,29 @@ export function PrepareFailureExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            <MessageModal.Icon type={failure ? 'error' : 'info'} sx={{ mb: 0 }} />
-            <Typography variant="h6">Profile</Typography>
+            <MessageModal.Icon variant={failure ? 'error' : 'info'} />
+            <MessageModal.Title>Profile</MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
-            <Stack sx={{ gap: 1.5 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {isPreparing ? (
-                <Typography color="text.secondary">Fetching profile…</Typography>
+                <Shared.Detail>Fetching profile…</Shared.Detail>
               ) : failure ? (
-                <Alert severity="error" variant="outlined">
+                <Shared.Alert title="Error" severity="error">
                   {failure.error.message}
-                </Alert>
+                </Shared.Alert>
               ) : (
-                <Typography>Ada Lovelace — Enterprise</Typography>
+                <Shared.Message>Ada Lovelace — Enterprise</Shared.Message>
               )}
-              <Typography variant="caption" color="text.secondary">
+              <Shared.Hint>
                 {failure
                   ? `Reported from ${failure.source}. Without onError this dialog would sit here looking loaded.`
                   : 'Nothing failed. The same open, with the switch off.'}
-              </Typography>
-            </Stack>
+              </Shared.Hint>
+            </div>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="contained" {...action('close')}>
+            <Shared.Button variant="primary" {...action('close')}>
               Close
             </Shared.Button>
           </MessageModal.Footer>
@@ -84,7 +83,7 @@ export function PrepareFailureExample() {
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-        <Shared.Button
+        <Button
           variant="contained"
           size="small"
           onClick={() => {
@@ -93,7 +92,7 @@ export function PrepareFailureExample() {
           }}
         >
           Open
-        </Shared.Button>
+        </Button>
         <FormControlLabel
           control={
             <Switch
