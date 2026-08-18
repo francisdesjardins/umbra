@@ -1,17 +1,16 @@
-/* The shell's button, on the app tokens. Shapes match what the MUI button drew here so the
-   conversion is a swap, not a redesign; every colour pair is one already measured — see
-   playground/CLAUDE.md, "Colour is measured, not chosen". */
+/* The shell's button, on the app tokens — and deliberately not a component library's silhouette:
+   sentence case at weight 600 on the lg radius is this playground's voice, where the shouting
+   uppercase-plus-letterspacing is somebody else's. Every colour pair stays one already measured —
+   see playground/CLAUDE.md, "Colour is measured, not chosen". */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--app-space-2);
   border: 1px solid transparent;
-  border-radius: var(--app-radius);
+  border-radius: var(--app-radius-lg);
   font-family: inherit;
-  font-weight: 500;
-  letter-spacing: 0.02857em;
-  text-transform: uppercase;
+  font-weight: 600;
   cursor: pointer;
   background: transparent;
   transition:
@@ -21,12 +20,13 @@
 }
 
 .medium {
-  padding: 6px var(--app-space-4);
+  /* Sentence case reads narrower than uppercase did; the wider inline padding keeps the target. */
+  padding: 6px var(--app-space-5);
   font-size: var(--app-text-md);
 }
 
 .small {
-  padding: var(--app-space-1) 10px;
+  padding: var(--app-space-1) var(--app-space-3);
   font-size: var(--app-text-sm);
 }
 

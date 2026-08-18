@@ -69,6 +69,7 @@
   --app-radius: 4px;
   --app-radius-md: 6px;
   --app-radius-lg: 8px;
+  --app-radius-xl: 12px;
   --app-radius-pill: 999px;
 
   /* Layout — the numbers the shell is built around. Breakpoints cannot be custom properties
@@ -146,7 +147,11 @@ body {
   margin: 0;
   background: var(--app-bg);
   color: var(--app-text);
-  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  /* The system stack, not Roboto: the shell's own voice rather than a component library's — and
+     the same stack the copied-out templates already speak, so the app and its copyable assets
+     read as one product. (Roboto never shipped as a webfont here anyway.) */
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;

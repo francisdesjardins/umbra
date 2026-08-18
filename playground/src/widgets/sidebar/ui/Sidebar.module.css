@@ -85,7 +85,7 @@
   align-items: center;
   margin: 0 var(--app-space-2) var(--app-space-1);
   padding: 6px var(--app-space-4);
-  border-radius: var(--app-radius);
+  border-radius: var(--app-radius-lg);
   text-decoration: none;
   color: var(--app-text);
   font-size: var(--app-text-md);

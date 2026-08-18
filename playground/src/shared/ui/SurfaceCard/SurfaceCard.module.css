@@ -9,7 +9,8 @@
   background: var(--app-paper);
   color: var(--app-text);
   border: 1px solid var(--app-divider);
-  border-radius: var(--app-radius);
+  /* The xl radius is the identity: the mascot is round, and so are the surfaces. */
+  border-radius: var(--app-radius-xl);
 }
 
 /* Dark keeps MUI's `grey.900`, not `--app-paper`: the original branched to #212121 on purpose,

@@ -45,7 +45,8 @@
 .badge {
   width: var(--app-space-8);
   height: var(--app-space-8);
-  border-radius: var(--app-radius);
+  /* Round, like the moon it holds. */
+  border-radius: 50%;
   background: var(--app-flame);
   color: var(--app-primary-ink);
   display: flex;
