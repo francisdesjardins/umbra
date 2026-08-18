@@ -1,4 +1,5 @@
-import { Box, useTheme } from '@mui/material';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState } from 'react';
 import { UmbraMoon } from './UmbraMoon';
 

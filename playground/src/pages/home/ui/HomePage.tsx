@@ -1,16 +1,14 @@
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
-import {
-  Box,
-  Button,
-  Checkbox,
-  Chip,
-  FormControlLabel,
-  Stack,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';

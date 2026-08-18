@@ -20,7 +20,8 @@ import {
   PerActionStateExample,
 } from '@/pages/modal-actions/examples/per-action-state';
 import { PageLayout } from '@/shared/ui/PageLayout';
-import { Alert, Typography } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Typography from '@mui/material/Typography';
 
 export const ModalActionsPage = () => {
   return (

@@ -1,7 +1,11 @@
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import LinkIcon from '@mui/icons-material/Link';
-import { Box, CardContent, Stack, Typography, type Theme } from '@mui/material';
+import Box from '@mui/material/Box';
+import CardContent from '@mui/material/CardContent';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { type Theme } from '@mui/material/styles';
 import type { ApiSymbol } from 'virtual:dialog-api';
 import { categoryHref, symbolAnchor } from '../model/api-index';
 import { DocProse } from './DocText';

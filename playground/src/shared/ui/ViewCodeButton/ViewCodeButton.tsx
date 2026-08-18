@@ -1,5 +1,5 @@
 import CodeIcon from '@mui/icons-material/Code';
-import { IconButton } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 import type { ReactNode } from 'react';
 import { useCodePane } from '@/shared/lib/code-pane-context';
 

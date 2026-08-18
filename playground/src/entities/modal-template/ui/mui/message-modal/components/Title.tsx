@@ -1,4 +1,4 @@
-import { DialogTitle } from '@mui/material';
+import DialogTitle from '@mui/material/DialogTitle';
 import type { ReactNode } from 'react';
 
 export type TitleProps = {

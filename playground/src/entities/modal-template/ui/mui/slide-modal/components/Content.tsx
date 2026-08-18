@@ -1,6 +1,7 @@
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
-import { Box, type SxProps } from '@mui/material';
+import Box from '@mui/material/Box';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 export type ContentProps = {

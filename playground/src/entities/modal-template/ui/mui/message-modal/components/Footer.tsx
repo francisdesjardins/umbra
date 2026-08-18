@@ -1,4 +1,5 @@
-import { Stack, type SxProps } from '@mui/material';
+import Stack from '@mui/material/Stack';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
 

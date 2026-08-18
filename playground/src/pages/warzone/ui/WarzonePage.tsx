@@ -1,6 +1,8 @@
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
-import { Box, Typography, useTheme } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 
 /**
  * A deliberately empty page: build a flow against the core and take it apart again, never a demo —

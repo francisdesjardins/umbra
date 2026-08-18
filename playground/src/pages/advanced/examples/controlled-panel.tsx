@@ -3,7 +3,10 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import { FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { dialogManager, reconcileOpen, useLookup, useSlideModal } from 'umbra/react';
 

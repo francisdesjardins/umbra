@@ -1,4 +1,6 @@
-import { Box, Typography, type SxProps, type Theme } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import type { DocPart } from 'virtual:dialog-api';
 import { categoryHref, symbolAnchor, symbolFor } from '../model/api-index';

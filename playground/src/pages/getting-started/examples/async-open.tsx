@@ -4,7 +4,10 @@ import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { ContentTransition } from '@/entities/modal-template/ui/mui/shared/content/ContentTransition';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
-import { Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 

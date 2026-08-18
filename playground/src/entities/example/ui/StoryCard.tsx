@@ -1,4 +1,6 @@
-import { Box, CardContent, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import { ViewCodeButton } from '@/shared/ui/ViewCodeButton/ViewCodeButton';

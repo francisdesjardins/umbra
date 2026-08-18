@@ -1,4 +1,5 @@
-import { Box, CircularProgress } from '@mui/material';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
 import { Suspense, useState } from 'react';

@@ -1,7 +1,9 @@
 import { readableSyntaxStyle } from '@/shared/lib/readable-syntax';
 import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Box, IconButton, useTheme } from '@mui/material';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@mui/material/styles';
 import { useCallback, useState } from 'react';
 // Deep paths, not the barrels: `react-syntax-highlighter` re-exports `Prism` (every grammar
 // refractor ships) and `styles/prism` re-exports all 47 themes, and Vite serves modules unbundled

@@ -1,4 +1,5 @@
-import { Box, type SxProps, type Theme } from '@mui/material';
+import Box from '@mui/material/Box';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import type { DocPart } from 'virtual:dialog-api';
 import { SymbolLink } from './DocText';
 

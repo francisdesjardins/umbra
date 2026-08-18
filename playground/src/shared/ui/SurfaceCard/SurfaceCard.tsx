@@ -1,4 +1,5 @@
-import { Card, alpha, type Theme } from '@mui/material';
+import Card from '@mui/material/Card';
+import { alpha, type Theme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 type SurfaceCardProps = {

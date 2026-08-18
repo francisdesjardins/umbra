@@ -2,7 +2,7 @@ import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as VanillaSlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import { Button } from '@mui/material';
+import Button from '@mui/material/Button';
 import { useSlideModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 

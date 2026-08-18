@@ -1,4 +1,4 @@
-import { Stack } from '@mui/material';
+import Stack from '@mui/material/Stack';
 import type { ReactNode } from 'react';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 

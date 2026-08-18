@@ -1,4 +1,5 @@
-import { Alert, type SxProps } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 export type AlertContentProps = {

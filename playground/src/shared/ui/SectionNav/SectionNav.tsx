@@ -1,4 +1,5 @@
-import { Box, Chip } from '@mui/material';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import { Link, useRouterState } from '@tanstack/react-router';
 
 type SectionNavProps = {

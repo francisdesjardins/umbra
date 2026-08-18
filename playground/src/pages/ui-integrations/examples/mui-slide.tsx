@@ -2,7 +2,9 @@ import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import * as SlideModal from '@/entities/modal-template/ui/mui/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import { Checkbox, FormControlLabel, Stack } from '@mui/material';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Stack from '@mui/material/Stack';
 import { useSlideModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 

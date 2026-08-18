@@ -1,4 +1,7 @@
-import { Box, Stack, Typography, type SxProps, type Theme } from '@mui/material';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import {
   CATEGORIES,
   SPECIFIERS,

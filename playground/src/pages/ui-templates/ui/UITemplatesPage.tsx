@@ -2,7 +2,11 @@ import { ExampleSection } from '@/entities/example';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import { ViewCodeButton } from '@/shared/ui/ViewCodeButton/ViewCodeButton';
-import { Box, CardContent, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import CardContent from '@mui/material/CardContent';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import { useState, type ReactNode } from 'react';
 
 // ── Config ────────────────────────────────────────────────────────────────────

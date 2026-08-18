@@ -1,5 +1,5 @@
 import { spacing } from '@/entities/modal-template/ui/shared/tokens';
-import { Button as MuiButton, type ButtonProps as MuiButtonProps } from '@mui/material';
+import MuiButton, { type ButtonProps as MuiButtonProps } from '@mui/material/Button';
 
 export type ButtonProps = Omit<MuiButtonProps, 'disabled'> & {
   readonly loading?: boolean;

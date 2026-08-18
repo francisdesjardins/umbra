@@ -1,6 +1,8 @@
 import { createAppTheme } from '@/app/providers/ThemeProvider/theme';
 import { colors } from '@/entities/modal-template/ui/shared/tokens';
-import { CssBaseline, ThemeProvider as MuiThemeProvider, useMediaQuery } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { ThemeContext } from '@/shared/lib/theme-context';
 

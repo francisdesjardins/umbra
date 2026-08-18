@@ -1,4 +1,5 @@
-import { Tooltip, Typography, type TooltipProps, type TypographyProps } from '@mui/material';
+import Tooltip, { type TooltipProps } from '@mui/material/Tooltip';
+import Typography, { type TypographyProps } from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
 
 export type OverflownTypographySlotProps = {

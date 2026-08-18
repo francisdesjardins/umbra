@@ -48,8 +48,9 @@ export default defineConfig({
     // page — which lands, by construction, on the first visit to whichever section introduced it.
     // The highlighter's subpaths are here because `CodeBlock` reaches them past the package's own
     // entry, so nothing points at them until the code viewer is first opened.
+    // No `@mui/material` barrel here: source imports are per-module (`@mui/material/Box`), so
+    // pre-bundling the barrel would drag all ~2 500 modules back into the optimizer for nothing.
     include: [
-      '@mui/material',
       '@mui/material/styles',
       '@tanstack/react-router',
       'immer',

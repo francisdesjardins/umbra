@@ -3,7 +3,7 @@ import * as VanillaMessageModal from '@/entities/modal-template/ui/vanilla/messa
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import { Button } from '@mui/material';
+import Button from '@mui/material/Button';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 

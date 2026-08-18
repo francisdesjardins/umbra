@@ -1,6 +1,9 @@
 import CloseIcon from '@mui/icons-material/Close';
 import CodeIcon from '@mui/icons-material/Code';
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
 import type { ModalHandle } from 'umbra/react';
 import type { ReactNode } from 'react';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';

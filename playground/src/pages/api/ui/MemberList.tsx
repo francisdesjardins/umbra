@@ -1,4 +1,6 @@
-import { Box, Button, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { Fragment, useState } from 'react';
 import type { ApiMember } from 'virtual:dialog-api';
 import { InlineCode, SymbolLink } from './DocText';

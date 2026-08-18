@@ -1,4 +1,4 @@
-import type { SxProps, Theme } from '@mui/material';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import type { SystemStyleObject } from '@mui/system';
 
 // Generic over the theme, defaulting to MUI's `Theme`, so un-typed callers work without `any`.

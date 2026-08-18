@@ -1,7 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
 

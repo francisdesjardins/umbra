@@ -1,6 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
-import { Alert, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createElement } from 'react';
 import { hydrateRoot, type Root } from 'react-dom/client';

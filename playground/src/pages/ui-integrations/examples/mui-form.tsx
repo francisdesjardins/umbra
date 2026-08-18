@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
 import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
-import { TextField } from '@mui/material';
+import TextField from '@mui/material/TextField';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useForm } from '@/shared/lib/use-form';
 import { useModal } from 'umbra/react';

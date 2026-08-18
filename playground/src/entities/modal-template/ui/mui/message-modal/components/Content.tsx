@@ -1,4 +1,6 @@
-import { DialogContent, Stack, type SxProps } from '@mui/material';
+import DialogContent from '@mui/material/DialogContent';
+import Stack from '@mui/material/Stack';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';

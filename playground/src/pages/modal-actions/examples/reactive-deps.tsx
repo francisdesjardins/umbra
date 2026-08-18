@@ -3,7 +3,12 @@ import * as MessageModal from '@/entities/modal-template/ui/mui/message-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
-import { Alert, Box, Paper, Stack, TextField, Typography } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 

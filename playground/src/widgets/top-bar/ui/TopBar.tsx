@@ -1,7 +1,11 @@
 import { MoonPhase } from '@/shared/ui/MoonPhase';
 import { ThemeToggleButton } from '@/shared/ui/ThemeToggleButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 import { Link } from '@tanstack/react-router';
 
 type TopBarProps = {

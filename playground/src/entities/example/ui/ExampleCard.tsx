@@ -1,5 +1,8 @@
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { Box, Button, CardContent, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
 import { dialogManager } from 'umbra/react';
 import type { ReactNode } from 'react';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';

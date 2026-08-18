@@ -1,13 +1,10 @@
 import SearchIcon from '@mui/icons-material/Search';
-import {
-  Box,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-  type SxProps,
-  type Theme,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import InputAdornment from '@mui/material/InputAdornment';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import { useState } from 'react';
 import type { FuzzyMatch } from '@/shared/lib/fuzzy-match';
 import { categoryHref, searchSymbols, symbolAnchor } from '../model/api-index';

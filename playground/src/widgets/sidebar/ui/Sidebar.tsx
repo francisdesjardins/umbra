@@ -8,25 +8,26 @@ import WidgetsIcon from '@mui/icons-material/Widgets';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import HubIcon from '@mui/icons-material/Hub';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
-import {
-  Box,
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Drawer from '@mui/material/Drawer';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import type { SvgIconProps } from '@mui/material/SvgIcon';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 import { Link, useRouterState } from '@tanstack/react-router';
-import type { SvgIconComponent } from '@mui/icons-material';
+import type { ComponentType } from 'react';
 
 const SIDEBAR_WIDTH = 232;
 
 type NavItem = {
   readonly path: string;
   readonly label: string;
-  readonly icon: SvgIconComponent;
+  // What an `@mui/icons-material/<Name>` module exports, named without the icons barrel — the one
+  // specifier here is per-icon, so the whole 7000-module index stays out of the graph.
+  readonly icon: ComponentType<SvgIconProps>;
 };
 
 type NavGroup = {

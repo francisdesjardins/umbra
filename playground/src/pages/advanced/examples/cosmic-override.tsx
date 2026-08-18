@@ -1,6 +1,8 @@
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
-import { Box, Stack, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { dialogPlacement } from 'umbra';
 import { Key, useModal } from 'umbra/react';
 import { useState } from 'react';

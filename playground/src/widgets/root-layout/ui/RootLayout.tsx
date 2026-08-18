@@ -3,7 +3,10 @@ import { useCodeModal } from '@/widgets/code-viewer';
 import { useCodePane } from '@/shared/lib/code-pane-context';
 import { Sidebar } from '@/widgets/sidebar';
 import { TopBar } from '@/widgets/top-bar';
-import { Box, Toolbar, useMediaQuery, useTheme } from '@mui/material';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 

@@ -1,4 +1,6 @@
-import { Stack, Typography, type SxProps } from '@mui/material';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 export type SectionProps = {

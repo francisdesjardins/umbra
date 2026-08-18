@@ -28,6 +28,25 @@
   "rules": {
     "no-console": "warn",
     "eqeqeq": "error",
+    // The MUI barrels re-export thousands of modules, and one `import { Box } from '@mui/material'`
+    // puts the whole graph back into every compile. Per-module imports keep the graph at what the
+    // playground actually uses; this is the lock that keeps the codemod from regressing one file
+    // at a time.
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@mui/material",
+            "message": "Import the module, not the barrel: @mui/material/<Component> (styles/types via @mui/material/styles)."
+          },
+          {
+            "name": "@mui/icons-material",
+            "message": "Import the icon module: @mui/icons-material/<Icon>."
+          }
+        ]
+      }
+    ],
     "curly": ["error", "all"],
     // No implicit returns — every arrow function uses a block body with an explicit `return`.
     // A concise body hides the return value and makes the arrow awkward to extend.

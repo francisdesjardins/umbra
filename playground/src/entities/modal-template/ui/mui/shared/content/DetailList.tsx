@@ -1,4 +1,8 @@
-import { List, ListItem, ListItemIcon, ListItemText, type SxProps } from '@mui/material';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 export type DetailListProps = {
