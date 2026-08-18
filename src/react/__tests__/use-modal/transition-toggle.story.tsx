@@ -3,6 +3,13 @@ import { useModal } from '../../use-modal.js';
 import { setLogLevel } from '../../../utils/logger.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
+const claimLogging = () => {
+  setLogLevel('*');
+};
+const dropLogging = () => {
+  setLogLevel(false);
+};
+
 const DISABLE_RULE = `dialog[data-testid='modal-transition-toggle'] { transition: none !important; }`;
 
 /**
@@ -16,15 +23,15 @@ const DISABLE_RULE = `dialog[data-testid='modal-transition-toggle'] { transition
 export function TransitionToggleHarness() {
   const [transitionsDisabled, setTransitionsDisabled] = useState(false);
 
+  // The level is global, so it is claimed for the open that needs it and dropped at the close: on
+  // mount it would run a page hosting a hundred harnesses with every namespace on.
   useEffect(() => {
-    setLogLevel('*');
-    return () => {
-      setLogLevel(false);
-    };
+    return dropLogging;
   }, []);
 
   const { open, isVisible, Modal } = useModal<void, 'done'>({
     id: 'transition-toggle',
+    onClose: dropLogging,
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -46,6 +53,7 @@ export function TransitionToggleHarness() {
       {transitionsDisabled ? <style>{DISABLE_RULE}</style> : null}
       <button
         onClick={async () => {
+          claimLogging();
           await open();
         }}
       >

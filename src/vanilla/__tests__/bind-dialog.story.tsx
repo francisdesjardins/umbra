@@ -873,24 +873,29 @@ export function VanillaLabellingHarness() {
       return;
     }
 
-    setLogLevel('*');
-
     const manager = createDialogManager();
+    // The level is global, so it is claimed per open and dropped at the close: a page hosting this
+    // beside a hundred other harnesses would otherwise run the whole route with logging on.
+    const quieten = () => {
+      setLogLevel(false);
+    };
     const boundBroken = bindDialog<void, 'close'>({
       id: 'vanilla-broken-label',
       dialog: broken,
       manager,
+      onClose: quieten,
     });
     const boundNameless = bindDialog<void, 'close'>({
       id: 'vanilla-nameless',
       dialog: nameless,
       manager,
+      onClose: quieten,
     });
 
     setControllers({ broken: boundBroken, nameless: boundNameless });
 
     return () => {
-      setLogLevel(false);
+      quieten();
       boundBroken.destroy();
       boundNameless.destroy();
       setControllers(null);
@@ -902,6 +907,7 @@ export function VanillaLabellingHarness() {
       <button
         data-testid="open-broken"
         onClick={() => {
+          setLogLevel('*');
           void controllers?.broken.open();
         }}
       >
@@ -910,6 +916,7 @@ export function VanillaLabellingHarness() {
       <button
         data-testid="open-nameless"
         onClick={() => {
+          setLogLevel('*');
           void controllers?.nameless.open();
         }}
       >

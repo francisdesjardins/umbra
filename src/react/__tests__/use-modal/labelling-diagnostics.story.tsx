@@ -11,13 +11,22 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * code is worse than no check.
  */
 
-/** Enable every namespace while mounted, so the warning is emitted at all. */
+/**
+ * Every namespace on, so the warning is emitted at all — but the level is global, so it is claimed
+ * for the open that needs it and dropped at the close. Enabled while merely mounted, one of these
+ * would run a page hosting a hundred harnesses with the whole log on.
+ */
+const claimLogging = () => {
+  setLogLevel('*');
+};
+const dropLogging = () => {
+  setLogLevel(false);
+};
+
+/** The unmount half, for a harness torn down with its dialog still open. */
 function useDebugLogging() {
   useEffect(() => {
-    setLogLevel('*');
-    return () => {
-      setLogLevel(false);
-    };
+    return dropLogging;
   }, []);
 }
 
@@ -27,6 +36,7 @@ export function DanglingLabelHarness() {
 
   const { open, Modal } = useModal({
     id: 'labelling-dangling',
+    onClose: dropLogging,
     ariaLabelledBy: 'labelling-dangling-title',
     render: () => {
       return <p style={dialogStyle}>Named by nothing at all.</p>;
@@ -37,6 +47,7 @@ export function DanglingLabelHarness() {
     <div>
       <button
         onClick={() => {
+          claimLogging();
           void open();
         }}
       >
@@ -53,6 +64,7 @@ export function LateTitleHarness() {
 
   const { open, Modal } = useModal({
     id: 'labelling-late',
+    onClose: dropLogging,
     ariaLabelledBy: 'labelling-late-title',
     prepare: async () => {
       await new Promise<void>((resolve) => {
@@ -86,6 +98,7 @@ export function LateTitleHarness() {
     <div>
       <button
         onClick={() => {
+          claimLogging();
           void open();
         }}
       >
@@ -99,6 +112,7 @@ export function LateTitleHarness() {
 function OutletInner() {
   const { open } = useModal({
     id: 'labelling-outlet',
+    onClose: dropLogging,
     ariaLabelledBy: 'labelling-outlet-title',
     render: () => {
       return (
@@ -112,6 +126,7 @@ function OutletInner() {
   return (
     <button
       onClick={() => {
+        claimLogging();
         void open();
       }}
     >

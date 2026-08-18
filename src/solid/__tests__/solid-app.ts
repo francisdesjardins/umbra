@@ -677,13 +677,19 @@ export const SolidBusyApp = (): JSX.Element => {
 function LabellingApp(): Built {
   const [release, setRelease] = createSignal<(() => void) | undefined>();
 
-  setLogLevel('*');
-  onCleanup(() => {
+  // The level is global, so it is claimed for the open that needs it and dropped at the close: set
+  // here, one harness would run a page hosting a hundred of them with every namespace on.
+  const claimLogging = () => {
+    setLogLevel('*');
+  };
+  const dropLogging = () => {
     setLogLevel(false);
-  });
+  };
+  onCleanup(dropLogging);
 
   const dangling = useModal({
     id: 'solid-dangling',
+    onClose: dropLogging,
     ariaLabelledBy: 'solid-dangling-title',
     render: () => {
       // Nothing here carries that id.
@@ -693,6 +699,7 @@ function LabellingApp(): Built {
 
   const late = useModal({
     id: 'solid-late',
+    onClose: dropLogging,
     ariaLabelledBy: 'solid-late-title',
     prepare: async () => {
       await new Promise<void>((resolve) => {
@@ -734,6 +741,7 @@ function LabellingApp(): Built {
       {
         'data-testid': 'open-dangling',
         onClick: () => {
+          claimLogging();
           void dangling.open();
         },
       },
@@ -744,6 +752,7 @@ function LabellingApp(): Built {
       {
         'data-testid': 'open-late',
         onClick: () => {
+          claimLogging();
           void late.open();
         },
       },
