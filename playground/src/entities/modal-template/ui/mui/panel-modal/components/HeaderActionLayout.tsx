@@ -1,4 +1,4 @@
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { type SxProps } from '@mui/material/styles';

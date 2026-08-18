@@ -3,7 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
-import Button from '@mui/material/Button';
+import { AppButton } from '@/shared/ui/AppButton';
 import type { ReactNode } from 'react';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
@@ -225,7 +225,7 @@ export function ReactiveDepsExample() {
 
   return (
     <ExampleLayout result={result} modals={reactiveModal.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -234,7 +234,7 @@ export function ReactiveDepsExample() {
         }}
       >
         Open Modal & Test Reactivity
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

@@ -1,0 +1,42 @@
+/* Inline code inside prose. Sized in `em` on purpose — it rides the surrounding text's rank
+   rather than the rem ramp. The 1px/3px are MUI's rendered 0.125 spacing and 0.75 radius steps. */
+.code {
+  padding: 1px var(--app-space-1);
+  border-radius: 3px;
+  background: var(--app-hover);
+  font-family: monospace;
+  font-size: 0.875em;
+}
+
+/* `a.` outranks RouterLink's reset whatever the modules' injection order (see
+   RouterLink.module.css). The 3px underline offset is a typographic fine-tune. */
+a.symbolLink {
+  color: var(--app-accent);
+  font-family: monospace;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+a.symbolLink:hover {
+  text-decoration-style: solid;
+}
+
+/* JSDoc uses blank lines as paragraph breaks; honouring them is what makes `@remarks` read. */
+.prose {
+  margin: 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.body1 {
+  font-size: var(--app-text-base);
+}
+
+.body2 {
+  font-size: var(--app-text-md);
+}
+
+.secondary {
+  color: var(--app-text-secondary);
+}

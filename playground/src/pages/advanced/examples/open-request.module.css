@@ -1,0 +1,27 @@
+/* The card's info banner, on MUI Alert's measured info pair — the light pair fails on a dark
+   page and vice versa, so the dark scheme swaps both halves rather than dimming one. */
+.banner {
+  display: flex;
+  gap: var(--app-space-3);
+  padding: var(--app-space-3);
+  border-radius: var(--app-radius-md);
+  background: rgba(2, 136, 209, 0.1);
+  color: #01579b;
+}
+
+:root[data-color-scheme='dark'] .banner {
+  background: rgba(41, 182, 246, 0.12);
+  color: #29b6f6;
+}
+
+.bannerIcon {
+  width: 22px; /* MUI Alert's icon geometry, between the 20/24 icon steps. */
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.bannerText {
+  margin: 0;
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+}

@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import Button from '@mui/material/Button';
+import { AppButton } from '@/shared/ui/AppButton';
 import { dialogManager, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
@@ -92,7 +92,7 @@ export function ImperativeExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={() => {
@@ -100,7 +100,7 @@ export function ImperativeExample() {
         }}
       >
         Open via dialogManager
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

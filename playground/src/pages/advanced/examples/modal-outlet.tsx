@@ -2,8 +2,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
+import { AppButton } from '@/shared/ui/AppButton';
 import { ModalOutlet, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -47,8 +46,8 @@ function ConfirmDialog() {
   });
 
   return (
-    <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-      <Button
+    <div style={{ display: 'flex', gap: 'var(--app-space-2)', flexWrap: 'wrap' }}>
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -57,8 +56,8 @@ function ConfirmDialog() {
         }}
       >
         Open
-      </Button>
-    </Stack>
+      </AppButton>
+    </div>
   );
 }
 
@@ -69,10 +68,10 @@ export function ModalOutletExample() {
 
   return (
     <ModalOutlet>
-      <Stack direction="column" sx={{ gap: 2 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
         <ConfirmDialog />
         <ResultDisplay result={result} />
-      </Stack>
+      </div>
     </ModalOutlet>
   );
 }

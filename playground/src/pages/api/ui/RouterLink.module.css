@@ -1,0 +1,7 @@
+/* The reset every navigation in the reference builds on. Callers layer their own class on top,
+   and one that must out-rank these two declarations uses an `a.class` selector — module injection
+   order is not something to bet a cascade on. */
+.link {
+  text-decoration: none;
+  color: inherit;
+}

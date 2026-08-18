@@ -1,0 +1,21 @@
+/* The declaration panel. The 10px/14px padding is MUI's rendered 1.25/1.75 spacing half-steps,
+   between the 4px grid's stops. */
+.panel {
+  display: block;
+  padding: 10px 14px;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+  /* MUI `grey.50`, a literal — the app sheet carries no grey ramp. */
+  background: #fafafa;
+  color: var(--app-text);
+  font-family: monospace;
+  font-size: var(--app-text-sm);
+  line-height: 1.7;
+  /* Signatures wrap rather than scroll: a horizontal scrollbar hides the return type. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+:root[data-color-scheme='dark'] .panel {
+  background: rgba(255, 255, 255, 0.03);
+}

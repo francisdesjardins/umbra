@@ -1,0 +1,119 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-8);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-3);
+}
+
+/* MUI's overline rank, with the original's wider 0.1em tracking. */
+.overline {
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-xs);
+  letter-spacing: 0.1em;
+  line-height: 2.66;
+  text-transform: uppercase;
+}
+
+.introBody {
+  /* 640px: a measured reading width, not a scale step. */
+  max-width: 640px;
+  margin: 0;
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+}
+
+.cardLink {
+  display: block;
+}
+
+/* CardContent's rendered numbers: 16px, with its own `:last-child` 24px bottom. */
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-2);
+  height: 100%;
+  padding: var(--app-space-4);
+  padding-bottom: var(--app-space-6);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--app-space-2);
+}
+
+/* The subtitle1 rank, bolded — at MUI's rendered element for it, an h6. */
+.cardTitle {
+  flex: 1;
+  margin: 0;
+  color: var(--app-text);
+  font-size: var(--app-text-base);
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.count {
+  color: var(--app-text-tertiary);
+  font-size: var(--app-text-xs);
+  line-height: 1.66;
+}
+
+.blurb {
+  flex: 1;
+  margin: 0;
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+}
+
+.symbolPreview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-1);
+  margin-top: var(--app-space-1);
+}
+
+.symbolPreviewName {
+  color: var(--app-text-tertiary);
+  font-family: monospace;
+  font-size: var(--app-text-xs);
+  line-height: 1.66;
+}
+
+.startRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-2);
+}
+
+/* 6px/10px: MUI's 0.75 and 1.25 spacing half-steps, kept at their rendered numbers. The `a.`
+   weight outranks RouterLink's reset whatever the modules' injection order. */
+a.startChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+  color: var(--app-text);
+  font-family: monospace;
+  font-size: var(--app-text-sm);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* As rendered: the hover pair is the amber fill as border and text — a hover-only accent on a
+   chip whose resting colours carry the reading. */
+a.startChip:hover {
+  border-color: var(--app-flame);
+  color: var(--app-flame);
+}
+
+.startSpecifier {
+  color: var(--app-text-tertiary);
+}

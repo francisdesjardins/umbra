@@ -3,8 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
 import { Key, useMessageModal, useSlideModal } from 'umbra/react';
 
@@ -152,7 +151,7 @@ export function GroceryListExample() {
 
   return (
     <ExampleLayout result={outcome} modals={list.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -162,10 +161,18 @@ export function GroceryListExample() {
         }}
       >
         Open the list
-      </Button>
-      <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
+      </AppButton>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 'var(--app-text-md)',
+          lineHeight: 1.43,
+          color: 'var(--app-text-secondary)',
+          alignSelf: 'center',
+        }}
+      >
         panel → confirm → async send → typed payload back
-      </Typography>
+      </p>
     </ExampleLayout>
   );
 }

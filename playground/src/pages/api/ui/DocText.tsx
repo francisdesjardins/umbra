@@ -1,19 +1,8 @@
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { type SxProps, type Theme } from '@mui/material/styles';
+import styles from '@/pages/api/ui/DocText.module.css';
 import type { ReactNode } from 'react';
 import type { DocPart } from 'virtual:dialog-api';
 import { categoryHref, symbolAnchor, symbolFor } from '../model/api-index';
 import { RouterLink } from './RouterLink';
-
-const CODE_SX: SxProps<Theme> = {
-  fontFamily: 'monospace',
-  fontSize: '0.875em',
-  px: 0.5,
-  py: 0.125,
-  borderRadius: 0.75,
-  bgcolor: 'action.hover',
-};
 
 /**
  * A cross-reference by `specifier#name`. Route + hash, not a bare `#anchor`: symbols live on
@@ -28,24 +17,13 @@ export const SymbolLink = ({
 }) => {
   const symbol = symbolFor(symbolKey);
   if (symbol === undefined) {
-    return (
-      <Box component="code" sx={CODE_SX}>
-        {children ?? symbolKey}
-      </Box>
-    );
+    return <code className={styles['code']}>{children ?? symbolKey}</code>;
   }
   return (
     <RouterLink
       to={categoryHref(symbol.category)}
       hash={symbolAnchor(symbol.name)}
-      sx={{
-        fontFamily: 'monospace',
-        color: 'accent.onSurface',
-        textDecoration: 'underline',
-        textDecorationStyle: 'dotted',
-        textUnderlineOffset: 3,
-        '&:hover': { textDecorationStyle: 'solid' },
-      }}
+      className={styles['symbolLink']}
     >
       {children ?? symbol.name}
     </RouterLink>
@@ -58,9 +36,9 @@ const Emphasis = ({ text: value }: { readonly text: string }) => {
     <>
       {value.split(/\*\*(.+?)\*\*/gs).map((chunk, index) => {
         return (
-          <Box component="span" key={index} sx={index % 2 === 1 ? { fontWeight: 700 } : undefined}>
+          <span key={index} style={index % 2 === 1 ? { fontWeight: 700 } : undefined}>
             {chunk}
-          </Box>
+          </span>
         );
       })}
     </>
@@ -73,9 +51,9 @@ export const InlineCode = ({ text: value }: { readonly text: string }) => {
     <>
       {value.split('`').map((chunk, index) => {
         return index % 2 === 1 ? (
-          <Box component="code" key={index} sx={CODE_SX}>
+          <code key={index} className={styles['code']}>
             {chunk}
-          </Box>
+          </code>
         ) : (
           <Emphasis key={index} text={chunk} />
         );
@@ -87,7 +65,7 @@ export const InlineCode = ({ text: value }: { readonly text: string }) => {
 type DocProseProps = {
   readonly parts: readonly DocPart[];
   readonly variant?: 'body1' | 'body2' | undefined;
-  readonly color?: string | undefined;
+  readonly color?: 'text.secondary' | undefined;
 };
 
 /** Prose with `{@link}` targets turned into jumps, the way a JSDoc reader expects. */
@@ -95,14 +73,15 @@ export const DocProse = ({ parts, variant = 'body1', color }: DocProseProps) => 
   if (parts.length === 0) {
     return null;
   }
+  const classes = [
+    styles['prose'],
+    variant === 'body2' ? styles['body2'] : styles['body1'],
+    color === 'text.secondary' ? styles['secondary'] : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <Typography
-      component="div"
-      variant={variant}
-      color={color}
-      // JSDoc uses blank lines as paragraph breaks; honouring them is what makes `@remarks` read.
-      sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}
-    >
+    <div className={classes}>
       {parts.map((part, index) => {
         return part.link !== undefined ? (
           <SymbolLink key={index} symbolKey={part.link}>
@@ -112,6 +91,6 @@ export const DocProse = ({ parts, variant = 'body1', color }: DocProseProps) => 
           <InlineCode key={index} text={part.text} />
         );
       })}
-    </Typography>
+    </div>
   );
 };

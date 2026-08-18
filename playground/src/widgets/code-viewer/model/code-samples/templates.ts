@@ -36,7 +36,7 @@ import templateSharedOverflownTypographySrc from '@/entities/modal-template/ui/m
 import templateSharedOverflowContainerSrc from '@/entities/modal-template/ui/mui/shared/content/OverflowContainer.tsx?raw';
 import templateSharedContentTransitionSrc from '@/entities/modal-template/ui/mui/shared/content/ContentTransition.tsx?raw';
 import templateSharedMuiButtonSrc from '@/entities/modal-template/ui/mui/shared/MuiButton.tsx?raw';
-import templateUtilSxUtilsSrc from '@/entities/modal-template/ui/shared/sxUtils.ts?raw';
+import templateUtilSxUtilsSrc from '@/entities/modal-template/ui/mui/shared/sxUtils.ts?raw';
 import templateUtilScrollRegionSrc from '@/entities/modal-template/ui/shared/scroll-region.ts?raw';
 import templateUtilTokensSrc from '@/entities/modal-template/ui/shared/tokens.ts?raw';
 import templateUtilTypesSrc from '@/entities/modal-template/ui/shared/types.ts?raw';

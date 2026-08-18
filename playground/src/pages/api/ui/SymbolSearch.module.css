@@ -1,0 +1,117 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-2);
+}
+
+/* The MUI small outlined field at its rendered geometry: 40px tall, 4px radius, the input inset
+   14px (MUI's own outlined padding, off the 4px grid). The edge is a *control* boundary, so
+   1.4.11 asks 3:1 of it — the vanilla templates' control-border rationale — and the layout
+   hairline (--app-divider) never could carry that; both greys are off-scale literals that just
+   clear 3:1 on their page grounds. Keyboard focus is the global ring. */
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  height: var(--app-space-10);
+  padding: 0 var(--app-space-3) 0 14px;
+  border: 1px solid #8c8c8c;
+  border-radius: var(--app-radius);
+}
+
+.field:hover {
+  border-color: var(--app-text);
+}
+
+:root[data-color-scheme='dark'] .field {
+  border-color: #757575;
+}
+
+:root[data-color-scheme='dark'] .field:hover {
+  border-color: var(--app-text);
+}
+
+/* MUI's `action.disabled` glyph — decorative, named by the placeholder beside it. */
+.fieldIcon {
+  flex-shrink: 0;
+  width: var(--app-icon-sm);
+  height: var(--app-icon-sm);
+  color: rgba(0, 0, 0, 0.26);
+}
+
+:root[data-color-scheme='dark'] .fieldIcon {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: var(--app-text-base);
+  line-height: 1.5;
+}
+
+/* MUI ghosts placeholders behind 0.42 opacity; the raised tertiary token is the measured
+   replacement (see app.css) — never `opacity`, which multiplies away the ratio. */
+.input::placeholder {
+  color: var(--app-text-tertiary);
+  opacity: 1;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  /* 2px/6px below: MUI's 0.25 and 0.75 spacing half-steps, kept at their rendered numbers. */
+  gap: 2px;
+}
+
+/* `a.` outranks RouterLink's reset whatever the modules' injection order. */
+a.row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  padding: 6px var(--app-space-2);
+  border-radius: var(--app-radius);
+  color: var(--app-text);
+}
+
+a.row:hover {
+  background: var(--app-hover);
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  font-size: var(--app-text-sm);
+}
+
+/* The 11px spec text, MUI's 0.6875rem half-step. */
+.rowSpecifier {
+  color: var(--app-text-tertiary);
+  font-family: monospace;
+  font-size: 0.6875rem;
+}
+
+.hit {
+  color: var(--app-accent);
+  font-weight: 700;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--app-space-1) var(--app-space-2);
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+}
+
+.more {
+  padding: 0 var(--app-space-2);
+  color: var(--app-text-tertiary);
+  font-size: var(--app-text-xs);
+  line-height: 1.66;
+}

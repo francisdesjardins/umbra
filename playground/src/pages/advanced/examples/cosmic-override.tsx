@@ -1,7 +1,5 @@
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import { dialogPlacement } from 'umbra';
 import { Key, useModal } from 'umbra/react';
 import { useState, type CSSProperties } from 'react';
@@ -109,8 +107,8 @@ const COSMIC_CSS = `
     animation: cosmic-flare 3.6s ease-in-out infinite;
   }
 
-  /* The dialogs' half of \`buttonSx\`: same values, as a class, because the interiors are plain
-     markup and \`:hover\`/\`:disabled\` cannot ride an inline style. Change one, change both. */
+  /* Every cosmic button — the card's trigger and the dialog interiors alike. One class, because
+     they must match and \`:hover\`/\`:disabled\` cannot ride an inline style. */
   .cosmic-button {
     padding: 8px 16px;
     border-radius: 8px;
@@ -165,20 +163,6 @@ const panelStyle: CSSProperties = {
   padding: 24,
   color: '#e2e8f0',
   textAlign: 'center',
-};
-
-// The card's trigger only — the dialog interiors carry the same values as `.cosmic-button` above.
-const buttonSx = {
-  px: 2,
-  py: 1,
-  borderRadius: 2,
-  border: '1px solid rgba(245,158,11,0.6)',
-  background: 'rgba(245,158,11,0.14)',
-  color: '#fcd34d',
-  font: 'inherit',
-  cursor: 'pointer',
-  '&:hover': { background: 'rgba(245,158,11,0.3)' },
-  '&:disabled': { opacity: 0.55, cursor: 'progress' },
 };
 
 /**
@@ -411,18 +395,18 @@ export function CosmicOverrideExample() {
   });
 
   return (
-    <Stack direction="column" sx={{ gap: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
       <style>{COSMIC_CSS}</style>
 
       {/* The sector: a sized, positioned region of your app — the "the host must have a size"
           half of the contained-placement contract. */}
-      <Box
-        sx={{
+      <div
+        style={{
           position: 'relative',
           height: 340,
           overflow: 'hidden',
-          borderRadius: 3,
-          // No flex centering: the library's host is a child of this box, and `align-items:
+          borderRadius: 12,
+          // No flex centering: the library's host is a child of this div, and `align-items:
           // center` would shrink it to its content so the panel sized itself instead of the
           // sector — contained placement's documented failure mode.
           background:
@@ -433,8 +417,8 @@ export function CosmicOverrideExample() {
         }}
       >
         {!gate.isVisible && (
-          <Box
-            sx={{
+          <div
+            style={{
               position: 'absolute',
               inset: 0,
               display: 'flex',
@@ -442,22 +426,22 @@ export function CosmicOverrideExample() {
               justifyContent: 'center',
             }}
           >
-            <Box
-              component="button"
-              sx={buttonSx}
+            <button
+              type="button"
+              className="cosmic-button"
               onClick={() => {
                 void gate.open();
               }}
             >
               Open the gate
-            </Box>
-          </Box>
+            </button>
+          </div>
         )}
         {gate.Modal}
-      </Box>
+      </div>
 
       <ResultDisplay result={result} />
       {warp.Modal}
-    </Stack>
+    </div>
   );
 }

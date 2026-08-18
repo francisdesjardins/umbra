@@ -6,10 +6,7 @@ import {
   FAILURE_MODAL_ID,
   deploymentService,
 } from '@/pages/advanced/examples/deployment-service';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 import { useSyncExternalStore } from 'react';
 
@@ -99,25 +96,31 @@ export function ServiceLayerExample() {
   });
 
   return (
-    <Stack sx={{ gap: 2 }}>
-      <Box
-        sx={{
-          p: 2,
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          border: 1,
-          borderColor: 'divider',
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
+      <div
+        style={{
+          padding: 'var(--app-space-4)',
+          background: 'var(--app-paper)',
+          borderRadius: 'var(--app-radius)',
+          border: '1px solid var(--app-divider)',
           fontFamily: 'monospace',
-          fontSize: '0.8125rem',
+          fontSize: 'var(--app-text-sm)',
           minHeight: 96,
           maxHeight: 180,
           overflow: 'auto',
         }}
       >
         {activity.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <p
+            style={{
+              margin: 0,
+              fontSize: 'var(--app-text-md)',
+              lineHeight: 1.43,
+              color: 'var(--app-text-secondary)',
+            }}
+          >
             No activity — start a deploy to watch the service drive the flow.
-          </Typography>
+          </p>
         ) : (
           activity.map((entry) => {
             return (
@@ -127,7 +130,7 @@ export function ServiceLayerExample() {
             );
           })
         )}
-      </Box>
+      </div>
 
       <ExampleLayout
         result={null}
@@ -138,7 +141,7 @@ export function ServiceLayerExample() {
           </>
         }
       >
-        <Button
+        <AppButton
           variant="contained"
           size="small"
           onClick={() => {
@@ -146,8 +149,8 @@ export function ServiceLayerExample() {
           }}
         >
           Deploy to staging
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
           variant="contained"
           size="small"
           color="error"
@@ -156,8 +159,8 @@ export function ServiceLayerExample() {
           }}
         >
           Deploy to production
-        </Button>
+        </AppButton>
       </ExampleLayout>
-    </Stack>
+    </div>
   );
 }

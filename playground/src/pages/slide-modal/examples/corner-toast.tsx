@@ -3,8 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useRef, useState } from 'react';
 import { useSlideModal } from 'umbra/react';
 
@@ -231,7 +230,7 @@ export function SlideCornerToastExample() {
 
   return (
     <ExampleLayout result={result} modals={toast.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -246,11 +245,19 @@ export function SlideCornerToastExample() {
         }}
       >
         Show Toast
-      </Button>
+      </AppButton>
       {region}
-      <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 'var(--app-text-md)',
+          lineHeight: 1.43,
+          color: 'var(--app-text-secondary)',
+          alignSelf: 'center',
+        }}
+      >
         direction: right · align: start · non-modal + portal
-      </Typography>
+      </p>
     </ExampleLayout>
   );
 }

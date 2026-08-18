@@ -2,10 +2,7 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
 import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageModal, useSlideModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
@@ -113,31 +110,37 @@ export function DomEventsExample() {
   }, []);
 
   return (
-    <Stack sx={{ gap: 2 }}>
-      <Box
-        sx={{
-          p: 2,
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          border: 1,
-          borderColor: 'divider',
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
+      <div
+        style={{
+          padding: 'var(--app-space-4)',
+          background: 'var(--app-paper)',
+          borderRadius: 'var(--app-radius)',
+          border: '1px solid var(--app-divider)',
           fontFamily: 'monospace',
-          fontSize: '0.8125rem',
+          fontSize: 'var(--app-text-sm)',
           maxHeight: 160,
           overflow: 'auto',
         }}
       >
         {eventLog.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <p
+            style={{
+              margin: 0,
+              fontSize: 'var(--app-text-md)',
+              lineHeight: 1.43,
+              color: 'var(--app-text-secondary)',
+            }}
+          >
             No events yet — open a modal to see <code>modal:open</code> / <code>modal:close</code>{' '}
             fire on <code>document</code>
-          </Typography>
+          </p>
         ) : (
           eventLog.map((entry, i) => {
             return <div key={i}>{entry}</div>;
           })
         )}
-      </Box>
+      </div>
 
       <ExampleLayout
         modals={
@@ -148,7 +151,7 @@ export function DomEventsExample() {
         }
         result={null}
       >
-        <Button
+        <AppButton
           variant="contained"
           size="small"
           onClick={() => {
@@ -156,8 +159,8 @@ export function DomEventsExample() {
           }}
         >
           Open Modal
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
           variant="contained"
           size="small"
           onClick={() => {
@@ -165,8 +168,8 @@ export function DomEventsExample() {
           }}
         >
           Open Slide Panel
-        </Button>
+        </AppButton>
       </ExampleLayout>
-    </Stack>
+    </div>
   );
 }

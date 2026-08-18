@@ -1,12 +1,30 @@
-import { useState } from 'react';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
+import { useState, type CSSProperties } from 'react';
 import { dialogManager, useMessageModal } from 'umbra/react';
 import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import { AppButton } from '@/shared/ui/AppButton';
+import { InfoIcon } from '@/shared/ui/icons';
+import styles from '@/pages/advanced/examples/open-request.module.css';
+
+/** The `.input` recipe at card level — these fields sit on the shell's `--app-*` sheet. */
+const fieldStyle: CSSProperties = {
+  padding: 'var(--app-space-2) var(--app-space-3)',
+  // The control edge, not the divider: 1.4.11 asks 3:1 of a boundary that says "type here".
+  border: '1px solid var(--app-control-border)',
+  borderRadius: 'var(--app-radius)',
+  font: 'inherit',
+  fontSize: 'var(--app-text-base)',
+  background: 'inherit',
+  color: 'inherit',
+  width: '100%',
+};
+
+const labelStyle: CSSProperties = {
+  fontSize: 'var(--app-text-sm)',
+  fontWeight: 500,
+  color: 'var(--app-text-secondary)',
+};
 
 /**
  * An open the dialog may refuse: `open(id)` instructs, `requestOpen` asks and the dialog decides —
@@ -141,29 +159,49 @@ export function OpenRequestExample() {
 
   return (
     <ExampleLayout modals={modal.Modal} result={log}>
-      <Stack spacing={1.5} sx={{ width: '100%' }}>
-        <TextField
-          label="context.source"
-          onChange={(event) => {
-            setSource(event.target.value);
-          }}
-          size="small"
-          value={source}
-        />
-        <TextField
-          label="data (JSON)"
-          onChange={(event) => {
-            setRawPayload(event.target.value);
-          }}
-          size="small"
-          value={rawPayload}
-        />
-        <Alert severity="info" variant="outlined">
-          Acceptée seulement si <code>source</code> est <code>shell:nav</code> ou{' '}
-          <code>deep-link</code> et que <code>data</code> porte une <code>room</code> non vide.
-        </Alert>
-        <Stack direction="row" spacing={1}>
-          <Button
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-3)',
+          width: '100%',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
+          <label htmlFor="open-request-source" style={labelStyle}>
+            context.source
+          </label>
+          <input
+            id="open-request-source"
+            onChange={(event) => {
+              setSource(event.target.value);
+            }}
+            style={fieldStyle}
+            value={source}
+          />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
+          <label htmlFor="open-request-payload" style={labelStyle}>
+            data (JSON)
+          </label>
+          <input
+            id="open-request-payload"
+            onChange={(event) => {
+              setRawPayload(event.target.value);
+            }}
+            style={fieldStyle}
+            value={rawPayload}
+          />
+        </div>
+        <div className={styles['banner']}>
+          <InfoIcon className={styles['bannerIcon']} aria-hidden="true" />
+          <p className={styles['bannerText']}>
+            Acceptée seulement si <code>source</code> est <code>shell:nav</code> ou{' '}
+            <code>deep-link</code> et que <code>data</code> porte une <code>room</code> non vide.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--app-space-2)' }}>
+          <AppButton
             onClick={() => {
               void ask();
             }}
@@ -171,8 +209,8 @@ export function OpenRequestExample() {
             variant="contained"
           >
             Demander l’ouverture
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
             onClick={() => {
               setLog(null);
               // The other door: no asking, no validation, and `room` is whatever it last was.
@@ -182,9 +220,9 @@ export function OpenRequestExample() {
             variant="contained"
           >
             Ordonner (open)
-          </Button>
-        </Stack>
-      </Stack>
+          </AppButton>
+        </div>
+      </div>
     </ExampleLayout>
   );
 }

@@ -4,8 +4,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { ContentTransition } from '@/entities/modal-template/ui/vanilla/shared/content/ContentTransition';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -114,8 +113,8 @@ export function AsyncOpenExample() {
 
   return (
     <ExampleLayout result={result} modals={asyncModal.Modal}>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
-        <Button
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--app-space-2)' }}>
+        <AppButton
           variant="contained"
           size="small"
           onClick={async () => {
@@ -124,8 +123,8 @@ export function AsyncOpenExample() {
           }}
         >
           Open
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
           variant="outlined"
           size="small"
           disabled={!isSuccess}
@@ -135,8 +134,8 @@ export function AsyncOpenExample() {
           }}
         >
           Invalidate cache
-        </Button>
-      </Stack>
+        </AppButton>
+      </div>
     </ExampleLayout>
   );
 }

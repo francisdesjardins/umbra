@@ -1,8 +1,5 @@
-import { createAppTheme } from '@/app/providers/ThemeProvider/theme';
 import { colors } from '@/entities/modal-template/ui/shared/tokens';
-import CssBaseline from '@mui/material/CssBaseline';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { ThemeContext } from '@/shared/lib/theme-context';
 
@@ -16,14 +13,18 @@ if (typeof document !== 'undefined') {
   document.documentElement.style.setProperty('--form-bg', initialBg);
 }
 
+/**
+ * The mode's single owner — and MUI-free: the shell styles itself from `app.css` tokens keyed on
+ * the attribute below, and the one MUI theme left lives in `shared/ui/MuiIsland`, scoped to the
+ * surfaces that demonstrate MUI.
+ */
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [userOverride, setUserOverride] = useState<'light' | 'dark' | null>(null);
 
   const mode = userOverride ?? (prefersDarkMode ? 'dark' : 'light');
-  const theme = createAppTheme(mode);
 
-  // `data-color-scheme` on the document is what the vanilla CSS modules key off.
+  // `data-color-scheme` on the document is what the app tokens and vanilla CSS modules key off.
   // `color-scheme` rides along because CSS cannot reach what the UA paints on its own — the
   // popup of a native <select> most visibly: without it, dark mode served white option lists.
   useEffect(() => {
@@ -62,11 +63,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [prefersDarkMode]);
 
   return (
-    <ThemeContext value={{ isDarkMode: mode === 'dark', toggleTheme }}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
-    </ThemeContext>
+    <ThemeContext value={{ isDarkMode: mode === 'dark', toggleTheme }}>{children}</ThemeContext>
   );
 };

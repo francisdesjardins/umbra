@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import { type SxProps } from '@mui/material/styles';
 import type { SlideDirection } from 'umbra/react';
 import type { ReactNode } from 'react';
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 
 export type DefaultLayoutProps = {
   readonly children: ReactNode;

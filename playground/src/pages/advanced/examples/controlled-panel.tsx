@@ -3,9 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import Button from '@mui/material/Button';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useState } from 'react';
 import { dialogManager, reconcileOpen, useLookup, useSlideModal } from 'umbra/react';
 
@@ -101,22 +99,30 @@ export function ControlledPanelExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={open}
-            onChange={(event) => {
-              setOpen(event.target.checked);
-              resultStore.setResult(
-                event.target.checked ? 'The owner opened it' : 'The owner closed it'
-              );
-            }}
-          />
-        }
-        label="Filters open"
-      />
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--app-space-2)',
+          cursor: 'pointer',
+          minHeight: 24,
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={open}
+          onChange={(event) => {
+            setOpen(event.target.checked);
+            resultStore.setResult(
+              event.target.checked ? 'The owner opened it' : 'The owner closed it'
+            );
+          }}
+          style={{ accentColor: 'var(--app-flame)' }}
+        />
+        Filters open
+      </label>
       {/* Outlined on purpose: this is the wrong door, visually demoted next to the switch. */}
-      <Button
+      <AppButton
         variant="outlined"
         size="small"
         onClick={() => {
@@ -127,7 +133,7 @@ export function ControlledPanelExample() {
         }}
       >
         Open it from outside
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

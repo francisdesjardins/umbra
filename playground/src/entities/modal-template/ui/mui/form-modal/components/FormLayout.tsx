@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { type SxProps, type Theme } from '@mui/material/styles';
 import { type ComponentProps, type ReactNode } from 'react';
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 
 export type FormLayoutProps = {
   readonly children: ReactNode;

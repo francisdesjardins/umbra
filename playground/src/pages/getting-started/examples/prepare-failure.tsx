@@ -3,10 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import Button from '@mui/material/Button';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
 import { useMessageModal } from 'umbra/react';
 import type { ModalFailure } from 'umbra/react';
@@ -82,8 +79,15 @@ export function PrepareFailureExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-        <Button
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--app-space-2)',
+          alignItems: 'center',
+        }}
+      >
+        <AppButton
           variant="contained"
           size="small"
           onClick={() => {
@@ -92,20 +96,27 @@ export function PrepareFailureExample() {
           }}
         >
           Open
-        </Button>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={shouldFail}
-              onChange={(event) => {
-                setShouldFail(event.target.checked);
-              }}
-              size="small"
-            />
-          }
-          label="Make the fetch throw"
-        />
-      </Stack>
+        </AppButton>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--app-space-2)',
+            cursor: 'pointer',
+            minHeight: 24,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={shouldFail}
+            onChange={(event) => {
+              setShouldFail(event.target.checked);
+            }}
+            style={{ accentColor: 'var(--app-flame)' }}
+          />
+          Make the fetch throw
+        </label>
+      </div>
     </ExampleLayout>
   );
 }

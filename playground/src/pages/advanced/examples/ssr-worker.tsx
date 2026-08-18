@@ -1,12 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
+import { AppButton } from '@/shared/ui/AppButton';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { CheckCircleIcon } from '@/shared/ui/icons';
+import styles from '@/pages/advanced/examples/ssr-worker.module.css';
+import { useEffect, useRef, useState } from 'react';
 import { createElement } from 'react';
 import { hydrateRoot, type Root } from 'react-dom/client';
 import { SsrWorkerApp } from './ssr-worker-app';
@@ -22,7 +19,6 @@ import type { RenderReply, RenderRequest } from './ssr-worker.worker';
  * of it.
  */
 export function SsrWorkerExample() {
-  const theme = useTheme();
   const hostRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<Root | null>(null);
 
@@ -112,42 +108,76 @@ export function SsrWorkerExample() {
               : null
       }
     >
-      <Stack sx={{ gap: 2, alignItems: 'flex-start' }}>
-        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-          <Button variant="contained" size="small" onClick={renderOnTheServer}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-4)',
+          alignItems: 'flex-start',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 'var(--app-space-2)', flexWrap: 'wrap' }}>
+          <AppButton variant="contained" size="small" onClick={renderOnTheServer}>
             Render in a worker
-          </Button>
-          <Button size="small" disabled={html === null || hydrated} onClick={hydrate}>
+          </AppButton>
+          <AppButton size="small" disabled={html === null || hydrated} onClick={hydrate}>
             Hydrate it
-          </Button>
-        </Stack>
+          </AppButton>
+        </div>
 
         {workerHadDocument !== null && (
-          <Chip
-            size="small"
-            color={workerHadDocument ? 'warning' : 'default'}
-            label={
-              workerHadDocument
-                ? 'the worker had a document — this proves nothing'
-                : 'the worker had no document'
-            }
-          />
+          /* The chip's `warning` state, said with weight and the flame's edge rather than an
+             orange fill — colour alone would be the 1.4.1 trap. */
+          <span
+            style={{
+              padding: '3px var(--app-space-2)',
+              borderRadius: 'var(--app-radius-pill)',
+              fontSize: 'var(--app-text-sm)',
+              background: 'var(--app-hover)',
+              color: 'var(--app-text)',
+              border: `1px solid ${workerHadDocument ? 'var(--app-flame)' : 'var(--app-divider)'}`,
+              fontWeight: workerHadDocument ? 600 : 400,
+            }}
+          >
+            {workerHadDocument
+              ? 'the worker had a document — this proves nothing'
+              : 'the worker had no document'}
+          </span>
         )}
 
         {html !== null && !hydrated && (
-          <Stack sx={{ gap: 0.5, width: '100%', minWidth: 0 }}>
-            <Typography variant="overline" color="text.secondary">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--app-space-1)',
+              width: '100%',
+              minWidth: 0,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 'var(--app-text-xs)',
+                lineHeight: 2.66,
+                letterSpacing: '0.08333em',
+                textTransform: 'uppercase',
+                color: 'var(--app-text-secondary)',
+              }}
+            >
               What came back — a closed &lt;dialog&gt;, described with no DOM
-            </Typography>
+            </span>
             <CodeBlock code={html} language="html" />
-          </Stack>
+          </div>
         )}
 
         {hydrated && (
-          <Alert severity="success" sx={{ width: '100%' }}>
-            React adopted that markup rather than replacing it. Open the dialog: it is the same
-            component, now with a document under it.
-          </Alert>
+          <div className={styles['banner']}>
+            <CheckCircleIcon className={styles['bannerIcon']} aria-hidden="true" />
+            <p className={styles['bannerText']}>
+              React adopted that markup rather than replacing it. Open the dialog: it is the same
+              component, now with a document under it.
+            </p>
+          </div>
         )}
 
         {/*
@@ -155,18 +185,8 @@ export function SsrWorkerExample() {
           reaches the rendered component through these variables rather than through props: the
           worker emits the same markup either way, which is what keeps hydration silent.
         */}
-        <div
-          ref={hostRef}
-          data-testid="ssr-worker-host"
-          style={
-            {
-              '--ssr-surface': theme.palette.background.paper,
-              '--ssr-ink': theme.palette.text.primary,
-              '--ssr-line': theme.palette.divider,
-            } as CSSProperties
-          }
-        />
-      </Stack>
+        <div ref={hostRef} data-testid="ssr-worker-host" className={styles['host']} />
+      </div>
     </ExampleLayout>
   );
 }

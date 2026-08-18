@@ -99,6 +99,37 @@ came along.
 `pages/<route>/ui/`. Page-to-page imports are an FSD violation — if two routes need the same
 example, it belongs in `entities/`.
 
+## The design system (`src/app/styles/app.css`)
+
+The shell runs on its own tokens — no component library — and the token sheet is the whole
+contract, written to be lifted into another project as a base:
+
+- **Colours** are `--app-*` custom properties on `:root`, dark mode overriding them under
+  `:root[data-color-scheme='dark']` (the attribute `ThemeProvider` sets alongside `color-scheme`).
+  Components consume tokens and never branch on mode. The palette is the mascot's, and every pair
+  is measured — see "Colour is measured, not chosen" below. Two rules with teeth: `--app-flame`
+  is a **fill** and `--app-accent` the amber you may put text in; a filled primary hovers
+  _brighter_ (`--app-primary-hover`), never deeper.
+- **Sizes are tokens too — a component asks for a step, never a pixel count**: spacing
+  `--app-space-1..14` on the 4px grid; the type ramp `--app-text-xs..3xl`; radii
+  `--app-radius-sm/·/md/lg/pill`; layout `--app-topbar-height`, `--app-sidebar-width`,
+  `--app-content-max-width`, `--app-icon-sm/md`; stacking `--app-z-*` (everything below the
+  1300+ the dialog manager assigns). An off-scale literal must carry a comment saying why it is
+  off-scale (a measured geometry, a UA constant).
+- **Breakpoints are the one thing that cannot be tokens** (media queries resolve before the
+  cascade): exactly **600px** and **900px**, stated in `app.css`, never a third.
+- **Primitives** live in `shared/ui`: `AppButton`/`AppIconButton` (the shell's buttons — dialog
+  interiors use the templates' buttons instead, on purpose), the `icons` set (Material glyphs
+  extracted from the installed icon package, `currentColor`, `aria-hidden` by default),
+  `SurfaceCard`, `PageLayout`, `SectionNav`, `ResultDisplay`, `LoadingButton`,
+  `ViewCodeButton`, `ThemeToggleButton`.
+- **The MUI island**: `shared/ui/MuiIsland` is the only place a MUI theme exists, wrapped around
+  the surfaces that _demonstrate_ MUI (`/ui-integrations`). The theme itself is
+  `shared/lib/mui-theme.ts`, projecting the same measured palette.
+- The vanilla **templates** keep their own token families (`--modal-*`, `--slide-*`, `--form-*`,
+  `--content-*`, `--panel-*`) — they are copied into other people's apps and must not depend on
+  the shell's sheet.
+
 ## Routes
 
 Grouped in the sidebar; the order is the intended reading order.

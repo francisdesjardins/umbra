@@ -1,10 +1,7 @@
 import { ExampleGrid, ExampleSection } from '@/entities/example';
+import styles from '@/pages/api/ui/ApiIndexPage.module.css';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
-import Box from '@mui/material/Box';
-import CardContent from '@mui/material/CardContent';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import type { ApiCategory } from 'virtual:dialog-api';
 import {
   SPECIFIERS,
@@ -46,42 +43,29 @@ const ENTRY_TITLE: Record<string, string> = {
 
 const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
   return (
-    <RouterLink to={categoryHref(category.id)} sx={{ display: 'block' }}>
+    <RouterLink to={categoryHref(category.id)} className={styles['cardLink']}>
       <SurfaceCard interactive>
-        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: '100%' }}>
-          <Stack direction="row" sx={{ alignItems: 'baseline', gap: 1 }}>
-            <Typography variant="subtitle1" color="text.primary" sx={{ fontWeight: 700, flex: 1 }}>
-              {category.label}
-            </Typography>
-            <Typography variant="caption" color="text.disabled">
-              {String(category.symbols.length)}
-            </Typography>
-          </Stack>
+        <div className={styles['cardContent']}>
+          <div className={styles['cardHeader']}>
+            <h6 className={styles['cardTitle']}>{category.label}</h6>
+            <span className={styles['count']}>{String(category.symbols.length)}</span>
+          </div>
 
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            {category.blurb}
-          </Typography>
+          <p className={styles['blurb']}>{category.blurb}</p>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+          <div className={styles['symbolPreview']}>
             {category.symbols.slice(0, 4).map((symbol) => {
               return (
-                <Typography
-                  key={symbol.name}
-                  variant="caption"
-                  color="text.disabled"
-                  sx={{ fontFamily: 'monospace' }}
-                >
+                <span key={symbol.name} className={styles['symbolPreviewName']}>
                   {symbol.name}
-                </Typography>
+                </span>
               );
             })}
             {category.symbols.length > 4 && (
-              <Typography variant="caption" color="text.disabled">
-                +{String(category.symbols.length - 4)}
-              </Typography>
+              <span className={styles['count']}>+{String(category.symbols.length - 4)}</span>
             )}
-          </Box>
-        </CardContent>
+          </div>
+        </div>
       </SurfaceCard>
     </RouterLink>
   );
@@ -89,7 +73,7 @@ const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
 
 const StartHere = () => {
   return (
-    <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+    <div className={styles['startRow']}>
       {START_HERE.map(({ specifier, name }) => {
         const symbol = symbolAt(specifier, name);
         if (symbol === undefined) {
@@ -100,32 +84,15 @@ const StartHere = () => {
             key={symbol.key}
             to={categoryHref(symbol.category)}
             hash={symbolAnchor(name)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.75,
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1.5,
-              border: 1,
-              borderColor: 'divider',
-              textDecoration: 'none',
-              fontFamily: 'monospace',
-              fontSize: '0.8125rem',
-              color: 'text.primary',
-              transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
-            }}
+            className={styles['startChip']}
           >
-            <Box component="span" sx={{ color: 'text.disabled' }}>
-              {specifier}
-            </Box>
+            <span className={styles['startSpecifier']}>{specifier}</span>
             {name}
             <KindBadge kind={symbol.kind} />
           </RouterLink>
         );
       })}
-    </Stack>
+    </div>
   );
 };
 
@@ -137,20 +104,18 @@ export const ApiIndexPage = () => {
       description="Generated from the source by typedoc and rendered with this site's own components, so the reference and the examples read as one document. It regenerates whenever the library changes."
     >
       <ApiLayout>
-        <Stack sx={{ gap: 4 }}>
-          <Stack sx={{ gap: 1.5 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: '0.1em' }}>
-              Start here
-            </Typography>
+        <div className={styles['page']}>
+          <div className={styles['intro']}>
+            <span className={styles['overline']}>Start here</span>
             <StartHere />
-            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 640 }}>
+            <p className={styles['introBody']}>
               These pages are the whole public surface: {String(SYMBOLS.length)} exports across{' '}
               {String(SPECIFIERS.length)} entry points. Anything internal is excluded from the
               generator, so if a name is not here it is not something the package promises — a type
               mentioned in a signature without a link is an internal shape you never have to name
               yourself.
-            </Typography>
-          </Stack>
+            </p>
+          </div>
 
           {SPECIFIERS.map((specifier) => {
             return (
@@ -167,7 +132,7 @@ export const ApiIndexPage = () => {
               </ExampleSection>
             );
           })}
-        </Stack>
+        </div>
       </ApiLayout>
     </PageLayout>
   );

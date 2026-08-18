@@ -1,0 +1,67 @@
+/* Deep links land the heading clear of the sticky bar: the top bar plus one 24px step. */
+.article {
+  scroll-margin-top: calc(var(--app-topbar-height) + var(--app-space-6));
+}
+
+/* CardContent's rendered numbers: 16px with its own `:last-child` 24px bottom below 900px,
+   24px all round from there. */
+.content {
+  padding: var(--app-space-4);
+  padding-bottom: var(--app-space-6);
+}
+
+@media (min-width: 900px) {
+  .content {
+    padding: var(--app-space-6);
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+}
+
+/* The h6 rank in monospace, bolded — the symbol's name. */
+.name {
+  margin: 0;
+  font-family: monospace;
+  font-size: var(--app-text-lg);
+  font-weight: 700;
+  letter-spacing: 0.0075em;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* `a.` outranks RouterLink's `color: inherit` whatever the modules' injection order. */
+a.anchor {
+  display: flex;
+  color: var(--app-text-tertiary);
+}
+
+a.anchor:hover {
+  color: var(--app-accent);
+}
+
+.anchorIcon {
+  width: var(--app-icon-sm);
+  height: var(--app-icon-sm);
+}
+
+/* A callout rule: 3px, deliberately thicker than the 1px hairline. */
+.remarks {
+  padding: var(--app-space-1) 0 var(--app-space-1) var(--app-space-4);
+  border-left: 3px solid var(--app-divider);
+}
+
+.example {
+  overflow: hidden;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+}

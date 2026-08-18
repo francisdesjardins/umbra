@@ -1,7 +1,7 @@
 import Stack from '@mui/material/Stack';
 import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 import { focusRingRoom, spacing } from '@/entities/modal-template/ui/shared/tokens';
 import { DefaultContainer } from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer';
 

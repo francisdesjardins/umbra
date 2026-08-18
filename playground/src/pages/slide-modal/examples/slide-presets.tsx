@@ -5,10 +5,8 @@ import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
+import styles from '@/pages/slide-modal/examples/slide-presets.module.css';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Key, useSlideModal } from 'umbra/react';
@@ -261,56 +259,22 @@ function ShapeTile({
         : { left: '22%', right: '22%', top: 3, height: '38%' };
 
   return (
-    <Stack
-      component="button"
+    <button
       type="button"
+      className={styles['shapeTile']}
       onClick={() => {
         void onOpen();
       }}
-      sx={{
-        gap: 1,
-        p: 1.5,
-        // `minWidth: 0` lets the monospace option line wrap instead of setting the tile's floor.
-        flex: '1 1 150px',
-        minWidth: 0,
-        alignItems: 'flex-start',
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1.5,
-        bgcolor: 'background.paper',
-        color: 'text.primary',
-        font: 'inherit',
-        textAlign: 'left',
-        cursor: 'pointer',
-        transition: 'border-color 120ms, transform 120ms',
-        '&:hover': { borderColor: 'primary.main', transform: 'translateY(-1px)' },
-      }}
     >
-      <Box
+      <div
         aria-hidden
-        sx={{
-          position: 'relative',
-          width: 58,
-          height: 40,
-          borderRadius: 1,
-          border: dashed ? '1px dashed' : '1px solid',
-          borderColor: 'text.disabled',
-          bgcolor: 'action.hover',
-        }}
+        className={dashed ? `${styles['thumb']} ${styles['thumbDashed']}` : styles['thumb']}
       >
-        <Box sx={{ position: 'absolute', borderRadius: 0.5, bgcolor: 'primary.main', ...band }} />
-      </Box>
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-        {label}
-      </Typography>
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ fontFamily: 'monospace', overflowWrap: 'anywhere' }}
-      >
-        {options}
-      </Typography>
-    </Stack>
+        <div className={styles['band']} style={band} />
+      </div>
+      <span className={styles['tileLabel']}>{label}</span>
+      <span className={styles['tileOptions']}>{options}</span>
+    </button>
   );
 }
 
@@ -347,8 +311,16 @@ export function SlidePresetsExample() {
         </>
       }
     >
-      <Stack sx={{ gap: 2, width: '100%', minWidth: 0 }}>
-        <Stack direction="row" sx={{ gap: 1.5, flexWrap: 'wrap' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-4)',
+          width: '100%',
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: 'flex', gap: 'var(--app-space-3)', flexWrap: 'wrap' }}>
           <ShapeTile
             label="Right drawer"
             options="direction: 'right'"
@@ -377,61 +349,71 @@ export function SlidePresetsExample() {
               await inspector.open();
             }}
           />
-        </Stack>
+        </div>
 
         {/* A contained panel is only as big as its host, so the host is a real card with rows. */}
-        <Box>
-          <Typography variant="caption" color="text.secondary">
+        <div>
+          <span
+            style={{
+              fontSize: 'var(--app-text-xs)',
+              lineHeight: 1.66,
+              color: 'var(--app-text-secondary)',
+            }}
+          >
             Contained panel — a details pane inside a card, not an overlay on the page. While it is
             open, ↑ and ↓ move through the rows:
-          </Typography>
-          <Box
-            sx={{
+          </span>
+          <div
+            style={{
               position: 'relative',
               height: 220,
-              mt: 0.5,
+              marginTop: 'var(--app-space-1)',
               // Clips the panel into the card and the row focus rings with it, so both boxes pad.
               overflow: 'hidden',
-              py: focusRingSpace,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              bgcolor: 'background.paper',
+              paddingBlock: focusRingSpace,
+              border: '1px solid var(--app-divider)',
+              borderRadius: 'var(--app-radius)',
+              background: 'var(--app-paper)',
             }}
           >
             {/* Scroll-into-view parks a tabbed-to button flush against the edge, clipping its ring;
                 `scroll-padding` moves that edge inward, and the padding covers the resting case. */}
-            <Stack
-              sx={{
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
                 height: '100%',
                 overflowY: 'auto',
-                py: focusRingSpace,
+                paddingBlock: focusRingSpace,
                 scrollPaddingBlock: focusRingSpace,
               }}
             >
               {ROWS.map((row, index) => {
                 return (
-                  <Stack
+                  <div
                     key={row.id}
-                    direction="row"
-                    sx={{
-                      px: 2,
-                      py: 1.25,
-                      gap: 2,
-                      alignItems: 'center',
-                      borderBottom: 1,
-                      borderColor: 'divider',
-                      bgcolor: selected?.id === row.id ? 'action.selected' : undefined,
-                    }}
+                    className={
+                      selected?.id === row.id
+                        ? `${styles['row']} ${styles['rowSelected']}`
+                        : styles['row']
+                    }
                   >
-                    <Stack sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="body2">{row.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 'var(--app-text-md)', lineHeight: 1.43 }}>
+                        {row.name}
+                      </p>
+                      <span
+                        style={{
+                          fontSize: 'var(--app-text-xs)',
+                          lineHeight: 1.66,
+                          color: 'var(--app-text-secondary)',
+                        }}
+                      >
                         {row.detail}
-                      </Typography>
-                    </Stack>
+                      </span>
+                    </div>
                     {/* Still clickable while the panel is open — nothing entered the top layer. */}
-                    <Button
+                    <AppButton
                       size="small"
                       variant="text"
                       onClick={async () => {
@@ -440,18 +422,18 @@ export function SlidePresetsExample() {
                       }}
                     >
                       Details
-                    </Button>
-                  </Stack>
+                    </AppButton>
+                  </div>
                 );
               })}
-            </Stack>
+            </div>
             {inspector.Modal}
-          </Box>
-        </Box>
+          </div>
+        </div>
         {/* Outside the dialog on purpose — see useAnnouncer for why a region inside `render`
             would announce nothing. */}
         {region}
-      </Stack>
+      </div>
     </ExampleLayout>
   );
 }

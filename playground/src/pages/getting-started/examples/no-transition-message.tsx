@@ -2,7 +2,7 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import Button from '@mui/material/Button';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -52,7 +52,7 @@ export function NoTransitionMessageExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -61,7 +61,7 @@ export function NoTransitionMessageExample() {
         }}
       >
         Open
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

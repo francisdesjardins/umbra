@@ -1,0 +1,42 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--app-space-6);
+  align-items: start;
+}
+
+.rail {
+  display: none;
+}
+
+.content {
+  min-width: 0;
+}
+
+.mobileSearch {
+  margin-bottom: var(--app-space-6);
+}
+
+@media (min-width: 900px) {
+  .grid {
+    /* 236px: the rail's measured column — off the 4px grid, sized to its longest label. */
+    grid-template-columns: 236px minmax(0, 1fr);
+    gap: var(--app-space-10);
+  }
+
+  /* Sticky one 16px step under the top bar; the max-height gives the rail its own scroll,
+     ending one 40px step above the viewport's bottom edge — the 80px/104px the MUI layout
+     rendered, spelled from the tokens. */
+  .rail {
+    display: block;
+    position: sticky;
+    top: calc(var(--app-topbar-height) + var(--app-space-4));
+    max-height: calc(100dvh - var(--app-topbar-height) - var(--app-space-10));
+    overflow-y: auto;
+    padding-right: var(--app-space-2);
+  }
+
+  .mobileSearch {
+    display: none;
+  }
+}

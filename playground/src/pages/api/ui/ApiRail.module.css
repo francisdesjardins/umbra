@@ -1,0 +1,95 @@
+/* Off-scale numbers throughout are MUI's rendered half-steps: 0.6875rem is the 11px spec text,
+   2px/6px the 0.25 and 0.75 spacing steps. `a.` selectors outrank RouterLink's reset whatever
+   the modules' injection order. */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-4);
+}
+
+.specifier {
+  display: block;
+  margin-bottom: var(--app-space-1);
+  padding: 0 var(--app-space-2);
+  color: var(--app-text-tertiary);
+  font-family: monospace;
+  font-size: 0.6875rem;
+  line-height: 1.66;
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+a.category {
+  display: flex;
+  align-items: baseline;
+  gap: var(--app-space-2);
+  padding: var(--app-space-1) var(--app-space-2);
+  border-radius: var(--app-radius);
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-md);
+}
+
+a.category:hover {
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+
+a.categoryActive {
+  color: var(--app-accent);
+  font-weight: 700;
+}
+
+.categoryLabel {
+  flex: 1;
+}
+
+.categoryCount {
+  color: var(--app-text-tertiary);
+  font-size: 0.6875rem;
+}
+
+.symbols {
+  display: flex;
+  flex-direction: column;
+  margin: var(--app-space-1) 0 var(--app-space-2);
+}
+
+a.symbol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: var(--app-space-2);
+  padding: 2px 0 2px var(--app-space-2);
+  border-left: 2px solid var(--app-divider);
+  color: var(--app-text-secondary);
+  font-family: monospace;
+  font-size: var(--app-text-xs);
+}
+
+a.symbol:hover {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+
+a.symbolCurrent {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+  font-weight: 700;
+}
+
+.symbolName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  padding: 0 var(--app-space-2);
+  color: var(--app-text-tertiary);
+  font-size: var(--app-text-xs);
+  line-height: 1.66;
+}

@@ -1,4 +1,4 @@
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
 import Box from '@mui/material/Box';
 import { type SxProps } from '@mui/material/styles';

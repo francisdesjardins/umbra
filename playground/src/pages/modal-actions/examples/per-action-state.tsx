@@ -4,7 +4,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
-import Button from '@mui/material/Button';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 
 export const MODAL_ID = 'per-action-state';
@@ -138,7 +138,7 @@ export function PerActionStateExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
@@ -147,7 +147,7 @@ export function PerActionStateExample() {
         }}
       >
         Open the publish dialog
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

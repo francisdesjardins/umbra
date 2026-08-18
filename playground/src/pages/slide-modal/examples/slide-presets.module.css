@@ -1,0 +1,74 @@
+/* A tile is a button drawn as a card — the hover lift and border shift are states an inline
+   style cannot carry. */
+.shapeTile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--app-space-2);
+  padding: var(--app-space-3);
+  /* `min-width: 0` lets the monospace option line wrap instead of setting the tile's floor. */
+  flex: 1 1 150px;
+  min-width: 0;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+  background: var(--app-paper);
+  color: var(--app-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms,
+    transform 120ms;
+}
+
+.shapeTile:hover {
+  border-color: var(--app-flame);
+  transform: translateY(-1px);
+}
+
+/* The glyph is a drawing, not layout, so its 58×40 box stays literal. */
+.thumb {
+  position: relative;
+  width: 58px;
+  height: 40px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-text-tertiary);
+  background: var(--app-hover);
+}
+
+.thumbDashed {
+  border-style: dashed;
+}
+
+.band {
+  position: absolute;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-flame);
+}
+
+.tileLabel {
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+  font-weight: 600;
+}
+
+.tileOptions {
+  font-family: monospace;
+  font-size: var(--app-text-xs);
+  line-height: 1.66;
+  color: var(--app-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-4);
+  /* 10px sits between the 8/12 steps — the denser rhythm this data list wants. */
+  padding: 10px var(--app-space-4);
+  border-bottom: 1px solid var(--app-divider);
+}
+
+.rowSelected {
+  background: var(--app-selected);
+}

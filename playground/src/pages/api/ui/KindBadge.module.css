@@ -1,0 +1,36 @@
+/* Off-scale numbers are MUI's rendered half-steps: 0.6875rem is the 11px spec text, 6px the
+   0.75 spacing step, 3px the 0.75 radius step. No `opacity` anywhere: it multiplies the
+   contrast just measured — a dimmer tone instead. */
+.badge {
+  flex-shrink: 0;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+/* The readable end of each tone, per mode: a palette `main` is a background for its ink, and as
+   11px page text amber measures 3.19:1 on white — so the amber tone is the accent token, which
+   already picks the deep end in light and the bright end in dark. */
+.primary {
+  color: var(--app-accent);
+}
+
+.neutral {
+  color: var(--app-text-secondary);
+}
+
+/* MUI's success tone at its rendered ends — light mode reads the palette's `dark`, dark mode its
+   `light`. Literals because the app sheet carries no green; measured 7.8:1 on white and 8.0:1 on
+   the dark card's #212121, the worst grounds each sits on. */
+.success {
+  color: #1b5e20;
+}
+
+:root[data-color-scheme='dark'] .success {
+  color: #81c784;
+}

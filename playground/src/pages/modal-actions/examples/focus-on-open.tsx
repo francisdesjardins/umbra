@@ -2,14 +2,21 @@ import { ExampleLayout } from '@/entities/example';
 import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
+import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
 
 export const MODAL_ID = 'focus-on-open';
+
+/** The chip the MUI `Chip` drew here: a pill of quiet text on the hover wash. */
+const chipStyle: CSSProperties = {
+  padding: '3px 8px',
+  borderRadius: 'var(--app-radius-pill)',
+  fontSize: 'var(--app-text-sm)',
+  background: 'var(--app-hover)',
+  color: 'var(--app-text)',
+};
 
 /** Reads what actually holds focus, so the claim on screen is measured rather than asserted. */
 function useFocusedLabel(active: boolean) {
@@ -125,27 +132,41 @@ export function FocusOnOpenExample() {
 
   return (
     <ExampleLayout result={outcome} modals={modal.Modal}>
-      <Stack sx={{ gap: 1.5, width: '100%' }}>
-        <Button
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-3)',
+          width: '100%',
+        }}
+      >
+        <AppButton
           variant="contained"
           size="small"
-          sx={{ alignSelf: 'flex-start' }}
+          style={{ alignSelf: 'flex-start' }}
           onClick={async () => {
             setOutcome(null);
             await modal.open();
           }}
         >
           Delete a file
-        </Button>
-        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-          <Chip size="small" label={`focus: ${isVisible ? focused : 'modal closed'}`} />
-          <Chip size="small" label={`delete attempts: ${String(attempts)}`} />
-        </Stack>
-        <Typography variant="caption" color="text.secondary">
+        </AppButton>
+        <div style={{ display: 'flex', gap: 'var(--app-space-2)', flexWrap: 'wrap' }}>
+          <span style={chipStyle}>focus: {isVisible ? focused : 'modal closed'}</span>
+          <span style={chipStyle}>delete attempts: {String(attempts)}</span>
+        </div>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 'var(--app-text-xs)',
+            lineHeight: 1.66,
+            color: 'var(--app-text-secondary)',
+          }}
+        >
           The first Delete always fails, so you can watch focus return to the button that offers the
           retry. Press <kbd>Enter</kbd> twice: the first fails, the second closes.
-        </Typography>
-      </Stack>
+        </p>
+      </div>
     </ExampleLayout>
   );
 }

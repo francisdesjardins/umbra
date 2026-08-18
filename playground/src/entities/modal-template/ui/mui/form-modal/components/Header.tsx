@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 
 type HeaderProps = {
   readonly children: ReactNode;

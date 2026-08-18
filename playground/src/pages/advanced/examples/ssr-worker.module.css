@@ -1,0 +1,38 @@
+/* The card's success banner, on MUI Alert's measured success pair — same structure as the info
+   banner recipe (main at 0.1 over light, the light shade at 0.12 and as the ink over dark),
+   because the light pair fails on a dark page and vice versa. */
+.banner {
+  display: flex;
+  gap: var(--app-space-3);
+  padding: var(--app-space-3);
+  border-radius: var(--app-radius-md);
+  width: 100%;
+  background: rgba(46, 125, 50, 0.1);
+  color: #1b5e20;
+}
+
+:root[data-color-scheme='dark'] .banner {
+  background: rgba(102, 187, 106, 0.12);
+  color: #66bb6a;
+}
+
+.bannerIcon {
+  width: 22px; /* MUI Alert's icon geometry, between the 20/24 icon steps. */
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.bannerText {
+  margin: 0;
+  font-size: var(--app-text-md);
+  line-height: 1.43;
+}
+
+/* The theme reaches the worker-rendered markup through these variables rather than through
+   props: the worker emits the same markup either way, which is what keeps hydration silent —
+   and tokens flip with the scheme, so no JS theme read is needed at all. */
+.host {
+  --ssr-surface: var(--app-paper);
+  --ssr-ink: var(--app-text);
+  --ssr-line: var(--app-divider);
+}

@@ -1,0 +1,87 @@
+/* MUI's overline rank, with the original's overrides: 600 weight and a wider 0.1em tracking. */
+.label {
+  display: block;
+  margin-bottom: var(--app-space-1);
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 2.66;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  column-gap: var(--app-space-5);
+}
+
+.term {
+  padding-top: var(--app-space-2);
+  border-top: 1px solid var(--app-divider);
+  font-family: monospace;
+  font-size: var(--app-text-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* The first row starts flush — no hairline above the list. The `.class.class` weight is what
+   keeps these wins order-independent against the media rules below. */
+.term.firstRow {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.detail {
+  min-width: 0;
+  margin: 0;
+  /* 2px: the stacked layout's 0.25 half-step between a name and its type. */
+  padding-top: 2px;
+  padding-bottom: var(--app-space-2);
+}
+
+/* Stacked below 600px, the name alone carries the hairline; two columns from 600px up, where
+   both cells rule and the name gains its bottom breath. */
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  }
+
+  .term {
+    padding-bottom: var(--app-space-2);
+  }
+
+  .detail {
+    padding-top: var(--app-space-2);
+    border-top: 1px solid var(--app-divider);
+  }
+
+  .detail.firstRow {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.optional {
+  color: var(--app-text-tertiary);
+}
+
+.memberType {
+  color: var(--app-text-secondary);
+  font-family: monospace;
+  font-size: var(--app-text-sm);
+  overflow-wrap: anywhere;
+}
+
+/* body2 with the original's tightened 2px top margin and opened 1.6 line height. */
+.summary {
+  margin: 2px 0 0;
+  color: var(--app-text-secondary);
+  font-size: var(--app-text-md);
+  line-height: 1.6;
+}
+
+.toggle {
+  margin-top: var(--app-space-1);
+}

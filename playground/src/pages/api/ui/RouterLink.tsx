@@ -1,11 +1,15 @@
-import { styled } from '@mui/material/styles';
+import styles from '@/pages/api/ui/RouterLink.module.css';
 import { Link } from '@tanstack/react-router';
+import type { ComponentProps } from 'react';
+
+type RouterLinkProps = ComponentProps<typeof Link>;
 
 /**
- * A TanStack `Link` taking MUI's `sx`, for every navigation here. `component={Link}` cannot type a
- * dynamic route and `styled(Link)` erases the generics typing `params`, so links are plain paths.
+ * A TanStack `Link` wearing the reference's link reset, for every navigation here. Wrapping
+ * erases the generics typing `params`, so links are plain paths; callers compose their own
+ * module class on top via `className`.
  */
-export const RouterLink = styled(Link)({
-  textDecoration: 'none',
-  color: 'inherit',
-});
+export const RouterLink = ({ className, ...rest }: RouterLinkProps) => {
+  const classes = [styles['link'], className ?? ''].filter(Boolean).join(' ');
+  return <Link {...rest} className={classes} />;
+};

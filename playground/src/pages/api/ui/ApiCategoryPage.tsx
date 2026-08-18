@@ -1,12 +1,7 @@
+import styles from '@/pages/api/ui/ApiCategoryPage.module.css';
+import { ArrowBackIcon, ArrowForwardIcon } from '@/shared/ui/icons';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import Box from '@mui/material/Box';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { useParams } from '@tanstack/react-router';
 import type { ApiCategory } from 'virtual:dialog-api';
 import { categoryHref, findCategory, neighboursOf } from '../model/api-index';
@@ -45,32 +40,32 @@ const CategoryStep = ({
   readonly direction: 'previous' | 'next';
 }) => {
   return (
-    <RouterLink
-      to={categoryHref(category.id)}
-      sx={{ display: 'block', flex: '1 1 200px', minWidth: 0 }}
-    >
+    <RouterLink to={categoryHref(category.id)} className={styles['step']}>
       <SurfaceCard interactive>
-        <CardContent>
-          <Stack
-            direction="row"
-            sx={{
-              gap: 1,
-              alignItems: 'center',
-              justifyContent: direction === 'next' ? 'flex-end' : 'flex-start',
-            }}
+        <div className={styles['stepContent']}>
+          <div
+            className={
+              direction === 'next'
+                ? `${styles['stepRow']} ${styles['stepRowNext']}`
+                : styles['stepRow']
+            }
           >
-            {direction === 'previous' && <ArrowBackIcon fontSize="small" color="disabled" />}
-            <Box sx={{ textAlign: direction === 'next' ? 'right' : 'left', minWidth: 0 }}>
-              <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
+            {direction === 'previous' && <ArrowBackIcon className={styles['stepIcon']} />}
+            <div
+              className={
+                direction === 'next'
+                  ? `${styles['stepText']} ${styles['stepTextNext']}`
+                  : styles['stepText']
+              }
+            >
+              <span className={styles['stepDirection']}>
                 {direction === 'previous' ? 'Previous' : 'Next'}
-              </Typography>
-              <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600 }}>
-                {category.label}
-              </Typography>
-            </Box>
-            {direction === 'next' && <ArrowForwardIcon fontSize="small" color="disabled" />}
-          </Stack>
-        </CardContent>
+              </span>
+              <p className={styles['stepLabel']}>{category.label}</p>
+            </div>
+            {direction === 'next' && <ArrowForwardIcon className={styles['stepIcon']} />}
+          </div>
+        </div>
       </SurfaceCard>
     </RouterLink>
   );
@@ -90,7 +85,7 @@ export const ApiCategoryPage = () => {
         description={`No API page is called “${categoryId}”.`}
       >
         <ApiLayout>
-          <RouterLink to="/api" sx={{ color: 'accent.onSurface' }}>
+          <RouterLink to="/api" className={styles['accentLink']}>
             Back to the API reference
           </RouterLink>
         </ApiLayout>
@@ -104,31 +99,18 @@ export const ApiCategoryPage = () => {
     <PageLayout
       title={category.label}
       description={category.blurb}
-      actions={
-        <Chip
-          size="small"
-          variant="outlined"
-          label={category.specifier}
-          sx={{ fontFamily: 'monospace', fontSize: '0.7rem' }}
-        />
-      }
+      actions={<span className={styles['specifierChip']}>{category.specifier}</span>}
     >
       <ApiLayout activeCategory={category.id} activeSymbol={activeSymbol}>
-        <Stack sx={{ gap: 2.5 }}>
-          <Stack direction="row" sx={{ gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
-            <RouterLink to="/api" sx={{ color: 'accent.onSurface', fontSize: '0.875rem' }}>
+        <div className={styles['column']}>
+          <div className={styles['breadcrumbs']}>
+            <RouterLink to="/api" className={styles['breadcrumbLink']}>
               API Reference
             </RouterLink>
-            <Typography variant="body2" color="text.disabled">
-              ›
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {category.label}
-            </Typography>
-            <Typography variant="body2" color="text.disabled" sx={{ ml: 'auto' }}>
-              {String(category.symbols.length)} exports
-            </Typography>
-          </Stack>
+            <p className={styles['crumbDivider']}>›</p>
+            <p className={styles['crumbCurrent']}>{category.label}</p>
+            <p className={styles['exportCount']}>{String(category.symbols.length)} exports</p>
+          </div>
 
           <ImportLine category={category} />
 
@@ -136,11 +118,11 @@ export const ApiCategoryPage = () => {
             return <SymbolArticle key={symbol.name} symbol={symbol} />;
           })}
 
-          <Stack direction="row" sx={{ gap: 2, flexWrap: 'wrap', mt: 1 }}>
+          <div className={styles['pager']}>
             {previous !== undefined && <CategoryStep category={previous} direction="previous" />}
             {next !== undefined && <CategoryStep category={next} direction="next" />}
-          </Stack>
-        </Stack>
+          </div>
+        </div>
       </ApiLayout>
     </PageLayout>
   );

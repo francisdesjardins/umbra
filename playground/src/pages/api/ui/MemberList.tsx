@@ -1,6 +1,5 @@
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import styles from '@/pages/api/ui/MemberList.module.css';
+import { AppButton } from '@/shared/ui/AppButton';
 import { Fragment, useState } from 'react';
 import type { ApiMember } from 'virtual:dialog-api';
 import { InlineCode, SymbolLink } from './DocText';
@@ -10,40 +9,22 @@ const COLLAPSE_ABOVE = 12;
 const COLLAPSED_ROWS = 8;
 
 const Label = ({ children }: { readonly children: React.ReactNode }) => {
-  return (
-    <Typography
-      variant="overline"
-      color="text.secondary"
-      sx={{ display: 'block', letterSpacing: '0.1em', fontWeight: 600, mb: 0.5 }}
-    >
-      {children}
-    </Typography>
-  );
+  return <span className={styles['label']}>{children}</span>;
 };
 
 const MemberType = ({ member }: { readonly member: ApiMember }) => {
   return (
-    <Box
-      component="span"
-      sx={{
-        fontFamily: 'monospace',
-        fontSize: '0.8125rem',
-        color: 'text.secondary',
-        overflowWrap: 'anywhere',
-      }}
-    >
+    <span className={styles['memberType']}>
       {member.type.map((part, index) => {
         return part.link !== undefined ? (
           <SymbolLink key={index} symbolKey={part.link}>
             {part.text}
           </SymbolLink>
         ) : (
-          <Box component="span" key={index}>
-            {part.text}
-          </Box>
+          <span key={index}>{part.text}</span>
         );
       })}
-    </Box>
+    </span>
   );
 };
 
@@ -68,83 +49,43 @@ export const MemberList = ({
   const visible = collapsible && !expanded ? members.slice(0, COLLAPSED_ROWS) : members;
 
   return (
-    <Box>
+    <div>
       <Label>{title}</Label>
-      <Box
-        component="dl"
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: 'minmax(0, 1fr)',
-            sm: 'minmax(0, max-content) minmax(0, 1fr)',
-          },
-          columnGap: 2.5,
-          m: 0,
-        }}
-      >
+      <dl className={styles['grid']}>
         {visible.map((member, index) => {
-          const rule = { borderTop: index === 0 ? 0 : 1, borderColor: 'divider' };
+          const first = index === 0 ? ` ${styles['firstRow']}` : '';
           return (
             <Fragment key={member.name}>
-              <Box
-                component="dt"
-                sx={{
-                  ...rule,
-                  pt: index === 0 ? 0 : 1,
-                  pb: { xs: 0, sm: 1 },
-                  fontFamily: 'monospace',
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  overflowWrap: 'anywhere',
-                }}
-              >
+              <dt className={`${styles['term']}${first}`}>
                 {member.name}
-                {member.optional && (
-                  <Box component="span" sx={{ color: 'text.disabled' }}>
-                    ?
-                  </Box>
-                )}
-              </Box>
-              <Box
-                component="dd"
-                sx={{
-                  ...rule,
-                  borderTop: { xs: 0, sm: index === 0 ? 0 : 1 },
-                  pt: { xs: 0.25, sm: index === 0 ? 0 : 1 },
-                  pb: 1,
-                  m: 0,
-                  minWidth: 0,
-                }}
-              >
+                {member.optional && <span className={styles['optional']}>?</span>}
+              </dt>
+              <dd className={`${styles['detail']}${first}`}>
                 <MemberType member={member} />
                 {member.summary !== '' && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 0.25, lineHeight: 1.6 }}
-                  >
+                  <p className={styles['summary']}>
                     <InlineCode text={member.summary} />
-                  </Typography>
+                  </p>
                 )}
-              </Box>
+              </dd>
             </Fragment>
           );
         })}
-      </Box>
+      </dl>
       {collapsible && (
-        <Button
+        <AppButton
           size="small"
+          className={styles['toggle']}
           onClick={() => {
             setExpanded((previous) => {
               return !previous;
             });
           }}
-          sx={{ mt: 0.5 }}
         >
           {expanded ? 'Show fewer' : `Show all ${String(members.length)}`}
-        </Button>
+        </AppButton>
       )}
-    </Box>
+    </div>
   );
 };
 

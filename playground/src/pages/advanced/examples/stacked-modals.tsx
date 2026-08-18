@@ -2,14 +2,21 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
+import { AppButton } from '@/shared/ui/AppButton';
+import type { CSSProperties } from 'react';
 import { useState } from 'react';
 import { Key, useMessageModal, useSlideModal } from 'umbra/react';
 
 export const PANEL_ID = 'stack-panel';
+
+/** The chip the MUI `Chip` drew here: a pill of quiet text on the hover wash. */
+const chipStyle: CSSProperties = {
+  padding: '3px 8px',
+  borderRadius: 'var(--app-radius-pill)',
+  fontSize: 'var(--app-text-sm)',
+  background: 'var(--app-hover)',
+  color: 'var(--app-text)',
+};
 
 /**
  * Three modals of different kinds, stacked: all three declare `Enter` differently and only the
@@ -166,8 +173,15 @@ export function StackedModalsExample() {
 
   return (
     <ExampleLayout result={log.at(-1) ?? null} modals={panel.Modal}>
-      <Stack sx={{ gap: 2, width: '100%' }}>
-        <Button
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-4)',
+          width: '100%',
+        }}
+      >
+        <AppButton
           variant="contained"
           size="small"
           onClick={async () => {
@@ -177,24 +191,24 @@ export function StackedModalsExample() {
           }}
         >
           Start the stack
-        </Button>
+        </AppButton>
 
-        <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
-          <Chip size="small" label={`Enter heard by level 1: ${String(counts.panel)}`} />
-          <Chip size="small" label={`level 2: ${String(counts.middle)}`} />
-          <Chip size="small" label={`level 3: ${String(counts.inner)}`} />
-        </Stack>
+        <div style={{ display: 'flex', gap: 'var(--app-space-2)', flexWrap: 'wrap' }}>
+          <span style={chipStyle}>Enter heard by level 1: {String(counts.panel)}</span>
+          <span style={chipStyle}>level 2: {String(counts.middle)}</span>
+          <span style={chipStyle}>level 3: {String(counts.inner)}</span>
+        </div>
 
-        <Box
-          sx={{
+        <div
+          style={{
             minHeight: 96,
-            p: 1.5,
-            borderRadius: 1,
-            border: 1,
-            borderColor: 'divider',
+            padding: 'var(--app-space-3)',
+            borderRadius: 'var(--app-radius)',
+            border: '1px solid var(--app-divider)',
             fontFamily: 'monospace',
+            // Off-scale on purpose: the log line size this box always used, kept to the letter.
             fontSize: '0.78rem',
-            color: 'text.secondary',
+            color: 'var(--app-text-secondary)',
           }}
         >
           {log.length === 0 ? (
@@ -204,8 +218,8 @@ export function StackedModalsExample() {
               return <div key={`${entry}-${String(index)}`}>{entry}</div>;
             })
           )}
-        </Box>
-      </Stack>
+        </div>
+      </div>
     </ExampleLayout>
   );
 }

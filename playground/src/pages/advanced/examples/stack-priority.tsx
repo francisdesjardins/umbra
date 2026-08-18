@@ -2,11 +2,7 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useState } from 'react';
 import {
   Key,
@@ -35,26 +31,34 @@ function PolicySwitch({
   enabled,
   onChange,
 }: {
-  enabled: boolean;
-  onChange: (next: boolean) => void;
+  readonly enabled: boolean;
+  readonly onChange: (next: boolean) => void;
 }) {
   return (
-    <FormControlLabel
-      control={
-        <Switch
-          size="small"
-          checked={enabled}
-          onChange={(event) => {
-            onChange(event.target.checked);
-          }}
-        />
-      }
-      label="Priority policy"
-    />
+    <label
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--app-space-2)',
+        cursor: 'pointer',
+        minHeight: 24,
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(event) => {
+          onChange(event.target.checked);
+        }}
+        style={{ accentColor: 'var(--app-flame)' }}
+      />
+      Priority policy
+    </label>
   );
 }
 
-/** The same control for the dialog interiors, on plain markup — the card keeps the MUI switch. */
+/** The same control for the dialog interiors, on the template tokens — the card's reads the
+ * shell's `--app-*` sheet, which the copied-out templates must not depend on. */
 function DialogPolicySwitch({
   enabled,
   onChange,
@@ -224,8 +228,15 @@ export function StackPriorityExample() {
         </>
       }
     >
-      <Stack sx={{ gap: 1.5, alignItems: 'flex-start' }}>
-        <Button
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--app-space-3)',
+          alignItems: 'flex-start',
+        }}
+      >
+        <AppButton
           variant="contained"
           size="small"
           onClick={async () => {
@@ -233,14 +244,23 @@ export function StackPriorityExample() {
           }}
         >
           Session warning fires
-        </Button>
+        </AppButton>
         <PolicySwitch enabled={enabled} onChange={setEnabled} />
-        <Chip
-          size="small"
-          color={foreground?.id === WARNING_ID ? 'success' : 'default'}
-          label={`in front: ${foreground ? shortName(foreground.id) : 'nothing open'}`}
-        />
-      </Stack>
+        {/* The chip's `success` state, said with weight and the flame's edge rather than a green
+            fill — colour alone would be the 1.4.1 trap. */}
+        <span
+          style={{
+            padding: '3px var(--app-space-2)',
+            borderRadius: 'var(--app-radius-pill)',
+            fontSize: 'var(--app-text-sm)',
+            background: 'var(--app-hover)',
+            border: `1px solid ${foreground?.id === WARNING_ID ? 'var(--app-flame)' : 'var(--app-divider)'}`,
+            fontWeight: foreground?.id === WARNING_ID ? 600 : 400,
+          }}
+        >
+          in front: {foreground ? shortName(foreground.id) : 'nothing open'}
+        </span>
+      </div>
     </ExampleLayout>
   );
 }

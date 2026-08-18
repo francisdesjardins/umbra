@@ -3,7 +3,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Button from '@mui/material/Button';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
@@ -121,7 +121,7 @@ export function DeleteItemModalExample() {
 
   return (
     <ExampleLayout result={result} modals={deleteModal.Modal}>
-      <Button
+      <AppButton
         variant="contained"
         color="error"
         onClick={async () => {
@@ -135,8 +135,8 @@ export function DeleteItemModalExample() {
         }}
       >
         Delete Document
-      </Button>
-      <Button
+      </AppButton>
+      <AppButton
         variant="contained"
         color="error"
         onClick={async () => {
@@ -147,7 +147,7 @@ export function DeleteItemModalExample() {
         }}
       >
         Delete Archive
-      </Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

@@ -1,7 +1,7 @@
 import Typography from '@mui/material/Typography';
 import { type SxProps } from '@mui/material/styles';
 import type { ReactNode } from 'react';
-import { mergeSx } from '@/entities/modal-template/ui/shared/sxUtils';
+import { mergeSx } from '@/entities/modal-template/ui/mui/shared/sxUtils';
 
 export type TitleProps = {
   readonly children: ReactNode;
