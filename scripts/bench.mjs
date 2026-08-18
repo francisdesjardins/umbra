@@ -55,10 +55,10 @@ const measure = (run, said) => {
 };
 
 /**
- * Claims that failed their bound. A structural claim the harness only *prints* is prose with a
- * number beside it — the multiple this document quoted drifted to nearly twice the measured one
- * before anyone re-ran it. Bounds are deliberately loose: the ratios sit at 1.1× and the absolutes
- * swing 2× under load, so a ceiling at 2× catches a sort gone O(n log n) and never the scheduler.
+ * Claims that failed their bound. A structural claim this only *prints* is prose with a number
+ * beside it, and a reader copying that number into a document has no way to tell a regression from
+ * a busy machine. Bounds are deliberately loose: the ratios sit at 1.1× while the absolutes swing 2×
+ * under load, so a 2× ceiling catches a sort gone O(n log n) and never the scheduler.
  */
 const broken = [];
 

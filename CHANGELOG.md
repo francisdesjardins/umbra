@@ -40,6 +40,17 @@ document recorded the policy at 1.88× from one noisy run, against 1.06–1.29×
 `update-coverage` stamps a local date while here. `toISOString()` is UTC, so any evening run west of
 Greenwich dated the measurement tomorrow.
 
+### Added — `yarn smoke` opens a code panel on `/stories`
+
+The samples for that route are **cut out of shared files by name, at module evaluation** — which
+happens on the first code-panel click and nowhere else. So a renamed declaration passes `type-check`,
+passes the stories gate, passes CT, and dies on a click nothing automated. One panel is enough:
+opening any of them runs all thirty-eight. Proved by renaming `BasicApp` and watching the check drop
+to 47 characters.
+
+`codeSamples.ts`'s census is re-measured while there — ~600 kB — and its per-route counts dropped
+rather than kept as two more numbers to move by hand.
+
 ### Added — the last twenty, and the exemption list is empty
 
 The Solid lot, and the one that made the slicer earn its keep twice: a Solid harness is three lines
