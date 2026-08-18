@@ -11,6 +11,30 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-17
 
+### Added — the last twenty, and the exemption list is empty
+
+The Solid lot, and the one that made the slicer earn its keep twice: a Solid harness is three lines
+of React hosting, the `Solid*App` export beside it three more of provider, and the subject is the
+un-exported `*App` under both. So `sliceExport` became `sliceDeclaration` — top-level declarations,
+`export` or not — with `sliceDeclarations` for the two stacking cards, which are one parameterised
+builder read twice, and for the shadow-root card, whose subject is the mount wrapper in the other
+file entirely.
+
+**`stories-registration.test.ts` now holds nothing.** It stays as the door rather than the ledger: an
+entry added to it owes a reason in that file.
+
+### Fixed — the React Compiler was compiling the Solid binding, and `/stories` is where that shows
+
+Putting Solid harnesses on the page is what surfaced it: the route died on **"Invalid hook call"**,
+thrown from `react/compiler-runtime` inside `BasicApp`. The compiler decides what a component is by
+naming convention and the playground's babel pass was unscoped, so every `*App` in `src/solid/` got
+the runtime injected — invisible until something in this build actually rendered one, since the frame
+that already exercised `umbra/solid` has no build step at all.
+
+`playground/vite.config.ts` excludes `src/solid/` now, which is the playground's copy of the scoping
+`scripts/vite-plugin-react-compiler.mjs` states for the library build — and the reason that file says
+it in the first place.
+
 ### Added — the eighteen `bindDialog` harnesses, cut out of the file they share
 
 The lot that needed a decision, and the decision was to slice rather than split. All eighteen live in

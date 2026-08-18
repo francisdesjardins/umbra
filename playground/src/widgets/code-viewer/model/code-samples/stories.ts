@@ -2,7 +2,7 @@
  * The library's component-test harnesses, rendered live by `/stories` and shown here as source —
  * the largest of the three groups, for the one route that needs it. See `codeSamples.ts`.
  */
-import { sliceExport } from '@/shared/lib/slice-export';
+import { sliceDeclaration, sliceDeclarations } from '@/shared/lib/slice-declaration';
 
 import storyUseModalBasicSrc from 'umbra/react/__tests__/use-modal/basic.story.tsx?raw';
 import storyUseModalOpenAndWaitSrc from 'umbra/react/__tests__/use-modal/open-and-wait.story.tsx?raw';
@@ -41,6 +41,8 @@ import storyFocusContainmentSrc from 'umbra/core/__tests__/focus-containment.sto
 import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.story.tsx?raw';
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
 import storyVanillaBindSrc from 'umbra/vanilla/__tests__/bind-dialog.story.tsx?raw';
+import storySolidAppSrc from 'umbra/solid/__tests__/solid-app.ts?raw';
+import storySolidModalSrc from 'umbra/solid/__tests__/solid-modal.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-modal/busy-while-preparing.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-modal/styling-surface.story.tsx?raw';
@@ -106,6 +108,32 @@ import storySlideNonModalEscHotkeySrc from 'umbra/react/__tests__/use-slide-moda
  * The `bindDialog` harnesses share one file, so each card is cut from it by name — eighteen cards
  * pointed at the same sixteen hundred lines would show the reader everything except the subject.
  */
+/**
+ * A Solid card's subject is the un-exported `*App` function; the `Solid*App` export beside it is
+ * three lines of provider, and the harness three more of React hosting. Two of these are one
+ * parameterised builder read twice, hence a list per card rather than a name.
+ */
+const SOLID_CARDS: ReadonlyArray<readonly [key: string, names: readonly string[]]> = [
+  ['story-solid-basic', ['BasicApp']],
+  ['story-solid-busy', ['BusyApp']],
+  ['story-solid-labelling', ['LabellingApp']],
+  ['story-solid-live-state', ['LiveStateApp']],
+  ['story-solid-declaration', ['DeclarationApp']],
+  ['story-solid-outlet', ['OutletInner', 'SolidOutletApp']],
+  ['story-solid-slide', ['SlideApp']],
+  ['story-solid-message', ['MessageApp']],
+  ['story-solid-disposal', ['DisposalInner', 'DisposalApp']],
+  ['story-solid-outlet-disposal', ['OutletDisposalInner', 'OutletDisposalApp']],
+  ['story-solid-portal', ['PortalApp']],
+  ['story-solid-contained', ['ContainedApp']],
+  ['story-solid-stack-priority', ['stackPriorityApp', 'SolidStackPriorityApp']],
+  ['story-solid-open-order', ['stackPriorityApp', 'SolidOpenOrderApp']],
+  ['story-solid-non-modal-options', ['NonModalOptionsApp']],
+  ['story-solid-reconcile', ['ReconcileApp']],
+  ['story-solid-failed-action', ['FailedActionApp']],
+  ['story-solid-claimless-reclaim', ['ClaimlessReclaimApp']],
+  ['story-solid-prepare-failure', ['PrepareFailureApp']],
+];
 const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> = [
   ['story-vanilla-basic', 'VanillaBasicHarness'],
   ['story-vanilla-unbind', 'VanillaUnbindHarness'],
@@ -129,8 +157,18 @@ const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> =
 
 export const stories: Record<string, string> = {
   ...Object.fromEntries(
+    SOLID_CARDS.map(([key, names]) => {
+      return [key, sliceDeclarations(storySolidAppSrc, names)];
+    })
+  ),
+  // The mount target is this one's subject, so it is the wrapper that is shown, with the app it hosts.
+  'story-solid-shadow-root': sliceDeclarations(storySolidModalSrc, ['SolidShadowRoot']).concat(
+    '\n\n',
+    sliceDeclarations(storySolidAppSrc, ['BasicApp'])
+  ),
+  ...Object.fromEntries(
     VANILLA_CARDS.map(([key, exportName]) => {
-      return [key, sliceExport(storyVanillaBindSrc, exportName)];
+      return [key, sliceDeclaration(storyVanillaBindSrc, exportName)];
     })
   ),
   'story-use-modal-basic': storyUseModalBasicSrc,

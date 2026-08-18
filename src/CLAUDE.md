@@ -575,7 +575,7 @@ dialogManager.open('other-modal'); // ✅ context-aware
 
 **Harness rules**: declare at module scope, not inside `test()`; follow React Compiler constraints.
 
-**Stories page registration**: Export from barrel → add `StoryEntry` in `StoriesPage.tsx` → register `?raw` import in `codeSamples.ts`. A story off the page is invisible: it builds, runs in CT, and nobody reaches it — **gated** by `stories-registration.test.ts`, which holds the 75 missing so a new one is deliberate.
+**Stories page registration**: Export from barrel → add `StoryEntry` in `StoriesPage.tsx` → register `?raw` import in `codeSamples.ts`. A story off the page is invisible: it builds, runs in CT, and nobody reaches it — **gated** by `stories-registration.test.ts`, whose exemption list is empty, so an omission is a written decision. A harness sharing a file with a dozen others is cut out of it by name (`sliceDeclaration`), not pointed at whole.
 
 The exception is a **parameterised** harness: `StoryEntry.component` takes no props, so one requiring them is a fixture rather than a demo, and the gate skips it for that reason — give it a prop-free default if it is worth showing.
 

@@ -54,6 +54,28 @@ import {
 import { UndefinedClearsHarness } from 'umbra/core/__tests__/apply-style.story';
 import { VanillaSwapHarness } from 'umbra/vanilla/__tests__/swap.story';
 import {
+  SolidBasicHarness,
+  SolidBusyHarness,
+  SolidClaimlessReclaimHarness,
+  SolidContainedHarness,
+  SolidDeclarationHarness,
+  SolidDisposalHarness,
+  SolidFailedActionHarness,
+  SolidLabellingHarness,
+  SolidLiveStateHarness,
+  SolidMessageHarness,
+  SolidNonModalOptionsHarness,
+  SolidOpenOrderHarness,
+  SolidOutletDisposalHarness,
+  SolidOutletHarness,
+  SolidPortalHarness,
+  SolidPrepareFailureHarness,
+  SolidReconcileHarness,
+  SolidShadowRootHarness,
+  SolidSlideHarness,
+  SolidStackPriorityHarness,
+} from 'umbra/solid/__tests__/solid-modal.story';
+import {
   VanillaBasicHarness,
   VanillaBusyHarness,
   VanillaClaimlessReclaimHarness,
@@ -1033,6 +1055,151 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'Its own harness because there is no render pass — the state reaches the page through the caller’s own listener. aria-busy, the library’s one owned attribute sitting on the caller’s markup, says the settle reached the element and not only the store.',
         component: VanillaPrepareFailureHarness,
         codeKey: 'story-vanilla-prepare-failure',
+      },
+    ],
+  },
+  {
+    label: 'The Solid binding: the same surface, fine-grained',
+    stories: [
+      {
+        title: 'The Solid binding’s ordinary surface, written with h',
+        description:
+          'Solid’s JSX needs babel-preset-solid and the component-test bundle is React’s — harmless, because h and compiled JSX produce the same calls, and hyperscript detects an action’s getters through the property descriptor. Each app brings its own DialogManagerProvider: the global test wrapper provides React’s only, so without one these would register with the module singleton and leak into each other.',
+        component: SolidBasicHarness,
+        codeKey: 'story-solid-basic',
+      },
+      {
+        title: 'The same Solid root, mounted inside a shadow root',
+        description:
+          'Its own component rather than a prop, because the mount target is the whole subject. adoptedStyleSheets does not cross the boundary, so the library’s dialog::backdrop never applies, and document.activeElement answers with the host. The shadow is reused across a remount — attachShadow throws on a host that already has one.',
+        component: SolidShadowRootHarness,
+        codeKey: 'story-solid-shadow-root',
+      },
+      {
+        title: 'The accessible name and aria-busy, written from a render effect',
+        description:
+          'Solid writes them onto its own <dialog> from an effect rather than a one-shot loop, so “written at all” and “still written next transition” are two claims. The gate is released from inside the dialog, which owns the top layer while it is open.',
+        component: SolidBusyHarness,
+        codeKey: 'story-solid-busy',
+      },
+      {
+        title: 'The labelling diagnostic, re-run when prepare settles',
+        description:
+          'Solid’s lifecycle effect tracks what its body reads, so the check re-runs on a name that arrives late only because isPreparing is passed in. The late-title half is what catches a version that does not.',
+        component: SolidLabellingHarness,
+        codeKey: 'story-solid-labelling',
+      },
+      {
+        title: 'The live fields on the hook’s return, read outside render',
+        description:
+          'The copy a trigger button reads while the modal works. They are getters over signals here, so “reaches the return” and “stays live” are two claims and only the first is a type error — which is why all of it is asserted outside render, where a frozen getter never moves.',
+        component: SolidLiveStateHarness,
+        codeKey: 'story-solid-live-state',
+      },
+      {
+        title: 'The declaration window a fine-grained renderer closes by hand',
+        description:
+          'Backdrop dismissal is opt-out with no actions and opt-in with them, so once the button is gone a click must dismiss again — which it never would without engine.undeclare running on that button’s own cleanup.',
+        component: SolidDeclarationHarness,
+        codeKey: 'story-solid-declaration',
+      },
+      {
+        title: 'An outlet takes the dialog, and Modal becomes null',
+        description:
+          'The same contract React’s has, which is the point of showing it here: the outlet is core, so the only thing that would notice a binding no longer reaching it is a test on that binding.',
+        component: SolidOutletHarness,
+        codeKey: 'story-solid-outlet',
+      },
+      {
+        title: 'The slide template, and the one thing only Solid can get wrong',
+        description:
+          'useSlideModal composes the render args with direction through mergeProps, not a spread. A spread freezes every getter — direction would still be right and isPreparing would never come back, so the second is the assertion.',
+        component: SolidSlideHarness,
+        codeKey: 'story-solid-slide',
+      },
+      {
+        title: 'The message template, deliberately a smoke test',
+        description:
+          'It is the same three lines React’s is, so anything beyond “it builds a dialog from this binding” would be testing the shared half twice.',
+        component: SolidMessageHarness,
+        codeKey: 'story-solid-message',
+      },
+      {
+        title: 'The three pieces of onCleanup work a binding owes',
+        description:
+          'Unregistering from the manager, retiring the outlet entry, removing a portaled element from document.body. A child function disposes them, since hyperscript re-runs it and disposes the owner of the branch it replaces — which is Solid’s unmount.',
+        component: SolidDisposalHarness,
+        codeKey: 'story-solid-disposal',
+      },
+      {
+        title: 'The same disposal, one level down',
+        description:
+          'The outlet has to forget it too. Left registered, it goes on rendering a <dialog> for a hook that no longer exists.',
+        component: SolidOutletDisposalHarness,
+        codeKey: 'story-solid-outlet-disposal',
+      },
+      {
+        title: 'portal: true, where the binding mounts the element itself',
+        description:
+          'The one place the two hook bindings’ surfaces differ in what they hand back rather than in how it updates: Modal stays null, because there is nothing left for the caller to place.',
+        component: SolidPortalHarness,
+        codeKey: 'story-solid-portal',
+      },
+      {
+        title: 'A contained non-modal panel, against a host the binding creates',
+        description:
+          'Nothing enters the top layer, so the placement is the whole behaviour — and the host is library-owned here rather than the caller’s markup, which is what separates this from the vanilla contained card.',
+        component: SolidContainedHarness,
+        codeKey: 'story-solid-contained',
+      },
+      {
+        title: 'prioritize through Solid: a policy that outranks open order',
+        description:
+          'Inherited through the wholesale re-export, so nothing would fail if a binding stopped reaching it — binding-parity.test.ts compares export names. Two silent breakers: the policy is installed at setup, a Solid body running once, so onCleanup owns the disposer; and the sizes are strings, since applyStyle writes them verbatim and a bare 300 type-checks, emits nothing, and stops the dialogs overlapping.',
+        component: SolidStackPriorityHarness,
+        codeKey: 'story-solid-stack-priority',
+      },
+      {
+        title: 'The same two dialogs with no policy at all',
+        description:
+          'The baseline the card above is measured against: a reorder that never happened looks identical to one that was not needed, so the false half is what makes the true half mean something.',
+        component: SolidOpenOrderHarness,
+        codeKey: 'story-solid-open-order',
+      },
+      {
+        title: 'Five options in one app, each with its own probe',
+        description:
+          'containFocus, dismissOnClickOutside, a custom dismissKey, a prepare aborted by its own close, and onOpenRequest. One app rather than five because they make the same claim — that these reach the shared attach* functions from this binding’s effects. Non-modal throughout: containFocus is the Tab wrap show() does not give, and the union rejects the pair on a modal.',
+        component: SolidNonModalOptionsHarness,
+        codeKey: 'story-solid-non-modal-options',
+      },
+      {
+        title: 'reconcileOpen driven from a Solid signal',
+        description:
+          'A controlled open prop, with createEffect where React writes useEffect. Non-modal, so the buttons driving the signal stay reachable from outside the dialog.',
+        component: SolidReconcileHarness,
+        codeKey: 'story-solid-reconcile',
+      },
+      {
+        title: 'Focus restored after an action that rejects',
+        description:
+          'Modal, and two focusables: the target is whoever held focus when the action started, so with one element a restore and focus never moving are the same observation, and non-modal would let focus sit outside. The opening focus is deliberately the other button — it is the floor the restore falls to, so a test can tell landing on the right one from landing anywhere.',
+        component: SolidFailedActionHarness,
+        codeKey: 'story-solid-failed-action',
+      },
+      {
+        title: 'The floor under reclaimFocus, on the second hook binding',
+        description:
+          'createFocusCoordinator is shared but when each binding syncs it is not — Solid’s body runs once where React’s re-runs. Neither action claims focusOnOpen, which is what puts this on the floor’s path: a claim would give the reclaim a marker, and lastFocusInside is empty too, its focusin listener attaching after showModal() has already placed the opening focus.',
+        component: SolidClaimlessReclaimHarness,
+        codeKey: 'story-solid-claimless-reclaim',
+      },
+      {
+        title: 'A prepare that throws, reported through onError',
+        description:
+          'Measured rather than inherited: React reads the callback through a ref, so a teardown reports to whichever onError is current, while Solid passes options.onError straight through. Two routes to the same guarantee is two chances to lose it.',
+        component: SolidPrepareFailureHarness,
+        codeKey: 'story-solid-prepare-failure',
       },
     ],
   },

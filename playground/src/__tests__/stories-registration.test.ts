@@ -6,22 +6,20 @@ import { expect, test } from '@playwright/test';
 /**
  * Every prop-free `*.story.tsx` harness reaches the `/stories` page.
  *
- * The rule was prose in `playground/CLAUDE.md` and nothing enforced it, which is how **75 of 158**
- * came to be missing: a harness that is not on the page still builds, still type-checks, still runs
- * in the component suite, and is reachable by nobody. Nothing fails — the demo simply does not exist
- * for readers, which is the same shape of silence the compatibility matrix and the doc budget were
- * each written to break.
+ * As prose in `playground/CLAUDE.md` the rule enforced nothing, and the failure is silent in every
+ * direction: a harness off the page still builds, still type-checks, still runs in the component
+ * suite, and is reachable by nobody. Nothing fails — the demo simply does not exist for readers,
+ * which is the shape of silence the compatibility matrix and the doc budget were each written to
+ * break.
  *
- * The exemption list below is a **debt, not a design**. It is the state the gate found, written down
- * so that adding a harness becomes a decision rather than an omission — a new one fails here until it
- * is either placed on the page or added to the list on purpose. The list also fails when it names a
- * harness that no longer exists or one that has since been placed, so it empties itself as the
- * backlog is worked rather than rotting into a second source of truth.
+ * The exemption list below is a **door, not a design**: an omission has to be written down, so
+ * adding a harness is a decision rather than a lapse. It also fails when it names a harness that no
+ * longer exists or one that has since been placed, so it cannot rot into a second source of truth.
+ * It is empty, and an entry added to it owes a reason here.
  *
- * A harness taking **required props** is out of scope and always was: `StoryEntry.component` is a
- * `ComponentType` with no props, so those are fixtures rather than demos — see
- * `playground/CLAUDE.md`. That is why this parses `export function X()` with an empty parameter list
- * rather than every export.
+ * A harness taking **required props** is out of scope: `StoryEntry.component` is a `ComponentType`
+ * with no props, so those are fixtures rather than demos — see `playground/CLAUDE.md`. That is why
+ * this parses `export function X()` with an empty parameter list rather than every export.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -29,29 +27,8 @@ const REPO = resolve(HERE, '../../..');
 const LIBRARY_SRC = join(REPO, 'src');
 const STORIES_PAGE = join(REPO, 'playground/src/pages/stories/ui/StoriesPage.tsx');
 
-/** Prop-free harnesses the page does not show yet — see this file's doc comment. */
-const NOT_ON_THE_PAGE = new Set([
-  'SolidBasicHarness',
-  'SolidBusyHarness',
-  'SolidClaimlessReclaimHarness',
-  'SolidContainedHarness',
-  'SolidDeclarationHarness',
-  'SolidDisposalHarness',
-  'SolidFailedActionHarness',
-  'SolidLabellingHarness',
-  'SolidLiveStateHarness',
-  'SolidMessageHarness',
-  'SolidNonModalOptionsHarness',
-  'SolidOpenOrderHarness',
-  'SolidOutletDisposalHarness',
-  'SolidOutletHarness',
-  'SolidPortalHarness',
-  'SolidPrepareFailureHarness',
-  'SolidReconcileHarness',
-  'SolidShadowRootHarness',
-  'SolidSlideHarness',
-  'SolidStackPriorityHarness',
-]);
+/** Prop-free harnesses the page does not show — see this file's doc comment. */
+const NOT_ON_THE_PAGE = new Set<string>([]);
 
 /** Every `*.story.tsx` under the library's `src/`, which is where the page sources its harnesses. */
 function storyFiles(directory: string): string[] {
