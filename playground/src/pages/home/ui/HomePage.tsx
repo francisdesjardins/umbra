@@ -1,14 +1,9 @@
+import styles from '@/pages/home/ui/HomePage.module.css';
+import { useTheme } from '@/shared/lib/theme-context';
+import { AppButton } from '@/shared/ui/AppButton';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
@@ -61,8 +56,7 @@ const modal = useModal<{ remember: boolean }, 'confirm' | 'cancel'>({
 
 /** What the site says before it starts explaining: what this is, how to get it, and one live modal. */
 export const HomePage = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const { isDarkMode } = useTheme();
 
   const [lastClose, setLastClose] = useState<string | null>(null);
   // The value the dialog produces, which is the whole reason a close carries a payload: `reason`
@@ -89,59 +83,41 @@ export const HomePage = () => {
     },
     render: ({ action }) => {
       return (
-        <Box
-          sx={{
-            // The library ships no UI: unstyled, a dialog is text on the backdrop. Consumers bring
-            // this, front page included.
-            p: 3,
-            maxWidth: 'min(420px, 88vw)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1.5,
-            bgcolor: 'background.paper',
-            color: 'text.primary',
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 2,
-            boxShadow: 8,
-          }}
-        >
-          <Typography id="home-hello-title" variant="h6" sx={{ fontWeight: 700 }}>
+        // The library ships no UI: unstyled, a dialog is text on the backdrop. Consumers bring
+        // this, front page included.
+        <div className={styles['helloCard']}>
+          <h6 id="home-hello-title" className={styles['helloTitle']}>
             This is the whole thing
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </h6>
+          <p className={styles['helloBody']}>
             A native <code>&lt;dialog&gt;</code> in the top layer, animated by CSS you wrote, closed
             with a reason your <code>onClose</code> can switch on exhaustively. Focus starts on{' '}
             <em>Not now</em> because that action asked for it. <kbd>Enter</kbd> confirms,{' '}
             <kbd>Escape</kbd> dismisses.
-          </Typography>
-          <FormControlLabel
-            sx={{ mt: 0.5 }}
-            control={
-              <Checkbox
-                size="small"
-                checked={remember}
-                onChange={(event) => {
-                  setRemember(event.target.checked);
-                }}
-              />
-            }
-            label={
-              <Typography variant="body2" color="text.secondary">
-                Remember this choice
-              </Typography>
-            }
-          />
-          <Stack direction="row" sx={{ gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-            <Button size="small" {...action('cancel', { focusOnOpen: true })}>
+          </p>
+          <label className={styles['helloRemember']}>
+            <input
+              type="checkbox"
+              className={styles['helloCheckbox']}
+              checked={remember}
+              onChange={(event) => {
+                setRemember(event.target.checked);
+              }}
+            />
+            Remember this choice
+          </label>
+          <div className={styles['helloFooter']}>
+            <button
+              className={`${styles['helloButton']} ${styles['helloButtonText']}`}
+              {...action('cancel', { focusOnOpen: true })}
+            >
               Not now
-            </Button>
+            </button>
             {/* No `onClick` of our own: after the spread it would replace the action's and the
                 action would never run. The payload rides on `onAction`, which is the only door
                 out — an action without one closes carrying its reason and nothing else. */}
-            <Button
-              size="small"
-              variant="contained"
+            <button
+              className={`${styles['helloButton']} ${styles['helloButtonContained']}`}
               {...action('confirm', {
                 hotkey: Key.Enter,
                 onAction: (close) => {
@@ -150,93 +126,59 @@ export const HomePage = () => {
               })}
             >
               Confirm
-            </Button>
-          </Stack>
-        </Box>
+            </button>
+          </div>
+        </div>
       );
     },
   });
 
   return (
-    <Box sx={{ maxWidth: 1040, mx: 'auto' }}>
+    <div className={styles['page']}>
       {/* Hero */}
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        sx={{ alignItems: 'center', gap: { xs: 3, md: 6 }, py: { xs: 4, md: 7 }, minWidth: 0 }}
-      >
-        {/* The corona paints past the SVG's box, so the art is inset in a square that clips
-            nothing: the wrapper bounds the layout and the disc sits at 78% of it. */}
-        <Box
-          sx={{
-            width: { xs: 176, md: 220 },
-            aspectRatio: '1',
-            flexShrink: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Box sx={{ width: '78%', aspectRatio: '1' }}>
-            <UmbraMoon isDark={isDark} breathing />
-          </Box>
-        </Box>
+      <div className={styles['hero']}>
+        {/* The corona clipping arrangement is explained beside the classes in the CSS module. */}
+        <div className={styles['heroArt']}>
+          <div className={styles['heroArtDisc']}>
+            <UmbraMoon isDark={isDarkMode} breathing />
+          </div>
+        </div>
 
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: '-0.03em',
-              fontSize: { xs: '2rem', md: '3rem' },
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-            }}
-          >
+        <div className={styles['heroText']}>
+          <h1 className={styles['heroTitle']}>
             {/* Sized to the heading's two steps: the mark is part of the lockup, not a bullet. */}
-            <Box component="span" sx={{ display: { xs: 'none', md: 'flex' } }}>
+            <span className={styles['markWide']}>
               <MoonPhase phase="first-quarter" size={40} />
-            </Box>
-            <Box component="span" sx={{ display: { xs: 'flex', md: 'none' } }}>
+            </span>
+            <span className={styles['markNarrow']}>
               <MoonPhase phase="first-quarter" size={28} />
-            </Box>
+            </span>
             Umbra
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mt: 1, fontWeight: 500 }}>
-            Headless dialogs on the native top layer.
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2, maxWidth: 560 }}>
+          </h1>
+          <p className={styles['heroSubtitle']}>Headless dialogs on the native top layer.</p>
+          <p className={styles['heroBody']}>
             A dialog manager whose core is plain TypeScript — it resolves and runs with no framework
             installed at all. React and Solid ship as two bindings over it with the same surface —
             same hooks, same options, same typed close — and vanilla as a third that renders
             nothing: a controller for a &lt;dialog&gt; you wrote yourself. Zero UI components either
             way: the markup, the animation and the styling stay yours.
-          </Typography>
+          </p>
 
-          {lastClose ? (
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', mt: 2, fontFamily: 'monospace', color: 'accent.onSurface' }}
-            >
-              onClose → {lastClose}
-            </Typography>
-          ) : null}
+          {lastClose ? <span className={styles['lastClose']}>onClose → {lastClose}</span> : null}
 
-          <Stack direction="row" sx={{ gap: 1, mt: 2, flexWrap: 'wrap' }}>
-            <Chip size="small" label="0 runtime dependencies" />
-            <Chip size="small" label="native <dialog>" />
-            <Chip size="small" label="typed close payloads" />
-            <Chip size="small" label="React · Solid · vanilla" />
-            <Chip size="small" label="React Compiler ready" />
+          <div className={styles['chipRow']}>
+            <span className={styles['chip']}>0 runtime dependencies</span>
+            <span className={styles['chip']}>native &lt;dialog&gt;</span>
+            <span className={styles['chip']}>typed close payloads</span>
+            <span className={styles['chip']}>React · Solid · vanilla</span>
+            <span className={styles['chip']}>React Compiler ready</span>
             {/* "Measured" is the claim, not "accessible": the README's Accessibility chapter and
                 the WCAG rows of the compatibility matrix cite the test behind each cell. */}
-            <Chip size="small" label="WCAG 2.2 · measured" />
-          </Stack>
+            <span className={styles['chip']}>WCAG 2.2 · measured</span>
+          </div>
 
-          <Stack direction="row" sx={{ gap: 1.5, mt: 3, flexWrap: 'wrap' }}>
-            <Button
+          <div className={styles['ctaRow']}>
+            <AppButton
               variant="contained"
               onClick={async () => {
                 // Cleared together, so each run starts from the same place and the readout below
@@ -247,45 +189,45 @@ export const HomePage = () => {
               }}
             >
               Open a modal
-            </Button>
-            <Button component={Link} to="/getting-started" variant="outlined">
+            </AppButton>
+            <Link
+              to="/getting-started"
+              className={`${styles['linkButton']} ${styles['linkButtonOutlined']}`}
+            >
               Get started
-            </Button>
-            <Button href={REPO} target="_blank" rel="noreferrer">
+            </Link>
+            <a
+              href={REPO}
+              target="_blank"
+              rel="noreferrer"
+              className={`${styles['linkButton']} ${styles['linkButtonText']}`}
+            >
               GitHub
-            </Button>
-          </Stack>
-        </Box>
-      </Stack>
+            </a>
+          </div>
+        </div>
+      </div>
 
       {/* Stacked, not side by side: at half width both snippets get a horizontal scrollbar. */}
-      <Stack sx={{ gap: 3, mb: 5, minWidth: 0 }}>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
-          >
+      <div className={styles['snippets']}>
+        <div className={styles['snippet']}>
+          <p className={styles['overline']}>
             <MoonPhase phase="first-quarter" size={14} />
             Getting it
-          </Typography>
+          </p>
           <CodeBlock code={GETTING_IT} language="bash" />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="overline"
-            color="text.secondary"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
-          >
+        </div>
+        <div className={styles['snippet']}>
+          <p className={styles['overline']}>
             <MoonPhase phase="last-quarter" size={14} />
             The whole API of a confirm dialog
-          </Typography>
+          </p>
           <CodeBlock code={HELLO} language="tsx" />
-        </Box>
-      </Stack>
+        </div>
+      </div>
 
       {/* Where to go next — the three things worth seeing first. */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, pb: 6 }}>
+      <div className={styles['nextRow']}>
         {(
           [
             {
@@ -310,45 +252,21 @@ export const HomePage = () => {
           ] satisfies readonly { to: string; phase: Phase; title: string; body: string }[]
         ).map((card) => {
           return (
-            <Box
-              key={card.to}
-              component={Link}
-              to={card.to}
-              sx={{
-                flex: 1,
-                p: 2.5,
-                borderRadius: 2,
-                border: 1,
-                borderColor: 'divider',
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'border-color 120ms, transform 120ms',
-                '&:hover': { borderColor: 'primary.main', transform: 'translateY(-2px)' },
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
-              >
+            <Link key={card.to} to={card.to} className={styles['nextCard']}>
+              <p className={styles['nextTitle']}>
                 <MoonPhase phase={card.phase} size={16} />
                 {card.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {card.body}
-              </Typography>
-            </Box>
+              </p>
+              <p className={styles['nextBody']}>{card.body}</p>
+            </Link>
           );
         })}
-      </Stack>
+      </div>
 
       {/* Decoration, marked as such, and carrying no `opacity`: over `text.secondary` that
           measured 4.3:1, and an ornament is not worth a contrast exception. `MoonPhase` rather
           than shade-block glyphs, which carry the sizing problem it exists to solve. */}
-      <Stack
-        aria-hidden="true"
-        direction="row"
-        sx={{ gap: 1.5, pb: 4, color: 'text.secondary', justifyContent: 'center' }}
-      >
+      <div aria-hidden="true" className={styles['moonRow']}>
         {(
           [
             'waxing-crescent',
@@ -362,9 +280,9 @@ export const HomePage = () => {
         ).map((phase) => {
           return <MoonPhase key={phase} phase={phase} size={14} />;
         })}
-      </Stack>
+      </div>
 
       {hello.Modal}
-    </Box>
+    </div>
   );
 };

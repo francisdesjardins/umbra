@@ -190,7 +190,7 @@ const flows = {
     checks.push([confirm.includes('Confirm deployment'), 'service opened the confirm dialog']);
     await page.getByRole('button', { name: 'Deploy', exact: true }).click();
     await page.waitForTimeout(2400);
-    const card = page.locator('.MuiCard-root', { hasText: 'Service Layer' });
+    const card = page.locator('[data-surface-card]', { hasText: 'Service Layer' });
     const log = ((await card.textContent()) ?? '').replace(/\s+/g, ' ');
     checks.push([/Deploying to staging/.test(log), 'service called the API']);
     checks.push([
@@ -256,7 +256,7 @@ const flows = {
   async esc(page) {
     const checks = [];
     await gotoRoute(page, '/getting-started');
-    const card = page.locator('.MuiCard-root', { hasText: 'Async Open' });
+    const card = page.locator('[data-surface-card]', { hasText: 'Async Open' });
     const dialog = page.getByTestId('modal-async-open');
 
     await card.getByRole('button', { name: 'Open', exact: true }).click();
@@ -291,7 +291,7 @@ const flows = {
   async asyncopen(page) {
     const checks = [];
     await gotoRoute(page, '/getting-started');
-    const card = page.locator('.MuiCard-root', { hasText: 'Async Open' });
+    const card = page.locator('[data-surface-card]', { hasText: 'Async Open' });
 
     // Peak opacity of the fallback layer over the 600ms following a click.
     const peakFallbackOpacity = () => {
@@ -456,7 +456,7 @@ for (const route of routes) {
     continue;
   }
 
-  const cards = await page.locator('.MuiCard-root').count();
+  const cards = await page.locator('[data-surface-card]').count();
   const h1s = await page.locator('h1').allTextContents();
   if (h1s.length === 1) titleByRoute.set(route, h1s[0]);
 

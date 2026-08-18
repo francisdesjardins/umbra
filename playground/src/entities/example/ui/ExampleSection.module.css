@@ -1,0 +1,32 @@
+.section {
+  margin-bottom: 40px;
+  /* Anchor jumps must clear the fixed 64px top bar. */
+  scroll-margin-top: 80px;
+}
+
+.section:last-of-type {
+  margin-bottom: 0;
+}
+
+.title {
+  display: block;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-text-secondary);
+}
+
+.description {
+  margin: 4px 0 0;
+  max-width: 680px;
+  font-size: 0.875rem;
+  line-height: 1.43;
+  color: var(--app-text-secondary);
+}
+
+.content {
+  margin-top: 16px;
+}

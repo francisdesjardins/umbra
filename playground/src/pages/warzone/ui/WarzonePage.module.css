@@ -1,0 +1,53 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+/* The corona paints past the SVG's box, so the art is inset in a square that clips
+   nothing — the landing page hero's arrangement. */
+.artFrame {
+  width: 160px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.artDisc {
+  width: 78%;
+  aspect-ratio: 1;
+}
+
+.lede {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.334;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.blurb {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--app-text-secondary);
+  max-width: 560px;
+}
+
+@media (min-width: 900px) {
+  .stage {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .artFrame {
+    width: 200px;
+  }
+}

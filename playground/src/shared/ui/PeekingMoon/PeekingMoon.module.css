@@ -1,0 +1,15 @@
+/* Only the static shell lives here: the animation is per-visit (name, offsets and keyframes
+   embed the visit key), so the element carries it inline plus a <style> of its own. */
+.moon {
+  position: fixed;
+  z-index: 1200;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moon {
+    /* !important because the per-visit animation shorthand is inline. 1ms, not none: the cycle
+       must still finish so onAnimationEnd keeps scheduling returns and completing the eclipse. */
+    animation-duration: 1ms !important;
+  }
+}

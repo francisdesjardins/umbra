@@ -1,0 +1,55 @@
+.root {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+/* Header — left-aligned so the title, the section labels and the card grid all share
+   one leading edge. A centred title over left-aligned content read as two layouts. */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--app-divider);
+}
+
+@media (min-width: 900px) {
+  .header {
+    margin-bottom: 32px;
+  }
+}
+
+.heading {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+/* 1.5rem at every width: the MUI original's `fontSize: { xs: '1.5rem', md: undefined }` emits
+   nothing for the md block — measured, the media query was empty — so the xs size is what
+   desktop rendered too. Line-height is the h4 variant's. */
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.235;
+  letter-spacing: -0.02em;
+}
+
+.description {
+  margin: 8px 0 0;
+  max-width: 720px;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0.00938em;
+  color: var(--app-text-secondary);
+}
+
+.actions {
+  flex-shrink: 0;
+}
+
+.result {
+  margin-bottom: 24px;
+}

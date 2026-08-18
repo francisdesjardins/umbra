@@ -1,5 +1,4 @@
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
+import styles from '@/widgets/code-viewer/model/useCodeModal.module.css';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
 import { Suspense, useState } from 'react';
@@ -32,33 +31,34 @@ export const useCodeModal = () => {
     },
     render: ({ handle, isPreparing }) => {
       return (
-        <Box
-          sx={{
-            flex: 1,
-            height: '100dvh',
-            minHeight: 0,
-            width: { xs: '100dvw', md: 'auto' },
-            minWidth: { xs: 0, md: '60vw' },
-            maxWidth: { xs: '100dvw', md: 'none' },
-            display: 'flex',
-            flexDirection: 'column',
-            bgcolor: 'background.paper',
-            color: 'text.primary',
-            overflow: 'hidden',
-          }}
-        >
+        <div className={styles['panel']}>
           <Suspense
             fallback={
-              <Box
-                sx={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CircularProgress size={28} />
-              </Box>
+              <div className={styles['fallback']}>
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                  style={{ width: 28, height: 28, flexShrink: 0 }}
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    fill="none"
+                    stroke="var(--app-flame)"
+                    strokeWidth="3"
+                    strokeDasharray="42 18"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 12 12"
+                    to="360 12 12"
+                    dur="0.8s"
+                    repeatCount="indefinite"
+                  />
+                </svg>
+              </div>
             }
           >
             <CodeModalContent
@@ -71,7 +71,7 @@ export const useCodeModal = () => {
               titleId={CODE_VIEWER_TITLE_ID}
             />
           </Suspense>
-        </Box>
+        </div>
       );
     },
   });

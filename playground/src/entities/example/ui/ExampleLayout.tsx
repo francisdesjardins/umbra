@@ -1,21 +1,20 @@
-import Stack from '@mui/material/Stack';
 import type { ReactNode } from 'react';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 
 type ExampleLayoutProps = {
-  result: string | null;
-  children: ReactNode;
-  modals: ReactNode;
+  readonly result: string | null;
+  readonly children: ReactNode;
+  readonly modals: ReactNode;
 };
 
 export function ExampleLayout({ result, children, modals }: ExampleLayoutProps) {
   return (
-    <Stack direction="column" sx={{ gap: 2 }}>
-      <Stack direction="row" sx={{ gap: 1, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         {children}
-      </Stack>
+      </div>
       <ResultDisplay result={result} />
       {modals}
-    </Stack>
+    </div>
   );
 }

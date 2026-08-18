@@ -1,5 +1,4 @@
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
+import styles from '@/shared/ui/SectionNav/SectionNav.module.css';
 import { Link, useRouterState } from '@tanstack/react-router';
 
 type SectionNavProps = {
@@ -22,50 +21,14 @@ export const SectionNav = ({ sections }: SectionNavProps) => {
   });
 
   return (
-    <Box
-      component="nav"
-      aria-label="Jump to section"
-      sx={{
-        position: 'sticky',
-        top: 64,
-        zIndex: 2,
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 0.75,
-        py: 1.5,
-        mb: 3,
-        bgcolor: 'background.default',
-        borderBottom: 1,
-        borderColor: 'divider',
-        // A two-pixel bleed of *background only*: the column's width is fractional, so a card's 1px
-        // border straddles this bar's edge and stays half-lit as an orange hairline. The background
-        // widens, not the box — negative margins would take `borderBottom` past the cards.
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          insetBlock: 0,
-          left: -2,
-          right: -2,
-          bgcolor: 'background.default',
-          zIndex: -1,
-        },
-      }}
-    >
+    <nav aria-label="Jump to section" className={styles['nav']}>
       {sections.map((section) => {
         return (
-          <Chip
-            key={section.id}
-            component={Link}
-            to={pathname}
-            hash={section.id}
-            label={section.label}
-            size="small"
-            variant="outlined"
-            clickable
-            sx={{ fontFamily: 'monospace', fontSize: '0.7rem' }}
-          />
+          <Link key={section.id} to={pathname} hash={section.id} className={styles['chip']}>
+            {section.label}
+          </Link>
         );
       })}
-    </Box>
+    </nav>
   );
 };

@@ -1,4 +1,4 @@
-import Box from '@mui/material/Box';
+import styles from '@/entities/example/ui/ExampleGrid.module.css';
 import type { ReactNode } from 'react';
 
 type ExampleGridProps = {
@@ -13,19 +13,6 @@ type ExampleGridProps = {
  * column width instead of stretching across the row.
  */
 export const ExampleGrid = ({ columns = 2, children }: ExampleGridProps) => {
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gap: 2,
-        alignItems: 'stretch',
-        gridTemplateColumns: {
-          xs: '1fr',
-          sm: columns === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))',
-        },
-      }}
-    >
-      {children}
-    </Box>
-  );
+  const className = columns === 1 ? styles['grid'] : `${styles['grid']} ${styles['twoColumns']}`;
+  return <div className={className}>{children}</div>;
 };

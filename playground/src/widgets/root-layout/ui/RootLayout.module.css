@@ -1,0 +1,37 @@
+.shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.main {
+  flex-grow: 1;
+  transition: margin-right 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* A flex item's default `min-width: auto` is the content's minimum, so one unwrappable line
+     stretches this past the viewport; what cannot shrink scrolls in its own container instead. */
+  min-width: 0;
+}
+
+/* The fixed bar's height, reserved in flow. */
+.toolbarSpacer {
+  height: 64px;
+  flex-shrink: 0;
+}
+
+/* No `overflow: auto`: the window does the scrolling, and declaring it would make this the
+   nearest scrolling ancestor, silently killing `position: sticky` on every jump bar inside. */
+.content {
+  flex: 1;
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .content {
+    padding: 32px;
+  }
+}

@@ -1,10 +1,9 @@
 import { readableSyntaxStyle } from '@/shared/lib/readable-syntax';
-import CheckIcon from '@mui/icons-material/Check';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import { useTheme } from '@mui/material/styles';
-import { useCallback, useState } from 'react';
+import { useTheme } from '@/shared/lib/theme-context';
+import { AppIconButton } from '@/shared/ui/AppButton';
+import styles from '@/shared/ui/CodeBlock/CodeBlock.module.css';
+import { CheckIcon, ContentCopyIcon } from '@/shared/ui/icons';
+import { useState } from 'react';
 // Deep paths, not the barrels: `react-syntax-highlighter` re-exports `Prism` (every grammar
 // refractor ships) and `styles/prism` re-exports all 47 themes, and Vite serves modules unbundled
 // in dev, so a barrel import pulls the whole of it whatever the named import says.
@@ -29,90 +28,37 @@ SyntaxHighlighter.registerLanguage('markup', markup);
 const CODE_SURFACE = { light: '#ffffff', dark: '#1a1a1a' } as const;
 
 type CodeBlockProps = {
-  code: string;
-  language?: string;
+  readonly code: string;
+  readonly language?: string | undefined;
   /**
    * Wrap long lines instead of scrolling them: in prose a horizontal scrollbar hides the line's
    * end with none in view to suggest it. The code viewer keeps scrolling — wide pane, real source.
    */
-  wrap?: boolean | undefined;
+  readonly wrap?: boolean | undefined;
 };
 
 export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
-  const surface = CODE_SURFACE[theme.palette.mode];
+  const { isDarkMode } = useTheme();
+  const surface = CODE_SURFACE[isDarkMode ? 'dark' : 'light'];
 
-  const handleCopy = useCallback(async () => {
+  const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
     }, 2000);
-  }, [code]);
+  };
 
   return (
-    <Box
-      sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}
-    >
-      <IconButton
-        size="small"
-        onClick={handleCopy}
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          zIndex: 1,
-          bgcolor: (theme) => {
-            return theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
-          },
-          backdropFilter: 'blur(8px)',
-          border: 1,
-          borderColor: 'divider',
-          transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-          '&:hover': {
-            bgcolor: (theme) => {
-              return theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
-            },
-            transform: 'scale(1.05)',
-          },
-        }}
-      >
-        {copied ? (
-          <CheckIcon fontSize="small" color="success" />
-        ) : (
-          <ContentCopyIcon fontSize="small" />
-        )}
-      </IconButton>
+    <div className={styles['frame']}>
+      <AppIconButton size="small" onClick={handleCopy} className={styles['copyButton']}>
+        {copied ? <CheckIcon className={styles['checkIcon']} /> : <ContentCopyIcon />}
+      </AppIconButton>
 
-      <Box
-        sx={{
-          flex: 1,
-          overflow: 'auto',
-          bgcolor: surface,
-          '& pre': {
-            margin: '0 !important',
-            background: 'transparent !important',
-            padding: '0 !important',
-            borderRadius: '0 !important',
-            overflowX: wrap ? 'visible !important' : 'auto !important',
-          },
-          '& code': {
-            display: 'block !important',
-            padding: '24px !important',
-            paddingTop: '24px !important',
-            borderRadius: '0 !important',
-            // The theme paints its own background on the <code>, and a background on a scroll
-            // container stays put while content moves, sliding the code off its own colour.
-            background: 'transparent !important',
-            // Otherwise the block is only viewport-wide and the scrolled-in region has none.
-            minWidth: 'max-content',
-          },
-          // Declared here because the highlighter puts `white-space: pre` inline on the <pre>. Only
-          // on `pre`/`code`: on the token spans each token wraps alone and the line breaks apart.
-          ...(wrap && { '& pre, & code': { whiteSpace: 'pre-wrap !important' } }),
-        }}
+      <div
+        className={wrap ? `${styles['scroll']} ${styles['wrap']}` : styles['scroll']}
+        style={{ background: surface }}
       >
         <SyntaxHighlighter
           language={language}
@@ -140,7 +86,7 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
         >
           {code}
         </SyntaxHighlighter>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

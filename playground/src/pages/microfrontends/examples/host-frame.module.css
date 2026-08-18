@@ -1,0 +1,43 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hint {
+  font-size: 0.75rem;
+  line-height: 1.66;
+  color: var(--app-text-secondary);
+}
+
+/* The border is read back by the measuring effect (`offsetHeight - clientHeight`), so it must
+   stay a real border here rather than an outline or shadow. */
+.frame {
+  width: 100%;
+  border: 1px solid var(--app-divider);
+  border-radius: 4px;
+  background: var(--app-paper);
+}
+
+/* Capped on a phone so it scrolls itself, and that is about the modals: `showModal()` centres in
+   **its own** viewport, and an iframe sized to its whole document has one as tall as that
+   document — 1802px at a 390px screen, so the dialog centres 900px down and the reader sees
+   nothing. Capping makes the frame's viewport what is on screen; the cost is a nested scroll
+   area, cheaper than dialogs opening out of sight.
+
+   A viewport unit and a breakpoint rather than the measured height and the frame's own width:
+   this is the reader's screen, not the content height the effect tracks. */
+@media (max-width: 599px) {
+  .frame {
+    max-height: 80vh;
+  }
+}

@@ -1,5 +1,4 @@
-import Card from '@mui/material/Card';
-import { alpha, type Theme } from '@mui/material/styles';
+import styles from '@/shared/ui/SurfaceCard/SurfaceCard.module.css';
 import type { ReactNode } from 'react';
 
 type SurfaceCardProps = {
@@ -14,30 +13,12 @@ type SurfaceCardProps = {
  * how they diverged. No `sx` passthrough: that escape hatch is what let them drift.
  */
 export const SurfaceCard = ({ interactive, children }: SurfaceCardProps) => {
+  const className =
+    interactive === true ? `${styles['card']} ${styles['interactive']}` : styles['card'];
+  // The stable hook the smoke probe locates cards by — a hashed module class cannot be one.
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderColor: 'divider',
-        bgcolor: (theme: Theme) => {
-          return theme.palette.mode === 'dark' ? 'grey.900' : 'background.paper';
-        },
-        ...(interactive === true && {
-          transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-          '&:hover': {
-            borderColor: 'primary.main',
-            boxShadow: (theme: Theme) => {
-              return `0 0 0 1px ${alpha(theme.palette.primary.main, 0.3)}, ${theme.shadows[4]}`;
-            },
-            transform: 'translateY(-2px)',
-          },
-        }),
-      }}
-    >
+    <div data-surface-card className={className}>
       {children}
-    </Card>
+    </div>
   );
 };

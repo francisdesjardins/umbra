@@ -1,0 +1,28 @@
+.panel {
+  flex: 1;
+  height: 100dvh;
+  min-height: 0;
+  width: 100dvw;
+  min-width: 0;
+  max-width: 100dvw;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-paper);
+  color: var(--app-text);
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .panel {
+    width: auto;
+    min-width: 60vw;
+    max-width: none;
+  }
+}
+
+.fallback {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

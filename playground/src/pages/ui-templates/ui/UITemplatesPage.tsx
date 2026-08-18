@@ -1,12 +1,8 @@
 import { ExampleSection } from '@/entities/example';
+import styles from '@/pages/ui-templates/ui/UITemplatesPage.module.css';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import { ViewCodeButton } from '@/shared/ui/ViewCodeButton/ViewCodeButton';
-import Box from '@mui/material/Box';
-import CardContent from '@mui/material/CardContent';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Typography from '@mui/material/Typography';
 import { useState, type ReactNode } from 'react';
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -221,10 +217,7 @@ const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
   mui: (
     <>
       Material UI implementations. Import them as namespaces —{' '}
-      <Box component="code" sx={{ fontFamily: 'monospace' }}>
-        import * as MessageModal from …/mui/message-modal
-      </Box>
-      .
+      <code>import * as MessageModal from …/mui/message-modal</code>.
     </>
   ),
   vanilla:
@@ -233,12 +226,9 @@ const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
     <>
       Works under either flavour, because none of it renders anything. What the two sets have in
       common is larger than this list, though: the hooks are the same call in both, an action
-      spreads the same props onto a Material UI button and a bare{' '}
-      <Box component="code" sx={{ fontFamily: 'monospace' }}>
-        &lt;button&gt;
-      </Box>
-      , and both must forward <code>aria-keyshortcuts</code> and <code>data-focus-on-open</code> or
-      the hotkey and the opening focus quietly stop working. Only the markup differs — which is the
+      spreads the same props onto a Material UI button and a bare <code>&lt;button&gt;</code>, and
+      both must forward <code>aria-keyshortcuts</code> and <code>data-focus-on-open</code> or the
+      hotkey and the opening focus quietly stop working. Only the markup differs — which is the
       whole argument for a headless library, and the reason this page has three tabs rather than
       two.
     </>
@@ -250,17 +240,10 @@ const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
 const TemplateItemCard = ({ name, codeKey }: TemplateItem) => {
   return (
     <SurfaceCard interactive>
-      <CardContent
-        sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, '&:last-child': { pb: 1.5 } }}
-      >
-        <Typography
-          variant="body2"
-          sx={{ fontFamily: 'monospace', fontSize: '0.8125rem', flex: 1, minWidth: 0 }}
-        >
-          {name}
-        </Typography>
+      <div className={styles['itemRow']}>
+        <p className={styles['itemName']}>{name}</p>
         <ViewCodeButton codeKey={codeKey} />
-      </CardContent>
+      </div>
     </SurfaceCard>
   );
 };
@@ -268,22 +251,22 @@ const TemplateItemCard = ({ name, codeKey }: TemplateItem) => {
 const TemplateGroupSection = ({ title, description, items }: TemplateGroup) => {
   return (
     <ExampleSection title={title} description={description}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-          gap: 1,
-        }}
-      >
+      <div className={styles['cardGrid']}>
         {items.map((item) => {
           return <TemplateItemCard key={item.codeKey} name={item.name} codeKey={item.codeKey} />;
         })}
-      </Box>
+      </div>
     </ExampleSection>
   );
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+const FLAVOR_TABS: readonly { readonly value: Flavor; readonly label: string }[] = [
+  { value: 'mui', label: 'Material UI' },
+  { value: 'vanilla', label: 'Vanilla' },
+  { value: 'shared', label: 'Shared' },
+];
 
 export const UITemplatesPage = () => {
   const [flavor, setFlavor] = useState<Flavor>('mui');
@@ -294,28 +277,33 @@ export const UITemplatesPage = () => {
         ? VANILLA_GROUPS
         : [PATTERNS_GROUP, PLAYGROUND_GROUP];
 
-  const handleFlavorChange = (_: React.MouseEvent<HTMLElement>, next: Flavor | null) => {
-    if (next === null) {
-      return;
-    }
-    setFlavor(next);
-  };
-
   return (
     <PageLayout
       title="UI Templates"
       description="Reference implementations you copy into your own project — the library ships no UI. The two rendering flavours expose the same component names; the third tab is what works under both."
       actions={
-        <ToggleButtonGroup value={flavor} exclusive onChange={handleFlavorChange} size="small">
-          <ToggleButton value="mui">Material UI</ToggleButton>
-          <ToggleButton value="vanilla">Vanilla</ToggleButton>
-          <ToggleButton value="shared">Shared</ToggleButton>
-        </ToggleButtonGroup>
+        // Exclusive selection with a tab always active: pressing the selected tab re-selects it,
+        // which is what the MUI group's ignored-null branch amounted to.
+        <div role="group" className={styles['segmented']}>
+          {FLAVOR_TABS.map((tab) => {
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                className={styles['segment']}
+                aria-pressed={flavor === tab.value}
+                onClick={() => {
+                  setFlavor(tab.value);
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       }
     >
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 4, maxWidth: 720 }}>
-        {FLAVOR_BLURB[flavor]}
-      </Typography>
+      <p className={styles['blurb']}>{FLAVOR_BLURB[flavor]}</p>
 
       {groups.map((group) => {
         return (

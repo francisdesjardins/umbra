@@ -1,0 +1,80 @@
+/* Fixed above the sidebar (its 1200) and below the dialogs (the manager's 1300+). */
+.appBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1201;
+  border-bottom: 1px solid var(--app-divider);
+  background: var(--app-paper);
+  color: var(--app-text);
+}
+
+.toolbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+@media (min-width: 600px) {
+  .toolbar {
+    padding: 0 24px;
+  }
+}
+
+/* `edge="start"`'s job: the icon's padding hangs into the gutter so the glyph aligns with content. */
+.menuButton {
+  margin-left: -8px;
+  margin-right: 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 4px;
+}
+
+.brand:hover .wordmark {
+  color: var(--app-accent);
+}
+
+.badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--app-flame);
+  color: var(--app-primary-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordmark {
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: color 120ms;
+}
+
+.pill {
+  display: none;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--app-hover);
+  color: var(--app-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+@media (min-width: 600px) {
+  .pill {
+    display: inline-flex;
+  }
+}
+
+.spacer {
+  flex: 1;
+}

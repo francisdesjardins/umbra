@@ -1,12 +1,10 @@
 import { PeekingMoon } from '@/shared/ui/PeekingMoon/PeekingMoon';
 import { useCodeModal } from '@/widgets/code-viewer';
 import { useCodePane } from '@/shared/lib/code-pane-context';
+import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { Sidebar } from '@/widgets/sidebar';
 import { TopBar } from '@/widgets/top-bar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
+import styles from '@/widgets/root-layout/ui/RootLayout.module.css';
 import { Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
@@ -28,42 +26,19 @@ const MainContent = () => {
   }, [open, setCodeModalOpen]);
 
   return (
-    <Box
-      component="main"
-      sx={{
-        flexGrow: 1,
-        transition: 'margin-right 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        // A flex item's default `min-width: auto` is the content's minimum, so one unwrappable line
-        // stretches this past the viewport; what cannot shrink scrolls in its own container instead.
-        minWidth: 0,
-      }}
-    >
-      <Toolbar sx={{ height: 64 }} />
-      {/* No `overflow: auto`: the window does the scrolling, and declaring it would make this the
-          nearest scrolling ancestor, silently killing `position: sticky` on every jump bar inside. */}
-      <Box
-        sx={{
-          flex: 1,
-          px: { xs: 2, md: 4 },
-          py: { xs: 2, md: 4 },
-          maxWidth: 1400,
-          mx: 'auto',
-          width: '100%',
-        }}
-      >
+    <main className={styles['main']}>
+      <div className={styles['toolbarSpacer']} />
+      <div className={styles['content']}>
         <Outlet />
-      </Box>
+      </div>
       {codeModal.Modal}
-    </Box>
+    </main>
   );
 };
 
 const ResponsiveShell = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // Below MUI's old `md` (900px) — spelled out, so the layout does not move without the theme.
+  const isMobile = useMediaQuery('(max-width: 899.95px)');
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleToggleSidebar = () => {
@@ -77,11 +52,11 @@ const ResponsiveShell = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
+    <div className={styles['shell']}>
       <TopBar isMobile={isMobile} onMenuClick={handleToggleSidebar} />
       <Sidebar isMobile={isMobile} mobileOpen={mobileOpen} onClose={handleCloseSidebar} />
       <MainContent />
-    </Box>
+    </div>
   );
 };
 

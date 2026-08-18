@@ -1,9 +1,6 @@
-import CloseIcon from '@mui/icons-material/Close';
-import CodeIcon from '@mui/icons-material/Code';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
+import { AppIconButton } from '@/shared/ui/AppButton';
+import { CloseIcon, CodeIcon } from '@/shared/ui/icons';
+import styles from '@/widgets/code-viewer/ui/CodeModal.module.css';
 import type { ModalHandle } from 'umbra/react';
 import type { ReactNode } from 'react';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
@@ -39,113 +36,60 @@ export const CodeModalContent = ({
   titleId: string;
 }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          flexShrink: 0,
-          bgcolor: (theme) => {
-            return theme.palette.mode === 'dark' ? '#1a1a1a' : '#fafafa';
-          },
-        }}
-      >
-        <CodeIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-          <Typography
-            id={titleId}
-            variant="h6"
-            sx={{
-              fontWeight: 600,
-              letterSpacing: '-0.01em',
-            }}
-          >
+    <div className={styles['root']}>
+      <div className={styles['header']}>
+        <CodeIcon className={styles['headerIcon']} />
+        <div className={styles['titleRow']}>
+          <h2 id={titleId} className={styles['title']}>
             {title}
-          </Typography>
-          <Box
-            sx={{
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-              bgcolor: (theme) => {
-                return theme.palette.mode === 'dark'
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.04)';
-              },
-              border: 1,
-              borderColor: 'divider',
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                fontFamily: 'monospace',
-                fontWeight: 500,
-                fontSize: '0.7rem',
-                textTransform: 'uppercase',
-              }}
-            >
-              {codeKey}
-            </Typography>
-          </Box>
-        </Box>
-        {exampleActions && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-            {exampleActions}
-          </Box>
-        )}
-        <IconButton
+          </h2>
+          <span className={styles['keyBadge']}>{codeKey}</span>
+        </div>
+        {exampleActions && <div className={styles['actions']}>{exampleActions}</div>}
+        <AppIconButton
           size="small"
+          aria-label="Close"
           onClick={() => {
             handle.close('close');
           }}
-          sx={{
-            '&:hover': {
-              bgcolor: 'action.hover',
-            },
-          }}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
+          <CloseIcon />
+        </AppIconButton>
+      </div>
 
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className={styles['body']}>
         {code ? (
           <CodeBlock code={code} language={languageForCodeKey(codeKey)} />
         ) : (
-          <Box
-            sx={{
-              p: 3,
-              textAlign: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 1.5,
-              flex: 1,
-            }}
-          >
+          <div className={styles['emptyState']}>
             {/* No live region: this branch unmounts when the code arrives, so a region on it would
                 be born with its text rather than updated, announcing nothing. The panel takes focus
                 on open and is named by its heading. */}
-            {isLoading && <CircularProgress size={18} />}
-            <Typography variant="body2" color="text.secondary">
-              {isLoading ? 'Loading source…' : 'No code available'}
-            </Typography>
-          </Box>
+            {isLoading && (
+              <svg viewBox="0 0 24 24" aria-hidden style={{ width: 18, height: 18, flexShrink: 0 }}>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  fill="none"
+                  stroke="var(--app-flame)"
+                  strokeWidth="3"
+                  strokeDasharray="42 18"
+                />
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 12 12"
+                  to="360 12 12"
+                  dur="0.8s"
+                  repeatCount="indefinite"
+                />
+              </svg>
+            )}
+            <span>{isLoading ? 'Loading source…' : 'No code available'}</span>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

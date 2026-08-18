@@ -1,21 +1,18 @@
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import { dialogManager } from 'umbra/react';
 import type { ReactNode } from 'react';
+import { AppButton } from '@/shared/ui/AppButton';
+import { PlayArrowIcon } from '@/shared/ui/icons';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import { ViewCodeButton } from '@/shared/ui/ViewCodeButton/ViewCodeButton';
 
 type ExampleCardProps = {
-  title: string;
-  description?: string;
-  codeKey?: string;
-  children?: ReactNode;
-  example?: ReactNode;
-  modalId?: string;
-  tryLabel?: string;
+  readonly title: string;
+  readonly description?: string | undefined;
+  readonly codeKey?: string | undefined;
+  readonly children?: ReactNode | undefined;
+  readonly example?: ReactNode | undefined;
+  readonly modalId?: string | undefined;
+  readonly tryLabel?: string | undefined;
 };
 
 export const ExampleCard = ({
@@ -28,55 +25,58 @@ export const ExampleCard = ({
   tryLabel = 'Try It',
 }: ExampleCardProps) => {
   const tryButton = modalId ? (
-    <Button
+    <AppButton
       variant="outlined"
       size="small"
-      startIcon={<PlayArrowIcon />}
       onClick={() => {
         dialogManager.open(modalId);
       }}
     >
+      <PlayArrowIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
       {tryLabel}
-    </Button>
+    </AppButton>
   ) : null;
 
   const actions = tryButton ?? children;
   return (
     <SurfaceCard interactive>
-      <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <Typography
-            variant="h6"
-            sx={{
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <h6
+            style={{
+              margin: 0,
               fontWeight: 600,
               fontSize: '1.1rem',
+              lineHeight: 1.6,
               letterSpacing: '-0.01em',
               flex: 1,
             }}
           >
             {title}
-          </Typography>
+          </h6>
           {codeKey && <ViewCodeButton codeKey={codeKey} actions={actions} />}
-        </Box>
+        </div>
         {description && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 3,
+          <p
+            style={{
+              margin: '0 0 24px',
+              fontSize: '0.875rem',
               lineHeight: 1.6,
+              color: 'var(--app-text-secondary)',
               flex: 1,
             }}
           >
             {description}
-          </Typography>
+          </p>
         )}
         {example ? (
-          <Box sx={{ mt: 'auto' }}>{example}</Box>
+          <div style={{ marginTop: 'auto' }}>{example}</div>
         ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 'auto' }}>{children}</Box>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 'auto' }}>
+            {children}
+          </div>
         )}
-      </CardContent>
+      </div>
     </SurfaceCard>
   );
 };

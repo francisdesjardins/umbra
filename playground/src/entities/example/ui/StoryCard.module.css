@@ -1,0 +1,94 @@
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0;
+  flex: 1;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+.description {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--app-text-secondary);
+}
+
+/* Harnesses are unstyled test fixtures so assertions press what you press; presentation
+   is applied from out here rather than by prettifying the fixtures. */
+.harness {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Harness controls are plain text nodes; a wrapping flex row makes them legible. */
+.harness > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.harness button {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--app-divider);
+  background: var(--app-paper);
+  color: var(--app-text);
+  cursor: pointer;
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+
+.harness button:hover:not(:disabled) {
+  border-color: var(--app-flame);
+  background: var(--app-hover);
+}
+
+.harness button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The state readouts a test asserts on, as monospace pills so they read as distinct. */
+.harness span[data-testid] {
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--app-hover);
+  color: var(--app-text-secondary);
+}
+
+.harness input,
+.harness select {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--app-divider);
+  background: var(--app-paper);
+  color: var(--app-text);
+}

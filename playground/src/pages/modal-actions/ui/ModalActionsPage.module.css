@@ -1,0 +1,28 @@
+/* The page-level info banner, on MUI Alert's measured info pair — the light pair fails on a dark
+   page and vice versa, so the dark scheme swaps both halves rather than dimming one. */
+.banner {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 32px;
+  background: rgba(2, 136, 209, 0.1);
+  color: #01579b;
+}
+
+:root[data-color-scheme='dark'] .banner {
+  background: rgba(41, 182, 246, 0.12);
+  color: #29b6f6;
+}
+
+.bannerIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.bannerText {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.43;
+}

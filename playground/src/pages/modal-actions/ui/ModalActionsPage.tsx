@@ -19,9 +19,9 @@ import {
   MODAL_ID as PER_ACTION_STATE_ID,
   PerActionStateExample,
 } from '@/pages/modal-actions/examples/per-action-state';
+import styles from '@/pages/modal-actions/ui/ModalActionsPage.module.css';
 import { PageLayout } from '@/shared/ui/PageLayout';
-import Alert from '@mui/material/Alert';
-import Typography from '@mui/material/Typography';
+import { InfoIcon } from '@/shared/ui/icons';
 
 export const ModalActionsPage = () => {
   return (
@@ -29,13 +29,14 @@ export const ModalActionsPage = () => {
       title="Modal Actions"
       description="An action is declared by being rendered: action('save', handler) inside render names the reason, binds the handler, and returns the button props — loading, disabled, aria-keyshortcuts — in one expression."
     >
-      <Alert severity="info" sx={{ mb: 4 }}>
-        <Typography variant="body2">
+      <div className={styles['banner']}>
+        <InfoIcon className={styles['bannerIcon']} aria-hidden="true" />
+        <p className={styles['bannerText']}>
           The <strong>Delete Item</strong> action fails randomly about 30% of the time, so the error
           and loading states are visible without rigging anything — retry to see the success path.
           The hotkey card beside it always succeeds: its subject is the keyboard.
-        </Typography>
-      </Alert>
+        </p>
+      </div>
 
       <ExampleSection
         title="Actions & hotkeys"

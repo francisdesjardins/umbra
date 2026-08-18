@@ -1,5 +1,5 @@
-import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
+import styles from '@/shared/ui/PeekingMoon/PeekingMoon.module.css';
+import { useTheme } from '@/shared/lib/theme-context';
 import { useEffect, useRef, useState } from 'react';
 import { UmbraMoon } from './UmbraMoon';
 
@@ -17,6 +17,12 @@ type Config = {
   /** Rest position, px from the top of the viewport. */
   readonly offset: number;
   readonly key: number;
+};
+
+type Frame = {
+  readonly transform: string;
+  readonly filter?: string | undefined;
+  readonly opacity?: number | undefined;
 };
 
 // Timing (ms): slide in + settle 0→2 000, peek + giggles 2 000→122 000, wave + out →125 000.
@@ -41,6 +47,22 @@ const GIGGLE_AT = [10_000, 21_000, 33_000, 45_000, 57_000, 69_000, 81_000, 93_00
 
 const pct = (ms: number) => {
   return `${((ms / ANIM_MS) * 100).toFixed(3)}%`;
+};
+
+/** The keyframes as CSS text, in insertion order — @keyframes selectors need no sorting. */
+const framesToCss = (frames: Record<string, Frame>) => {
+  return Object.entries(frames)
+    .map(([stop, frame]) => {
+      const decls = [`transform: ${frame.transform};`];
+      if (frame.filter !== undefined) {
+        decls.push(`filter: ${frame.filter};`);
+      }
+      if (frame.opacity !== undefined) {
+        decls.push(`opacity: ${frame.opacity.toString()};`);
+      }
+      return `${stop} { ${decls.join(' ')} }`;
+    })
+    .join('\n');
 };
 
 const responsiveSize = (viewportWidth: number) => {
@@ -73,8 +95,7 @@ const distanceToRect = (rect: DOMRect, point: { readonly x: number; readonly y: 
 };
 
 export const PeekingMoon = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const { isDarkMode } = useTheme();
 
   const [size, setSize] = useState(() => {
     return typeof window === 'undefined' ? 180 : responsiveSize(window.innerWidth);
@@ -195,7 +216,7 @@ export const PeekingMoon = () => {
   // Alternate the giggle direction per visit so it never looks looped.
   const sway = key % 2 === 0 ? 1 : -1;
 
-  const peekKeyframes: Record<string, { transform: string }> = {
+  const peekKeyframes: Record<string, Frame> = {
     [pct(0)]: { transform: tHide },
     [pct(420)]: { transform: `${tPeek} rotate(-14deg) scale(1.1)` },
     [pct(820)]: { transform: `${tPeek} rotate(8deg) scale(0.95)` },
@@ -218,7 +239,7 @@ export const PeekingMoon = () => {
     peekKeyframes[pct(at + 600)] = { transform: `${tPeek} rotate(0deg) scale(1)` };
   }
 
-  const shyKeyframes = {
+  const shyKeyframes: Record<string, Frame> = {
     '0%': { transform: `${tPeek} scale(1)` },
     '22%': { transform: `${tPeek} rotate(6deg) scale(0.94)` },
     '100%': { transform: `${tHide} rotate(-6deg)` },
@@ -226,7 +247,7 @@ export const PeekingMoon = () => {
 
   // It leaves the way it is named: a diamond-ring flare, then the disc contracts into its own
   // shadow. No spin; a moon does not cartwheel out of an eclipse.
-  const eclipseKeyframes = {
+  const eclipseKeyframes: Record<string, Frame> = {
     '0%': { transform: `${tPeek} scale(1)`, filter: 'brightness(1)', opacity: 1 },
     '18%': { transform: `${tPeek} scale(1.14)`, filter: 'brightness(2.1)', opacity: 1 },
     '38%': { transform: `${tPeek} scale(1.04)`, filter: 'brightness(1.2)', opacity: 1 },
@@ -258,12 +279,13 @@ export const PeekingMoon = () => {
   };
 
   return (
-    <Box
+    <div
       ref={boxRef}
       key={`${phase}-${key.toString()}`}
       role="button"
       tabIndex={0}
       aria-label="Dismiss the mascot"
+      className={styles['moon']}
       onClick={dismiss}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -283,19 +305,17 @@ export const PeekingMoon = () => {
           scheduleNext(config, phase === 'shy');
         }
       }}
-      sx={{
-        position: 'fixed',
-        zIndex: 1200,
-        cursor: 'pointer',
+      style={{
         width: size,
         height: size,
         ...position,
         animation: `${animName} ${duration.toString()}ms ${easing} forwards`,
-        [`@keyframes ${animName}`]: keyframes,
-        '@media (prefers-reduced-motion: reduce)': { animationDuration: '1ms' },
       }}
     >
-      <UmbraMoon isDark={isDark} />
-    </Box>
+      {/* Per-visit keyframes ride with the element they animate; the name is unique per
+          phase+visit, so remounts (the `key` above) restart the run cleanly. */}
+      <style>{`@keyframes ${animName} {\n${framesToCss(keyframes)}\n}`}</style>
+      <UmbraMoon isDark={isDarkMode} />
+    </div>
   );
 };

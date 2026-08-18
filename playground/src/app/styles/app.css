@@ -23,7 +23,9 @@
   --app-primary-ink: #0f172a;
   --app-primary-hover: #f59e0b;
 
-  --app-bg: #fafafa;
+  /* MUI's light default ground is #fff — not the #fafafa of older versions; measured, since the
+     sidebar paints on it and a mismatched token grays it. */
+  --app-bg: #ffffff;
   --app-paper: #ffffff;
   --app-text: rgba(0, 0, 0, 0.87);
   --app-text-secondary: rgba(0, 0, 0, 0.6);

@@ -1,0 +1,351 @@
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-top: 32px;
+  padding-bottom: 32px;
+  min-width: 0;
+}
+
+/* The corona paints past the SVG's box, so the art is inset in a square that clips
+   nothing: the wrapper bounds the layout and the disc sits at 78% of it. */
+.heroArt {
+  width: 176px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroArtDisc {
+  width: 78%;
+  aspect-ratio: 1;
+}
+
+.heroText {
+  min-width: 0;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.167;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Sized to the heading's two steps: the mark is part of the lockup, not a bullet. */
+.markWide {
+  display: none;
+}
+
+.markNarrow {
+  display: flex;
+}
+
+.heroSubtitle {
+  margin: 8px 0 0;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--app-text-secondary);
+}
+
+.heroBody {
+  margin: 16px 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--app-text-secondary);
+  max-width: 560px;
+}
+
+.lastClose {
+  display: block;
+  margin: 16px 0 0;
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.66;
+  color: var(--app-accent);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.chip {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Links dressed as buttons — AppButton's metrics on an anchor, because a real <a> keeps
+   navigation semantics (new tab, copy link) a button-with-navigate would drop. */
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02857em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Unfilled variants paint amber on the *page*, which is the 3.19:1 trap — they take the
+   readable accent instead. */
+.linkButtonOutlined {
+  color: var(--app-accent);
+  border-color: var(--app-accent);
+}
+
+.linkButtonText {
+  color: var(--app-accent);
+}
+
+.linkButtonOutlined:hover,
+.linkButtonText:hover {
+  background: var(--app-hover);
+}
+
+/* Stacked, not side by side: at half width both snippets get a horizontal scrollbar. */
+.snippets {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 40px;
+  min-width: 0;
+}
+
+.snippet {
+  min-width: 0;
+}
+
+.overline {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 2.66;
+  font-weight: 400;
+  letter-spacing: 0.08333em;
+  text-transform: uppercase;
+  color: var(--app-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nextRow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 48px;
+}
+
+.nextCard {
+  flex: 1;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--app-divider);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 120ms,
+    transform 120ms;
+}
+
+.nextCard:hover {
+  border-color: var(--app-flame);
+  transform: translateY(-2px);
+}
+
+.nextTitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nextBody {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.43;
+  color: var(--app-text-secondary);
+}
+
+.moonRow {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 32px;
+  color: var(--app-text-secondary);
+  justify-content: center;
+}
+
+/* ── The hello modal's interior ─────────────────────────────────────────────────
+   Page-owned on purpose — the library ships no UI, so the front page brings its own, on the
+   same tokens as the shell. The shadow is a dialog's: the one place this shell keeps elevation. */
+.helloCard {
+  padding: 24px;
+  max-width: min(420px, 88vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--app-paper);
+  color: var(--app-text);
+  border: 1px solid var(--app-divider);
+  border-radius: 8px;
+  box-shadow:
+    0px 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0px 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.helloTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.helloBody {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.43;
+  color: var(--app-text-secondary);
+}
+
+.helloRemember {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  line-height: 1.43;
+  color: var(--app-text-secondary);
+  cursor: pointer;
+}
+
+/* A fill, so the browser picks the check ink against the flame. */
+.helloCheckbox {
+  accent-color: var(--app-flame);
+  width: 16px;
+  height: 16px;
+}
+
+.helloFooter {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* Bare <button>s, not AppButton: an action's spread must land on a native button so
+   aria-keyshortcuts / data-focus-on-open / data-action-reason all arrive — the exact claim the
+   HELLO snippet beside it makes. Metrics mirror the shell button's small size. */
+.helloButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02857em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.helloButtonText {
+  color: var(--app-accent);
+}
+
+.helloButtonText:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+
+.helloButtonContained {
+  background: var(--app-flame);
+  color: var(--app-primary-ink);
+}
+
+.helloButtonContained:hover:not(:disabled) {
+  background: var(--app-primary-hover);
+}
+
+.helloButton:disabled {
+  cursor: default;
+  background: var(--app-divider);
+  border-color: transparent;
+  color: var(--app-text-tertiary);
+}
+
+@media (min-width: 600px) {
+  .nextRow {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 900px) {
+  .hero {
+    flex-direction: row;
+    gap: 48px;
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+
+  .heroArt {
+    width: 220px;
+  }
+
+  .heroTitle {
+    font-size: 3rem;
+  }
+
+  .markWide {
+    display: flex;
+  }
+
+  .markNarrow {
+    display: none;
+  }
+}

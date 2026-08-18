@@ -1,0 +1,83 @@
+.frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Floats over the code on a translucent wash + blur; the literals are the MUI overlays it
+   replaced (the icon-button's action.active ink included) — mode-flipped below, not tokens,
+   because --app-hover's light value is a different alpha. 5px padding keeps the 30px hit box. */
+.copyButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  padding: 5px;
+  border: 1px solid var(--app-divider);
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.54);
+  backdrop-filter: blur(8px);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.copyButton:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+}
+
+:root[data-color-scheme='dark'] .copyButton {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+:root[data-color-scheme='dark'] .copyButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* MUI success.main, per mode — the "copied" tick. */
+.checkIcon {
+  color: #2e7d32;
+}
+
+:root[data-color-scheme='dark'] .checkIcon {
+  color: #66bb6a;
+}
+
+/* The surface colour itself is inline (CODE_SURFACE): the TSX also feeds it to
+   `readableSyntaxStyle`, and two declarations of one background drift. */
+.scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.scroll pre {
+  margin: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  overflow-x: auto !important;
+}
+
+.scroll code {
+  display: block !important;
+  padding: 24px !important;
+  border-radius: 0 !important;
+  /* The theme paints its own background on the <code>, and a background on a scroll
+     container stays put while content moves, sliding the code off its own colour. */
+  background: transparent !important;
+  /* Otherwise the block is only viewport-wide and the scrolled-in region has none. */
+  min-width: max-content;
+}
+
+.wrap pre {
+  overflow-x: visible !important;
+}
+
+/* Declared here because the highlighter puts `white-space: pre` inline on the <pre>. Only
+   on `pre`/`code`: on the token spans each token wraps alone and the line breaks apart. */
+.wrap pre,
+.wrap code {
+  white-space: pre-wrap !important;
+}

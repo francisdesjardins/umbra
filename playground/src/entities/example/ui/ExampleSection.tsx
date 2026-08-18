@@ -1,6 +1,5 @@
 import { sectionSlug } from '@/shared/lib/section-slug';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import styles from '@/entities/example/ui/ExampleSection.module.css';
 import type { ReactNode } from 'react';
 
 type ExampleSectionProps = {
@@ -18,29 +17,10 @@ type ExampleSectionProps = {
  */
 export const ExampleSection = ({ title, description, id, children }: ExampleSectionProps) => {
   return (
-    <Box
-      component="section"
-      id={id ?? sectionSlug(title)}
-      sx={{
-        mb: 5,
-        // Anchor jumps must clear the fixed 64px top bar.
-        scrollMarginTop: 80,
-        '&:last-of-type': { mb: 0 },
-      }}
-    >
-      <Typography
-        variant="overline"
-        color="text.secondary"
-        sx={{ display: 'block', lineHeight: 1.4, letterSpacing: '0.1em', fontWeight: 600 }}
-      >
-        {title}
-      </Typography>
-      {description !== undefined && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 680 }}>
-          {description}
-        </Typography>
-      )}
-      <Box sx={{ mt: 2 }}>{children}</Box>
-    </Box>
+    <section id={id ?? sectionSlug(title)} className={styles['section']}>
+      <span className={styles['title']}>{title}</span>
+      {description !== undefined && <p className={styles['description']}>{description}</p>}
+      <div className={styles['content']}>{children}</div>
+    </section>
   );
 };

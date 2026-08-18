@@ -1,0 +1,34 @@
+/* The one card surface, at the numbers the MUI outlined Card rendered: 4px radius (the default
+   theme's shape), border only — the shell's cards carry no resting elevation. `overflow: hidden`
+   is Card's own rule and still clips children's corners to the radius. */
+.card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-paper);
+  color: var(--app-text);
+  border: 1px solid var(--app-divider);
+  border-radius: 4px;
+}
+
+/* Dark keeps MUI's `grey.900`, not `--app-paper`: the original branched to #212121 on purpose,
+   a step lighter than the #111c30 paper the dialogs sit on. */
+:root[data-color-scheme='dark'] .card {
+  background: #212121;
+}
+
+.interactive {
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The lift: flame border, a 30% flame ring plus MUI's elevation-4 shadow, and a 2px rise. */
+.interactive:hover {
+  border-color: var(--app-flame);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--app-flame) 30%, transparent),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}

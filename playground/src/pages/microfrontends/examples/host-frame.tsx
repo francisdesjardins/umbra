@@ -1,8 +1,6 @@
+import styles from '@/pages/microfrontends/examples/host-frame.module.css';
 import { useTheme } from '@/shared/lib/theme-context';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useRef, useState } from 'react';
 
 /**
@@ -40,8 +38,8 @@ export function HostFrame() {
   const { isDarkMode } = useTheme();
 
   /**
-   * Take the height from the document inside, not from breakpoints: MUI's key off the **viewport**
-   * while the host's grid keys off the **frame's width**, and the two diverge by the sidebar plus
+   * Take the height from the document inside, not from breakpoints: breakpoints key off the
+   * **viewport** while the host's grid keys off the **frame's width**, and the two diverge by the sidebar plus
    * the page padding — a `md` height computed for a 1200px viewport applied to a 604px frame that
    * had reflowed to two columns and wanted twice as much.
    *
@@ -111,9 +109,9 @@ export function HostFrame() {
   }, [reloadKey, isDarkMode]);
 
   return (
-    <Stack sx={{ gap: 1.5, width: '100%', minWidth: 0 }}>
-      <Stack direction="row" sx={{ gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Button
+    <div className={styles['stack']}>
+      <div className={styles['controls']}>
+        <AppButton
           variant="outlined"
           size="small"
           onClick={() => {
@@ -123,41 +121,24 @@ export function HostFrame() {
           }}
         >
           Restart the host
-        </Button>
-        <Typography variant="caption" color="text.secondary">
+        </AppButton>
+        <span className={styles['hint']}>
           Ask across a boundary in any direction, then read all four logs.
-        </Typography>
-      </Stack>
+        </span>
+      </div>
 
-      <Box
+      {/* The phone-height cap and its reasoning live in the CSS module beside this file. */}
+      <iframe
         key={reloadKey}
         ref={frameRef}
-        component="iframe"
         src={`${import.meta.env.BASE_URL}mfe/host.html`}
         title="Microfrontend host — four microfrontends sharing one dialog manager"
         // It carries its own copy of the library, React and Solid, and sits low on the page.
         loading="lazy"
-        sx={{
-          width: '100%',
-          // Measured from the document inside — see the effect above.
-          height,
-          /**
-           * Capped on a phone so it scrolls itself, and that is about the modals: `showModal()`
-           * centres in **its own** viewport, and an iframe sized to its whole document has one as
-           * tall as that document — 1802px at a 390px screen, so the dialog centres 900px down and
-           * the reader sees nothing. Capping makes the frame's viewport what is on screen; the
-           * cost is a nested scroll area, cheaper than dialogs opening out of sight.
-           *
-           * A viewport unit and a breakpoint rather than the measured height and the frame's own
-           * width: this is the reader's screen, not the content height the effect above tracks.
-           */
-          maxHeight: { xs: '80vh', sm: 'none' },
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-        }}
+        className={styles['frame']}
+        // Measured from the document inside — see the effect above.
+        style={{ height }}
       />
-    </Stack>
+    </div>
   );
 }
