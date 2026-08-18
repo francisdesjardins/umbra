@@ -1,0 +1,31 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--app-hover);
+}
+
+.iconButton:disabled {
+  cursor: default;
+  color: var(--app-text-tertiary);
+}
+
+.small {
+  padding: 4px;
+}
+
+.small svg {
+  width: 20px;
+  height: 20px;
+}

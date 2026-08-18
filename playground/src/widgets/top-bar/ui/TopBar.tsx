@@ -101,7 +101,7 @@ export const TopBar = ({ isMobile, onMenuClick }: TopBarProps) => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <ThemeToggleButton sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }} />
+        <ThemeToggleButton />
       </Toolbar>
     </AppBar>
   );

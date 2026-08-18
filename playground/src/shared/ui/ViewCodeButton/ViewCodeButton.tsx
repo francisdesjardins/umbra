@@ -1,5 +1,6 @@
-import CodeIcon from '@mui/icons-material/Code';
-import IconButton from '@mui/material/IconButton';
+import { AppIconButton } from '@/shared/ui/AppButton';
+import { CodeIcon } from '@/shared/ui/icons';
+import styles from '@/shared/ui/ViewCodeButton/ViewCodeButton.module.css';
 import type { ReactNode } from 'react';
 import { useCodePane } from '@/shared/lib/code-pane-context';
 
@@ -23,16 +24,15 @@ export function ViewCodeButton({ codeKey, actions }: ViewCodeButtonProps) {
   };
 
   return (
-    <IconButton
+    <AppIconButton
       size="small"
-      color="primary"
+      className={styles['codeButton']}
       onClick={handleClick}
       disabled={disabled}
       aria-label="View source code"
       aria-haspopup="dialog"
-      sx={{ bgcolor: 'action.hover', '&:hover': { bgcolor: 'action.selected' } }}
     >
-      <CodeIcon fontSize="small" />
-    </IconButton>
+      <CodeIcon />
+    </AppIconButton>
   );
 }

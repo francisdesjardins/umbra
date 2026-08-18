@@ -1,47 +1,35 @@
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { alpha } from '@mui/material/styles';
-
 type ResultDisplayProps = {
   result: string | null;
 };
 
 export const ResultDisplay = ({ result }: ResultDisplayProps) => {
   return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderRadius: 1,
-        // Derived from the palette, not written out: the border beside it is `primary.main`, and a
-        // literal here left a fuchsia wash inside an amber border the moment the palette moved.
-        bgcolor: (theme) => {
-          return result
-            ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.15 : 0.1)
-            : theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.03)'
-              : 'rgba(0, 0, 0, 0.02)';
-        },
-        border: 1,
-        borderColor: result ? 'primary.main' : 'divider',
+    <div
+      style={{
+        padding: 12,
+        borderRadius: 4,
+        // Token-derived, not written out: the border beside it is the flame, and a literal here
+        // left a fuchsia wash inside an amber border the moment the palette moved.
+        background: result
+          ? 'var(--app-flame-wash)'
+          : 'color-mix(in srgb, var(--app-text) 2%, transparent)',
+        border: `1px solid ${result ? 'var(--app-flame)' : 'var(--app-divider)'}`,
         transition: 'background-color 200ms, border-color 200ms',
       }}
     >
-      <Typography
-        variant="body2"
-        sx={{
+      <p
+        style={{
+          margin: 0,
           fontFamily: '"Fira Code", "Consolas", monospace',
           fontSize: '0.8125rem',
+          lineHeight: 1.43,
         }}
       >
-        <Box component="span" sx={{ color: 'text.secondary' }}>
-          Result:{' '}
-        </Box>
+        <span style={{ color: 'var(--app-text-secondary)' }}>Result: </span>
         {result ?? (
-          <Box component="span" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
-            waiting...
-          </Box>
+          <span style={{ color: 'var(--app-text-tertiary)', fontStyle: 'italic' }}>waiting...</span>
         )}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   );
 };

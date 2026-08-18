@@ -1,0 +1,10 @@
+/* A resting fill, unlike the bare icon buttons: this one is an affordance on every card, and
+   the wash is what makes it read as a control rather than an ornament. */
+.codeButton {
+  background: var(--app-hover);
+  color: var(--app-accent);
+}
+
+.codeButton:hover:not(:disabled) {
+  background: var(--app-selected);
+}

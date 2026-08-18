@@ -1,0 +1,6 @@
+/* The bordered square the top bar always drew around it — owned here since this is the only
+   place the toggle renders. */
+.toggle {
+  border: 1px solid var(--app-divider);
+  border-radius: 4px;
+}

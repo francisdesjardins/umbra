@@ -35,6 +35,17 @@
   --app-scrollbar-thumb: rgba(0, 0, 0, 0.12);
   --app-scrollbar-track: transparent;
   --app-scrollbar-width: 10px;
+
+  --app-hover: rgba(0, 0, 0, 0.04);
+  --app-selected: rgba(0, 0, 0, 0.08);
+  /* The amber wash behind a fresh result — derived from the flame, not a literal, so it moves
+     with the palette. */
+  --app-flame-wash: rgba(217, 119, 6, 0.1);
+  /* Error pair, measured like the primary one: light mode carries white on the deep red
+     (4.66:1); dark mode's brighter red cannot carry white (3.68:1) and takes a dark ink. */
+  --app-error: #d32f2f;
+  --app-error-ink: #ffffff;
+  --app-error-hover: #b71c1c;
 }
 
 /* Dark mode */
@@ -57,6 +68,13 @@
   --app-divider: rgba(255, 255, 255, 0.12);
 
   --app-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+
+  --app-hover: rgba(255, 255, 255, 0.08);
+  --app-selected: rgba(255, 255, 255, 0.16);
+  --app-flame-wash: rgba(245, 158, 11, 0.15);
+  --app-error: #f44336;
+  --app-error-ink: rgba(0, 0, 0, 0.87);
+  --app-error-hover: #ef5350;
 }
 
 /* ========== Scrollbars ========== */
