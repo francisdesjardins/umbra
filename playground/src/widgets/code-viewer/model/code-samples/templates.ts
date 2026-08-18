@@ -68,6 +68,13 @@ import vanillaFormInputSrc from '@/entities/modal-template/ui/vanilla/form-modal
 import vanillaFormLabelSrc from '@/entities/modal-template/ui/vanilla/form-modal/components/VanillaLabel.tsx?raw';
 import vanillaFormButtonContainerSrc from '@/entities/modal-template/ui/vanilla/form-modal/components/VanillaButtonContainer.tsx?raw';
 import vanillaFormStylesSrc from '@/entities/modal-template/ui/vanilla/form-modal/styles.module.css?raw';
+import vanillaPanelPanelContainerSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaPanelContainer.tsx?raw';
+import vanillaPanelPanelHeaderSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaPanelHeader.tsx?raw';
+import vanillaPanelHeaderActionLayoutSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaHeaderActionLayout.tsx?raw';
+import vanillaPanelPanelContentSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaPanelContent.tsx?raw';
+import vanillaPanelPanelFooterSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaPanelFooter.tsx?raw';
+import vanillaPanelDividerSrc from '@/entities/modal-template/ui/vanilla/panel-modal/components/VanillaPanelDivider.tsx?raw';
+import vanillaPanelStylesSrc from '@/entities/modal-template/ui/vanilla/panel-modal/styles.module.css?raw';
 import vanillaSharedButtonSrc from '@/entities/modal-template/ui/vanilla/shared/VanillaButton.tsx?raw';
 import vanillaSharedAlertSrc from '@/entities/modal-template/ui/vanilla/shared/Alert.tsx?raw';
 import vanillaSharedAlertContentSrc from '@/entities/modal-template/ui/vanilla/shared/content/AlertContent.tsx?raw';
@@ -76,6 +83,10 @@ import vanillaSharedMessageSrc from '@/entities/modal-template/ui/vanilla/shared
 import vanillaSharedDetailSrc from '@/entities/modal-template/ui/vanilla/shared/content/Detail.tsx?raw';
 import vanillaSharedHintSrc from '@/entities/modal-template/ui/vanilla/shared/content/Hint.tsx?raw';
 import vanillaSharedSectionSrc from '@/entities/modal-template/ui/vanilla/shared/content/Section.tsx?raw';
+import vanillaSharedDetailListSrc from '@/entities/modal-template/ui/vanilla/shared/content/DetailList.tsx?raw';
+import vanillaSharedContentTransitionSrc from '@/entities/modal-template/ui/vanilla/shared/content/ContentTransition.tsx?raw';
+import vanillaSharedOverflowContainerSrc from '@/entities/modal-template/ui/vanilla/shared/content/OverflowContainer.tsx?raw';
+import vanillaSharedOverflownTypographySrc from '@/entities/modal-template/ui/vanilla/shared/content/OverflownTypography.tsx?raw';
 import vanillaSharedStylesSrc from '@/entities/modal-template/ui/vanilla/shared/content/styles.module.css?raw';
 import sharedComponentCodeBlockSrc from '@/shared/ui/CodeBlock/CodeBlock.tsx?raw';
 import sharedComponentViewCodeButtonSrc from '@/shared/ui/ViewCodeButton/ViewCodeButton.tsx?raw';
@@ -157,6 +168,13 @@ export const templates: Record<string, string> = {
   'vanilla-form-label': vanillaFormLabelSrc,
   'vanilla-form-button-container': vanillaFormButtonContainerSrc,
   'vanilla-form-styles': vanillaFormStylesSrc,
+  'vanilla-panel-panel-container': vanillaPanelPanelContainerSrc,
+  'vanilla-panel-panel-header': vanillaPanelPanelHeaderSrc,
+  'vanilla-panel-header-action-layout': vanillaPanelHeaderActionLayoutSrc,
+  'vanilla-panel-panel-content': vanillaPanelPanelContentSrc,
+  'vanilla-panel-panel-footer': vanillaPanelPanelFooterSrc,
+  'vanilla-panel-divider': vanillaPanelDividerSrc,
+  'vanilla-panel-styles': vanillaPanelStylesSrc,
   'vanilla-shared-button': vanillaSharedButtonSrc,
   'vanilla-shared-alert': vanillaSharedAlertSrc,
   'vanilla-shared-alert-content': vanillaSharedAlertContentSrc,
@@ -165,6 +183,10 @@ export const templates: Record<string, string> = {
   'vanilla-shared-detail': vanillaSharedDetailSrc,
   'vanilla-shared-hint': vanillaSharedHintSrc,
   'vanilla-shared-section': vanillaSharedSectionSrc,
+  'vanilla-shared-detail-list': vanillaSharedDetailListSrc,
+  'vanilla-shared-content-transition': vanillaSharedContentTransitionSrc,
+  'vanilla-shared-overflow-container': vanillaSharedOverflowContainerSrc,
+  'vanilla-shared-overflown-typography': vanillaSharedOverflownTypographySrc,
   'vanilla-shared-styles': vanillaSharedStylesSrc,
   'shared-component-code-block': sharedComponentCodeBlockSrc,
   'shared-component-view-code-button': sharedComponentViewCodeButtonSrc,

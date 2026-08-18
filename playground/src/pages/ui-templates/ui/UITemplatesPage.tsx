@@ -150,6 +150,20 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
     ],
   },
   {
+    title: 'PanelModal',
+    description:
+      'Components for large, complex full-panel modals — with its own Divider, since there is no component library to borrow one from.',
+    items: [
+      { name: 'PanelContainer', codeKey: 'vanilla-panel-panel-container' },
+      { name: 'PanelHeader', codeKey: 'vanilla-panel-panel-header' },
+      { name: 'HeaderActionLayout', codeKey: 'vanilla-panel-header-action-layout' },
+      { name: 'PanelContent', codeKey: 'vanilla-panel-panel-content' },
+      { name: 'PanelFooter', codeKey: 'vanilla-panel-panel-footer' },
+      { name: 'Divider', codeKey: 'vanilla-panel-divider' },
+      { name: 'styles.module.css', codeKey: 'vanilla-panel-styles' },
+    ],
+  },
+  {
     title: 'Shared',
     description:
       'Button (forwards aria-keyshortcuts — required for hotkeys) and the content atoms mirroring the MUI set.',
@@ -160,8 +174,12 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
       { name: 'Heading', codeKey: 'vanilla-shared-heading' },
       { name: 'Message', codeKey: 'vanilla-shared-message' },
       { name: 'Detail', codeKey: 'vanilla-shared-detail' },
+      { name: 'DetailList', codeKey: 'vanilla-shared-detail-list' },
       { name: 'Hint', codeKey: 'vanilla-shared-hint' },
       { name: 'Section', codeKey: 'vanilla-shared-section' },
+      { name: 'OverflownTypography', codeKey: 'vanilla-shared-overflown-typography' },
+      { name: 'OverflowContainer', codeKey: 'vanilla-shared-overflow-container' },
+      { name: 'ContentTransition', codeKey: 'vanilla-shared-content-transition' },
       { name: 'styles.module.css', codeKey: 'vanilla-shared-styles' },
     ],
   },

@@ -1,0 +1,120 @@
+/* ========== CSS Variables ========== */
+:root {
+  /* Light mode */
+  --panel-bg: #ffffff;
+  --panel-text: #1a1a1a;
+  /* Layout hairline only: the container edge and the divider separate areas of one surface, so
+     1.4.11 asks nothing of them. A control drawn inside a panel brings its own
+     `--*-control-border`. */
+  --panel-border: #dee2e6;
+  --panel-radius: 8px;
+  --panel-spacing-sm: 8px;
+  --panel-spacing: 16px;
+  --panel-spacing-lg: 20px;
+  --panel-content-inline: 24px;
+  /* Room a scroll container leaves for a focus ring drawn outside its controls — same 2px ring at
+     2px offset the whole playground uses, clipped at the padding box of anything not
+     `overflow: visible`. */
+  --panel-focus-ring-space: 4px;
+
+  /* Typography */
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Dark mode */
+:root[data-mui-color-scheme='dark'] {
+  --panel-bg: #121212;
+  --panel-text: rgba(255, 255, 255, 0.87);
+  --panel-border: #424242;
+}
+
+/* ========== PanelContainer ========== */
+.panelContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  font-family: var(--font-family);
+  overflow: visible;
+}
+
+/* ========== PanelHeader ========== */
+.panelHeader {
+  flex-shrink: 0;
+  padding: var(--panel-spacing) var(--panel-spacing-lg);
+}
+
+/* ========== HeaderActionLayout ========== */
+.headerActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: var(--panel-spacing-sm);
+}
+
+/* The 10rem floor is what lets the actions drop to a second line instead of starving the title:
+   with `flex-shrink: 0` on the actions, the content is the only thing that can give — measured on
+   a 375px phone, it gave all of it. */
+.headerActionContent {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.headerActionActions {
+  display: flex;
+  align-items: center;
+  gap: var(--panel-spacing-sm);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: var(--panel-spacing);
+}
+
+/* ========== PanelContent ========== */
+.panelContent {
+  flex: 1;
+  overflow-y: auto;
+  padding-block: var(--panel-spacing-lg);
+  scroll-padding: var(--panel-focus-ring-space);
+}
+
+.panelContentPadded {
+  padding-inline: var(--panel-content-inline);
+}
+
+/* Full-bleed content (data tables) still owes a flush control its ring: the ring-space padding is
+   cancelled by the negative margin, so the content stays edge-to-edge while the ring survives. */
+.panelContentBleed {
+  padding-inline: var(--panel-focus-ring-space);
+  margin-inline: calc(-1 * var(--panel-focus-ring-space));
+}
+
+/* ========== PanelFooter ========== */
+.panelFooter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--panel-spacing-sm);
+  flex-shrink: 0;
+  padding: var(--panel-spacing) var(--panel-spacing-lg);
+  justify-content: flex-end;
+}
+
+.panelFooterStart {
+  justify-content: flex-start;
+}
+
+.panelFooterSpaceBetween {
+  justify-content: space-between;
+}
+
+/* ========== Divider ========== */
+.panelDivider {
+  border: none;
+  border-top: 1px solid var(--panel-border);
+  margin: 0;
+}

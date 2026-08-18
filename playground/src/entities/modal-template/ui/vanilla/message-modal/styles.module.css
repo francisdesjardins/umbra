@@ -174,7 +174,12 @@
   font-family: var(--font-family);
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  /* Only what hover changes. `all` also animated `color`, and a theme flip interpolates it
+     across 200ms while an attribute-keyed background flips instantly — measured at 1.08:1
+     mid-flip on the panel surface. */
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
   min-width: 64px;
   outline: none;
 }

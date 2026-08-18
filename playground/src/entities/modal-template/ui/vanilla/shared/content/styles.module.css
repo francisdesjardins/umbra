@@ -138,3 +138,78 @@
   color: var(--content-alert-error-text);
   border: 1px solid rgba(176, 0, 32, 0.08);
 }
+
+/* ========== DetailList ========== */
+.detailList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.detailListItem {
+  display: flex;
+  align-items: center;
+  gap: var(--content-spacing-sm);
+  padding-block: 8px;
+}
+
+.detailListDense .detailListItem {
+  padding-block: 4px;
+}
+
+/* A fixed slot, not `gap` alone, so text columns align whether or not a row has an icon. */
+.detailListIcon {
+  flex: 0 0 auto;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.detailListText {
+  font-size: var(--font-size-sm);
+  line-height: 1.43;
+  color: var(--content-text-primary);
+  margin: 0;
+}
+
+/* ========== ContentTransition ========== */
+.transitionGrid {
+  display: grid;
+}
+
+/* Both layers share one grid cell so they overlap without absolute positioning — no layout
+   collapse or overflow while they crossfade. */
+.transitionLayer {
+  grid-area: 1 / 1;
+}
+
+.transitionFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========== OverflowContainer ========== */
+:root {
+  /* Room a scroll container leaves for a focus ring drawn outside its controls: the ring is a 2px
+     outline at 2px offset, clipped at the padding box of anything not `overflow: visible`. */
+  --content-focus-ring-space: 4px;
+}
+
+.overflowContainer {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-block: var(--content-spacing-sm);
+  padding-inline: var(--content-focus-ring-space);
+  margin-inline: calc(-1 * var(--content-focus-ring-space));
+  scroll-padding: var(--content-focus-ring-space);
+}
+
+/* ========== OverflownTypography ========== */
+.overflownText {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+}
