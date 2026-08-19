@@ -1,3 +1,4 @@
+import { Spinner } from '@/shared/ui/Spinner';
 import { AppIconButton } from '@/shared/ui/AppButton';
 import { CloseIcon, CodeIcon } from '@/shared/ui/icons';
 import styles from '@/widgets/code-viewer/ui/CodeModal.module.css';
@@ -66,25 +67,9 @@ export const CodeModalContent = ({
                 be born with its text rather than updated, announcing nothing. The panel takes focus
                 on open and is named by its heading. */}
             {isLoading && (
-              <svg viewBox="0 0 24 24" aria-hidden style={{ width: 18, height: 18, flexShrink: 0 }}>
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="9"
-                  fill="none"
-                  stroke="var(--app-flame)"
-                  strokeWidth="3"
-                  strokeDasharray="42 18"
-                />
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 12 12"
-                  to="360 12 12"
-                  dur="0.8s"
-                  repeatCount="indefinite"
-                />
-              </svg>
+              <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
+                <Spinner size={18} />
+              </span>
             )}
             <span>{isLoading ? 'Loading source…' : 'No code available'}</span>
           </div>

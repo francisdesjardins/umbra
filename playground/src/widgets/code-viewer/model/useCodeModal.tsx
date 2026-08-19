@@ -1,3 +1,4 @@
+import { Spinner } from '@/shared/ui/Spinner';
 import styles from '@/widgets/code-viewer/model/useCodeModal.module.css';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
@@ -35,29 +36,9 @@ export const useCodeModal = () => {
           <Suspense
             fallback={
               <div className={styles['fallback']}>
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                  style={{ width: 28, height: 28, flexShrink: 0 }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                    fill="none"
-                    stroke="var(--app-flame)"
-                    strokeWidth="3"
-                    strokeDasharray="42 18"
-                  />
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="0 12 12"
-                    to="360 12 12"
-                    dur="0.8s"
-                    repeatCount="indefinite"
-                  />
-                </svg>
+                <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
+                  <Spinner size={28} />
+                </span>
               </div>
             }
           >

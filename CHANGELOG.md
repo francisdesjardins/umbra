@@ -36,6 +36,22 @@ identical character for character between the dev server and the bundle, 184 624
 A disk cache keyed on `src/**` would take the remaining ~5s off a rebuild and is deliberately absent:
 this file already carries a chapter on caches that went stale in silence.
 
+### Fixed — five spinners, none of which span, and now one that does
+
+`<animateTransform>` sat as a **sibling** of the arc, directly under the `<svg>`, where it animates
+a transform the root element does not take — so every one of them rendered a still ring. The same
+fifteen lines had been written five times and inherited the same defect five times, which is the
+argument for `shared/ui/Spinner`: the route loader, the loading button, the code viewer's two, and
+the per-action example all take it now, sized and coloured by the caller.
+
+Verified by measurement rather than by looking: 250ms after mount the arc's transform reads
+`matrix(-0.383, 0.924, …)`, a 112.5° rotation — exactly 250/800 of a turn at the declared 0.8s.
+It also honours `prefers-reduced-motion`, which the SMIL version could not, and the dash gap is
+wide enough that a stopped arc still reads as busy.
+
+`LoadingOverlay` keeps its own copy and is left alone twice over: its `animateTransform` is inside
+the `<path>`, so it always worked, and it is a template that may not reach into `shared/`.
+
 ### Fixed — a card clipped the focus ring of anything flush against it
 
 `SurfaceCard` was `overflow: hidden`, which clips at the padding box and takes the 2px outline a

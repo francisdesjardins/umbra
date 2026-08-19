@@ -1,0 +1,20 @@
+@keyframes spinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The rotation is on the arc, not on the `<svg>`: the root element's transform is not the lever an
+   animation moves there, and targeting it leaves a still ring. The origin is in user units because
+   an SVG element's `transform-box` resolves against the view box. */
+.arc {
+  transform-origin: 12px 12px;
+  animation: spinnerRotate 0.8s linear infinite;
+}
+
+/* The gap in the dash is wide enough that a stopped arc still reads as a busy state. */
+@media (prefers-reduced-motion: reduce) {
+  .arc {
+    animation: none;
+  }
+}

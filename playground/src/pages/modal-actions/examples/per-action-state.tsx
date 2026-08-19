@@ -1,3 +1,4 @@
+import { Spinner } from '@/shared/ui/Spinner';
 import { ExampleLayout } from '@/entities/example';
 import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
@@ -18,28 +19,13 @@ const slow = (ms: number) => {
   });
 };
 
-/** An SMIL spinner: rotation the markup carries itself, where a component library ships a widget. */
-function Spinner() {
+/** The shell's spinner, taking the dialog's own primary rather than the page's — this renders
+ * inside a vanilla modal, whose palette is the template's. */
+function ActionSpinner() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden style={{ width: 18, height: 18, flexShrink: 0 }}>
-      <circle
-        cx="12"
-        cy="12"
-        r="9"
-        fill="none"
-        stroke="var(--color-primary)"
-        strokeWidth="3"
-        strokeDasharray="42 18"
-      />
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        from="0 12 12"
-        to="360 12 12"
-        dur="0.8s"
-        repeatCount="indefinite"
-      />
-    </svg>
+    <span style={{ display: 'inline-flex', color: 'var(--color-primary)' }}>
+      <Spinner size={18} />
+    </span>
   );
 }
 
@@ -62,7 +48,7 @@ export function PerActionStateExample() {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            {hasRunningAction ? <Spinner /> : null}
+            {hasRunningAction ? <ActionSpinner /> : null}
             <MessageModal.Title>
               {publishing
                 ? 'Publishing…'
