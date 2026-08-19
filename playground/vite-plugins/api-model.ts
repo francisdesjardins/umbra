@@ -1,7 +1,12 @@
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
 import type { Plugin } from 'vite';
+
+// Asynchronous, and that is the whole point: typedoc is a ~5 s subprocess, and spawning it
+// synchronously freezes the thread Rolldown transforms modules on — half a build spent single-file.
+const execFileAsync = promisify(execFile);
 
 // ── virtual:dialog-api ───────────────────────────────────────────────────────
 // Projects typedoc's ~470 kB graph over the library's entry points into a compact model, so the API
@@ -913,9 +918,9 @@ function captured(error: unknown, stream: 'stdout' | 'stderr'): string {
 }
 
 /**
- * Say what typedoc said: `stdio: 'pipe'` means a failure arrives as `Command failed: node
- * …/typedoc` with the diagnostics unread on the error, which under `treatWarningsAsErrors` is what
- * a broken `{@link}` produces mid-`yarn dev`.
+ * Say what typedoc said: `execFile` captures both streams, so a failure arrives as `Command failed:
+ * node …/typedoc` with the diagnostics unread on the error — which under `treatWarningsAsErrors` is
+ * what a broken `{@link}` produces mid-`yarn dev`.
  */
 export function typedocFailure(error: unknown): Error {
   const output = [captured(error, 'stdout'), captured(error, 'stderr')].join('').trim();
@@ -931,7 +936,7 @@ ${output}
   );
 }
 
-function buildModel(
+async function buildModel(
   repoRoot: string,
   run: { readonly cacheDir: string; readonly warn: (message: string) => void }
 ) {
@@ -942,7 +947,7 @@ function buildModel(
   // The CLI writes the JSON (the programmatic serializer needs a filesystem it lacks here), with
   // `--out` at the cache so the committed docs are never touched.
   try {
-    execFileSync(
+    await execFileAsync(
       process.execPath,
       [
         join(repoRoot, 'node_modules', 'typedoc', 'bin', 'typedoc'),
@@ -962,7 +967,7 @@ function buildModel(
         '--out',
         join(cacheDir, 'html'),
       ],
-      { cwd: repoRoot, stdio: 'pipe' }
+      { cwd: repoRoot }
     );
   } catch (error) {
     throw typedocFailure(error);
@@ -1072,35 +1077,57 @@ export function apiModelPlugin(): Plugin {
   const repoRoot = resolve(import.meta.dirname, '..', '..');
   const cacheDir = join(repoRoot, 'node_modules', '.cache', 'dialog-api');
   const watched = join(repoRoot, 'src');
-  let cached: string | null = null;
+  let pending: Promise<string> | null = null;
+
+  const generate = async (warn: (message: string) => void): Promise<string> => {
+    const seen = new Set<string>();
+    return JSON.stringify(
+      await buildModel(repoRoot, {
+        cacheDir,
+        warn: (message) => {
+          // Once per distinct message: an unhandled type kind repeats across every symbol.
+          if (!seen.has(message)) {
+            seen.add(message);
+            warn(message);
+          }
+        },
+      })
+    );
+  };
 
   return {
     name: 'dialog-api-model',
+
+    // Started here and awaited in `load`, so typedoc runs alongside the rest of the graph rather
+    // than in the middle of it. Deliberately not returned: Rolldown awaits `buildStart` before it
+    // scans a module, so returning the promise would re-serialise exactly what this parallelises.
+    // In dev this warms the model at startup instead of on the first visit to `/api`, which is the
+    // same trade `server.warmup` makes.
+    buildStart() {
+      pending ??= generate((message) => {
+        this.warn(message);
+      });
+      // The rejection is handled where it is awaited; this only keeps Node from seeing it unhandled.
+      pending.catch(() => {
+        return undefined;
+      });
+    },
 
     resolveId(id) {
       return id === VIRTUAL_ID ? RESOLVED_ID : null;
     },
 
-    load(id) {
+    async load(id) {
       if (id !== RESOLVED_ID) {
         return null;
       }
-      const seen = new Set<string>();
-      cached ??= JSON.stringify(
-        buildModel(repoRoot, {
-          cacheDir,
-          warn: (message) => {
-            // Once per distinct message: an unhandled type kind repeats across every symbol.
-            if (!seen.has(message)) {
-              seen.add(message);
-              this.warn(message);
-            }
-          },
-        })
-      );
+      // Not only `buildStart`'s: the dev server drops `pending` on a change under `src/`.
+      pending ??= generate((message) => {
+        this.warn(message);
+      });
       // `JSON.parse` of a string literal, not the object literal: ~215 kB parses as data in one
       // pass where the same bytes as JavaScript go through the full parser.
-      return `export default JSON.parse(${JSON.stringify(cached)});`;
+      return `export default JSON.parse(${JSON.stringify(await pending)});`;
     },
 
     configureServer(server) {
@@ -1110,7 +1137,7 @@ export function apiModelPlugin(): Plugin {
         if (!file.startsWith(watched)) {
           return;
         }
-        cached = null;
+        pending = null;
         const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
         if (mod) {
           server.moduleGraph.invalidateModule(mod);

@@ -9,6 +9,33 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-19
+
+### Tooling — typedoc off the playground build's critical path
+
+Rolldown's `PLUGIN_TIMINGS` read 98% of a 15.2s build inside plugin hooks, over three rows totalling
+174%: `vite:worker-import-meta-url` at 12.0s over 2 calls, `@rolldown/plugin-babel` at 7.3s, and
+`dialog-api-model` at 6.9s over 1198. **The overlap is the report's most useful property** — a hook's
+`await` is counted, so one blocking call gets billed to every row that was waiting on the thread. The
+virtual API model spawned typedoc with `execFileSync` inside `load`, freezing for ~5s the thread
+Rolldown transforms modules on. Of its 1198 calls, 1197 return on `id !== RESOLVED_ID` and cost
+nothing; the count was attribution noise and the single call was the finding.
+
+typedoc runs through `promisify(execFile)` now, started from `buildStart` and awaited in `load` —
+**deliberately not returned from `buildStart`**, because Rolldown awaits that hook before it scans a
+module and returning the promise would re-serialise precisely what this parallelises. The same build
+is **7.3s**, and the worker row fell to 4.2s: it never was 12s of worker bundling, it was 12s with
+typedoc's block on its meter. In dev the model warms at startup instead of on the first visit to
+`/api`, which is the trade `server.warmup` already makes one page over.
+
+**The error path is what the change put at risk, so it is what was checked.** A promisified
+`execFile` rejects with `.stdout` and `.stderr` on the error, so `typedocFailure` still prints
+typedoc's own diagnostics — the thing a broken `{@link}` needs mid-`yarn dev`. The model itself is
+identical character for character between the dev server and the bundle, 184 624 of them.
+
+A disk cache keyed on `src/**` would take the remaining ~5s off a rebuild and is deliberately absent:
+this file already carries a chapter on caches that went stale in silence.
+
 ## 2026-08-17
 
 ### Fixed — `yarn bench` proved an O(1) claim against two identical objects
