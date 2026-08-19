@@ -1,0 +1,131 @@
+/**
+ * Penumbra — the skin. **This is the file another project rewrites**; everything in
+ * `tokens.system.css` beside it ports unchanged.
+ *
+ * The palette is the eclipse the mascot draws: a dark body, a corona escaping around it. Dark is
+ * the designed-for scheme — the product's whole job is putting a shadow over a page — and light
+ * is the eclipse ended, given the same care rather than derived by inversion.
+ *
+ * Two rules with teeth, and both are carried in the token *names* so nobody has to read a comment
+ * to obey them:
+ *
+ * - **`--app-flame` is a fill; `--app-accent` is the ink.** Amber as text on the page is 3.2:1 —
+ *   never write `color: var(--app-flame)`.
+ * - **A filled primary hovers _brighter_** (`--app-primary-hover`), never deeper: the ink sitting
+ *   on it is dark, so a deeper amber underneath collapses to 2.5:1.
+ *
+ * Every pair here is measured rather than chosen — see playground/CLAUDE.md, "Colour is measured,
+ * not chosen", and re-run the audit after touching any value.
+ */
+
+:root {
+  /* ── Typefaces ───────────────────────────────────────────────────────────────────────
+     A low-contrast text serif for display against an engineered grotesque for text — the mascot
+     is a woodcut, and the serif is its voice. The mono carries labels, code and anything with
+     digits in a column. */
+  --app-font-display: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --app-font-body: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --app-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  /* How far a mark rises onto the cap band of the word beside it — `align-items: center` centres
+     boxes, and a text box carries descender room its ink may not use. Measured off the baseline at
+     two sizes; skin, because it is this face's asymmetry.
+
+     Only for a mark alone with type. In a row, leave the mark on the shared midline and trim the
+     text with `text-box: trim-both cap alphabetic` instead. That cannot serve a flex lockup like
+     the hero, whose text is an anonymous item with no line box to trim. */
+  --app-lockup-rise: 0.11em;
+
+  /* ── Light — the eclipse ended ───────────────────────────────────────────────────────
+     Neutrals carry a slate bias rather than being black at an opacity: a grey mixed toward the
+     ground reads as chosen, and an alpha ladder reads as whatever is behind it. */
+  --app-flame: #d97706;
+  --app-body: #1e293b;
+  --app-body-edge: #475569;
+  --app-accent: #92400e;
+  --app-ring: #92400e;
+  --app-primary-ink: #0b1120;
+  --app-primary-hover: #f59e0b;
+
+  /* The ground sits a real step under the paper, the way it does in dark. At 1% apart a card had
+     nothing but its hairline to separate it from the page, and light mode lost the figure-ground
+     the dark scheme has. Slate-tinted, so both schemes share a hue. */
+  --app-bg: #f4f6fa;
+  --app-paper: #ffffff;
+  --app-text: #0b1120;
+  --app-text-secondary: #4a5568;
+  /* Tertiary is spent on *text* here — counts, hints, placeholders — so it clears 4.5:1 rather
+     than sitting at the inactive-control tone a component library would give it. */
+  --app-text-tertiary: #5f6b7e;
+  --app-divider: rgb(15 23 42 / 0.1);
+  /* A control's edge says where the control is, so 1.4.11 asks 3:1 of it. The divider above is a
+     layout hairline and owes nothing. */
+  --app-control-border: #6b788c;
+
+  --app-hover: rgb(15 23 42 / 0.05);
+  --app-selected: rgb(15 23 42 / 0.09);
+  --app-flame-wash: rgb(217 119 6 / 0.1);
+
+  --app-error: #b91c1c;
+  --app-error-ink: #ffffff;
+  --app-error-hover: #991b1b;
+
+  /* The other two semantic inks, each with the tinted ground a badge or a banner sits on. They
+     exist so a component stops reaching for a literal — and, with it, stops branching on mode. */
+  --app-ok: #047857;
+  --app-ok-wash: rgb(4 120 87 / 0.1);
+  --app-info: #0369a1;
+  --app-info-wash: rgb(3 105 161 / 0.1);
+
+  /* The scrim behind the mobile drawer. Black in both schemes on purpose: it is an absence of
+     light rather than a colour, and tinting it slate makes it read as a surface. */
+  --app-scrim: rgb(0 0 0 / 0.5);
+  --app-scrollbar-thumb: rgb(15 23 42 / 0.16);
+  --app-scrollbar-track: transparent;
+
+  /* Edges, not elevation: one hairline and one soft shadow, instead of a three-layer stack
+     imitating paper height. The glow is the only real light in the system and is spent on the
+     corona — the focused, selected, live thing. */
+  --app-lift: 0 1px 1px rgb(15 23 42 / 0.05), 0 18px 44px -30px rgb(15 23 42 / 0.45);
+  --app-glow: 0 0 0 1px rgb(217 119 6 / 0.55), 0 0 32px -10px rgb(217 119 6 / 0.4);
+}
+
+/* ── Dark — the umbra ──────────────────────────────────────────────────────────────────
+   Slate dusk, not black: amber on #000 is a hazard label, on slate it is light. */
+:root[data-color-scheme='dark'] {
+  --app-flame: #f59e0b;
+  --app-body: #0b1120;
+  --app-body-edge: #334155;
+  --app-accent: #fbbf24;
+  --app-ring: #fbbf24;
+  --app-primary-hover: #fcd34d;
+
+  --app-bg: #0b1120;
+  --app-paper: #111a2b;
+  --app-text: #eef2f8;
+  --app-text-secondary: #a3b0c4;
+  --app-text-tertiary: #8494ab;
+  --app-divider: rgb(148 163 184 / 0.16);
+  --app-control-border: #7d8ba1;
+
+  --app-hover: rgb(238 242 248 / 0.07);
+  --app-selected: rgb(238 242 248 / 0.12);
+  --app-flame-wash: rgb(245 158 11 / 0.13);
+
+  /* The bright red cannot carry white (3.7:1), so it takes a dark ink — the same fill/ink split
+     the corona makes. */
+  --app-error: #f87171;
+  --app-error-ink: #0b1120;
+  --app-error-hover: #fca5a5;
+
+  --app-ok: #34d399;
+  --app-ok-wash: rgb(52 211 153 / 0.14);
+  --app-info: #38bdf8;
+  --app-info-wash: rgb(56 189 248 / 0.14);
+
+  --app-scrim: rgb(0 0 0 / 0.62);
+  --app-scrollbar-thumb: rgb(238 242 248 / 0.14);
+
+  --app-lift: 0 1px 1px rgb(2 6 23 / 0.5), 0 18px 44px -28px rgb(2 6 23 / 0.9);
+  --app-glow: 0 0 0 1px rgb(245 158 11 / 0.5), 0 0 32px -8px rgb(245 158 11 / 0.35);
+}

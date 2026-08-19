@@ -24,13 +24,7 @@
   color: var(--app-text-secondary);
 }
 
-/* MUI's success tone at its rendered ends — light mode reads the palette's `dark`, dark mode its
-   `light`. Literals because the app sheet carries no green; measured 7.8:1 on white and 8.0:1 on
-   the dark card's #212121, the worst grounds each sits on. */
+/* The semantic ink, which flips per mode on its own. */
 .success {
-  color: #1b5e20;
-}
-
-:root[data-color-scheme='dark'] .success {
-  color: #81c784;
+  color: var(--app-ok);
 }

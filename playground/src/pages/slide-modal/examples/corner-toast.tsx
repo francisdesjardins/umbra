@@ -203,6 +203,10 @@ export function SlideCornerToastExample() {
                 height: '100%',
                 width: `${String((remaining / LIFETIME_MS) * 100)}%`,
                 background: isPaused ? 'var(--color-warning)' : 'var(--color-primary)',
+                // The state ticks every TICK_MS, which is fifty visible steps across the lifetime.
+                // Transitioning each step over exactly one tick, linearly, joins them into one
+                // continuous sweep — and a pause simply stops feeding it, so the bar holds.
+                transition: `width ${String(TICK_MS)}ms linear`,
               }}
             />
           </div>

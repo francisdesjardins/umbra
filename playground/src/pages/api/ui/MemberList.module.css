@@ -1,12 +1,14 @@
-/* MUI's overline rank, with the original's overrides: 600 weight and a wider 0.1em tracking. */
+/* A mono eyebrow, and the margin is the spacing. It used to ride on a 2.66 leading, so the 4px
+   below it was a nudge on top of ~20px of leading rather than the whole gap. */
 .label {
   display: block;
-  margin-bottom: var(--app-space-1);
-  color: var(--app-text-secondary);
+  margin-bottom: var(--app-space-2);
+  color: var(--app-text-tertiary);
+  font-family: var(--app-font-mono);
   font-size: var(--app-text-xs);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  line-height: 2.66;
+  font-weight: 500;
+  letter-spacing: var(--app-tracking-label);
+  line-height: var(--app-lh-snug);
   text-transform: uppercase;
 }
 

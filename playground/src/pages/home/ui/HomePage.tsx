@@ -1,6 +1,6 @@
 import styles from '@/pages/home/ui/HomePage.module.css';
 import { useTheme } from '@/shared/lib/theme-context';
-import { AppButton } from '@/shared/ui/AppButton';
+import { AppButton, appButtonClass } from '@/shared/ui/AppButton';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
@@ -108,7 +108,7 @@ export const HomePage = () => {
           </label>
           <div className={styles['helloFooter']}>
             <button
-              className={`${styles['helloButton']} ${styles['helloButtonText']}`}
+              className={appButtonClass({ size: 'small' })}
               {...action('cancel', { focusOnOpen: true })}
             >
               Not now
@@ -117,7 +117,7 @@ export const HomePage = () => {
                 action would never run. The payload rides on `onAction`, which is the only door
                 out — an action without one closes carrying its reason and nothing else. */}
             <button
-              className={`${styles['helloButton']} ${styles['helloButtonContained']}`}
+              className={appButtonClass({ variant: 'contained', size: 'small' })}
               {...action('confirm', {
                 hotkey: Key.Enter,
                 onAction: (close) => {
@@ -190,18 +190,12 @@ export const HomePage = () => {
             >
               Open a modal
             </AppButton>
-            <Link
-              to="/getting-started"
-              className={`${styles['linkButton']} ${styles['linkButtonOutlined']}`}
-            >
+            {/* Real anchors wearing the button recipe: a button-with-navigate would drop new-tab
+                and copy-link. */}
+            <Link to="/getting-started" className={appButtonClass({ variant: 'outlined' })}>
               Get started
             </Link>
-            <a
-              href={REPO}
-              target="_blank"
-              rel="noreferrer"
-              className={`${styles['linkButton']} ${styles['linkButtonText']}`}
-            >
+            <a href={REPO} target="_blank" rel="noreferrer" className={appButtonClass()}>
               GitHub
             </a>
           </div>

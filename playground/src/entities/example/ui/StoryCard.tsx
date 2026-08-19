@@ -15,7 +15,7 @@ export const StoryCard = ({ title, description, codeKey, children }: StoryCardPr
     <SurfaceCard>
       <div className={styles['content']}>
         <div className={styles['titleRow']}>
-          <h6 className={styles['title']}>{title}</h6>
+          <h3 className={styles['title']}>{title}</h3>
           {codeKey && <ViewCodeButton codeKey={codeKey} />}
         </div>
 

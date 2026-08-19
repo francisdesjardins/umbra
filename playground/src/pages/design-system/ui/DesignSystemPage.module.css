@@ -1,0 +1,221 @@
+.grid {
+  display: grid;
+  gap: var(--app-space-3);
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.swatch {
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+}
+
+/* The chip paints the token itself, so the page cannot claim a colour the sheet does not hold. */
+.chip {
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--app-space-2);
+}
+
+.chipInk {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-text-xs);
+}
+
+.meta {
+  padding: var(--app-space-2) var(--app-space-3) var(--app-space-3);
+}
+
+.name {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-text-xs);
+  color: var(--app-text);
+  word-break: break-all;
+}
+
+.value {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-text-xs);
+  color: var(--app-text-tertiary);
+  margin-top: 2px;
+}
+
+.note {
+  margin-top: var(--app-space-1);
+  font-size: var(--app-text-xs);
+  line-height: var(--app-lh-snug);
+  color: var(--app-text-secondary);
+}
+
+/* ── Scales ─────────────────────────────────────────────────────────────── */
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 168px 88px 1fr;
+  gap: var(--app-space-4);
+  align-items: center;
+  padding: var(--app-space-3) 0;
+  border-top: 1px solid var(--app-divider);
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.rowKey {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-text-xs);
+  color: var(--app-text-secondary);
+  word-break: break-all;
+}
+
+.rowValue {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-text-xs);
+  color: var(--app-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  height: 12px;
+  border-radius: var(--app-radius-sm);
+  background: var(--app-flame);
+}
+
+.radiusDemo {
+  width: 56px;
+  height: 34px;
+  border: 1px solid var(--app-control-border);
+  background: var(--app-hover);
+}
+
+.specimen {
+  min-width: 0;
+  color: var(--app-text);
+}
+
+/* Below the small breakpoint the three columns leave the demo about 18px, which clips the top of
+   the ramp entirely. The label and its value keep one line; whatever is being shown takes the
+   next, full width. */
+@media (max-width: 599px) {
+  .row {
+    grid-template-columns: 1fr auto;
+    gap: var(--app-space-2) var(--app-space-3);
+    padding: var(--app-space-4) 0;
+  }
+
+  .specimen,
+  .bar,
+  .radiusDemo,
+  .track {
+    grid-column: 1 / -1;
+  }
+
+  /* A 46px specimen has to be allowed to wrap once rather than run off the card. */
+  .specimen {
+    overflow-wrap: anywhere;
+    line-height: var(--app-lh-tight);
+  }
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────────── */
+.track {
+  height: 26px;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-pill);
+  position: relative;
+  overflow: hidden;
+  background: var(--app-paper);
+}
+
+.dot {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--app-flame);
+  transition-property: left;
+  transition-duration: var(--app-slow);
+}
+
+.track:hover .dot,
+.track:focus-visible .dot {
+  left: calc(100% - 20px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}
+
+/* ── Recipes ────────────────────────────────────────────────────────────── */
+.recipeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-3);
+  align-items: center;
+}
+
+.navSample {
+  max-width: 280px;
+  border: 1px solid var(--app-divider);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-2) 0;
+  background: var(--app-bg);
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-3);
+  padding: var(--app-space-2) var(--app-space-4);
+  font-size: var(--app-text-md);
+  color: var(--app-text-secondary);
+}
+
+.navItemOn {
+  background: var(--app-flame-wash);
+  color: var(--app-text);
+  font-weight: 500;
+}
+
+.navItemOn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 0 var(--app-radius-sm) var(--app-radius-sm) 0;
+  background: var(--app-flame);
+}
+
+.rules {
+  margin: 0;
+  padding-left: var(--app-space-5);
+}
+
+.rules li {
+  margin-bottom: var(--app-space-2);
+  font-size: var(--app-text-md);
+  line-height: var(--app-lh-body);
+  color: var(--app-text-secondary);
+}
+
+.rules li:last-child {
+  margin-bottom: 0;
+}
+
+.rules strong {
+  color: var(--app-text);
+}

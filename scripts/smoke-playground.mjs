@@ -378,7 +378,20 @@ const flows = {
     await page.waitForTimeout(500);
     const box = await page.locator('nav[aria-label="Jump to section"]').boundingBox();
     const y = box?.y ?? -1;
-    return [[Math.abs(y - 64) < 2, 'jump bar sticks below the top bar', `y=${y}`]];
+    // Read the bar's height off the token rather than restating it: the literal was 64, and the
+    // check failed the day the shell's bar changed height, which is not what it is here to catch.
+    const barHeight = await page.evaluate(() => {
+      return parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--app-topbar-height')
+      );
+    });
+    return [
+      [
+        Math.abs(y - barHeight) < 2,
+        'jump bar sticks below the top bar',
+        `y=${y}, bar=${barHeight}`,
+      ],
+    ];
   },
 };
 

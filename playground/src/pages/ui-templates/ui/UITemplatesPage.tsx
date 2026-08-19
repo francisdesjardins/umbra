@@ -7,7 +7,7 @@ import { useState, type ReactNode } from 'react';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-type Flavor = 'mui' | 'vanilla' | 'shared';
+type Flavor = 'vanilla' | 'mui' | 'shared';
 
 type TemplateItem = {
   readonly name: string;
@@ -262,14 +262,16 @@ const TemplateGroupSection = ({ title, description, items }: TemplateGroup) => {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// Vanilla first, and it is the tab that opens: the library ships no UI, so the zero-dependency set
+// is the one a reader should meet before the one that needs a component library.
 const FLAVOR_TABS: readonly { readonly value: Flavor; readonly label: string }[] = [
-  { value: 'mui', label: 'Material UI' },
   { value: 'vanilla', label: 'Vanilla' },
+  { value: 'mui', label: 'Material UI' },
   { value: 'shared', label: 'Shared' },
 ];
 
 export const UITemplatesPage = () => {
-  const [flavor, setFlavor] = useState<Flavor>('mui');
+  const [flavor, setFlavor] = useState<Flavor>('vanilla');
   const groups =
     flavor === 'mui'
       ? MUI_GROUPS

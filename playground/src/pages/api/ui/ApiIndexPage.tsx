@@ -47,7 +47,7 @@ const CategoryCard = ({ category }: { readonly category: ApiCategory }) => {
       <SurfaceCard interactive>
         <div className={styles['cardContent']}>
           <div className={styles['cardHeader']}>
-            <h6 className={styles['cardTitle']}>{category.label}</h6>
+            <h3 className={styles['cardTitle']}>{category.label}</h3>
             <span className={styles['count']}>{String(category.symbols.length)}</span>
           </div>
 

@@ -1,11 +1,16 @@
-/* The one card surface, at the numbers the MUI outlined Card rendered: 4px radius (the default
-   theme's shape), border only — the shell's cards carry no resting elevation. `overflow: hidden`
-   is Card's own rule and still clips children's corners to the radius. */
+/* The one card surface. Edges rather than elevation: a hairline at rest, and the corona only when
+   the card is actually interactive and hovered — light is spent on the live thing, not on faking
+   paper height. `overflow: hidden` clips children to the radius. */
 .card {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* `clip` rather than `hidden`, with room for a focus ring: children still clip to the radius, but
+     a control flush against the edge keeps the 2px outline it draws 2px outside itself. `hidden`
+     has no such allowance and cuts the ring off — the card does not scroll, so nothing is lost by
+     not being a scroll container. */
+  overflow: clip;
+  overflow-clip-margin: var(--app-space-1);
   background: var(--app-paper);
   color: var(--app-text);
   border: 1px solid var(--app-divider);
@@ -13,23 +18,22 @@
   border-radius: var(--app-radius-xl);
 }
 
-/* Dark keeps MUI's `grey.900`, not `--app-paper`: the original branched to #212121 on purpose,
-   a step lighter than the #111c30 paper the dialogs sit on. */
-:root[data-color-scheme='dark'] .card {
-  background: #212121;
-}
-
 .interactive {
-  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    border-color var(--app-duration) var(--app-ease),
+    box-shadow var(--app-duration) var(--app-ease),
+    transform var(--app-duration) var(--app-ease-out);
 }
 
-/* The lift: flame border, a 30% flame ring plus MUI's elevation-4 shadow, and a 2px rise. */
+/* The corona, and a 2px rise. One glow token, not a stack of three shadows. */
 .interactive:hover {
   border-color: var(--app-flame);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--app-flame) 30%, transparent),
-    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
-    0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--app-glow);
   transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive:hover {
+    transform: none;
+  }
 }

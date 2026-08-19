@@ -28,7 +28,7 @@
 .lede {
   margin: 0;
   font-size: var(--app-text-xl);
-  line-height: 1.334;
+  line-height: var(--app-lh-snug);
   font-weight: 700;
   letter-spacing: -0.02em;
 }

@@ -22,8 +22,7 @@
   --form-focus-ring-space: 4px;
 
   /* Typography */
-  --font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family: inherit;
   --font-size-base: 1rem;
   --font-size-sm: 0.875rem;
   --font-size-xs: 0.75rem;
@@ -88,14 +87,14 @@
 .input {
   padding: 8px 12px;
   border: 1px solid var(--form-control-border);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: var(--font-size-base);
   font-family: var(--font-family);
   background: var(--form-input-bg);
   color: var(--form-input-text);
   transition:
-    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-color 150ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 150ms cubic-bezier(0.2, 0, 0, 1);
   outline: none;
 }
 
@@ -185,7 +184,8 @@
   line-height: 1.4;
   min-height: 1lh;
   color: var(--form-text-secondary);
-  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Not transitioned: a theme flip would interpolate this ink across an instantly-switched
+     surface — the trap the message-modal sheet documents. */
   margin: 0;
 }
 
@@ -260,15 +260,15 @@
 .select {
   padding: 8px 12px;
   border: 1px solid var(--form-control-border);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: var(--font-size-base);
   font-family: var(--font-family);
   background: var(--form-input-bg);
   color: var(--form-input-text);
   cursor: pointer;
   transition:
-    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-color 150ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 150ms cubic-bezier(0.2, 0, 0, 1);
   outline: none;
 }
 
@@ -309,7 +309,7 @@
 .removeBtn {
   padding: 8px 10px;
   border: 1px solid var(--form-control-border);
-  border-radius: 4px;
+  border-radius: 8px;
   background: transparent;
   color: var(--form-error);
   cursor: pointer;
@@ -318,8 +318,8 @@
   line-height: 1;
   flex-shrink: 0;
   transition:
-    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 150ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 150ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .removeBtn:hover {
@@ -330,16 +330,15 @@
 .addBtn {
   padding: 6px 12px;
   border: 1px dashed var(--form-control-border);
-  border-radius: 4px;
+  border-radius: 8px;
   background: transparent;
   color: var(--form-text-secondary);
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
   align-self: flex-start;
-  transition:
-    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Border only — `color` is theme-sensitive and would interpolate across a flipped surface. */
+  transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .addBtn:hover {

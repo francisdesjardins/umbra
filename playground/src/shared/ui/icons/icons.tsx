@@ -1,11 +1,21 @@
 import type { SVGProps } from 'react';
 
 /**
- * The shell's icon set — the Material glyphs the app already used, path data extracted from
- * `@mui/icons-material`'s own installed modules rather than redrawn, so the outlines are
- * pixel-identical to what they replace. Each icon is a plain <svg> on `currentColor`: colour
- * and size come from the caller, accessibility from the site of use (`aria-hidden` is the
- * default; a functional icon gets its name from the control around it).
+ * The shell's icon set — drawn for this app, on the mascot's engraved line rather than a
+ * component library's filled silhouettes. Every glyph is a stroke on `currentColor`: colour and
+ * size come from the caller, accessibility from the site of use (`aria-hidden` is the default; a
+ * functional icon gets its name from the control around it).
+ *
+ * The rules the set is drawn to, so a twenty-seventh glyph matches the twenty-six:
+ *
+ * - **24×24 grid, content inside a ~3px inset.** A glyph that touches the box reads a size bigger
+ *   than its neighbours on the same row.
+ * - **Stroke 1.75, round caps and joins, no fill.** The weight is the thing that has to be
+ *   constant — a hairline among them looks broken rather than lighter. `Palette`'s two wells are
+ *   the one deliberate fill, because a stroked 2px circle at 20px is a smudge.
+ * - **Open forms over closed ones.** `Menu`'s third rule is short and `Tune`'s handles sit off
+ *   centre for the same reason: an asymmetry is what stops a set of straight lines reading as a
+ *   texture.
  */
 
 type IconProps = SVGProps<SVGSVGElement>;
@@ -14,14 +24,18 @@ const base = {
   viewBox: '0 0 24 24',
   width: 24,
   height: 24,
-  fill: 'currentColor',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.75,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
   'aria-hidden': true,
 } as const;
 
 export function ArrowBackIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z" />
+      <path d="M19.5 12h-15M11 5.5 4.5 12l6.5 6.5" />
     </svg>
   );
 }
@@ -29,7 +43,7 @@ export function ArrowBackIcon(props: IconProps) {
 export function ArrowForwardIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="m12 4-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+      <path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5" />
     </svg>
   );
 }
@@ -37,7 +51,11 @@ export function ArrowForwardIcon(props: IconProps) {
 export function AutoAwesomeIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z" />
+      {/* Three sparkles at three sizes — a four-point star whose arms are concave, so it reads as
+          light rather than as a plus sign. */}
+      <path d="M10 4.2c.7 4 1.8 5.1 5.8 5.8-4 .7-5.1 1.8-5.8 5.8-.7-4-1.8-5.1-5.8-5.8 4-.7 5.1-1.8 5.8-5.8Z" />
+      <path d="M17.8 14.4c.3 1.8.8 2.3 2.6 2.6-1.8.3-2.3.8-2.6 2.6-.3-1.8-.8-2.3-2.6-2.6 1.8-.3 2.3-.8 2.6-2.6Z" />
+      <path d="M18.4 3.4c.2 1.2.5 1.5 1.7 1.7-1.2.2-1.5.5-1.7 1.7-.2-1.2-.5-1.5-1.7-1.7 1.2-.2 1.5-.5 1.7-1.7Z" />
     </svg>
   );
 }
@@ -45,7 +63,7 @@ export function AutoAwesomeIcon(props: IconProps) {
 export function CheckIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+      <path d="m4.5 12.5 5 5 10-11" />
     </svg>
   );
 }
@@ -53,7 +71,8 @@ export function CheckIcon(props: IconProps) {
 export function CheckCircleIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12.2 2.8 2.8 5.4-6" />
     </svg>
   );
 }
@@ -61,7 +80,7 @@ export function CheckCircleIcon(props: IconProps) {
 export function CloseIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+      <path d="m6 6 12 12M18 6 6 18" />
     </svg>
   );
 }
@@ -69,7 +88,7 @@ export function CloseIcon(props: IconProps) {
 export function CodeIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6z" />
+      <path d="M9 17 4 12l5-5M15 7l5 5-5 5" />
     </svg>
   );
 }
@@ -77,7 +96,8 @@ export function CodeIcon(props: IconProps) {
 export function ContentCopyIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z" />
+      <rect x="8" y="8" width="12" height="12" rx="2.2" />
+      <path d="M16 8V5.6A1.6 1.6 0 0 0 14.4 4H5.6A1.6 1.6 0 0 0 4 5.6v8.8A1.6 1.6 0 0 0 5.6 16H8" />
     </svg>
   );
 }
@@ -85,7 +105,7 @@ export function ContentCopyIcon(props: IconProps) {
 export function DarkModeIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1" />
+      <path d="M20 13.2A8.2 8.2 0 1 1 10.8 4a6.4 6.4 0 0 0 9.2 9.2Z" />
     </svg>
   );
 }
@@ -93,7 +113,8 @@ export function DarkModeIcon(props: IconProps) {
 export function ErrorIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-2h2zm0-4h-2V7h2z" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.6v5.2M12 16.4h.01" />
     </svg>
   );
 }
@@ -101,7 +122,12 @@ export function ErrorIcon(props: IconProps) {
 export function HubIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M8.4 18.2c.38.5.6 1.12.6 1.8 0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3c.44 0 .85.09 1.23.26l1.41-1.77c-.92-1.03-1.29-2.39-1.09-3.69l-2.03-.68c-.54.83-1.46 1.38-2.52 1.38-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3c0 .07 0 .14-.01.21l2.03.68c.64-1.21 1.82-2.09 3.22-2.32V5.91C9.96 5.57 9 4.4 9 3c0-1.66 1.34-3 3-3s3 1.34 3 3c0 1.4-.96 2.57-2.25 2.91v2.16c1.4.23 2.58 1.11 3.22 2.32L18 9.71V9.5c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3c-1.06 0-1.98-.55-2.52-1.37l-2.03.68c.2 1.29-.16 2.65-1.09 3.69l1.41 1.77Q17.34 17 18 17c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3c0-.68.22-1.3.6-1.8l-1.41-1.77c-1.35.75-3.01.76-4.37 0z" />
+      {/* Spokes first, so the nodes sit on top of the line ends rather than beside them. */}
+      <path d="M12 9.4V6.6M10 13.6 7.3 15.5M14 13.6l2.7 1.9" />
+      <circle cx="12" cy="12" r="2.6" />
+      <circle cx="12" cy="4.6" r="2" />
+      <circle cx="5.6" cy="17" r="2" />
+      <circle cx="18.4" cy="17" r="2" />
     </svg>
   );
 }
@@ -109,7 +135,8 @@ export function HubIcon(props: IconProps) {
 export function InfoIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-6h2zm0-8h-2V7h2z" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 16.6v-5.2M12 7.8h.01" />
     </svg>
   );
 }
@@ -117,7 +144,8 @@ export function InfoIcon(props: IconProps) {
 export function LightModeIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5M2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1m18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1M11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1m0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1M5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0z" />
+      <circle cx="12" cy="12" r="4.2" />
+      <path d="M12 2.8V5M12 19v2.2M2.8 12H5M19 12h2.2M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5" />
     </svg>
   );
 }
@@ -125,7 +153,8 @@ export function LightModeIcon(props: IconProps) {
 export function LinkIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5" />
+      <path d="M10.4 13.6a3.9 3.9 0 0 0 5.6 0l2.6-2.6a3.9 3.9 0 0 0-5.5-5.5l-1.5 1.5" />
+      <path d="M13.6 10.4a3.9 3.9 0 0 0-5.6 0l-2.6 2.6a3.9 3.9 0 0 0 5.5 5.5l1.5-1.5" />
     </svg>
   );
 }
@@ -133,8 +162,11 @@ export function LinkIcon(props: IconProps) {
 export function LocalFireDepartmentIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="m12 12.9-2.13 2.09c-.56.56-.87 1.29-.87 2.07C9 18.68 10.35 20 12 20s3-1.32 3-2.94c0-.78-.31-1.52-.87-2.07z" />
-      <path d="m16 6-.44.55C14.38 8.02 12 7.19 12 5.3V2S4 6 4 13c0 2.92 1.56 5.47 3.89 6.86-.56-.79-.89-1.76-.89-2.8 0-1.32.52-2.56 1.47-3.5L12 10.1l3.53 3.47c.95.93 1.47 2.17 1.47 3.5 0 1.02-.31 1.96-.85 2.75 1.89-1.15 3.29-3.06 3.71-5.3.66-3.55-1.07-6.9-3.86-8.52" />
+      {/* The mascot's flame, reduced: an outer tongue with a curled shoulder, and a small hot core
+          sitting low. The core is kept well under half the height — matched to the tongue it turns
+          the whole glyph to a scribble by 16px. */}
+      <path d="M13 2.5c.3 2.2 1.5 3.5 2.9 5A7.3 7.3 0 0 1 18 12.8a6 6 0 0 1-12 0c0-2.1.9-3.9 2.2-5.2.1 1.4.9 2.3 1.9 2.3 1.2 0 2-1 2-2.6 0-1.6-.6-3.2-1.1-4.8Z" />
+      <path d="M12 14.4c1 .9 1.6 1.7 1.6 2.5a1.6 1.6 0 1 1-3.2 0c0-.8.6-1.6 1.6-2.5Z" />
     </svg>
   );
 }
@@ -142,7 +174,7 @@ export function LocalFireDepartmentIcon(props: IconProps) {
 export function MenuIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M3 18h18v-2H3zm0-5h18v-2H3zm0-7v2h18V6z" />
+      <path d="M4 7h16M4 12h16M4 17h10" />
     </svg>
   );
 }
@@ -150,8 +182,9 @@ export function MenuIcon(props: IconProps) {
 export function MenuBookIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1m0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5z" />
-      <path d="M17.5 10.5c.88 0 1.73.09 2.5.26V9.24c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99M13 12.49v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26V11.9c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.3-4.5.83m4.5 1.84c-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26v-1.52c-.79-.16-1.64-.24-2.5-.24" />
+      <path d="M12 6.6v13" />
+      <path d="M12 6.6C10.4 5.2 8.3 4.5 5.9 4.5c-1 0-1.9.1-2.9.4v13c1-.3 1.9-.4 2.9-.4 2.4 0 4.5.7 6.1 2" />
+      <path d="M12 6.6c1.6-1.4 3.7-2.1 6.1-2.1 1 0 1.9.1 2.9.4v13c-1-.3-1.9-.4-2.9-.4-2.4 0-4.5.7-6.1 2" />
     </svg>
   );
 }
@@ -159,7 +192,12 @@ export function MenuBookIcon(props: IconProps) {
 export function PaletteIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.2-.64-1.67-.08-.1-.13-.21-.13-.33 0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9m5.5 11c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5m-3-4c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9M5 11.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S7.33 13 6.5 13 5 12.33 5 11.5m6-4c0 .83-.67 1.5-1.5 1.5S8 8.33 8 7.5 8.67 6 9.5 6s1.5.67 1.5 1.5" />
+      <path d="M12 3.4c-4.9 0-8.9 3.9-8.9 8.6s4 8.6 8.9 8.6c1.2 0 2.1-.9 2.1-2.1 0-.6-.2-1.1-.6-1.5a1.85 1.85 0 0 1 1.4-3.1h1.8c2.4 0 4.3-1.9 4.3-4.3 0-3.4-3.6-6.2-9-6.2Z" />
+      {/* The wells are filled: a stroked 2px ring turns to a smudge at 20px. */}
+      <circle cx="7.4" cy="12.4" r="1.05" fill="currentColor" stroke="none" />
+      <circle cx="9.5" cy="8.4" r="1.05" fill="currentColor" stroke="none" />
+      <circle cx="14.4" cy="8.2" r="1.05" fill="currentColor" stroke="none" />
+      <circle cx="17.2" cy="11.4" r="1.05" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -167,7 +205,7 @@ export function PaletteIcon(props: IconProps) {
 export function PlayArrowIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M8 5v14l11-7z" />
+      <path d="M7.5 5.4v13.2L18.8 12Z" />
     </svg>
   );
 }
@@ -175,7 +213,11 @@ export function PlayArrowIcon(props: IconProps) {
 export function ScienceIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M19.8 18.4 14 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81H9.04c-.42 0-.65.48-.39.81L10 6.5v4.17L4.2 18.4c-.49.66-.02 1.6.8 1.6h14c.82 0 1.29-.94.8-1.6" />
+      <path d="M9.8 3.4h4.4" />
+      <path d="M10.6 3.4v6.3l-5.3 8.1a1.7 1.7 0 0 0 1.4 2.6h10.6a1.7 1.7 0 0 0 1.4-2.6l-5.3-8.1V3.4" />
+      {/* The fill line: what makes a flask a flask rather than a funnel. Held 1px inside each wall
+          (which is at x=7.34 / 16.66 at this height) so the round cap does not poke through. */}
+      <path d="M8.3 14.8h7.4" />
     </svg>
   );
 }
@@ -183,7 +225,8 @@ export function ScienceIcon(props: IconProps) {
 export function SearchIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14" />
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 4.6 4.6" />
     </svg>
   );
 }
@@ -191,7 +234,12 @@ export function SearchIcon(props: IconProps) {
 export function SettingsIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6" />
+      {/* A real cog outline — eight square teeth between a 5.6 root and an 8.15 tip, faceted rather
+          than filleted so the corners survive 16px. Drawn as an outline and not as a hub with
+          radiating spokes: that construction is `LightModeIcon`, and at a glance the two were the
+          same glyph. */}
+      <path d="M9.99 6.77 10.44 4h3.12l.45 2.77.27.11 2.28-1.64 2.2 2.2-1.64 2.28.11.27L20 10.44v3.12l-2.77.45-.11.27 1.64 2.28-2.2 2.2-2.28-1.64-.27.11L13.56 20h-3.12l-.45-2.77-.27-.11-2.28 1.64-2.2-2.2 1.64-2.28-.11-.27L4 13.56v-3.12l2.77-.45.11-.27L5.24 7.44l2.2-2.2 2.28 1.64Z" />
+      <circle cx="12" cy="12" r="2.9" />
     </svg>
   );
 }
@@ -199,7 +247,9 @@ export function SettingsIcon(props: IconProps) {
 export function TuneIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M3 17v2h6v-2zM3 5v2h10V5zm10 16v-2h8v-2h-8v-2h-2v6zM7 9v2H3v2h4v2h2V9zm14 4v-2H11v2zm-6-4h2V7h4V5h-4V3h-2z" />
+      <path d="M4 7h9.3M17.7 7H20M4 17h2.3M10.7 17H20" />
+      <circle cx="15.5" cy="7" r="2.2" />
+      <circle cx="8.5" cy="17" r="2.2" />
     </svg>
   );
 }
@@ -207,7 +257,8 @@ export function TuneIcon(props: IconProps) {
 export function ViewSidebarIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M16 20H2V4h14zm2-12h4V4h-4zm0 12h4v-4h-4zm0-6h4v-4h-4z" />
+      <rect x="3.2" y="4.5" width="17.6" height="15" rx="2.2" />
+      <path d="M14.8 4.5v15" />
     </svg>
   );
 }
@@ -215,7 +266,8 @@ export function ViewSidebarIcon(props: IconProps) {
 export function WarningIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z" />
+      <path d="M12 4.2 2.9 19.8h18.2Z" />
+      <path d="M12 10v4.2M12 17.2h.01" />
     </svg>
   );
 }
@@ -223,7 +275,12 @@ export function WarningIcon(props: IconProps) {
 export function WidgetsIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M13 13v8h8v-8zM3 21h8v-8H3zM3 3v8h8V3zm13.66-1.31L11 7.34 16.66 13l5.66-5.66z" />
+      {/* Three squares and a diamond: the rotated one is what keeps this from reading as a
+          four-up grid, which is a different idea. */}
+      <rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.4" />
+      <rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.4" />
+      <rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.4" />
+      <path d="M17 2.6 21.4 7 17 11.4 12.6 7Z" />
     </svg>
   );
 }

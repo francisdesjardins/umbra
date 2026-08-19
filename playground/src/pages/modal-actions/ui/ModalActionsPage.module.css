@@ -6,13 +6,8 @@
   padding: var(--app-space-3);
   border-radius: var(--app-radius-md);
   margin-bottom: var(--app-space-8);
-  background: rgba(2, 136, 209, 0.1);
-  color: #01579b;
-}
-
-:root[data-color-scheme='dark'] .banner {
-  background: rgba(41, 182, 246, 0.12);
-  color: #29b6f6;
+  background: var(--app-info-wash);
+  color: var(--app-info);
 }
 
 .bannerIcon {
@@ -25,5 +20,5 @@
 .bannerText {
   margin: 0;
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }

@@ -8,8 +8,7 @@
   --slide-spacing-lg: 24px;
 
   /* Typography */
-  --font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family: inherit;
   --font-size-h2: 1.25rem;
 }
 
@@ -30,18 +29,20 @@
   font-family: var(--font-family);
 }
 
-/* one-sided borders + default sizing for slide panels */
+/* One-sided borders + default sizing. The 400px is what gives an unsized panel a width, since the
+   library never sets the main-axis size. Both bounds carry `100%` so a caller who sizes the
+   `<dialog>` wins: a panel wider than the dialog holding it is a horizontal scrollbar. */
 .slideLeft {
   border-right: 1px solid var(--slide-border);
   width: 400px;
-  min-width: 320px;
-  max-width: 640px;
+  min-width: min(320px, 100%);
+  max-width: min(640px, 100%);
 }
 .slideRight {
   border-left: 1px solid var(--slide-border);
   width: 400px;
-  min-width: 320px;
-  max-width: 640px;
+  min-width: min(320px, 100%);
+  max-width: min(640px, 100%);
 }
 .slideTop {
   border-bottom: 1px solid var(--slide-border);

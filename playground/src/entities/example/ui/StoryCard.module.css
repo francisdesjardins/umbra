@@ -12,7 +12,10 @@
   margin-bottom: var(--app-space-2);
 }
 
+/* An h3 under the section's h2. The body face is stated because the global heading rule reaches
+   h3 and would hand a card title the display serif. */
 .title {
+  font-family: var(--app-font-body);
   margin: 0;
   flex: 1;
   font-weight: 600;
@@ -89,7 +92,9 @@
   font-size: var(--app-text-sm);
   padding: var(--app-space-1) var(--app-space-2);
   border-radius: var(--app-radius);
-  border: 1px solid var(--app-divider);
+  /* A control's edge, not a layout hairline: 1.4.11 asks 3:1 of this one, and `--app-divider`
+     clears 1.3:1. The two tokens exist precisely so this is not a judgement call. */
+  border: 1px solid var(--app-control-border);
   background: var(--app-paper);
   color: var(--app-text);
 }

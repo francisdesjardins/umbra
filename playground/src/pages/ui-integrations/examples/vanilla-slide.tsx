@@ -2,7 +2,6 @@ import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as VanillaSlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import Button from '@mui/material/Button';
 import { useSlideModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -82,16 +81,15 @@ export function VanillaSlideExample() {
 
   return (
     <ExampleLayout result={result} modals={panel.Modal}>
-      <Button
-        variant="contained"
-        size="small"
+      <Shared.Button
+        variant="primary"
         onClick={async () => {
           const [, closeResult] = await panel.openAndWait();
           resultStore.setResult(`Panel closed with reason: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
         Open Vanilla Panel
-      </Button>
+      </Shared.Button>
     </ExampleLayout>
   );
 }

@@ -48,14 +48,14 @@
 
 .tileLabel {
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
   font-weight: 600;
 }
 
 .tileOptions {
   font-family: monospace;
   font-size: var(--app-text-xs);
-  line-height: 1.66;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
   overflow-wrap: anywhere;
 }

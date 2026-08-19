@@ -262,7 +262,7 @@ export const PeekingMoon = () => {
 
   const easing =
     phase === 'eclipse'
-      ? 'cubic-bezier(0.4, 0, 0.2, 1)'
+      ? 'var(--app-ease)'
       : phase === 'shy'
         ? 'cubic-bezier(0.36, 0, 0.66, -0.24)'
         : 'linear';

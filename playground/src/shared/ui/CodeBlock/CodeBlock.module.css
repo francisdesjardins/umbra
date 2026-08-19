@@ -6,9 +6,7 @@
   position: relative;
 }
 
-/* Floats over the code on a translucent wash + blur; the literals are the MUI overlays it
-   replaced (the icon-button's action.active ink included) — mode-flipped below, not tokens,
-   because --app-hover's light value is a different alpha. 5px padding keeps the 30px hit box. */
+/* Floats over the code on a translucent wash + blur. 5px padding keeps the 30px hit box. */
 .copyButton {
   position: absolute;
   top: var(--app-space-4);
@@ -16,33 +14,20 @@
   z-index: 1;
   padding: 5px;
   border: 1px solid var(--app-divider);
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.54);
+  background: var(--app-hover);
+  color: var(--app-text-secondary);
   backdrop-filter: blur(8px);
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 200ms var(--app-ease);
 }
 
 .copyButton:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--app-selected);
   transform: scale(1.05);
 }
 
-:root[data-color-scheme='dark'] .copyButton {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-}
-
-:root[data-color-scheme='dark'] .copyButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* MUI success.main, per mode — the "copied" tick. */
+/* The "copied" tick. */
 .checkIcon {
-  color: #2e7d32;
-}
-
-:root[data-color-scheme='dark'] .checkIcon {
-  color: #66bb6a;
+  color: var(--app-ok);
 }
 
 /* The surface colour itself is inline (CODE_SURFACE): the TSX also feeds it to

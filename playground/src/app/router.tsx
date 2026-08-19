@@ -123,6 +123,16 @@ const storiesRoute = createRoute({
   }, 'StoriesPage'),
 });
 
+const designSystemRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/design-system',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/design-system');
+  }, 'DesignSystemPage'),
+});
+
 const warzoneRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
@@ -144,6 +154,7 @@ const routeTree = rootRoute.addChildren([
   microfrontendsRoute,
   uiIntegrationsRoute,
   uiTemplatesRoute,
+  designSystemRoute,
   storiesRoute,
   warzoneRoute,
 ]);

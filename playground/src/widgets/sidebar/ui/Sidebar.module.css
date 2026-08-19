@@ -1,5 +1,5 @@
-/* Desktop: a fixed panel with a same-width placeholder holding its space in the flex row —
-   the shape MUI's permanent Drawer rendered, spelled out. */
+/* Desktop: a fixed panel, with a same-width placeholder holding its space in the flex row so the
+   content column starts where the rail ends. */
 .placeholder {
   width: var(--app-sidebar-width);
   flex-shrink: 0;
@@ -24,7 +24,7 @@
    click-outside. Escape is handled in the component. */
 .panelMobile {
   transform: translateX(-100%);
-  transition: transform 225ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 225ms var(--app-ease);
   background: var(--app-paper);
 }
 
@@ -36,10 +36,10 @@
   position: fixed;
   inset: 0;
   z-index: var(--app-z-backdrop);
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--app-scrim);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 225ms var(--app-ease);
   border: none;
   padding: 0;
 }
@@ -63,13 +63,16 @@
   gap: var(--app-space-5);
 }
 
+/* A mono eyebrow — the one device the shell still sets in uppercase, because here it is a
+   typographic label rather than a component library's idea of a button. */
 .groupLabel {
   padding: 0 var(--app-space-4);
   display: block;
-  margin: 0 0 var(--app-space-1);
+  margin: 0 0 var(--app-space-2);
+  font-family: var(--app-font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
+  letter-spacing: var(--app-tracking-label);
+  font-weight: 500;
   font-size: var(--app-text-xs);
   color: var(--app-text-tertiary);
 }
@@ -81,39 +84,59 @@
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: center;
-  margin: 0 var(--app-space-2) var(--app-space-1);
-  padding: 6px var(--app-space-4);
-  border-radius: var(--app-radius-lg);
+  margin: 0 var(--app-space-2) 2px;
+  padding: var(--app-space-2) var(--app-space-4);
+  border-radius: var(--app-radius-md);
   text-decoration: none;
-  color: var(--app-text);
+  color: var(--app-text-secondary);
   font-size: var(--app-text-md);
-  line-height: 1.43;
-  transition: background-color 150ms;
+  line-height: var(--app-lh-snug);
+  /* Background only. `color` here is theme-sensitive, and a theme flip interpolates it across the
+     duration while an attribute-keyed background flips instantly — the same trap the vanilla
+     templates document, measured at 2.5:1 mid-flip on this element. Hover's colour change is worth
+     less than that. */
+  transition: background-color var(--app-quick) var(--app-ease);
 }
 
 .item:hover {
   background: var(--app-hover);
+  color: var(--app-text);
 }
 
+/* Selected is a lit edge, not a filled slab. The corona marks the entry and the label stays in the
+   page's own ink — which is also what retires the contrast trap the amber fill created, where the
+   label rode on the fill and hover had to brighten rather than deepen to keep its ratio. */
 .itemSelected,
 .itemSelected:hover {
+  background: var(--app-flame-wash);
+  color: var(--app-text);
+  font-weight: 500;
+}
+
+.itemSelected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 0 var(--app-radius-sm) var(--app-radius-sm) 0;
   background: var(--app-flame);
-  color: var(--app-primary-ink);
 }
 
-/* Brighter, not deeper: a darker amber under this fill's dark ink is 2.5:1. */
-.itemSelected:hover {
-  background: var(--app-ink);
+.itemSelected .itemIcon {
+  color: var(--app-accent);
 }
 
-/* The icon slot: a fixed 36px so labels align, the way ListItemIcon reserved it. */
+/* The icon slot: fixed so labels align down the rail whatever the glyph. */
 .itemIcon {
-  min-width: 36px;
+  min-width: 30px;
   display: inline-flex;
   align-items: center;
-  color: inherit;
+  color: var(--app-text-tertiary);
 }
 
 .itemIcon svg {

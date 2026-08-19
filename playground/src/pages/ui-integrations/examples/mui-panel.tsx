@@ -193,7 +193,7 @@ export function MuiPanelExample() {
                         setupStore.resetToRecommended();
                       }}
                     >
-                      <AutoAwesomeIcon fontSize="small" />
+                      <AutoAwesomeIcon width={20} height={20} />
                     </IconButton>
                   </Tooltip>
 
@@ -219,7 +219,7 @@ export function MuiPanelExample() {
                   </FormControl>
 
                   <IconButton size="small" aria-label="Close" {...action('close')}>
-                    <CloseIcon fontSize="small" />
+                    <CloseIcon width={20} height={20} />
                   </IconButton>
                 </>
               }

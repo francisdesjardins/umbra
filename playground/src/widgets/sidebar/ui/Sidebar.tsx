@@ -1,4 +1,5 @@
 import {
+  AutoAwesomeIcon,
   HubIcon,
   LocalFireDepartmentIcon,
   MenuBookIcon,
@@ -48,8 +49,9 @@ const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: 'Reference',
     items: [
-      { path: '/ui-integrations', label: 'UI Integrations', icon: PaletteIcon },
+      { path: '/ui-integrations', label: 'UI Integrations', icon: AutoAwesomeIcon },
       { path: '/ui-templates', label: 'UI Templates', icon: WidgetsIcon },
+      { path: '/design-system', label: 'Design System', icon: PaletteIcon },
       { path: '/api', label: 'API Reference', icon: MenuBookIcon },
     ],
   },

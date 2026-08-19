@@ -52,9 +52,12 @@ export const ExampleCard = ({
             marginBottom: 'var(--app-space-2)',
           }}
         >
-          <h6
+          {/* h3, under the section's h2 — a card title is a level of the page, not a sixth one.
+              The body face is stated because the global heading rule reaches h3. */}
+          <h3
             style={{
               margin: 0,
+              fontFamily: 'var(--app-font-body)',
               fontWeight: 600,
               // Off-scale: between --app-text-base and --app-text-lg.
               fontSize: '1.1rem',
@@ -64,7 +67,7 @@ export const ExampleCard = ({
             }}
           >
             {title}
-          </h6>
+          </h3>
           {codeKey && <ViewCodeButton codeKey={codeKey} actions={actions} />}
         </div>
         {description && (

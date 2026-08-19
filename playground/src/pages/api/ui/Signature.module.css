@@ -5,17 +5,14 @@
   padding: 10px 14px;
   border: 1px solid var(--app-divider);
   border-radius: var(--app-radius-md);
-  /* MUI `grey.50`, a literal — the app sheet carries no grey ramp. */
-  background: #fafafa;
+  /* A subtle lift off the card, from the palette: a literal grey here is a white slab the moment
+     the scheme flips. */
+  background: var(--app-hover);
   color: var(--app-text);
-  font-family: monospace;
+  font-family: var(--app-font-mono);
   font-size: var(--app-text-sm);
   line-height: 1.7;
   /* Signatures wrap rather than scroll: a horizontal scrollbar hides the return type. */
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-:root[data-color-scheme='dark'] .panel {
-  background: rgba(255, 255, 255, 0.03);
 }

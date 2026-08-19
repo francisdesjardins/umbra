@@ -26,21 +26,21 @@ a.accentLink {
   margin: 0;
   color: var(--app-text-tertiary);
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }
 
 .crumbCurrent {
   margin: 0;
   color: var(--app-text-secondary);
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }
 
 .exportCount {
   margin: 0 0 0 auto;
   color: var(--app-text-tertiary);
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }
 
 /* The MUI small outlined chip at its rendered numbers (SectionNav's twin): 24px tall, 16px
@@ -55,7 +55,7 @@ a.accentLink {
   height: 24px;
   padding: 0 7px;
   overflow: hidden;
-  border: 1px solid #bdbdbd;
+  border: 1px solid var(--app-control-border);
   border-radius: 16px;
   color: var(--app-text);
   font-family: monospace;
@@ -63,10 +63,6 @@ a.accentLink {
   line-height: 1.5;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-:root[data-color-scheme='dark'] .specifierChip {
-  border-color: #616161;
 }
 
 .pager {
@@ -103,11 +99,7 @@ a.accentLink {
 .stepIcon {
   width: var(--app-icon-sm);
   height: var(--app-icon-sm);
-  color: rgba(0, 0, 0, 0.26);
-}
-
-:root[data-color-scheme='dark'] .stepIcon {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--app-text-tertiary);
 }
 
 .stepText {
@@ -123,7 +115,7 @@ a.accentLink {
   display: block;
   color: var(--app-text-tertiary);
   font-size: var(--app-text-xs);
-  line-height: 1.66;
+  line-height: var(--app-lh-body);
 }
 
 .stepLabel {
@@ -131,5 +123,5 @@ a.accentLink {
   color: var(--app-text);
   font-size: var(--app-text-md);
   font-weight: 600;
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }

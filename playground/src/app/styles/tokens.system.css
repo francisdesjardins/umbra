@@ -1,0 +1,89 @@
+/**
+ * Penumbra — the system half of the design system.
+ *
+ * Scale, rhythm, motion and stacking. **No colour and no typeface live here**, which is the whole
+ * point: this file is lifted into another project unchanged, and `tokens.skin.css` beside it is
+ * the one that gets rewritten. If a `#hex` or a font name ever appears below, the split has
+ * failed and the file has stopped being portable.
+ *
+ * A component asks for a step, never a pixel count. An off-scale literal must carry a comment
+ * saying why it is off-scale — a measured geometry, a UA constant.
+ */
+
+:root {
+  /* ── Space — the 4px grid ────────────────────────────────────────────────────────── */
+  --app-space-1: 4px;
+  --app-space-2: 8px;
+  --app-space-3: 12px;
+  --app-space-4: 16px;
+  --app-space-5: 20px;
+  --app-space-6: 24px;
+  --app-space-8: 32px;
+  --app-space-10: 40px;
+  --app-space-12: 48px;
+  --app-space-14: 56px;
+
+  /* ── Type ramp ───────────────────────────────────────────────────────────────────────
+     A ~1.22 ratio off a 15px body: 11 · 13 · 15 · 18 · 22 · 28 · 36 · 46. Body is `-md`, and it
+     is 15px on purpose — larger than the 14px a component library spends its interface on,
+     smaller than a marketing 16px. This is a documentation app; 15 is the reading size. */
+  --app-text-xs: 0.6875rem;
+  --app-text-sm: 0.8125rem;
+  --app-text-md: 0.9375rem;
+  --app-text-base: 1.125rem;
+  --app-text-lg: 1.375rem;
+  --app-text-xl: 1.75rem;
+  --app-text-2xl: 2.25rem;
+  --app-text-3xl: 2.875rem;
+
+  /* Line heights are tokens too, so a new surface stops inventing a decimal. */
+  --app-lh-tight: 1.15;
+  --app-lh-snug: 1.35;
+  --app-lh-body: 1.6;
+  --app-lh-relaxed: 1.7;
+
+  /* Tracking. Display sizes tighten; the mono eyebrow is the one thing that opens up. */
+  --app-tracking-tight: -0.022em;
+  --app-tracking-snug: -0.01em;
+  --app-tracking-label: 0.14em;
+
+  /* ── Radii ───────────────────────────────────────────────────────────────────────── */
+  --app-radius-sm: 3px;
+  --app-radius: 6px;
+  --app-radius-md: 8px;
+  --app-radius-lg: 12px;
+  --app-radius-xl: 16px;
+  --app-radius-pill: 999px;
+
+  /* ── Motion ──────────────────────────────────────────────────────────────────────────
+     The default curve front-loads the movement and settles hard, rather than easing
+     symmetrically in and out. Per element the difference is small; across a page it is what
+     stops the app feeling like it was assembled from a component library. */
+  --app-quick: 110ms;
+  --app-duration: 200ms;
+  --app-slow: 340ms;
+  --app-ease: cubic-bezier(0.2, 0, 0, 1);
+  --app-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --app-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* ── Layout ──────────────────────────────────────────────────────────────────────────
+     Breakpoints cannot be custom properties (media queries resolve before the cascade), so the
+     two the app uses stay a convention: 600px (sm) and 900px (md), stated here and nowhere
+     re-invented. */
+  --app-topbar-height: 56px;
+  --app-sidebar-width: 248px;
+  --app-content-max-width: 1400px;
+  --app-measure: 68ch;
+  --app-icon-sm: 20px;
+
+  /* ── Stacking ────────────────────────────────────────────────────────────────────────
+     Small numbers, deliberately. The dialog manager assigns 1300+ and a modal `<dialog>` paints
+     in the top layer where no `z-index` reaches it at all, so the shell only ever has to order
+     itself against itself. */
+  --app-z-backdrop: 20;
+  --app-z-sidebar: 30;
+  --app-z-mascot: 30;
+  --app-z-topbar: 40;
+
+  --app-scrollbar-width: 10px;
+}

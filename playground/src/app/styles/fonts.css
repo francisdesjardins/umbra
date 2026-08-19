@@ -1,0 +1,31 @@
+/**
+ * The three faces, served from this origin so they can be preloaded and arrive before first
+ * paint. A cross-origin stylesheet costs a second round trip, and the swap that follows moves
+ * every block of text on the page.
+ *
+ * Latin subsets only, variable weight axes. Regenerate with scripts/fetch-fonts.mjs.
+ */
+
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/geist.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/fonts/geist-mono.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/newsreader.woff2') format('woff2');
+}

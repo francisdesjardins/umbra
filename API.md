@@ -42,7 +42,7 @@ specifier if they prefer a single import path.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`ModalOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Modal}` in JSX.
 
-> **Note:** For reference UI component implementations (MUI and vanilla HTML/CSS), see `playground/src/entities/modal-template/ui/`.
+> **Note:** For reference UI component implementations, see `playground/src/entities/modal-template/ui/` — `vanilla/` depends on nothing, `mui/` exposes the same component names under Material UI.
 
 ---
 
@@ -737,7 +737,7 @@ accepted branch.
 </Content.Section>
 ```
 
-Since the library is headless, you can use any UI framework or plain HTML/CSS for your content. The above shows the playground's MUI-based reference components as an example.
+Since the library is headless, you can use any UI framework or plain HTML/CSS for your content. The above shows one of the playground's two reference sets; the vanilla one carries the same component names with no dependency.
 
 ---
 

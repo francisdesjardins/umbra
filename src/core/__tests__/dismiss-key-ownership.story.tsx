@@ -84,14 +84,31 @@ export function KeyClaimProbeHarness() {
   return (
     <>
       <div data-testid="answers">{answers}</div>
-      <div data-testid="scope" role="dialog">
+      {/* Named, and the option carries the role its parent requires. The guard reads ancestor roles
+          and `aria-expanded`, so none of that changes what is under test — and an unnamed dialog
+          beside a listbox full of buttons is four axe violations on a page that ships. */}
+      <div aria-label="Key ownership scope" data-testid="scope" role="dialog">
         <button data-testid="plain" type="button">
           Plain
         </button>
-        <input aria-expanded="true" data-testid="expanded" readOnly role="combobox" />
+        {/* `aria-controls` points at the list below, which is the arrangement the case is named
+            for: the control is inside the dialog and its popup is rendered outside it. */}
+        <input
+          aria-controls="ownership-elsewhere"
+          aria-expanded="true"
+          aria-label="Expanded combobox"
+          data-testid="expanded"
+          readOnly
+          role="combobox"
+        />
       </div>
-      <div data-testid="elsewhere" role="listbox">
-        <button data-testid="in-listbox" type="button">
+      <div
+        aria-label="A popup outside the scope"
+        data-testid="elsewhere"
+        id="ownership-elsewhere"
+        role="listbox"
+      >
+        <button data-testid="in-listbox" role="option" type="button">
           Option
         </button>
       </div>

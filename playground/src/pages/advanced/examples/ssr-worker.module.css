@@ -7,13 +7,8 @@
   padding: var(--app-space-3);
   border-radius: var(--app-radius-md);
   width: 100%;
-  background: rgba(46, 125, 50, 0.1);
-  color: #1b5e20;
-}
-
-:root[data-color-scheme='dark'] .banner {
-  background: rgba(102, 187, 106, 0.12);
-  color: #66bb6a;
+  background: var(--app-ok-wash);
+  color: var(--app-ok);
 }
 
 .bannerIcon {
@@ -25,7 +20,7 @@
 .bannerText {
   margin: 0;
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }
 
 /* The theme reaches the worker-rendered markup through these variables rather than through

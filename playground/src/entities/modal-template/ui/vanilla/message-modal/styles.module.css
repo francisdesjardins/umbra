@@ -9,7 +9,7 @@
      grey above is 1.3:1. Kept separate from `--modal-border`: a hairline between two areas of
      one surface conveys nothing on its own and would only look heavy at this weight. */
   --modal-control-border: #8c8c8c;
-  --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --modal-shadow: 0 8px 32px rgb(15 23 42 / 0.12);
   --modal-radius: 8px;
   --modal-spacing: 16px;
   --modal-spacing-sm: 8px;
@@ -19,7 +19,7 @@
      flush control keeps part of its ring and loses the rest. `overflow-y: auto` also makes
      `overflow-x` compute to `auto`, so every side needs it — not just the scrolling one. */
   --modal-focus-ring-space: 4px;
-  --button-hover-bg: rgba(0, 0, 0, 0.04);
+  --button-hover-bg: rgb(15 23 42 / 0.05);
   --button-hover-border: rgba(0, 0, 0, 0.23);
 
   /* Colors */
@@ -38,16 +38,18 @@
   --color-info: #01579b;
 
   /* Typography */
-  --font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* `inherit`, not a stack of its own: a template that is copied into someone's app should speak
+     that app's typeface rather than impose one — and in this playground that is what keeps the
+     shell and the assets it hands out reading as a single product. */
+  --font-family: inherit;
   --font-size-base: 1rem;
   --font-size-sm: 0.875rem;
   --font-size-xs: 0.75rem;
   --font-size-h2: 1.25rem;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-normal: 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Dark mode colors */
@@ -168,13 +170,16 @@
 /* ========== Buttons ========== */
 .button {
   padding: 8px 16px;
-  border-radius: 4px;
+  /* Sized against the shell's own button so a card's trigger and the dialog's confirm read as one
+     system. Deliberately a step under it: the templates carry no brand, and a copied button that
+     arrives fully rounded is a decision made for whoever copied it. */
+  border-radius: 8px;
   border: 1px solid var(--modal-control-border);
   background: transparent;
   color: var(--modal-text);
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   /* Only what hover changes. `all` also animated `color`, and a theme flip interpolates it
      across 200ms while an attribute-keyed background flips instantly — measured at 1.08:1

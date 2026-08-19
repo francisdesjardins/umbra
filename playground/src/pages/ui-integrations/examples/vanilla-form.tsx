@@ -1,7 +1,6 @@
 import { ExampleLayout } from '@/entities/example';
 import * as VanillaFormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import Button from '@mui/material/Button';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useForm } from '@/shared/lib/use-form';
 import { useModal } from 'umbra/react';
@@ -120,15 +119,14 @@ export function VanillaFormExample() {
 
   return (
     <ExampleLayout result={result} modals={formModal.Modal}>
-      <Button
-        variant="contained"
-        size="small"
+      <Shared.Button
+        variant="primary"
         onClick={() => {
           void formModal.open();
         }}
       >
         Open Vanilla Form
-      </Button>
+      </Shared.Button>
     </ExampleLayout>
   );
 }

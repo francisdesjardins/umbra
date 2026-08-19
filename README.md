@@ -297,7 +297,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Reference Templates
 
-The library ships no UI components. Reference implementations for **MUI** and **vanilla HTML/CSS** are available in `playground/src/entities/modal-template/ui/`. Copy them into your project or write your own.
+The library ships no UI components. Reference implementations live in `playground/src/entities/modal-template/ui/`: **vanilla HTML/CSS** first, since it depends on nothing, and a **MUI** set beside it for the same component names. Copy either into your project or write your own.
 
 > **If you write a custom button wrapper**, you must forward three props onto the underlying `<button>` element: `aria-keyshortcuts`, `data-focus-on-open` and `data-action-reason`. All three are how the library finds a button in the DOM — hotkeys dispatch by querying `[aria-keyshortcuts]`, `focusOnOpen` finds its button by `[data-focus-on-open]`, and the focus restore after an action re-queries `[data-action-reason]` when your renderer has replaced the node it ran on. Dropping any one of them makes that feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards all three. A wrapper that _builds_ `aria-keyshortcuts` instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 

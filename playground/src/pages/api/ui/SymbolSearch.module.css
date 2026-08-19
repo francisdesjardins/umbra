@@ -15,19 +15,11 @@
   gap: var(--app-space-2);
   height: var(--app-space-10);
   padding: 0 var(--app-space-3) 0 14px;
-  border: 1px solid #8c8c8c;
+  border: 1px solid var(--app-control-border);
   border-radius: var(--app-radius);
 }
 
 .field:hover {
-  border-color: var(--app-text);
-}
-
-:root[data-color-scheme='dark'] .field {
-  border-color: #757575;
-}
-
-:root[data-color-scheme='dark'] .field:hover {
   border-color: var(--app-text);
 }
 
@@ -36,11 +28,7 @@
   flex-shrink: 0;
   width: var(--app-icon-sm);
   height: var(--app-icon-sm);
-  color: rgba(0, 0, 0, 0.26);
-}
-
-:root[data-color-scheme='dark'] .fieldIcon {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--app-text-tertiary);
 }
 
 .input {
@@ -106,12 +94,12 @@ a.row:hover {
   padding: var(--app-space-1) var(--app-space-2);
   color: var(--app-text-secondary);
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
 }
 
 .more {
   padding: 0 var(--app-space-2);
   color: var(--app-text-tertiary);
   font-size: var(--app-text-xs);
-  line-height: 1.66;
+  line-height: var(--app-lh-body);
 }

@@ -36,17 +36,25 @@
 
 .heroTitle {
   margin: 0;
-  /* Off-scale: between --app-text-xl and --app-text-2xl, the narrow-viewport step of the 3rem hero. */
-  font-size: 2rem;
-  line-height: 1.167;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: var(--app-font-display);
+  font-size: var(--app-text-2xl);
+  line-height: var(--app-lh-tight);
+  /* 500, not a heavier grade: the display serif's bold is heavier than the drawing wants beside
+     the mascot, and the size is already carrying the emphasis. */
+  font-weight: 500;
+  letter-spacing: var(--app-tracking-tight);
   display: flex;
   align-items: center;
   gap: var(--app-space-3);
 }
 
-/* Sized to the heading's two steps: the mark is part of the lockup, not a bullet. */
+/* Sized to the heading's two steps: the mark is part of the lockup, not a bullet — and it rises
+   onto the word's optical centre, since "Umbra" carries no descender to balance its ascent. */
+.markWide,
+.markNarrow {
+  transform: translateY(calc(-1 * var(--app-lockup-rise)));
+}
+
 .markWide {
   display: none;
 }
@@ -76,7 +84,7 @@
   margin: var(--app-space-4) 0 0;
   font-family: monospace;
   font-size: var(--app-text-xs);
-  line-height: 1.66;
+  line-height: var(--app-lh-body);
   color: var(--app-accent);
 }
 
@@ -103,44 +111,6 @@
   margin-top: var(--app-space-6);
 }
 
-/* Links dressed as buttons — AppButton's metrics on an anchor, because a real <a> keeps
-   navigation semantics (new tab, copy link) a button-with-navigate would drop. */
-.linkButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--app-space-2);
-  border: 1px solid transparent;
-  border-radius: var(--app-radius);
-  padding: 6px var(--app-space-4);
-  font-family: inherit;
-  font-size: var(--app-text-md);
-  font-weight: 500;
-  letter-spacing: 0.02857em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Unfilled variants paint amber on the *page*, which is the 3.19:1 trap — they take the
-   readable accent instead. */
-.linkButtonOutlined {
-  color: var(--app-accent);
-  border-color: var(--app-accent);
-}
-
-.linkButtonText {
-  color: var(--app-accent);
-}
-
-.linkButtonOutlined:hover,
-.linkButtonText:hover {
-  background: var(--app-hover);
-}
-
 /* Stacked, not side by side: at half width both snippets get a horizontal scrollbar. */
 .snippets {
   display: flex;
@@ -154,17 +124,21 @@
   min-width: 0;
 }
 
+/* The eyebrow owns its breathing room as margin. It used to come from a 2.66 line-height — MD2's
+   overline, where the leading was the spacing — so collapsing that ramp onto an honest one left the
+   label sitting on the code block. Spacing is a margin here, and the label reads at its own size. */
 .overline {
-  margin: 0;
+  margin: 0 0 var(--app-space-3);
+  font-family: var(--app-font-mono);
   font-size: var(--app-text-xs);
-  line-height: 2.66;
-  font-weight: 400;
-  letter-spacing: 0.08333em;
+  line-height: var(--app-lh-snug);
+  font-weight: 500;
+  letter-spacing: var(--app-tracking-label);
   text-transform: uppercase;
-  color: var(--app-text-secondary);
+  color: var(--app-text-tertiary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--app-space-2);
 }
 
 .nextRow {
@@ -194,7 +168,7 @@
 .nextTitle {
   margin: 0;
   font-size: var(--app-text-base);
-  line-height: 1.75;
+  line-height: var(--app-lh-relaxed);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -204,7 +178,7 @@
 .nextBody {
   margin: var(--app-space-1) 0 0;
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
 }
 
@@ -218,7 +192,7 @@
 
 /* ── The hello modal's interior ─────────────────────────────────────────────────
    Page-owned on purpose — the library ships no UI, so the front page brings its own, on the
-   same tokens as the shell. The shadow is a dialog's: the one place this shell keeps elevation. */
+   same tokens as the shell. The lift is a dialog's: the one place this shell spends a shadow. */
 .helloCard {
   padding: var(--app-space-6);
   max-width: min(420px, 88vw);
@@ -229,10 +203,7 @@
   color: var(--app-text);
   border: 1px solid var(--app-divider);
   border-radius: var(--app-radius-lg);
-  box-shadow:
-    0px 5px 5px -3px rgba(0, 0, 0, 0.2),
-    0px 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--app-lift);
 }
 
 .helloTitle {
@@ -245,7 +216,7 @@
 .helloBody {
   margin: 0;
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
 }
 
@@ -255,7 +226,7 @@
   align-items: center;
   gap: var(--app-space-2);
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
   cursor: pointer;
 }
@@ -272,53 +243,6 @@
   gap: var(--app-space-2);
   justify-content: flex-end;
   margin-top: var(--app-space-2);
-}
-
-/* Bare <button>s, not AppButton: an action's spread must land on a native button so
-   aria-keyshortcuts / data-focus-on-open / data-action-reason all arrive — the exact claim the
-   HELLO snippet beside it makes. Metrics mirror the shell button's small size. */
-.helloButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--app-space-2);
-  border: 1px solid transparent;
-  border-radius: var(--app-radius);
-  padding: var(--app-space-1) 10px;
-  font-family: inherit;
-  font-size: var(--app-text-sm);
-  font-weight: 500;
-  letter-spacing: 0.02857em;
-  text-transform: uppercase;
-  cursor: pointer;
-  background: transparent;
-  transition:
-    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.helloButtonText {
-  color: var(--app-accent);
-}
-
-.helloButtonText:hover:not(:disabled) {
-  background: var(--app-hover);
-}
-
-.helloButtonContained {
-  background: var(--app-flame);
-  color: var(--app-primary-ink);
-}
-
-.helloButtonContained:hover:not(:disabled) {
-  background: var(--app-primary-hover);
-}
-
-.helloButton:disabled {
-  cursor: default;
-  background: var(--app-divider);
-  border-color: transparent;
-  color: var(--app-text-tertiary);
 }
 
 @media (min-width: 600px) {

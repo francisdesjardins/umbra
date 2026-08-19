@@ -15,7 +15,7 @@
 
 .hint {
   font-size: var(--app-text-xs);
-  line-height: 1.66;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
 }
 

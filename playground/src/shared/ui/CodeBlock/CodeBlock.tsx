@@ -52,7 +52,14 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
 
   return (
     <div className={styles['frame']}>
-      <AppIconButton size="small" onClick={handleCopy} className={styles['copyButton']}>
+      {/* The icon is `aria-hidden`, so the control's name has to come from here — and it states the
+          outcome, which is also what a screen reader hears change when the tick appears. */}
+      <AppIconButton
+        size="small"
+        onClick={handleCopy}
+        className={styles['copyButton']}
+        aria-label={copied ? 'Code copied' : 'Copy code'}
+      >
         {copied ? <CheckIcon className={styles['checkIcon']} /> : <ContentCopyIcon />}
       </AppIconButton>
 
@@ -69,7 +76,9 @@ export const CodeBlock = ({ code, language = 'tsx', wrap = false }: CodeBlockPro
             background: 'transparent',
             margin: 0,
             padding: 0,
-            fontFamily: '"JetBrains Mono", "Fira Code", "Consolas", monospace',
+            // The token, not a stack of its own: code is the largest mono surface here, and a
+            // second opinion about the mono face shows up as two monos on one page.
+            fontFamily: 'var(--app-font-mono)',
           }}
           // Both off when wrapping: they wrap each line into a flex row of tokens, which scrambles.
           showLineNumbers={!wrap}

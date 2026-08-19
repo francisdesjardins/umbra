@@ -11,11 +11,16 @@
   border-radius: var(--app-radius-lg);
   font-family: inherit;
   font-weight: 600;
+  /* The recipe is worn by real <a>s too (see `appButtonClass`), so the anchor defaults have to be
+     neutralised here rather than at each call site. */
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   background: transparent;
   transition:
-    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color var(--app-duration) var(--app-ease),
+    border-color var(--app-duration) var(--app-ease),
+    box-shadow var(--app-duration) var(--app-ease);
   outline: none;
 }
 
@@ -39,6 +44,7 @@
 
 .contained:hover:not(:disabled) {
   background: var(--app-primary-hover);
+  box-shadow: var(--app-glow);
 }
 
 .containedError {
@@ -70,6 +76,6 @@
   cursor: default;
   background: var(--app-divider);
   border-color: transparent;
-  /* Inactive control, 1.4.3-exempt — the same tone MUI disables with. */
+  /* An inactive control, which 1.4.3 exempts from the contrast minimum. */
   color: var(--app-text-tertiary);
 }

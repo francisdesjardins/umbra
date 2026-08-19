@@ -3,7 +3,6 @@ import * as VanillaMessageModal from '@/entities/modal-template/ui/vanilla/messa
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Button from '@mui/material/Button';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -65,16 +64,15 @@ export function VanillaMessageExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Button
-        variant="contained"
-        size="small"
+      <Shared.Button
+        variant="primary"
         onClick={async () => {
           const [, closeResult] = await modal.openAndWait();
           resultStore.setResult(`Closed with reason: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
         Open Vanilla Modal
-      </Button>
+      </Shared.Button>
     </ExampleLayout>
   );
 }

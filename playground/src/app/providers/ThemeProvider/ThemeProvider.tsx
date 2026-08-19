@@ -3,14 +3,56 @@ import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { ThemeContext } from '@/shared/lib/theme-context';
 
-// Seed the modal surface vars on :root before first paint: dialogs inherit custom properties from
-// :root through the DOM, top layer included, so they theme correctly on mount.
+type Mode = 'light' | 'dark';
+
+/** Also spelled out in `index.html`'s inline script, which runs before any module can be imported
+ * and so cannot share this constant. Change both. */
+const STORAGE_KEY = 'umbra:color-scheme';
+
+/** A locked-down browser throws on `localStorage` rather than answering null, so both doors are
+ * guarded and an unreadable preference is simply no preference. */
+const readStoredMode = (): Mode | null => {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === 'light' || stored === 'dark' ? stored : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredMode = (mode: Mode): void => {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, mode);
+  } catch {
+    // A preference that cannot be stored is not worth failing the click over.
+    return;
+  }
+};
+
+/**
+ * Everything keyed on the mode, in one place so the module-level seed and the effect cannot
+ * disagree. `data-color-scheme` is what the app tokens and the vanilla CSS modules read;
+ * `color-scheme` rides along because CSS cannot reach what the UA paints on its own — a native
+ * `<select>` popup most visibly. The modal surface vars sit on `:root` because dialogs inherit
+ * custom properties through the DOM, top layer included.
+ */
+const applyMode = (mode: Mode): void => {
+  const root = document.documentElement;
+  root.setAttribute('data-color-scheme', mode);
+  root.style.colorScheme = mode;
+  const bg = mode === 'dark' ? colors.modalBgDark : colors.modalBgLight;
+  root.style.setProperty('--modal-bg', bg);
+  root.style.setProperty('--slide-bg', bg);
+  root.style.setProperty('--form-bg', bg);
+};
+
+// Before first paint, and before React renders: a stored preference that only lands in an effect
+// shows the other scheme for a frame.
 if (typeof document !== 'undefined') {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const initialBg = prefersDark ? colors.modalBgDark : colors.modalBgLight;
-  document.documentElement.style.setProperty('--modal-bg', initialBg);
-  document.documentElement.style.setProperty('--slide-bg', initialBg);
-  document.documentElement.style.setProperty('--form-bg', initialBg);
+  applyMode(
+    readStoredMode() ??
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  );
 }
 
 /**
@@ -20,24 +62,17 @@ if (typeof document !== 'undefined') {
  */
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const [userOverride, setUserOverride] = useState<'light' | 'dark' | null>(null);
+  // Seeded from storage, so a reload keeps the choice. Null means no choice has been made and the
+  // system query below stays live.
+  const [userOverride, setUserOverride] = useState<Mode | null>(() => {
+    return readStoredMode();
+  });
 
   const mode = userOverride ?? (prefersDarkMode ? 'dark' : 'light');
 
-  // `data-color-scheme` on the document is what the app tokens and vanilla CSS modules key off.
-  // `color-scheme` rides along because CSS cannot reach what the UA paints on its own — the
-  // popup of a native <select> most visibly: without it, dark mode served white option lists.
-  useEffect(() => {
-    document.documentElement.setAttribute('data-color-scheme', mode);
-    document.documentElement.style.colorScheme = mode;
-  }, [mode]);
-
-  // Open dialogs pick these up through custom-property inheritance from :root, so no per-dialog sync.
+  // Layout, not passive: the attribute has to land before the browser paints the new mode.
   useLayoutEffect(() => {
-    const bg = mode === 'dark' ? colors.modalBgDark : colors.modalBgLight;
-    document.documentElement.style.setProperty('--modal-bg', bg);
-    document.documentElement.style.setProperty('--slide-bg', bg);
-    document.documentElement.style.setProperty('--form-bg', bg);
+    applyMode(mode);
   }, [mode]);
 
   useEffect(() => {
@@ -56,11 +91,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [mode]);
 
   const toggleTheme = useCallback(() => {
-    setUserOverride((prev) => {
-      const currentMode = prev ?? (prefersDarkMode ? 'dark' : 'light');
-      return currentMode === 'light' ? 'dark' : 'light';
-    });
-  }, [prefersDarkMode]);
+    const next: Mode = mode === 'light' ? 'dark' : 'light';
+    setUserOverride(next);
+    writeStoredMode(next);
+  }, [mode]);
 
   return (
     <ThemeContext value={{ isDarkMode: mode === 'dark', toggleTheme }}>{children}</ThemeContext>

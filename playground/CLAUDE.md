@@ -99,36 +99,45 @@ came along.
 `pages/<route>/ui/`. Page-to-page imports are an FSD violation — if two routes need the same
 example, it belongs in `entities/`.
 
-## The design system (`src/app/styles/app.css`)
+## The design system — Penumbra (`src/app/styles/`)
 
-The shell runs on its own tokens — no component library — and the token sheet is the whole
-contract, written to be lifted into another project as a base:
+**The sheet is split so the base can travel**: `tokens.system.css` is scale, motion and stacking
+with no brand in it, `tokens.skin.css` is the eclipse palette and the three typefaces, and
+`app.css` imports both and adds the baseline.
 
-- **Colours** are `--app-*` custom properties on `:root`, dark mode overriding them under
-  `:root[data-color-scheme='dark']` (the attribute `ThemeProvider` sets alongside `color-scheme`).
-  Components consume tokens and never branch on mode. The palette is the mascot's, and every pair
-  is measured — see "Colour is measured, not chosen" below. Two rules with teeth: `--app-flame`
-  is a **fill** and `--app-accent` the amber you may put text in; a filled primary hovers
-  _brighter_ (`--app-primary-hover`), never deeper.
-- **Sizes are tokens too — a component asks for a step, never a pixel count**: spacing
-  `--app-space-1..14` on the 4px grid; the type ramp `--app-text-xs..3xl`; radii
-  `--app-radius-sm/·/md/lg/pill`; layout `--app-topbar-height`, `--app-sidebar-width`,
-  `--app-content-max-width`, `--app-icon-sm/md`; stacking `--app-z-*` (everything below the
-  1300+ the dialog manager assigns). An off-scale literal must carry a comment saying why it is
-  off-scale (a measured geometry, a UA constant).
-- **Breakpoints are the one thing that cannot be tokens** (media queries resolve before the
-  cascade): exactly **600px** and **900px**, stated in `app.css`, never a third.
-- **Primitives** live in `shared/ui`: `AppButton`/`AppIconButton` (the shell's buttons — dialog
-  interiors use the templates' buttons instead, on purpose), the `icons` set (Material glyphs
-  extracted from the installed icon package, `currentColor`, `aria-hidden` by default),
-  `SurfaceCard`, `PageLayout`, `SectionNav`, `ResultDisplay`, `LoadingButton`,
-  `ViewCodeButton`, `ThemeToggleButton`.
-- **The MUI island**: `shared/ui/MuiIsland` is the only place a MUI theme exists, wrapped around
-  the surfaces that _demonstrate_ MUI (`/ui-integrations`). The theme itself is
-  `shared/lib/mui-theme.ts`, projecting the same measured palette.
-- The vanilla **templates** keep their own token families (`--modal-*`, `--slide-*`, `--form-*`,
-  `--content-*`, `--panel-*`) — they are copied into other people's apps and must not depend on
-  the shell's sheet.
+**The split is a gate, not prose** —
+[design-system-layering.test.ts](src/__tests__/design-system-layering.test.ts) fails on a colour or
+typeface in the system file, a `--app-*` inside the templates, or any Material easing or MD2 metric
+anywhere. Porting Penumbra elsewhere is: copy the system file, write a new skin.
+
+- **Colours** are `--app-*` on `:root`, dark overriding under `:root[data-color-scheme='dark']`
+  (set by `ThemeProvider`). Components never branch on mode.
+- **Sizes are tokens too — a component asks for a step, never a pixel count.** Space, the ramp
+  (~1.22 off a 15px body), line height, tracking, radii and layout each have a family in
+  `tokens.system.css`; an off-scale literal says why.
+- **Motion is tokens** (`--app-quick/duration/slow`, `--app-ease/-out/-in`); **elevation is
+  `--app-lift`, light `--app-glow`** — one hairline, one shadow, the glow only on the live thing.
+  Never a `cubic-bezier` literal, and never a transition on `color`.
+- **Breakpoints cannot be tokens** (media queries resolve first): **600px** and **900px**.
+- **Three voices**: Newsreader on `h1`–`h3` and the wordmark, Geist elsewhere, Geist Mono for code
+  and eyebrows. Self-hosted and preloaded — a cross-origin swap re-lays out every block of text.
+  Regenerate with `scripts/fetch-fonts.mjs`.
+- **Sentence case, except a mono eyebrow** — uppercase on a button is a component library's
+  signature; on a mono group label it is a typographic device.
+- **Primitives** in `shared/ui`: `AppButton`/`AppIconButton` + `appButtonClass`, the `icons` set,
+  `EclipseMark`, `MoonPhase`, `SurfaceCard`, `PageLayout`, `SectionNav`, `ResultDisplay`,
+  `LoadingButton`, `ViewCodeButton`, `ThemeToggleButton`.
+- **The MUI island** (`shared/ui/MuiIsland` + `shared/lib/mui-theme.ts`) is **the subject, not a
+  leftover**: Umbra ships no UI, so proving it works under another component library is the product
+  claim, and the island stays Material-looking on purpose.
+- The vanilla **templates** keep their own token families, are deliberately unbranded, and may not
+  touch the shell's sheet — they are copied into apps where it does not exist.
+
+**One button recipe**: what cannot be an `AppButton` takes
+[`appButtonClass`](src/shared/ui/AppButton/buttonRecipe.ts).
+
+**The three marks are not interchangeable** — see
+[`EclipseMark`](src/shared/ui/EclipseMark/EclipseMark.tsx).
 
 ## Routes
 
@@ -143,6 +152,7 @@ Grouped in the sidebar; the order is the intended reading order.
 | Patterns  | `/microfrontends`  | Four bindings, one manager, in a frame with no build step  |
 | Reference | `/ui-integrations` | MUI vs vanilla, paired by use case                         |
 | Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
+| Reference | `/design-system`   | Penumbra, read live from the token sheet — never restated  |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |
 | Testing   | `/stories`         | Live `*.story.tsx` harnesses from the component test suite |
 | Testing   | `/warzone`         | Scratch surface — empty on purpose, see below              |
@@ -245,7 +255,8 @@ hidden). It creates a scroll container that never scrolls and silently disables 
 The palette is held to **WCAG 2.2 AA**, and the check is a real browser rather than a reading of
 the theme: `node .claude/skills/wcag-audit/audit.mjs --attach --route … --focus` (PowerShell on
 Windows — Git Bash rewrites a bare `/` argument into a path). Run it after any edit to colours,
-tokens or a component's theme. Nine routes × both schemes is currently clean, dialogs included.
+tokens or a component's theme. Ten routes × both schemes is currently clean, dialogs included,
+and every focusable element draws a ring.
 
 Two things it caught that source review had not, and both are the reason it exists:
 
@@ -258,17 +269,20 @@ Two things it caught that source review had not, and both are the reason it exis
 
 Three rules follow, and they are where a new colour goes:
 
-- **`primary.main` is a fill; `accent.onSurface` is the text.** Amber on the page is 3.19:1. Never
-  write `color: 'primary.main'` — the token exists for exactly that, per mode.
-- **A filled primary brightens on hover, it does not deepen.** The ink on it is dark, so
-  `primary.dark` under it is 2.5:1. Same trap in `Sidebar`'s selected entry.
+- **`--app-flame` is a fill; `--app-accent` is the text** (`primary.main` and `accent.onSurface`
+  inside the island). Amber on the page is 3.19:1 — never write `color: var(--app-flame)`.
+- **A filled primary brightens on hover, it does not deepen** — `--app-primary-hover`, named for
+  the rule. The ink on it is dark, so a deeper amber underneath is 2.5:1.
 - **The vanilla templates are copied into other people's apps**, so a failure there propagates.
   Their control boundaries (`--*-control-border`) are a separate token from the layout hairline
-  (`--*-border`) because 1.4.11 asks 3:1 of the first and nothing of the second.
+  (`--*-border`) because 1.4.11 asks 3:1 of the first and nothing of the second. The shell makes
+  the same split (`--app-control-border` against `--app-divider`) — an `<input>` bordered with the
+  hairline is the one thing the last audit caught.
 
-Keyboard focus is part of the same gate. There is **one** global ring, declared in `theme.ts` as
+Keyboard focus is part of the same gate. There is **one** global ring, declared in `app.css` as
 `body :focus-visible` — the descendant element is load-bearing, since `.MuiButtonBase-root` zeroes
-the outline at equal specificity and is injected later. Do not add per-component focus styles.
+the outline at equal specificity and is injected later, so the island's buttons would silently get
+no ring. Do not add per-component focus styles.
 
 ## Templates (`src/entities/modal-template/ui/`)
 

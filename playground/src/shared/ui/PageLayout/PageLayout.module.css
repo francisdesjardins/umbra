@@ -26,23 +26,22 @@
   min-width: 0;
 }
 
-/* 1.5rem at every width: the MUI original's `fontSize: { xs: '1.5rem', md: undefined }` emits
-   nothing for the md block — measured, the media query was empty — so the xs size is what
-   desktop rendered too. Line-height is the h4 variant's. */
+/* One size at every width: a page title that grows on desktop competes with the hero, and this
+   one sits under a bar that does not change height. */
 .title {
   margin: 0;
   font-size: var(--app-text-xl);
   font-weight: 700;
-  line-height: 1.235;
+  line-height: var(--app-lh-tight);
   letter-spacing: -0.02em;
 }
 
 .description {
   margin: var(--app-space-2) 0 0;
-  max-width: 720px;
+  max-width: var(--app-measure);
   font-size: var(--app-text-base);
   line-height: 1.5;
-  letter-spacing: 0.00938em;
+  letter-spacing: normal;
   color: var(--app-text-secondary);
 }
 

@@ -38,36 +38,39 @@
   border-radius: var(--app-radius);
 }
 
+/* No `--app-lockup-rise` here on purpose: in a row the mark stays on the shared midline and the
+   text is trimmed to meet it instead — see the token. */
+
 .brand:hover .wordmark {
   color: var(--app-accent);
 }
 
-.badge {
-  width: var(--app-space-8);
-  height: var(--app-space-8);
-  /* Round, like the moon it holds. */
-  border-radius: 50%;
-  background: var(--app-flame);
-  color: var(--app-primary-ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* The wordmark is the one place the display serif does brand work rather than editorial work. */
 .wordmark {
+  font-family: var(--app-font-display);
   font-size: var(--app-text-lg);
-  font-weight: 600;
-  transition: color 120ms;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: var(--app-tracking-snug);
+  /* Cap band, so centring the box centres the letters: "Umbra" reserves descender room it never
+     uses, and the disc beside it reads low. Trimming the text keeps every item in the row on one
+     midline; nudging the mark would not. */
+  text-box: trim-both cap alphabetic;
+  /* Not transitioned: the wordmark's colour is inherited and theme-sensitive, so a flip would
+     interpolate it against a background that switches instantly — 1.08:1 mid-flip, measured. */
 }
 
 .pill {
   display: none;
+  align-self: center;
   padding: 2px var(--app-space-2);
+  border: 1px solid var(--app-divider);
   border-radius: var(--app-radius-sm);
-  background: var(--app-hover);
-  color: var(--app-text-secondary);
+  color: var(--app-text-tertiary);
+  font-family: var(--app-font-mono);
   font-size: var(--app-text-xs);
   font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 @media (min-width: 600px) {

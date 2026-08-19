@@ -8,22 +8,25 @@
   margin-bottom: 0;
 }
 
+/* An h2 dressed as a mono eyebrow — the family and weight are stated because the global heading
+   rule would otherwise hand it the display serif. */
 .title {
   display: block;
   margin: 0;
+  font-family: var(--app-font-mono);
   font-size: var(--app-text-xs);
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.1em;
+  font-weight: 500;
+  line-height: var(--app-lh-snug);
+  letter-spacing: var(--app-tracking-label);
   text-transform: uppercase;
-  color: var(--app-text-secondary);
+  color: var(--app-text-tertiary);
 }
 
 .description {
   margin: var(--app-space-1) 0 0;
   max-width: 680px;
   font-size: var(--app-text-md);
-  line-height: 1.43;
+  line-height: var(--app-lh-body);
   color: var(--app-text-secondary);
 }
 

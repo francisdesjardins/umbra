@@ -34,7 +34,7 @@
   font-family: monospace;
   font-size: var(--app-text-lg);
   font-weight: 700;
-  letter-spacing: 0.0075em;
+  letter-spacing: var(--app-tracking-snug);
   line-height: 1.6;
   overflow-wrap: anywhere;
 }

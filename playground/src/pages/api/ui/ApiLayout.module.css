@@ -24,9 +24,7 @@
     gap: var(--app-space-10);
   }
 
-  /* Sticky one 16px step under the top bar; the max-height gives the rail its own scroll,
-     ending one 40px step above the viewport's bottom edge — the 80px/104px the MUI layout
-     rendered, spelled from the tokens. */
+  /* Sticky one step under the top bar, with its own scroll ending a step above the viewport. */
   .rail {
     display: block;
     position: sticky;
@@ -35,10 +33,17 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: var(--app-space-2);
-    /* Ring room: a scroll container clips at its padding box, and the links' focus rings draw
-       2px outside at 2px offset — measured clipped left without this. */
+    /* Ring room on every side that clips. A scroll container clips at its padding box and the
+       links' rings draw 2px out at 2px offset, so a flush link keeps part of its ring and loses the
+       rest — measured on the left, and again on the last entry's bottom edge. `overflow-y: auto`
+       makes `overflow-x` compute to `auto` too, which is why this is not just a vertical problem. */
     padding-left: var(--app-space-1);
     margin-left: calc(-1 * var(--app-space-1));
+    padding-block: var(--app-space-1);
+    /* Padding alone is not enough vertically: focusing a link scrolls it into view, and
+       scroll-into-view aligns to the *client* edge, parking the last entry flush against the clip
+       with its ring outside. `scroll-padding` is what that alignment reads. */
+    scroll-padding-block: var(--app-space-2);
   }
 
   .mobileSearch {

@@ -9,9 +9,9 @@
   gap: 6px;
   padding-block: var(--app-space-3);
   margin-bottom: var(--app-space-6);
-  /* The light page ground is MUI's `background.default` (#fff — the theme only overrides the
-     dark pair), so the bar matches it rather than --app-bg's #fafafa, which would band. */
-  background: #ffffff;
+  /* The bar paints the page ground, not the paper: a sticky strip in a different tone bands
+     against the content scrolling under it. */
+  background: var(--app-bg);
   border-bottom: 1px solid var(--app-divider);
 }
 
@@ -24,21 +24,11 @@
   inset-block: 0;
   left: -2px;
   right: -2px;
-  background: #ffffff;
+  background: var(--app-bg);
   z-index: -1;
 }
 
-:root[data-color-scheme='dark'] .nav {
-  /* Dark's ground is the token exactly (#0f172a both sides). */
-  background: var(--app-bg);
-}
-
-:root[data-color-scheme='dark'] .nav::before {
-  background: var(--app-bg);
-}
-
-/* The MUI small outlined chip, at its rendered numbers: 24px tall, 16px radius, 7px label
-   padding, grey[400]/grey[700] border per mode. Keyboard focus is the global ring. */
+/* A 24px pill. Keyboard focus is the global ring. */
 .chip {
   box-sizing: border-box;
   display: inline-flex;
@@ -48,7 +38,7 @@
   height: 24px;
   padding: 0 7px;
   overflow: hidden;
-  border: 1px solid #bdbdbd;
+  border: 1px solid var(--app-control-border);
   border-radius: 16px;
   background: transparent;
   color: var(--app-text);
@@ -63,22 +53,15 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 300ms var(--app-ease),
+    box-shadow 300ms var(--app-ease);
 }
 
 .chip:hover {
   background: var(--app-hover);
 }
 
-/* MUI's clickable chip presses with elevation 1. */
+/* It presses. */
 .chip:active {
-  box-shadow:
-    0px 2px 1px -1px rgba(0, 0, 0, 0.2),
-    0px 1px 1px 0px rgba(0, 0, 0, 0.14),
-    0px 1px 3px 0px rgba(0, 0, 0, 0.12);
-}
-
-:root[data-color-scheme='dark'] .chip {
-  border-color: #616161;
+  box-shadow: var(--app-lift);
 }

@@ -5,7 +5,6 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import Button from '@mui/material/Button';
 import type { CSSProperties, ReactNode, SelectHTMLAttributes } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
@@ -597,9 +596,9 @@ export function VanillaPanelExample() {
 
   return (
     <ExampleLayout result={result} modals={modal.Modal}>
-      <Button variant="contained" size="small" onClick={handleOpen}>
+      <Shared.Button variant="primary" onClick={handleOpen}>
         Open Vanilla Panel
-      </Button>
+      </Shared.Button>
     </ExampleLayout>
   );
 }

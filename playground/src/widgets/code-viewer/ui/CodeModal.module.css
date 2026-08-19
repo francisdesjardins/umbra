@@ -12,11 +12,8 @@
   align-items: center;
   gap: var(--app-space-3);
   flex-shrink: 0;
-  background: #fafafa;
-}
-
-:root[data-color-scheme='dark'] .header {
-  background: #1a1a1a;
+  /* A step off the panel it sits on, from the palette rather than a literal grey. */
+  background: var(--app-hover);
 }
 
 /* The glyph is decoration on a named panel; the flame clears 1.4.11's 3:1 for non-text. */
@@ -38,22 +35,24 @@
   margin: 0;
   font-size: var(--app-text-lg);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--app-tracking-snug);
+  /* Cap band, so the icon beside it lines up with the letters rather than with the descender room
+     the serif reserves and this title never uses. */
+  text-box: trim-both cap alphabetic;
 }
 
 .keyBadge {
   padding: var(--app-space-1) var(--app-space-3);
   border-radius: var(--app-radius);
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--app-hover);
   border: 1px solid var(--app-divider);
-  font-family: monospace;
+  /* A key badge is a label device, not a Material button: uppercase mono at the label tracking is
+     the one place the shell still shouts, and it means something here. */
+  font-family: var(--app-font-mono);
   font-weight: 500;
-  font-size: 0.7rem;
+  font-size: var(--app-text-xs);
+  letter-spacing: var(--app-tracking-label);
   text-transform: uppercase;
-}
-
-:root[data-color-scheme='dark'] .keyBadge {
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .actions {

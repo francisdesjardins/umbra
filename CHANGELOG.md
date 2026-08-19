@@ -36,6 +36,255 @@ identical character for character between the dev server and the bundle, 184 624
 A disk cache keyed on `src/**` would take the remaining ~5s off a rebuild and is deliberately absent:
 this file already carries a chapter on caches that went stale in silence.
 
+### Fixed — a card clipped the focus ring of anything flush against it
+
+`SurfaceCard` was `overflow: hidden`, which clips at the padding box and takes the 2px outline a
+control draws 2px outside itself with it. It is `overflow: clip` with
+`overflow-clip-margin: var(--app-space-1)` now — children still clip to the radius, and the card
+never scrolled, so being a scroll container bought nothing. Second instance of this shape after the
+API rail, and the reason to fix it at the surface rather than at each control.
+
+### Changed — three dead tokens out, one literal in, and the measure honoured
+
+`--app-flame-edge`, `--app-ink` and `--app-icon-md` were declared and referenced nowhere: the
+drawings that once read them state their own colours. `--app-measure` was the opposite problem —
+declared, documented, and honoured by nothing while the reading columns hand-rolled 720px and 640px;
+both read the token now. And the mobile drawer's scrim was the last literal left in the shell, so it
+is `--app-scrim`, deliberately black in both schemes because it is an absence of light rather than
+a colour.
+
+### Fixed — the design-system page was unusable on a phone
+
+Three columns at `168px 88px 1fr` leave the specimen about 18 pixels at 390px wide, which clipped
+the top of the type ramp entirely. Below the small breakpoint the label and its value keep one line
+and whatever is being demonstrated takes the next at full width. Twenty-nine rows, none overflowing,
+and the mobile-viewport audit — which is where 1.4.10 Reflow and 2.5.8 Target Size actually bite —
+is clean on both schemes.
+
+### Added — `/design-system`, generated from the sheet rather than describing it
+
+Penumbra now has a route, and every value on it is read out of
+`getComputedStyle(document.documentElement)` instead of written into the page: the palette, the
+ramp, the space and radius scales, the easings and durations. A style guide that restates its own
+tokens is a second source of truth and is wrong the first time one of them changes — this one
+cannot be, and it re-reads on a theme flip, which is also how the swatches show the right pair. What
+it does carry in prose is the half a value cannot state: what each token is _for_, and the five
+rules, four of which are tests.
+
+### Fixed — two glitches, one of them from the de-branching above
+
+`Signature` kept `#fafafa` after its dark override was collapsed, so the API reference showed a
+white slab on a dark page — the exact failure mode that made those overrides worth removing, caught
+one file late. It reads `--app-hover` now, and a sweep says it was the only literal left exposed.
+
+The route loader never spun: `<animateTransform>` sat as a child of the `<svg>`, and the root
+element's transform is not the lever SMIL moves there. The rotation is on the arc, in CSS, with a
+`prefers-reduced-motion` guard the SMIL version could not have.
+
+### Fixed — an ARIA pass over the playground, and the three things it found
+
+axe-core over eleven routes, each scanned closed **and with a dialog open** — a page scan never sees
+the thing a dialog library exists to render. Contrast is excluded: `audit.mjs` already measures it in
+a real browser, per scheme, and two tools reporting one property is how they come to disagree.
+
+Three real defects. The code viewer's **copy button had no accessible name** — the icon is
+`aria-hidden`, so there was nothing left to announce; it now says what it will do, and what it did.
+The **heading outline skipped from `h1` to `h6`**: `ExampleSection`'s label was a styled `<span>`
+rather than the heading for the band it labels, so cards hung off nothing. Sections are `h2` and
+card titles `h3` — the eyebrow styling is presentation and was never a reason to leave a level out.
+The last were five violations in one CT fixture, named and given the roles their parents require;
+`isKeyClaimedByPopup` reads ancestor roles and `aria-expanded`, so none of it touches what is under
+test, and `aria-controls` now points at the list the case is named for.
+
+**Also caught, by adding `/api` to the sweep:** a focus ring drawn and then **clipped** by the rail's
+scroll container. Padding is not the whole fix — focusing a link scrolls it into view, and that
+alignment reads `scroll-padding`, so the last entry parked flush against the clip with its ring
+outside. Both are set now.
+
+### Changed — the shell stops branching on the colour scheme
+
+Eighteen `:root[data-color-scheme='dark']` blocks across eleven components, against a rule stated in
+`playground/CLAUDE.md`: components consume tokens and never branch on mode. They were branching
+because the palette had no semantic ink to reach for, so each one carried its own literal. Adding
+`--app-ok`, `--app-info` and a `-wash` for each retires all eighteen; the five in
+`entities/modal-template/` stay, because those blocks _define_ the per-mode families a copied
+template carries with it.
+
+The light ground moves to `#f4f6fa`. At `#fcfcfd` against `#ffffff` paper a card had nothing but its
+hairline to separate it from the page — light mode had lost the figure-ground that dark has.
+
+### Added — the theme survives a reload, and does not flash on the way back
+
+`ThemeProvider` held the override in React state alone, so every reload dropped it and fell back to
+the system query. It reads and writes `umbra:color-scheme` now: a stored `light`/`dark` wins, and
+anything else — absent, unreadable, or garbage — leaves the live `prefers-color-scheme` query in
+charge. Both `localStorage` doors are guarded, since a locked-down browser throws rather than
+answering null.
+
+Applying it from the module was not early enough. Measured on a cold load with `dark` stored against
+a light system, the document carried no scheme for ~64ms — the bundle has to arrive first — so the
+UA painted white and then flipped. **A four-line inline script in `index.html` sets the attribute and
+`color-scheme` before anything else runs**, and the scheme is now correct on the first sampled frame
+in both directions. It restates the storage key because a script that must beat the bundle cannot
+import one; `STORAGE_KEY` names the other half.
+
+One consequence worth knowing before it wastes an afternoon: **a stored preference outranks the
+`prefers-color-scheme` emulation the WCAG audit drives**, so a browser with the key set audits one
+scheme twice and reports it as two. Clear it before a run.
+
+### Changed — Geist for text and code, self-hosted, and the page stops jumping on load
+
+`display=swap` on a cross-origin stylesheet re-lays out the page when the face lands: measured on a
+cold load, the hero text sat at `top=139` with a 62px line box in the fallback and dropped to
+`top=147/46px` at 544ms — every block of text on the page moved. The three faces are served from
+`public/fonts/` and preloaded, so they are in hand before first paint; a cold load now samples one
+geometry across 340 frames, with the real metrics from the first frame.
+
+IBM Plex gives way to **Geist** and **Geist Mono** for text and code. Newsreader stays on `h1`–`h3`
+and the wordmark, minus its italic axis — 147 kB for a face that dresses no italic heading, since
+every `<em>` here is body copy. `CodeBlock` also stops naming its own mono stack; the largest mono
+surface on the site now reads from the same token as everything else.
+
+### Fixed — a mark beside a word aligned to the box instead of the letters
+
+`align-items: center` centres boxes, and a text box carries descender room the string may not use —
+"Umbra" has none — so the disc beside it read low. Three lockups, and they want two mechanisms:
+
+- **In a row** (top bar, the code viewer's title) the text is trimmed to its cap band with
+  `text-box: trim-both cap alphabetic`. Nothing leaves the shared midline, which is the point: the
+  mark, wordmark, chip and toggle all sit on the bar's 28px line, and lifting the mark onto the word
+  would have bought one agreement and lost three.
+- **Standalone** (the hero) the mark rises instead, by `--app-lockup-rise`. `text-box` cannot serve
+  that one — its text is an anonymous flex item with no line box to trim.
+
+Measured against real baselines rather than font metrics: 2.5px at 22px, 4.99px at 46px, now 0.08px
+and −0.07px. A sweep of ten routes turned up no fourth case; the near-misses are a chip's padding
+and rows whose cap band already lands on the icon.
+
+The three eyebrow labels that rode on MD2's 2.66 line-height also get their spacing back as margin,
+which is where spacing belongs — the ramp change had left the homepage's overline sitting on its
+code block.
+
+### Fixed — a panel wider than the `<dialog>` holding it
+
+Sizing a dialog is user-land: the library never sets the main-axis size, so the vanilla slide
+template's `width: 400px` is what gives an unsized panel a width. The moment a caller sizes the
+`<dialog>` itself, two declarations describe one box — and `/advanced`'s priority demo asks for
+`style: { width: 380 }`, so a 400px layout sat inside a 380px dialog and grew a horizontal
+scrollbar. `min-width: 320px` was the same defect one step down, biting at any caller width under 320. Both caps now yield to the dialog (`min(…, 100%)`), and an unsized panel still measures 400.
+
+The library's shared story interior had it too, from the other direction: `dialogStyle`'s flat
+`minWidth: 280` against the stack-priority trio's `width: 260` overflowed three dialogs by 20px on
+`/stories`.
+
+**Found by sweeping rather than by looking**: clicking every trigger on nine routes, opening
+**213 dialog surfaces** and comparing each one's `scrollWidth` against its `clientWidth`. Four
+overflowed; three were the `minWidth` floor above and one is a `<button>` two pixels wider than a
+94px contained host in a CT harness — an intrinsic text width, not a declared size, and left alone.
+
+## 2026-08-18
+
+### Changed — the playground shell has a brand of its own: Penumbra
+
+Moving off MUI removed the dependency and kept the design. The tokens that got written down were
+Material's: a 64px toolbar, a 232px drawer, `cubic-bezier(0.4, 0, 0.2, 1)` in **13 files**, MD2's
+line-height ladder in **39 places**, its tracking in 7, `rgba(0,0,0,.87/.6/.12/.04)` in 18, three
+copies of the elevation stack, and uppercase buttons at `0.02857em`. Two comments named the source
+outright — the sidebar described itself as "the shape MUI's permanent Drawer rendered, spelled out"
+and reserved an icon slot "the way `ListItemIcon` reserved it". The app had stopped depending on
+Material and gone on looking like it.
+
+**Penumbra** is the eclipse the mascot already draws — a dark body, a corona escaping around it —
+and the sheet is now **two files so the base can travel**: `tokens.system.css` (space, ramp, line
+heights, tracking, radii, motion, layout, stacking — no colour, no typeface) and
+`tokens.skin.css` (the palette in both schemes, the three faces, lift and glow). Porting it to
+another project is copy the first, rewrite the second. Dark is the designed-for scheme, since the
+product's whole job is putting a shadow over a page.
+
+What changed on screen: Newsreader for display against IBM Plex Sans and Mono; a 15px body on a
+~1.22 ramp; sentence-case buttons, with uppercase surviving only as a mono eyebrow where it is a
+typographic device rather than a component library's signature; a 56px bar and a 248px rail; edges
+and one `--app-glow` instead of stacked shadows; and a **selected nav entry that is a lit edge, not
+a filled amber slab** — which retires the contrast trap that fill created, where the label rode on
+the amber and hover had to brighten rather than deepen to hold its ratio.
+
+The prefix stayed `--app-`. Renaming to `--ds-` would have touched 697 references across 62 files
+and buried the design change in mechanical noise; portability comes from the file split and the
+no-hex-outside-the-skin rule, not from the prefix.
+
+Ten routes × both schemes measure clean, dialogs opened on four of them and audited in both
+flavours, and every focusable element draws a ring.
+
+### Fixed — a theme flip was interpolating the outgoing scheme's ink, again
+
+The vanilla templates found this once and wrote it down: `color` is keyed on the scheme, the
+attribute that flips the scheme flips backgrounds instantly, so a `transition` on `color`
+interpolates the old ink across an already-switched surface — "measured at 1.08:1 mid-flip". The
+shell then re-introduced it on the sidebar entries and the wordmark, and the audit read **2.5:1
+across nine nav entries and 1.08:1 on the wordmark** — the same number, on `/microfrontends`, where
+a heavy route left `document.timeline.currentTime` at 0 and froze all seventy-seven transitions at
+their start value. Two more sites turned up once it was looked for: the form template's hint and
+add-row button, and the UI Templates tab strip.
+
+Everything now transitions `background-color` and `border-color` and never `color`, and the
+[design-system gate](playground/src/__tests__/design-system-layering.test.ts) asserts it — the
+comment in the template stylesheet was true, correct, and did not stop the same defect being
+written three more times.
+
+### Changed — the copyable templates speak the host app's typeface
+
+`--font-family` in all five vanilla template families was a hardcoded system stack. It is `inherit`
+now, which is what a template being copied into someone else's app should do — adopt that app's
+face rather than impose one. In this playground it means the shell and the assets it hands out read
+as one product again, which is what the old `app.css` used the system stack to achieve before the
+rebrand moved the shell to IBM Plex and left the templates behind.
+
+Their buttons also moved to an 8px radius at weight 600, and the form's inputs and selects to 6px,
+so a card's trigger and the dialog's confirm no longer look like two design systems meeting. The
+templates stay a step under the shell's own 12px: they carry no brand, and a copied button that
+arrives fully rounded is a decision made on behalf of whoever copied it.
+
+### Removed — the last vendor code in the repo, and a defect on the page it undercut
+
+`shared/ui/icons/icons.tsx` held **26 glyphs of Google's Material path data**, lifted out of
+`@mui/icons-material` — the file's own doc comment said so. It is redrawn: a stroke set at 1.75 on
+round caps and joins, echoing the mascot's engraved line instead of Material's filled silhouettes.
+Same 26 export names, same `SVGProps` signature, same `currentColor` and `aria-hidden` contract, so
+no call site changed. Two of them were still passing MUI's `fontSize="small"`, which had been dead
+since the icons stopped being MUI components.
+
+Separately, the four **vanilla** examples on `/ui-integrations` imported `@mui/material/Button` for
+their trigger — on the page whose whole claim is "the same headless hooks, twice", with the import
+visible in the code viewer. Each MUI example already used its own `Shared.Button`; the vanilla ones
+now use theirs, which is the pairing that page was always describing.
+
+### Added — three gates, because the sweep that did this broke a rule on its way through
+
+The mechanical pass that replaced Material's constants reached into `entities/modal-template/` and
+left **sixteen `--app-*` references** in files that are copied into other people's apps. There the
+tokens do not exist, so `var(--app-ease)` makes the whole `transition` invalid at computed-value
+time and the dialog stops animating — and nothing in the playground can notice, because the
+playground defines the tokens. The defect only exists in the copied-out artifact.
+
+`playground/src/__tests__/design-system-layering.test.ts` now asserts all three halves of the rule:
+no shell token inside the templates, no colour or typeface inside `tokens.system.css`, and no
+Material easing or MD2 metric anywhere in the playground.
+
+`AppButton`'s metrics had also been written three times — the component, plus `HomePage`'s link
+buttons and its hello-modal buttons. They share `appButtonClass` now, which lives in its own module
+because a file exporting both a component and a function loses Fast Refresh. The two hand-rolled
+sites stay hand-rolled on purpose: a link dressed as a button must remain a real `<a>`, and a modal
+action's button must be one the example writes itself, or the `aria-keyshortcuts` /
+`data-focus-on-open` / `data-action-reason` spread lands nowhere.
+
+`EclipseMark` is the flat mark promoted out of `public/favicon.svg` into a component. The top bar
+had been showing a `MoonPhase` — a lunar phase is a different drawing from an eclipse — while the
+browser tab showed the eclipse. `MoonPhase` keeps its real job as a heading ornament. This breaks
+the badge parity `TopBar` claimed with the sibling stardust playground until stardust follows.
+
+`smoke-playground.mjs` read the top bar's height off `--app-topbar-height` rather than the literal
+64 it asserted, which failed the day the bar changed height — not what that check is there to catch.
+
 ## 2026-08-17
 
 ### Fixed — `yarn bench` proved an O(1) claim against two identical objects

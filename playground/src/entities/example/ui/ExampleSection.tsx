@@ -18,7 +18,10 @@ type ExampleSectionProps = {
 export const ExampleSection = ({ title, description, id, children }: ExampleSectionProps) => {
   return (
     <section id={id ?? sectionSlug(title)} className={styles['section']}>
-      <span className={styles['title']}>{title}</span>
+      {/* A heading, not a styled span: this is the label for a band of the page, so it belongs in
+          the outline under `PageLayout`'s h1 — and the cards' own titles sit under it as h3. Styled
+          as a mono eyebrow, which is presentation and no reason to leave it out of the structure. */}
+      <h2 className={styles['title']}>{title}</h2>
       {description !== undefined && <p className={styles['description']}>{description}</p>}
       <div className={styles['content']}>{children}</div>
     </section>

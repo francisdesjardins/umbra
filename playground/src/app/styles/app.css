@@ -1,137 +1,15 @@
 /**
- * The app's own design tokens and global rules — the shell's foundation, owned by no component
- * library. The palette is the mascot's five eclipse colours (see shared/lib/mui-theme.ts, which
- * still projects the same values into the scoped MUI island), and every contrast decision here
- * was measured, not chosen: see playground/CLAUDE.md, "Colour is measured, not chosen".
+ * The app's global sheet: the two token files, then the baseline rules that belong to no
+ * component. The tokens are split so the base can travel — `tokens.system.css` is scale, motion
+ * and stacking with no brand in it, `tokens.skin.css` is the palette and the typefaces, and
+ * porting Penumbra to another project means copying the first and rewriting the second.
  */
 
-/* ========== Tokens ========== */
-:root {
-  /* Light mode — the mascot's palette. Light takes the deeper amber: a bright page needs less
-     glow to register. */
-  --app-flame: #d97706;
-  --app-flame-edge: #92400e;
-  --app-body: #1e293b;
-  --app-body-edge: #475569;
-  --app-ink: #fcd34d;
-  /* Amber as *text* is this token, never --app-flame: #d97706 is 3.19:1 on white — a fill, not
-     an ink. Light reads the deep edge, dark the bright ink. */
-  --app-accent: #92400e;
-  --app-ring: #92400e;
-  /* What sits on the flame: the eclipse's own body. Fire is the background you read the dark
-     body against, never the reverse — so a filled primary hovers *brighter*, not deeper. */
-  --app-primary-ink: #0f172a;
-  --app-primary-hover: #f59e0b;
-
-  /* MUI's light default ground is #fff — not the #fafafa of older versions; measured, since the
-     sidebar paints on it and a mismatched token grays it. */
-  --app-bg: #ffffff;
-  --app-paper: #ffffff;
-  --app-text: rgba(0, 0, 0, 0.87);
-  --app-text-secondary: rgba(0, 0, 0, 0.6);
-  /* MUI's 0.38 "disabled" is an inactive-control tone; this app spends the third step as
-     tertiary *text* (counts, hints, placeholders), so it is raised to clear 4.5:1. */
-  --app-text-tertiary: rgba(0, 0, 0, 0.55);
-  --app-divider: rgba(0, 0, 0, 0.12);
-  /* A control's edge is what says where the control is, so 1.4.11 asks 3:1 of it — the divider
-     above is a layout hairline and clears nothing. Same measured pair as the vanilla templates. */
-  --app-control-border: #8c8c8c;
-
-  --app-scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --app-scrollbar-track: transparent;
-  --app-scrollbar-width: 10px;
-
-  /* ── Sizes — the whole scale, so components carry no hardcoded dimensions ─────────────
-     Spacing is the 4px grid; a component asks for a step, never a pixel count. */
-  --app-space-1: 4px;
-  --app-space-2: 8px;
-  --app-space-3: 12px;
-  --app-space-4: 16px;
-  --app-space-5: 20px;
-  --app-space-6: 24px;
-  --app-space-8: 32px;
-  --app-space-10: 40px;
-  --app-space-12: 48px;
-  --app-space-14: 56px;
-
-  /* Type ramp — t-shirt sizes over role names, so a new surface picks a size without inventing
-     one. `-sm` is the small-button size MUI used; `-md` the body-2 everything reads in. */
-  --app-text-xs: 0.75rem;
-  --app-text-sm: 0.8125rem;
-  --app-text-md: 0.875rem;
-  --app-text-base: 1rem;
-  --app-text-lg: 1.25rem;
-  --app-text-xl: 1.5rem;
-  --app-text-2xl: 2.125rem;
-  --app-text-3xl: 3rem;
-
-  --app-radius-sm: 2px;
-  --app-radius: 4px;
-  --app-radius-md: 6px;
-  --app-radius-lg: 8px;
-  --app-radius-xl: 12px;
-  --app-radius-pill: 999px;
-
-  /* Layout — the numbers the shell is built around. Breakpoints cannot be custom properties
-     (media queries resolve before the cascade), so the two the app uses are a convention:
-     600px (sm) and 900px (md), stated here and nowhere re-invented. */
-  --app-topbar-height: 64px;
-  --app-sidebar-width: 232px;
-  --app-content-max-width: 1400px;
-  --app-icon-sm: 20px;
-  --app-icon-md: 24px;
-
-  /* Stacking — everything below the 1300+ the dialog manager assigns. */
-  --app-z-backdrop: 1199;
-  --app-z-sidebar: 1200;
-  --app-z-mascot: 1200;
-  --app-z-topbar: 1201;
-
-  --app-hover: rgba(0, 0, 0, 0.04);
-  --app-selected: rgba(0, 0, 0, 0.08);
-  /* The amber wash behind a fresh result — derived from the flame, not a literal, so it moves
-     with the palette. */
-  --app-flame-wash: rgba(217, 119, 6, 0.1);
-  /* Error pair, measured like the primary one: light mode carries white on the deep red
-     (4.66:1); dark mode's brighter red cannot carry white (3.68:1) and takes a dark ink. */
-  --app-error: #d32f2f;
-  --app-error-ink: #ffffff;
-  --app-error-hover: #b71c1c;
-}
-
-/* Dark mode */
-:root[data-color-scheme='dark'] {
-  --app-flame: #f59e0b;
-  --app-flame-edge: #b45309;
-  --app-body: #0f172a;
-  --app-body-edge: #334155;
-  --app-ink: #fbbf24;
-  --app-accent: #fbbf24;
-  --app-ring: #fbbf24;
-  --app-primary-hover: #fbbf24;
-
-  /* The mascot's body, not pure black: amber on #000 is a warning label, on slate dusk. */
-  --app-bg: #0f172a;
-  --app-paper: #111c30;
-  --app-text: #ffffff;
-  --app-text-secondary: rgba(255, 255, 255, 0.7);
-  --app-text-tertiary: rgba(255, 255, 255, 0.6);
-  --app-divider: rgba(255, 255, 255, 0.12);
-  --app-control-border: #757575;
-
-  --app-scrollbar-thumb: rgba(255, 255, 255, 0.12);
-
-  --app-hover: rgba(255, 255, 255, 0.08);
-  --app-selected: rgba(255, 255, 255, 0.16);
-  --app-flame-wash: rgba(245, 158, 11, 0.15);
-  --app-error: #f44336;
-  --app-error-ink: rgba(0, 0, 0, 0.87);
-  --app-error-hover: #ef5350;
-}
+@import './fonts.css';
+@import './tokens.system.css';
+@import './tokens.skin.css';
 
 /* ========== Baseline ========== */
-/* What CssBaseline used to provide, kept to the letter so nothing reflows when it goes: border-box
-   everywhere, a marginless body carrying the ground, the text ink and the type ramp's body size. */
 html {
   box-sizing: border-box;
   -webkit-text-size-adjust: 100%;
@@ -147,22 +25,45 @@ body {
   margin: 0;
   background: var(--app-bg);
   color: var(--app-text);
-  /* The system stack, not Roboto: the shell's own voice rather than a component library's — and
-     the same stack the copied-out templates already speak, so the app and its copyable assets
-     read as one product. (Roboto never shipped as a webfont here anyway.) */
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 1rem;
+  font-family: var(--app-font-body);
+  font-size: var(--app-text-md);
   font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0.00938em;
+  line-height: var(--app-lh-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Display sizes speak in the serif and tighten as they grow; the ramp sets the size, this sets
+   the voice. Weight stays at 500 — Newsreader's 600 is heavier than the drawing wants. */
+h1,
+h2,
+h3 {
+  font-family: var(--app-font-display);
+  font-weight: 500;
+  line-height: var(--app-lh-tight);
+  letter-spacing: var(--app-tracking-tight);
+  text-wrap: balance;
+}
+
+h4,
+h5,
+h6 {
+  font-family: var(--app-font-body);
+  font-weight: 600;
+  line-height: var(--app-lh-snug);
+  letter-spacing: normal;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--app-font-mono);
+}
+
 strong,
 b {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* ========== Scrollbars ========== */
@@ -186,7 +87,7 @@ b {
 
 *::-webkit-scrollbar-thumb {
   background-color: var(--app-scrollbar-thumb);
-  border-radius: 8px;
+  border-radius: var(--app-radius-md);
   border: 2px solid var(--app-scrollbar-track);
 }
 
@@ -195,15 +96,14 @@ b {
 }
 
 /* ========== Keyboard focus ========== */
-/* One keyboard focus ring, for everything. `ButtonBase` zeroes the UA outline and marks focus
-   with `.Mui-focusVisible`, which resolves to no visual change at all (measured: outline,
-   box-shadow, border, background and both pseudo-elements byte-identical focused and not).
-   Declared globally because the custom link surfaces are plain <a>; the 2px offset puts the
-   ring on the page rather than the control, which keeps it readable over the amber fill.
+/* One keyboard focus ring, for everything. Declared globally because the custom link surfaces are
+   plain <a>; the 2px offset puts the ring on the page rather than the control, which keeps it
+   readable over the amber fill.
 
-   `body ` is load-bearing: `.MuiButtonBase-root` zeroes the outline at the same specificity as
-   a bare `:focus-visible`, so the descendant selector is what lifts this above it — measured,
-   with the bare selector the plain links got a ring and every MUI button silently did not. */
+   `body ` is load-bearing: `.MuiButtonBase-root` zeroes the outline at the same specificity as a
+   bare `:focus-visible` and is injected later, so the descendant selector is what lifts this above
+   it. Measured — with the bare selector the plain links got a ring and every button inside the MUI
+   island silently did not. */
 body :focus-visible {
   outline: 2px solid var(--app-ring);
   outline-offset: 2px;
