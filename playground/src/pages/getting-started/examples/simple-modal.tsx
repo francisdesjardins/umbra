@@ -2,9 +2,9 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
+import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
-import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'simple';
 
@@ -48,7 +48,10 @@ export function SimpleModalExample() {
             </Shared.OverflowContainer>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button variant="primary" {...action('confirm')}>
+            {/* Claimed, because the container above overflows: `useScrollRegion` gives an
+                overflowing scroller its own Tab stop, and first in the DOM it wins the opening
+                focus — so the dialog would open on its reading area rather than its one button. */}
+            <Shared.Button variant="primary" {...action('confirm', { focusOnOpen: true })}>
               OK
             </Shared.Button>
           </MessageModal.Footer>

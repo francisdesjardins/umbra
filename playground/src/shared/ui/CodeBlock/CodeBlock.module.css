@@ -6,13 +6,18 @@
   position: relative;
 }
 
-/* Floats over the code on a translucent wash + blur. 5px padding keeps the 30px hit box. */
+/* Floats over the code on a translucent wash + blur, inset on the gutter the code itself uses
+   (`.scroll code` padding) — which is also what puts it under the viewer's Close on one axis,
+   the two being the only controls on that edge. Sized by the button, not padded past it: a
+   second opinion about how big "small" is is what took the two out of line. */
 .copyButton {
   position: absolute;
   top: var(--app-space-4);
-  right: var(--app-space-4);
+  right: var(--app-space-6);
   z-index: 1;
-  padding: 5px;
+  /* The border pays for itself out of the padding: nothing here declares a width, so a bare border
+     grows the button past the shell's 28px small and off the column it shares with Close. */
+  padding: calc(var(--app-space-1) - 1px);
   border: 1px solid var(--app-divider);
   background: var(--app-hover);
   color: var(--app-text-secondary);

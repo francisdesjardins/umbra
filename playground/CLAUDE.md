@@ -328,9 +328,9 @@ belonging to no category, so `/api` answers **500** — and `yarn check` cannot 
 route is generated at serve time. `node scripts/smoke-playground.mjs` against a running dev server
 is what catches it; that is the check to run before believing an example is done.
 
-`ExampleCard`'s `modalId` + `tryLabel` render a trigger **inside the source-code viewer**, not
-on the card itself — it lets you fire the example while reading its code. The button on the
-card comes from the example component's own `ExampleLayout` children.
+**The source-code viewer shows source and nothing else.** Its header is a title, the key and
+Close; a control that fires the example belongs on the card, where the example component's own
+`ExampleLayout` children already put it.
 
 ### Name the dialog
 

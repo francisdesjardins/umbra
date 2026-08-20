@@ -3,8 +3,6 @@ import { CodePaneContext, type CodePaneContextValue } from '@/shared/lib/code-pa
 
 export const CodePaneProvider = ({ children }: { children: ReactNode }) => {
   const [selectedExample, setSelectedExample] = useState<string | null>(null);
-  const [exampleActions, setExampleActions] =
-    useState<CodePaneContextValue['exampleActions']>(null);
   const [codeModalOpen, setCodeModalOpen] = useState<CodePaneContextValue['codeModalOpen']>(null);
 
   return (
@@ -12,8 +10,6 @@ export const CodePaneProvider = ({ children }: { children: ReactNode }) => {
       value={{
         selectedExample,
         setSelectedExample,
-        exampleActions,
-        setExampleActions,
         codeModalOpen,
         setCodeModalOpen,
       }}

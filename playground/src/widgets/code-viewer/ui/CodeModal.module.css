@@ -29,6 +29,7 @@
   align-items: center;
   gap: var(--app-space-3);
   flex: 1;
+  min-width: 0;
 }
 
 .title {
@@ -39,6 +40,15 @@
   /* Cap band, so the icon beside it lines up with the letters rather than with the descender room
      the serif reserves and this title never uses. */
   text-box: trim-both cap alphabetic;
+  /* Two words that must stay two words: wrapped, they double the header and squeeze the badge into
+     a hyphenated column. Narrow enough and the title yields rather than push Close off-screen. */
+  min-width: 0;
+  white-space: nowrap;
+  /* clip, not hidden: `text-box` above trims the box to the cap band, and `hidden` would clip the
+     letters to it. The margin gives the glyphs back the room the trim took. */
+  overflow: clip;
+  overflow-clip-margin: 0.2em;
+  text-overflow: ellipsis;
 }
 
 .keyBadge {
@@ -53,13 +63,19 @@
   font-size: var(--app-text-xs);
   letter-spacing: var(--app-tracking-label);
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--app-space-2);
-  align-items: center;
+/* Phone: the key is already the first thing the source shows, so the badge is the part to drop. */
+@media (max-width: 480px) {
+  .header {
+    padding-block: var(--app-space-3);
+  }
+
+  .keyBadge {
+    display: none;
+  }
 }
 
 .body {

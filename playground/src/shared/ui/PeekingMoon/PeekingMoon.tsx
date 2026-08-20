@@ -79,8 +79,23 @@ const responsiveSize = (viewportWidth: number) => {
 };
 
 /** Bounded off both viewport ends, so it never arrives clipped by an edge it is not leaning on. */
+const offsetBounds = (size: number) => {
+  const min = Math.max(20, size * 0.15);
+  return { min, max: Math.max(min, window.innerHeight - size * 1.15) };
+};
+
 const computeOffset = (size: number) => {
-  return Math.max(20, size * 0.15 + Math.random() * Math.max(1, window.innerHeight - size * 1.3));
+  const { min, max } = offsetBounds(size);
+  return min + Math.random() * (max - min);
+};
+
+/**
+ * A phone fires `resize` while you scroll, as the URL bar collapses and expands. Drawing a fresh
+ * offset there teleports the moon mid-peek, so a resize only pulls it back inside the bounds.
+ */
+const clampOffset = (offset: number, size: number) => {
+  const { min, max } = offsetBounds(size);
+  return Math.min(Math.max(offset, min), max);
 };
 
 const makeConfig = (prev: Config | undefined, size: number): Config => {
@@ -148,7 +163,12 @@ export const PeekingMoon = () => {
       sizeRef.current = next;
       setSize(next);
       setConfig((prev) => {
-        return prev ? { ...prev, offset: computeOffset(next) } : prev;
+        if (!prev) {
+          return prev;
+        }
+        const offset = clampOffset(prev.offset, next);
+        // Same object when nothing moved: a new one re-renders, re-emitting the keyframes in flight.
+        return offset === prev.offset ? prev : { ...prev, offset };
       });
     };
 

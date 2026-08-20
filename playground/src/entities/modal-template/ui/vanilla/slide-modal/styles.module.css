@@ -44,15 +44,22 @@
   min-width: min(320px, 100%);
   max-width: min(640px, 100%);
 }
+/* 300px is the same default as the 400px above, on the axis these two slide along — but a floor
+   rather than a fixed size: as a height it capped content that had room to grow, so a panel 26px
+   too short for its own text scrolled while most of the viewport stood empty. No `100%` beside it
+   the way the width has one: the dialog's height is indefinite, and a percentage against that
+   resolves to auto — which is the floor silently going missing, not a bound. */
 .slideTop {
   border-bottom: 1px solid var(--slide-border);
-  height: 300px;
-  max-height: 80dvh;
+  height: auto;
+  min-height: 300px;
+  max-height: min(80dvh, 100%);
 }
 .slideBottom {
   border-top: 1px solid var(--slide-border);
-  height: 300px;
-  max-height: 80dvh;
+  height: auto;
+  min-height: 300px;
+  max-height: min(80dvh, 100%);
 }
 
 /* ========== Header ========== */

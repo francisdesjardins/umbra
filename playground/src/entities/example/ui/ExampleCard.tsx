@@ -1,7 +1,4 @@
-import { dialogManager } from 'umbra/react';
 import type { ReactNode } from 'react';
-import { AppButton } from '@/shared/ui/AppButton';
-import { PlayArrowIcon } from '@/shared/ui/icons';
 import { SurfaceCard } from '@/shared/ui/SurfaceCard';
 import { ViewCodeButton } from '@/shared/ui/ViewCodeButton/ViewCodeButton';
 
@@ -11,8 +8,6 @@ type ExampleCardProps = {
   readonly codeKey?: string | undefined;
   readonly children?: ReactNode | undefined;
   readonly example?: ReactNode | undefined;
-  readonly modalId?: string | undefined;
-  readonly tryLabel?: string | undefined;
 };
 
 export const ExampleCard = ({
@@ -21,24 +16,7 @@ export const ExampleCard = ({
   codeKey,
   children,
   example,
-  modalId,
-  tryLabel = 'Try It',
 }: ExampleCardProps) => {
-  const tryButton = modalId ? (
-    <AppButton
-      variant="outlined"
-      size="small"
-      onClick={() => {
-        dialogManager.open(modalId);
-      }}
-    >
-      {/* Off-scale 18px: inline with the small button's label, not on the icon grid. */}
-      <PlayArrowIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
-      {tryLabel}
-    </AppButton>
-  ) : null;
-
-  const actions = tryButton ?? children;
   return (
     <SurfaceCard interactive>
       <div
@@ -68,7 +46,7 @@ export const ExampleCard = ({
           >
             {title}
           </h3>
-          {codeKey && <ViewCodeButton codeKey={codeKey} actions={actions} />}
+          {codeKey && <ViewCodeButton codeKey={codeKey} />}
         </div>
         {description && (
           <p

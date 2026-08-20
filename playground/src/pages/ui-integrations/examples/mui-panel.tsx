@@ -226,9 +226,12 @@ export function MuiPanelExample() {
             />
           </PanelModal.PanelHeader>
           <Divider />
+          {/* Pinned so the panel keeps one height across the three steps rather than resizing
+              under the reader — measured against the tallest, since a pin below that makes the
+              step scroll for no reason. The vh guard is for a phone shorter than the pin. */}
           <Shared.OverflowContainer
             sx={{
-              height: 350,
+              height: 'min(440px, 52vh)',
             }}
             overflowSx={{
               '& > div': {

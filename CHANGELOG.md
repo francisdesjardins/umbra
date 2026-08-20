@@ -9,6 +9,99 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-20
+
+### Fixed — the playground on a phone, and a source viewer that showed everything but source
+
+Five reports from a pass on a real phone, and four of them were one shape: a control the layout
+could not fit had been allowed to leave the box rather than make room.
+
+**The contained panel could not be closed.** Measured at 390px, the inspector's box ran y 575–793
+and its Close button y 795–831 — the whole control below the panel, clipped away by the host card's
+`overflow: hidden`. `marginTop: auto` on the hint above it is what pushed it out: with a fixed
+220px host there was no auto left to take. It is a three-part column now — header, a body that
+scrolls, and an action bar that does not — which is the shape a panel this size always wanted.
+
+**The code viewer's Close button was off-screen entirely**, starting at x=392 on a 390px viewport.
+Two causes. The header had no shrink path, so "Source Code" claimed its intrinsic width and the key
+badge hyphenated itself across two lines. And the header carried a third control: `exampleActions`
+piped each card's `modalId` + `tryLabel` trigger into the source panel, 154px of "Open the
+drawer" between the title and Close.
+
+**That button is gone rather than made to fit.** A viewer of source is a viewer of source; a control
+that fires the example belongs on the card, where the example's own `ExampleLayout` already puts
+one — verified for all 25 sites before removing it, every one of which renders its own opener. The
+prop is out of `ViewCodeButton`, the state out of `CodePaneProvider`, and `ExampleCard`'s
+`modalId`/`tryLabel` with them, since the viewer header was the only place they rendered.
+
+The remaining header now yields properly: `min-width: 0` down the flex chain, the title ellipsized,
+the badge hidden below 480px because the key is already the first thing the source itself shows.
+**`overflow: clip` with a clip margin, not `hidden`** — `text-box: trim-both cap alphabetic`
+trims the box to the cap band, and `hidden` clips the letters to it, which is a truncated title
+where a shrink path was wanted.
+
+**The Close button and the copy button share an edge and did not share a column** — 24px and 16px of
+inset, 28px and 32px wide. The copy button was padded 5px past the shell's small icon button "to
+keep the 30px hit box", which is a second opinion about how big small is. It is the plain small
+button now, inset on the same gutter the code itself uses, with the 1px border paid for out of the
+padding so nothing declares a width twice. Both boxes land at x=1388, 28×28.
+
+**Two loaders, in two containers, one after the other.** The lazy boundary was around the whole
+panel, so the first wait rendered a 28px spinner centred in a bare box and the second an 18px one in
+the body under a header that had just appeared. The boundary is around `CodeBlock` now — which is
+what actually pulls the highlighter — so the header paints on the first frame and both waits land in
+the same busy state. Confirmed against the built bundle: the highlighter is still absent from the
+entry chunk, which is the whole reason the lazy boundary exists.
+
+### Fixed — the same defect, swept for rather than waited for
+
+The palette's fixed height was one instance of a shape, so the shape got a sweep: every dialog in
+the playground opened at two viewports — **432 surfaces over ten routes** — and asked two questions
+neither the eye nor a unit test answers. Is any focusable control outside a clipping ancestor, and
+does anything scroll while its dialog is far short of the viewport?
+
+**No control anywhere else is clipped.** The contained panel was the only one, which is worth
+knowing: it means the fix above was a fix and not the first of twelve.
+
+Six lines came back: three the sweep was wrong about, two fixed below, one already known. The Simple
+Modal’s scroller (twice) is the example _demonstrating_ a scroller, and the contained inspector is
+bounded by a 220px host card rather than by the viewport the heuristic compared against. The known
+one is `/stories contained-overlay`, still 2px wide of its box — a 96px dialog around a button with
+a larger intrinsic width, judged and left in an earlier pass, and left again here.
+
+**Both step wizards were pinned below their own tallest step.** The vanilla panel capped its
+scroller at 310px with steps measuring 322, 339 and 328 — so every step scrolled, none of them
+because the content was long. The MUI one pinned 350px against a 431px step. Both are measured
+against the tallest step now, with a `vh` guard for a phone shorter than the pin, and the vanilla
+one moved from `max-height` to `height`: a cap still lets a short step shrink the panel, which is
+the resizing the pin exists to prevent. All three steps now render at one height and none scrolls —
+and on a 568px phone all of them scroll, which is the guard doing its job rather than the pin
+failing.
+
+**`focusRingRoom` widened its box past the dialog.** The reserve is `padding: 4px` with
+`margin: -4px`, which grows a full-width box by 8px — 3px of horizontal scrollbar in a 354px panel
+on a phone. It carries `max-width: 100%` now: reserve the ring, never outgrow the container.
+
+### Fixed — a mascot that teleported when you scrolled a phone
+
+`PeekingMoon`'s resize handler called `computeOffset`, and `computeOffset` calls
+`Math.random()`. On a desktop a resize is a deliberate act; on a phone the URL bar collapses and
+expands as you scroll, firing `resize` both ways — so scrolling drew the moon a new height, mid-peek,
+repeatedly. The bounds are extracted now and a resize **clamps** the offset it already has instead of
+drawing a fresh one, returning the same object when nothing moved so a no-op resize does not
+re-render and re-emit the per-visit keyframes in flight. Measured across six height-only resizes:
+one offset, `90.2733px`, unchanged.
+
+### Fixed — a dialog that opened focused on its reading area
+
+`useScrollRegion`'s own JSDoc says to pair it with `focusOnOpen` when the region sits first in the
+DOM; the Simple Modal example did not, and opened with the keyboard on `div[role="region"]` rather
+than its one button. It claims focus now.
+
+The rule is that pairing, not a blanket one: swept every `OverflowContainer` site and the other
+three are already right — the panel examples open on a real first control, and a form modal's first
+field _should_ win, so marking a button there would be the defect rather than the fix.
+
 ## 2026-08-19
 
 ### Tooling — typedoc off the playground build's critical path

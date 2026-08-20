@@ -1,33 +1,15 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
-import {
-  GATE_ID as COSMIC_GATE_ID,
-  CosmicOverrideExample,
-} from '@/pages/advanced/examples/cosmic-override';
-import {
-  PANEL_ID as CONTROLLED_PANEL_ID,
-  ControlledPanelExample,
-} from '@/pages/advanced/examples/controlled-panel';
+import { CosmicOverrideExample } from '@/pages/advanced/examples/cosmic-override';
+import { ControlledPanelExample } from '@/pages/advanced/examples/controlled-panel';
 import { DomEventsExample } from '@/pages/advanced/examples/dom-events';
-import {
-  LIST_ID as GROCERY_LIST_ID,
-  GroceryListExample,
-} from '@/pages/advanced/examples/grocery-list';
+import { GroceryListExample } from '@/pages/advanced/examples/grocery-list';
 import { ImperativeExample } from '@/pages/advanced/examples/imperative';
 import { OpenRequestExample } from '@/pages/advanced/examples/open-request';
-import {
-  MODAL_ID as OUTLET_DEMO_ID,
-  ModalOutletExample,
-} from '@/pages/advanced/examples/modal-outlet';
+import { ModalOutletExample } from '@/pages/advanced/examples/modal-outlet';
 import { ServiceLayerExample } from '@/pages/advanced/examples/service-layer';
 import { SsrWorkerExample } from '@/pages/advanced/examples/ssr-worker';
-import {
-  WARNING_ID as STACK_PRIORITY_WARNING_ID,
-  StackPriorityExample,
-} from '@/pages/advanced/examples/stack-priority';
-import {
-  PANEL_ID as STACK_PANEL_ID,
-  StackedModalsExample,
-} from '@/pages/advanced/examples/stacked-modals';
+import { StackPriorityExample } from '@/pages/advanced/examples/stack-priority';
+import { StackedModalsExample } from '@/pages/advanced/examples/stacked-modals';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SectionNav } from '@/shared/ui/SectionNav';
 
@@ -56,16 +38,12 @@ export const AdvancedPage = () => {
             title="One Escape, one modal"
             description="Three modals of different kinds, each rendered inside the one below it — which is how stacking actually happens, since a dialog in the top layer swallows every click outside itself. All three declare Enter with a different meaning, and only the level in front hears it. Press Escape three times and watch the stack unwind one modal per press."
             codeKey="stacked-modals"
-            modalId={STACK_PANEL_ID}
-            tryLabel="Start the stack"
             example={<StackedModalsExample />}
           />
           <ExampleCard
             title="Who is in front is a decision, not a race"
             description="A session warning is up when a deep link raises a panel. The panel's showModal() lands last, so the platform paints it in front and the warning ends up under its backdrop — inert, dimmed, and lost, while the user carries on with the thing the app was interrupting. Nothing threw. dialogManager.prioritize() installs one project-wide rule that says which kind of dialog outranks which; flip the switch while both are open and the warning comes back without the panel closing. Moving a modal dialog means closing and re-showing it, since the top layer paints in the order elements were added and ignores z-index between them. Both dialogs here are modal, which is what makes the order a decision at all — between a modal dialog and a non-modal one the platform has already settled it, and no policy reaches across that line."
             codeKey="stack-priority"
-            modalId={STACK_PRIORITY_WARNING_ID}
-            tryLabel="Session warning fires"
             example={<StackPriorityExample />}
           />
         </ExampleGrid>
@@ -93,8 +71,6 @@ export const AdvancedPage = () => {
             title="When the open is a prop"
             description="The shape most component-library call sites take, and the one where a dialog must not close itself: the boolean above it would still be true and the next render would put it straight back. The switch is the only truth here — Escape reports through onDismissRequest instead of closing, the footer action asks the same way, and reconcileOpen puts the dialog wherever the switch says, which is why an instruction from outside is undone. Non-modal is a requirement rather than a preference: a modal dialog's backdrop would put the switch out of reach."
             codeKey="controlled-panel"
-            modalId={CONTROLLED_PANEL_ID}
-            tryLabel="Open the panel"
             example={<ControlledPanelExample />}
           />
           <ExampleCard
@@ -121,8 +97,6 @@ export const AdvancedPage = () => {
             title="ModalOutlet"
             description="Wrap a subtree with ModalOutlet — inner useModal calls render automatically, no {modal.Modal} needed."
             codeKey="modal-outlet"
-            modalId={OUTLET_DEMO_ID}
-            tryLabel="Open Modal"
             example={<ModalOutletExample />}
           />
           <ExampleCard
@@ -150,16 +124,12 @@ export const AdvancedPage = () => {
             title="One flow, end to end"
             description="A panel that edits something, a confirm raised from inside it, an async action that fails about a third of the time, and a typed payload coming back out. The confirm is opened from inside the panel's render — not a style choice: a modal dialog swallows every click outside itself, so a trigger that must work while a modal is open has to live in that modal's tree. Both dialogs keep their own Escape and their own Enter."
             codeKey="grocery-list"
-            modalId={GROCERY_LIST_ID}
-            tryLabel="Open the list"
             example={<GroceryListExample />}
           />
           <ExampleCard
             title="Cosmic Override — everything you see is yours"
             description="The library contributes a <dialog>, a phase to animate on, a place to put it and a typed way out. Nothing else. This one overrides all of it: a restyled ::backdrop, custom entrance and exit transforms, a contained non-modal dialog answering to a sector of the page instead of the viewport (placed by dialogPlacement, read here as data), an Enter hotkey declared on the action, and an action error rendered in your own markup. It also opts into containFocus — a non-modal dialog gets no Tab trap from the platform, so without it the keyboard walks off Close and into the page behind."
             codeKey="cosmic-override"
-            modalId={COSMIC_GATE_ID}
-            tryLabel="Open the gate"
             example={<CosmicOverrideExample />}
           />
         </ExampleGrid>

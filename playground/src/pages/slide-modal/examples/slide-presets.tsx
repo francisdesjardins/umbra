@@ -208,10 +208,8 @@ function useInspectorPreset(
           style={{
             height: '100%',
             width: '100%',
-            padding: 16,
             display: 'flex',
             flexDirection: 'column',
-            gap: 8,
             background: 'var(--slide-bg)',
             color: 'var(--slide-text)',
             fontFamily: 'var(--font-family)',
@@ -219,15 +217,40 @@ function useInspectorPreset(
             boxShadow: 'var(--modal-shadow)',
           }}
         >
-          <Shared.Heading>{selected?.name ?? 'Details'}</Shared.Heading>
-          <Shared.Detail>{selected?.detail ?? '—'}</Shared.Detail>
-          <div style={{ marginTop: 'auto' }}>
+          <div
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              padding: 16,
+              paddingBottom: 8,
+            }}
+          >
+            <Shared.Heading>{selected?.name ?? 'Details'}</Shared.Heading>
+            <Shared.Detail>{selected?.detail ?? '—'}</Shared.Detail>
+          </div>
+
+          {/* The prose scrolls; the action bar below does not. A panel this size is a phone's
+              worth of room, and `marginTop: auto` pushed Close straight out of the host. */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 16px' }}>
             <Shared.Hint>
               Slides inside the card, not over the page — and the rows behind it stay clickable,
               because nothing entered the top layer. ↑ and ↓ switch rows while focus stays on Close.
             </Shared.Hint>
           </div>
-          <Shared.Button {...action('close', { focusOnOpen: true })}>Close</Shared.Button>
+
+          <div
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: 12,
+              borderTop: '1px solid var(--slide-border)',
+            }}
+          >
+            <Shared.Button {...action('close', { focusOnOpen: true })}>Close</Shared.Button>
+          </div>
         </div>
       );
     },

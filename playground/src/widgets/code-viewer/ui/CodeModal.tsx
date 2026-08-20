@@ -3,8 +3,8 @@ import { AppIconButton } from '@/shared/ui/AppButton';
 import { CloseIcon, CodeIcon } from '@/shared/ui/icons';
 import styles from '@/widgets/code-viewer/ui/CodeModal.module.css';
 import type { ModalHandle } from 'umbra/react';
-import type { ReactNode } from 'react';
-import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
+import { Suspense } from 'react';
+import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlockLazy';
 
 /**
  * Highlighter language by suffix — `-styles` (CSS modules), `-html` (the microfrontend host);
@@ -17,10 +17,28 @@ const languageForCodeKey = (codeKey: string) => {
   return codeKey.endsWith('-html') ? 'markup' : 'tsx';
 };
 
+/**
+ * The one busy state this panel has. Both waits land here — the source being fetched and the
+ * highlighter chunk arriving — because they are one wait to the reader, and two spinners handing
+ * off between two containers looks like a fault rather than a load.
+ */
+const Busy = () => {
+  return (
+    <div className={styles['emptyState']}>
+      {/* No live region: this unmounts when the code arrives, so a region on it would be born with
+          its text rather than updated, announcing nothing. The panel takes focus on open and is
+          named by its heading. */}
+      <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
+        <Spinner size={18} />
+      </span>
+      <span>Loading source…</span>
+    </div>
+  );
+};
+
 export const CodeModalContent = ({
   code,
   codeKey,
-  exampleActions,
   handle,
   isLoading,
   title,
@@ -28,7 +46,6 @@ export const CodeModalContent = ({
 }: {
   code: string;
   codeKey: string;
-  exampleActions: ReactNode;
   handle: ModalHandle;
   /** Still arriving — distinct from an empty `code`, which means the key names no sample. */
   isLoading: boolean;
@@ -46,7 +63,6 @@ export const CodeModalContent = ({
           </h2>
           <span className={styles['keyBadge']}>{codeKey}</span>
         </div>
-        {exampleActions && <div className={styles['actions']}>{exampleActions}</div>}
         <AppIconButton
           size="small"
           aria-label="Close"
@@ -60,18 +76,14 @@ export const CodeModalContent = ({
 
       <div className={styles['body']}>
         {code ? (
-          <CodeBlock code={code} language={languageForCodeKey(codeKey)} />
+          <Suspense fallback={<Busy />}>
+            <CodeBlock code={code} language={languageForCodeKey(codeKey)} />
+          </Suspense>
+        ) : isLoading ? (
+          <Busy />
         ) : (
           <div className={styles['emptyState']}>
-            {/* No live region: this branch unmounts when the code arrives, so a region on it would
-                be born with its text rather than updated, announcing nothing. The panel takes focus
-                on open and is named by its heading. */}
-            {isLoading && (
-              <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
-                <Spinner size={18} />
-              </span>
-            )}
-            <span>{isLoading ? 'Loading source…' : 'No code available'}</span>
+            <span>No code available</span>
           </div>
         )}
       </div>

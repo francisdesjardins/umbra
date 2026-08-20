@@ -371,7 +371,10 @@ export function VanillaPanelExample() {
           {/* Scroll inside the padded area, not around it: a scrollbar on the outer box runs the
               panel's rounded border; inset by the content padding it clears border and radius. */}
           <PanelModal.PanelContent>
-            <Shared.OverflowContainer style={{ maxHeight: 310 }}>
+            {/* Pinned so the panel keeps one height across the three steps rather than resizing
+                under the reader — measured against the tallest of them, since a pin below that
+                makes every step scroll. The vh guard is for a phone shorter than the pin. */}
+            <Shared.OverflowContainer style={{ height: 'min(340px, 42vh)' }}>
               {/* ── Step 1: Project Details ────────────────────── */}
               {setup.step === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

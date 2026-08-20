@@ -1,16 +1,15 @@
-import { Spinner } from '@/shared/ui/Spinner';
 import styles from '@/widgets/code-viewer/model/useCodeModal.module.css';
 import { useRouterState } from '@tanstack/react-router';
 import { useSlideModal } from 'umbra/react';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { useCodePane } from '@/shared/lib/code-pane-context';
-import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModalLazy';
+import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModal';
 
 /** Declared once and passed both ways, since the heading and the reference are in two files. */
 const CODE_VIEWER_TITLE_ID = 'code-viewer-title';
 
 export const useCodeModal = () => {
-  const { selectedExample, exampleActions } = useCodePane();
+  const { selectedExample } = useCodePane();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
@@ -33,25 +32,14 @@ export const useCodeModal = () => {
     render: ({ handle, isPreparing }) => {
       return (
         <div className={styles['panel']}>
-          <Suspense
-            fallback={
-              <div className={styles['fallback']}>
-                <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
-                  <Spinner size={28} />
-                </span>
-              </div>
-            }
-          >
-            <CodeModalContent
-              code={code}
-              codeKey={codeKey}
-              exampleActions={exampleActions}
-              handle={handle}
-              isLoading={isPreparing}
-              title="Source Code"
-              titleId={CODE_VIEWER_TITLE_ID}
-            />
-          </Suspense>
+          <CodeModalContent
+            code={code}
+            codeKey={codeKey}
+            handle={handle}
+            isLoading={isPreparing}
+            title="Source Code"
+            titleId={CODE_VIEWER_TITLE_ID}
+          />
         </div>
       );
     },

@@ -1,33 +1,12 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
-import { MODAL_ID as MUI_FORM_ID, MuiFormExample } from '@/pages/ui-integrations/examples/mui-form';
-import {
-  MODAL_ID as MUI_PANEL_ID,
-  MuiPanelExample,
-} from '@/pages/ui-integrations/examples/mui-panel';
-import {
-  MODAL_ID as MUI_MESSAGE_ID,
-  MuiMessageExample,
-} from '@/pages/ui-integrations/examples/mui-message';
-import {
-  MODAL_ID as MUI_SLIDE_ID,
-  MuiSlideExample,
-} from '@/pages/ui-integrations/examples/mui-slide';
-import {
-  MODAL_ID as VANILLA_FORM_ID,
-  VanillaFormExample,
-} from '@/pages/ui-integrations/examples/vanilla-form';
-import {
-  MODAL_ID as VANILLA_MESSAGE_ID,
-  VanillaMessageExample,
-} from '@/pages/ui-integrations/examples/vanilla-message';
-import {
-  MODAL_ID as VANILLA_PANEL_ID,
-  VanillaPanelExample,
-} from '@/pages/ui-integrations/examples/vanilla-panel';
-import {
-  MODAL_ID as VANILLA_SLIDE_ID,
-  VanillaSlideExample,
-} from '@/pages/ui-integrations/examples/vanilla-slide';
+import { MuiFormExample } from '@/pages/ui-integrations/examples/mui-form';
+import { MuiPanelExample } from '@/pages/ui-integrations/examples/mui-panel';
+import { MuiMessageExample } from '@/pages/ui-integrations/examples/mui-message';
+import { MuiSlideExample } from '@/pages/ui-integrations/examples/mui-slide';
+import { VanillaFormExample } from '@/pages/ui-integrations/examples/vanilla-form';
+import { VanillaMessageExample } from '@/pages/ui-integrations/examples/vanilla-message';
+import { VanillaPanelExample } from '@/pages/ui-integrations/examples/vanilla-panel';
+import { VanillaSlideExample } from '@/pages/ui-integrations/examples/vanilla-slide';
 import { MuiIsland } from '@/shared/ui/MuiIsland';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
@@ -47,14 +26,12 @@ export const UIIntegrationsPage = () => {
               title="Vanilla Message Modal"
               description="Same behavior using plain HTML and CSS modules, dark mode included."
               codeKey="vanilla-message"
-              modalId={VANILLA_MESSAGE_ID}
               example={<VanillaMessageExample />}
             />
             <ExampleCard
               title="MUI Message Modal"
               description="Confirmation modal with MUI components and keyboard actions."
               codeKey="mui-message"
-              modalId={MUI_MESSAGE_ID}
               example={<MuiMessageExample />}
             />
           </ExampleGrid>
@@ -69,14 +46,12 @@ export const UIIntegrationsPage = () => {
               title="Vanilla Slide Panel"
               description="Slide panel flow with no UI framework dependencies."
               codeKey="vanilla-slide"
-              modalId={VANILLA_SLIDE_ID}
               example={<VanillaSlideExample />}
             />
             <ExampleCard
               title="MUI Slide Panel"
               description="Right-side settings panel with Material UI controls."
               codeKey="mui-slide"
-              modalId={MUI_SLIDE_ID}
               example={<MuiSlideExample />}
             />
           </ExampleGrid>
@@ -91,14 +66,12 @@ export const UIIntegrationsPage = () => {
               title="Vanilla Form Modal"
               description="Framework-free form modal with validation feedback."
               codeKey="vanilla-form"
-              modalId={VANILLA_FORM_ID}
               example={<VanillaFormExample />}
             />
             <ExampleCard
               title="MUI Form Modal"
               description="User creation form using MUI fields and validation."
               codeKey="mui-form"
-              modalId={MUI_FORM_ID}
               example={<MuiFormExample />}
             />
           </ExampleGrid>
@@ -113,14 +86,12 @@ export const UIIntegrationsPage = () => {
               title="Vanilla Panel Wizard"
               description="The vanilla panel-modal templates, native select/radio/checkbox, a self-drawn chevron, and a native title where MUI ships a Tooltip."
               codeKey="vanilla-panel"
-              modalId={VANILLA_PANEL_ID}
               example={<VanillaPanelExample />}
             />
             <ExampleCard
               title="MUI Panel Wizard"
               description="MUI selects, radios, a Tooltip on the recommended-settings button, and the MUI panel templates."
               codeKey="mui-panel"
-              modalId={MUI_PANEL_ID}
               example={<MuiPanelExample />}
             />
           </ExampleGrid>

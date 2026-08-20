@@ -33,6 +33,11 @@ export const focusRingRoom = {
   padding: focusRingSpace,
   margin: `calc(-1 * ${focusRingSpace})`,
   /**
+   * The negative margin widens the box by twice the ring, which past a narrow dialog's edge is a
+   * horizontal scrollbar rather than breathing room — measured at +3px in a 354px panel.
+   */
+  maxWidth: '100%',
+  /**
    * The resting case is the padding; this is the scrolled one. Tabbing to a control below the fold
    * makes the browser scroll it into view flush against the edge, where the padding it would have
    * sat inside has scrolled away with it.
