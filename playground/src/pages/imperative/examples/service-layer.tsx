@@ -5,7 +5,7 @@ import {
   CONFIRM_MODAL_ID,
   FAILURE_MODAL_ID,
   deploymentService,
-} from '@/pages/advanced/examples/deployment-service';
+} from '@/pages/imperative/examples/deployment-service';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageModal } from 'umbra/react';
 import { useSyncExternalStore } from 'react';

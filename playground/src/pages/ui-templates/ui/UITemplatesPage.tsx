@@ -33,6 +33,24 @@ const MUI_GROUPS: readonly TemplateGroup[] = [
       { name: 'FieldError', codeKey: 'template-form-field-error' },
     ],
   },
+  {
+    title: 'Content atoms',
+    description: 'What the form pair renders inside its layout.',
+    items: [
+      { name: 'Heading', codeKey: 'template-shared-heading' },
+      { name: 'Detail', codeKey: 'template-shared-detail' },
+      { name: 'AlertContent', codeKey: 'template-shared-alert-content' },
+    ],
+  },
+  {
+    title: 'Utilities',
+    description:
+      'An MUI button carrying loading and hotkey-label support, and the sx merge helper.',
+    items: [
+      { name: 'Button', codeKey: 'template-shared-mui-button' },
+      { name: 'mergeSx / sxToObject', codeKey: 'template-util-sx-utils' },
+    ],
+  },
 ];
 
 const VANILLA_GROUPS: readonly TemplateGroup[] = [
@@ -137,6 +155,19 @@ const PATTERNS_GROUP: TemplateGroup = {
   ],
 };
 
+/** Template internals that render nothing, so they serve both flavours rather than either one. */
+const TEMPLATE_SHARED_GROUP: TemplateGroup = {
+  title: 'Template internals',
+  description:
+    'Under entities/modal-template/ui/shared: read by the vanilla families and the MUI one alike, which is why they are here rather than under a flavour.',
+  items: [
+    { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
+    { name: 'tokens', codeKey: 'template-util-tokens' },
+    { name: 'types', codeKey: 'template-util-types' },
+    { name: 'LoadingOverlay', codeKey: 'template-util-loading-overlay' },
+  ],
+};
+
 const PLAYGROUND_GROUP: TemplateGroup = {
   title: 'Playground components',
   description:
@@ -213,7 +244,7 @@ export const UITemplatesPage = () => {
       ? MUI_GROUPS
       : flavor === 'vanilla'
         ? VANILLA_GROUPS
-        : [PATTERNS_GROUP, PLAYGROUND_GROUP];
+        : [TEMPLATE_SHARED_GROUP, PATTERNS_GROUP, PLAYGROUND_GROUP];
 
   return (
     <PageLayout

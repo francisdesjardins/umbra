@@ -73,14 +73,44 @@ const slideModalRoute = createRoute({
   }, 'SlideModalPage'),
 });
 
-const advancedRoute = createRoute({
+const stackingRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
   },
-  path: '/advanced',
+  path: '/stacking',
   component: lazyRouteComponent(() => {
-    return import('@/pages/advanced');
-  }, 'AdvancedPage'),
+    return import('@/pages/stacking');
+  }, 'StackingPage'),
+});
+
+const imperativeRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/imperative',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/imperative');
+  }, 'ImperativePage'),
+});
+
+const interopRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/interop',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/interop');
+  }, 'InteropPage'),
+});
+
+const showcasesRoute = createRoute({
+  getParentRoute: () => {
+    return rootRoute;
+  },
+  path: '/showcases',
+  component: lazyRouteComponent(() => {
+    return import('@/pages/showcases');
+  }, 'ShowcasesPage'),
 });
 
 const microfrontendsRoute = createRoute({
@@ -150,7 +180,10 @@ const routeTree = rootRoute.addChildren([
   apiRoute,
   apiCategoryRoute,
   slideModalRoute,
-  advancedRoute,
+  stackingRoute,
+  imperativeRoute,
+  interopRoute,
+  showcasesRoute,
   microfrontendsRoute,
   uiIntegrationsRoute,
   uiTemplatesRoute,

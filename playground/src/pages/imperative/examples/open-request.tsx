@@ -5,7 +5,7 @@ import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-moda
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import { InfoIcon } from '@/shared/ui/icons';
-import styles from '@/pages/advanced/examples/open-request.module.css';
+import styles from '@/pages/imperative/examples/open-request.module.css';
 
 /** The `.input` recipe at card level — these fields sit on the shell's `--app-*` sheet. */
 const fieldStyle: CSSProperties = {

@@ -231,7 +231,7 @@ export const HomePage = () => {
               body: 'Open, render, close — and the typed reason that comes back.',
             },
             {
-              to: '/advanced',
+              to: '/showcases',
               phase: 'first-quarter',
               title: 'Stacking and focus',
               body: 'One Escape closes one modal; a shared hotkey fires at one level only.',

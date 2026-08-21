@@ -31,7 +31,7 @@ Reference UI in `src/entities/modal-template/ui/` — not exported from the libr
 
 ## Routing
 
-TanStack Router — routes: `/` (the landing page), `/getting-started`, `/modal-actions`, `/slide-modal`, `/advanced`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Defined in [router.tsx](../src/app/router.tsx).
+TanStack Router — routes: `/` (the landing page), `/getting-started`, `/modal-actions`, `/slide-modal`, `/stacking`, `/imperative`, `/interop`, `/showcases`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Defined in [router.tsx](../src/app/router.tsx).
 
 ## Conventions
 

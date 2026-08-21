@@ -1,7 +1,7 @@
 # Playground — Templates & Examples
 
 Interactive demo app, vanilla-first: the learning routes (`/getting-started`, `/modal-actions`,
-`/slide-modal`, `/advanced`) render their dialog interiors with the vanilla HTML/CSS templates —
+`/slide-modal`, `/stacking`) render their dialog interiors with the vanilla HTML/CSS templates —
 the library is headless, and the demos should not suggest it goes with a component library. MUI is
 the demonstrated _exception_, and one pair of it — the form modal, on `/ui-integrations` and in
 `/ui-templates`. One worked pair carries that claim; four charged four times the upkeep for it.
@@ -14,7 +14,7 @@ out of the root. Run `yarn install` once at the repo root to install both packag
 
 It consumes the library through the same public specifiers as any user: `umbra/react`
 for hooks and components, and `umbra` (the root) for anything that must work without
-React — see `pages/advanced/examples/deployment-service.ts`. Vite aliases both to `../src`.
+React — see `pages/imperative/examples/deployment-service.ts`. Vite aliases both to `../src`.
 
 **The app itself is React, and stays React** — and `umbra/solid` still costs it no second compiler.
 Two places reach it: the microfrontend frame, which has no build step at all (see below), and
@@ -147,22 +147,28 @@ Grouped in the sidebar; the order is the intended reading order.
 | Learn     | `/getting-started` | The core open → render → close loop                        |
 | Learn     | `/modal-actions`   | Action state: `hasRunningAction`, `error`, hotkeys         |
 | Patterns  | `/slide-modal`     | The four slide shapes as presets, and the toast            |
-| Patterns  | `/advanced`        | Stacking, imperative control, outlet, events, showcases    |
-| Patterns  | `/microfrontends`  | Four bindings, one manager, in a frame with no build step  |
+| Patterns  | `/stacking`        | Who is in front, and who owns the keyboard                 |
+| Patterns  | `/imperative`      | Opening and rendering from outside the component           |
+| Patterns  | `/interop`         | Foreign observers, and a render with no document           |
+| Patterns  | `/showcases`       | Whole flows, assembled                                     |
+| Patterns  | `/microfrontends`  | Four bindings, one manager, no build step                  |
 | Reference | `/ui-integrations` | The vanilla set, and one MUI pair that is the whole claim  |
 | Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
 | Reference | `/design-system`   | Penumbra, read live from the token sheet — never restated  |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |
 | Testing   | `/stories`         | Live `*.story.tsx` harnesses from the component test suite |
-| Testing   | `/warzone`         | Scratch surface — empty on purpose, see below              |
+| Testing   | `/warzone`         | Unlisted scratch surface, empty on purpose — see below     |
 
 ## `/warzone` is empty, and stays empty
 
-A scratch surface for building a flow against the core and watching it behave — a reproduction, a
-stacking arrangement nobody has tried, something being shown before it is worth a card. It is not a
-tenth demonstration, and it starts to become one the moment it explains itself, so what lands there
-is temporary by construction: prove the point, then take it apart. Anything worth keeping graduates
-to a real route with a card and a `codeSamples` entry.
+**Unlisted**, because a menu entry that rewards a click with nothing teaches every visitor that one
+item is not for them. Type the route.
+
+A scratch surface for building a flow against the core and watching it behave — a reproduction, an
+arrangement nobody has tried, something shown before it is worth a card. It starts becoming a
+demonstration the moment it explains itself, so what lands there is temporary by construction:
+prove the point, then take it apart. Anything worth keeping graduates to a real route with a card
+and a `codeSamples` entry.
 
 It renders the still `UmbraMoon` the landing page uses as its hero, so **`RootLayout` suppresses
 `PeekingMoon` on this route** for the same reason it does on `/` — a mascot whose joke is that it
@@ -310,11 +316,8 @@ Single file per example — component + "View Code" source.
    from `@/entities/example`. Use unique modal `id` values.
 2. **Register** the `?raw` import in
    [code-samples/examples.ts](src/widgets/code-viewer/model/code-samples/examples.ts) — a route's
-   own example always goes there. The samples are cut into three modules the viewer loads one of,
-   and **the cut is by where a sample comes from, not by how its key is spelled**: anything under
-   `entities/modal-template`, `shared/ui` or `shared/lib` goes in `templates.ts`, a `*.story.tsx`
-   in `stories.ts`. [codeSamples.ts](src/widgets/code-viewer/model/codeSamples.ts) is the selector
-   and needs no edit — it keys off the route, so there is no per-sample index to keep in step.
+   own example always goes there. Which of the three modules takes a sample, and why the selector
+   needs no edit, is on [codeSamples.ts](src/widgets/code-viewer/model/codeSamples.ts).
 3. **Add** an `<ExampleCard>` inside an `<ExampleSection>` on the route's page component.
 
 Step 3 is not optional. An example registered in `codeSamples` but not placed on a page is

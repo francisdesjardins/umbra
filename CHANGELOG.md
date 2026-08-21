@@ -11,6 +11,51 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-21
 
+### Changed — `/advanced` becomes four routes that name what they hold
+
+One route held a third of the playground: 11 examples and 2,199 lines, in four sections that were
+four unrelated subjects. The problem was never the size. **&ldquo;Advanced&rdquo; describes a
+difficulty, not a topic**, so nothing could ever be said not to belong there — which is how it
+filled up, and how it would have filled up again after any trim.
+
+| Route         | From                             | Holds                                            |
+| ------------- | -------------------------------- | ------------------------------------------------ |
+| `/stacking`   | Stacking, keyboard and focus     | Who is in front, and who owns the keyboard       |
+| `/imperative` | Imperative control + ModalOutlet | Opening and rendering from outside the component |
+| `/interop`    | DOM events, SSR worker           | Foreign observers, and a render with no document |
+| `/showcases`  | Showcases                        | Whole flows, assembled                           |
+
+Three notes on where the lines fell. **`ModalOutlet` went to `/imperative`** rather than to a
+templates page: it is the same decoupling asked about the render instead of the open, and the page
+carries it as its own section. **The interop route is not called `without-react`**, which is what
+the proposal said — the SSR example runs `react-dom/server`, so the name would have been false;
+what those two share is meeting something that is not your React tree. **`/microfrontends` stays
+its own route**: the frame is the widest thing here and four bindings sharing one registry is a
+peer of stacking, which is what `playground/CLAUDE.md` already argued.
+
+`/warzone` leaves the sidebar and keeps its route. A menu entry that rewards a click with nothing
+teaches every visitor that one item is not for them.
+
+### Fixed — nine code samples that had stopped being reachable
+
+Cutting Material UI to one pair took `MUI_GROUPS` down to the surviving family, and the atoms
+those families used went with it — registered in the viewer, listed on no page, invisible in the
+way the playground's own docs warn about. The three the form pair renders are back under the MUI
+tab, and four that render nothing moved to the **Shared** tab, where the rule already said they
+belonged: they are read by the vanilla families and the MUI one alike, so they were never a
+flavour's to own. 213 samples registered, 213 reachable.
+
+### On the DRY pass, which mostly did not happen
+
+Measured before changing anything, and the two obvious targets are both deliberate. The
+`createResultStore` + `useStore` preamble repeats in 17 examples because each example is read and
+copied on its own, and `useStore` is a library export those files exist to show — the factory's own
+JSDoc says to call it at module scope for exactly that reason. The shell's inline styles number 38
+against the examples' 136, and its most repeated one appears four times. Removing what duplication
+is left would buy indirection, not clarity.
+
+## 2026-08-21
+
 ### Fixed — a running Confirm that read as a dead black box
 
 The vanilla template's primary button lost its spinner while an action ran, most visibly in dark

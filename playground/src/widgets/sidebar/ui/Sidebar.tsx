@@ -1,5 +1,6 @@
 import {
   AutoAwesomeIcon,
+  CodeIcon,
   HubIcon,
   LocalFireDepartmentIcon,
   MenuBookIcon,
@@ -42,7 +43,10 @@ const NAV_GROUPS: readonly NavGroup[] = [
     label: 'Patterns',
     items: [
       { path: '/slide-modal', label: 'Slide Modals', icon: ViewSidebarIcon },
-      { path: '/advanced', label: 'Advanced', icon: TuneIcon },
+      { path: '/stacking', label: 'Stacking', icon: WidgetsIcon },
+      { path: '/imperative', label: 'Imperative Control', icon: TuneIcon },
+      { path: '/interop', label: 'Interop', icon: CodeIcon },
+      { path: '/showcases', label: 'Showcases', icon: LocalFireDepartmentIcon },
       { path: '/microfrontends', label: 'Microfrontends', icon: HubIcon },
     ],
   },
@@ -60,7 +64,6 @@ const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { path: '/stories', label: 'Test Harnesses', icon: ScienceIcon },
       // Deliberately last and deliberately empty — a scratch surface, not a tenth demonstration.
-      { path: '/warzone', label: 'Warzone', icon: LocalFireDepartmentIcon },
     ],
   },
 ];

@@ -13,19 +13,19 @@ import reactivDepsSrc from '@/pages/modal-actions/examples/reactive-deps.tsx?raw
 import perActionStateSrc from '@/pages/modal-actions/examples/per-action-state.tsx?raw';
 import slidePresetsSrc from '@/pages/slide-modal/examples/slide-presets.tsx?raw';
 import slideCornerToastSrc from '@/pages/slide-modal/examples/corner-toast.tsx?raw';
-import stackedModalsSrc from '@/pages/advanced/examples/stacked-modals.tsx?raw';
-import stackPrioritySrc from '@/pages/advanced/examples/stack-priority.tsx?raw';
-import serviceLayerSrc from '@/pages/advanced/examples/service-layer.tsx?raw';
-import ssrWorkerSrc from '@/pages/advanced/examples/ssr-worker.tsx?raw';
-import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.ts?raw';
-import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw';
-import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
-import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
+import stackedModalsSrc from '@/pages/stacking/examples/stacked-modals.tsx?raw';
+import stackPrioritySrc from '@/pages/stacking/examples/stack-priority.tsx?raw';
+import serviceLayerSrc from '@/pages/imperative/examples/service-layer.tsx?raw';
+import ssrWorkerSrc from '@/pages/interop/examples/ssr-worker.tsx?raw';
+import deploymentServiceSrc from '@/pages/imperative/examples/deployment-service.ts?raw';
+import cosmicOverrideSrc from '@/pages/showcases/examples/cosmic-override.tsx?raw';
+import domEventsSrc from '@/pages/interop/examples/dom-events.tsx?raw';
+import groceryListSrc from '@/pages/showcases/examples/grocery-list.tsx?raw';
 import vanillaPanelSrc from '@/pages/ui-integrations/examples/vanilla-panel.tsx?raw';
-import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
-import openRequestSrc from '@/pages/advanced/examples/open-request.tsx?raw';
-import controlledPanelSrc from '@/pages/advanced/examples/controlled-panel.tsx?raw';
-import modalOutletSrc from '@/pages/advanced/examples/modal-outlet.tsx?raw';
+import imperativeSrc from '@/pages/imperative/examples/imperative.tsx?raw';
+import openRequestSrc from '@/pages/imperative/examples/open-request.tsx?raw';
+import controlledPanelSrc from '@/pages/imperative/examples/controlled-panel.tsx?raw';
+import modalOutletSrc from '@/pages/imperative/examples/modal-outlet.tsx?raw';
 import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw';
 // The build behind the import map: not a file to copy, but the demo's subject — how three
 // independently-written scripts end up with one manager.

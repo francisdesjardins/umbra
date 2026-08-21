@@ -183,7 +183,7 @@ const flows = {
   /** The framework-agnostic service drives confirm → API → outcome without a component. */
   async service(page) {
     const checks = [];
-    await gotoRoute(page, '/advanced');
+    await gotoRoute(page, '/imperative');
     await page.getByRole('button', { name: 'Deploy to staging', exact: true }).click();
     await page.waitForTimeout(700);
     const confirm = (await page.locator('dialog[open]').first().textContent()) ?? '';

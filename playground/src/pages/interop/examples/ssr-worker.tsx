@@ -2,7 +2,7 @@ import { ExampleLayout } from '@/entities/example';
 import { AppButton } from '@/shared/ui/AppButton';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlock';
 import { CheckCircleIcon } from '@/shared/ui/icons';
-import styles from '@/pages/advanced/examples/ssr-worker.module.css';
+import styles from '@/pages/interop/examples/ssr-worker.module.css';
 import { useEffect, useRef, useState } from 'react';
 import { createElement } from 'react';
 import { hydrateRoot, type Root } from 'react-dom/client';
