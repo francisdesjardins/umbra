@@ -9,6 +9,22 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-21
+
+### Fixed — a running Confirm that read as a dead black box
+
+The vanilla template's primary button lost its spinner while an action ran, most visibly in dark
+mode, where the whole control went near-black. One cause with two halves: an action sets `disabled`
+while it runs, so `.button:disabled`'s `opacity: 0.5` and `.buttonPrimary:disabled`'s 50%-alpha fill
+both applied to a button that was busy, not unavailable. Composited on `#121212` the amber landed at
+`#442b0f`, and the spinner — drawn in `--color-primary-ink` `#0f172a`, the ink picked against the
+_full_ amber — sat on it at roughly 1.3:1. Invisible, on a fill dark enough to read as black.
+
+The dimming is split from the cursor now: `not-allowed` still belongs to every disabled button,
+`opacity: 0.5` and the faded fill only to `:not(.loading)`. A running action keeps full-strength
+chrome, so the spinner is back on the 5.5:1 pairing the file already documents. Measured in both
+schemes at 390px and 1440px; the genuinely-disabled case still fades exactly as it did.
+
 ## 2026-08-20
 
 ### Fixed — the playground on a phone, and a source viewer that showed everything but source
