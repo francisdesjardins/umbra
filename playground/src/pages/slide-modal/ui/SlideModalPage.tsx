@@ -16,7 +16,7 @@ export const SlideModalPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Drawer, sheet, palette, contained panel"
-            description="A right drawer is the default. A bottom sheet is the same options with one word changed. A command palette adds align: 'center', which makes the panel content-sized across the slide instead of full-bleed. The contained one is non-modal with no portal, so it answers to the dashed box rather than the viewport — and the page stays clickable while it is open."
+            description="A right drawer is the default; a bottom sheet is the same options with one word changed. A command palette adds align: 'center', which content-sizes the panel across the slide. The contained one is non-modal with no portal, so it answers to the dashed box rather than the viewport."
             codeKey="slide-presets"
             example={<SlidePresetsExample />}
           />
@@ -30,7 +30,7 @@ export const SlideModalPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Corner toast"
-            description="align: 'start' pins a content-sized panel to the top of the cross axis; non-modal + portal keeps the page interactive. The countdown pauses while the pointer is over it — which is both a courtesy and the proof that the panel really does receive the pointer. It is still named, and the two facts do not fight: role='status' with aria-live is what announces the toast without moving anyone, while the accessible name is for the other way in — the element stays in the accessibility tree, so a screen reader's virtual cursor can land on it minutes later, and an unnamed one is announced there as just a dialog."
+            description="The one case where the element and the intent disagree. align: 'start' pins a content-sized panel to the top; non-modal keeps the page live, which the pointer-pauses-the-countdown behaviour proves. It carries role='status' to announce itself and a name for the reader who finds it later."
             codeKey="slide-corner-toast"
             example={<SlideCornerToastExample />}
           />

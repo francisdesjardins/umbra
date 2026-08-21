@@ -36,7 +36,7 @@ export const ModalActionsPage = () => {
           />
           <ExampleCard
             title="Which button has the focus?"
-            description="showModal() focuses the first thing it finds — for a form, its first input, which is rarely what a confirmation wants and never what a destructive one wants. action('keep', { focusOnOpen: true }) moves the starting point, and the readout inside the modal names whatever actually holds focus. The first Delete fails on purpose: focus returns to the same button, because that is where the retry lives."
+            description="showModal() focuses the first thing it finds. On a destructive confirm that is Delete — a trap, with Enter already under the reader's finger. focusOnOpen moves the opening focus to the safe action, leaving tab and reading order alone."
             codeKey="focus-on-open"
             example={<FocusOnOpenExample />}
           />
@@ -48,7 +48,7 @@ export const ModalActionsPage = () => {
           />
           <ExampleCard
             title="Which action is running?"
-            description="Spreading an action's props gives that button data-loading, and for the button that is enough — but the header, the locked field and the notice are not that button, and hasRunningAction only tells them that something is running. action.isRunning('publish') is the same fact for everything else: publishing locks the release note, saving a draft leaves it editable, and every button is disabled either way."
+            description="Spreading an action's props gives that button data-loading and disables it while the handler runs. What the rest of the modal does with that is yours: this one keeps the field editable for a draft and locks it for a publish."
             codeKey="per-action-state"
             example={<PerActionStateExample />}
           />

@@ -29,7 +29,7 @@ export const MicrofrontendsPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Four microfrontends, four ways of writing one, one manager"
-            description="Checkout is umbra/react and owns checkout:receipt. Support is umbra/solid — the same call, the same options, the same return — and owns support:ticket. Billing is umbra/vanilla, the controller binding, over a <dialog> written by hand in the host page. Audit is a web component whose dialog lives in a shadow root, which is a different DOM tree rather than a different framework. None of them imports another; each asks the others with requestOpenAndWait, and the owner decides."
+            description="Checkout on umbra/react, Support on umbra/solid, Billing on umbra/vanilla over a hand-written <dialog>, and Audit as a web component behind a shadow root. None imports another: each asks with requestOpenAndWait, and the owner decides."
             codeKey="mfe-host-frame"
             example={<HostFrame />}
           />
@@ -63,22 +63,22 @@ export const MicrofrontendsPage = () => {
         <ExampleGrid columns={2}>
           <ExampleCard
             title="mfa1.js — Checkout, on the React binding"
-            description="createElement rather than JSX, because nothing compiles this file. It imports umbra from umbra, useModal from umbra/react and react from react — the package's real specifiers, which the host resolves to modules out of one build so there comes to be one manager and one React rather than several. onOpenRequest lets the others raise its dialog; requestOpen sends the other way. Its Enter hotkey and its opening focus work on a bare <button> with no wrapper — the props carry aria-keyshortcuts and data-focus-on-open, which is all either mechanism needs."
+            description="createElement rather than JSX, because nothing compiles this file. It writes the same umbra/react specifier a bundled app would, and the import map resolves it to the same module the other three got — which is the whole trick."
             codeKey="mfe-checkout"
           />
           <ExampleCard
             title="mfa3.js — Support, on the Solid binding"
-            description="Put this beside Checkout: the useModal call is the same one. Same options object, same render callback, same action factory spread onto a bare <button>, same typed close travelling back to whoever asked. What differs is underneath — nothing re-renders, and the live fields of an action's props are getters Solid subscribes to individually. h() rather than JSX for the same reason Checkout uses createElement: no build step runs on this page, and Solid's JSX is one."
+            description="Put this beside Checkout: the same useModal call, the same options, the same typed close. What differs is Solid's — live values arrive as getters, so the render args are read rather than destructured. Billing asks it for a ticket without knowing it is Solid."
             codeKey="mfe-support"
           />
           <ExampleCard
             title="mfa2.js — Billing, on the vanilla binding"
-            description="The third kind of binding: a controller, not a renderer. The <dialog> is written by hand in host.html and stays the page's; umbra/vanilla drives its lifecycle and bindAction turns two existing buttons into actions — close path, hotkey, and the disabled/loading sync a hook binding gets from a spread. A payload that crossed an ownership boundary is unknown until this side says otherwise, so it validates before it opens, and over the limit it refuses and passes the conversation to Support, which it has never heard of."
+            description="The third kind of binding: a controller, not a renderer. The <dialog> is hand-written in host.html and this file drives it — bindDialog for the lifecycle, bindAction for a button, with disabled and aria-busy kept in step. The binding a page with no framework reaches for."
             codeKey="mfe-billing"
           />
           <ExampleCard
             title="mfa4.js — Audit, a web component behind a shadow root"
-            description="The other three prove the core is indifferent to the framework; this one asked whether it is indifferent to the tree — and the answer, twice, was no. A shadow root changes what document.activeElement reports and which stylesheets apply, so a dialog in a web component was getting the browser's backdrop instead of the library's, and a failed action handed focus to the dialog rather than back to the button. Both are fixed in the core, and its Escalate button still throws on purpose so the second one stays visible."
+            description="The other three prove the core does not care which framework; this one asked whether it cares which tree — and twice the answer was no. A shadow root changes what document.activeElement reports and which stylesheets apply, and both broke the core. Escalate throws on purpose: a failing action is how the focus restore gets exercised."
             codeKey="mfe-audit"
           />
         </ExampleGrid>

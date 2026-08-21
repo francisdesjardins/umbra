@@ -11,7 +11,7 @@ export const StackingPage = () => {
     >
       <ExampleSection
         title="Stacking, keyboard and focus"
-        description="A modal opened from inside another renders its <dialog> in that one's subtree, so every event bubbles through the modal underneath; the library scopes them back, which is what makes one Escape close one modal and a shared hotkey fire at one level only. Order is the other half, and it is not a z-index question — the top layer paints in the order elements were added and no z-index reaches between them, so deciding who is in front is a policy rather than a number."
+        description="Two questions the platform answers badly on its own: which modal hears the keyboard, and which one is in front. Neither is a z-index problem."
       >
         <ExampleGrid columns={1}>
           <ExampleCard
@@ -22,7 +22,7 @@ export const StackingPage = () => {
           />
           <ExampleCard
             title="Who is in front is a decision, not a race"
-            description="A session warning is up when a deep link raises a panel. The panel's showModal() lands last, so the platform paints it in front and the warning ends up under its backdrop — inert, dimmed, and lost, while the user carries on with the thing the app was interrupting. Nothing threw. dialogManager.prioritize() installs one project-wide rule that says which kind of dialog outranks which; flip the switch while both are open and the warning comes back without the panel closing. Moving a modal dialog means closing and re-showing it, since the top layer paints in the order elements were added and ignores z-index between them. Both dialogs here are modal, which is what makes the order a decision at all — between a modal dialog and a non-modal one the platform has already settled it, and no policy reaches across that line."
+            description="A session warning is up when a deep link raises a panel. The panel shows last, so the platform puts it in front and the warning goes under its backdrop — inert, dimmed, and lost. Nothing threw. Flip the switch to install a prioritize() rule and the warning comes back without the panel closing."
             codeKey="stack-priority"
             example={<StackPriorityExample />}
           />

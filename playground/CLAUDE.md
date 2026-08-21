@@ -378,9 +378,9 @@ Keep the **UI Templates** page (`src/pages/ui-templates/ui/UITemplatesPage.tsx`)
 
 1. Add the `?raw` import in `code-samples/templates.ts` — that module is this page's group. Key
    convention: `template-<group>-<name>` for MUI, `vanilla-<group>-<name>` for vanilla,
-   `shared-component-<name>` for playground UI. **The key is a label, not the routing**: the three
-   `/ui-integrations` examples are keyed `vanilla-form`, `vanilla-message`, `vanilla-slide` and
-   belong in `examples.ts`, because what decides the module is the path the source is read from.
+   `shared-component-<name>` for playground UI. **The key is a label, not the routing**: `vanilla-form` is
+   a `/ui-integrations` example and belongs in `examples.ts`, because what decides the module is
+   the path the source is read from.
 2. Add the entry to the matching group in `MUI_GROUPS`, `VANILLA_GROUPS`, or — if it renders
    nothing and therefore works under either flavour — `PATTERNS_GROUP`, which the **Shared** tab
    shows alongside `PLAYGROUND_GROUP`. Three tabs, and the third is the honest home for

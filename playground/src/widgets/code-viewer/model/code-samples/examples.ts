@@ -21,7 +21,7 @@ import deploymentServiceSrc from '@/pages/imperative/examples/deployment-service
 import cosmicOverrideSrc from '@/pages/showcases/examples/cosmic-override.tsx?raw';
 import domEventsSrc from '@/pages/interop/examples/dom-events.tsx?raw';
 import groceryListSrc from '@/pages/showcases/examples/grocery-list.tsx?raw';
-import vanillaPanelSrc from '@/pages/ui-integrations/examples/vanilla-panel.tsx?raw';
+import vanillaPanelSrc from '@/pages/showcases/examples/vanilla-panel.tsx?raw';
 import imperativeSrc from '@/pages/imperative/examples/imperative.tsx?raw';
 import openRequestSrc from '@/pages/imperative/examples/open-request.tsx?raw';
 import controlledPanelSrc from '@/pages/imperative/examples/controlled-panel.tsx?raw';
@@ -31,8 +31,6 @@ import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw'
 // independently-written scripts end up with one manager.
 import mfeDistributionSrc from '../../../../../vite-plugins/mfe-umbra.ts?raw';
 import muiFormSrc from '@/pages/ui-integrations/examples/mui-form.tsx?raw';
-import vanillaMessageSrc from '@/pages/ui-integrations/examples/vanilla-message.tsx?raw';
-import vanillaSlideSrc from '@/pages/ui-integrations/examples/vanilla-slide.tsx?raw';
 import vanillaFormSrc from '@/pages/ui-integrations/examples/vanilla-form.tsx?raw';
 import {
   audit as mfeAuditSrc,
@@ -75,7 +73,5 @@ export const examples: Record<string, string> = {
   'mfe-audit': mfeAuditSrc,
   'mfe-distribution': mfeDistributionSrc,
   'mui-form': muiFormSrc,
-  'vanilla-message': vanillaMessageSrc,
-  'vanilla-slide': vanillaSlideSrc,
   'vanilla-form': vanillaFormSrc,
 };

@@ -11,6 +11,36 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-21
 
+### Removed — two examples that taught what another route already taught
+
+`/ui-integrations` existed to pair each template family against its Material UI twin. With three of
+the four twins gone, the vanilla halves stopped being halves of anything — and measured against the
+routes that own those subjects, two were duplicates outright.
+
+- **`vanilla-slide`** is a strict subset of `slide-presets`: one `direction: 'right'` against four
+  directions, `align`, `nonModal` and `portal`.
+- **`vanilla-message`** teaches what `delete-item-modal` teaches — same `useMessageModal`, same
+  `action('cancel', { hotkey })` beside an async `action('delete')`, same `simulateApiCall`, same
+  failure alert. The other one adds `role: 'alertdialog'`.
+
+The panel wizard is not a duplicate — it is the only worked example of the panel-modal family
+anywhere — so it moved to `/showcases`, where a three-step flow with a stepper belongs. What is left
+on `/ui-integrations` is the form pair and nothing else, which is the page's whole claim.
+
+### Changed — the card descriptions were essays
+
+Measured across every page: **3,130 words** of description prose, 18 of them over 60 words and one
+at 142. A card is a doorway — it says what you are looking at and why to click — and a 142-word
+paragraph asks the reader to finish the lesson before starting it.
+
+Rewritten to **2,249 words**, the longest now 60, **nothing over 60** where 18 were. The median is
+unchanged at 32, because the short ones were already right and were left alone; what came down is
+the tail. No information was deleted that the example's own source does not already carry — the code
+viewer is one click away and the mechanism belongs there.
+
+Two things the measurement also ruled out: **no sentence appears on more than one route**, and no
+four-word phrase is used three times. The prose was long, not copy-pasted.
+
 ### Changed — `/advanced` becomes four routes that name what they hold
 
 One route held a third of the playground: 11 examples and 2,199 lines, in four sections that were
