@@ -25,11 +25,11 @@ export function OpenRequestHarness() {
         payload === null ||
         typeof (payload as { id?: unknown }).id !== 'number'
       ) {
-        note(`refusée (${from})`);
+        note(`refused (${from})`);
         return;
       }
       setAccepted((payload as { id: number }).id);
-      note(`acceptée (${from})`);
+      note(`accepted (${from})`);
       void modal.open();
     },
     render: ({ action }) => {
@@ -79,7 +79,7 @@ function Caller() {
         }}
         type="button"
       >
-        Demander (valide)
+        Request (valid)
       </button>
       <button
         data-testid="ask-invalid"
@@ -88,7 +88,7 @@ function Caller() {
         }}
         type="button"
       >
-        Demander (invalide)
+        Request (invalid)
       </button>
       <button
         data-testid="instruct"
@@ -97,7 +97,7 @@ function Caller() {
         }}
         type="button"
       >
-        Ordonner (l’autre porte)
+        Instruct (the other door)
       </button>
     </div>
   );
@@ -124,7 +124,7 @@ export function RefusesEverythingHarness() {
         }}
         type="button"
       >
-        Demander
+        Request
       </button>
       <button
         data-testid="instruct"
@@ -133,7 +133,7 @@ export function RefusesEverythingHarness() {
         }}
         type="button"
       >
-        Ordonner
+        Instruct
       </button>
       {modal.Modal}
     </div>

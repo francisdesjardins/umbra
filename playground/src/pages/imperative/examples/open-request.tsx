@@ -96,16 +96,16 @@ export function OpenRequestExample() {
           <MessageModal.Header>
             <MessageModal.Icon variant="warning" />
             <MessageModal.Title id="open-request-demo-title">
-              Archiver la salle {room}?
+              Archive room {room}?
             </MessageModal.Title>
           </MessageModal.Header>
           <MessageModal.Content>
             <Shared.Detail>
-              Ouverte par une demande venue d’ailleurs, que ce dialogue a validée avant d’accepter.
+              Opened by a request from elsewhere, which this dialog validated before accepting.
             </Shared.Detail>
           </MessageModal.Content>
           <MessageModal.Footer>
-            <Shared.Button {...action('cancel')}>Annuler</Shared.Button>
+            <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
               {...action('confirm', (close) => {
@@ -113,7 +113,7 @@ export function OpenRequestExample() {
                 close({ room: room ?? '—', archivedAt: new Date().toISOString() });
               })}
             >
-              Archiver
+              Archive
             </Shared.Button>
           </MessageModal.Footer>
         </MessageModal.DefaultLayout>
@@ -139,22 +139,22 @@ export function OpenRequestExample() {
       context: { source },
     });
     if (!outcome.accepted) {
-      setLog(`Refusée — ${outcome.reason}`);
+      setLog(`Refused — ${outcome.reason}`);
       return;
     }
-    setLog('Acceptée — en attente de la fermeture…');
+    setLog('Accepted — waiting for the close…');
     // Opt-in second half: the decision settles now, the close when the user is done.
     const [, result] = await outcome.closed;
     if (result === null) {
-      setLog('Le dialogue a disparu avant de répondre');
+      setLog('The dialog vanished before it answered');
       return;
     }
     if (!isArchiveReceipt(result.data)) {
       // Not an error — 'cancel' and 'dismiss' close with no payload at all.
-      setLog(`Fermée sans reçu : ${result.reason}`);
+      setLog(`Closed with no receipt: ${result.reason}`);
       return;
     }
-    setLog(`Salle ${result.data.room} archivée à ${result.data.archivedAt}`);
+    setLog(`Room ${result.data.room} archived at ${result.data.archivedAt}`);
   };
 
   return (
@@ -196,8 +196,8 @@ export function OpenRequestExample() {
         <div className={styles['banner']}>
           <InfoIcon className={styles['bannerIcon']} aria-hidden="true" />
           <p className={styles['bannerText']}>
-            Acceptée seulement si <code>source</code> est <code>shell:nav</code> ou{' '}
-            <code>deep-link</code> et que <code>data</code> porte une <code>room</code> non vide.
+            Accepted only if <code>source</code> is <code>shell:nav</code> or <code>deep-link</code>{' '}
+            and <code>data</code> carries a non-empty <code>room</code>.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--app-space-2)' }}>
@@ -208,7 +208,7 @@ export function OpenRequestExample() {
             size="small"
             variant="contained"
           >
-            Demander l’ouverture
+            Request the open
           </AppButton>
           <AppButton
             onClick={() => {
@@ -219,7 +219,7 @@ export function OpenRequestExample() {
             size="small"
             variant="contained"
           >
-            Ordonner (open)
+            Instruct (open)
           </AppButton>
         </div>
       </div>

@@ -52,6 +52,9 @@ export const ExampleCard = ({
           <p
             style={{
               margin: '0 0 var(--app-space-6)',
+              // The same measure `PageLayout` holds its own prose to. A full-width card runs 98
+              // characters to the line without it, which is past where the eye finds the next one.
+              maxWidth: 'var(--app-measure)',
               fontSize: 'var(--app-text-md)',
               lineHeight: 1.6,
               color: 'var(--app-text-secondary)',

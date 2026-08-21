@@ -24,7 +24,8 @@
 
 .description {
   margin: var(--app-space-1) 0 0;
-  max-width: 680px;
+  /* The measure, not a pixel count: the page heading and the cards hold the same one. */
+  max-width: var(--app-measure);
   font-size: var(--app-text-md);
   line-height: var(--app-lh-body);
   color: var(--app-text-secondary);

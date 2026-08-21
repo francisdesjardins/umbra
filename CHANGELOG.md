@@ -11,6 +11,31 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-21
 
+### Fixed — one example was in French, and card prose ran to 98 characters
+
+A visual pass over the routes, in both themes at desktop and phone.
+
+**`open-request` was written in French** — its dialog title, body, both buttons, the banner and
+every log line — on a site that is otherwise entirely English. So was the CT harness behind it,
+which also renders on `/stories`. Twenty strings translated. Two component assertions read the
+French back (`acceptée (mfa1)`) and were updated with them.
+
+**Card descriptions had no measure.** `PageLayout` holds its prose to `--app-measure`, and a card
+in a one-column grid held its to nothing: **98 characters to the line** against the header's 67,
+measured on `/interop` at 1440px. Cards take the measure now, and so do section descriptions —
+which had been carrying a hardcoded `680px`, a third prose width on the same page. All three read
+67ch.
+
+That one had a second effect worth naming: narrower prose wraps taller, so the cards in a row even
+out on their own. The dead space inside `/imperative`'s lightest card fell from roughly 280px to
+nothing without touching the layout.
+
+**Not fixed, and deliberately.** Cards in a row still match height, because `SurfaceCard` is
+`height: 100%` so that every **Result** box lines up across the row. Where a three-line card sits
+beside one holding two inputs, that trade shows. `align-items: start` on the grid was tried and
+does nothing — the card sizes itself, not the row — and reordering cards to balance their pixels
+would break the order they teach in.
+
 ### Removed — two examples that taught what another route already taught
 
 `/ui-integrations` existed to pair each template family against its Material UI twin. With three of

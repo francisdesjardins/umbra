@@ -17,7 +17,7 @@ test.describe('a dialog asked to open by someone else', () => {
 
     await component.getByTestId('ask-valid').click();
 
-    await expect(component.getByTestId('trail')).toHaveText('acceptée (mfa1)');
+    await expect(component.getByTestId('trail')).toHaveText('accepted (mfa1)');
     await expect(component.getByTestId('phase')).toHaveText('open');
     // Set by the handler before it opened: the dialog renders once with the data, not empty.
     await expect(component.getByTestId('accepted')).toHaveText('42');
@@ -30,7 +30,7 @@ test.describe('a dialog asked to open by someone else', () => {
     await component.getByTestId('ask-invalid').click();
     await component.page().waitForTimeout(SETTLED_MS);
 
-    await expect(component.getByTestId('trail')).toHaveText('refusée (mfa1)');
+    await expect(component.getByTestId('trail')).toHaveText('refused (mfa1)');
     await expect(component.getByTestId('phase')).toHaveText('closed');
     await expect(page.locator('dialog[data-modal-id="asked"]')).toBeHidden();
   });
