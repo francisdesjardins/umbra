@@ -21,7 +21,6 @@ import deploymentServiceSrc from '@/pages/advanced/examples/deployment-service.t
 import cosmicOverrideSrc from '@/pages/advanced/examples/cosmic-override.tsx?raw';
 import domEventsSrc from '@/pages/advanced/examples/dom-events.tsx?raw';
 import groceryListSrc from '@/pages/advanced/examples/grocery-list.tsx?raw';
-import muiPanelSrc from '@/pages/ui-integrations/examples/mui-panel.tsx?raw';
 import vanillaPanelSrc from '@/pages/ui-integrations/examples/vanilla-panel.tsx?raw';
 import imperativeSrc from '@/pages/advanced/examples/imperative.tsx?raw';
 import openRequestSrc from '@/pages/advanced/examples/open-request.tsx?raw';
@@ -31,8 +30,6 @@ import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw'
 // The build behind the import map: not a file to copy, but the demo's subject — how three
 // independently-written scripts end up with one manager.
 import mfeDistributionSrc from '../../../../../vite-plugins/mfe-umbra.ts?raw';
-import muiMessageSrc from '@/pages/ui-integrations/examples/mui-message.tsx?raw';
-import muiSlideSrc from '@/pages/ui-integrations/examples/mui-slide.tsx?raw';
 import muiFormSrc from '@/pages/ui-integrations/examples/mui-form.tsx?raw';
 import vanillaMessageSrc from '@/pages/ui-integrations/examples/vanilla-message.tsx?raw';
 import vanillaSlideSrc from '@/pages/ui-integrations/examples/vanilla-slide.tsx?raw';
@@ -65,7 +62,6 @@ export const examples: Record<string, string> = {
   'cosmic-override': cosmicOverrideSrc,
   'dom-events': domEventsSrc,
   'grocery-list': groceryListSrc,
-  'mui-panel': muiPanelSrc,
   'vanilla-panel': vanillaPanelSrc,
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
@@ -78,8 +74,6 @@ export const examples: Record<string, string> = {
   'mfe-support': mfeSupportSrc,
   'mfe-audit': mfeAuditSrc,
   'mfe-distribution': mfeDistributionSrc,
-  'mui-message': muiMessageSrc,
-  'mui-slide': muiSlideSrc,
   'mui-form': muiFormSrc,
   'vanilla-message': vanillaMessageSrc,
   'vanilla-slide': vanillaSlideSrc,

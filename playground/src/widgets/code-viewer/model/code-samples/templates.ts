@@ -2,39 +2,14 @@
  * The copy-paste catalogue behind `/ui-templates`: both template flavours, the playground's shared
  * components, and the `shared/lib` patterns the Shared tab lists. Split off — see `codeSamples.ts`.
  */
-import templateMsgCreateTextSrc from '@/entities/modal-template/ui/mui/create-text-message-modal.tsx?raw';
-import templateMsgDefaultContainerSrc from '@/entities/modal-template/ui/mui/message-modal/components/DefaultContainer.tsx?raw';
-import templateMsgDefaultLayoutSrc from '@/entities/modal-template/ui/mui/message-modal/components/DefaultLayout.tsx?raw';
-import templateMsgHeaderSrc from '@/entities/modal-template/ui/mui/message-modal/components/Header.tsx?raw';
-import templateMsgTitleSrc from '@/entities/modal-template/ui/mui/message-modal/components/Title.tsx?raw';
-import templateMsgIconSrc from '@/entities/modal-template/ui/mui/message-modal/components/Icon.tsx?raw';
-import templateMsgContentSrc from '@/entities/modal-template/ui/mui/message-modal/components/Content.tsx?raw';
-import templateMsgFooterSrc from '@/entities/modal-template/ui/mui/message-modal/components/Footer.tsx?raw';
-import templateSlideDefaultLayoutSrc from '@/entities/modal-template/ui/mui/slide-modal/components/DefaultLayout.tsx?raw';
-import templateSlideTitleSrc from '@/entities/modal-template/ui/mui/slide-modal/components/Title.tsx?raw';
-import templateSlideContentSrc from '@/entities/modal-template/ui/mui/slide-modal/components/Content.tsx?raw';
-import templateSlideFooterSrc from '@/entities/modal-template/ui/mui/slide-modal/components/Footer.tsx?raw';
-import templateSlideHeaderSrc from '@/entities/modal-template/ui/mui/slide-modal/components/Header.tsx?raw';
 import templateFormFormLayoutSrc from '@/entities/modal-template/ui/mui/form-modal/components/FormLayout.tsx?raw';
 import templateFormHeaderSrc from '@/entities/modal-template/ui/mui/form-modal/components/Header.tsx?raw';
 import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
 import templateFormFooterSrc from '@/entities/modal-template/ui/mui/form-modal/components/Footer.tsx?raw';
 import templateFormFieldErrorSrc from '@/entities/modal-template/ui/mui/form-modal/components/FieldError.tsx?raw';
-import templatePanelPanelContainerSrc from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContainer.tsx?raw';
-import templatePanelPanelHeaderSrc from '@/entities/modal-template/ui/mui/panel-modal/components/PanelHeader.tsx?raw';
-import templatePanelHeaderActionLayoutSrc from '@/entities/modal-template/ui/mui/panel-modal/components/HeaderActionLayout.tsx?raw';
-import templatePanelPanelContentSrc from '@/entities/modal-template/ui/mui/panel-modal/components/PanelContent.tsx?raw';
-import templatePanelPanelFooterSrc from '@/entities/modal-template/ui/mui/panel-modal/components/PanelFooter.tsx?raw';
 import templateSharedHeadingSrc from '@/entities/modal-template/ui/mui/shared/content/Heading.tsx?raw';
-import templateSharedMessageSrc from '@/entities/modal-template/ui/mui/shared/content/Message.tsx?raw';
 import templateSharedDetailSrc from '@/entities/modal-template/ui/mui/shared/content/Detail.tsx?raw';
-import templateSharedDetailListSrc from '@/entities/modal-template/ui/mui/shared/content/DetailList.tsx?raw';
-import templateSharedHintSrc from '@/entities/modal-template/ui/mui/shared/content/Hint.tsx?raw';
 import templateSharedAlertContentSrc from '@/entities/modal-template/ui/mui/shared/content/AlertContent.tsx?raw';
-import templateSharedSectionSrc from '@/entities/modal-template/ui/mui/shared/content/Section.tsx?raw';
-import templateSharedOverflownTypographySrc from '@/entities/modal-template/ui/mui/shared/content/OverflownTypography.tsx?raw';
-import templateSharedOverflowContainerSrc from '@/entities/modal-template/ui/mui/shared/content/OverflowContainer.tsx?raw';
-import templateSharedContentTransitionSrc from '@/entities/modal-template/ui/mui/shared/content/ContentTransition.tsx?raw';
 import templateSharedMuiButtonSrc from '@/entities/modal-template/ui/mui/shared/MuiButton.tsx?raw';
 import templateUtilSxUtilsSrc from '@/entities/modal-template/ui/mui/shared/sxUtils.ts?raw';
 import templateUtilScrollRegionSrc from '@/entities/modal-template/ui/shared/scroll-region.ts?raw';
@@ -102,39 +77,14 @@ import sharedLibImmerStoreSrc from '@/shared/lib/immer-store.ts?raw';
 import sharedComponentResultDisplaySrc from '@/shared/ui/ResultDisplay/ResultDisplay.tsx?raw';
 
 export const templates: Record<string, string> = {
-  'template-msg-create-text': templateMsgCreateTextSrc,
-  'template-msg-default-container': templateMsgDefaultContainerSrc,
-  'template-msg-default-layout': templateMsgDefaultLayoutSrc,
-  'template-msg-header': templateMsgHeaderSrc,
-  'template-msg-title': templateMsgTitleSrc,
-  'template-msg-icon': templateMsgIconSrc,
-  'template-msg-content': templateMsgContentSrc,
-  'template-msg-footer': templateMsgFooterSrc,
-  'template-slide-default-layout': templateSlideDefaultLayoutSrc,
-  'template-slide-title': templateSlideTitleSrc,
-  'template-slide-content': templateSlideContentSrc,
-  'template-slide-footer': templateSlideFooterSrc,
-  'template-slide-header': templateSlideHeaderSrc,
   'template-form-form-layout': templateFormFormLayoutSrc,
   'template-form-header': templateFormHeaderSrc,
   'template-form-content': templateFormContentSrc,
   'template-form-footer': templateFormFooterSrc,
   'template-form-field-error': templateFormFieldErrorSrc,
-  'template-panel-panel-container': templatePanelPanelContainerSrc,
-  'template-panel-panel-header': templatePanelPanelHeaderSrc,
-  'template-panel-header-action-layout': templatePanelHeaderActionLayoutSrc,
-  'template-panel-panel-content': templatePanelPanelContentSrc,
-  'template-panel-panel-footer': templatePanelPanelFooterSrc,
   'template-shared-heading': templateSharedHeadingSrc,
-  'template-shared-message': templateSharedMessageSrc,
   'template-shared-detail': templateSharedDetailSrc,
-  'template-shared-detail-list': templateSharedDetailListSrc,
-  'template-shared-hint': templateSharedHintSrc,
   'template-shared-alert-content': templateSharedAlertContentSrc,
-  'template-shared-section': templateSharedSectionSrc,
-  'template-shared-overflown-typography': templateSharedOverflownTypographySrc,
-  'template-shared-overflow-container': templateSharedOverflowContainerSrc,
-  'template-shared-content-transition': templateSharedContentTransitionSrc,
   'template-shared-mui-button': templateSharedMuiButtonSrc,
   'template-util-sx-utils': templateUtilSxUtilsSrc,
   'template-util-scroll-region': templateUtilScrollRegionSrc,

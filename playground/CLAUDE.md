@@ -3,8 +3,8 @@
 Interactive demo app, vanilla-first: the learning routes (`/getting-started`, `/modal-actions`,
 `/slide-modal`, `/advanced`) render their dialog interiors with the vanilla HTML/CSS templates —
 the library is headless, and the demos should not suggest it goes with a component library. MUI is
-the demonstrated _exception_: `/ui-integrations` (whose subject it is), the MUI tab of
-`/ui-templates`, and the MUI twin of the panel wizard.
+the demonstrated _exception_, and one pair of it — the form modal, on `/ui-integrations` and in
+`/ui-templates`. One worked pair carries that claim; four charged four times the upkeep for it.
 
 `umbra-playground` — a private Yarn workspace, never published. **Its UI dependencies
 live here, not in the root manifest**, which is the published package's dependency list: MUI,
@@ -128,8 +128,7 @@ anywhere. Porting Penumbra elsewhere is: copy the system file, write a new skin.
   `EclipseMark`, `MoonPhase`, `SurfaceCard`, `PageLayout`, `SectionNav`, `ResultDisplay`,
   `LoadingButton`, `ViewCodeButton`, `ThemeToggleButton`.
 - **The MUI island** (`shared/ui/MuiIsland` + `shared/lib/mui-theme.ts`) is **the subject, not a
-  leftover**: Umbra ships no UI, so proving it works under another component library is the product
-  claim, and the island stays Material-looking on purpose.
+  leftover**, and stays Material-looking on purpose. Scoped to the one card that needs it.
 - The vanilla **templates** keep their own token families, are deliberately unbranded, and may not
   touch the shell's sheet — they are copied into apps where it does not exist.
 
@@ -150,7 +149,7 @@ Grouped in the sidebar; the order is the intended reading order.
 | Patterns  | `/slide-modal`     | The four slide shapes as presets, and the toast            |
 | Patterns  | `/advanced`        | Stacking, imperative control, outlet, events, showcases    |
 | Patterns  | `/microfrontends`  | Four bindings, one manager, in a frame with no build step  |
-| Reference | `/ui-integrations` | MUI vs vanilla, paired by use case                         |
+| Reference | `/ui-integrations` | The vanilla set, and one MUI pair that is the whole claim  |
 | Reference | `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared           |
 | Reference | `/design-system`   | Penumbra, read live from the token sheet — never restated  |
 | Reference | `/api`             | Generated API reference — a map, then a page per category  |
@@ -288,11 +287,11 @@ no ring. Do not add per-component focus styles.
 
 Reference UI — not exported from the library. Users copy them into their projects.
 
-- **MUI** (`mui/`): `message-modal/`, `slide-modal/`, `form-modal/`, `panel-modal/`, `shared/content/`
-- **Vanilla** (`vanilla/`): pure HTML/CSS with CSS modules + dark mode
+- **Vanilla** (`vanilla/`): every family, pure HTML/CSS with CSS modules + dark mode
+- **MUI** (`mui/`): `form-modal/` and the `shared/` atoms it uses
 
-Both flavours expose the same component names, so an example ports between them by changing
-one import. All layouts use children-based composition:
+Both spell the same component names, so that example ports by changing one import. All layouts use
+children-based composition:
 
 ```tsx
 <MessageModal.DefaultLayout>

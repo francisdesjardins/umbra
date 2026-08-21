@@ -2,6 +2,7 @@ export { BasicHarness } from './use-modal/basic.story';
 export { OnOpenAbortHarness } from './use-modal/on-open-abort.story';
 export { AccessibleNameHarness } from './use-modal/accessible-name.story';
 export { BusyWhilePreparingHarness } from './use-modal/busy-while-preparing.story';
+export { RenderPhaseHarness } from './use-modal/render-phase.story';
 export { PrepareFailureHarness } from './use-modal/prepare-failure.story';
 export {
   DanglingLabelHarness,

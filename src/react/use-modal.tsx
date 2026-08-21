@@ -224,6 +224,7 @@ export function useModal<TData = void, TReason extends string = string>(
     return runDeclarationWindow(engine, () => {
       return render({
         isPreparing: snap.isPreparing,
+        phase: snap.phase,
         handle,
         action,
         hasRunningAction: actionSnap.hasRunningAction,
@@ -295,6 +296,7 @@ export function useModal<TData = void, TReason extends string = string>(
   return {
     open,
     isVisible: snap.phase !== 'closed',
+    phase: snap.phase,
     isPreparing: snap.isPreparing,
     Modal,
     openAndWait,

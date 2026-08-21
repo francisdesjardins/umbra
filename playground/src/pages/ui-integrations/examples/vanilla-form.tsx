@@ -1,3 +1,4 @@
+import { AppButton } from '@/shared/ui/AppButton';
 import { ExampleLayout } from '@/entities/example';
 import * as VanillaFormModal from '@/entities/modal-template/ui/vanilla/form-modal';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
@@ -119,14 +120,15 @@ export function VanillaFormExample() {
 
   return (
     <ExampleLayout result={result} modals={formModal.Modal}>
-      <Shared.Button
-        variant="primary"
+      <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           void formModal.open();
         }}
       >
         Open Vanilla Form
-      </Shared.Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

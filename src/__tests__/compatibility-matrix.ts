@@ -554,12 +554,22 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   {
     capability: 'phase, exposed to the caller',
     react: {
-      state: 'no-by-design',
-      why: 'A phase moves while the dialog is up; exposing it invites logic keyed on a transition. `isVisible` and `isPreparing` are the two answers a caller needs.',
+      state: 'works',
+      note: 'On the render args and the hook return. `isVisible` and `isPreparing` are not the two answers a caller needs after all: `isVisible` is true for both `open` and `closing`, so nothing but `phase` separates a panel that is leaving from one that is up — and the render callback, which decides what is on screen, carried neither. Transient state is what forces it: an action stops running before the exit animation ends, so a label read from `hasRunningAction` reverts with the panel still painted.',
+      caveat:
+        'The `closing` window itself is not assertable in a component test: transitions are off in a harness, so `runCloseSequence` finalizes with no exit to observe. It is measured in a real browser instead — 18 painted frames of a playground modal holding its running label through the exit.',
+      references: [
+        {
+          file: 'src/react/__tests__/use-modal.ct.tsx',
+          title: 'phase reaches the render callback, and agrees with the hook return',
+        },
+      ],
     },
     solid: {
-      state: 'no-by-design',
-      why: 'Same reason, and the getters make it worse: a phase read inside JSX would subscribe that expression to every transition.',
+      state: 'works',
+      note: 'A getter, like every other live value.',
+      caveat:
+        'A `phase` read inside JSX subscribes that expression to every transition. That is the getter\u2019s cost and the caller\u2019s to spend: read it where the transition matters and nowhere else.',
     },
     vanilla: {
       state: 'works',

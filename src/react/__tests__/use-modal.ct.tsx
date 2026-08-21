@@ -43,6 +43,7 @@ import {
   OutletLabelHarness,
   VolatileKeyDownHarness,
   ShadowRootHarness,
+  RenderPhaseHarness,
 } from './use-modal.story';
 
 test.describe('useModal', () => {
@@ -1344,5 +1345,36 @@ test.describe('onError', () => {
       'aria-busy',
       'false'
     );
+  });
+});
+
+test.describe('the phase a render can see', () => {
+  test('phase reaches the render callback, and agrees with the hook return', async ({ mount }) => {
+    const component = await mount(<RenderPhaseHarness />);
+
+    await expect(component.getByTestId('hook-phase')).toHaveText('closed');
+
+    await component.getByTestId('open').click();
+    await expect(component.getByTestId('render-phase')).toHaveText('open');
+    // One answer, not two: the hook return and the render args read the same store.
+    await expect(component.getByTestId('hook-phase')).toHaveText('open');
+    await expect(component.getByTestId('hook-visible')).toHaveText('visible');
+
+    // The shape a caller writes against `phase`. While an action runs the two agree, which is the
+    // half a harness can hold: `'closing'` has no duration here, transitions being off.
+    await component.getByTestId('publish').click();
+    await expect(component.getByTestId('render-busy')).toHaveText('busy');
+    await expect(component.getByTestId('render-held')).toHaveText('busy');
+    await expect(component.getByTestId('hook-phase')).toHaveText('closed');
+
+    await component.getByTestId('open').click();
+    await expect(component.getByTestId('render-busy')).toHaveText('idle');
+    await expect(component.getByTestId('render-held')).toHaveText('idle');
+
+    // `'closing'` itself is not assertable here — transitions are off in a harness, so the close
+    // finalizes with no exit to observe. The playground measures that window in a real browser.
+    await component.getByTestId('close-direct').click();
+    await expect(component.getByTestId('hook-phase')).toHaveText('closed');
+    await expect(component.getByTestId('hook-visible')).toHaveText('gone');
   });
 });

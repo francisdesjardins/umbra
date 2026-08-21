@@ -25,6 +25,67 @@ The dimming is split from the cursor now: `not-allowed` still belongs to every d
 chrome, so the spinner is back on the 5.5:1 pairing the file already documents. Measured in both
 schemes at 390px and 1440px; the genuinely-disabled case still fades exactly as it did.
 
+## 2026-08-21
+
+### Added — `phase` on the render args, reversing a refusal
+
+The render callback decides what is on screen and was the one place unable to ask whether it still
+is. `ModalRenderArgs` carries `phase` now, and so does the hook return, on both hook bindings — a
+getter on Solid, like every other live value.
+
+**This reverses a `✗ by design` in the compatibility matrix**, whose reason was that `isVisible`
+and `isPreparing` are the two answers a caller needs. They are not: `isVisible` is true for
+`open` and `closing` alike, so nothing but `phase` separates a panel that is leaving from one
+that is up — and the render callback carried neither of them anyway. The row is `works` now, and
+Solid's cost is recorded as a caveat rather than dropped: a `phase` read inside JSX subscribes that
+expression to every transition.
+
+**The evidence was three examples and the shape of the workaround.** Without it, holding a
+transient value through the exit costs a `useState`, a set in the handler, a clear in `onClose`
+and a test in the render — four touch points, in every example that shows action state. Two of the
+three need none of them now; the third keeps one piece of state because the header names _which_
+action ran, which a phase cannot say.
+
+The new test proves the field arrives and agrees with the hook return, and **does not claim more**:
+`'closing'` has no observable duration in a component test, because transitions are off in a
+harness and `runCloseSequence` finalizes with no exit to wait on. The window is measured in a real
+browser instead.
+
+### Fixed — three modals that reverted while they were still on screen
+
+An action stops running the moment its handler resolves. The panel is painted for the whole exit
+after that — 18 frames, measured — so a header read from `isRunning` alone flips back to its
+resting text under a reader who is watching the modal leave. "Publishing…" became "Ready to
+publish" mid-exit on the per-action-state card, and two status lines read "Idle" against a dialog
+still on screen.
+
+All three hold now, and the two that only needed a boolean hold it with `phase === 'closing'` and
+no state at all.
+
+### Changed — Material UI cut to the one pair that carries the claim
+
+Four MUI pairs proved the same thing four times. What the flavour is for is the demonstration that
+a component library's chrome fits over the library's own `<dialog>` — and the form modal is where
+that is literally true, both files calling one `useForm` and one `useModal` and disagreeing only
+in markup. The message, slide and panel twins are gone, with the template families only they used:
+**24 files, about 2,000 lines**, and the vendor chunk from 273 kB to 225 kB.
+
+What survives is deliberate. The vanilla panel wizard stays because it is the only worked example
+of the panel-modal family anywhere. `focusRingRoom` and `useScrollRegion`'s `regionSx` and
+`scrollbarWidth` do not: every consumer was MUI, and a template directory should not ship what
+nothing uses.
+
+The trigger on both form cards is the shell's own button now, not each flavour's. A comparison whose
+two cards differ before the modal even opens is not making its point; that MUI's button takes
+`action()`'s props is proven in the footer, where it matters.
+
+### Fixed — a lint gate that went red on a dependency bump
+
+The oxlint update brought `react/set-state-in-effect`, which found three effects that genuinely
+synchronise with an external system — the CSS cascade in one, the dialog manager in two test
+harnesses. Suppressed with their reasons, the directive on the line immediately above the call:
+a two-line comment between them silently targets the comment instead.
+
 ## 2026-08-20
 
 ### Fixed — the playground on a phone, and a source viewer that showed everything but source

@@ -45,7 +45,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
     ariaDescribedBy: `${MODAL_ID}-body`,
     // A destructive confirm interrupts, and an alertdialog is announced with its description.
     role: 'alertdialog',
-    render: ({ action, hasRunningAction, error }) => {
+    render: ({ action, hasRunningAction, error, phase }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -68,7 +68,9 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
                   color: 'var(--modal-text-secondary)',
                 }}
               >
-                Status: {hasRunningAction ? 'Running...' : 'Idle'}
+                {/* An action stops running before the exit ends, so the flag alone reads Idle
+                    against a panel still on screen. */}
+                Status: {hasRunningAction || phase === 'closing' ? 'Running...' : 'Idle'}
                 {error && ` | Error: ${error.message}`}
               </span>
             </div>

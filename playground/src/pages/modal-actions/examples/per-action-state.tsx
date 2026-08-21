@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Spinner } from '@/shared/ui/Spinner';
 import { ExampleLayout } from '@/entities/example';
 import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
@@ -36,25 +37,26 @@ function ActionSpinner() {
  */
 export function PerActionStateExample() {
   const { result } = useStore(resultStore);
+  // Which handler started: `phase` says the modal is leaving, not what it was doing.
+  const [started, setStarted] = useState<'draft' | 'publish' | null>(null);
 
   const modal = useMessageModal<void, 'draft' | 'publish' | 'cancel'>({
     id: MODAL_ID,
     // A string, not the heading: it is a status changing under the user, and a name must not.
     ariaLabel: 'Publish post',
     dismissOnBackdropClick: false,
-    render: ({ action, hasRunningAction }) => {
-      const publishing = action.isRunning('publish');
+    render: ({ action, hasRunningAction, phase }) => {
+      // An action stops running before the exit ends, so the header needs the wait to outlive it.
+      const leaving = phase === 'closing';
+      const publishing = action.isRunning('publish') || (leaving && started === 'publish');
+      const savingDraft = action.isRunning('draft') || (leaving && started === 'draft');
 
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
-            {hasRunningAction ? <ActionSpinner /> : null}
+            {hasRunningAction || leaving ? <ActionSpinner /> : null}
             <MessageModal.Title>
-              {publishing
-                ? 'Publishing…'
-                : action.isRunning('draft')
-                  ? 'Saving draft…'
-                  : 'Ready to publish'}
+              {publishing ? 'Publishing…' : savingDraft ? 'Saving draft…' : 'Ready to publish'}
             </MessageModal.Title>
           </MessageModal.Header>
 
@@ -101,6 +103,7 @@ export function PerActionStateExample() {
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               {...action('draft', async (close) => {
+                setStarted('draft');
                 await slow(1400);
                 close();
               })}
@@ -110,6 +113,7 @@ export function PerActionStateExample() {
             <Shared.Button
               variant="primary"
               {...action('publish', async (close) => {
+                setStarted('publish');
                 await slow(2000);
                 close();
               })}
@@ -128,6 +132,7 @@ export function PerActionStateExample() {
         variant="contained"
         size="small"
         onClick={async () => {
+          setStarted(null);
           const [, closeResult] = await modal.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}

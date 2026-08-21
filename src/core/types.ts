@@ -107,6 +107,18 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
    * that loads something.
    */
   readonly isPreparing: boolean;
+  /**
+   * The dialog's own phase — the same value {@link ModalInfo} carries.
+   *
+   * The render callback decides what is on screen, so it needs to know whether it still *is*.
+   * An action stops running the moment its handler resolves — before the exit animation — so a
+   * label read from `hasRunningAction` alone reverts to its resting text with the panel still
+   * painted; `phase === 'closing'` holds the leaving state until it is gone.
+   *
+   * `isVisible` on the hook's return answers the other question, "is there a dialog", which is
+   * the one the page outside it asks.
+   */
+  readonly phase: ModalPhase;
   /** Imperative close handle, typed with the modal's close payload. */
   readonly handle: ModalHandle<TData, TReason>;
   /**

@@ -311,7 +311,7 @@ Each wraps `useModal` with template-specific render context. Shared internals in
 
 `buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
-- `useMessageModal<TData>` ([react/templates/use-message-modal.tsx](react/templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, handle, action, hasRunningAction, error }`); reports `template: 'message'`
+- `useMessageModal<TData>` ([react/templates/use-message-modal.tsx](react/templates/use-message-modal.tsx)) — Context: `ModalRenderArgs` unchanged (`{ isPreparing, phase, handle, action, hasRunningAction, error }`); reports `template: 'message'`
 - `useSlideModal` ([react/templates/use-slide-modal.tsx](react/templates/use-slide-modal.tsx)) — Direction-based animation, reports `template: 'slide'`. Context: `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis** (perpendicular to the slide): `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both animation keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
@@ -412,7 +412,7 @@ the concept, not editing three that describe it. The chain, rooted in [core/type
 
 ```
 ModalRenderArgs<TData>                ← the render-time slice:
-│                                       { isPreparing, handle, action, hasRunningAction, error }
+│                                       { isPreparing, phase, handle, action, hasRunningAction, error }
 ├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)

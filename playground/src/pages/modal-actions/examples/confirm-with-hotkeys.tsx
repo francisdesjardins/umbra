@@ -19,7 +19,7 @@ export function ConfirmWithHotkeysExample() {
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     // A plain dialog, not an `alertdialog`: this asks, it does not interrupt.
-    render: ({ action, hasRunningAction, error }) => {
+    render: ({ action, hasRunningAction, error, phase }) => {
       return (
         <MessageModal.DefaultLayout>
           <MessageModal.Header>
@@ -44,7 +44,9 @@ export function ConfirmWithHotkeysExample() {
                   color: 'var(--modal-text-secondary)',
                 }}
               >
-                Status: {hasRunningAction ? 'Running...' : 'Idle'}
+                {/* An action stops running before the exit ends, so the flag alone reads Idle
+                    against a panel still on screen. */}
+                Status: {hasRunningAction || phase === 'closing' ? 'Running...' : 'Idle'}
                 {error ? ` | Error: ${error.message}` : ''}
               </span>
               {error && <Shared.Alert severity="error">{error.message}</Shared.Alert>}

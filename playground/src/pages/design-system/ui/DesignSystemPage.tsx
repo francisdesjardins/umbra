@@ -109,6 +109,9 @@ function useTokens(): (name: string) => string {
     for (const name of names) {
       next[name] = computed.getPropertyValue(name).trim();
     }
+    // The external system is the CSS cascade: a custom property has no resolved value until the
+    // DOM is committed, so this cannot be derived during render.
+    // oxlint-disable-next-line react/set-state-in-effect
     setRead(next);
   }, [isDarkMode]);
 

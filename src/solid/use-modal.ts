@@ -161,6 +161,9 @@ export function useModal<TData = void, TReason extends string = string>(
     get isPreparing() {
       return isPreparing();
     },
+    get phase() {
+      return snapshot().phase;
+    },
     get hasRunningAction() {
       return hasRunningAction();
     },
@@ -283,6 +286,9 @@ export function useModal<TData = void, TReason extends string = string>(
     dialogManager: manager,
     get isVisible() {
       return isVisible();
+    },
+    get phase() {
+      return snapshot().phase;
     },
     get isPreparing() {
       return isPreparing();

@@ -68,6 +68,9 @@ export function ReconcileOpenHarness() {
 
   useEffect(() => {
     const next = reconcileOpen(phase, open);
+    // The manager is the external system this synchronises with, and recording what the
+    // reconciliation asked for is the assertion.
+    // oxlint-disable-next-line react/set-state-in-effect
     setReconciliations((seen) => {
       return next === 'none' ? seen : [...seen, next];
     });

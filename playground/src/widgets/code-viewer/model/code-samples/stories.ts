@@ -45,6 +45,7 @@ import storySolidAppSrc from 'umbra/solid/__tests__/solid-app.ts?raw';
 import storySolidModalSrc from 'umbra/solid/__tests__/solid-modal.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-modal/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-modal/busy-while-preparing.story.tsx?raw';
+import storyRenderPhaseSrc from 'umbra/react/__tests__/use-modal/render-phase.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-modal/styling-surface.story.tsx?raw';
 import storyActionsFocusSrc from 'umbra/actions/__tests__/use-modal-actions/focus-restoration.story.tsx?raw';
 import storyActionsDismissCollisionSrc from 'umbra/actions/__tests__/use-modal-actions/dismiss-key-collision.story.tsx?raw';
@@ -210,6 +211,7 @@ export const stories: Record<string, string> = {
   'story-vanilla-swap': storyVanillaSwapSrc,
   'story-accessible-name': storyAccessibleNameSrc,
   'story-busy-while-preparing': storyBusyWhilePreparingSrc,
+  'story-render-phase': storyRenderPhaseSrc,
   'story-styling-surface': storyStylingSurfaceSrc,
   'story-action-focus': storyActionsFocusSrc,
   'story-action-dismiss-collision': storyActionsDismissCollisionSrc,

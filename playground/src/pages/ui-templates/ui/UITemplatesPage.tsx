@@ -22,79 +22,15 @@ type TemplateGroup = {
 
 const MUI_GROUPS: readonly TemplateGroup[] = [
   {
-    title: 'MessageModal',
-    description: 'Components for alert, confirm, and info-style dialogs.',
-    items: [
-      { name: 'createTextMessageModal', codeKey: 'template-msg-create-text' },
-      { name: 'DefaultContainer', codeKey: 'template-msg-default-container' },
-      { name: 'DefaultLayout', codeKey: 'template-msg-default-layout' },
-      { name: 'Header', codeKey: 'template-msg-header' },
-      { name: 'Title', codeKey: 'template-msg-title' },
-      { name: 'Icon', codeKey: 'template-msg-icon' },
-      { name: 'Content', codeKey: 'template-msg-content' },
-      { name: 'Footer', codeKey: 'template-msg-footer' },
-    ],
-  },
-  {
-    title: 'SlideModal',
-    description: 'Components for panel and drawer-style slide-in modals.',
-    items: [
-      { name: 'DefaultLayout', codeKey: 'template-slide-default-layout' },
-      { name: 'Header', codeKey: 'template-slide-header' },
-      { name: 'Title', codeKey: 'template-slide-title' },
-      { name: 'Content', codeKey: 'template-slide-content' },
-      { name: 'Footer', codeKey: 'template-slide-footer' },
-    ],
-  },
-  {
     title: 'FormModal',
-    description: 'Components for form dialogs with submit handling.',
+    description:
+      'The one family kept in Material UI, because one worked pair is what proves the library is not UI-aware — four proved it four times.',
     items: [
       { name: 'FormLayout', codeKey: 'template-form-form-layout' },
       { name: 'Header', codeKey: 'template-form-header' },
       { name: 'Content', codeKey: 'template-form-content' },
       { name: 'Footer', codeKey: 'template-form-footer' },
       { name: 'FieldError', codeKey: 'template-form-field-error' },
-    ],
-  },
-  {
-    title: 'PanelModal',
-    description: 'Components for large, complex full-panel modals.',
-    items: [
-      { name: 'PanelContainer', codeKey: 'template-panel-panel-container' },
-      { name: 'PanelHeader', codeKey: 'template-panel-panel-header' },
-      { name: 'HeaderActionLayout', codeKey: 'template-panel-header-action-layout' },
-      { name: 'PanelContent', codeKey: 'template-panel-panel-content' },
-      { name: 'PanelFooter', codeKey: 'template-panel-panel-footer' },
-    ],
-  },
-  {
-    title: 'Content atoms',
-    description: 'Reusable content atoms shared across all template types.',
-    items: [
-      { name: 'Heading', codeKey: 'template-shared-heading' },
-      { name: 'Message', codeKey: 'template-shared-message' },
-      { name: 'Detail', codeKey: 'template-shared-detail' },
-      { name: 'DetailList', codeKey: 'template-shared-detail-list' },
-      { name: 'Hint', codeKey: 'template-shared-hint' },
-      { name: 'AlertContent', codeKey: 'template-shared-alert-content' },
-      { name: 'Section', codeKey: 'template-shared-section' },
-      { name: 'OverflownTypography', codeKey: 'template-shared-overflown-typography' },
-      { name: 'OverflowContainer', codeKey: 'template-shared-overflow-container' },
-      { name: 'ContentTransition', codeKey: 'template-shared-content-transition' },
-    ],
-  },
-  {
-    title: 'Utilities',
-    description:
-      'MUI Button with loading and hotkey-label support, plus cross-template helpers, visual tokens, and shared types.',
-    items: [
-      { name: 'Button', codeKey: 'template-shared-mui-button' },
-      { name: 'mergeSx / sxToObject', codeKey: 'template-util-sx-utils' },
-      { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
-      { name: 'tokens', codeKey: 'template-util-tokens' },
-      { name: 'types', codeKey: 'template-util-types' },
-      { name: 'LoadingOverlay', codeKey: 'template-util-loading-overlay' },
     ],
   },
 ];

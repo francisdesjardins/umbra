@@ -1,3 +1,4 @@
+import { AppButton } from '@/shared/ui/AppButton';
 import { ExampleLayout } from '@/entities/example';
 import { FormModal } from '@/entities/modal-template/ui/mui/form-modal';
 import * as Shared from '@/entities/modal-template/ui/mui/shared';
@@ -120,7 +121,10 @@ export function MuiFormExample() {
 
   return (
     <ExampleLayout result={result} modals={formModal.Modal}>
-      <Shared.Button
+      {/* The shell's button, not MUI's: the trigger is the playground's chrome, and the two cards
+          on this page must differ in the modal alone for the comparison to say anything. That MUI's
+          button takes `action()`'s props is proven in the footer, where it matters. */}
+      <AppButton
         variant="contained"
         size="small"
         onClick={() => {
@@ -128,7 +132,7 @@ export function MuiFormExample() {
         }}
       >
         Open MUI Form
-      </Shared.Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

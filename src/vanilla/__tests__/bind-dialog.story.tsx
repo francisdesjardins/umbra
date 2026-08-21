@@ -1294,6 +1294,9 @@ export function VanillaReconcileHarness() {
     }
     const next = reconcileOpen(phase, wanted);
     if (next !== 'none') {
+      // The controller is the external system here, and the recorded list is what the test
+      // asserts on.
+      // oxlint-disable-next-line react/set-state-in-effect
       setAsked((seen) => {
         return [...seen, next];
       });

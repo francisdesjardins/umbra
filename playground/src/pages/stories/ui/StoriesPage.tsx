@@ -159,6 +159,7 @@ import {
   EscWithoutFocusHarness,
   AccessibleNameHarness,
   BusyWhilePreparingHarness,
+  RenderPhaseHarness,
   StylingSurfaceHarness,
 } from 'umbra/react/__tests__/use-modal.story';
 import {
@@ -544,6 +545,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'A dialog is on screen well before an async prepare settles — phase "open" with isPreparing true is the normal state of a loading modal. The <dialog> carries aria-busy for exactly that window, and carries "false" once it closes, so the off state is reachable rather than welded on.',
         component: BusyWhilePreparingHarness,
         codeKey: 'story-busy-while-preparing',
+      },
+      {
+        title: 'The phase a render can see',
+        description:
+          'The render callback decides what is on screen, so it is handed the phase of the dialog it is drawing. It matters on the way out: an action stops running the moment its handler resolves, which is before the exit animation ends, so a label read from hasRunningAction alone reverts to its resting text with the panel still painted. Reading phase === \u0022closing\u0022 beside it holds the leaving state until it is gone.',
+        component: RenderPhaseHarness,
+        codeKey: 'story-render-phase',
       },
       {
         title: 'The styling surface',

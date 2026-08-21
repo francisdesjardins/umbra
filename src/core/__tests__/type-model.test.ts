@@ -234,6 +234,7 @@ test.describe('type model', () => {
     // Anything added lands in every template context and in the hook return — a deliberate edit.
     const keys: readonly (keyof ModalRenderArgs)[] = [
       'isPreparing',
+      'phase',
       'handle',
       'action',
       'hasRunningAction',
@@ -245,6 +246,7 @@ test.describe('type model', () => {
       'handle',
       'hasRunningAction',
       'isPreparing',
+      'phase',
     ]);
   });
 });
