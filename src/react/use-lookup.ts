@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { ModalId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-manager.js';
 import type { ModalInfo } from '../manager/types.js';
@@ -33,7 +34,7 @@ function lookupIn(
   return manager.lookup(id);
 }
 
-export function useLookup(id: string): ModalInfo {
+export function useLookup(id: ModalId): ModalInfo {
   const manager = useDialogManagerContext();
   // Server-readable for the reason on `useModal`: nothing here asks the DOM anything.
   const snapshot = useSyncExternalStore(

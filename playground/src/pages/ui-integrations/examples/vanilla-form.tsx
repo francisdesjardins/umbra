@@ -9,7 +9,7 @@ import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'vanilla-form-example';
 
-type FormValues = { name: string; email: string };
+export type FormValues = { name: string; email: string };
 
 const resultStore = createResultStore();
 
@@ -38,7 +38,7 @@ export function VanillaFormExample() {
   });
 
   // Same two type arguments as the MUI version; only the markup below differs.
-  const formModal = useModal<FormValues, 'cancel' | 'submit'>({
+  const formModal = useModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {

@@ -13,7 +13,7 @@ const resultStore = createResultStore();
 export function SimpleModalExample() {
   const { result } = useStore(resultStore);
 
-  const simpleModal = useMessageModal<void, 'confirm'>({
+  const simpleModal = useMessageModal({
     id: MODAL_ID,
     // Points at the heading rather than repeating it — a name written twice drifts; the id derives
     // from the modal's own, already unique.

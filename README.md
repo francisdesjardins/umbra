@@ -265,7 +265,7 @@ From then on the id is checked wherever one is accepted:
 
 ```ts
 dialogManager.open('confirm-delete'); // fine
-dialogManager.open('confirm-delet'); // Type error, and the editor suggests the real one
+dialogManager.open('confirm-delet'); // Allowed — an unknown id is a supported one
 dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another modal
 ```
 
@@ -289,10 +289,9 @@ that pays off during a bug hunt rather than at the keyboard.
 
 Three things to know before adopting it:
 
-- **Declaring one modal declares them all.** Once the interface has a key, an id it does not name
-  is an error everywhere. That is what makes the list trustworthy, and it means adoption is a
-  single pass rather than a gradual one. A genuinely computed id opts out at the call site with
-  `as ModalId`.
+- **Declare as few as you like.** An id the registry does not name still works, so you can adopt
+  one modal at a time — and an app can host modals it does not own. The trade is that a mistyped
+  id is not an error: what a declared entry buys is its _contract_, not exhaustiveness.
 - **Payload types have to be exported** to be named in the registry. Types that were local to one
   component become part of the app's vocabulary, which is usually an improvement and is always
   work.

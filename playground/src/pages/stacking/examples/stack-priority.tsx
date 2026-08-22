@@ -99,7 +99,7 @@ export function StackPriorityExample() {
   const [enabled, setEnabled] = useState(false);
   const { openDialogs, foreground } = useDialogManager();
 
-  const panel = useSlideModal<void, 'close'>({
+  const panel = useSlideModal({
     id: PANEL_ID,
     direction: 'right',
     ariaLabelledBy: `${PANEL_ID}-title`,
@@ -142,7 +142,7 @@ export function StackPriorityExample() {
   // The context-aware instance, not the static singleton — every hook here returns the same one.
   const { dialogManager } = panel;
 
-  const warning = useMessageModal<void, 'acknowledge'>({
+  const warning = useMessageModal({
     id: WARNING_ID,
     ariaLabelledBy: `${WARNING_ID}-title`,
     ariaDescribedBy: `${WARNING_ID}-body`,

@@ -97,11 +97,6 @@ contradiction rather than an inconvenience. One rule decides:
 | `react/`, `solid/`                                                | Everything that imports its framework as a value — hooks, components, providers, and the option/return type instantiation.      |
 | `vanilla/`                                                        | The controller binding. Framework-free like the core, but a _binding_ rather than a primitive: it composes, it does not decide. |
 
-**Only the two hook bindings mirror each other.** `vanilla/` is a different kind — a controller
-over markup the caller owns, with no `render`, no `Modal` and no outlet — so requiring it to match
-would be requiring the wrong thing. `binding-parity.test.ts` asserts the mirror for the hook pair
-and, separately, what the controller must and must not export.
-
 `react/` and `solid/` mirror each other **file for file** — `use-modal`, `modal-outlet`,
 `dialog-manager-context`, `use-dialog-manager`, `use-lookup`, `types.ts` and
 `templates/use-{message,slide}-modal` — with one documented exception, `solid/from-store.ts`
@@ -122,12 +117,11 @@ lifecycle through **one** deps-free call into [core/modal-director.ts](core/moda
 the order is not theirs to write and the diff between them is scheduling.
 
 **A test lives next to what it tests, whatever framework its harness uses.** `apply-style.ct.tsx`
-tests a core function through a React harness and belongs in `core/__tests__/`; so do the manager's
-and the action engine's CT tests. Only tests of a binding's own surface moved to
-`react/__tests__/`. Shared harness helpers (`story-styles.ts`) live in `src/__tests__/`, because a
-helper used by four folders' stories belongs to none of them.
+tests a core function through a React harness and belongs in `core/__tests__/`, as do the manager's
+and the action engine's. Only a binding's own surface belongs in `react/__tests__/`; shared harness
+helpers live in `src/__tests__/`.
 
-### What is shared, and what a binding actually does
+### What is shared
 
 [core/modal-runtime.ts](core/modal-runtime.ts) holds the parts that were written twice and were
 identical both times: `resolveModalOptions` (the defaults _and_ the variant narrowing — reading
@@ -153,12 +147,10 @@ The short list, and it is the measure of whether the core is doing its job. A bi
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys, the
 placement table, the slide geometry, the action factory, the default animation — is shared.
 
-**The list above is one file per binding, and that file is the measure**: `react/use-modal.tsx` and
+**That list is one file per binding, and that file is the measure**: `react/use-modal.tsx` and
 `solid/use-modal.ts` are a little over 200 code lines each, `vanilla/bind-dialog.ts` about 260, and
-none of it is logic. Say which file, because the folder around it is not the same number — on the
-hook bindings the outlet, the provider, `useLookup` and the two template hooks roughly double it, and
-they are surface rather than lifecycle. `umbra/vanilla` has none of them, which is why its one file
-is the largest and its folder the smallest.
+none of it is logic. Say which file — the folder around it is not the same number, since the outlet,
+the provider, `useLookup` and the templates roughly double it and are surface rather than lifecycle.
 
 A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the
 caller's element, and drops 2 and 5 outright: there is no render pass, so actions are declared by
@@ -442,6 +434,13 @@ and nothing failed.
 So a new render-time field is added to `ModalRenderArgs` **once** and reaches the hook return and
 every template context. `isPreparing` carries a subtle caveat (it tracks the `prepare` callback, not
 the `'opening'` phase) that would otherwise be written out three times and drift; it has one home.
+
+**One input comes from outside the model.** `core/registry.ts` declares `ModalRegistry` for a
+consumer to augment; `ModalId`, `ReasonOf` and `DataOf` read off it, and every hook —
+`useModal`, both templates, `bindDialog` — leads with an overload constrained to
+`RegisteredModalId`, so a declared id supplies `TData` and `TReason`. `ModalId` stays open, since a
+project hosts modals it does not own. The augmented half is `yarn type-check:registry` over
+`type-fixtures/`, compiled alone because declaration merging is global.
 
 ### The payload flows
 

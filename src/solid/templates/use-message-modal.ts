@@ -1,4 +1,5 @@
 import type { JSX } from 'solid-js';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
 import type { DialogStyle } from '../../core/style.js';
 import {
   DEFAULT_FADE_ANIMATION,
@@ -40,6 +41,17 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
  * Headless template hook for a standard message/confirmation modal — `umbra/react`'s, but for the
  * node type. Option mapping and fade animation are shared, in `templates/shared.ts`.
  */
+/**
+ * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * the one below — which is the signature `useMessageModal` has always had.
+ */
+export function useMessageModal<TId extends RegisteredModalId>(
+  options: UseMessageModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): UseMessageModalReturn<DataOf<TId>, ReasonOf<TId>>;
+export function useMessageModal<TData = void, TReason extends string = string>(
+  options: UseMessageModalOptions<TData, TReason>
+): UseMessageModalReturn<TData, TReason>;
 export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason> {

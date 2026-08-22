@@ -186,7 +186,7 @@ export function ReactiveDepsExample() {
 
   const { LiveControls } = useLiveControls();
 
-  const reactiveModal = useMessageModal<void, 'cancel' | 'confirm'>({
+  const reactiveModal = useMessageModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     dismissOnBackdropClick: false,

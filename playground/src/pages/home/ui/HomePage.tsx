@@ -63,7 +63,7 @@ export const HomePage = () => {
   // says which door, `data` says what came through it.
   const [remember, setRemember] = useState(false);
 
-  const hello = useMessageModal<{ remember: boolean }, 'confirm' | 'cancel'>({
+  const hello = useMessageModal({
     id: 'home-hello',
     ariaLabelledBy: 'home-hello-title',
     onClose: (result) => {

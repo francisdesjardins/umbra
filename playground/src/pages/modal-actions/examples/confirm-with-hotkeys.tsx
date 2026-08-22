@@ -15,7 +15,7 @@ const resultStore = createResultStore();
 export function ConfirmWithHotkeysExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageModal<void, 'cancel' | 'confirm'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     // A plain dialog, not an `alertdialog`: this asks, it does not interrupt.

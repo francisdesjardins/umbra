@@ -39,7 +39,7 @@ export function GroceryListExample() {
   };
 
   // The confirm: it closes with the number of items it sent, and the panel reads that back.
-  const confirm = useMessageModal<number, 'cancel' | 'send'>({
+  const confirm = useMessageModal({
     id: 'grocery-confirm',
     ariaLabelledBy: 'grocery-confirm-title',
     render: ({ action, error }) => {
@@ -76,7 +76,7 @@ export function GroceryListExample() {
     },
   });
 
-  const list = useSlideModal<number, 'close' | 'sent'>({
+  const list = useSlideModal({
     id: LIST_ID,
     direction: 'right',
     // Point at the heading rather than repeat its text in `ariaLabel` — the drift its doc warns of.

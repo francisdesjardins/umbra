@@ -31,7 +31,7 @@ export function AsyncOpenExample() {
   // The shape a real `useQuery` gives you — swap the import, keep everything below.
   const { data, isFetching, isSuccess, refetch, invalidate } = useQuery(profileQuery);
 
-  const asyncModal = useMessageModal<void, 'confirm'>({
+  const asyncModal = useMessageModal({
     id: MODAL_ID,
     // A string: the pending branch has no heading to point at, the loaded one is the fetched name.
     ariaLabel: 'Profile',

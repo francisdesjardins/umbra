@@ -60,7 +60,7 @@ export function SlideCornerToastExample() {
   const [focusedInside, setFocusedInside] = useState(false);
   const isPaused = hovered || focusedInside;
 
-  const toast = useSlideModal<void, 'dismiss' | 'timeout'>({
+  const toast = useSlideModal({
     id: MODAL_ID,
     direction: 'right',
     ariaLabel: 'Notification',

@@ -48,7 +48,7 @@ const column = {
  * is enterable from `showModal()` alone and no served HTML can hand one back open.
  */
 export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
-  const modal = useModal<void, 'close'>({
+  const modal = useModal({
     id: SSR_MODAL_ID,
     ariaLabel: 'Rendered without a DOM',
     render: ({ action }) => {

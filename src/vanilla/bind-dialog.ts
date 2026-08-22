@@ -1,4 +1,5 @@
 import { createActionFactory } from '../core/action-factory.js';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { attachFocusContainment } from '../core/attach-focus-containment.js';
@@ -62,6 +63,17 @@ const log = createLogger('modal');
  *
  * const [error, result] = await confirm.openAndWait();
  */
+/**
+ * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * the one below — which is the signature `bindDialog` has always had.
+ */
+export function bindDialog<TId extends RegisteredModalId>(
+  options: BindDialogOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): DialogController<DataOf<TId>, ReasonOf<TId>>;
+export function bindDialog<TData = void, TReason extends string = string>(
+  options: BindDialogOptions<TData, TReason>
+): DialogController<TData, TReason>;
 export function bindDialog<TData = void, TReason extends string = string>(
   options: BindDialogOptions<TData, TReason>
 ): DialogController<TData, TReason> {

@@ -1,4 +1,5 @@
 import type { Accessor } from 'solid-js';
+import type { ModalId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
 import type { ModalInfo } from '../manager/types.js';
@@ -14,7 +15,7 @@ import type { ModalInfo } from '../manager/types.js';
  *   return info().exists && info().isVisible ? 'Open' : 'Closed';
  * };
  */
-export function useLookup(id: string): Accessor<ModalInfo> {
+export function useLookup(id: ModalId): Accessor<ModalInfo> {
   const manager = useDialogManagerContext();
   const snapshot = fromStore({
     subscribe: manager.subscribeSnapshot,

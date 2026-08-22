@@ -31,7 +31,7 @@ export function ControlledPanelExample() {
   /** The owner's state. In a real wrapper this is a prop, and this component is `<Filters open>`. */
   const [open, setOpen] = useState(false);
 
-  const modal = useSlideModal<void, 'close'>({
+  const modal = useSlideModal({
     id: PANEL_ID,
     direction: 'right',
     nonModal: true,

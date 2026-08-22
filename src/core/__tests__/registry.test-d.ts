@@ -16,8 +16,8 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Assert<T extends true> = T;
 
-/** With nothing declared, an id is what it has always been. */
-export type _IdIsStringWhenEmpty = Assert<Equals<ModalId, string>>;
+/** With nothing declared, every string is still an id. */
+export const _idAcceptsAnyString: ModalId = String(1);
 
 /** And the two derivations fall back rather than resolving to `never`. */
 export type _ReasonFallsBack = Assert<Equals<ReasonOf<'anything'>, string>>;

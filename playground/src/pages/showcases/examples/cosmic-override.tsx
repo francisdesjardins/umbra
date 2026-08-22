@@ -199,7 +199,7 @@ export function CosmicOverrideExample() {
   // outside React applies exactly this.
   const placement = dialogPlacement({ nonModal: true, portal: false });
 
-  const warp = useModal<string, 'abort' | 'engage'>({
+  const warp = useModal({
     id: WARP_ID,
     ariaLabel: 'Warp core',
     // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
@@ -294,7 +294,7 @@ export function CosmicOverrideExample() {
     },
   });
 
-  const gate = useModal<void, 'closed'>({
+  const gate = useModal({
     id: GATE_ID,
     // Named even though it never takes focus: a non-modal `<dialog>` stays in the accessibility
     // tree, so a virtual cursor walks into it and an unnamed one announces as just "dialog".

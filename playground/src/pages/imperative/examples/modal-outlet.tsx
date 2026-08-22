@@ -15,7 +15,7 @@ const resultStore = createResultStore();
 // ── Inner component — no {Modal} in JSX ────────────────────────────────────
 
 function ConfirmDialog() {
-  const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
+  const confirmModal = useMessageModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {

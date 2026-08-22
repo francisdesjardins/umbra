@@ -1,4 +1,5 @@
 import { mergeProps } from 'solid-js';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
 import type { JSX } from 'solid-js';
 import type { DialogStyle } from '../../core/style.js';
 import {
@@ -56,6 +57,17 @@ export type UseSlideModalReturn<TData = void, TReason extends string = string> =
  * Headless template hook for a slide-in panel modal — `umbra/react`'s, and which edge it pins to
  * and how far it travels are `templates/slide-geometry.ts`'s, which neither binding owns.
  */
+/**
+ * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * the one below — which is the signature `useSlideModal` has always had.
+ */
+export function useSlideModal<TId extends RegisteredModalId>(
+  options: UseSlideModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): UseSlideModalReturn<DataOf<TId>, ReasonOf<TId>>;
+export function useSlideModal<TData = void, TReason extends string = string>(
+  options: UseSlideModalOptions<TData, TReason>
+): UseSlideModalReturn<TData, TReason>;
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
 ): UseSlideModalReturn<TData, TReason> {

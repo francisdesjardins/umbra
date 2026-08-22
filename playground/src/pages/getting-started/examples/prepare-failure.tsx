@@ -23,7 +23,7 @@ export function PrepareFailureExample() {
   const [shouldFail, setShouldFail] = useState(true);
   const [failure, setFailure] = useState<ModalFailure | null>(null);
 
-  const modal = useMessageModal<void, 'close'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     ariaLabel: 'Profile',
     prepare: async () => {

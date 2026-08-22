@@ -1,9 +1,8 @@
 /**
- * The other half of the registry's contract, compiled on its own because declaration merging is
- * global: augmenting `ModalRegistry` here would narrow every id in the main project, and the
- * `string` fallback that `src/core/__tests__/registry.test-d.ts` asserts would stop being reachable.
+ * What a declared registry buys, compiled on its own because declaration merging is global:
+ * augmenting `ModalRegistry` in the main project would narrow ids for every other type test there.
  *
- * Run by `yarn type-check:registry`, which `yarn check` calls.
+ * Run by `yarn type-check:registry`, which `yarn type-check` calls.
  */
 
 import type { DataOf, ModalId, ReasonOf } from '../src/core/registry.js';
@@ -23,24 +22,27 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Assert<T extends true> = T;
 
-/** Declaring modals narrows the id everywhere, which is the whole point. */
-export type _IdIsTheUnion = Assert<Equals<ModalId, 'delete-account' | 'session-warning'>>;
+/** A declared id carries its contract. */
 export type _ReasonNarrows = Assert<Equals<ReasonOf<'delete-account'>, 'confirm' | 'cancel'>>;
 export type _DataNarrows = Assert<Equals<DataOf<'delete-account'>, { id: string }>>;
 
-/** A modal that declares no payload still gets one answer, not `unknown`. */
+/** A modal that declares no payload answers `void`, not `unknown`. */
 export type _NoDataIsVoid = Assert<Equals<DataOf<'session-warning'>, void>>;
+
+/** An undeclared id keeps the open answer, which lets a project host modals it does not own. */
+export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-modal'>, string>>;
 
 export function _manager() {
   dialogManager.open('delete-account');
   dialogManager.close('delete-account', 'confirm');
   dialogManager.close('delete-account', 'dismiss');
 
-  // @ts-expect-error a typo in the id
-  dialogManager.open('delete-acount');
+  // Checked **per id**, which is the guarantee that survives an open id space.
+  // @ts-expect-error 'extend' belongs to session-warning
+  dialogManager.close('delete-account', 'extend');
 
-  // @ts-expect-error a computed id has to say so — `as ModalId` is the documented escape
-  dialogManager.open(String(Math.round(1)));
+  // An id nobody declared still works: a third-party panel, a harness, a computed name.
+  dialogManager.open('some-other-modal');
 }
 
 /** Inferred from the id literal: no type argument, and both halves come back typed. */
@@ -61,7 +63,7 @@ export function Inferred() {
   });
 }
 
-/** The explicit form, the id as the one type argument. */
+/** The explicit form, naming the id as the one type argument. */
 export function Explicit() {
   return useModal<'session-warning'>({
     id: 'session-warning',
@@ -73,22 +75,17 @@ export function Explicit() {
   });
 }
 
-/**
- * **The one thing the explicit form does not buy.** `useModal<'session-warnin'>` is not an error:
- * a type argument that fails the first overload's constraint falls to the second, where it is read
- * as `TData` — a perfectly legal payload type. Only the `id` *value* is checked.
- *
- * So the explicit form is a convenience for naming what is already inferred, not a second place
- * typos are caught. The value is, which is the one that matters, and it is asserted above.
- */
-export function ExplicitTypoFallsThrough() {
-  const loose = useModal<'session-warnin'>({
-    // @ts-expect-error the id value is still checked, which is where the typo is caught
-    id: 'session-warnin',
-    ariaLabel: 'x',
-    render: () => {
+/** A modal the registry never named still declares, with its reasons left open. */
+export function Undeclared() {
+  return useModal({
+    id: 'third-party-panel',
+    ariaLabel: 'Third party',
+    render: ({ handle }) => {
+      handle.close('whatever-it-likes');
       return null;
     },
   });
-  return loose;
 }
+
+/** `ModalId` stays assignable from any string, which is what makes the above compile. */
+export const _idAcceptsAnyString: ModalId = String(1);

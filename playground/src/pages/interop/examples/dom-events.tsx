@@ -29,7 +29,7 @@ const PANEL_ID = 'dom-events-panel';
 export function DomEventsExample() {
   const { eventLog } = useStore(store);
 
-  const alert = useMessageModal<void, 'ok'>({
+  const alert = useMessageModal({
     id: ALERT_ID,
     ariaLabelledBy: `${ALERT_ID}-title`,
     render: ({ action }) => {
@@ -51,7 +51,7 @@ export function DomEventsExample() {
     },
   });
 
-  const panel = useSlideModal<void, 'ok'>({
+  const panel = useSlideModal({
     id: PANEL_ID,
     direction: 'right',
     ariaLabelledBy: `${PANEL_ID}-title`,

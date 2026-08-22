@@ -10,7 +10,7 @@ import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'mui-form-example';
 
-type FormValues = { name: string; email: string };
+export type FormValues = { name: string; email: string };
 
 const resultStore = createResultStore();
 
@@ -43,7 +43,7 @@ export function MuiFormExample() {
   const { 'aria-describedby': _emailDescribedBy, ...emailField } = form.field('email');
 
   // Payload and reasons once: `action('submmit')` would not compile, and `onClose` is exhaustive.
-  const formModal = useModal<FormValues, 'cancel' | 'submit'>({
+  const formModal = useModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {

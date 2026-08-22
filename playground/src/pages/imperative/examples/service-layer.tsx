@@ -22,7 +22,7 @@ export function ServiceLayerExample() {
     deploymentService.getLastError
   );
 
-  const confirmModal = useMessageModal<void, 'cancel' | 'confirm'>({
+  const confirmModal = useMessageModal({
     id: CONFIRM_MODAL_ID,
     ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
     // A dialog, not an alertdialog: the user pressed the button that raised it.
@@ -56,7 +56,7 @@ export function ServiceLayerExample() {
     },
   });
 
-  const failureModal = useMessageModal<void, 'acknowledge'>({
+  const failureModal = useMessageModal({
     id: FAILURE_MODAL_ID,
     ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
     ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,

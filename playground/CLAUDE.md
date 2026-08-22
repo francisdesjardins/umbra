@@ -170,10 +170,9 @@ demonstration the moment it explains itself, so what lands there is temporary by
 prove the point, then take it apart. Anything worth keeping graduates to a real route with a card
 and a `codeSamples` entry.
 
-It renders the still `UmbraMoon` the landing page uses as its hero, so **`RootLayout` suppresses
-`PeekingMoon` on this route** for the same reason it does on `/` — a mascot whose joke is that it
-is hiding cannot share a screen with a full-size twin. A second route needing that exemption is why
-the flag there is named for the condition rather than for the homepage.
+It renders the still `UmbraMoon`, so **`RootLayout` suppresses `PeekingMoon` here** as it does on
+`/` — a mascot whose joke is hiding cannot share a screen with a full-size twin, and the flag is
+named for that condition rather than for the homepage.
 
 ## The API reference is generated
 
@@ -230,6 +229,13 @@ with `symbolFor`. `symbolAt(specifier, name)` is the one door for a link that st
 neither, which is the start-here row on `/api`. The **anchor** stays the bare name: a category
 renders one specifier, so `api-useModal` is unique on the page it lives on and is what a reader
 can guess and share.
+
+## Modals are declared in one place
+
+[`src/app/modal-registry.ts`](src/app/modal-registry.ts) names every modal and what it closes
+with, so **a call site writes no type arguments** — writing them selects the other overload and lets
+the two drift. Add a modal, add a line. Not enforced complete, which is what lets `/stories` render
+the library's own harnesses.
 
 ## Page composition
 

@@ -40,7 +40,7 @@ export function PerActionStateExample() {
   // Which handler started: `phase` says the modal is leaving, not what it was doing.
   const [started, setStarted] = useState<'draft' | 'publish' | null>(null);
 
-  const modal = useMessageModal<void, 'draft' | 'publish' | 'cancel'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     // A string, not the heading: it is a status changing under the user, and a name must not.
     ariaLabel: 'Publish post',

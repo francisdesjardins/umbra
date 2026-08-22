@@ -33,7 +33,7 @@ const openCountStore = createImmerStore(
 export function ImperativeExample() {
   const { openCount, result } = useStore(openCountStore);
 
-  const modal = useMessageModal<void, 'confirm' | 'imperative-demo'>({
+  const modal = useMessageModal({
     id: 'imperative-demo',
     ariaLabelledBy: 'imperative-demo-title',
     render: ({ action }) => {

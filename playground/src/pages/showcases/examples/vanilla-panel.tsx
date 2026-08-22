@@ -11,7 +11,7 @@ import { useStore } from '@/shared/lib/use-store';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type SetupValues = {
+export type SetupValues = {
   name: string;
   environment: string;
   region: string;
@@ -265,7 +265,7 @@ export function VanillaPanelExample() {
   const setup = useStore(setupStore);
 
   // Template hooks infer the payload from `actions`; `submit` is the only one carrying a payload.
-  const modal = useMessageModal<SetupValues, 'back' | 'close' | 'next' | 'submit'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     // A string: the heading is the *step* and changes three times while the dialog stays open.
     ariaLabel: 'Project setup',

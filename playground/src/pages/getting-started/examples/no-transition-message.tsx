@@ -21,7 +21,7 @@ const resultStore = createResultStore();
 export function NoTransitionMessageExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageModal<void, 'confirm'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     animation: NO_ANIMATION,
     ariaLabelledBy: `${MODAL_ID}-title`,

@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
 import type { UseModalReturn } from '../types.js';
 import { useModal } from '../use-modal.js';
 import { slideAnimation, slideDialogStyle } from '../../templates/slide-geometry.js';
@@ -70,6 +71,17 @@ export type UseSlideModalReturn<TData = void, TReason extends string = string> =
  *   ),
  * });
  */
+/**
+ * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * the one below — which is the signature `useSlideModal` has always had.
+ */
+export function useSlideModal<TId extends RegisteredModalId>(
+  options: UseSlideModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): UseSlideModalReturn<DataOf<TId>, ReasonOf<TId>>;
+export function useSlideModal<TData = void, TReason extends string = string>(
+  options: UseSlideModalOptions<TData, TReason>
+): UseSlideModalReturn<TData, TReason>;
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
 ): UseSlideModalReturn<TData, TReason> {

@@ -1,7 +1,8 @@
 // `../store` is the framework-free barrel (React bindings live in `../store/react`); this entry
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
-import type { ModalId } from '../core/registry.js';
+import type { DismissReason } from '../core/dismiss-reason.js';
+import type { ModalId, ReasonOf } from '../core/registry.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -385,7 +386,7 @@ export type DialogManager = {
    * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
    * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
    */
-  close(id: ModalId, reason?: string): void;
+  close<TId extends ModalId>(id: TId, reason?: ReasonOf<TId> | DismissReason): void;
 
   /**
    * Query modal state.

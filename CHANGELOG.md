@@ -31,32 +31,84 @@ spelling of either. Every door narrows: `open`, `close`, `requestOpen`, `request
 contract off the id, so a declared modal needs no type arguments at all — and the per-call-site
 `useModal<TData, TReason>` form is untouched.
 
-**Nothing changes for a project that never opts in**, and one detail is what guarantees it:
+**Nothing changes for a project that never opts in, and adoption is per modal**, which is one
+type:
 
 ```ts
-export type ModalId = [keyof ModalRegistry] extends [never] ? string : keyof ModalRegistry;
+export type ModalId = keyof ModalRegistry | (string & {});
 ```
 
-The brackets are load-bearing. A naked `keyof ModalRegistry extends never` distributes over
-`never` and evaluates to `never`, so the fallback would be unreachable and every call site in every
-project that had not opted in would stop compiling.
+`(string & {})` is what keeps both halves. A plain `keyof ModalRegistry | string` collapses to
+`string` and the editor stops completing the names; the branded member is ignored by that reduction,
+so the union survives long enough to be suggested.
 
 **Proven at compile time, in two configurations, because one file cannot hold both.** Declaration
-merging is global, so an augmented registry inside the main project would hide the very fallback the
+merging is global, so an augmented registry inside the main project would hide the open id space the
 empty case asserts. `src/core/__tests__/registry.test-d.ts` covers the empty state inside
 `yarn type-check`; `yarn type-check:registry` compiles `type-fixtures/` alone for the augmented one.
 
 Three findings worth recording, because each is a limit rather than a detail:
 
-- **Declaring one modal declares them all.** Once the interface has a key, an undeclared id is an
-  error everywhere — including inside the library's own tests, which is how the consequence was
-  found. That is what makes the list trustworthy; a computed id opts out with `as ModalId`.
+- **A mistyped id is not an error.** An unknown id is a supported one, so the registry buys a
+  _contract_, not exhaustiveness: `open('confrim-delete')` still compiles, and what it now costs is
+  the autocompletion that would have spelled it right. Every other door — the reason, the payload —
+  is checked once the id is one the registry names.
 - **Naming the id as a type argument is a convenience, not a second check.** A type argument that
   fails the registered overload's constraint falls to the next one, where it reads as `TData` — so
   `useModal<'typo'>()` is legal. The id _value_ is checked either way, which is where the typo is.
 - **Typing the public doors reached the library's own plumbing.** Five internal call sites hold an
   id that genuinely is a registered one and were typed `string`; they take `ModalId` now, which is
   the honest fix rather than five casts the repo bans anyway.
+
+### Changed — the registry is per modal, not all-or-nothing, because the playground said so
+
+The first design made an augmented registry exhaustive: declare one modal and an undeclared id is
+an error everywhere. Adopting it in the playground produced **247 errors, 244 of them in the
+library's own CT harnesses** — which `/stories` renders, so the playground compiles a few hundred
+modal declarations it does not own. No app that hosts a third-party panel could adopt it either.
+
+So `ModalId` is `keyof ModalRegistry | (string & {})`: an undeclared id still works, and adoption
+is one modal at a time. What an entry buys is its **contract**, not exhaustiveness — and a mistyped
+id is no longer an error, which is the price.
+
+Two mechanical findings behind that, each paid for once:
+
+- **`(string & {})` in the union kills literal inference**, so per-id reason checking died with it.
+  An overload pair does not bring it back — a failing first overload falls through to the permissive
+  one rather than erroring. One generic signature does: `close<TId extends ModalId>(id: TId,
+reason?: ReasonOf<TId> | DismissReason)`. The old signature typed the reason as plain `string`,
+  so this is the first time it was checked at all.
+- **The template hooks needed the overload too.** `useMessageModal` and `useSlideModal` wrap
+  `useModal` but declare their own signatures, so a modal opened through them read `void` for its
+  payload. Both, on both bindings.
+
+### Added — the playground declares its own modals
+
+**Call sites write no type arguments.** That is the half that makes the registry the single source:
+naming `useMessageModal<SetupValues, ...>` selects the _other_ overload, so the registry is never
+consulted and the two can disagree in silence — verified, a call site could claim an unrelated
+payload and reason and nothing objected. 34 call sites dropped their generics; the three that kept
+them are a code sample in a template literal and two whose id constants are imported, which the
+sweep could not resolve and which were done by hand.
+
+Declaring them found **two more mismatches of my own making**: `deploy-confirm` was written into the
+registry as `cancel | deploy` when its actions are `cancel` and `confirm`, and `deploy-failure`
+as `close` when the service closes it with `retry`.
+
+Four gaps closed in the same pass, each one something the matrix or a claim implied was already
+done: `bindDialog` had no registered overload (the matrix said it narrowed "with the rest"),
+`useLookup` still took a bare `string` on both bindings, and neither architecture doc mentioned the
+registry at all.
+
+`playground/src/app/modal-registry.ts` lists **38 modals** with their reasons and payloads. It is
+the answer to "which component owns `stack-priority-warning`": find-references on the key rather
+than a grep. Four payload types that were local to a component are exported to be nameable, which
+is the cost the README names.
+
+**It found a real bug on the first compile.** `deployment-service.ts` closes `deploy-failure` with
+`'retry'`, and that modal declared `<void, 'acknowledge'>`. The old `close(id, reason?: string)`
+accepted anything, so the mismatch compiled and the reason was simply wrong at runtime. Both sides
+declare `'acknowledge' | 'retry'` now.
 
 ### Fixed — the API reference could not show an interface
 

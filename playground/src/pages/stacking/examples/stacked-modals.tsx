@@ -39,7 +39,7 @@ export function StackedModalsExample() {
     });
   };
 
-  const inner = useMessageModal<void, 'ack'>({
+  const inner = useMessageModal({
     id: 'stack-inner',
     ariaLabel: 'Level 3',
     render: ({ action }) => {
@@ -77,7 +77,7 @@ export function StackedModalsExample() {
     },
   });
 
-  const middle = useMessageModal<void, 'save'>({
+  const middle = useMessageModal({
     id: 'stack-middle',
     ariaLabel: 'Level 2',
     render: ({ action }) => {
@@ -123,7 +123,7 @@ export function StackedModalsExample() {
     },
   });
 
-  const panel = useSlideModal<void, 'close'>({
+  const panel = useSlideModal({
     id: PANEL_ID,
     direction: 'right',
     ariaLabel: 'Level 1',

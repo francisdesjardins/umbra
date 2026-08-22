@@ -39,7 +39,7 @@ const resultStore = createResultStore();
 function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<void> }) {
   const { itemName } = useStore(deleteItemStore);
 
-  const modal = useMessageModal<void, 'cancel' | 'delete'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     ariaDescribedBy: `${MODAL_ID}-body`,

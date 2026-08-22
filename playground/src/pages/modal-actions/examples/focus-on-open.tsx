@@ -55,7 +55,7 @@ export function FocusOnOpenExample() {
   const [isVisible, setIsVisible] = useState(false);
   const focused = useFocusedLabel(isVisible);
 
-  const modal = useMessageModal<void, 'delete' | 'keep'>({
+  const modal = useMessageModal({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     // Not `alertdialog`: it announces its description, and this body is focus commentary.

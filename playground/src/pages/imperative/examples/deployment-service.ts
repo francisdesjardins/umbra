@@ -1,6 +1,7 @@
 // A plain TypeScript service — no React, no hooks. It imports the package root, not `/react`, so it
 // compiles where React is absent: the shape an API client, router guard or websocket handler takes.
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
+import type { ModalId } from 'umbra';
 import { dialogManager } from 'umbra';
 
 export const CONFIRM_MODAL_ID = 'deploy-confirm';
@@ -16,7 +17,10 @@ type Activity = { readonly at: string; readonly text: string };
  * The imperative `openAndWait()`: open, resolve with the close reason, and unsubscribe in the
  * one-shot listener so a caller that never awaits leaks nothing.
  */
-const openAndAwaitClose = (id: string) => {
+// The id narrows, the reason cannot: `subscribe` is a broadcast over every dialog on the page, so
+// one event type serves them all and `reason` is `string`. The typed await lives on the hook
+// (`modal.openAndWait()`), and this caller has no component to hold one.
+const openAndAwaitClose = (id: ModalId) => {
   return new Promise<string>((resolve) => {
     const unsubscribe = dialogManager.subscribe((event) => {
       if (event.type === 'close' && event.id === id) {

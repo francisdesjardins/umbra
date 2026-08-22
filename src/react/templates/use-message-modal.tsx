@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
 import { useModal } from '../use-modal.js';
 import type { UseModalReturn } from '../types.js';
 import {
@@ -64,6 +65,17 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
  *   ),
  * });
  */
+/**
+ * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * the one below — which is the signature `useMessageModal` has always had.
+ */
+export function useMessageModal<TId extends RegisteredModalId>(
+  options: UseMessageModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): UseMessageModalReturn<DataOf<TId>, ReasonOf<TId>>;
+export function useMessageModal<TData = void, TReason extends string = string>(
+  options: UseMessageModalOptions<TData, TReason>
+): UseMessageModalReturn<TData, TReason>;
 export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason> {

@@ -58,7 +58,7 @@ function Panel({
 
 /** Settings drawer: the default shape. Full height, slides from the right, blocks the page. */
 function useDrawerPreset() {
-  return useSlideModal<void, 'close'>({
+  return useSlideModal({
     id: DRAWER_ID,
     direction: 'right',
     ariaLabel: 'Settings drawer',
@@ -95,7 +95,7 @@ function useDrawerPreset() {
 
 /** Bottom sheet: the same hook, one word different. */
 function useSheetPreset() {
-  return useSlideModal<void, 'close'>({
+  return useSlideModal({
     id: SHEET_ID,
     direction: 'bottom',
     ariaLabel: 'Bottom sheet',
@@ -126,7 +126,7 @@ function useSheetPreset() {
 
 /** Command palette: drops from the top, pinned to the middle of the cross axis. */
 function usePalettePreset() {
-  return useSlideModal<void, 'close'>({
+  return useSlideModal({
     id: PALETTE_ID,
     direction: 'top',
     align: 'center',
@@ -176,7 +176,7 @@ function useInspectorPreset(
   selected: (typeof ROWS)[number] | null,
   onNavigate: (delta: 1 | -1) => void
 ) {
-  return useSlideModal<void, 'close'>({
+  return useSlideModal({
     id: INSPECTOR_ID,
     direction: 'right',
     nonModal: true,

@@ -46,7 +46,7 @@ function parseArchiveRequest(data: unknown): ArchiveRequest | null {
 }
 
 /** And what it closes *with* — the answer, travelling back the way the request came. */
-type ArchiveReceipt = { readonly room: string; readonly archivedAt: string };
+export type ArchiveReceipt = { readonly room: string; readonly archivedAt: string };
 
 /**
  * A predicate, not parse-or-null: `data?: unknown` comes back, and each side distrusts the other.
@@ -66,7 +66,7 @@ export function OpenRequestExample() {
   const [room, setRoom] = useState<string | null>(null);
   const [log, setLog] = useState<string | null>(null);
 
-  const modal = useMessageModal<ArchiveReceipt, 'confirm' | 'cancel'>({
+  const modal = useMessageModal({
     id: 'open-request-demo',
     ariaLabelledBy: 'open-request-demo-title',
 
