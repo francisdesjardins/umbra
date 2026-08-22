@@ -276,7 +276,7 @@ const modal = useModal({
   id: 'confirm-delete',
   render: ({ handle }) => <button onClick={() => handle.close('confirm', { id })}>Delete</button>,
   onClose: (result) => {
-    if (result.reason === 'confirm') {
+    if (result.reason === 'confirm' && result.data) {
       remove(result.data.id); // typed, without `useModal<{ id: string }, …>` anywhere
     }
   },
@@ -308,26 +308,21 @@ imports the root and drives dialogs by id. This file compiles and runs with no r
 ```ts
 import { dialogManager } from 'umbra';
 
-/** Open a dialog and resolve with the reason it closed. */
-const askConfirmation = (id: string) => {
-  return new Promise<string>((resolve) => {
-    const unsubscribe = dialogManager.subscribe((event) => {
-      if (event.type === 'close' && event.id === id) {
-        unsubscribe();
-        resolve(event.reason ?? 'dismiss');
-      }
-    });
-    dialogManager.open(id);
-  });
-};
-
 export const deleteAccount = async () => {
-  if ((await askConfirmation('confirm-delete')) !== 'confirm') {
-    return;
+  const [unavailable, closed] = await dialogManager.openAndWait('confirm-delete');
+  if (unavailable) {
+    return report(unavailable.message); // nobody registered that id — an answer, not a hang
   }
-  await api.deleteAccount();
+  if (closed.reason === 'confirm') {
+    // 'cancel' or 'dismiss' otherwise, and the checker knows it
+    await api.deleteAccount();
+  }
 };
 ```
+
+`openAndWait` is the same door a hook offers, on the manager instead — so the service needs no
+component to hold one. `reason` and `data` are typed if the id is [in the registry](#declaring-your-modals-in-one-place)
+and open if it is not, and there is no listener to unsubscribe or to register in the right order.
 
 Your UI layer only has to _register_ a modal with that id; the service decides when it appears.
 For a dialog the service does not own, `requestOpenAndWait(id, request)` asks instead of
@@ -348,7 +343,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close, and the `lookup` query API
 - `prioritize` — who is in front, as one project-wide rule, and the three costs of reordering a modal dialog
-- `openAndWait()` — Go-style async result: open, and resolve with how it closed
+- `openAndWait()` — Go-style async result: open, and resolve with how it closed — on a hook, and on `dialogManager` for code with no component
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
 - `normalizeError` — turn whatever was thrown into an `Error`

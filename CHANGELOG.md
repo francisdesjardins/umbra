@@ -118,6 +118,54 @@ and the build failed on a category listing an export the model could not see —
 working, but it would have omitted the one symbol an adopter has to find. Interfaces read as types
 on that page and are mapped as such.
 
+### Added — `dialogManager.openAndWait(id)`, the imperative instruct-and-await
+
+The registry could type an id, and every door that read a close still handed back `string`. This
+was the shape a service kept ending up in:
+
+```ts
+const decision = await openAndAwaitClose(CONFIRM_MODAL_ID); // Promise<string>
+if (decision !== 'confirm') {
+```
+
+Hand-rolled over `subscribe`, and `subscribe` is a broadcast over every dialog on the page — one
+event type serves them all, so `reason` there is `string` and cannot be anything else. The typed
+await existed only on a hook, and a service has no component to hold one. So the manager has its
+own now, resolving the same `[error, result]` tuple, typed by the registry:
+
+```ts
+const [unavailable, closed] = await dialogManager.openAndWait('deploy-confirm');
+if (!unavailable && closed.reason === 'confirm') {
+```
+
+`closed.reason` is `'cancel' | 'confirm' | 'dismiss'`, and an id nobody registered resolves
+`[Error, null]` rather than hanging — the listener version waits forever, silently. The resolver is
+registered before `beginOpen`, so a modal dismissed inside `prepare` is still heard; both of those
+are unit tests rather than claims. The playground's service and the README's framework-free example
+were the two callers written the old way, and neither has a listener to unsubscribe any more.
+
+`requestOpenAndWait` is the other half of the pair and unchanged in behaviour: it **asks** and may
+be refused. Reach for it across an ownership boundary and for `openAndWait` inside one.
+
+### Changed — the rest of the close surface reads its types off the id
+
+`OpenRequestOutcome` is `OpenRequestOutcome<TData, TReason>`, so an accepted request's `closed`
+carries the modal's own contract instead of `unknown`. `ModalLookup`'s four queries — `get`, `exists`,
+`isVisible`, `isForeground` — take `ModalId`, which is where autocompletion was still missing. What
+they hand _back_ keeps `id: string`: a returned union of names would read as noise in every hover
+and guards nothing.
+
+`close` gained one word: `reason?: ReasonOf<NoInfer<TId>> | DismissReason`. Without it a wrong
+reason is a solvable inference problem — TypeScript widens `TId` to whatever id would accept that
+reason and reports the mismatch against the **id**, which is the argument that was right.
+
+One finding paid for on the way: **a loose implementation cannot satisfy a generic declaration.**
+`openAndWait(id: string)` does not implement
+`openAndWait<TId extends ModalId>(id: TId): Promise<…DataOf<TId>…>`, and the repo bans the `as` that
+would paper over it. Both awaiting doors are declared as overload pairs instead — narrow on
+`RegisteredModalId`, loose on `ModalId` — which is honest about the erasure and costs the caller
+nothing.
+
 ## 2026-08-21
 
 ### Fixed — one example was in French, and card prose ran to 98 characters

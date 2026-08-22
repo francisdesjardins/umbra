@@ -89,3 +89,40 @@ export function Undeclared() {
 
 /** `ModalId` stays assignable from any string, which is what makes the above compile. */
 export const _idAcceptsAnyString: ModalId = String(1);
+
+/** Does the generic `requestOpenAndWait` really hand back a typed close, or only compile? */
+export async function _requestOpenAndWaitIsTyped() {
+  const outcome = await dialogManager.requestOpenAndWait('delete-account', {});
+  if (!outcome.accepted) {
+    return;
+  }
+  const [error, result] = await outcome.closed;
+  if (error) {
+    return;
+  }
+  const reason: 'confirm' | 'cancel' | 'dismiss' = result.reason;
+  const id: string | undefined = result.data?.id;
+  void reason;
+  void id;
+}
+
+/** The imperative twin of a hook's `openAndWait`, typed by the registry. */
+export async function _openAndWaitIsTyped() {
+  const [error, result] = await dialogManager.openAndWait('delete-account');
+  if (error) {
+    return;
+  }
+  const reason: 'confirm' | 'cancel' | 'dismiss' = result.reason;
+  const id: string | undefined = result.data?.id;
+  // @ts-expect-error 'extend' belongs to session-warning
+  const wrong: 'extend' = result.reason;
+  void reason;
+  void id;
+  void wrong;
+}
+
+/** An id the registry does not name still opens and waits, with the payload erased. */
+export async function _openAndWaitStaysOpen() {
+  const [, result] = await dialogManager.openAndWait('third-party-panel');
+  void result;
+}

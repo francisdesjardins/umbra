@@ -555,7 +555,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'ModalRegistry — project-level id and contract typing',
     react: {
       state: 'works',
-      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `lookup` and `useModal`. The hook gains an overload that reads `data` and `reason` off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts.',
+      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useModal`. The hook gains an overload that reads `data` and `reason` off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts.',
       caveat:
         'Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring.',
     },
@@ -566,6 +566,31 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     vanilla: {
       state: 'works',
       note: 'The id is the manager\u2019s key rather than a renderer\u2019s, so `bindDialog` narrows with the rest.',
+    },
+  },
+  {
+    capability: 'dialogManager.openAndWait (the imperative instruct-and-await)',
+    react: {
+      state: 'works',
+      note: 'A root export rather than a binding’s, for a module with no component to hold a hook’s `openAndWait` — a service, a router guard, a worker. Resolves the same `[error, result]` tuple, typed by the registry, and answers `[Error, null]` for an id nobody registered rather than leaving the caller waiting forever. `requestOpenAndWait` is the other half of the pair: that one asks and may be refused, so reach for it across an ownership boundary and this one inside.',
+      references: [
+        {
+          file: 'src/manager/__tests__/open-and-wait.test.ts',
+          title: 'opens the dialog and resolves with how it closed',
+        },
+        {
+          file: 'src/manager/__tests__/open-and-wait.test.ts',
+          title: 'hears a close that happens inside the open',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      note: 'The same function — it lives under the root, which every binding re-exports.',
+    },
+    vanilla: {
+      state: 'works',
+      note: 'Beside the controller’s own `openAndWait()`, which is the one to use when you are holding the controller.',
     },
   },
   {

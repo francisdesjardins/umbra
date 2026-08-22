@@ -1,7 +1,6 @@
 // A plain TypeScript service — no React, no hooks. It imports the package root, not `/react`, so it
 // compiles where React is absent: the shape an API client, router guard or websocket handler takes.
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import type { ModalId } from 'umbra';
 import { dialogManager } from 'umbra';
 
 export const CONFIRM_MODAL_ID = 'deploy-confirm';
@@ -10,27 +9,6 @@ export const FAILURE_MODAL_ID = 'deploy-failure';
 export type Environment = 'staging' | 'production';
 
 type Activity = { readonly at: string; readonly text: string };
-
-// ── Await a user decision from non-React code ────────────────────────────────
-
-/**
- * The imperative `openAndWait()`: open, resolve with the close reason, and unsubscribe in the
- * one-shot listener so a caller that never awaits leaks nothing.
- */
-// The id narrows, the reason cannot: `subscribe` is a broadcast over every dialog on the page, so
-// one event type serves them all and `reason` is `string`. The typed await lives on the hook
-// (`modal.openAndWait()`), and this caller has no component to hold one.
-const openAndAwaitClose = (id: ModalId) => {
-  return new Promise<string>((resolve) => {
-    const unsubscribe = dialogManager.subscribe((event) => {
-      if (event.type === 'close' && event.id === id) {
-        unsubscribe();
-        resolve(event.reason ?? 'dismiss');
-      }
-    });
-    dialogManager.open(id);
-  });
-};
 
 // ── Service state ────────────────────────────────────────────────────────────
 // A hand-rolled listener set rather than the library's `createStore` — which is a root export and
@@ -60,9 +38,16 @@ const deploy = async (environment: Environment) => {
   target = environment;
   emit();
 
-  const decision = await openAndAwaitClose(CONFIRM_MODAL_ID);
-  if (decision !== 'confirm') {
-    record(`Deploy to ${environment} cancelled (${decision})`);
+  // The manager's own await rather than a hand-rolled `subscribe` listener: the registry types the
+  // close, so `reason` is `'cancel' | 'confirm' | 'dismiss'` and a typo in the test below is a
+  // compile error — and an id nobody mounted answers instead of hanging the caller forever.
+  const [unavailable, closed] = await dialogManager.openAndWait(CONFIRM_MODAL_ID);
+  if (unavailable) {
+    record(`Deploy to ${environment} aborted: ${unavailable.message}`);
+    return;
+  }
+  if (closed.reason !== 'confirm') {
+    record(`Deploy to ${environment} cancelled (${closed.reason})`);
     return;
   }
 

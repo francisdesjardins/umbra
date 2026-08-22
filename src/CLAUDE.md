@@ -468,7 +468,8 @@ rejection are real. Flattening a derived type into an equivalent-looking literal
 `verify:package` re-checks the same guarantees against the published `.d.ts`.
 
 - `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`); the `[Error, null]`
-  branch is produced by `store.abandon()`
+  branch is produced by `store.abandon()`, or by an id nobody registered on
+  `dialogManager.openAndWait(id)`
 - No `as` casts — `Extract<Source, Target>` to narrow, `satisfies` to prevent widening
 
 ## Generated docs

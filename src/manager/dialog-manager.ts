@@ -2,7 +2,7 @@
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
-import type { ModalId, ReasonOf } from '../core/registry.js';
+import type { DataOf, ModalId, ReasonOf, RegisteredModalId } from '../core/registry.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -143,11 +143,11 @@ export type OpenRequestDispatch = OpenRequest & {
  * abandoned) in a two-branch tuple, so the decision *carries* the close instead. Awaiting the
  * second half is opt-in and costs nothing when skipped.
  */
-export type OpenRequestOutcome =
+export type OpenRequestOutcome<TData = unknown, TReason extends string = string> =
   | {
       readonly accepted: true;
       /** Resolves the way `openAndWait()` does, once the dialog closes. */
-      readonly closed: Promise<AwaitedClose<unknown>>;
+      readonly closed: Promise<AwaitedClose<TData, TReason>>;
     }
   | {
       readonly accepted: false;
@@ -378,7 +378,37 @@ export type DialogManager = {
    *   const [error, result] = await outcome.closed;
    * }
    */
+  requestOpenAndWait<TId extends RegisteredModalId>(
+    id: TId,
+    request?: OpenRequest
+  ): Promise<OpenRequestOutcome<DataOf<TId>, ReasonOf<TId>>>;
   requestOpenAndWait(id: ModalId, request?: OpenRequest): Promise<OpenRequestOutcome>;
+
+  /**
+   * Open a modal and wait for it to close — the imperative twin of a hook's `openAndWait()`, for
+   * code with no component to hold one: a service, a router guard, a worker.
+   *
+   * **Instructs, like {@link DialogManager.open}**, where {@link DialogManager.requestOpenAndWait}
+   * asks and may be refused. Reach for that one across an ownership boundary and this one inside it.
+   *
+   * Resolves the same `[error, result]` tuple a hook does, typed by the registry — so a project
+   * that declared the modal gets its reasons and its payload back without annotating anything. An
+   * id nobody registered resolves `[Error, null]` rather than hanging, which is the answer a
+   * caller can act on.
+   *
+   * @example
+   * const [unavailable, closed] = await dialogManager.openAndWait('confirm-delete');
+   * if (unavailable) {
+   *   return report(unavailable.message); // nobody registered that id — an answer, not a hang
+   * }
+   * if (closed.reason === 'confirm') {
+   *   await api.deleteAccount();
+   * }
+   */
+  openAndWait<TId extends RegisteredModalId>(
+    id: TId
+  ): Promise<AwaitedClose<DataOf<TId>, ReasonOf<TId>>>;
+  openAndWait(id: ModalId): Promise<AwaitedClose<unknown>>;
 
   /**
    * Close a modal imperatively by id, with a reason.
@@ -386,7 +416,7 @@ export type DialogManager = {
    * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
    * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
    */
-  close<TId extends ModalId>(id: TId, reason?: ReasonOf<TId> | DismissReason): void;
+  close<TId extends ModalId>(id: TId, reason?: ReasonOf<NoInfer<TId>> | DismissReason): void;
 
   /**
    * Query modal state.
@@ -1085,6 +1115,21 @@ export function createDialogManager(): DialogManager {
         return;
       }
       entry.store.beginOpen();
+    },
+
+    openAndWait(id: string): Promise<AwaitedClose<unknown>> {
+      const entry = registry.get(id);
+      if (!entry) {
+        log.warn('Open skipped (not registered)', { id });
+        return Promise.resolve([new Error(`No modal registered with id "${id}"`), null]);
+      }
+      // The resolver is registered before the open, so a modal that closes inside `beginOpen` —
+      // a `prepare` that throws, a reconciliation putting it straight back — is still heard.
+      const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
+        entry.store.addCloseResolver(resolve);
+      });
+      entry.store.beginOpen();
+      return closed;
     },
 
     requestOpen(id: string, request: OpenRequest = {}): void {

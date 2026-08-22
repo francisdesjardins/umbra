@@ -1,3 +1,4 @@
+import type { ModalId } from '../core/registry.js';
 import type { ModalPhase } from '../core/types.js';
 
 /** The state every `ModalInfo` reports, registered or not. */
@@ -72,9 +73,9 @@ export type ModalInfo = RegisteredModalInfo | UnregisteredModalInfo;
  */
 export type ModalLookup = {
   /** Get modal info by id. Returns null-object default for unregistered ids. */
-  get(id: string): ModalInfo;
+  get(id: ModalId): ModalInfo;
   /** Check if a modal is registered. */
-  exists(id: string): boolean;
+  exists(id: ModalId): boolean;
   /**
    * Get the open dialog in front — the most recently opened **modal** one, or whichever a
    * `dialogManager.prioritize` policy put there. A non-modal dialog is never in front of a modal one.
@@ -91,9 +92,9 @@ export type ModalLookup = {
   // ── Per-modal queries ───────────────────────────────────────────────────
 
   /** Whether a specific dialog is on screen, exit animation included. */
-  isVisible(id: string): boolean;
+  isVisible(id: ModalId): boolean;
   /** Check if a specific modal is the topmost open modal by id. */
-  isForeground(id: string): boolean;
+  isForeground(id: ModalId): boolean;
 
   // ── Registration queries ────────────────────────────────────────────────
 
