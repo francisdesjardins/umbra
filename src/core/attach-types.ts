@@ -1,4 +1,5 @@
 import type { ActionGate } from '../actions/action-engine.js';
+import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
@@ -19,7 +20,7 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 export type ModalDomContext = {
   readonly store: ModalStore;
   readonly getDialog: GetDialog;
-  readonly modalId: string;
+  readonly modalId: ModalId;
   readonly phase: ModalPhase;
   readonly manager: DialogManager;
 };

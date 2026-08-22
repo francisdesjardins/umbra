@@ -240,6 +240,67 @@ you get three things: a mistyped `action('submmit')` is a compile error, the rea
 autocompletes, and the `switch` above is **exhaustive**. `'dismiss'` is always in the union
 because the library produces it itself, on Escape, on a backdrop click and on teardown.
 
+### Declaring your modals in one place
+
+Everything above is declared at the call site, which is fine until the app has forty modals and a
+bug report names one by id. Then two questions get hard: **which component owns `confirm-delete`**,
+and **what does it close with**. A project can answer both once, by declaring its modals in a
+single interface:
+
+```ts
+// src/modals.d.ts — or anywhere your tsconfig includes
+declare module 'umbra' {
+  interface ModalRegistry {
+    'confirm-delete': { data: { id: string }; reason: 'confirm' | 'cancel' };
+    'session-warning': { reason: 'extend' | 'sign-out' };
+    'command-palette': Record<string, never>;
+  }
+}
+```
+
+An entry names the same two things a close result does — `reason` and `data` — and both are
+optional, so a modal with no payload declares only its reasons.
+
+From then on the id is checked wherever one is accepted:
+
+```ts
+dialogManager.open('confirm-delete'); // fine
+dialogManager.open('confirm-delet'); // Type error, and the editor suggests the real one
+dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another modal
+```
+
+And `useModal` reads the contract off the id, so a declared modal needs no type arguments at all:
+
+```tsx
+const modal = useModal({
+  id: 'confirm-delete',
+  render: ({ handle }) => <button onClick={() => handle.close('confirm', { id })}>Delete</button>,
+  onClose: (result) => {
+    if (result.reason === 'confirm') {
+      remove(result.data.id); // typed, without `useModal<{ id: string }, …>` anywhere
+    }
+  },
+});
+```
+
+**The registry becomes the index.** Because every key is a real type, "which component opens this?"
+is find-references on the key rather than a grep across the codebase — which is the half of this
+that pays off during a bug hunt rather than at the keyboard.
+
+Three things to know before adopting it:
+
+- **Declaring one modal declares them all.** Once the interface has a key, an id it does not name
+  is an error everywhere. That is what makes the list trustworthy, and it means adoption is a
+  single pass rather than a gradual one. A genuinely computed id opts out at the call site with
+  `as ModalId`.
+- **Payload types have to be exported** to be named in the registry. Types that were local to one
+  component become part of the app's vocabulary, which is usually an improvement and is always
+  work.
+- **Nothing changes if you skip it.** The interface ships empty, and while it is empty an id is
+  the `string` it has always been — no new errors, and the per-call-site `useModal<TData, TReason>`
+  form keeps working exactly as documented above. Both forms are supported; the registry is the one
+  that scales with the number of modals.
+
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Without a framework
 
 A module that has no component to hang a hook off — an API client, a router guard, a worker —

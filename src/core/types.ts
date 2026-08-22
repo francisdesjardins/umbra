@@ -1,4 +1,5 @@
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
+import type { ModalId } from './registry.js';
 import type { DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
@@ -250,7 +251,7 @@ export type UseModalBaseOptions<
    * new name and keeps answering to the old one everywhere else. Give a modal one id for its
    * lifetime, and mount a different modal if you need a different name.
    */
-  readonly id: string;
+  readonly id: ModalId;
   /** Render function for modal content. Receives modal state as arguments. */
   readonly render: (args: ModalRenderArgs<TData, TReason>) => TNode;
   /** CSS transition animation configuration */

@@ -13,6 +13,7 @@ import {
 } from './attach-lifecycle.js';
 import { createStepRunner } from './step-runner.js';
 import type { ActionGate } from '../actions/action-engine.js';
+import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { FocusCoordinator } from './attach-focus.js';
@@ -81,7 +82,7 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 export type ModalDirectorContext = {
   readonly store: ModalStore;
   readonly getDialog: GetDialog;
-  readonly modalId: string;
+  readonly modalId: ModalId;
   readonly manager: DialogManager;
   readonly engine: ActionGate;
 };

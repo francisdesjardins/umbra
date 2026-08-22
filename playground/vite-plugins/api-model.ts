@@ -40,6 +40,9 @@ export const symbolKey = (specifier: string, name: string): string => {
 const KIND: Record<number, ApiSymbol['kind']> = {
   32: 'variable',
   64: 'function',
+  // An interface reads as a type on the page, and one of them is public: `ModalRegistry`, which a
+  // project augments. Unmapped, the reference silently omits the one symbol adopters must find.
+  256: 'type',
   2097152: 'type',
 };
 
@@ -78,6 +81,12 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'ModalErrorSource',
       'DISMISS_REASON',
       'DismissReason',
+      'ModalRegistry',
+      'ModalContract',
+      'ModalId',
+      'ReasonOf',
+      'DataOf',
+      'RegisteredModalId',
       'setLogLevel',
     ],
   },

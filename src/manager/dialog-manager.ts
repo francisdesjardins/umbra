@@ -1,6 +1,7 @@
 // `../store` is the framework-free barrel (React bindings live in `../store/react`); this entry
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
+import type { ModalId } from '../core/registry.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -324,13 +325,13 @@ const emptySnapshot: DialogManagerSnapshot = {
  */
 export type DialogManager = {
   /** Register a modal store. Called internally by useModal. */
-  register(id: string, options: RegisterOptions): void;
+  register(id: ModalId, options: RegisterOptions): void;
 
   /** Unregister a modal store. Called internally by useModal. */
-  unregister(id: string): void;
+  unregister(id: ModalId): void;
 
   /** Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}. */
-  open(id: string): void;
+  open(id: ModalId): void;
 
   /**
    * **Ask** a modal to open, and let it say no.
@@ -355,7 +356,7 @@ export type DialogManager = {
    *   context: { source: 'portal:nav' },
    * });
    */
-  requestOpen(id: string, request?: OpenRequest): void;
+  requestOpen(id: ModalId, request?: OpenRequest): void;
 
   /**
    * The same ask, with the answer — and, if it was a yes, the close that follows.
@@ -376,7 +377,7 @@ export type DialogManager = {
    *   const [error, result] = await outcome.closed;
    * }
    */
-  requestOpenAndWait(id: string, request?: OpenRequest): Promise<OpenRequestOutcome>;
+  requestOpenAndWait(id: ModalId, request?: OpenRequest): Promise<OpenRequestOutcome>;
 
   /**
    * Close a modal imperatively by id, with a reason.
@@ -384,7 +385,7 @@ export type DialogManager = {
    * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
    * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
    */
-  close(id: string, reason?: string): void;
+  close(id: ModalId, reason?: string): void;
 
   /**
    * Query modal state.
@@ -396,7 +397,7 @@ export type DialogManager = {
   /** The collection-level query API. */
   lookup(): ModalLookup;
   /** One modal's state; a null-object default for an id nobody registered. */
-  lookup(id: string): ModalInfo;
+  lookup(id: ModalId): ModalInfo;
 
   /**
    * Decide the stack order yourself, instead of letting whoever opened last win.
@@ -461,7 +462,7 @@ export type DialogManager = {
    * nothing rewrites it, so a stamp and this number can disagree after a close. Nothing reads the
    * stamp back, and the order they describe is the same.
    */
-  getZIndex(id: string): number;
+  getZIndex(id: ModalId): number;
 
   /** Subscribe to open/close events. */
   subscribe(callback: DialogManagerSubscriber): () => void;

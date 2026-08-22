@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } from 'solid-js';
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
+import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
@@ -45,6 +46,18 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
  * @typeParam TReason - The reasons this modal closes with. Declare them.
  */
+/**
+ * The registered door, first so a declared id is matched by it — whether the caller wrote the id as
+ * a literal and let it infer, or named it as the one type argument. While `ModalRegistry` is empty
+ * `RegisteredModalId` is `never`, this overload is uninhabitable, and every call falls through to
+ * the one below, which is the signature this hook has always had.
+ */
+export function useModal<TId extends RegisteredModalId>(
+  options: UseModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
+): UseModalReturn<DataOf<TId>, ReasonOf<TId>>;
+export function useModal<TData = void, TReason extends string = string>(
+  options: UseModalOptions<TData, TReason>
+): UseModalReturn<TData, TReason>;
 export function useModal<TData = void, TReason extends string = string>(
   options: UseModalOptions<TData, TReason>
 ): UseModalReturn<TData, TReason> {

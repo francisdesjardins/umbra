@@ -552,6 +552,23 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'ModalRegistry — project-level id and contract typing',
+    react: {
+      state: 'works',
+      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `lookup` and `useModal`. The hook gains an overload that reads `data` and `reason` off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts.',
+      caveat:
+        'Declaring one modal declares them all — once the interface has a key, an id it does not name is an error everywhere, which is what makes the list trustworthy and why adoption is one pass rather than a gradual one. A computed id opts out with `as ModalId`. The explicit form that names the id as a type argument names what is already inferred and is not a second place typos are caught: a type argument failing the first overload falls to the second, where it reads as `TData`. The id *value* is checked either way.',
+    },
+    solid: {
+      state: 'works',
+      note: 'The same overload pair, over the same core types.',
+    },
+    vanilla: {
+      state: 'works',
+      note: 'The id is the manager\u2019s key rather than a renderer\u2019s, so `bindDialog` narrows with the rest.',
+    },
+  },
+  {
     capability: 'phase, exposed to the caller',
     react: {
       state: 'works',

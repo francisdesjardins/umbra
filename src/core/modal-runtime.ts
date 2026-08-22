@@ -8,6 +8,7 @@ import { finalizeModalClose } from './finalize-close.js';
 import { createModalStore } from './modal-store.js';
 import { dialogPlacement, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
+import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
@@ -109,7 +110,9 @@ export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedMo
  * them be used as effect dependencies (the compiler cannot memoize them: it treats the store as
  * opaque).
  */
-export function createModalRuntime<TData = void, TReason extends string = string>(modalId: string) {
+export function createModalRuntime<TData = void, TReason extends string = string>(
+  modalId: ModalId
+) {
   const store = createModalStore<TData, TReason>(modalId);
   const engine = createActionEngine<TData, TReason>(modalId);
   engine.bindClose((reason, data) => {
@@ -218,7 +221,7 @@ export function shouldDismissOnBackdropClick(
  */
 export type TeardownOptions = {
   readonly manager: DialogManager;
-  readonly modalId: string;
+  readonly modalId: ModalId;
   readonly dialog: HTMLDialogElement | null;
   /** Where a throwing `onClose` goes on the unmount path — the same channel the close path uses. */
   readonly onError: ((failure: ModalFailure) => void) | undefined;

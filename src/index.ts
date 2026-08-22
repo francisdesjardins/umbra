@@ -48,6 +48,18 @@ export type { StackModal, StackPriority } from './manager/stack-order.js';
 // rendering, so they stay on a binding.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
 
+// The registry, and the three types derived from it. `ModalRegistry` is exported so a project can
+// augment it — an interface nobody can name is an interface nobody can merge into — and `ModalId`
+// because it is what every door on the manager now says, so a consumer annotating one needs it.
+export type {
+  DataOf,
+  ModalContract,
+  ModalId,
+  ModalRegistry,
+  ReasonOf,
+  RegisteredModalId,
+} from './core/registry.js';
+
 // The same rule for `onError`'s payload: `ModalErrorSource` ships beside `ModalFailure` because its
 // doc promises an exhaustive `switch`, and one whose type has no name is not one. (`docs:check`
 // cannot ask for these, reaching them only through `UseModalBaseOptions`.)

@@ -11,6 +11,63 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-21
 
+### Added — `ModalRegistry`, so a project can name its modals once
+
+An id was the last untyped string in the library. `dialogManager.open('confrim-delete')` compiled
+and did nothing; a helper resolving `Promise<string>` let `=== 'delete'` past the checker when the
+modal's reasons were `'confirm' | 'cancel'`. A project declares its modals in one interface now:
+
+```ts
+declare module 'umbra' {
+  interface ModalRegistry {
+    'confirm-delete': { data: { id: string }; reason: 'confirm' | 'cancel' };
+  }
+}
+```
+
+An entry names what `CloseResult` already calls them — `reason` and `data` — rather than a second
+spelling of either. Every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`,
+`lookup`, `getZIndex`, `register`, `unregister`. `useModal` gains an overload that reads the
+contract off the id, so a declared modal needs no type arguments at all — and the per-call-site
+`useModal<TData, TReason>` form is untouched.
+
+**Nothing changes for a project that never opts in**, and one detail is what guarantees it:
+
+```ts
+export type ModalId = [keyof ModalRegistry] extends [never] ? string : keyof ModalRegistry;
+```
+
+The brackets are load-bearing. A naked `keyof ModalRegistry extends never` distributes over
+`never` and evaluates to `never`, so the fallback would be unreachable and every call site in every
+project that had not opted in would stop compiling.
+
+**Proven at compile time, in two configurations, because one file cannot hold both.** Declaration
+merging is global, so an augmented registry inside the main project would hide the very fallback the
+empty case asserts. `src/core/__tests__/registry.test-d.ts` covers the empty state inside
+`yarn type-check`; `yarn type-check:registry` compiles `type-fixtures/` alone for the augmented one.
+
+Three findings worth recording, because each is a limit rather than a detail:
+
+- **Declaring one modal declares them all.** Once the interface has a key, an undeclared id is an
+  error everywhere — including inside the library's own tests, which is how the consequence was
+  found. That is what makes the list trustworthy; a computed id opts out with `as ModalId`.
+- **Naming the id as a type argument is a convenience, not a second check.** A type argument that
+  fails the registered overload's constraint falls to the next one, where it reads as `TData` — so
+  `useModal<'typo'>()` is legal. The id _value_ is checked either way, which is where the typo is.
+- **Typing the public doors reached the library's own plumbing.** Five internal call sites hold an
+  id that genuinely is a registered one and were typed `string`; they take `ModalId` now, which is
+  the honest fix rather than five casts the repo bans anyway.
+
+### Fixed — the API reference could not show an interface
+
+`ModalRegistry` is the first `interface` in the public surface, and `api-model.ts`'s kind map
+covered variables, functions and type aliases. Unmapped, typedoc's reflection was dropped silently
+and the build failed on a category listing an export the model could not see — which is the gate
+working, but it would have omitted the one symbol an adopter has to find. Interfaces read as types
+on that page and are mapped as such.
+
+## 2026-08-21
+
 ### Fixed — one example was in French, and card prose ran to 98 characters
 
 A visual pass over the routes, in both themes at desktop and phone.
