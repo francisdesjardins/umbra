@@ -208,3 +208,77 @@ test.describe('stack ordering', () => {
     expect(dm.lookup().getForeground()?.id).toBe('a');
   });
 });
+
+test.describe('a dialog that has not arrived yet', () => {
+  test('open says so rather than doing nothing quietly', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+
+    // The ordinary case, not a typo: a code-split route registers when its component mounts, and
+    // a router guard or deep link fires before that.
+    expect(dm.open('late')).toBe(false);
+
+    dm.register('late', { store });
+    expect(dm.open('late')).toBe(true);
+  });
+
+  test('register lands with the dialog already openable', () => {
+    // The whole value of the event: a listener whose reason to exist is to open what just arrived
+    // would be useless if told a moment early.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const openable: boolean[] = [];
+
+    dm.subscribe((event) => {
+      if (event.type === 'register') {
+        openable.push(dm.lookup().exists(event.id));
+      }
+    });
+
+    dm.register('m', { store });
+
+    expect(openable).toEqual([true]);
+  });
+
+  test('the events are enough to hold an open until its dialog exists', () => {
+    // The pattern this pair exists for, written out — because a claim that something *can* be
+    // built in user-land is worth exactly one demonstration that it can.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+
+    const openWhenRegistered = (id: string) => {
+      if (dm.open(id)) {
+        return () => {};
+      }
+      const stop = dm.subscribe((event) => {
+        if (event.type === 'register' && event.id === id) {
+          stop();
+          dm.open(id);
+        }
+      });
+      return stop;
+    };
+
+    openWhenRegistered('late');
+    expect(dm.lookup().getOpen()).toEqual([]);
+
+    dm.register('late', { store });
+
+    expect(dm.lookup().isVisible('late')).toBe(true);
+  });
+
+  test('unregister is heard too, so a waiter can be re-armed when a route unmounts', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const seen: DialogManagerEvent['type'][] = [];
+
+    dm.subscribe((event) => {
+      seen.push(event.type);
+    });
+
+    dm.register('m', { store });
+    dm.unregister('m');
+
+    expect(seen).toEqual(['register', 'unregister']);
+  });
+});

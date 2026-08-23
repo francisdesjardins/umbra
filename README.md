@@ -354,6 +354,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed — on a hook, and on `dialogManager` for code with no component
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
+- `subscribe` — the same two moments plus `register` / `unregister`, so an imperative open can wait for a dialog behind a code-split route
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)
 - Debug logging

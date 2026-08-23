@@ -581,6 +581,35 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'register / unregister, so an open can wait for its dialog',
+    react: {
+      state: 'works',
+      note: 'A modal joins the registry when its component mounts, so an imperative `open` from a service, a router guard or a deep link can arrive before the dialog behind a code-split route exists. Every other door already reported that — `openAndWait` resolves `[Error, null]`, `requestOpenAndWait` refuses with `not-registered` — while `open` only warned, and warnings are silent until `setLogLevel`. It answers `false` now, and `subscribe` carries the two registry moments beside the two screen ones, so the ask can be held until the dialog arrives. **No queue is shipped**: a pending open needs an expiry, and how long a deep link should wait for a route is the application’s question, the same reason nothing here auto-dismisses.',
+      references: [
+        {
+          file: 'src/manager/__tests__/dialog-manager-registry.test.ts',
+          title: 'open says so rather than doing nothing quietly',
+        },
+        {
+          file: 'src/manager/__tests__/dialog-manager-registry.test.ts',
+          title: 'the events are enough to hold an open until its dialog exists',
+        },
+        {
+          file: 'src/manager/__tests__/dialog-manager-registry.test.ts',
+          title: 'register lands with the dialog already openable',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      note: 'The manager’s own, and every binding registers through the same door.',
+    },
+    vanilla: {
+      state: 'works',
+      note: '`bindDialog` registers at bind and unregisters at `destroy()`, so a swap that rebinds is heard as the pair — which is the one arrangement where a consumer needs to know the registry moved.',
+    },
+  },
+  {
     capability: 'dialogManager.openAndWait (the imperative instruct-and-await)',
     react: {
       state: 'works',

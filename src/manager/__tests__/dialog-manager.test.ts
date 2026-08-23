@@ -194,11 +194,13 @@ test.describe('createDialogManager', () => {
     expect(events).toEqual([
       { type: 'open', id: 'm' },
       { type: 'close', id: 'm', reason: 'dismiss' },
+      // The dialog leaves the screen before it leaves the registry, and both are worth hearing.
+      { type: 'unregister', id: 'm' },
     ]);
     // The `modal:close` event shares this branch; no DOM here, so see `complib-bridge.ct.tsx`.
   });
 
-  test('unregistering a closed dialog reports nothing', () => {
+  test('unregistering a closed dialog reports no second close', () => {
     // A modal that closed then unmounted is already reported; a second close puts observers behind.
     const dm = createDialogManager();
     const store = createFakeStore();
@@ -215,7 +217,8 @@ test.describe('createDialogManager', () => {
 
     dm.unregister('m');
 
-    expect(events).toHaveLength(before);
+    // It leaves the registry, which is a fact of its own — and that is all it says.
+    expect(events.slice(before)).toEqual([{ type: 'unregister', id: 'm' }]);
   });
 
   test('foreground, openDialogs order and z-index follow open order', () => {

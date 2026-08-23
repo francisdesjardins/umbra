@@ -11,6 +11,37 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Added — `register` / `unregister` events, and an `open` that says whether it landed
+
+A modal joins the registry when its component mounts. So an imperative `dialogManager.open(id)`
+from a service, a router guard or a deep link can arrive before the dialog behind a code-split
+route exists — the ordinary case, not a typo — and it did nothing, quietly: a `log.warn`, and
+warnings are silent until `setLogLevel`. Every other door already answered (`openAndWait` resolves
+`[Error, null]`, `requestOpenAndWait` refuses with `'not-registered'`); this one did not.
+
+`open` returns whether a dialog was there to open. And `subscribe` now carries the two registry
+moments beside the two screen ones:
+
+```ts
+dialogManager.subscribe((event) => {
+  // 'open' | 'close'            — a dialog on screen
+  // 'register' | 'unregister'   — a dialog existing at all
+});
+```
+
+`ModalLookup.exists` answered "now" and nothing answered "tell me when", which is what made an
+open-when-it-arrives impossible to write without polling. `register` fires **after** the entry is
+in the map, so the dialog is openable by the time a listener hears it — the whole value of the
+event, since a listener told a moment early would find nothing to open. `unregister` fires
+**after** the `close` an unmount-while-open also emits: the dialog leaves the screen and then
+leaves the registry, and both are worth hearing separately.
+
+**No pending-open queue is shipped, and that is a decision rather than a smaller first step.** A
+held open needs an expiry, and how long a deep link should wait for a route is an application's
+question — the same reason nothing here auto-dismisses. The pair makes the ten-line version
+writable, and there is a test that writes it, because a claim that something _can_ be built in
+user-land is worth exactly one demonstration that it can.
+
 ### Added — the registry types the way _in_, not only the way out
 
 `requestOpenAndWait<TId extends RegisteredModalId>` narrowed its result off the id — `DataOf<TId>`,

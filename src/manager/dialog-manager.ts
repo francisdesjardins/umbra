@@ -203,6 +203,12 @@ export type RegisterOptions = {
 
 /**
  * Events emitted by the dialog manager.
+ *
+ * Two pairs, and they answer different questions. `open` / `close` are about a dialog on screen;
+ * `register` / `unregister` are about one existing at all — which is what a caller outside the
+ * component tree cannot otherwise know, since {@link ModalLookup.exists} answers "now" and nothing
+ * answered "tell me when". A dialog behind a code-split route is registered when its component
+ * mounts, so an imperative `open` before that lands on nothing.
  */
 export type DialogManagerEvent =
   | {
@@ -218,6 +224,28 @@ export type DialogManagerEvent =
       readonly id: string;
       /** The reason the modal closed with, if it had one. */
       readonly reason?: string | undefined;
+    }
+  | {
+      /**
+       * Fires when a dialog joins the registry — its component mounted, or `bindDialog` ran.
+       *
+       * **The dialog is openable by the time this arrives**, which is what makes it useful rather
+       * than merely informative: a caller holding an ask nobody could answer yet opens here.
+       * A duplicate id emits this again, the displaced registration having been released.
+       */
+      readonly type: 'register';
+      /** The modal's id. */
+      readonly id: string;
+    }
+  | {
+      /**
+       * Fires when a dialog leaves the registry — its component unmounted, or the controller was
+       * destroyed. After the `close` that an unmount-while-open also emits: the dialog leaves the
+       * screen before it leaves the registry, and both are worth hearing separately.
+       */
+      readonly type: 'unregister';
+      /** The modal's id. */
+      readonly id: string;
     };
 
 /**
@@ -350,8 +378,21 @@ export type DialogManager = {
   /** Unregister a modal store. Called internally by useModal. */
   unregister(id: ModalId): void;
 
-  /** Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}. */
-  open(id: ModalId): void;
+  /**
+   * Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}.
+   *
+   * @returns Whether a dialog was there to open. **`false` is the only report this door makes**,
+   * and it is the answer to the one way an instruct fails: the id names no *registered* dialog, so
+   * nothing happened. That is not a rare mistake to guard against — a modal behind a code-split
+   * route is registered when its component mounts, and a service, router guard or deep link firing
+   * before that is the ordinary case. Every other door already answered (`openAndWait` resolves
+   * `[Error, null]`, `requestOpenAndWait` refuses with `'not-registered'`); this one only warned,
+   * and warnings are silent until `setLogLevel`.
+   *
+   * To open one that has not arrived yet, listen for it — `subscribe` reports `register`, and the
+   * dialog is openable by the time that lands.
+   */
+  open(id: ModalId): boolean;
 
   /**
    * **Ask** a modal to open, and let it say no.
@@ -960,6 +1001,9 @@ export function createDialogManager(): DialogManager {
       openSequence: 0,
     });
     log('Registered', { id, registeredCount: registry.size });
+    // After the entry is in the map, never before: a listener's whole reason to be here is to open
+    // the dialog that just arrived, and one told about it too early would find nothing to open.
+    emit({ type: 'register', id });
     notifyChange();
   }
 
@@ -995,6 +1039,11 @@ export function createDialogManager(): DialogManager {
         openedAt: entry.openedAt,
       });
     }
+
+    // After the close, which is the order the two facts happen in: the dialog left the screen and
+    // then left the registry. There is no DOM twin of this pair — `modal:open` / `modal:close`
+    // exist so a *different bundle* can hear a dialog on screen, and a registry is one manager's.
+    emit({ type: 'unregister', id });
 
     notifyChange();
     syncStackOrder();
@@ -1146,13 +1195,14 @@ export function createDialogManager(): DialogManager {
     register,
     unregister,
 
-    open(id: string): void {
+    open(id: string): boolean {
       const entry = registry.get(id);
       if (!entry) {
         log.warn('Open skipped (not registered)', { id });
-        return;
+        return false;
       }
       entry.store.beginOpen();
+      return true;
     },
 
     openAndWait(id: string): Promise<AwaitedClose<unknown>> {
