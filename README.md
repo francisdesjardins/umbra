@@ -253,21 +253,29 @@ declare module 'umbra' {
   interface ModalRegistry {
     'confirm-delete': { data: { id: string }; reason: 'confirm' | 'cancel' };
     'session-warning': { reason: 'extend' | 'sign-out' };
+    'patient:merge': { payload: { patientId: string }; reason: 'merged' | 'cancel' };
     'command-palette': Record<string, never>;
   }
 }
 ```
 
-An entry names the same two things a close result does — `reason` and `data` — and both are
-optional, so a modal with no payload declares only its reasons.
+An entry names the same things the two directions already call them — `reason` and `data` for the
+close, `payload` for the open — and all are optional, so a modal that closes with nothing declares
+only its reasons.
 
-From then on the id is checked wherever one is accepted:
+From then on the id is checked wherever one is accepted, in both directions:
 
 ```ts
 dialogManager.open('confirm-delete'); // fine
 dialogManager.open('confirm-delet'); // Allowed — an unknown id is a supported one
 dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another modal
+dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } }); // Type error: it declared a string
 ```
+
+`payload` types the **asking** side, where both call sites are yours. `onOpenRequest` still receives
+`unknown` on purpose — that is where a message from outside the project arrives, and a declaration
+is a contract between call sites rather than a check on what turns up. Parse it; `PayloadOf<'patient:merge'>`
+is the type to parse to.
 
 And `useModal` reads the contract off the id, so a declared modal needs no type arguments at all:
 

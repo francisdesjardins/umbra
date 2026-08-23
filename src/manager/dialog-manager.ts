@@ -2,7 +2,7 @@
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
-import type { DataOf, ModalId, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { DataOf, ModalId, PayloadOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -32,8 +32,9 @@ type RegisteredStore = {
   /**
    * One-shot resolver for the next close, so `requestOpenAndWait` can hand back the close of a
    * dialog it does not own. Erased at `unknown`: a parameter-position callback is checked
-   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable — and the
-   * string-keyed registry cannot know `TData` anyway, as with {@link OpenRequest.payload}.
+   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable. The
+   * narrowing happens at the door instead, off the id — this port is what the registry holds, and
+   * it holds every dialog under one type.
    */
   readonly addCloseResolver: (resolve: (result: AwaitedClose<unknown>) => void) => void;
 };
@@ -59,15 +60,18 @@ export type OpenRequestContext = {
  * pretending to be typed. It crossed an ownership boundary, so the dialog that receives it
  * validates it before believing it, exactly as it would a message off the wire.
  */
-export type OpenRequest = {
+export type OpenRequest<TPayload = unknown> = {
   /**
-   * The payload, unvalidated. Parse it against your own schema before acting on it.
+   * The payload. `unknown` unless the receiving modal declared one in {@link ModalRegistry}, in
+   * which case this is that type and the ask is checked against it — see {@link PayloadOf}, and
+   * note that a declaration is a contract between two call sites rather than a validation of what
+   * arrives. Parse anything that genuinely crossed a boundary before acting on it.
    *
-   * Called `payload` and not `data` on purpose: `CloseResult.data` is the payload *this* modal
-   * declared and the type system checked, and this one is whatever crossed the boundary. Two
-   * levels of trust that share a word are two levels of trust that get confused.
+   * Called `payload` and not `data` on purpose: `CloseResult.data` is what *this* modal closes
+   * with, and this is what it was opened with. Two directions that share a word are two directions
+   * that get confused.
    */
-  readonly payload?: unknown;
+  readonly payload?: TPayload;
   /** What the caller says about itself. See {@link OpenRequestContext}. */
   readonly context?: OpenRequestContext | undefined;
 };
@@ -90,7 +94,10 @@ export type OpenRequest = {
  * // No payload — just say who is asking.
  * dialogManager.requestOpen('help', createOpenRequest(undefined, { source: 'shell:menu' }));
  */
-export function createOpenRequest(payload?: unknown, context?: OpenRequestContext): OpenRequest {
+export function createOpenRequest<TPayload = unknown>(
+  payload?: TPayload,
+  context?: OpenRequestContext
+): OpenRequest<TPayload> {
   return {
     ...(payload !== undefined && { payload }),
     ...(context !== undefined && { context }),
@@ -107,6 +114,18 @@ export function createOpenRequest(payload?: unknown, context?: OpenRequestContex
  *
  * The payload comes first because it is what a handler almost always wants; the whole envelope
  * follows for the ones that also care who is asking.
+ *
+ * **`unknown`, and it stays `unknown` even for a modal the registry declares** — the one place the
+ * contract deliberately does not narrow. {@link PayloadOf} types the *asking* side, where both call
+ * sites are the project's own and a mismatch is a mistake the checker can catch. This side is where
+ * a message from outside the project arrives, and a parameter annotated with a declaration nobody
+ * checked at run time would read as a guarantee that had never been made. Parse it — the
+ * declaration is there to be the type you parse *to* — `PayloadOf<'patient:merge'>` is what a
+ * schema for this door should produce, and checking that it does is one line:
+ *
+ * ```ts
+ * const schema: z.ZodType<PayloadOf<'patient:merge'>> = z.object({ patientId: z.string() });
+ * ```
  */
 export type OpenRequestHandler = (
   payload: unknown,
@@ -120,7 +139,7 @@ export type OpenRequestHandler = (
  * supplied by the manager at dispatch, so the two shapes are genuinely different and neither is
  * a copy of the other.
  */
-export type OpenRequestDispatch = OpenRequest & {
+export type OpenRequestDispatch<TPayload = unknown> = OpenRequest<TPayload> & {
   /**
    * Refuse the request, with a reason the asker can act on.
    *
@@ -347,8 +366,15 @@ export type DialogManager = {
    *
    * Fire-and-forget; when the answer matters use {@link DialogManager.requestOpenAndWait}.
    *
+   * **The payload is checked against the id** when the registry names one for it
+   * ({@link PayloadOf}) — one generic signature rather than an overload pair, for the reason
+   * {@link DialogManager.close} carries: a failing first overload falls through to the permissive
+   * one instead of erroring, so the check a declared modal is paying for would evaporate exactly
+   * when it is wrong.
+   *
    * @param id The dialog to ask.
-   * @param request What to hand its handler. Both halves are untrusted — see {@link OpenRequest}.
+   * @param request What to hand its handler. `context` is untrusted and so is a payload that
+   * genuinely crossed a boundary — see {@link OpenRequest}.
    *
    * @example
    * // The shell asks; the dialog's owner decides.
@@ -357,7 +383,7 @@ export type DialogManager = {
    *   context: { source: 'portal:nav' },
    * });
    */
-  requestOpen(id: ModalId, request?: OpenRequest): void;
+  requestOpen<TId extends ModalId>(id: TId, request?: OpenRequest<PayloadOf<NoInfer<TId>>>): void;
 
   /**
    * The same ask, with the answer — and, if it was a yes, the close that follows.
@@ -366,6 +392,11 @@ export type DialogManager = {
    * which is what a caller across a boundary needs — a refusal it never hears is a dead end. All
    * three refusals (no such dialog, no handler, an explicit `refuse`) arrive here as a reason
    * rather than only in the console. Acceptance is the default; the handler may be `async`.
+   *
+   * **Two signatures, and both constrain the payload identically** — the pair exists for the
+   * *return*, which is `DataOf`/`ReasonOf` for a declared id and open for any other. Constraining
+   * the argument in only the first is what would make it decorative: a wrong payload would fail
+   * that overload and land on this one.
    *
    * @example
    * const outcome = await dialogManager.requestOpenAndWait(
@@ -380,9 +411,12 @@ export type DialogManager = {
    */
   requestOpenAndWait<TId extends RegisteredModalId>(
     id: TId,
-    request?: OpenRequest
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
   ): Promise<OpenRequestOutcome<DataOf<TId>, ReasonOf<TId>>>;
-  requestOpenAndWait(id: ModalId, request?: OpenRequest): Promise<OpenRequestOutcome>;
+  requestOpenAndWait<TId extends ModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<OpenRequestOutcome>;
 
   /**
    * Open a modal and wait for it to close — the imperative twin of a hook's `openAndWait()`, for

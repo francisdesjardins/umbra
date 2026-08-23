@@ -87,6 +87,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'ModalId',
       'ReasonOf',
       'DataOf',
+      'PayloadOf',
       'RegisteredModalId',
       'setLogLevel',
     ],

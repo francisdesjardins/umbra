@@ -48,7 +48,7 @@ export type { StackModal, StackPriority } from './manager/stack-order.js';
 // rendering, so they stay on a binding.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
 
-// The registry, and the three types derived from it. `ModalRegistry` is exported so a project can
+// The registry, and the four types derived from it. `ModalRegistry` is exported so a project can
 // augment it — an interface nobody can name is an interface nobody can merge into — and `ModalId`
 // because it is what every door on the manager now says, so a consumer annotating one needs it.
 export type {
@@ -56,6 +56,7 @@ export type {
   ModalContract,
   ModalId,
   ModalRegistry,
+  PayloadOf,
   ReasonOf,
   RegisteredModalId,
 } from './core/registry.js';

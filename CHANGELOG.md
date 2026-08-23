@@ -11,6 +11,50 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Added — the registry types the way _in_, not only the way out
+
+`requestOpenAndWait<TId extends RegisteredModalId>` narrowed its result off the id — `DataOf<TId>`,
+`ReasonOf<TId>` — while the request it took stayed `unknown`, in the same call. The reason on
+`OpenRequest.payload` was that "the registry is keyed by string and cannot check one against a
+modal's `TData`", which was true when it was written and stopped being true when `ModalRegistry`
+landed: the overload beside it already proves the id is known at the type level.
+
+A contract may now declare a third thing, and `PayloadOf<TId>` reads it the way `DataOf` and
+`ReasonOf` read theirs:
+
+```ts
+declare module 'umbra' {
+  interface ModalRegistry {
+    'patient:merge': { payload: { patientId: string }; reason: 'merged' | 'cancel' };
+  }
+}
+
+dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } });
+//                                                     ^ Type error: it declared a string
+```
+
+**`data` is what a modal closes with, `payload` is what it opens with** — the distinction
+`OpenRequest` already drew in prose, now in the contract. The fallbacks differ for the same reason:
+`DataOf` answers `void` for an undeclared modal (it carries nothing until someone says otherwise),
+`PayloadOf` answers `unknown` (it carries whatever crossed the boundary, and `void` would be a claim
+about a stranger's message).
+
+**`requestOpen` is one generic signature, not an overload pair** — the shape `close` already uses,
+and for the reason recorded there: a failing first overload falls through to the permissive one, so
+the check a declared modal is paying for would evaporate exactly when it is wrong.
+`requestOpenAndWait` keeps its pair, because the _return_ differs between a declared id and any
+other — so both halves constrain the payload identically and neither rescues what the other
+rejected. There is a fixture for that, since it is the one way this could have been decorative.
+
+**`onOpenRequest` still hands its handler `unknown`, and that is the deliberate half.** `PayloadOf`
+types the asking side, where both call sites belong to the project and a mismatch is a mistake the
+checker can catch. The receiving side is where a message from outside the project arrives; a
+parameter annotated with a declaration nobody checked at run time would read as a guarantee that
+had never been made. Parse it — the declaration is now the type to parse _to_.
+
+Nothing changes for a project that declares no payloads: `PayloadOf` is `unknown` there, which is
+what the envelope already said.
+
 ### Fixed — `onDismissRequest` answers every door, not only the keyboard
 
 The option's promise is that a controlled surface — one whose `open` is a prop — never closes its
