@@ -11,6 +11,7 @@ import {
   KeyClaimProbeHarness,
 } from 'umbra/core/__tests__/dismiss-key-ownership.story';
 import {
+  ControlledClickOutsideHarness,
   ControlledModalHarness,
   ControlledPanelHarness,
 } from 'umbra/core/__tests__/dismiss-request.story';
@@ -476,6 +477,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         description:
           'The dialog reports and the state above it decides, as in any controlled wrapper. One that closed itself would leave the boolean upstream still saying true, and the next render would put it straight back on screen.',
         component: ControlledModalHarness,
+        codeKey: 'story-dismiss-request',
+      },
+      {
+        title: 'A panel whose click-outside is a request too',
+        description:
+          'The door a controlled surface could not hear until every dismissal went through the same one. Outside the top layer, the pointer reaches the page underneath — so the click is the library’s to notice and the owner’s to answer, exactly as the key is.',
+        component: ControlledClickOutsideHarness,
         codeKey: 'story-dismiss-request',
       },
       {

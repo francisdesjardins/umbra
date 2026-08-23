@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { createPortal } from 'react-dom';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
-import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import { createModalDirector } from '../core/modal-director.js';
@@ -17,6 +16,7 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
+import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { useModalOutletContext } from './modal-outlet.js';
 import type { GetDialog } from '../core/types.js';
@@ -208,8 +208,9 @@ export function useModal<TData = void, TReason extends string = string>(
     // `isPortaled` is a dep the body never reads: like `nonModal`, it changes the structure.
   }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, isPortaled, store]);
 
-  // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s, and it takes only a
-  // structural slice of the event, so React's synthetic one satisfies it unchanged.
+  // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s and the answer is
+  // `answerDismiss`'s — a controlled surface hears this door the way it hears the dismiss key. It
+  // takes only a structural slice of the event, so React's synthetic one satisfies it unchanged.
   const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
     const dialog = dialogRef.current;
     if (!dialog) {
@@ -225,7 +226,7 @@ export function useModal<TData = void, TReason extends string = string>(
         dismissWhilePreparing,
       })
     ) {
-      store.close(DISMISS_REASON);
+      answerDismiss(store, { request: onDismissRequest, cause: 'backdrop-click' });
     }
   };
 

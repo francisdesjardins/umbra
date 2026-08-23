@@ -163,13 +163,25 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   },
   {
     option: 'onDismissRequest',
-    dependsOn: ['dismissKey'],
+    dependsOn: ['dismissKey', 'dismissOnBackdropClick', 'dismissOnClickOutside'],
     enforcement: 'RUNTIME',
-    note: 'Replaces the *last* step of the dismiss key and nothing before it — which key, whether an action claimed it, whether a popup answers it first, whether a `prepare` or a running action forbids it, and which dialog is in front are all still the library’s. `dismissKey: false` turns the key off, so nothing is requested either. Returning `false` declines the press, which only the non-modal listener acts on: it captures, so a press it takes is one the page never sees.',
+    note: 'Replaces the *last* step of **every** user-initiated dismissal and nothing before it — which key, whether an action claimed it, whether a popup answers it first, where the pointer landed, whether a `prepare` or a running action forbids it, and which dialog is in front are all still the library’s. So it depends on all three doors: whichever is switched off requests nothing, and `dismissKey: false` is the same statement about the key. The handler is told which door through `DismissCause`, since one owner answering three of them can otherwise only guess. Returning `false` declines, which only the non-modal dismiss-key listener acts on: it captures, so a press it takes is one the page never sees — nothing is prevented on a pointer path, so a declined click is just a dialog left open.',
     references: [
       {
         file: 'src/core/__tests__/dismiss-request.ct.tsx',
         title: 'a declined press is left travelling',
+      },
+      {
+        file: 'src/core/__tests__/dismiss-request.ct.tsx',
+        title: 'the owner is told which door, and the key still says its own name',
+      },
+      {
+        file: 'src/core/__tests__/dismiss-request.ct.tsx',
+        title: 'reports the click and stays open',
+      },
+      {
+        file: 'src/utils/__tests__/dismiss-gate.test.ts',
+        title: 'tells the owner which door it came through',
       },
     ],
   },

@@ -9,6 +9,46 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-23
+
+### Fixed — `onDismissRequest` answers every door, not only the keyboard
+
+The option's promise is that a controlled surface — one whose `open` is a prop — never closes its
+own dialog, because the boolean upstream would put it straight back. It kept that promise for the
+dismiss key and broke it for the pointer: `attachClickOutside` and each binding's backdrop handler
+called `store.close(DISMISS_REASON)` themselves, so a controlled modal answered Escape correctly
+and reopened itself on a backdrop click. A modal that draws no actions defaults to
+`dismissOnBackdropClick: true`, which is the arrangement most likely to meet it.
+
+The cause was structural rather than an oversight at four call sites. `canDismiss` is the one
+predicate every dismissal path shares, and each path layers its own check on top — but the _last
+step_, the one this option replaces, had no such home: it existed as a private
+`answerDismissKey` in `attach-keydown.ts`, reachable only by the three listeners in that file.
+It is `answerDismiss` in `utils/dismiss-gate.ts` now, beside the predicate it belongs with, and
+every dismissal path ends there. A fourth binding gets the behaviour by calling it.
+
+**The handler is told which door**, since one owner answering three of them could otherwise only
+guess:
+
+```ts
+onDismissRequest: (cause) => {
+  // 'dismiss-key' | 'backdrop-click' | 'click-outside'
+  if (cause === 'dismiss-key') {
+    onClose();
+  }
+  return false; // decline the rest
+};
+```
+
+`DismissCause` is a new root export, and the argument is additive: a handler that ignores it
+behaves exactly as it did. The return value still only means something on the dismiss key — its
+non-modal window listener captures, so declining leaves the press travelling to the page. Nothing
+is prevented on a pointer path, so a declined click is simply a dialog left open.
+
+Every gate above the last step is unchanged and still the library's: which key, whether an action
+claimed it, whether a popup answered first, where the pointer landed, whether `prepare` or a
+running action forbids it, and which dialog is in front.
+
 ## 2026-08-22
 
 ### Fixed — the select popup was white in dark mode, with white labels on it
@@ -107,7 +147,6 @@ dozen words to fit. Meeting a ceiling is not the same as having room under one: 
 whoever writes next, every time, and it is paid in the worst possible currency — trimming prose
 that is already dense. Each budgeted file is now at or under 90% of its own budget, and the set is
 under 90% of the total, so the next paragraph is written rather than negotiated.
-
 ## 2026-08-21
 
 ### Added — `ModalRegistry`, so a project can name its modals once

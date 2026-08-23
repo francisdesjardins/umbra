@@ -220,8 +220,8 @@ including why each step declares its own inputs rather than sharing one key:
   ([core/dialog-props.ts](core/dialog-props.ts))
 - `dialogPlacement` ([core/placement.ts](core/placement.ts)) — the positioning contract as data, and
   public from the root, so a hand-written host places a dialog identically
-- `canDismiss` ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — the one predicate every dismissal
-  path shares
+- `canDismiss` / `answerDismiss` ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — the predicate
+  every dismissal path shares, and their last step
 - `resolveAnimation` ([utils/animation-utils.ts](utils/animation-utils.ts)) — read by both the inline
   `transition` and the `transitionend` wait, so the two cannot disagree
 

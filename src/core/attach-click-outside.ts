@@ -1,6 +1,5 @@
-import { canDismiss } from '../utils/dismiss-gate.js';
+import { answerDismiss, canDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
-import { DISMISS_REASON } from './dismiss-reason.js';
 import type { ClickOutsideOptions, ModalDomContext } from './attach-types.js';
 
 const log = createLogger('modal:click-outside');
@@ -17,7 +16,8 @@ const log = createLogger('modal:click-outside');
  * worth stating, because the sentence it replaces described a different rule.
  *
  * Only meaningful for non-modal dialogs; a modal one has a backdrop, and the backdrop click is
- * a different path with a different question (did the pointer land outside the box).
+ * a different path with a different question (did the pointer land outside the box). Both end at
+ * `answerDismiss`, so a controlled surface hears this the way it hears the dismiss key.
  *
  * @returns A teardown that removes the listener, or `undefined` when nothing was attached.
  */
@@ -26,7 +26,7 @@ export function attachClickOutside(
   options: ClickOutsideOptions
 ): (() => void) | undefined {
   const { store, getDialog, modalId, phase, manager } = ctx;
-  const { dismissOnClickOutside, dismissWhilePreparing, engine } = options;
+  const { dismissOnClickOutside, dismissWhilePreparing, engine, onDismissRequest } = options;
 
   if (!dismissOnClickOutside || phase === 'closed') {
     return undefined;
@@ -60,7 +60,7 @@ export function attachClickOutside(
     }
 
     log('Click outside', { id: modalId });
-    store.close(DISMISS_REASON);
+    answerDismiss(store, { request: onDismissRequest, cause: 'click-outside' });
   };
 
   document.addEventListener('pointerdown', handlePointerDown);

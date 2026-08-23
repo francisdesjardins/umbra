@@ -13,6 +13,7 @@ import {
 } from './attach-lifecycle.js';
 import { createStepRunner } from './step-runner.js';
 import type { ActionGate } from '../actions/action-engine.js';
+import type { DismissCause } from './dismiss-reason.js';
 import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
@@ -106,7 +107,7 @@ export type ModalLifecyclePass = {
   readonly exitDuration: number;
   readonly dismissKey: HotkeyDef | false;
   readonly dismissWhilePreparing: boolean;
-  readonly onDismissRequest: (() => boolean | void) | undefined;
+  readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
   readonly containFocus: boolean;
   readonly dismissOnClickOutside: boolean;
 };
@@ -284,13 +285,19 @@ export const MODAL_LIFECYCLE_STEPS = [
     /** Dismissal by a click that landed outside, once the four-step gate agrees. */
     step: 'attachClickOutside',
     inputs: (pass) => {
-      return [pass.phase, pass.dismissOnClickOutside, pass.dismissWhilePreparing];
+      return [
+        pass.phase,
+        pass.dismissOnClickOutside,
+        pass.dismissWhilePreparing,
+        pass.onDismissRequest,
+      ];
     },
     run: (dom, { pass, parts }) => {
       return attachClickOutside(dom, {
         dismissOnClickOutside: pass.dismissOnClickOutside,
         dismissWhilePreparing: pass.dismissWhilePreparing,
         engine: parts.engine,
+        onDismissRequest: pass.onDismissRequest,
       });
     },
   },

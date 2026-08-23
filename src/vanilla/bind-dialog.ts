@@ -1,6 +1,5 @@
 import { createActionFactory } from '../core/action-factory.js';
 import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
-import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { attachFocusContainment } from '../core/attach-focus-containment.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
@@ -28,6 +27,7 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
+import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
 import type { ModalDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
@@ -152,7 +152,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         dismissWhilePreparing: resolved.dismissWhilePreparing,
       })
     ) {
-      store.close(DISMISS_REASON);
+      answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
     }
   };
   dialog.addEventListener('click', handleDialogClick);
@@ -211,6 +211,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
           dismissOnClickOutside: resolved.dismissOnClickOutside,
           dismissWhilePreparing: resolved.dismissWhilePreparing,
           engine,
+          onDismissRequest: options.onDismissRequest,
         }),
         attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
         syncCloseSequence(ctx, {

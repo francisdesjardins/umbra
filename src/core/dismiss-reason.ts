@@ -2,8 +2,9 @@
  * `'dismiss'` — the library's own close reason, in one place so it cannot drift.
  *
  * It means **the modal was dismissed rather than acted on**: the dismiss key, a backdrop click, a
- * click outside a non-modal panel, or teardown while it was still open. Every one of those closes
- * the store directly; none of them runs an action, because there is no action to run.
+ * click outside a non-modal panel, or teardown while it was still open. None of them runs an
+ * action, because there is no action to run — the first three close the store directly unless the
+ * caller asked to answer for them ({@link DismissCause}), and teardown asks nobody.
  *
  * That is why it is *reserved*. An action's reason is its identity, and a button named `'dismiss'`
  * would produce a close indistinguishable from the four above while behaving differently — the
@@ -32,3 +33,17 @@ export const DISMISS_REASON = 'dismiss';
 
 /** The type of {@link DISMISS_REASON} — see there for why this is one word in one file. */
 export type DismissReason = typeof DISMISS_REASON;
+
+/**
+ * Which door a user-initiated dismissal came through, handed to `onDismissRequest` so that an
+ * owner answering for all of them can tell them apart.
+ *
+ * The names are the options' own words — `dismissKey`, `dismissOnBackdropClick`,
+ * `dismissOnClickOutside` — because a cause a caller cannot map back to the option that produced
+ * it is a string they have to look up.
+ *
+ * **Three, not the four doors above.** Teardown while open closes the store directly and asks
+ * nobody: the surface that would have answered is the one going away, so a request it could not
+ * act on would be a call with no correct response.
+ */
+export type DismissCause = 'dismiss-key' | 'backdrop-click' | 'click-outside';

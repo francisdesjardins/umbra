@@ -1,6 +1,6 @@
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
 import type { ModalId } from './registry.js';
-import type { DismissReason } from './dismiss-reason.js';
+import type { DismissCause, DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
 
@@ -301,24 +301,32 @@ export type UseModalBaseOptions<
    */
   readonly dismissKey?: HotkeyDef | false | undefined;
   /**
-   * Hand the dismiss key to the owner instead of closing on it.
+   * Hand every user-initiated dismissal to the owner instead of closing on it.
    *
    * **The dialog stops dismissing itself and starts reporting.** Every gate above this point is
    * unchanged and still the library's: which key, whether an action claimed it, whether a popup
-   * inside the dialog answers it first, whether a `prepare` or a running action forbids it, and —
-   * for a non-modal panel — which dialog is actually in front. All of that is decided the same
-   * way it is without this option. What changes is the last step: `store.close(DISMISS_REASON)`
-   * becomes this call, and the modal leaves the screen when the owner says so.
+   * inside the dialog answers it first, where the pointer landed, whether a `prepare` or a running
+   * action forbids it, and — for a non-modal panel — which dialog is actually in front. All of
+   * that is decided the same way it is without this option. What changes is the last step:
+   * `store.close(DISMISS_REASON)` becomes this call, and the modal leaves the screen when the
+   * owner says so.
    *
    * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself — the
    * boolean upstream is still `true` and the next render puts it back — so its only correct answer
-   * to the key is to tell the owner. This is the listener every controlled wrapper writes, and
-   * writes three times because the non-modal case cannot be heard from the dialog at all.
+   * to a dismissal is to tell the owner. This is the listener every controlled wrapper writes.
    *
-   * **Return `false` to decline the press**, for a condition only the caller can know, such as
-   * another framework's modal being on top. The non-modal window listener captures, so a press it
-   * takes is one nobody else sees; declining leaves it un-prevented and still travelling. Anything
-   * else, `undefined` included, means the request was taken.
+   * **All three doors, which is why the handler is told which one.** The dismiss key, a backdrop
+   * click and a click outside a non-modal panel are one decision reached three ways
+   * ({@link DismissCause}), and an option that covered only the key would leave a controlled modal
+   * answering Escape correctly and reopening itself on a backdrop click. Ignore the argument and
+   * the three are one rule; read it to keep them apart — "Escape asks, the backdrop does not".
+   *
+   * **Return `false` to decline**, for a condition only the caller can know, such as another
+   * framework's modal being on top. Only the dismiss key has a second reader: its non-modal window
+   * listener captures, so a press it takes is one nobody else sees, and declining leaves it
+   * un-prevented and still travelling. Nothing is prevented on the pointer paths, so a declined
+   * click is simply a dialog left open. Anything else, `undefined` included, means the request was
+   * taken.
    *
    * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings — which
    * matters because a controlled surface is usually a panel, so a template hook is where this is
@@ -329,8 +337,10 @@ export type UseModalBaseOptions<
    * useModal({
    *   id: 'filters',
    *   nonModal: true,
-   *   onDismissRequest: () => {
-   *     onClose();
+   *   dismissOnClickOutside: true,
+   *   onDismissRequest: (cause) => {
+   *     // One owner, every door — the argument is there for the wrapper that wants them apart.
+   *     onClose(cause);
    *   },
    *   render: () => {
    *     return <Filters />;
@@ -338,7 +348,7 @@ export type UseModalBaseOptions<
    * });
    * ```
    */
-  readonly onDismissRequest?: (() => boolean | void) | undefined;
+  readonly onDismissRequest?: ((cause: DismissCause) => boolean | void) | undefined;
   /**
    * Whether the dismiss key and backdrop click can close the modal while `prepare` is executing.
    * @default true

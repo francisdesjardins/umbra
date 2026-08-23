@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import { useModal } from '../../react.js';
+import type { DismissCause } from '../../react.js';
 
-// A modal dialog whose Escape is a *request*: the dialog reports and the state above it decides,
-// as in any controlled wrapper. A dialog that closed itself would leave that boolean saying `true`,
-// and the next render would put it straight back.
+// A modal dialog whose dismissals are *requests*: the dialog reports and the state above it
+// decides, as in any controlled wrapper. A dialog that closed itself would leave that boolean
+// saying `true`, and the next render would put it straight back.
 export function ControlledModalHarness() {
   const [requests, setRequests] = useState(0);
+  const [cause, setCause] = useState<DismissCause | ''>('');
   const [allow, setAllow] = useState(false);
 
   const modal = useModal({
     id: 'controlled-modal',
     ariaLabel: 'A controlled modal',
-    onDismissRequest: () => {
+    onDismissRequest: (dismissedBy) => {
       setRequests((count) => {
         return count + 1;
       });
+      // Which door, so one owner can treat them differently — Escape asks, the backdrop does not.
+      setCause(dismissedBy);
       // The owner acts only once it has decided to, which is the whole point of the two steps.
       if (allow) {
         modal.handle.close('dismiss');
@@ -45,6 +49,7 @@ export function ControlledModalHarness() {
   return (
     <>
       <div data-testid="requests">{requests}</div>
+      <div data-testid="cause">{cause}</div>
       <button
         data-testid="open"
         onClick={() => {
@@ -126,5 +131,48 @@ export function ControlledPanelHarness() {
       </button>
       {modal.Modal}
     </div>
+  );
+}
+
+// The door that could not be heard until every dismissal went through the same one. A non-modal
+// panel outside the top layer: the pointer reaches the page underneath it, so a click there is the
+// library's to notice and the owner's to answer. Left to close itself, this is the arrangement
+// where a controlled surface reopens on the next render.
+export function ControlledClickOutsideHarness() {
+  const [causes, setCauses] = useState<DismissCause[]>([]);
+
+  const modal = useModal({
+    id: 'controlled-click-outside',
+    nonModal: true,
+    dismissOnClickOutside: true,
+    ariaLabel: 'A controlled panel that hears the click outside it',
+    onDismissRequest: (dismissedBy) => {
+      setCauses((seen) => {
+        return [...seen, dismissedBy];
+      });
+    },
+    render: () => {
+      return (
+        <button data-testid="in-outside-panel" type="button">
+          In the panel
+        </button>
+      );
+    },
+  });
+
+  return (
+    <>
+      <div data-testid="causes">{causes.join(',')}</div>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void modal.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      {modal.Modal}
+    </>
   );
 }

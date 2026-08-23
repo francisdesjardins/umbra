@@ -68,7 +68,7 @@ export type { ModalErrorSource, ModalFailure } from './core/types.js';
 // The reserved close reason, value and type: `CloseResult.reason` is `TReason | DismissReason`, and
 // comparing against it should not mean retyping the string.
 export { DISMISS_REASON } from './core/dismiss-reason.js';
-export type { DismissReason } from './core/dismiss-reason.js';
+export type { DismissCause, DismissReason } from './core/dismiss-reason.js';
 
 // The one piece of a binding's rendering job that is not framework work — a table of CSS whose
 // mistakes make an inline non-modal dialog jump — so every binding positions one identically.
