@@ -15,6 +15,7 @@ import storyUseModalCustomDismissKeySrc from 'umbra/react/__tests__/use-modal/cu
 import storyUseModalDismissKeyDisabledSrc from 'umbra/react/__tests__/use-modal/dismiss-key-disabled.story.tsx?raw';
 import storyUseModalNonModalCustomDismissKeySrc from 'umbra/react/__tests__/use-modal/non-modal-custom-dismiss-key.story.tsx?raw';
 import storyUseModalPortalDefaultSrc from 'umbra/react/__tests__/use-modal/portal-default.story.tsx?raw';
+import storyUseModalPortalHostSrc from 'umbra/react/__tests__/use-modal/portal-host.story.tsx?raw';
 import storyUseModalPortalOptInSrc from 'umbra/react/__tests__/use-modal/portal-opt-in.story.tsx?raw';
 import storyUseModalPortalNonModalDefaultSrc from 'umbra/react/__tests__/use-modal/portal-non-modal-default.story.tsx?raw';
 import storyUseModalPortalNonModalOptInSrc from 'umbra/react/__tests__/use-modal/portal-non-modal-opt-in.story.tsx?raw';
@@ -183,6 +184,7 @@ export const stories: Record<string, string> = {
   'story-use-modal-dismiss-key-disabled': storyUseModalDismissKeyDisabledSrc,
   'story-use-modal-non-modal-custom-dismiss-key': storyUseModalNonModalCustomDismissKeySrc,
   'story-use-modal-portal-default': storyUseModalPortalDefaultSrc,
+  'story-use-modal-portal-host': storyUseModalPortalHostSrc,
   'story-use-modal-portal-opt-in': storyUseModalPortalOptInSrc,
   'story-use-modal-portal-non-modal-default': storyUseModalPortalNonModalDefaultSrc,
   'story-use-modal-portal-non-modal-opt-in': storyUseModalPortalNonModalOptInSrc,

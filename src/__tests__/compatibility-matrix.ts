@@ -351,11 +351,19 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'portal',
     ignoredBy: ['nonModal: false'],
     enforcement: 'PROSE',
-    note: 'A modal dialog is placed by the top layer, so `portal` changes nothing for it. In `umbra/vanilla` it selects the placement and does **not** move the element — the markup is the caller’s.',
+    note: 'A modal dialog is placed by the top layer, so `portal` changes nothing about where it *appears* — but **where it is mounted** still matters, because a dialog portaled out of a themed container, a design-system root or a microfrontend’s mount point loses whatever that ancestor provided. `true` is `document.body`; a getter names the host instead (`PortalTarget`), asked at placement rather than at hook-call time so a host still being rendered is found. A getter answering `null` falls back to the body and warns rather than un-portaling, the placement CSS having already been chosen. In `umbra/vanilla` it stays a `boolean`: that binding selects the placement and does **not** move the element — the markup is the caller’s — so a host it could only ignore is a type error instead.',
     references: [
       {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'portal places without relocating',
+      },
+      {
+        file: 'src/react/__tests__/use-modal.ct.tsx',
+        title: 'a portal host of the caller’s own is where the dialog lands',
+      },
+      {
+        file: 'src/core/__tests__/modal-runtime.test.ts',
+        title: 'a getter answering null falls back rather than un-portaling',
       },
     ],
   },

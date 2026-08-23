@@ -23,6 +23,7 @@ import {
   NonModalStackHarness,
   PortalDefaultHarness,
   PortalNonModalDefaultHarness,
+  PortalHostHarness,
   PortalNonModalOptInHarness,
   PortalOptInHarness,
   OpenAndWaitHarness,
@@ -363,6 +364,20 @@ test.describe('useModal — portal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).toHaveText('BODY');
+  });
+
+  test('a portal host of the caller’s own is where the dialog lands', async ({ mount, page }) => {
+    // `portal: true` is `document.body`, which is the wrong answer wherever the tree the dialog
+    // left was doing something — here, declaring the custom property the dialog reads.
+    await mount(<PortalHostHarness />);
+    await page.getByRole('button', { name: 'Open' }).click();
+
+    const parent = await page.getByTestId('modal-portal-host').evaluate((node) => {
+      return node.parentElement?.dataset['testid'] ?? 'none';
+    });
+
+    expect(parent).toBe('themed-host');
+    await expect(page.getByTestId('inherited-ink')).toHaveText('rebeccapurple');
   });
 
   test('modal without portal: full lifecycle works', async ({ mount, page }) => {

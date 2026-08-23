@@ -8,6 +8,7 @@ import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
+  resolvePortalHost,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -72,6 +73,7 @@ export function useModal<TData = void, TReason extends string = string>(
     ariaLabelledBy,
     ariaDescribedBy,
     role,
+    portal,
   } = options;
 
   // The defaults and the variant narrowing, from the one place both bindings read them.
@@ -270,8 +272,19 @@ export function useModal<TData = void, TReason extends string = string>(
 
   let dialogNode: ReactNode;
 
-  if (isPortaled) {
-    dialogNode = createPortal(dialogElement, document.body);
+  // Asked at placement rather than remembered, so a host that mounts after this hook first ran is
+  // still found — and a caller whose host moves is followed rather than stranded on the old node.
+  // `null` here is the un-portaled answer, which is why it doubles as the branch below.
+  //
+  // Guarded on `isPortaled` rather than left to `resolvePortalHost`'s own `null` branch, because
+  // the *argument* is the problem: `document.body` on a server pass throws where this binding
+  // otherwise renders a closed `<dialog>` with no DOM in scope. Portaling has never server-rendered
+  // — `createPortal` needs a live container — but the default and contained paths do, and asserting
+  // that is what `verify:package` does.
+  const portalHost = isPortaled ? resolvePortalHost(portal, document.body) : null;
+
+  if (portalHost) {
+    dialogNode = createPortal(dialogElement, portalHost);
   } else if (placement.host) {
     // The dialog's `absolute` positioning resolves against this host (closest positioned ancestor
     // wins), immune to transforms above, and it fills its parent so a slide anchors to that region.

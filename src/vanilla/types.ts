@@ -34,6 +34,12 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
      * where no transformed or `will-change` ancestor supplies the containing block: put it at top
      * level, or use the contained variant. Pinned by *portal places without relocating* in
      * `__tests__/bind-dialog.ct.tsx`.
+     *
+     * **A `boolean` here where the hook bindings take a `PortalTarget`**, and the narrowing is the
+     * point: their second form names the element to mount into, and this binding mounts nothing.
+     * Accepting a host getter it could only ignore is the silently-dropped option the type is
+     * there to prevent — the `<dialog>` is already wherever the caller put it, which is the whole
+     * bargain of the controller binding.
      */
     readonly portal?: boolean | undefined;
     /**

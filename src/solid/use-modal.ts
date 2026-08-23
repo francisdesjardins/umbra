@@ -13,6 +13,7 @@ import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
+  resolvePortalHost,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -279,7 +280,10 @@ export function useModal<TData = void, TReason extends string = string>(
   if (isPortaled) {
     // The one place the surface differs from React's: a Solid modal owns its element, so the
     // binding mounts it and `Modal` is `null` — hence no outlet registration on this branch.
-    document.body.append(placed);
+    // Resolved once, unlike React's per-render read: this branch mounts the node itself and runs
+    // exactly once, so the host a moving getter would name later has nothing left to move.
+    const host = resolvePortalHost(options.portal, document.body) ?? document.body;
+    host.append(placed);
     onCleanup(() => {
       placed.remove();
     });

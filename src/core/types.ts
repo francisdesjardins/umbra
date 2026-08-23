@@ -559,11 +559,16 @@ export type UseModalBaseOptions<
    */
   readonly clipContainer?: boolean | undefined;
   /**
-   * Render the `<dialog>` into `document.body` rather than where it was declared.
+   * Render the `<dialog>` somewhere other than where it was declared — `document.body` by
+   * default, or a host of your own.
    *
    * When `false` (default), the dialog renders inline in the tree.
    * Modal dialogs are promoted to the browser's top layer by `showModal()`,
    * so they are viewport-anchored regardless of ancestors.
+   *
+   * **`true` means `document.body`; a function names the host instead** — see
+   * {@link PortalTarget}, which is where the reason for the second form lives. `false` and the
+   * contained arrangement are unaffected by either.
    *
    * Non-modal dialogs never enter the top layer, so positioning depends on placement:
    * - **`portal: true`** — portaled to `document.body`, anchored to the viewport
@@ -578,7 +583,7 @@ export type UseModalBaseOptions<
    *
    * @default false
    */
-  readonly portal?: boolean | undefined;
+  readonly portal?: PortalTarget | undefined;
 };
 
 /**
@@ -673,6 +678,26 @@ export type UseModalReturn<
  * This is the `<dialog>`'s own lifecycle. Whether the modal's *content* is ready is the
  * separate `isPreparing` axis — see {@link ModalRenderArgs}.
  */
+/**
+ * Where a portaled dialog is mounted: `document.body`, or a host the caller names.
+ *
+ * `true` is `document.body`, which is the right answer for a page whose styling is global, and the
+ * wrong one everywhere the tree the dialog left was doing something. A dialog portaled out of a
+ * themed container, a design-system root or a microfrontend's mount point loses whatever that
+ * ancestor was providing — CSS custom properties, a scoping class, a cascade layer — and the loss
+ * is silent, because the dialog still renders and only looks wrong.
+ *
+ * So the second form names the host, and is a **getter rather than an element** for the reason
+ * `getDialog` is: the option is read where the dialog is placed, and a caller writing
+ * `document.getElementById(…)` at hook-call time would be reading before its own tree exists.
+ * It is asked each time the dialog is placed, so a host that arrives late is picked up.
+ *
+ * Answering `null` is not a way to un-portal — the arrangement is already chosen by then, and the
+ * placement CSS with it. It falls back to `document.body` and warns, which is the failure a host
+ * that never mounted should make: visible under `setLogLevel`, and not an invisible dialog.
+ */
+export type PortalTarget = boolean | (() => Element | null);
+
 export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
 
 /**

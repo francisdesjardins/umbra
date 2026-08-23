@@ -46,7 +46,7 @@ export type { StackModal, StackPriority } from './manager/stack-order.js';
 // The vocabulary the manager's own surface speaks: a consumer who can name `ModalInfo` but not
 // `ModalPhase` cannot write the annotation it requires. The hook-shaped types beside them describe
 // rendering, so they stay on a binding.
-export type { CloseResult, ModalPhase, ModalStoreSnapshot } from './core/types.js';
+export type { CloseResult, ModalPhase, ModalStoreSnapshot, PortalTarget } from './core/types.js';
 
 // The registry, and the four types derived from it. `ModalRegistry` is exported so a project can
 // augment it — an interface nobody can name is an interface nobody can merge into — and `ModalId`

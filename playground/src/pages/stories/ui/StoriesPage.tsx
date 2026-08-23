@@ -144,6 +144,7 @@ import {
   NonModalHarness,
   NonModalStackHarness,
   PortalDefaultHarness,
+  PortalHostHarness,
   PortalNonModalDefaultHarness,
   PortalNonModalOptInHarness,
   PortalOptInHarness,
@@ -673,6 +674,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         description: 'Modal dialog with portal: true. Dialog is portaled to document.body.',
         component: PortalOptInHarness,
         codeKey: 'story-use-modal-portal-opt-in',
+      },
+      {
+        title: 'Portal — a host of the caller’s own',
+        description:
+          '`portal: true` is `document.body`, which is the wrong answer wherever the tree the dialog left was doing something. A getter names the host instead — here a themed container, so the custom property the dialog reads survives the move. A getter and not an element, because the host is still being rendered when the hook runs.',
+        component: PortalHostHarness,
+        codeKey: 'story-use-modal-portal-host',
       },
       {
         title: 'Portal — Non-Modal Default (Inline)',

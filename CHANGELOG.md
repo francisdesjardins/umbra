@@ -11,6 +11,46 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Added — `portal` can name its host, not only `document.body`
+
+`portal: true` was `createPortal(node, document.body)`, hardcoded — and `document.body` is the
+right answer only for a page whose styling is global. A dialog portaled out of a themed container,
+a design-system root or a microfrontend's mount point loses whatever that ancestor was providing:
+CSS custom properties, a scoping class, a cascade layer. Silently, because the dialog still renders
+and only looks wrong. Everything else in this library is careful with roots — the stylesheet is
+adopted per `getRootNode()`, shadow DOM has a matrix row, two managers on one page have a lock
+ledger — and the portal had one destination.
+
+```tsx
+useModal({
+  id: 'filters',
+  portal: () => {
+    return themeRootRef.current;
+  },
+  render: () => {
+    return <Filters />;
+  },
+});
+```
+
+**A getter rather than an element**, for the reason `getDialog` is one: the option is read where
+the dialog is placed, and a caller writing `document.getElementById(…)` at hook-call time would be
+reading before its own tree exists. It is asked each time the dialog is placed, so a host that
+mounts late is found — React re-reads it per render, Solid once, since that binding mounts the node
+itself and there is nothing left to move.
+
+**Answering `null` is not a way to un-portal.** By then the arrangement is chosen and the placement
+CSS with it, so rendering inline would position the dialog against the wrong thing. It falls back
+to `document.body` and warns, which is the failure a host that never mounted should make: visible
+under `setLogLevel`, rather than an invisible dialog.
+
+**`umbra/vanilla` keeps a plain `boolean`**, and the narrowing is the point: there `portal` selects
+the placement and never moves the element, because reparenting the caller's markup would take its
+ids, stylesheet scope and listeners with it. Accepting a host it could only ignore is the
+silently-dropped option the type system is there to prevent.
+
+`PortalTarget` is a new root export. `portal: true` and `portal: false` behave exactly as before.
+
 ### Added — `register` / `unregister` events, and an `open` that says whether it landed
 
 A modal joins the registry when its component mounts. So an imperative `dialogManager.open(id)`

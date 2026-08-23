@@ -105,6 +105,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'DialogHostStyle',
       'DialogBackdropStyle',
       'DialogPositionStyle',
+      'PortalTarget',
       'applyStyle',
       'DialogStyle',
       'StyleTarget',
