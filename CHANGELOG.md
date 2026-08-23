@@ -262,6 +262,7 @@ dozen words to fit. Meeting a ceiling is not the same as having room under one: 
 whoever writes next, every time, and it is paid in the worst possible currency — trimming prose
 that is already dense. Each budgeted file is now at or under 90% of its own budget, and the set is
 under 90% of the total, so the next paragraph is written rather than negotiated.
+
 ## 2026-08-21
 
 ### Added — `ModalRegistry`, so a project can name its modals once
