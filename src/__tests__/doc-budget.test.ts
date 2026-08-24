@@ -78,11 +78,15 @@ test.describe('the agent instructions have a budget', () => {
       'playwright-report',
       'coverage',
     ]);
+    // By path, not by name: a worktree Claude Code leaves under here is a whole checkout, so it
+    // answers with a second copy of all four files. `.claude` itself stays walked — a CLAUDE.md
+    // added there is one a session would load, and it should want a budget.
+    const SKIP_PATH = '.claude/worktrees';
     const walk = (dir: string): string[] => {
       return readdirSync(resolve(REPO_ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
         const path = dir === '' ? entry.name : `${dir}/${entry.name}`;
         if (entry.isDirectory()) {
-          return SKIP.has(entry.name) ? [] : walk(path);
+          return SKIP.has(entry.name) || path === SKIP_PATH ? [] : walk(path);
         }
         return entry.name === 'CLAUDE.md' ? [path] : [];
       });

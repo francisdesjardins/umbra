@@ -83,6 +83,12 @@ const NEEDS_REAL_FOCUS = /@focus-dependent/;
  */
 export default defineConfig({
   testDir: './src',
+  // The projects below root at the repo, and `testMatch` is unanchored — so `src/**` also matches
+  // `.claude/worktrees/<branch>/src/**`, and a worktree Claude Code left behind is discovered as a
+  // second copy of the suite. It carries its own `node_modules`, so loading one file from it throws
+  // `Requiring @playwright/test second time` and takes the whole run down, in a repo where nothing
+  // is wrong.
+  testIgnore: ['**/.claude/**', '**/node_modules/**'],
   // Empties `.nyc_output/` before any worker writes to it, and only when coverage is on — see the
   // file for why stale counters are worse than missing ones.
   globalSetup: './scripts/ct-coverage-reset.mjs',

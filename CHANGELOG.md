@@ -25,6 +25,23 @@ The control and its `option`s now paint `var(--form-bg, var(--modal-bg))` explic
 are needed — Chrome uses an option's own background when the author sets one, and the popup's
 canvas when they do not.
 
+### Fixed — a leftover worktree took the whole suite down
+
+`.claude/worktrees/<branch>/` is a full checkout with its own `node_modules`, and both gates walk
+the repo by an unanchored pattern: Playwright's `src/**` matched it and threw
+`Requiring @playwright/test second time` on the first file it loaded, and the doc budget counted
+four extra `CLAUDE.md`s. Neither said anything about a worktree, and nothing in the repo was wrong.
+The config ignores `**/.claude/**` now, and the budget walker skips `.claude/worktrees` by path —
+`.claude` itself stays walked, because a `CLAUDE.md` added there is one a session loads and should
+want a budget.
+
+`.gitignore` covers the rest, and covers it better than an ignore of their own would: prettier reads
+it, and so does oxlint — which needed reaching, because oxlint discovers nested configs _before_
+applying its own `ignorePatterns` and had refused to start at all over an `options.typeAware` that
+is only legal in a root config. Each of the four was removed and re-run to see it fail; the two that
+did not are not here. That the entry also stops one `git add .` from committing a second checkout of
+this repo is the smaller half of why it earns its line.
+
 ### Added — `SelectionDropdown`, the playground's one select
 
 Extracted from `showcases/examples/vanilla-panel.tsx`, where it had been a local `SelectField` with

@@ -56,3 +56,7 @@ RATING.md
 
 # The dom-probe skill's screenshots — evidence for one question, not a fixture to keep.
 probe-shots/
+
+# A Claude Code worktree is a whole second checkout of this repo living inside it — committable by
+# one `git add .`, and read as a second copy of the suite by anything that walks the tree.
+.claude/worktrees/
