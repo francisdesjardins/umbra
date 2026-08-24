@@ -336,4 +336,30 @@ test.describe('close resolvers and the order they must be registered in', () => 
 
     expect(seen).toEqual([[null, { reason: 'ok' }]]);
   });
+
+  // The other end of the same window, and the one that answered *wrongly* rather than not at all:
+  // `beginOpen` queues no reopen, so a caller arriving mid-exit was handed the close it walked in
+  // on — a reason somebody else's interaction produced, for a dialog it never saw.
+  test('a resolver registered during the exit is refused rather than answered', async () => {
+    const store = createModalStore<void, 'cancel'>('resolver-mid-exit');
+
+    store.beginOpen();
+    frames.flush();
+    store.finishPreparing();
+    store.close('cancel');
+    expect(store.getSnapshot().phase).toBe('closing');
+
+    const seen: AwaitedClose<void, 'cancel'>[] = [];
+    store.addCloseResolver((result) => {
+      seen.push(result);
+    });
+    store.beginOpen();
+    store.finalize();
+    await Promise.resolve();
+
+    expect(seen).toHaveLength(1);
+    const [error, result] = seen[0] ?? [null, null];
+    expect(error?.message).toBe('Modal "resolver-mid-exit" is closing; no reopen is queued');
+    expect(result, 'the in-flight close belongs to the caller that asked for it').toBeNull();
+  });
 });

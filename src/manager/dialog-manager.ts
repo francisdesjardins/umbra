@@ -392,9 +392,9 @@ export type DialogManager = {
    * asks and may be refused. Reach for that one across an ownership boundary and this one inside it.
    *
    * Resolves the same `[error, result]` tuple a hook does, typed by the registry — so a project
-   * that declared the modal gets its reasons and its payload back without annotating anything. An
-   * id nobody registered resolves `[Error, null]` rather than hanging, which is the answer a
-   * caller can act on.
+   * that declared the modal gets its reasons and its payload back without annotating anything.
+   * Two situations take the `[Error, null]` branch rather than hanging or lying: an id nobody
+   * registered, and a dialog still leaving, whose exit is not this caller's to hear.
    *
    * @example
    * const [unavailable, closed] = await dialogManager.openAndWait('confirm-delete');
@@ -1056,6 +1056,10 @@ export function createDialogManager(): DialogManager {
    * close, and a dialog that opens and closes inside an `async` handler would already have had
    * its only one. A refusal simply never returns that promise; the resolver drains at the
    * dialog's next close or at its teardown, which is where every unclaimed one goes anyway.
+   *
+   * It inherits the store's other rule too: asked while the dialog is `'closing'`, an accepted
+   * outcome's `closed` is the `[Error, null]` branch — the owner said yes, but the exit already
+   * running is not the answer to this ask.
    */
   async function dispatchOpenRequest(
     id: string,

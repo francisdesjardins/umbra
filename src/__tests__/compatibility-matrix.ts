@@ -572,7 +572,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'dialogManager.openAndWait (the imperative instruct-and-await)',
     react: {
       state: 'works',
-      note: 'A root export rather than a binding’s, for a module with no component to hold a hook’s `openAndWait` — a service, a router guard, a worker. Resolves the same `[error, result]` tuple, typed by the registry, and answers `[Error, null]` for an id nobody registered rather than leaving the caller waiting forever. `requestOpenAndWait` is the other half of the pair: that one asks and may be refused, so reach for it across an ownership boundary and this one inside.',
+      note: 'A root export rather than a binding’s, for a module with no component to hold a hook’s `openAndWait` — a service, a router guard, a worker. Resolves the same `[error, result]` tuple, typed by the registry, and takes the `[Error, null]` branch rather than hanging or lying in the two cases that cannot be answered: an id nobody registered, and a dialog still leaving. That second one is the store’s rule, so all three awaiting doors inherit it — `beginOpen` queues no reopen, and the exit already running belongs to whoever asked for it. `requestOpenAndWait` is the other half of the pair: that one asks and may be refused, so reach for it across an ownership boundary and this one inside.',
       references: [
         {
           file: 'src/manager/__tests__/open-and-wait.test.ts',
@@ -581,6 +581,14 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         {
           file: 'src/manager/__tests__/open-and-wait.test.ts',
           title: 'hears a close that happens inside the open',
+        },
+        {
+          file: 'src/manager/__tests__/open-and-wait.test.ts',
+          title: 'refuses while the dialog is still leaving, instead of answering with its close',
+        },
+        {
+          file: 'src/core/__tests__/modal-store.test.ts',
+          title: 'a resolver registered during the exit is refused rather than answered',
         },
       ],
     },

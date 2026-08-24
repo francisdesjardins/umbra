@@ -629,6 +629,11 @@ export type UseModalReturn<
    * no timeout. This registers first, which is why the store's `addCloseResolver` is internal
    * and the surface never lets a caller choose the order.
    *
+   * The other end of that window is refused rather than answered: called while the modal is
+   * `'closing'`, this resolves `[Error, null]`. No reopen is queued (see `open`), so the exit in
+   * flight belongs to whoever asked for it — handing back its reason would report a decision this
+   * caller never caused, for a dialog it never saw.
+   *
    * To observe a close you are not the one causing, use `onClose` — it is a callback rather than
    * a promise and carries no ordering question at all. To await a dialog you do not own, see
    * `dialogManager.requestOpenAndWait`, whose accepted branch carries the close.

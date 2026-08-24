@@ -62,6 +62,44 @@ inactive select had read exactly like a live one in dark mode, and the disabled 
 down now. The border falls back to `--app-control-border` and not `--app-divider`, which the token
 sheet says owes no contrast — 1.4.11 asks 3:1 of a control's edge.
 
+### Fixed — a close nobody asked for, handed to a caller that asked to open
+
+`openAndWait` registers its close resolver before requesting the open, which is the whole point of
+the method. But `beginOpen` is a no-op unless the modal is `'closed'`, and it queues no reopen — so
+a call arriving during an exit animation attached to the close _already in flight_:
+
+```ts
+store.close('cancel'); // phase = 'closing'
+const [error, result] = await modal.openAndWait();
+// [null, { reason: 'cancel' }] — for a dialog this caller never saw
+```
+
+Nothing opened, and the caller was handed a decision somebody else's interaction produced. A
+service acting on `reason === 'confirm'` acts twice.
+
+The rule belongs to the store, so it lives there: `addCloseResolver` refuses while `'closing'` and
+settles that resolver with `[Error, null]` instead. All three awaiting doors inherit it in one
+place — the hook's `openAndWait`, `dialogManager.openAndWait`, and `requestOpenAndWait`, whose
+accepted outcome then carries the error branch on `closed` (the owner said yes; the exit already
+running is still not the answer to that ask).
+
+**Refusing rather than queueing a reopen** keeps this consistent with `open()`, which resolves
+immediately in the same situation and is pinned by its own test. A silent wrong answer becomes a
+detectable one; a caller that wants the dialog back asks again once it has closed.
+
+Two notes on reach. The click path was never exposed — swept at 0/20/60/120/200 ms against the
+playground's deploy flow, and the top layer blocks the page through a modal dialog's exit, so a
+second click cannot land in the window. What was exposed is programmatic callers, which is exactly
+the audience `dialogManager.openAndWait` exists for, and non-modal panels, where the page stays
+live while one slides away.
+
+### Fixed — the type-only registry counted against unit coverage
+
+`src/core/registry.ts` is 72 lines of types and no runtime, and it never went into `.c8rc.json`'s
+type-only group. Unmapped, it read as 0% and pulled the unit measurement down to 95.44%; excluded,
+it is 96.77%. The exclude list is the statement of what the Node project can reach, so a module
+with nothing to reach belongs in it.
+
 ## 2026-08-21
 
 ### Added — `ModalRegistry`, so a project can name its modals once

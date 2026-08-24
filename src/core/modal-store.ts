@@ -228,7 +228,19 @@ export function createModalStore<TData = unknown, TReason extends string = strin
           return prepareController.signal;
         },
 
+        /**
+         * Queue a resolver for the **next** close.
+         *
+         * Refused while `'closing'`, with the error branch. The close already in flight was
+         * requested by somebody else before this caller asked, and {@link beginOpen} queues no
+         * reopen — so the caller would be handed a decision it did not cause, for a dialog it
+         * never saw. An error is the answer it can act on; a reason is not.
+         */
         addCloseResolver(resolver: CloseResolver<TData, TReason>): void {
+          if (get().phase === 'closing') {
+            resolver([new Error(`Modal "${id}" is closing; no reopen is queued`), null]);
+            return;
+          }
           closeResolvers.push(resolver);
         },
       };

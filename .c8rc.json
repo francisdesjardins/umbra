@@ -5,6 +5,7 @@
     "src/**/*.d.ts",
     "src/**/__tests__/**",
     "src/core/types.ts",
+    "src/core/registry.ts",
     "src/core/attach-types.ts",
     "src/actions/types.ts",
     "src/manager/types.ts",

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
+import { createModalStore } from '../../core/modal-store.js';
 import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, createOpenRequest, type OpenRequest } from '../dialog-manager.js';
 
@@ -192,6 +194,39 @@ test.describe('requestOpenAndWait', () => {
 
     expect(outcome).toEqual({ accepted: false, reason: 'over-limit' });
     expect(store.phase).toBe('closed');
+  });
+
+  // The ask registers its resolver before the handler decides, so it shares the store's rule about
+  // a close already in flight: the request is still accepted — the owner said yes — but the close
+  // it hands back is the error branch rather than an exit nobody in this exchange asked for.
+  test('an accept during the exit carries the error branch, not the leaving dialog’s reason', async () => {
+    const frames: FrameControl = installFakeFrames();
+    try {
+      const dm = createDialogManager();
+      const store = createModalStore<void, 'cancel'>('leaving');
+      dm.register('leaving', {
+        store,
+        onOpenRequest: () => {
+          store.beginOpen();
+        },
+      });
+
+      store.beginOpen();
+      frames.flush();
+      store.finishPreparing();
+      store.close('cancel');
+
+      const outcome = await dm.requestOpenAndWait('leaving');
+      expect(outcome.accepted).toBe(true);
+      if (!outcome.accepted) {
+        return;
+      }
+      const [error, result] = await outcome.closed;
+      expect(error?.message).toBe('Modal "leaving" is closing; no reopen is queued');
+      expect(result).toBeNull();
+    } finally {
+      frames.restore();
+    }
   });
 
   test('the refuses the manager makes itself are reasons too, not just warnings', async () => {

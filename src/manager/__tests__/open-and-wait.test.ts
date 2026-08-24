@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
+import { createModalStore } from '../../core/modal-store.js';
 import type { AwaitedClose, ModalPhase } from '../../core/types.js';
 import { createDialogManager } from '../dialog-manager.js';
 
@@ -84,6 +86,29 @@ test.describe('openAndWait', () => {
 
     expect(error?.message).toBe('No modal registered with id "nobody-registered-this"');
     expect(result).toBeNull();
+  });
+
+  // Over the real store rather than the fake: the rule being asserted is the store's, and a fake
+  // that reimplemented it would prove only that the fake has it.
+  test('refuses while the dialog is still leaving, instead of answering with its close', async () => {
+    const frames: FrameControl = installFakeFrames();
+    try {
+      const dm = createDialogManager();
+      const store = createModalStore<void, 'cancel'>('leaving');
+      dm.register('leaving', { store });
+
+      store.beginOpen();
+      frames.flush();
+      store.finishPreparing();
+      store.close('cancel');
+
+      const [error, result] = await dm.openAndWait('leaving');
+
+      expect(error?.message).toBe('Modal "leaving" is closing; no reopen is queued');
+      expect(result, 'the previous interaction’s reason is not this caller’s').toBeNull();
+    } finally {
+      frames.restore();
+    }
   });
 
   test('hears a close that happens inside the open', async () => {
