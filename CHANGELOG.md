@@ -63,11 +63,17 @@ the checker compares against the union of its branches; narrowing that union to 
 resolves it to `void`, and the manager's own facade stops being assignable to the interface it
 implements. That failure is silent at every call site and loud only there.
 
+**`dialogManager.close(id, reason)` now takes only the reasons that carry nothing.** It holds no
+`TData` — the registry is keyed by string — so offering a reason whose contract declares a payload
+would be offering a close it cannot make, and `onClose` would be handed a result its own type says
+cannot exist. `PayloadFreeReasonOf` is that set, and it is exported, since the door's signature
+names it.
+
 Found by the gates rather than by reading: `oxlint`'s `no-unnecessary-condition` flagged
 `closeResult.reason === 'submit' && closeResult.data` in both form examples — a second test that had
 become dead — and `noUnusedLocals` retired the `isArchiveReceipt` guard.
 
-`CloseOf` and `DataOfReason` are exported; the registered forms of the option and return types are
+`CloseOf`, `DataOfReason` and `PayloadFreeReasonOf` are exported; the registered forms of the option and return types are
 `intentionallyNotExported`, on the reason already listed there for the open forms of
 `UseModalOptions` — two of each in the reference makes the reader pick.
 

@@ -60,6 +60,7 @@ export type {
   ModalContract,
   ModalId,
   ModalRegistry,
+  PayloadFreeReasonOf,
   PayloadOf,
   ReasonOf,
   RegisteredModalId,

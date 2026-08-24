@@ -700,8 +700,10 @@ declare module 'umbra' {
 }
 ```
 
-An entry names the two things a close result already names — `reason` and `data` — and both are
-optional, so a modal with no payload declares only its reasons.
+An entry names the two directions — `closesWith` for the close, `opensWith` for the open — and both
+are optional. `closesWith` takes the bare reasons when none carries a payload, or one per reason;
+declared that way it is **required** when closing with that reason, so `onClose` narrows `data` off
+`reason` instead of leaving it optional on every branch.
 
 Every door that takes an id then completes the declared names, and every door that hands one back
 reads its contract off the id:
@@ -713,7 +715,7 @@ const modal = useModal({
   id: 'confirm-delete',
   render: ({ handle }) => <button onClick={() => handle.close('confirm', { id })}>Delete</button>,
   onClose: (result) => {
-    if (result.reason === 'confirm' && result.data) {
+    if (result.reason === 'confirm') {
       remove(result.data.id); // typed, with no `useModal<{ id: string }, …>` anywhere
     }
   },
@@ -1168,7 +1170,7 @@ this is the single place a protocol would grow — a version, a correlation id �
 caller being edited.
 
 It **checks** rather than validates, and only where a project said what to check against: a
-declared `payload` in `ModalRegistry` types this argument (`PayloadOf<TId>`), so asking with the
+a declared `opensWith` in `ModalRegistry` types this argument (`PayloadOf<TId>`), so asking with the
 wrong shape is a compile error. An id the registry does not name keeps `unknown`, which is what
 hosting someone else's dialog means. Neither is a run-time guarantee — the dialog receiving a
 request from genuinely outside the project is still the only side that knows what a good payload

@@ -98,7 +98,7 @@ export function OpenRequestExample() {
             <Shared.Button
               variant="primary"
               {...action('confirm', (close) => {
-                // `TData` on the hook checks it here; it reaches the caller as `unknown`.
+                // The contract gives the receipt to `confirm` alone, at both ends of the trip.
                 close({ room: room ?? '—', archivedAt: new Date().toISOString() });
               })}
             >

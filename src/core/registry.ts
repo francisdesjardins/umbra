@@ -115,17 +115,32 @@ export type DataOfReason<TId, TReason> =
  * correlation. `CloseResult.data` is already optional, so a `void` member would be one every hop
  * carries and none can use.
  *
- * **Ending in `infer` is load-bearing.** Un-augmented, this conditional stays deferred and the
- * checker compares against the union of its branches; a true branch narrowed to a computed key list
- * resolves to `void`, which silently stops the manager's facade from implementing its own interface.
+ * **Reading through `infer` and `keyof` is load-bearing twice over.** A `Record<string, …>` pattern
+ * matches a type literal and not an `interface`, which has no index signature — the contract would
+ * answer `void` there while {@link ReasonOf} read it correctly. And un-augmented this conditional
+ * stays deferred, so the checker compares against the union of its branches: narrow that union and
+ * the manager's facade silently stops implementing its own interface.
  */
 export type DataOf<TId> = TId extends keyof ModalRegistry
-  ? ModalRegistry[TId] extends { readonly closesWith: Readonly<Record<string, infer TData>> }
-    ? [Exclude<TData, void>] extends [never]
+  ? ModalRegistry[TId] extends { readonly closesWith: infer TClosesWith }
+    ? TClosesWith extends string
       ? void
-      : Exclude<TData, void>
+      : [Exclude<TClosesWith[keyof TClosesWith], void>] extends [never]
+        ? void
+        : Exclude<TClosesWith[keyof TClosesWith], void>
     : void
   : void;
+
+/**
+ * The reasons that close with nothing — what a door with no way to carry a payload may ask for.
+ *
+ * `dialogManager.close(id, reason)` is that door: the registry is keyed by string and the manager
+ * holds no `TData`, so offering a reason whose contract requires one would be offering a close it
+ * cannot make. A payload goes through the typed doors — `handle.close(reason, data)`, or an action.
+ */
+export type PayloadFreeReasonOf<TId> = {
+  [TReason in ReasonOf<TId>]: DataOfReason<TId, TReason> extends void ? TReason : never;
+}[ReasonOf<TId>];
 
 /**
  * How one declared modal closed, as a union correlated by `reason` — so a `switch` on it narrows

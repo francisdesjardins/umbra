@@ -45,8 +45,13 @@ export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-modal'>
 
 export function _manager() {
   dialogManager.open('delete-account');
-  dialogManager.close('delete-account', 'confirm');
+  dialogManager.close('delete-account', 'cancel');
   dialogManager.close('delete-account', 'dismiss');
+
+  // The manager holds no payload, so it is offered only the reasons that carry none — `confirm`
+  // declares one, and closing without it would hand `onClose` a result its own type forbids.
+  // @ts-expect-error 'confirm' closes with a payload this door cannot supply
+  dialogManager.close('delete-account', 'confirm');
 
   // Checked **per id**, which is the guarantee that survives an open id space.
   // @ts-expect-error 'extend' belongs to session-warning

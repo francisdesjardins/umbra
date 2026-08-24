@@ -2,7 +2,12 @@
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
-import type { ModalId, PayloadOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type {
+  ModalId,
+  PayloadFreeReasonOf,
+  PayloadOf,
+  RegisteredModalId,
+} from '../core/registry.js';
 import type { AwaitedCloseOf } from '../core/registered-types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
@@ -517,10 +522,15 @@ export type DialogManager = {
   /**
    * Close a modal imperatively by id, with a reason.
    *
-   * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
-   * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
+   * **Reason only, and only the reasons that carry nothing.** The registry is keyed by string, so
+   * nothing here knows a modal's `TData` — a reason whose contract declares a payload is refused
+   * rather than closed without one, which would hand `onClose` a result its own type says cannot
+   * exist. Those go through the typed doors: `handle.close(reason, data)`, or an action's `close`.
    */
-  close<TId extends ModalId>(id: TId, reason?: ReasonOf<NoInfer<TId>> | DismissReason): void;
+  close<TId extends ModalId>(
+    id: TId,
+    reason?: PayloadFreeReasonOf<NoInfer<TId>> | DismissReason
+  ): void;
 
   /**
    * Query modal state.

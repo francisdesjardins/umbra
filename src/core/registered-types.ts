@@ -60,7 +60,11 @@ export type RegisteredActionFactory<TId> = {
           reason: TReason,
           handlerOrOptions:
             | ((close: (data: DataOfReason<TId, TReason>) => void) => void | Promise<void>)
-            | ActionOptions<DataOfReason<TId, TReason>>,
+            | (Omit<ActionOptions<DataOfReason<TId, TReason>>, 'onAction'> & {
+                readonly onAction: (
+                  close: (data: DataOfReason<TId, TReason>) => void
+                ) => void | Promise<void>;
+              }),
         ]
   ): ActionButtonProps;
   /** Whether that action is running — see {@link ActionFactory.isRunning}. */

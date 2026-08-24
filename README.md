@@ -259,9 +259,9 @@ declare module 'umbra' {
 }
 ```
 
-An entry names the same things the two directions already call them — `reason` and `data` for the
-close, `opensWith` for the open — and all are optional, so a modal that closes with nothing declares
-only its reasons.
+An entry names the two directions — `closesWith` for the close, `opensWith` for the open — and both
+are optional. `closesWith` takes the bare reasons when none carries a payload, or one per reason;
+a payload declared that way is **required** when closing with that reason.
 
 From then on the id is checked wherever one is accepted, in both directions:
 
@@ -329,7 +329,7 @@ export const deleteAccount = async () => {
 ```
 
 `openAndWait` is the same door a hook offers, on the manager instead — so the service needs no
-component to hold one. `reason` and `data` are typed if the id is [in the registry](#declaring-your-modals-in-one-place)
+component to hold one. `reason` and `data` are typed, and correlated, if the id is [in the registry](#declaring-your-modals-in-one-place)
 and open if it is not, and there is no listener to unsubscribe or to register in the right order.
 
 Your UI layer only has to _register_ a modal with that id; the service decides when it appears.

@@ -24,7 +24,14 @@ declare module '../src/core/registry.js' {
     'shift-notice': { closesWith: { acknowledge: void; snooze: void } };
     /** The bare-union form: the same thing said shorter, for a modal where none carries one. */
     'shift-brief': { closesWith: 'acknowledge' | 'snooze' };
+    /** Declared through a named interface, which has no index signature to match against. */
+    'archive-iface': { closesWith: ArchiveCloses };
   }
+}
+
+interface ArchiveCloses {
+  confirm: { room: string };
+  cancel: void;
 }
 
 // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- the two-signature identity trick needs a parameter the rule counts as used once
@@ -42,6 +49,11 @@ export type _DataIsTheUnionWithoutVoid = Assert<Equals<DataOf<'archive-room'>, {
 
 /** All-`void` reasons answer `void`, the same as a modal that declared no payload at all. */
 export type _AllVoidIsVoid = Assert<Equals<DataOf<'shift-notice'>, void>>;
+
+/** An `interface` reads the same as a type literal — it matches no `Record<…>` pattern. */
+export type _InterfaceReadsTheSame = Assert<
+  Equals<DataOf<'archive-iface'>, DataOf<'archive-room'>>
+>;
 
 /** The two forms are one contract: the bare union answers exactly what the all-`void` map does. */
 export type _BriefReasons = Assert<Equals<ReasonOf<'shift-brief'>, 'acknowledge' | 'snooze'>>;
@@ -92,6 +104,9 @@ export function Hook() {
 
       // @ts-expect-error a bare action on a payload reason would auto-close with nothing
       action('confirm');
+
+      // @ts-expect-error and so would an options object without a handler
+      action('confirm', { hotkey: 'Enter' });
 
       action('confirm', (close) => {
         // @ts-expect-error and its close is typed too
