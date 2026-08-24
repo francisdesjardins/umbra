@@ -24,11 +24,15 @@ declare module '../src/core/registry.js' {
     'shift-notice': { closesWith: { acknowledge: void; snooze: void } };
     /** The bare-union form: the same thing said shorter, for a modal where none carries one. */
     'shift-brief': { closesWith: 'acknowledge' | 'snooze' };
-    /** Declared through a named interface, which has no index signature to match against. */
     'archive-iface': { closesWith: ArchiveCloses };
   }
 }
 
+/**
+ * An `interface` because that is the subject: it has no index signature, so a contract read through
+ * a `Record<…>` pattern answers `void` here while `ReasonOf` reads it correctly. As a `type` this is
+ * `archive-room` again and `_InterfaceReadsTheSame` below passes while proving nothing.
+ */
 interface ArchiveCloses {
   confirm: { room: string };
   cancel: void;
