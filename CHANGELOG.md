@@ -9,6 +9,68 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-24
+
+### Changed — a modal's contract declares what each reason closes with
+
+`ModalRegistry` entries said `{ data, reason }`: one payload for every reason a modal has. Five of
+the six declared entries carrying a payload had more than one reason, and every one of them paid for
+it at the call site — `result.data?.remember ?? false` inside `case 'confirm'`, `result.data ?? 0`
+after `reason === 'sent'`, `data ?? 'somewhere'` after `reason === 'engage'`, and an
+`isArchiveReceipt(result.data)` type guard doing at run time what narrowing should have done. Those
+`??` arms are fabricated defaults for states that cannot occur: nothing ever sent zero items.
+
+An entry now declares `closesWith`, which takes either the bare reasons or a payload per reason:
+
+```ts
+declare module 'umbra' {
+  interface ModalRegistry {
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
+  }
+}
+```
+
+**A declared payload is required, and that is the half that pays.** `close('confirm', data)` must be
+given it and a bare `action('confirm')` is rejected, since it would auto-close with nothing. Without
+that, correlation only forbids `close('cancel', x)` — a mistake nobody makes — and every `??` above
+survives. A reason that genuinely sometimes closes empty declares `confirm: Data | undefined`.
+
+**`data` and `reason` are gone rather than kept beside it.** Two keys for one act is the thing
+`src/CLAUDE.md`'s vocabulary table forbids, and the additive version needed a precedence rule for
+entries declaring both — the heuristic the design set out to avoid. The bare-union form exists so
+the 30-odd payload-free entries stay one line, the way `PortalTarget` takes a boolean or a getter.
+
+**And the pair is named by direction: `closesWith` / `opensWith`.** `closes` alone reads as a
+transitive verb — closes *what* — where the sense is what it closes *with*, which is the phrase the
+docs already used for it. `payload` followed: it had been named after the runtime field it types
+(`OpenRequest.payload`), a rule `closesWith` does not follow, so keeping it would have been two
+naming rules for two neighbouring keys. `PayloadOf` keeps its name, since what it returns really is
+that payload. The controller binding's registered types moved to `vanilla/types.ts` in the same
+pass — in `core/` they needed type parameters whose only job was to avoid naming `DialogController`.
+
+**The internals did not move.** `CloseResult` is still the flat plain object its own doc insists on;
+the store, the engine and the resolver queue never name `CloseOf`. A union keyed by `reason` is
+opaque at a generic boundary the way a conditional is, so proving a value inhabits it inside
+`createModalStore` would have wanted an `as` — instead the correlation is stated only in the
+registered-id overloads every entry point already had, which is the one seam TypeScript sanctions
+for a signature narrower than its body can prove. The two manager doors whose *return* narrows moved
+from object-literal members to function declarations for the same reason: only a declaration carries
+overloads.
+
+`DataOf` ends in `infer` and must keep doing so. Left un-augmented the conditional stays deferred and
+the checker compares against the union of its branches; narrowing that union to a computed key list
+resolves it to `void`, and the manager's own facade stops being assignable to the interface it
+implements. That failure is silent at every call site and loud only there.
+
+Found by the gates rather than by reading: `oxlint`'s `no-unnecessary-condition` flagged
+`closeResult.reason === 'submit' && closeResult.data` in both form examples — a second test that had
+become dead — and `noUnusedLocals` retired the `isArchiveReceipt` guard.
+
+`CloseOf` and `DataOfReason` are exported; the registered forms of the option and return types are
+`intentionallyNotExported`, on the reason already listed there for the open forms of
+`UseModalOptions` — two of each in the reference makes the reader pick.
+
 ## 2026-08-23
 
 ### Changed — one `noop` for the tests, and none for the library

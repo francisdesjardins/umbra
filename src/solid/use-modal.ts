@@ -1,7 +1,8 @@
 import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } from 'solid-js';
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import {
@@ -54,8 +55,8 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * the one below, which is the signature this hook has always had.
  */
 export function useModal<TId extends RegisteredModalId>(
-  options: UseModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredOptions<TId, DialogStyle, JSX.Element>
+): RegisteredReturn<TId, JSX.Element>;
 export function useModal<TData = void, TReason extends string = string>(
   options: UseModalOptions<TData, TReason>
 ): UseModalReturn<TData, TReason>;

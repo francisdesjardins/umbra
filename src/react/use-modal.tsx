@@ -1,8 +1,16 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import { createModalDirector } from '../core/modal-director.js';
 import {
@@ -50,8 +58,8 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * through to the one below, which is the signature this hook has always had.
  */
 export function useModal<TId extends RegisteredModalId>(
-  options: UseModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredOptions<TId, CSSProperties, ReactNode>
+): RegisteredReturn<TId, ReactNode>;
 export function useModal<TData = void, TReason extends string = string>(
   options: UseModalOptions<TData, TReason>
 ): UseModalReturn<TData, TReason>;

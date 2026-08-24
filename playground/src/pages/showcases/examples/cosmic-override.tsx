@@ -288,7 +288,7 @@ export function CosmicOverrideExample() {
     onClose: (closeResult) => {
       setResult(
         closeResult.reason === 'engage'
-          ? `Warped to ${closeResult.data ?? 'somewhere'}`
+          ? `Warped to ${closeResult.data}`
           : `Warp ${closeResult.reason === 'abort' ? 'aborted' : 'dismissed'}`
       );
     },

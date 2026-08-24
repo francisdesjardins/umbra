@@ -2,7 +2,8 @@
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
-import type { DataOf, ModalId, PayloadOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { ModalId, PayloadOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { AwaitedCloseOf } from '../core/registered-types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -166,6 +167,22 @@ export type OpenRequestDispatch<TPayload = unknown> = OpenRequest<TPayload> & {
    */
   readonly refuse: (reason: string) => void;
 };
+
+/**
+ * {@link OpenRequestOutcome} for a declared id: the accepted branch resolves the correlated close,
+ * so a caller across a boundary switches on `reason` and reads the payload that reason declared.
+ */
+export type RegisteredOpenRequestOutcome<TId> =
+  | {
+      readonly accepted: true;
+      /** Resolves the way `openAndWait()` does, once the dialog closes. */
+      readonly closed: Promise<AwaitedCloseOf<TId>>;
+    }
+  | {
+      readonly accepted: false;
+      /** Why — see {@link OpenRequestOutcome}. */
+      readonly reason: string;
+    };
 
 /**
  * What {@link DialogManager.requestOpenAndWait} resolves to — the answer to the ask, and on the
@@ -467,7 +484,7 @@ export type DialogManager = {
   requestOpenAndWait<TId extends RegisteredModalId>(
     id: TId,
     request?: OpenRequest<PayloadOf<NoInfer<TId>>>
-  ): Promise<OpenRequestOutcome<DataOf<TId>, ReasonOf<TId>>>;
+  ): Promise<RegisteredOpenRequestOutcome<TId>>;
   requestOpenAndWait<TId extends ModalId>(
     id: TId,
     request?: OpenRequest<PayloadOf<NoInfer<TId>>>
@@ -494,9 +511,7 @@ export type DialogManager = {
    *   await api.deleteAccount();
    * }
    */
-  openAndWait<TId extends RegisteredModalId>(
-    id: TId
-  ): Promise<AwaitedClose<DataOf<TId>, ReasonOf<TId>>>;
+  openAndWait<TId extends RegisteredModalId>(id: TId): Promise<AwaitedCloseOf<TId>>;
   openAndWait(id: ModalId): Promise<AwaitedClose<unknown>>;
 
   /**
@@ -1209,6 +1224,38 @@ export function createDialogManager(): DialogManager {
     return { accepted: true, closed };
   }
 
+  // The two doors whose *return* narrows on a declared id. Written as declarations rather than as
+  // members of the object below, because only a declaration carries overloads — and the correlated
+  // signature is one the body cannot prove, `CloseOf` being a union the store never builds.
+  function openAndWait<TId extends RegisteredModalId>(id: TId): Promise<AwaitedCloseOf<TId>>;
+  function openAndWait(id: ModalId): Promise<AwaitedClose<unknown>>;
+  function openAndWait(id: string): Promise<AwaitedClose<unknown>> {
+    const entry = registry.get(id);
+    if (!entry) {
+      log.warn('Open skipped (not registered)', { id });
+      return Promise.resolve([new Error(`No modal registered with id "${id}"`), null]);
+    }
+    // The resolver is registered before the open, so a modal that closes inside `beginOpen` —
+    // a `prepare` that throws, a reconciliation putting it straight back — is still heard.
+    const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
+      entry.store.addCloseResolver(resolve);
+    });
+    entry.store.beginOpen();
+    return closed;
+  }
+
+  function requestOpenAndWait<TId extends RegisteredModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<RegisteredOpenRequestOutcome<TId>>;
+  function requestOpenAndWait<TId extends ModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<OpenRequestOutcome>;
+  function requestOpenAndWait(id: string, request: OpenRequest = {}): Promise<OpenRequestOutcome> {
+    return dispatchOpenRequest(id, request);
+  }
+
   // ── Public API (facade) ───────────────────────────────────────────────────
 
   return {
@@ -1225,20 +1272,7 @@ export function createDialogManager(): DialogManager {
       return true;
     },
 
-    openAndWait(id: string): Promise<AwaitedClose<unknown>> {
-      const entry = registry.get(id);
-      if (!entry) {
-        log.warn('Open skipped (not registered)', { id });
-        return Promise.resolve([new Error(`No modal registered with id "${id}"`), null]);
-      }
-      // The resolver is registered before the open, so a modal that closes inside `beginOpen` —
-      // a `prepare` that throws, a reconciliation putting it straight back — is still heard.
-      const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
-        entry.store.addCloseResolver(resolve);
-      });
-      entry.store.beginOpen();
-      return closed;
-    },
+    openAndWait,
 
     requestOpen(id: string, request: OpenRequest = {}): void {
       // The fire-and-forget door. Deliberately not `void dispatchOpenRequest(...)` at the call
@@ -1246,9 +1280,7 @@ export function createDialogManager(): DialogManager {
       void dispatchOpenRequest(id, request);
     },
 
-    requestOpenAndWait(id: string, request: OpenRequest = {}): Promise<OpenRequestOutcome> {
-      return dispatchOpenRequest(id, request);
-    },
+    requestOpenAndWait,
 
     close(id: string, reason: string = DISMISS_REASON): void {
       const entry = registry.get(id);

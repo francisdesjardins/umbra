@@ -436,6 +436,13 @@ returning it, and the hooks take `ActionGate` rather than `ActionEngine<TData>`.
 the declaration it constrains, being a fact about that type and nothing else — as are the two
 deliberate non-derivations, `RegisteredStore` and `ModalVariant`.
 
+**A declared id's correlated close lives in the overload declarations and nowhere else**
+(`core/registered-types.ts`): `CloseOf` is a union keyed by `reason`, which is opaque at a generic
+boundary the way a conditional is, so the internals stay on the flat model and no `as` bridges
+them. `DataOf` ends in `infer` for the same law read the other way — un-augmented it stays
+deferred, the checker compares against the union of its branches, and narrowing that union is what
+stops the manager's facade from implementing its own signature.
+
 Pinned by [core/\_\_tests\_\_/type-model.test.ts](core/__tests__/type-model.test.ts) — compile-time
 assertions plus `@ts-expect-error` checks that the variant's mutual exclusion and the payload
 rejection are real, so flattening a derived type into an equivalent-looking literal fails there.

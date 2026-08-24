@@ -112,7 +112,7 @@ export function MuiFormExample() {
     },
     onClose: (closeResult) => {
       resultStore.setResult(
-        closeResult.reason === 'submit' && closeResult.data
+        closeResult.reason === 'submit'
           ? `User created: ${closeResult.data.name} (${closeResult.data.email})`
           : `Form closed with reason: ${closeResult.reason}`
       );

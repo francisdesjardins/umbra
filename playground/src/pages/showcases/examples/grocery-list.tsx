@@ -143,7 +143,7 @@ export function GroceryListExample() {
     onClose: (result) => {
       setOutcome(
         result.reason === 'sent'
-          ? `Sent ${String(result.data ?? 0)} items`
+          ? `Sent ${String(result.data)} items`
           : `List closed: ${result.reason}`
       );
     },

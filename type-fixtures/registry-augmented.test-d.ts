@@ -11,9 +11,9 @@ import { useModal } from '../src/react/use-modal.js';
 
 declare module '../src/core/registry.js' {
   interface ModalRegistry {
-    'delete-account': { data: { id: string }; reason: 'confirm' | 'cancel' };
-    'session-warning': { reason: 'extend' | 'sign-out' };
-    'patient:merge': { payload: { patientId: string }; reason: 'merged' | 'cancel' };
+    'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
   }
 }
 

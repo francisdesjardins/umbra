@@ -48,11 +48,15 @@ export type { StackModal, StackPriority } from './manager/stack-order.js';
 // rendering, so they stay on a binding.
 export type { CloseResult, ModalPhase, ModalStoreSnapshot, PortalTarget } from './core/types.js';
 
-// The registry, and the four types derived from it. `ModalRegistry` is exported so a project can
+// The registry, and the types derived from it. `ModalRegistry` is exported so a project can
 // augment it — an interface nobody can name is an interface nobody can merge into — and `ModalId`
 // because it is what every door on the manager now says, so a consumer annotating one needs it.
+// `CloseOf` is here for the same reason: it is what a declared modal's close *is*, so a function
+// taking one has to be able to say so.
 export type {
+  CloseOf,
   DataOf,
+  DataOfReason,
   ModalContract,
   ModalId,
   ModalRegistry,

@@ -1,5 +1,6 @@
 import { mergeProps } from 'solid-js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredReturn } from '../../core/registered-types.js';
 import type { JSX } from 'solid-js';
 import type { DialogStyle } from '../../core/style.js';
 import {
@@ -11,6 +12,8 @@ import {
 import {
   buildModalOptions,
   type BaseRenderContext,
+  type RegisteredBaseRenderContext,
+  type RegisteredTemplateOptions,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
 import { useModal } from '../use-modal.js';
@@ -23,6 +26,12 @@ export type SlideModalRenderContext<
   TData = void,
   TReason extends string = string,
 > = BaseRenderContext<TData, TReason> & {
+  /** The slide direction for direction-aware layout */
+  readonly direction: SlideDirection;
+};
+
+/** {@link SlideModalRenderContext} for a declared id. */
+export type RegisteredSlideContext<TId> = RegisteredBaseRenderContext<TId> & {
   /** The slide direction for direction-aware layout */
   readonly direction: SlideDirection;
 };
@@ -63,8 +72,11 @@ export type UseSlideModalReturn<TData = void, TReason extends string = string> =
  * the one below — which is the signature `useSlideModal` has always had.
  */
 export function useSlideModal<TId extends RegisteredModalId>(
-  options: UseSlideModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseSlideModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredTemplateOptions<TId, RegisteredSlideContext<TId>, DialogStyle, JSX.Element> & {
+    readonly direction: SlideDirection;
+    readonly align?: SlideAlign | undefined;
+  }
+): RegisteredReturn<TId, JSX.Element>;
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
 ): UseSlideModalReturn<TData, TReason>;

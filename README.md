@@ -251,16 +251,16 @@ single interface:
 // src/modals.d.ts — or anywhere your tsconfig includes
 declare module 'umbra' {
   interface ModalRegistry {
-    'confirm-delete': { data: { id: string }; reason: 'confirm' | 'cancel' };
-    'session-warning': { reason: 'extend' | 'sign-out' };
-    'patient:merge': { payload: { patientId: string }; reason: 'merged' | 'cancel' };
+    'confirm-delete': { closesWith: { confirm: { id: string }; cancel: void } };
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
     'command-palette': Record<string, never>;
   }
 }
 ```
 
 An entry names the same things the two directions already call them — `reason` and `data` for the
-close, `payload` for the open — and all are optional, so a modal that closes with nothing declares
+close, `opensWith` for the open — and all are optional, so a modal that closes with nothing declares
 only its reasons.
 
 From then on the id is checked wherever one is accepted, in both directions:
