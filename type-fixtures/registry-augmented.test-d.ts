@@ -152,6 +152,13 @@ export function _requestOpenChecksThePayload() {
   // Asking with nothing stays legal: the contract types the payload, it does not require one.
   dialogManager.requestOpen('patient:merge');
   dialogManager.requestOpen('patient:merge', { context: { source: 'portal:nav' } });
+
+  // And the builder's own payload-free form fits a *declared* contract too — the one shape a
+  // single generic signature got wrong, since it inferred `OpenRequest<undefined>` there.
+  dialogManager.requestOpen('patient:merge', createOpenRequest(undefined, { source: 'nav' }));
+  dialogManager.requestOpen('patient:merge', createOpenRequest());
+  void dialogManager.requestOpenAndWait('patient:merge', createOpenRequest(undefined, {}));
+  dialogManager.requestOpen('someone-elses-modal', createOpenRequest(undefined, { source: 'x' }));
 }
 
 /**

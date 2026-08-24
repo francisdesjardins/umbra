@@ -120,7 +120,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   {
     option: 'id',
     enforcement: 'RUNTIME',
-    note: 'The manager’s key. Two live modals sharing one id is last-registration-wins, which is why the playground’s microfrontend demo namespaces them.',
+    note: 'The manager’s key, so **one id is one live instance** — two sharing it is last-registration-wins, which is why the playground’s microfrontend demo namespaces them. A confirm per table row is therefore N ids, derived from the row key rather than one id reused; the displaced registration is released, warned about, and reported as an `unregister` so a listener counting arrivals stays balanced.',
   },
   {
     option: 'render',
@@ -1186,6 +1186,11 @@ export const BINDING_ROWS: readonly BindingRow[] = [
 // ── Axis C — the platform, and features meeting each other ────────────────────
 
 export const PLATFORM_ROWS: readonly PlatformRow[] = [
+  {
+    fact: 'the browser back button closes the front dialog',
+    state: 'no-by-design',
+    why: 'Nothing here reads `popstate` or writes `history`, and nothing will: a dialog that pushed a history entry would fight the router of every application that has one, and one that listened without pushing would close on a back press it did not cause. Navigation is the application’s, and the wiring is three lines it already owns — push on open, `subscribe` for the close, `dialogManager.close(id)` from the `popstate` handler. Recorded because it was the one refusal with no line: a compatibility fact that is nowhere is one the next reader rediscovers.',
+  },
   {
     fact: 'z-index orders two dialogs in the top layer',
     state: 'no-platform',

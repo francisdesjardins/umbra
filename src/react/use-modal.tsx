@@ -281,7 +281,22 @@ export function useModal<TData = void, TReason extends string = string>(
   // otherwise renders a closed `<dialog>` with no DOM in scope. Portaling has never server-rendered
   // — `createPortal` needs a live container — but the default and contained paths do, and asserting
   // that is what `verify:package` does.
-  const portalHost = isPortaled ? resolvePortalHost(portal, document.body) : null;
+  // Held across renders, and re-read only when `portal` flips between portaled and not — the one
+  // structural change, and the one the teardown effect already treats as such. Re-reading it every
+  // render is what a getter invites and what strands an open modal: a container of a different
+  // identity makes React unmount the portal subtree and mount a *fresh*, closed `<dialog>`, and
+  // `syncOpenSequence` will not show it again outside `'opening'`. The dialog vanishes with the
+  // store still reporting `phase: 'open'`, and nothing on screen left to dismiss.
+  const [portalEra, setPortalEra] = useState(() => {
+    return { isPortaled, host: isPortaled ? resolvePortalHost(portal, document.body) : null };
+  });
+  if (portalEra.isPortaled !== isPortaled) {
+    setPortalEra({
+      isPortaled,
+      host: isPortaled ? resolvePortalHost(portal, document.body) : null,
+    });
+  }
+  const portalHost = portalEra.isPortaled === isPortaled ? portalEra.host : null;
 
   if (portalHost) {
     dialogNode = createPortal(dialogElement, portalHost);

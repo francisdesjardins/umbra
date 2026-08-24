@@ -37,27 +37,13 @@ fermeture partage », mais la _dernière étape_, celle que l'option remplace, v
 
 Classé par ce que ça coûte de ne rien faire, pas par difficulté.
 
-### 2.1 Le budget documentaire est à zéro de marge — **bloquant pour le prochain**
+### 2.1 Le budget documentaire est à zéro de marge — **résolu sur `main`**
 
-```
-CLAUDE.md            = 2800
-src/CLAUDE.md        = 5749
-src/store/CLAUDE.md  = 1119
-playground/CLAUDE.md = 3832
-TOTAL                = 13500 / 13500
-```
-
-`doc-budget.test.ts` échoue au mot suivant, quel que soit le fichier. J'ai découvert la contrainte en
-la heurtant : ma note d'architecture sur le nouveau seam a dû devenir une réécriture de longueur
-égale de la ligne existante au lieu d'un ajout.
-
-Ce n'est pas un défaut — la règle de routage du test est bonne et elle a fonctionné exactement comme
-prévu, en poussant le fait vers le JSDoc et la matrice. Mais à zéro de marge, elle ne discrimine plus
-entre « ce fait n'a rien à faire ici » et « il n'y a plus de place ». Les deux donnent le même échec.
-
-**Recommandation** — une passe de taille sur `src/CLAUDE.md` (le plus gros, et celui qui a le plus de
-prose reprise ailleurs), pour récupérer 200–300 mots de marge. Monter le plafond est l'autre option et
-le test dit lui-même que c'est une décision à énoncer dans le commit qui la prend.
+Le constat était juste : `13 499 / 13 500`, et le test échouait au mot suivant. `main` a fait la
+passe de taille recommandée, en plus grand — **12 149 mots**, environ 10 % de marge sur le total et
+aucun fichier au-dessus de 87 % du sien. La norme est écrite dans `doc-budget.test.ts` et dans les
+premières lignes du `CLAUDE.md` racine : viser 90 %, et dépenser la marge à écrire plutôt qu'à
+faire tenir.
 
 ### 2.2 `onOpenRequest` reçoit encore `unknown` — la moitié réceptrice du point 2
 
@@ -83,7 +69,7 @@ et détruit l'exclusion mutuelle que `type-model.test.ts` épingle.
 **Recommandation** — à faire si l'on veut la boucle fermée, en un commit dédié. Sinon, laisser tel
 quel : l'état actuel est cohérent et documenté, pas un oubli.
 
-### 2.3 Le bouton retour n'a pas de décision écrite
+### 2.3 Le bouton retour n'a pas de décision écrite — **porté dans la matrice**
 
 Aucun `popstate`, aucun `history` dans `src/` ni dans le playground. Ce n'est probablement pas un
 manque — la navigation appartient à l'application — mais **c'est le seul refus de la bibliothèque qui
@@ -93,11 +79,11 @@ dans la matrice avec leur `why`. Celui-ci n'a rien.
 Par la règle du dépôt, c'est ça le défaut : un fait de compatibilité qui n'est nulle part est un fait
 que la prochaine personne redécouvre.
 
-**Recommandation** — une `PlatformRow` avec son `why`. Une heure, et `yarn todo` cesse de mentir par
-omission. Le contenu probable : le retour Android / navigateur est une affaire de routeur, et
-`subscribe` + `close(id)` suffisent à le câbler côté application.
+**Fait** — `PLATFORM_ROWS` porte maintenant « the browser back button closes the front dialog » en
+`no-by-design`, avec son `why` : la navigation appartient à l'application, et le câblage est
+`push` à l'ouverture + `subscribe` + `dialogManager.close(id)` depuis son `popstate`.
 
-### 2.4 Un identifiant = une instance
+### 2.4 Un identifiant = une instance — **porté dans la matrice**
 
 `register` remplace l'entrée précédente et prévient (`Duplicate modal id`). Donc pas de N instances
 d'un même modal — une confirmation par ligne de tableau, par exemple, demande N identifiants.
@@ -106,9 +92,9 @@ C'est cohérent avec un registre à clé chaîne et la ligne `id` de la matrice 
 (« last-registration-wins »). Mais la matrice le formule comme une **conséquence**, pas comme une
 limite que quelqu'un pourrait vouloir contourner.
 
-**Recommandation** — pas de changement de code. Une phrase dans la ligne `id` disant ce qu'un
-appelant doit faire à la place (dériver l'identifiant de la clé de la ligne), pour que ça se lise
-comme une réponse et non comme un silence.
+**Fait** — la ligne `id` dit maintenant qu'un identifiant est une instance, qu'une confirmation par
+ligne de tableau demande donc N identifiants dérivés de la clé de la ligne, et que la registration
+déplacée est désormais rapportée par un `unregister` pour qu'un compteur d'arrivées reste juste.
 
 ### 2.5 Pas d'opération en masse
 

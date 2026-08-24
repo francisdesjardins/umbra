@@ -678,6 +678,8 @@ export type UseModalReturn<
  * This is the `<dialog>`'s own lifecycle. Whether the modal's *content* is ready is the
  * separate `isPreparing` axis — see {@link ModalRenderArgs}.
  */
+export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
+
 /**
  * Where a portaled dialog is mounted: `document.body`, or a host the caller names.
  *
@@ -688,17 +690,26 @@ export type UseModalReturn<
  * is silent, because the dialog still renders and only looks wrong.
  *
  * So the second form names the host, and is a **getter rather than an element** for the reason
- * `getDialog` is: the option is read where the dialog is placed, and a caller writing
- * `document.getElementById(…)` at hook-call time would be reading before its own tree exists.
- * It is asked each time the dialog is placed, so a host that arrives late is picked up.
+ * `getDialog` is: the option is read where the dialog is placed rather than where it is written, so
+ * a caller keeps naming the host and the binding decides when to ask.
+ *
+ * **The host has to exist by the time the modal is placed**, which is the modal's first render on
+ * `umbra/react` and its mount on `umbra/solid`. A design-system root, a themed shell, a
+ * microfrontend's mount point: all of those are already in the document when a feature component
+ * renders. A node in the modal's *own* subtree is not — the getter answers `null` there, and the
+ * fallback below is what the caller gets.
+ *
+ * **It is read once per portal era, not per render.** A container that changed identity under an
+ * open dialog would make React unmount the portal subtree and mount a fresh, closed `<dialog>` that
+ * nothing shows again — the modal would vanish with its store still reporting `'open'`. So the
+ * answer is held for as long as the modal stays portaled, and re-read only when `portal` flips
+ * between portaled and not, which is the structural change the binding already tears down for.
  *
  * Answering `null` is not a way to un-portal — the arrangement is already chosen by then, and the
  * placement CSS with it. It falls back to `document.body` and warns, which is the failure a host
  * that never mounted should make: visible under `setLogLevel`, and not an invisible dialog.
  */
 export type PortalTarget = boolean | (() => Element | null);
-
-export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
 
 /**
  * Which callback of yours threw.

@@ -70,6 +70,8 @@ import {
   SolidOutletDisposalHarness,
   SolidOutletHarness,
   SolidPortalHarness,
+  SolidPortalHostHarness,
+  SolidDismissRequestHarness,
   SolidPrepareFailureHarness,
   SolidReconcileHarness,
   SolidShadowRootHarness,
@@ -82,6 +84,7 @@ import {
   VanillaClaimlessReclaimHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
+  VanillaDismissRequestHarness,
   VanillaExplicitHostHarness,
   VanillaFailingActionHarness,
   VanillaLabellingHarness,
@@ -1004,6 +1007,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-vanilla-destroy',
       },
       {
+        title: 'A backdrop click the owner answers',
+        description:
+          'The controller reaches the same last step the hook bindings do: with onDismissRequest set, the click is reported and the dialog is left alone rather than closed behind the owner’s back.',
+        component: VanillaDismissRequestHarness,
+        codeKey: 'story-vanilla-dismiss-request',
+      },
+      {
         title: 'The manager’s asking door, from a binding with no hooks',
         description:
           'onOpenRequest is forwarded to the manager, so a request the owner refuses is refused before anything opens — and requestOpenAndWait reports which of the two happened.',
@@ -1168,6 +1178,20 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'The one place the two hook bindings’ surfaces differ in what they hand back rather than in how it updates: Modal stays null, because there is nothing left for the caller to place.',
         component: SolidPortalHarness,
         codeKey: 'story-solid-portal',
+      },
+      {
+        title: 'A portal into a host the caller owns',
+        description:
+          'Solid resolves the host once, in the setup body, so it has to exist before the modal does — a shell or a design-system root, not a node from the modal’s own JSX.',
+        component: SolidPortalHostHarness,
+        codeKey: 'story-solid-portal-host',
+      },
+      {
+        title: 'A backdrop click the owner answers',
+        description:
+          'The door most likely to be missed: a handler that closed the store itself would work perfectly and ignore onDismissRequest, so a controlled surface would answer Escape and reopen itself on a backdrop click.',
+        component: SolidDismissRequestHarness,
+        codeKey: 'story-solid-dismiss-request',
       },
       {
         title: 'A contained non-modal panel, against a host the binding creates',

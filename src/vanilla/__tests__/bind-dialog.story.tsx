@@ -112,6 +112,63 @@ export function VanillaBasicHarness() {
 }
 
 /**
+ * A backdrop click this binding must *report* rather than act on.
+ *
+ * `answerDismiss` is unit-tested and `bind-dialog` calls it, but nothing asserted that it does: a
+ * handler closing the store itself works perfectly and ignores `onDismissRequest`, which is the
+ * defect the option exists to prevent. This harness draws no action, so backdrop dismissal is on by
+ * default — the arrangement most likely to meet it.
+ */
+export function VanillaDismissRequestHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [controller, setController] = useState<Bound<'ok'> | null>(null);
+  const [cause, setCause] = useState('none');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'ok'>({
+      id: 'vanilla-dismiss-request',
+      dialog,
+      ariaLabel: 'Vanilla dismiss request',
+      manager: createDialogManager(),
+      onDismissRequest: (which) => {
+        setCause(which);
+        return false;
+      },
+    });
+
+    setController(bound);
+
+    return () => {
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="cause">{cause}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      <dialog ref={dialogRef}>
+        <p data-testid="inside">Vanilla content</p>
+      </dialog>
+    </>
+  );
+}
+
+/**
  * Unbinding an action retires its declaration, which backdrop dismissal makes observable: it is
  * opt-out without actions and opt-in with them.
  */

@@ -14,6 +14,8 @@ import {
   SolidLiveStateHarness,
   SolidOutletDisposalHarness,
   SolidPortalHarness,
+  SolidPortalHostHarness,
+  SolidDismissRequestHarness,
   SolidDeclarationHarness,
   SolidMessageHarness,
   SolidNonModalOptionsHarness,
@@ -273,6 +275,28 @@ test.describe('what Solid does on the way out', () => {
   });
 });
 
+test.describe('umbra/solid — a dismissal this binding must report', () => {
+  // `answerDismiss` is unit-tested, but nothing asserted this binding *reaches* it: a backdrop
+  // handler closing the store itself works perfectly and ignores `onDismissRequest`, which is the
+  // defect the option exists to prevent. Reverting this call site passes every other test.
+  test('a backdrop click is reported to the owner instead of closing the dialog', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<SolidDismissRequestHarness />);
+    await page.getByTestId('open').click();
+
+    const dialog = page.locator('dialog[data-modal-id="solid-dismiss-request"]');
+    await expect(dialog).toBeVisible();
+
+    await page.mouse.click(5, 5);
+
+    await expect(page.getByTestId('cause')).toHaveText('backdrop-click');
+    await page.waitForTimeout(600);
+    await expect(dialog).toBeVisible();
+  });
+});
+
 test.describe('placement (Solid)', () => {
   test('portal: true mounts the dialog itself and leaves Modal null', async ({ mount, page }) => {
     // The one place the hook surfaces differ: Solid owns the element, mounts it, returns `null`.
@@ -288,6 +312,21 @@ test.describe('placement (Solid)', () => {
         return dialog?.parentElement === document.body;
       })
     ).toBe(true);
+  });
+
+  // A host the caller names, resolved once at mount — so it has to exist by then. That is the
+  // arrangement `PortalTarget` describes, and the one this binding can honour.
+  test('a portal host of the caller’s own is where the dialog lands', async ({ mount, page }) => {
+    await mount(<SolidPortalHostHarness />);
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('modal-solid-portal-host')).toBeVisible();
+
+    expect(
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[data-modal-id="solid-portal-host"]');
+        return dialog?.parentElement?.getAttribute('data-testid');
+      })
+    ).toBe('solid-themed-host');
   });
 
   test('a contained non-modal panel gets a positioned host of its own', async ({ mount, page }) => {

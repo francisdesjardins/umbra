@@ -84,6 +84,12 @@ export type OpenRequest<TPayload = unknown> = {
  * (a version, a correlation id) without every caller being edited. It validates nothing and
  * cannot: only the receiving dialog knows what a good payload looks like.
  *
+ * **Two overloads, because the payload-free call has to fit a modal that declares one.** Asking
+ * with nothing is legal against any contract — {@link PayloadOf} types the payload, it does not
+ * require one — but a single generic signature inferred `OpenRequest<undefined>` there, which is
+ * not assignable to the `OpenRequest<Declared>` the door takes. `never` is: it is assignable to
+ * every payload type, and no caller can put a value in it.
+ *
  * @example
  * // The two halves, named, at the boundary.
  * dialogManager.requestOpen(
@@ -91,10 +97,18 @@ export type OpenRequest<TPayload = unknown> = {
  *   createOpenRequest({ patientId: '42' }, { source: 'portal:nav' })
  * );
  *
- * // No payload — just say who is asking.
+ * // No payload — just say who is asking. Fits a declared contract as well as an open one.
  * dialogManager.requestOpen('help', createOpenRequest(undefined, { source: 'shell:menu' }));
  */
-export function createOpenRequest<TPayload = unknown>(
+export function createOpenRequest(
+  payload?: undefined,
+  context?: OpenRequestContext
+): OpenRequest<never>;
+export function createOpenRequest<TPayload>(
+  payload: TPayload,
+  context?: OpenRequestContext
+): OpenRequest<TPayload>;
+export function createOpenRequest<TPayload>(
   payload?: TPayload,
   context?: OpenRequestContext
 ): OpenRequest<TPayload> {
@@ -985,7 +999,13 @@ export function createDialogManager(): DialogManager {
     const displaced = registry.get(id);
     if (displaced) {
       displaced.unsubscribe();
+      registry.delete(id);
       log.warn('Duplicate modal id — the previous registration was released', { id });
+      // Emitted, and before the `register` below, because a listener keeping membership from this
+      // pair is the reason the pair exists: two arrivals against one departure leaves it holding a
+      // waiter for an id that has gone. The entry is out of the map first, so the event is true
+      // when it fires — the same rule the `register` emission follows.
+      emit({ type: 'unregister', id });
     }
 
     registry.set(id, {

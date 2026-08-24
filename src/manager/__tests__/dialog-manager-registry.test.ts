@@ -281,4 +281,23 @@ test.describe('a dialog that has not arrived yet', () => {
 
     expect(seen).toEqual(['register', 'unregister']);
   });
+
+  // A duplicate id is a user-land mistake the manager already warns about, but a listener counting
+  // arrivals is the reason this pair exists: two registers against one unregister leaves it holding
+  // a waiter for an id nothing will answer.
+  test('a duplicate id reports the displaced registration leaving, so the pair stays balanced', () => {
+    const dm = createDialogManager();
+    const seen: DialogManagerEvent['type'][] = [];
+
+    dm.subscribe((event) => {
+      seen.push(event.type);
+    });
+
+    dm.register('dup', { store: createFakeStore() });
+    dm.register('dup', { store: createFakeStore() });
+    dm.unregister('dup');
+
+    expect(seen).toEqual(['register', 'unregister', 'register', 'unregister']);
+    expect(dm.lookup().exists('dup')).toBe(false);
+  });
 });

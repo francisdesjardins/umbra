@@ -17,6 +17,8 @@ import {
   SolidOutletApp,
   SolidOutletDisposalApp,
   SolidPortalApp,
+  SolidPortalHostApp,
+  SolidDismissRequestApp,
   SolidClaimlessReclaimApp,
   SolidPrepareFailureApp,
   SolidStackPriorityApp,
@@ -112,6 +114,14 @@ export function SolidOutletDisposalHarness() {
 
 export function SolidPortalHarness() {
   return <SolidRoot app={SolidPortalApp} />;
+}
+
+export function SolidPortalHostHarness() {
+  return <SolidRoot app={SolidPortalHostApp} />;
+}
+
+export function SolidDismissRequestHarness() {
+  return <SolidRoot app={SolidDismissRequestApp} />;
 }
 
 export function SolidContainedHarness() {

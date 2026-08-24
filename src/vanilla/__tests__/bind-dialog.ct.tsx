@@ -7,6 +7,7 @@ import {
   VanillaClaimlessReclaimHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
+  VanillaDismissRequestHarness,
   VanillaExplicitHostHarness,
   VanillaFailingActionHarness,
   VanillaNoHostHarness,
@@ -453,6 +454,27 @@ test.describe('bindDialog — what teardown hands back', () => {
  * option — both carry their attributes, or their absence, in the caller's own markup, which reading
  * `options.ariaLabelledBy` would be blind to.
  */
+test.describe('bindDialog — a dismissal the owner answers', () => {
+  // The seam is shared and unit-tested; what is not otherwise asserted is that *this* binding
+  // reaches it. Reverting this call site to `store.close()` passes every other test in the suite.
+  test('a backdrop click is reported to the owner instead of closing the dialog', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<VanillaDismissRequestHarness />);
+    await component.getByTestId('open').click();
+
+    const dialog = page.locator('dialog[data-modal-id="vanilla-dismiss-request"]');
+    await expect(dialog).toBeVisible();
+
+    await page.mouse.click(5, 5);
+
+    await expect(component.getByTestId('cause')).toHaveText('backdrop-click');
+    await page.waitForTimeout(600);
+    await expect(dialog).toBeVisible();
+  });
+});
+
 test.describe('bindDialog — the labelling diagnostic', () => {
   const labellingWarnings = (page: Page) => {
     const lines: string[] = [];

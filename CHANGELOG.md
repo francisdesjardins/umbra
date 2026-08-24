@@ -11,6 +11,43 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Fixed — six findings from reviewing this branch against `main`
+
+A review pass over the four commits above, run against the four that landed on `main` beside them.
+Each item was probed rather than read: the two coverage findings are mutation-proven, and the type
+one was found by compiling the shape the JSDoc recommends.
+
+- **The Solid and vanilla backdrop paths were asserted by nothing.** Reverting both to
+  `store.close(DISMISS_REASON)` — reintroducing the exact defect `answerDismiss` exists to prevent,
+  on two bindings of three — left all 382 component tests passing. The same mutation on React fails
+  two. Both bindings have their own backdrop-with-`onDismissRequest` test now, and both fail when
+  reverted; Solid also has the portal-host assertion it had none of.
+- **A portal host was re-read on every React render**, so a container that changed identity under an
+  open dialog made React mount a fresh, closed `<dialog>` that `syncOpenSequence` will not show
+  outside `'opening'` — the modal vanished with its store still reporting `'open'` and nothing left
+  to dismiss it. The host is held for a portal era now, re-read only when `portal` flips between
+  portaled and not, which is the structural change the teardown effect already keys on.
+- **`PortalTarget` promised what neither binding delivers.** "Asked each time the dialog is placed,
+  so a host that arrives late is picked up" is false on Solid, which resolves once at mount, and was
+  true on React only through the accident that stranded it. The contract now says what both do — the
+  host must exist when the modal is placed — and names what qualifies: a shell, a design-system
+  root, a microfrontend's mount point, not a node in the modal's own subtree. The React story used
+  its own sibling as a host and passed on a second-render coincidence; it mounts the host first now.
+- **A duplicate id emitted `register` twice against one `unregister`.** The pair exists so a caller
+  can hold an open until its dialog arrives, so a membership count that drifts defeats it. The
+  displaced registration is reported leaving, before the new one arrives.
+- **`createOpenRequest(undefined, context)` did not compile against a declared payload** — the
+  builder's own `@example`, safe there only because the example names an undeclared id. A
+  context-only overload returns `OpenRequest<never>`, which fits every contract.
+- **A second file in `type-fixtures/` was not compiled at all.** `tsconfig.registry.json` named one
+  file; a fixture added beside it looked like a gate and was not one. Discovered by a glob now.
+
+Two more, both about where a fact lives. `PortalTarget` had been inserted between `ModalPhase`'s doc
+comment and `ModalPhase`, so a public root export lost its documentation to the declaration above
+it. And `decouverte-et-suggestions.md` was holding two compatibility facts whose home is the
+matrix — the back button, now a `no-by-design` platform row with its `why`, and one-id-one-instance,
+now an answer in the `id` row rather than a silence.
+
 ### Added — `portal` can name its host, not only `document.body`
 
 `portal: true` was `createPortal(node, document.body)`, hardcoded — and `document.body` is the

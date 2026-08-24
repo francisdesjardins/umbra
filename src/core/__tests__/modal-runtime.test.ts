@@ -527,7 +527,7 @@ test.describe('resolvePortalHost', () => {
     ).toBe(themed);
   });
 
-  test('the getter is asked every time, so a host that arrives late is found', () => {
+  test('the getter is read on every call rather than cached, so the binding owns the timing', () => {
     // The reason it is a getter and not an element: a caller cannot name a node its own tree has
     // not rendered yet.
     let host: Element | null = null;
