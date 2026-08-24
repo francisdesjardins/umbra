@@ -1,4 +1,5 @@
 import type { ArchiveReceipt } from '@/pages/imperative/examples/open-request';
+import type { PrintJob } from '@/pages/imperative/examples/declared-payload';
 import type { SetupValues } from '@/pages/showcases/examples/vanilla-panel';
 import type { FormValues as MuiFormValues } from '@/pages/ui-integrations/examples/mui-form';
 import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/examples/vanilla-form';
@@ -40,9 +41,15 @@ declare module 'umbra' {
     'stack-inner': { reason: 'ack' };
     'stack-priority-panel': { reason: 'close' };
     'stack-priority-warning': { reason: 'acknowledge' };
+    'bulk-first': { reason: 'close' | 'close-all' | 'close-others' };
+    'bulk-second': { reason: 'close' | 'close-all' | 'close-others' };
+    'bulk-third': { reason: 'close' | 'close-all' | 'close-others' };
     'imperative-demo': { reason: 'confirm' | 'imperative-demo' };
     'open-request-demo': { data: ArchiveReceipt; reason: 'confirm' | 'cancel' };
     'controlled-filters': { reason: 'close' };
+    'deferred-open-target': { reason: 'close' };
+    // The other direction: `payload` is what this one is *opened* with, checked at the ask.
+    'print-job': { payload: PrintJob; reason: 'cancel' | 'print' };
     // Opened by `deployment-service.ts`, which is a plain module with no component — exactly the
     // case the registry answers: the id is the only thing naming them from outside.
     'deploy-confirm': { reason: 'cancel' | 'confirm' };

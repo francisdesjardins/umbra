@@ -11,6 +11,42 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Added — the playground demonstrates the surfaces this branch added
+
+Three cards, because a surface nothing demonstrates is one a reader has to take on faith — and the
+playground's own rule is that an example not placed on a page does not exist.
+
+- **"An open that lands on nothing"** (`/imperative`) — `open()` answering `false`, and the
+  `register` event closing the gap. The waiter it shows waits for the **`open`** event rather than
+  retiring on `register`, and that is the lesson rather than a detail: the version that unsubscribes
+  on `register` fails, and React's development double-mount is enough to show it — the first
+  registration is torn down and replaced, so the open lands on a modal about to unmount and the
+  second registration finds nobody listening. Watching for the fact you wanted costs one branch.
+- **"A payload the contract declares"** (`/imperative`) — `ModalContract.payload` and `PayloadOf`,
+  beside the card that asks with a payload typed into a textarea. The contrast is the point: that
+  one is genuinely `unknown` and parses, this one is asked and answered inside the project, so the
+  compiler checks the ask and no type argument is written anywhere.
+- **"Closing every one of them"** (`/stacking`) — the loop over `lookup().getOpen()` that stands in
+  for a `closeAll()` the library does not ship, since every caller wants a different filter. Its
+  controls are **inside** the dialogs: three modals in the top layer make the page under them inert,
+  so a "close them all" button on the card could not be pressed. Written on the card first, and
+  caught by driving it rather than by reading it.
+
+### Removed — the review note, now that each of its findings has a home
+
+`decouverte-et-suggestions.md` was a second place to look. Its open items are where the repo keeps
+that kind of fact: the back button and one-id-one-instance in the compatibility matrix, `portal:
+boolean` on the vanilla binding in the `portal: true` row's `why`, the documentation budget resolved
+on `main`, and the three demonstrations above. What is left of it is the CHANGELOG's job, which is
+where the reasoning for each commit already was.
+
+`onOpenRequest` receiving `unknown` stays open, and stays a decision rather than an omission — the
+`ModalRegistry` row carries the reason. `data` has one producer, the modal's own `handle.close`, so
+believing it on the receiving side is honest; `payload` has two, and the second is the whole purpose
+of the door — a microfrontend, a relay, another bundle, none of them compiled here. Typing the
+handler would state a guarantee exactly where it cannot be kept. `PayloadOf` is a root export, so
+the receiving side already has the name to parse _to_.
+
 ### Fixed — six findings from reviewing this branch against `main`
 
 A review pass over the four commits above, run against the four that landed on `main` beside them.

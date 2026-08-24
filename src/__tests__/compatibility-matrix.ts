@@ -480,7 +480,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'partial',
-      why: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor.',
+      why: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor. **And it keeps `portal: boolean`, not `PortalTarget`**: this binding never moves the element, so a host getter is an option it could only ignore — silently, which is the failure the typed surface exists to prevent.',
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
