@@ -9,6 +9,42 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-22
+
+### Fixed — the select popup was white in dark mode, with white labels on it
+
+The playground's only `<select>` set `background: inherit`, which on a `<span>` wrapper resolves to
+transparent. That reads fine on the closed control — it borrows the panel — but `appearance: none`
+takes the control out of the UA's themed painting, and Chrome canvases the **option popup** with
+the select's own `background-color`. Transparent resolves to white there, and the options inherit
+the dark theme's `rgba(255, 255, 255, 0.87)`: measured `#FFFFFF` on `#FFFFFF`, so opening the
+wizard's jump-to dropdown showed one highlighted row and two invisible ones. `color-scheme: dark`
+was set and reaches the element; it does not override an author background.
+
+The control and its `option`s now paint `var(--form-bg, var(--modal-bg))` explicitly. Both halves
+are needed — Chrome uses an option's own background when the author sets one, and the popup's
+canvas when they do not.
+
+### Added — `SelectionDropdown`, the playground's one select
+
+Extracted from `showcases/examples/vanilla-panel.tsx`, where it had been a local `SelectField` with
+its recipe in inline styles, to `shared/ui/SelectionDropdown` on a CSS module — so the fix above
+lands once rather than at each call site, and the third select added later inherits it. `block`
+and `compact` replace the two `style` overrides the call sites were passing. The props spread
+rather than enumerate, the trap `AppButton` documents.
+
+The regression guard is a component test, because the thing that broke is not in the page: the
+option popup is drawn by the browser outside the DOM, so nothing rendered looks wrong. It asserts
+instead that both backgrounds are opaque and that the two schemes differ — the second because a
+token that fails to resolve falls back identically in both, which the first would still pass.
+
+It reads `--form-*`, then `--modal-*`, then `--app-*`, so the same control works on a page with no
+dialog open — which is where the Design System's _Recipes_ card now shows it, beside the buttons.
+That card is what caught the last of it: `color: inherit` outranks the UA's disabled ink, so an
+inactive select had read exactly like a live one in dark mode, and the disabled recipe is written
+down now. The border falls back to `--app-control-border` and not `--app-divider`, which the token
+sheet says owes no contrast — 1.4.11 asks 3:1 of a control's edge.
+
 ## 2026-08-21
 
 ### Added — `ModalRegistry`, so a project can name its modals once

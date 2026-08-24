@@ -1,6 +1,7 @@
 import { ExampleSection } from '@/entities/example';
 import { useTheme } from '@/shared/lib/theme-context';
 import { AppButton } from '@/shared/ui/AppButton';
+import { SelectionDropdown } from '@/shared/ui/SelectionDropdown';
 import { CodeIcon, PlayArrowIcon } from '@/shared/ui/icons';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SectionNav } from '@/shared/ui/SectionNav';
@@ -269,7 +270,7 @@ export function DesignSystemPage() {
       <ExampleSection
         id="recipes"
         title="Recipes"
-        description="One recipe per thing. The buttons below are the shell's own; a dialog's interior uses the templates' buttons instead, on purpose."
+        description="One recipe per thing. The buttons below are the shell's own; a dialog's interior uses the templates' buttons instead, on purpose. The select is the exception that proves it — one recipe worn on both sides, which is why it reads the template tokens first."
       >
         <SurfaceCard>
           <div
@@ -294,6 +295,33 @@ export function DesignSystemPage() {
                 <CodeIcon width={15} height={15} />
                 Small
               </AppButton>
+            </div>
+
+            {/* Each control names its own recipe, the way the buttons above do — so the 4px the
+                default stands taller than `compact` reads as the variant it is. The popup is drawn
+                by the browser outside the page, so this card's dark mode is checked by opening
+                one, never by reading it. */}
+            <div className={styles['recipeRow']}>
+              <SelectionDropdown id="ds-select-default" aria-label="Default select">
+                <option>Default</option>
+                <option>A second option</option>
+              </SelectionDropdown>
+              <SelectionDropdown id="ds-select-compact" aria-label="Compact select" compact>
+                <option>Compact</option>
+                <option>A second option</option>
+              </SelectionDropdown>
+              <SelectionDropdown id="ds-select-disabled" aria-label="Disabled select" disabled>
+                <option>Disabled</option>
+              </SelectionDropdown>
+            </div>
+
+            {/* `block` is the only one a row cannot show: it is a width, so it needs a width to
+                fill. Boxed at a field's measure rather than the card's, which is where it is worn. */}
+            <div style={{ maxWidth: 320 }}>
+              <SelectionDropdown id="ds-select-block" aria-label="Full-width select" block>
+                <option>Full width — fills its row</option>
+                <option>A second option</option>
+              </SelectionDropdown>
             </div>
 
             <div className={styles['navSample']}>

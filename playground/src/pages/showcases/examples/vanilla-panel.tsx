@@ -5,7 +5,8 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
-import type { CSSProperties, ReactNode, SelectHTMLAttributes } from 'react';
+import { SelectionDropdown } from '@/shared/ui/SelectionDropdown';
+import type { ReactNode } from 'react';
 import { Key, useMessageModal } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -122,59 +123,6 @@ function isRecommended(state: SetupValues): boolean {
     state.accessLevel === RECOMMENDED.accessLevel &&
     state.notifications === RECOMMENDED.notifications &&
     state.schedule === RECOMMENDED.schedule
-  );
-}
-
-// ── Native controls, styled by the form tokens ─────────────────────────────
-
-/** The `.input` recipe for elements the templates do not wrap — selects here. */
-const fieldStyle: CSSProperties = {
-  padding: '8px 12px',
-  border: '1px solid var(--form-control-border, var(--modal-control-border))',
-  borderRadius: 4,
-  fontFamily: 'var(--font-family)',
-  fontSize: 'var(--font-size-sm)',
-  background: 'inherit',
-  color: 'inherit',
-  width: '100%',
-};
-
-/**
- * A select with its chevron drawn here rather than by the UA: the native arrow sits at a fixed
- * inset that padding cannot move, flush against the border. `appearance: none` takes it over,
- * and an inline SVG keeps the colour on a token instead of a data-URI literal.
- */
-function SelectField({
-  wrapperStyle,
-  style,
-  children,
-  ...rest
-}: SelectHTMLAttributes<HTMLSelectElement> & {
-  readonly children: ReactNode;
-  readonly wrapperStyle?: CSSProperties | undefined;
-}) {
-  return (
-    <span style={{ position: 'relative', display: 'inline-block', ...wrapperStyle }}>
-      <select {...rest} style={{ ...fieldStyle, appearance: 'none', paddingRight: 32, ...style }}>
-        {children}
-      </select>
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden
-        style={{
-          position: 'absolute',
-          right: 10,
-          top: '50%',
-          marginTop: -8,
-          width: 16,
-          height: 16,
-          pointerEvents: 'none',
-          fill: 'var(--modal-text-secondary)',
-        }}
-      >
-        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
-      </svg>
-    </span>
   );
 }
 
@@ -325,13 +273,14 @@ export function VanillaPanelExample() {
                   </button>
 
                   {/* ── "Jump to" dropdown — the element the platform already ships ── */}
-                  <SelectField
+                  <SelectionDropdown
+                    id={`${MODAL_ID}-step`}
                     aria-label="Jump to step"
+                    compact
                     value={setup.step}
                     onChange={(e) => {
                       setupStore.setStep(Number(e.target.value));
                     }}
-                    style={{ width: 'auto', padding: '6px 30px 6px 8px' }}
                   >
                     {STEP_TITLES.map((label, i) => {
                       return (
@@ -340,7 +289,7 @@ export function VanillaPanelExample() {
                         </option>
                       );
                     })}
-                  </SelectField>
+                  </SelectionDropdown>
 
                   {/* No explicit `type`: the action spread already carries `type="button"`. */}
                   <button
@@ -389,18 +338,18 @@ export function VanillaPanelExample() {
                     />
                   </Field>
                   <Field label="Environment" htmlFor={`${MODAL_ID}-environment`}>
-                    <SelectField
+                    <SelectionDropdown
                       id={`${MODAL_ID}-environment`}
                       value={setup.environment}
                       onChange={(e) => {
                         setupStore.setEnvironment(e.target.value);
                       }}
-                      wrapperStyle={{ display: 'block' }}
+                      block
                     >
                       <option value="development">Development</option>
                       <option value="staging">Staging</option>
                       <option value="production">Production</option>
-                    </SelectField>
+                    </SelectionDropdown>
                   </Field>
                   <RadioRow
                     legend="Region"
@@ -423,18 +372,18 @@ export function VanillaPanelExample() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <Shared.Heading>Access control</Shared.Heading>
                   <Field label="Access level" htmlFor={`${MODAL_ID}-access`}>
-                    <SelectField
+                    <SelectionDropdown
                       id={`${MODAL_ID}-access`}
                       value={setup.accessLevel}
                       onChange={(e) => {
                         setupStore.setAccessLevel(e.target.value);
                       }}
-                      wrapperStyle={{ display: 'block' }}
+                      block
                     >
                       <option value="viewer">Viewer</option>
                       <option value="editor">Editor</option>
                       <option value="admin">Admin</option>
-                    </SelectField>
+                    </SelectionDropdown>
                   </Field>
                   <label
                     style={{

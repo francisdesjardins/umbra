@@ -126,7 +126,7 @@ anywhere. Porting Penumbra elsewhere is: copy the system file, write a new skin.
   signature; on a mono group label it is a typographic device.
 - **Primitives** in `shared/ui`: `AppButton`/`AppIconButton` + `appButtonClass`, the `icons` set,
   `EclipseMark`, `MoonPhase`, `SurfaceCard`, `PageLayout`, `SectionNav`, `ResultDisplay`,
-  `LoadingButton`, `ViewCodeButton`, `ThemeToggleButton`.
+  `LoadingButton`, `ViewCodeButton`, `ThemeToggleButton`, `SelectionDropdown`.
 - **The MUI island** (`shared/ui/MuiIsland` + `shared/lib/mui-theme.ts`) is **the subject, not a
   leftover**, and stays Material-looking on purpose. Scoped to the one card that needs it.
 - The vanilla **templates** keep their own token families, are deliberately unbranded, and may not

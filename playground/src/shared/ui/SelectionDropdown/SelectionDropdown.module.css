@@ -1,0 +1,70 @@
+/* The one select in the playground, so the dark-mode trap below is fixed once rather than per
+   call site. The chain is `--form-*` then `--modal-*` then `--app-*`: the first two are `:root`
+   -scoped and inherit into the top layer, so the control sits in either template family's
+   surface, and the shell tokens catch it on a page with no dialog open, which the Design System
+   card is. */
+
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.block {
+  display: block;
+}
+
+.select {
+  /* The UA arrow sits at a fixed inset that padding cannot move, flush against the border, so
+     the chevron is drawn here instead — see the sibling SVG. */
+  appearance: none;
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid
+    var(--form-control-border, var(--modal-control-border, var(--app-control-border)));
+  border-radius: 4px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: inherit;
+  /* Opaque, never `inherit`: `appearance: none` takes the control out of the UA's themed
+     painting, and Chrome canvases the option popup with the select's own background-color — a
+     transparent one resolves to white, which in dark mode leaves white labels on white. */
+  background: var(--form-bg, var(--modal-bg, var(--app-paper)));
+}
+
+/* Chrome paints an option's own background when the author sets one, and inherits the select's
+   colour into it — both halves are needed or the popup keeps the light default. */
+.select option {
+  background: var(--form-bg, var(--modal-bg, var(--app-paper)));
+  color: var(--form-text, var(--modal-text, var(--app-text)));
+}
+
+/* `color: inherit` above outranks the UA's disabled ink, so an inactive select would read exactly
+   like a live one — visible in light only because the UA still greys the *popup*. 1.4.3 exempts an
+   inactive control from the contrast minimum, so the dimmer token is the right one. */
+.select:disabled {
+  cursor: default;
+  color: var(--form-text-secondary, var(--modal-text-secondary, var(--app-text-tertiary)));
+  border-color: var(--form-border, var(--app-divider));
+}
+
+/* Set from the component rather than `:has(select:disabled)`, which Firefox 115 — the floor — does
+   not have. */
+.disabledChevron {
+  opacity: 0.5;
+}
+
+.compact {
+  width: auto;
+  padding: 6px 30px 6px 8px;
+}
+
+.chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  margin-top: -8px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  fill: var(--modal-text-secondary, var(--form-text-secondary, var(--app-text-secondary)));
+}
