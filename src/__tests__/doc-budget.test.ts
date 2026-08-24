@@ -12,6 +12,11 @@ import { expect, test } from '@playwright/test';
  * the folder rule, the vocabulary, the commands, pointers to the first two. So passing is almost
  * never deleting a fact: move it, or let the CHANGELOG own the historical ones. The limits are the
  * sizes reached by doing that, so raising one is a decision for the commit that raises it.
+ *
+ * **Land at 90% of a budget, not at it.** These numbers are ceilings, and a document sitting on its
+ * ceiling taxes every later session with a word hunt for whatever it wants to add — which is what
+ * the trim that opened this headroom was paying off. Adding a paragraph is meant to cost writing
+ * the paragraph.
  */
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');

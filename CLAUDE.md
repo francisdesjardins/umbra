@@ -3,48 +3,47 @@
 Framework-agnostic dialog/modal manager, with React, Solid and vanilla shipped as three bindings
 over it. No UI components exported; users bring their own.
 
+**Every `CLAUDE.md` carries a word budget, deliberately left with 10% of headroom. Spend it rather
+than shave prose to fit** — see [doc-budget.test.ts](src/__tests__/doc-budget.test.ts).
+
 ## Entry points
 
-The package root is plain TypeScript and **must resolve with no framework installed**. Bindings
-are the optional layer.
+The package root is plain TypeScript and **must resolve with no framework installed**; bindings are
+the optional layer.
 
-| Specifier       | Contents                                                                                                                                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`         | `dialogManager`, `createDialogManager`, `dialogPlacement`, `applyStyle`, the store engine (`createStore`, `StoreContract`), `normalizeError`, `Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`, `parseHotkey`, `setLogLevel`. No framework. |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.                                                             |
-| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                                                                   |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export.                                               |
+| Specifier       | Contents                                                                                                                                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | The manager, `ModalRegistry`, placement and style, the store engine, the hotkey utilities, `normalizeError`, `setLogLevel`. No framework; `src/index.ts` is the list.                                                           |
+| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.               |
+| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                     |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export. |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
 _Hook_ bindings — `./react` and `./solid` — **render**: a `render` callback returns the content and
-the binding returns a `Modal` to place. They share a surface on purpose, down to the file names, so
-a team running both writes the same modal twice with the same words. Three differences, and all
-three are the renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`,
-`error`) are getters over signals rather than re-rendered values — so **do not destructure the
-render args** — `useLookup` returns an accessor rather than an object (a discriminated union cannot
-survive being spread into getters), and `portal: true` mounts the dialog itself, leaving `Modal` as
+the binding returns a `Modal` to place. They share a surface down to the file names, so a team
+running both writes the same modal twice with the same words. Three differences, all the renderer's:
+Solid's live values are getters over signals — so **do not destructure the render args** —
+`useLookup` returns an accessor, and `portal: true` mounts the dialog itself, leaving `Modal` as
 `null`.
 
 The _controller_ binding — `./vanilla` — **does not render**, and could not without the library
-shipping a renderer, which is the one thing it refuses to do. The `<dialog>` and its contents are
-markup the caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`,
-no `Modal` and no outlet, and it gains `bindAction(button, { reason })` — which attaches the handler
-_and_ keeps `disabled` / `data-loading` / `aria-busy` in step, the half a renderer does elsewhere.
-Asserting it mirrored the hook bindings would be asserting the wrong thing; `binding-parity.test.ts`
-knows the difference and records what it must and must not have.
+shipping a renderer, the one thing it refuses to do. The `<dialog>` and its contents are markup the
+caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`, no `Modal`
+and no outlet, and it gains `bindAction(button, { reason })`, which does the half a renderer does
+elsewhere. `binding-parity.test.ts` knows the difference and asserts each kind's own shape.
 
-Adding a fourth binding (Vue, a web component) means adding a sibling of `src/react.ts` and a new
-`exports` entry. Nothing under the root changes — see [src/CLAUDE.md](src/CLAUDE.md#what-a-binding-actually-does)
-for the list of what it inherits.
+Adding a fourth binding means a sibling of `src/react.ts` and a new `exports` entry; nothing under
+the root changes. What it inherits, and what those six numbered steps are, is
+[src/CLAUDE.md](src/CLAUDE.md#what-a-binding-actually-does).
 
 **Entry-point isolation is a test, not a convention:**
 [src/\_\_tests\_\_/entry-isolation.test.ts](src/__tests__/entry-isolation.test.ts) walks the real
-import graph from each entry and asserts that the root reaches no framework, that each hook
-binding reaches its own and only its own, and that `./vanilla` reaches none (type-only imports are erased, so those are fine). The
-positive halves are what stop the root's assertion from passing because the walker resolved
-nothing. `peerDependenciesMeta` marks `react`, `react-dom` and `solid-js` optional, which is the
-promise those tests defend, and `verify:package` re-checks all of it against the built artifact.
+import graph from each entry and asserts that the root reaches no framework, that each hook binding
+reaches its own and only its own, and that `./vanilla` reaches none (type-only imports are erased).
+The positive halves are what stop the root's assertion from passing because the walker resolved
+nothing. `peerDependenciesMeta` marks the three optional, which is the promise those tests defend,
+and `verify:package` re-checks all of it against the built artifact.
 
 ## Commands
 
@@ -67,15 +66,14 @@ yarn coverage:update    # Run both coverage measurements and rewrite README + CL
 Playwright for unit + component tests (`playwright.config.ts`).
 
 ```bash
-yarn test                   # All tests (unit + component)
-yarn test:ui                # All with Playwright UI
-yarn test:unit              # Unit tests only (*.test.ts)
-yarn test:unit:coverage     # Unit tests with coverage (c8)
-yarn test:unit:ui           # Unit tests with UI
-yarn test:component         # Component tests only (*.ct.tsx)
-yarn test:component:ui      # Component tests with UI
+yarn test                    # All tests (unit + component)
+yarn test:unit               # Unit tests only (*.test.ts)
+yarn test:component          # Component tests only (*.ct.tsx)
+yarn test:unit:coverage      # Unit tests with coverage (c8)
 yarn test:component:coverage # Component tests with coverage (istanbul, see below)
 ```
+
+Every one of those has a `:ui` variant that opens the Playwright UI.
 
 | Suffix        | Purpose                                 |
 | ------------- | --------------------------------------- |
@@ -87,10 +85,9 @@ yarn test:component:coverage # Component tests with coverage (istanbul, see belo
 
 Two reports, because one project cannot reach the whole library.
 
-`yarn test:unit:coverage` measures the **unit** project — Node, no DOM — so the exclude list in
-`.c8rc.json` is not a way to make a number look better, it is the statement of what that project can
-reach. Three groups, and each entry says which: type-only modules (no runtime at all), **every
-binding** (`src/react/**`, `src/solid/**`, `src/vanilla/**`, globbed, because a new file there is
+`yarn test:unit:coverage` measures the **unit** project — Node, no DOM — so `.c8rc.json`'s exclude
+list is not a way to make a number look better, it is the statement of what that project can reach.
+Three groups: type-only modules, **every binding** (globbed, because a new file there is
 component-test territory), and the DOM-only core modules — listed **one by one**, so a new module
 shows up as a gap until someone decides which kind it is. The line is _zero_ reachable runtime in
 Node; a file with a testable half stays visible and partially covered.
@@ -98,91 +95,86 @@ Node; a file with a testable half stays visible and partially covered.
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
 (`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-17: **92.50% over 55 files**, against unit's **96.73%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
-badges from it. Moving one copy is how the README came to be two points and three files behind,
-which is why **`yarn coverage:update` now does the whole move**: both measurements, both documents,
-both badges, one command — its patterns fail loudly if this prose is reworded.
+badges from it. Moving one copy is how the README came to be two points behind, which is why
+**`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one
+command — its patterns fail loudly if this prose is reworded.
 
 **So a partially-covered file is either a genuine gap or a DOM branch, and both are worth a look.**
-Two moves pay off repeatedly and are the first to try. **A DOM type in a signature is not a DOM
-dependency** — narrow the parameter to the members actually read (`BackdropDialog`,
-`Pick<HTMLDialogElement, 'open' | 'close'>`, `StyleTarget`) and the function becomes an ordinary unit
-test with no call site changed. **A function of the minority kind is a file in the wrong place** — a
-DOM one among pure ones, or the reverse, keeps its whole module out of reach; move it to where its
-kind lives and both modules become answerable. And **if something is hard to unit-test because it is
-tangled with a renderer, that is the finding**: extract the framework-free half into `core/`.
+Three moves, in order. **A DOM type in a signature is not a DOM dependency** — narrow the parameter
+to the members actually read (`BackdropDialog`, `Pick<HTMLDialogElement, 'open' | 'close'>`,
+`StyleTarget`) and the function becomes an ordinary unit test, no call site changed. **A function of
+the minority kind is a file in the wrong place** — a DOM one among pure ones, or the reverse, keeps
+its whole module out of reach. And **hard to unit-test because it is tangled with a renderer is the
+finding**: extract the framework-free half into `core/`.
 
 **Coverage is a local command, not a CI job, deliberately.** GitHub's upload is Cobertura-only and
-404s here (Code Quality needs an enterprise owner; this is a personal repo), and running the coverage
-variants in CI to publish an artifact nobody opens costs the component job ~45% more runtime. Do not
-re-add it unless the repo moves under an enterprise **and** something renders the result.
+404s here (Code Quality needs an enterprise owner; this is a personal repo), and publishing an
+artifact nobody opens costs the component job ~45% more runtime. Do not re-add it unless the repo
+moves under an enterprise **and** something renders the result.
 
-**Every way the CT report has failed has failed quietly**, so the four failure modes are documented
-where each can bite — `scripts/vite-plugin-ct-coverage.mjs`, `playwright.config.ts`'s `use.ctCacheDir`,
-`scripts/ct-coverage-reset.mjs` — and `ct-coverage-report.mjs` prints all four when it finds nothing.
-**A fifth is in no file**: editing the instrumenter invalidates neither CT cache, so delete
-`playwright/.cache-coverage/` by hand.
+**Every way the CT report has failed has failed quietly**, so each failure mode is documented where
+it bites and `scripts/ct-coverage-report.mjs` prints them all when it finds nothing. The one in no
+file: editing the instrumenter invalidates neither CT cache, so delete `playwright/.cache-coverage/`
+by hand.
 
 ### Top-layer rule
 
-`showModal()` places dialogs in the browser's top layer — native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a modal is open must be inside the `render` callback. Multi-modal: call `dialogManager.open(id)` from inside the first modal's render. Applies to stories, tests, and playground examples.
+`showModal()` places dialogs in the browser's top layer, whose native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a modal is open must be inside the `render` callback; multi-modal means calling `dialogManager.open(id)` from inside the first modal's render. Applies to stories, tests and playground examples.
 
 **Non-modal dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
 
 - `nonModal: true, portal: true` → portaled to `document.body`, viewport-anchored (`position: fixed`). Use for viewport-edge/centered non-modal panels.
-- `nonModal: true, portal: false` → **contained**: rendered inside a library-owned wrapper that is itself `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and positioned `absolute` against that wrapper. Absolute rather than an in-flow `relative` block because a `height: 100%` block is laid out _after_ the content it is meant to cover, pushing it out of a clipped region — see `CONTAINED_HOST` in [core/placement.ts](src/core/placement.ts). Immune to a transformed/`will-change` ancestor hijacking the containing block (the jump/flicker a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) in this mode.
+- `nonModal: true, portal: false` → **contained**: rendered inside a library-owned wrapper that is `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and positioned `absolute` against that wrapper — `CONTAINED_HOST` in [core/placement.ts](src/core/placement.ts) says why absolute rather than an in-flow block. Immune to a transformed ancestor hijacking the containing block (the jump a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) here.
 
 ## Conventions
 
 - **Commits**: [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
-- **Changelog**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), organized by date
+- **Changelog**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), by date
 - **Files**: kebab-case. **Exports**: PascalCase types/components, camelCase functions/hooks
-- **Comments**: **why, not what** — and never the past (`used to`, `previously`, `no longer`); the CHANGELOG is the history. One dense sentence beats a paragraph; JSDoc on public API is the exception, it is the documentation.
-- **No implicit returns**: every arrow function uses a block body with an explicit `return` (`arrow-body-style: ['error', 'always']`, auto-fixable via `yarn lint:fix`)
+- **Comments**: **why, not what** — and never the past (`used to`, `previously`); the CHANGELOG is the history. One dense sentence beats a paragraph; JSDoc on public API is the exception, being the documentation.
+- **No implicit returns**: every arrow function uses a block body with an explicit `return` (`arrow-body-style: ['error', 'always']`, `yarn lint:fix` auto-fixes)
 - **Optional props**: `| undefined` suffix (`onClose?: ((r: CloseResult) => void) | undefined`)
 - **Type safety**: No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening.
-- **`createStore` type arguments**: prefer none — annotate the initial snapshot and the builder's return and let inference do the rest, the way `createModalStore` and the action engine do. Explicit arguments do resolve correctly (a builder is a function, so weak-type detection rules out the options overload before arity is consulted, and `createStore<Snap, Methods>(initial, builder)` reaches the domain overload); that resolution is pinned by the overload assertions in [create-store.test.ts](src/store/__tests__/create-store.test.ts) rather than left to be rediscovered.
+- **`createStore` type arguments**: prefer none — annotate the initial snapshot and the builder's return and let inference do the rest, the way `createModalStore` and the action engine do. Explicit arguments do resolve correctly (a builder is a function, so weak-type detection rules out the options overload before arity is consulted); that resolution is pinned by the overload assertions in [create-store.test.ts](src/store/__tests__/create-store.test.ts) rather than left to be rediscovered.
 
 ## Key Constraints
 
-- **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): No `useMemo`/`useCallback`/`React.memo`. No ref writes during render. No property assignment on `useState` values. See [src/CLAUDE.md](src/CLAUDE.md#react-compiler) for full rules.
+- **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): no `useMemo`/`useCallback`/`React.memo`, no ref writes during render, no property assignment on `useState` values. Full rules in [src/CLAUDE.md](src/CLAUDE.md#react-compiler).
 - **TypeScript strict**: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature`
-- **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward three props**: `aria-keyshortcuts`, `data-focus-on-open` (which `action('cancel', { focusOnOpen: true })` sets to claim the modal's opening focus) and `data-action-reason` (always set, and how the post-action focus restore finds the button again once a renderer has replaced the node). All three are queried out of the DOM, so a wrapper that drops one makes that feature silently do nothing. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
-- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. `isForeground` moves with the order, which is why it matters beyond paint: it decides who answers the dismiss key. The policy's rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), and what a policy cannot do is in the compatibility matrix.
-- **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. Keydown handling and hotkey dispatch are scoped with `utils/dialog-scope.ts` — without it one Escape unwinds the whole stack and a shared key fires at every level.
-- **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. There is no config and nothing to pass into `useModal`.
-- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`. Always do this — the `TReason = string` default accepts any string, which silently costs the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
+- **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward three props** — `aria-keyshortcuts`, `data-focus-on-open`, `data-action-reason` — because all three are queried out of the DOM, so dropping one makes that feature silently do nothing. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
+- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. Order decides who answers the dismiss key, which is why `isForeground` matters beyond paint. The rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), the limits in the matrix.
+- **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
+- **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useModal`.
+- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`, or name them once in `ModalRegistry`. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
 - **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and
   Solid ^1.9.0 as optional peers, each required only by its own binding and neither by `./vanilla` |
-  Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. The **peer** ranges
-  are what a consumer must satisfy and they are the wide ones — this repo's `devDependencies` sit far
-  above them, and quoting a dev pin as the requirement asks for more than the package does. **The
-  browser floor is measured**: the highest thing the runtime calls — constructed `CSSStyleSheet`
-  (Safari 16.4), `toSorted` (Chrome 110, Firefox 115).
-- **Package manager**: Yarn only — `yarn.lock` is authoritative, there is no `package-lock.json`. Use `yarn install --immutable` in CI. Dependency pins go in `resolutions` (npm's `overrides` is ignored by Yarn).
+  Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. **The peer ranges
+  are the requirement, not this repo's `devDependencies`**, which sit far above them; quoting a dev
+  pin asks for more than the package does. **The browser floor is measured** — the highest thing the
+  runtime calls: constructed `CSSStyleSheet` (Safari 16.4), `toSorted` (Chrome 110, Firefox 115).
+- **Package manager**: Yarn only — `yarn.lock` is authoritative and `yarn install --immutable` is the CI form. Dependency pins go in `resolutions`; npm's `overrides` is ignored.
 - **Yarn workspaces**: two packages — `umbra` (root, published) and `umbra-playground`
   (`playground/`, private); one `yarn install` at the root installs both. **The published dependency
-  list is the root manifest**, so anything the demo needs (MUI, Emotion, TanStack Router, immer,
-  react-syntax-highlighter) belongs in `playground/package.json` and never in the root, whose
-  `dependencies` stay empty. Root `dev`/`playground:*` scripts delegate with `yarn workspace`.
-- **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin — so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** (`'./types.js'`, `'../store/index.js'`) because `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext` — silently, under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
+  list is the root manifest**, so anything the demo needs belongs in `playground/package.json` and
+  never in the root, whose `dependencies` stay empty. Root `dev`/`playground:*` scripts delegate.
+- **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin, so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** — `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext`, silently under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
 - **TypeScript 7, and nothing beside it in the lint path**: every `tsc` call in `scripts` is
-  `node node_modules/typescript-7/bin/tsc`, and linting is `oxlint --type-aware`, whose type-aware
-  half runs through **tsgolint** — built on the TS 7 compiler, so the linter and `tsc` are one
-  generation. **The bare `typescript` 6.0.3 is typedoc's**, which peers on `6.0.x`, and the editor's,
-  since `typescript-7/lib` ships no `tsserver.js` — so IntelliSense stays a generation behind the
-  gates and no setting fixes it (`options.typeAware` in `.oxlintrc.json` covers most of that cost).
-  `resolutions` cannot shortcut a peer. Collapsing this to one TypeScript means replacing typedoc;
-  what blocks that, and when it was last re-measured, is the matrix row.
+  `node node_modules/typescript-7/bin/tsc`, and `oxlint --type-aware` runs its type-aware half
+  through **tsgolint**, built on the TS 7 compiler — so the linter and `tsc` are one generation.
+  **The bare `typescript` 6.0.3 is typedoc's**, which peers on `6.0.x` (a peer `resolutions` cannot
+  shortcut), and the editor's, since `typescript-7/lib` ships no `tsserver.js` — so IntelliSense
+  stays a generation behind the gates, and `options.typeAware` in `.oxlintrc.json` covers most of
+  that cost. Collapsing to one TypeScript means replacing typedoc; the matrix row holds what blocks
+  that and when it was last re-measured.
 
 ## Design Philosophy
 
 - **Core is framework-agnostic**: anything that does not need a framework goes under the root
-  and stays importable without a renderer. New logic belongs in the core unless it genuinely
-  needs one — a binding should be thin enough that writing a second one is unremarkable, and
-  `umbra/solid` is what holds that claim honest. **The test for "does this belong in the core"
-  is now mechanical**: if adding it to one binding would mean adding it to the other, it is
-  core. That is how the `attach*` functions, the action factory, the dialog attributes, the
-  slide geometry and the default animation ended up there.
+  and stays importable without a renderer. A binding should be thin enough that writing a second
+  one is unremarkable, and `umbra/solid` is what holds that claim honest. **The test is
+  mechanical**: if adding it to one binding would mean adding it to the other, it is core — which
+  is how the `attach*` functions, the action factory, the dialog attributes, the slide geometry
+  and the default animation ended up there.
 - **Headless-first**: zero shipped UI — never add UI components
 - **Minimal surface**: extend `useModal` over adding template hooks
 - **No abstraction leakage**: templates must not expose core internals
@@ -196,10 +188,9 @@ of options against options, capabilities against the three bindings, and feature
 platform — as data, rendered into `API.md`'s _Compatibility_ chapter by `yarn docs:matrix`, with a
 test that fails when the document and the table disagree.
 
-It exists because these facts were spread over this file, `src/CLAUDE.md`, `API.md`, the CHANGELOG and
-a hundred JSDoc blocks, and prose in five places disagrees with itself in five: **inventorying the
-rows produced seven defects before a cell was written.** So a new compatibility fact goes in the
-table, not in prose here — and if it is about one module, in that module's JSDoc.
+It exists because these facts were spread over five places that disagreed with each other:
+**inventorying the rows produced seven defects before a cell was written.** So a new compatibility
+fact goes in the table, not in prose here — and if it is about one module, in that module's JSDoc.
 
 Three things the vocabulary buys:
 
@@ -207,15 +198,14 @@ Three things the vocabulary buys:
   refusal that owes a reason — carried in `why`, which the gate requires of it and of `~`. Neither is
   a to-do, and without the split a list of what does not work fills with items nobody can act on.
 - **`✓ untested` and `~` are declared states, so they enumerate.** **`yarn todo`** prints them and
-  that list _is_ the backlog, generated from the same data the document is. A `TODO.md` would be a
-  second answer that drifts from the first.
+  that list _is_ the backlog, from the same data. A `TODO.md` would be a second answer that drifts.
 - **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and
-  not the others. In a note it would reach a reader of the table and not the backlog, since the
-  enumeration reads the _state_, and the state says done. `yarn todo` lists caveats prefixed `?`.
+  not the others. The enumeration reads the _state_, and the state says done, so in a note it would
+  reach a reader of the table and not the backlog. `yarn todo` lists caveats prefixed `?`.
 
 The gate checks that every option has a row, that no row names an option that no longer exists, that
-every cited test resolves to a real file and title, and that a refusal carries its `why`. It
-**cannot** check that the cited test proves the cell; that part stays human.
+every cited test resolves to a real file and title, and that a refusal carries its `why`. It cannot
+check that the cited test proves the cell; that part stays human.
 
 ## Deeper Context
 

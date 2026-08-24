@@ -100,6 +100,14 @@ type-only group. Unmapped, it read as 0% and pulled the unit measurement down to
 it is 96.77%. The exclude list is the statement of what the Node project can reach, so a module
 with nothing to reach belongs in it.
 
+### Changed — every word budget now carries a 10% buffer
+
+The `CLAUDE.md` budgets were being met exactly, and the last few sessions each ended by hunting a
+dozen words to fit. Meeting a ceiling is not the same as having room under one: the cost lands on
+whoever writes next, every time, and it is paid in the worst possible currency — trimming prose
+that is already dense. Each budgeted file is now at or under 90% of its own budget, and the set is
+under 90% of the total, so the next paragraph is written rather than negotiated.
+
 ## 2026-08-21
 
 ### Added — `ModalRegistry`, so a project can name its modals once
