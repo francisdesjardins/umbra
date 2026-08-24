@@ -26,24 +26,28 @@ const MODAL_ID = 'deferred-open-target';
  * Watching for the fact you wanted costs one more branch and survives every cause of that shape.
  */
 function openWhenItArrives(id: string, onOpened: (how: string) => void): () => void {
-  if (dialogManager.open(id)) {
-    onOpened('it was already there');
-    return () => {};
-  }
+  let waited = false;
 
+  // Subscribed **before** the open is attempted, for the reason `openAndWait` registers its resolver
+  // first: an answer that lands inside the call is one a listener added afterwards never hears. It
+  // also leaves one return path — an early "it was already there" would have to hand back a canceller
+  // with nothing to cancel, and an empty function is a branch pretending to be a value.
   const stop = dialogManager.subscribe((event) => {
     if (event.id !== id) {
       return;
     }
     if (event.type === 'register') {
+      waited = true;
       // Openable by the time this arrives — that ordering is the event's whole value.
       dialogManager.open(id);
     }
     if (event.type === 'open') {
       stop();
-      onOpened('opened when it arrived');
+      onOpened(waited ? 'opened when it arrived' : 'it was already there');
     }
   });
+
+  dialogManager.open(id);
   return stop;
 }
 

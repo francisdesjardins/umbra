@@ -11,6 +11,28 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-23
 
+### Changed — one `noop` for the tests, and none for the library
+
+`() => {}` appeared 26 times, 24 of them a stub argument in a test: `{ onKeyDown: () => {} }`, which
+reads as something somebody meant to fill in rather than as a deliberate nothing. They share
+`src/__tests__/noop.ts` now, beside the other harness helpers.
+
+**Not exported from the root**, because the library has no site for it: a step that attaches nothing
+returns `undefined` and the caller checks, which is what the `attach*` contract already says — so
+shipping one would be exporting something the library does not run on.
+
+The helper's doc carries the one case it must not be used for: where the _identity_ is the subject.
+A test asserting that a changed callback rebuilds a lifecycle step is asserting exactly that two
+functions differ, and one shared reference would make it compare equal and quietly assert the
+opposite. That hazard turned out not to be live here — the pass those tests diff against holds
+`undefined`, so every assertion still passes — but the next one to reach for this deserves the
+warning rather than the discovery.
+
+The one `return () => {};` was a different thing wearing the same clothes: an early return handing
+back a canceller with nothing to cancel. The waiter it lived in subscribes before it opens now, for
+the reason `openAndWait` registers its resolver first — one return path, and no empty function to
+name.
+
 ### Added — the playground demonstrates the surfaces this branch added
 
 Three cards, because a surface nothing demonstrates is one a reader has to take on faith — and the

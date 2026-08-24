@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, type DialogManagerEvent } from '../dialog-manager.js';
 
@@ -248,7 +249,7 @@ test.describe('a dialog that has not arrived yet', () => {
 
     const openWhenRegistered = (id: string) => {
       if (dm.open(id)) {
-        return () => {};
+        return noop;
       }
       const stop = dm.subscribe((event) => {
         if (event.type === 'register' && event.id === id) {

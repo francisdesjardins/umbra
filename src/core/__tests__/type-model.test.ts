@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import type { ActionFactory } from '../../actions/types.js';
 import type { BaseRenderContext, TemplateCommonOptions } from '../../templates/shared.js';
 import type { useMessageModal } from '../../react/templates/use-message-modal.js';
@@ -52,7 +53,7 @@ export type _SlideHandleTakesPayload = Equals<
 
 // `void` makes `data` unusable rather than absent, so assert the *rejection* — the part users
 // rely on.
-const voidHandle: ModalHandle = { close: () => {} };
+const voidHandle: ModalHandle = { close: noop };
 // @ts-expect-error a modal with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 

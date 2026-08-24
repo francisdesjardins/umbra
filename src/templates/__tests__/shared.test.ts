@@ -1,15 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { DEFAULT_FADE_ANIMATION, buildModalOptions } from '../shared.js';
 import type { DialogStyle } from '../../core/style.js';
 
 // The option mapping every template hook runs through — four of them, across two bindings. Both
 // rules that matter fail silently in one direction only, so they are asserted here directly.
 
-const noop = () => {
+/** A `render` that draws nothing — a node is required, so this is not the shared `noop`. */
+const renderNothing = () => {
   return null;
 };
 
-const base = { id: 'template', render: noop } as const;
+const base = { id: 'template', render: renderNothing } as const;
 
 test.describe('buildModalOptions', () => {
   test('the caller’s structural style is merged over the template’s, not instead of it', () => {
@@ -74,7 +76,7 @@ test.describe('buildModalOptions', () => {
   });
 
   test('everything else is passed through untouched', () => {
-    const onClose = () => {};
+    const onClose = noop;
     const built = buildModalOptions<void, unknown, 'ok', DialogStyle, null>(
       { ...base, id: 'kept', ariaLabel: 'Kept', dismissKey: false, onClose },
       { animation: DEFAULT_FADE_ANIMATION }

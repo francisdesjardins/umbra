@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { DISMISS_REASON } from '../../core/dismiss-reason.js';
 import type { DismissCause, DismissReason } from '../../core/dismiss-reason.js';
 import type { DismissGate } from '../dismiss-gate.js';
@@ -101,7 +102,7 @@ test.describe('answerDismiss', () => {
   test('reports to the owner instead of closing when one asked', () => {
     const target = recordingTarget();
 
-    expect(answerDismiss(target, { request: () => {}, cause: 'dismiss-key' })).toBe(true);
+    expect(answerDismiss(target, { request: noop, cause: 'dismiss-key' })).toBe(true);
     // The whole point: the owner decides, so the dialog is still on screen.
     expect(target.closed).toEqual([]);
   });
@@ -137,7 +138,7 @@ test.describe('answerDismiss', () => {
       })
     ).toBe(true);
     // `undefined` is what a handler with no return statement produces, and it means "taken".
-    expect(answer(() => {})).toBe(true);
+    expect(answer(noop)).toBe(true);
     expect(target.closed).toEqual([]);
   });
 
