@@ -85,12 +85,21 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
 }
 
 /**
- * Re-measure on `'open'`, run the exit and finalize on `'closing'`.
+ * Re-measure on `'open'` and again on `'closing'`, run the exit and finalize.
  *
- * The `'open'` pass re-measures the transition state on every open, so the closing path reads
- * *this* open's answer from the cache rather than the first one's — and reads it without a
- * reflow. The `'closing'` pass short-circuits when transitions are disabled, otherwise waits for
- * the exit (`transitionend` or the fallback timeout) before finalizing.
+ * **The exit's own duration is the only one that answers the exit's question**, and it is not on
+ * the element until the phase is `'closing'` — the binding writes the phase's style during render,
+ * so this effect runs after it. Measuring at open alone read the *entrance* duration and applied
+ * its verdict to the close: `{ duration: 0, exitDuration: 900 }` — instant in, animated out, an
+ * ordinary thing to ask for — computed `0s`, was filed as "transitions are disabled", and lost the
+ * exit entirely along with any observable `'closing'` window.
+ *
+ * The open pass stays, because it is the one that costs nothing: it warms the cache for the common
+ * case and keeps the answer this open's rather than the first open's. The closing pass is one
+ * `getComputedStyle` read against dropping an animation the caller asked for.
+ *
+ * Both readings still catch what the measurement is chiefly for — a `prefers-reduced-motion` rule
+ * setting `transition: none !important` computes to `0s` at either moment.
  *
  * @returns The teardown for the exit listeners, or `undefined` when nothing was attached.
  */
@@ -114,6 +123,9 @@ export function syncCloseSequence(
   if (phase !== 'closing') {
     return undefined;
   }
+
+  // The element now carries the exit style, which the open pass could not have seen.
+  refreshTransitionsDisabled(dialog);
 
   return runCloseSequence(dialog, {
     nonModal,

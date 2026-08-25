@@ -6,7 +6,10 @@ import * as prettier from 'prettier';
 import {
   BINDING_ROWS,
   OPTION_ROWS,
+  PLATFORM_ROWS,
+  WCAG_ROWS,
   allReferences,
+  bindingCells,
   renderMatrix,
   worklist,
 } from './compatibility-matrix.js';
@@ -19,6 +22,11 @@ import { collectOptionNames } from './option-surface.js';
  * and every row a real option; every cited test resolves by file and title; `API.md` carries the
  * rendered table byte for byte. What it cannot check — that a cited test *proves* its cell — stays
  * a human claim, the same scope limit `docs-exports.test.ts` keeps about type-only imports.
+ *
+ * Two more hold the *vocabulary* rather than the facts, and both exist because a state whose whole
+ * content is a field goes hollow the moment the field is optional: a `⏸ blocked` cell owes a
+ * `recheck`, and a `caveat` owes both of its halves. Same argument as the `why` gate below,
+ * applied to the two shapes added after it.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -31,6 +39,9 @@ const OPTIONS_TABLE_EXEMPT = new Set([
   // `@internal`, set by the template hooks rather than by a caller.
   'clipContainer',
 ]);
+
+/** The shape `recheck.measured` and `since` are written in, so the age sort means something. */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const BEGIN = '<!-- BEGIN COMPATIBILITY MATRIX -->';
 const END = '<!-- END COMPATIBILITY MATRIX -->';
@@ -131,13 +142,7 @@ test.describe('the compatibility matrix', () => {
     // owes a reason. `✗ by design` and `~` are the states whose whole content is the explanation.
     // `✓ untested` is exempt — a note there is twenty restatements of "nothing verifies this".
     const unexplained = BINDING_ROWS.flatMap((row) => {
-      return (
-        [
-          ['umbra/react', row.react],
-          ['umbra/solid', row.solid],
-          ['umbra/vanilla', row.vanilla],
-        ] as const
-      )
+      return bindingCells(row)
         .filter(([, value]) => {
           const owes = value.state === 'no-by-design' || value.state === 'partial';
           // `why`, not "anything at all": a reference proves a behaviour and says nothing about why
@@ -199,19 +204,119 @@ test.describe('the compatibility matrix', () => {
     ).toBe(await renderedBlock());
   });
 
+  /**
+   * Every row in the file, flattened to the fields the vocabulary gates read. The binding cells
+   * arrive through `bindingCells`, so a fourth binding reaches these checks with the rest.
+   */
+  const everyRow = (): readonly {
+    readonly label: string;
+    readonly state: string;
+    readonly recheck?: { readonly what: string; readonly measured: string };
+    readonly caveat?: { readonly question: string; readonly nextStep: string };
+  }[] => {
+    return [
+      ...BINDING_ROWS.flatMap((row) => {
+        return bindingCells(row).map(([binding, value]) => {
+          return { label: `${row.capability} (${binding})`, ...value };
+        });
+      }),
+      ...PLATFORM_ROWS.map((row) => {
+        return { label: row.fact, ...row };
+      }),
+      ...WCAG_ROWS.map((row) => {
+        return { label: `WCAG ${row.criterion} ${row.name}`, ...row };
+      }),
+    ];
+  };
+
+  test('a blocked cell says what to re-check and when it was last measured', () => {
+    // `⏸` buys exactly one thing — it leaves the actionable list — and `recheck` is the price. A
+    // blocked cell with nothing to look at is a `~` that stopped being counted, which is the failure
+    // the state was introduced to prevent rather than to enable. The date is checked for shape as
+    // well as presence: an unparseable one sorts wrong, and the watch list is sorted by staleness.
+    const silent = everyRow()
+      .filter((row) => {
+        return row.state === 'blocked';
+      })
+      .filter((row) => {
+        return (
+          row.recheck === undefined ||
+          row.recheck.what.trim() === '' ||
+          !ISO_DATE.test(row.recheck.measured)
+        );
+      })
+      .map((row) => {
+        return row.label;
+      });
+
+    expect(
+      silent,
+      'A ⏸ blocked cell needs a `recheck` — what to look at, and an ISO date someone last did.'
+    ).toEqual([]);
+  });
+
+  test('a caveat names the question and what would close it', () => {
+    // The half that stops the ratchet. Four caveats were written in two weeks and none was ever
+    // removed; two of them turned out to be explanations of a deliberate trade wearing the
+    // worklist's clothes. An author who cannot write `nextStep` has written a `note` — that is the
+    // whole test, and it is the same shape as the `why` a refusal owes.
+    const vague = everyRow()
+      .filter((row) => {
+        return row.caveat !== undefined;
+      })
+      .filter((row) => {
+        return (
+          (row.caveat?.question ?? '').trim() === '' || (row.caveat?.nextStep ?? '').trim() === ''
+        );
+      })
+      .map((row) => {
+        return row.label;
+      });
+
+    expect(
+      vague,
+      'A caveat owes both halves: what is not known, and what would close it. With no next step it is a `note`.'
+    ).toEqual([]);
+  });
+
   test('the open cells are the worklist', () => {
-    const open = worklist();
+    const { open, watch } = worklist();
 
     // The list is the output, not a threshold: printing it makes the matrix a backlog, which is
     // why `✓ untested` and `~` are declared states rather than something found by reading.
+    // **No threshold was added when the plateau was found**, deliberately: the count sat at six for
+    // ten days and the count is not what made that visible — the `since` date is, which `yarn todo`
+    // sorts by and prints the age of. A failing number would say the list is too long; an age says
+    // which line has been ignored, and that is the one a person can act on.
     console.log(
-      `\ncompatibility matrix — ${String(open.length)} open cells:\n${open.join('\n')}\n`
+      `\ncompatibility matrix — ${String(open.length)} open, ${String(watch.length)} on watch:\n${[
+        ...open,
+        ...watch,
+      ]
+        .map((entry) => {
+          return `  ${entry.since ?? '  undated  '}  ${entry.line}`;
+        })
+        .join('\n')}\n`
     );
 
     // About honesty, not count: an open cell that says nothing is a symbol nobody can act on.
     expect(
-      open.every((entry) => {
-        return entry.includes('—') || entry.length > 20;
+      [...open, ...watch].every((entry) => {
+        return entry.line.includes('—') || entry.line.length > 20;
+      })
+    ).toBe(true);
+
+    // The split is the point of the change, so it is asserted rather than trusted: nothing blocked
+    // may reach the actionable list, and nothing but blocked may sit on the watch list.
+    expect(
+      open.filter((entry) => {
+        return entry.line.startsWith('⏸');
+      }),
+      'A blocked cell reached the actionable list — check OPEN_STATES.'
+    ).toEqual([]);
+    expect(
+      watch.every((entry) => {
+        return entry.line.startsWith('⏸');
       })
     ).toBe(true);
   });

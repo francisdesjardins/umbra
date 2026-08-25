@@ -1,4 +1,5 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
+import { CloseThemAllExample } from '@/pages/stacking/examples/close-them-all';
 import { StackPriorityExample } from '@/pages/stacking/examples/stack-priority';
 import { StackedModalsExample } from '@/pages/stacking/examples/stacked-modals';
 import { PageLayout } from '@/shared/ui/PageLayout';
@@ -25,6 +26,12 @@ export const StackingPage = () => {
             description="A session warning is up when a deep link raises a panel. The panel shows last, so the platform puts it in front and the warning goes under its backdrop — inert, dimmed, and lost. Nothing threw. Flip the switch to install a prioritize() rule and the warning comes back without the panel closing."
             codeKey="stack-priority"
             example={<StackPriorityExample />}
+          />
+          <ExampleCard
+            title="Closing every one of them"
+            description="A route change, a sign-out, a workspace switch. There is no closeAll(): it is a loop over lookup().getOpen(), which answers in stack order and hands back a snapshot, so closing while iterating is safe. Every caller wants a different filter, and shipping one shape would be guessing which. The controls are inside the dialogs, because three modals in the top layer make everything under them inert."
+            codeKey="close-them-all"
+            example={<CloseThemAllExample />}
           />
         </ExampleGrid>
       </ExampleSection>

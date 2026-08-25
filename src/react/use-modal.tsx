@@ -1,14 +1,22 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
-import { DISMISS_REASON } from '../core/dismiss-reason.js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
+  resolvePortalHost,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -17,6 +25,7 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
+import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { useModalOutletContext } from './modal-outlet.js';
 import type { GetDialog } from '../core/types.js';
@@ -49,8 +58,8 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * through to the one below, which is the signature this hook has always had.
  */
 export function useModal<TId extends RegisteredModalId>(
-  options: UseModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredOptions<TId, CSSProperties, ReactNode>
+): RegisteredReturn<TId, ReactNode>;
 export function useModal<TData = void, TReason extends string = string>(
   options: UseModalOptions<TData, TReason>
 ): UseModalReturn<TData, TReason>;
@@ -72,6 +81,7 @@ export function useModal<TData = void, TReason extends string = string>(
     ariaLabelledBy,
     ariaDescribedBy,
     role,
+    portal,
   } = options;
 
   // The defaults and the variant narrowing, from the one place both bindings read them.
@@ -208,8 +218,9 @@ export function useModal<TData = void, TReason extends string = string>(
     // `isPortaled` is a dep the body never reads: like `nonModal`, it changes the structure.
   }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, isPortaled, store]);
 
-  // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s, and it takes only a
-  // structural slice of the event, so React's synthetic one satisfies it unchanged.
+  // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s and the answer is
+  // `answerDismiss`'s — a controlled surface hears this door the way it hears the dismiss key. It
+  // takes only a structural slice of the event, so React's synthetic one satisfies it unchanged.
   const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
     const dialog = dialogRef.current;
     if (!dialog) {
@@ -225,7 +236,7 @@ export function useModal<TData = void, TReason extends string = string>(
         dismissWhilePreparing,
       })
     ) {
-      store.close(DISMISS_REASON);
+      answerDismiss(store, { request: onDismissRequest, cause: 'backdrop-click' });
     }
   };
 
@@ -269,8 +280,35 @@ export function useModal<TData = void, TReason extends string = string>(
 
   let dialogNode: ReactNode;
 
-  if (isPortaled) {
-    dialogNode = createPortal(dialogElement, document.body);
+  // Asked at placement rather than at hook time, so a host mounted by the time this first portals
+  // is found. A host that changes identity *within* an era is deliberately not followed — see the
+  // era below and `PortalTarget`'s own contract. `null` here is the un-portaled answer, which is
+  // why it doubles as the branch below.
+  //
+  // Guarded on `isPortaled` rather than left to `resolvePortalHost`'s own `null` branch, because
+  // the *argument* is the problem: `document.body` on a server pass throws where this binding
+  // otherwise renders a closed `<dialog>` with no DOM in scope. Portaling has never server-rendered
+  // — `createPortal` needs a live container — but the default and contained paths do, and asserting
+  // that is what `verify:package` does.
+  // Held across renders, and re-read only when `portal` flips between portaled and not — the one
+  // structural change, and the one the teardown effect already treats as such. Re-reading it every
+  // render is what a getter invites and what strands an open modal: a container of a different
+  // identity makes React unmount the portal subtree and mount a *fresh*, closed `<dialog>`, and
+  // `syncOpenSequence` will not show it again outside `'opening'`. The dialog vanishes with the
+  // store still reporting `phase: 'open'`, and nothing on screen left to dismiss.
+  const [portalEra, setPortalEra] = useState(() => {
+    return { isPortaled, host: isPortaled ? resolvePortalHost(portal, document.body) : null };
+  });
+  if (portalEra.isPortaled !== isPortaled) {
+    setPortalEra({
+      isPortaled,
+      host: isPortaled ? resolvePortalHost(portal, document.body) : null,
+    });
+  }
+  const portalHost = portalEra.isPortaled === isPortaled ? portalEra.host : null;
+
+  if (portalHost) {
+    dialogNode = createPortal(dialogElement, portalHost);
   } else if (placement.host) {
     // The dialog's `absolute` positioning resolves against this host (closest positioned ancestor
     // wins), immune to transforms above, and it fills its parent so a slide anchors to that region.

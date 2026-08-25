@@ -1,4 +1,5 @@
 import type { ActionGate } from '../actions/action-engine.js';
+import type { DismissCause } from './dismiss-reason.js';
 import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
@@ -53,7 +54,7 @@ export type DialogKeydownOptions = {
   readonly nonModal: boolean;
   readonly dismissWhilePreparing: boolean;
   /** Controlled surfaces only: report the press instead of closing. See `ModalOptions`. */
-  readonly onDismissRequest: (() => boolean | void) | undefined;
+  readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
 };
 
 /** Options for the Tab-wrapping listener a non-modal dialog needs. */
@@ -66,6 +67,8 @@ export type ClickOutsideOptions = {
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly engine: ActionGate;
+  /** Controlled surfaces only: report the click instead of closing. See `ModalOptions`. */
+  readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
 };
 
 /** Options for the focus coordinator. */

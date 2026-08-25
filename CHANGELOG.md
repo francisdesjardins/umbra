@@ -9,6 +9,543 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-25
+
+### Changed — both watch-list cells re-measured, both unchanged
+
+The two `⏸ blocked` cells carry the date someone last looked, which is the only thing this repo owns
+about an answer that is somebody else’s to ship. Both re-read today.
+
+**WebKit still swallows a forward Tab from the dialog element.** Measured the way the cell means it —
+`attachFocusContainment` neutered so the engine answers alone, then the dead-space-click test run on
+all three: Chromium and Firefox reach the content natively, WebKit leaves focus on the `<dialog>`.
+The unconditional recovery is still earning its place.
+
+**typedoc is still `0.28.20` and still peers on `5.0.x || … || 6.0.x`.** The `typescript@6.0.3` pin is
+that range, not a stale entry, so there is nothing to try until it moves.
+
+No cell changed state; only `recheck.measured`, from 2026-08-13 and 2026-08-14 to 2026-08-25.
+
+### Changed — the reconcileOpen note had the wrong pair written on it
+
+The last open cell said the `phase`-versus-`isVisible` half of `reconcileOpen` was proven on React
+only, that "the controller never publishes that phase here", and that the two forms of the decision
+differ on `['closing', false]`. Two of those three are now false, and one was never true.
+
+**The controller publishes `'closing'` now** — the exit-measurement fix above is why. The vanilla
+reconcile harness asks for `{ duration: 0, exitDuration: 120 }`, which is the same shape that lost
+its exit everywhere else, so the sequence read `opening,open,closed` and the window the decision
+turns on did not exist. It reads `opening,open,closing,closed`, and the CT test pins that.
+
+**The differing pair is `['closing', true]`, not `['closing', false]`.** The flag going back _up_
+mid-exit is the case the guard exists for — `reconcile-open.ts` says so in its own comment, "how a
+call site that raised the prop mid-exit gets its dialog back", and `reconcile-open.test.ts` spells
+it out over all eight inputs: with the guard dropped, `open: false` still answers `'none'`, because a
+closing dialog is not open and the prop agrees. The two forms never disagreed on the pair the note
+named. Measured, not re-read: removing the guard leaves every assertion in that harness green.
+
+**And `['closing', true]` is not reachable end-to-end from a snapshot surface**, which is a fact
+about the surface rather than a gap in it. Raising the flag is not a store event, so no notification
+lands while the phase is `'closing'` and the flag is up — a subscriber-side recorder was written to
+try, and records nothing because there is nothing to record. The case is exhaustive at the unit
+level, where it belongs.
+
+So the entry is a note, not an open question: there is no next step, which under the new `caveat`
+shape is precisely the test for one. `yarn todo` prints **0 open** and 2 on the watch list.
+
+### Fixed — an exit animation the caller asked for is no longer skipped
+
+`{ duration: 0, exitDuration: 900 }` — instant in, animated out — lost its exit entirely. The close
+path short-circuits when transitions are disabled, so it does not wait for a `transitionend` that a
+`prefers-reduced-motion` rule will never fire. That check was measured **once per open**, reading
+`getComputedStyle(dialog).transitionDuration` while the element still carried the _entrance_ style.
+An entrance of `0` computes to `0s`, which is indistinguishable from `transition: none !important` —
+so the dialog was filed as having no transitions at all, and the exit was dropped along with any
+observable `'closing'` window.
+
+**The exit's own duration is the only one that answers the exit's question**, and it is on the
+element by the time the phase is `'closing'`: the binding writes the phase's style during render, so
+the effect runs after it. `syncCloseSequence` re-measures there. The open pass stays — it costs
+nothing and keeps the answer this open's rather than the first open's — and both readings still
+catch what the check is chiefly for, since a reduced-motion rule computes to `0s` at either moment.
+
+**This surfaced from the other end.** The matrix carried a caveat saying the `'closing'` window was
+not assertable in a component test, "transitions being off in a harness". They were not off: the
+harness asked for a zero-length entrance, and the library concluded from that that it had none. The
+premise was the bug. The assertion is now in `phase reaches the render callback, and agrees with the
+hook return` and passes on Chromium, Firefox and WebKit; with the re-measure removed it reads
+`closed` where it expects `closing` and fails.
+
+The caveat is gone rather than reworded, and `yarn todo` goes from 2 open to 1.
+
+### Fixed — a late policy install lifts what the order needs, not everything
+
+`prioritize` over dialogs already on screen re-showed **every** open modal dialog. The top layer is
+untracked until a policy exists — `syncStackOrder` is dormant before then — so the first plan
+compared the wanted order against an empty `current`, and `planRaises` returns everything when it
+has nothing to keep. Each entry is a real `close()` + `showModal()`.
+
+**This was tried once before and abandoned, because the measurement said it changed nothing.** That
+reading was wrong, and the way it was wrong is worth keeping: **`close()` queues its event**. The
+harness counted native `close` events with a synchronous read straight after the install, which
+returns an empty array about half the time — the raises had happened and the events had not been
+delivered yet. Reading zero, twice, looked like evidence that nothing was reachable here.
+
+Re-measured on the arrangement the old note said had never been tried — three dialogs, opened high,
+mid, low, against a policy wanting the reverse — and polling for the queued events instead of
+reading once:
+
+|                       | round-trips at install                |
+| --------------------- | ------------------------------------- |
+| empty `current`       | **3** — `mr-low`, `mr-mid`, `mr-high` |
+| seeded from the stack | **2** — `mr-mid`, `mr-high`           |
+
+The saved one is `mr-low`: it is at the top and belongs at the bottom, and re-showing the two above
+it puts it there without touching it. That is `planRaises`' rule — keep the longest prefix of the
+wanted order that is already a subsequence of the real one — finally given a real `current` to work
+against.
+
+**The seed is only sound before the first policy, which is the only place it runs.** Nothing has
+raised anything yet, so the top layer _is_ the open order, and that is what the snapshot already
+carries, ranked by `openSequence` because no policy has ranked it. Reading the DOM would be a second
+source for a fact the manager holds. A dialog at phase `'opening'` is excluded by the same test
+`syncStackOrder` makes: it is not in the top layer, and seeding it would claim a position the
+platform has not given it.
+
+`a late install lifts only what the order needs` pins both numbers and the resulting paint order.
+Checked the other way: with the seed removed it reports three and fails.
+
+The matrix cell goes `~` → `✓`, and `yarn todo` from 3 open to 2.
+
+### Fixed — a raise puts the caret back on every engine, not on the engine's guess
+
+A raise is `close()` + `showModal()`, the only mechanism the top layer offers. The dialog that
+**held** the keyboard got it back — `raiseDialog` reads the active element before the round-trip and
+restores it after. The one that did not was left on whatever `showModal()` picks: Chromium the first
+focusable, WebKit the field. So a policy installed while a second dialog was in front handed the
+front dialog back to its confirm button and lost the field someone was typing in.
+
+**The coordinator already remembered the right answer and was having it overwritten.**
+`lastFocusInside` tracks every `focusin` inside the dialog, and the focus `showModal()` takes on the
+way back fires one — indistinguishable at the listener from a person clicking. It landed on the
+memory a fraction before anything could read it, so there was nothing left to restore from. Then the
+reclaim's guard, "focus is inside me, nothing to do", was satisfied by the wrong control.
+
+Two changes, both small, and the second is the one that could have gone wrong:
+
+- **`isRaisingDialog()`** publishes the round-trip as a window, and `remember` declines to record
+  inside it. A plain synchronous counter is enough because `close()`, `showModal()` and `focus()`
+  dispatch `focusin` before they return — anything arriving later is somebody's actual doing.
+- **The reclaim now reads focus-inside-but-not-where-I-remember** as the signature of a move the
+  library made. That is sound only because every other way focus travels inside is recorded, so the
+  memory is re-synced by the time anything asks. **Two states are deliberately not divergence**:
+  focus on the `<dialog>` element itself, which a dead-space click produces and which is never
+  recorded — reading it as divergence would yank the keyboard off a state `focus-containment.ct.tsx`
+  pins — and a memory that has left the DOM, since falling through with one sends the restore to the
+  `focusOnOpen` button, re-honouring an opening choice over wherever the user had got to.
+
+**The assertion that used to accept either answer now pins one.** "keeps the keyboard when something
+opens over it" read `expect(['shadow-confirm', 'shadow-note']).toContain(...)`, because pinning a
+control pinned an engine and broke CI. It pins `shadow-note` now and passes on Chromium, Firefox and
+WebKit — the position is the library's answer rather than the engine's. Checked the other way too:
+with the window disabled, Chromium returns `shadow-confirm` and the test fails.
+
+What stays the engine's is the case with no memory to restore: a dialog nobody had focused anything
+in comes back on whatever `showModal()` picks, and there is nothing truer to put there.
+
+The matrix cell goes `~` → `✓`, and `yarn todo` from 4 open to 3.
+
+### Changed — the matrix worklist says which of ten things were actually work
+
+`yarn todo` printed **10 open cells** and had printed nine or ten for eleven days. The file's own
+history says which half of that was real:
+
+| Date       | `✓ untested` | `~` | `caveat` |
+| ---------- | ------------ | --- | -------- |
+| 2026-08-13 | 16           | 4–6 | 0        |
+| 2026-08-17 | 0            | 6   | 1        |
+| 2026-08-23 | 0            | 6   | 4        |
+
+`✓ untested` went to zero and stayed there — that lane worked. `~` sat at six for ten days, and
+**not one caveat was ever removed**: all four arrived attached to a feature branch. So the list was
+not growing so much as never finishing, and it could not finish, because three different things were
+printing under one heading — work, decisions already taken, and answers somebody else has to ship.
+
+**`⏸ blocked` is the state that was missing**, and it owes a `recheck`: what to look at, and the ISO
+date someone last did. Two cells were it all along and their own prose said so — the WebKit half of
+the Tab recovery is "left open only to be re-measured", and the TypeScript 6 pin "is blocked on
+typedoc rather than on this repo". `worklist()` returns them in a second list nobody is expected to
+burn down. `no-platform` could not carry them: it means _never_, and both change when somebody else
+releases.
+
+**Four cells were decisions wearing a `~` or a `?`**, each already argued in the cell that carried
+it. `portal: true` on the controller and a fragment swapped underneath it are `✗ by design` —
+"this binding never moves the element", "**deliberately not detected**", the second with two named
+tests and the `destroy()`/re-bind recipe. The `ModalRegistry` and Solid `phase` caveats are notes:
+per-modal adoption and the cost of reading a getter inside JSX are trades, not open questions. No
+judgement was reversed here; the state caught up with the sentence beside it.
+
+**A caveat is now `{ question, nextStep }`, both gated.** That is what stops the ratchet, and it is
+the same shape as the `why` a refusal owes: an author who cannot say what would close it has written
+a note. Both remaining caveats gained a real next step — instrument the controller's publish path
+before touching anything for `reconcileOpen`; decide whether a transitions-on assertion is reachable
+at all before writing one for React's `phase`, given `playwright.config.ts` has no e2e project.
+
+**Every open cell carries a `since`, and there is deliberately no threshold on the count.** The
+count is what hid the plateau — six `~` for ten days reads exactly like six closed and six opened —
+so `yarn todo` sorts oldest-first and prints the age instead. A failing number would say the list is
+too long; an age says which line has been ignored, and that is the one a person can act on. The
+"list is the output, not a threshold" decision in the test stands, with the reasoning now written
+beside it.
+
+Two smaller things fell out. `openTail` is shared by all three axes, because the platform and WCAG
+loops rendered `why` and nothing else — so a caveat on one of those rows reached `yarn todo` and
+never reached `API.md`, the exact hiding the caveat is rendered to prevent on a binding cell. And
+`bindingCells` replaces the react/solid/vanilla triple written out in four places, one of them the
+gate that exists to catch a fourth binding.
+
+**Nothing the library does changed.** Before and after:
+
+```
+10 open cells — the worklist the matrix produces:
+  ~  portal: true — umbra/vanilla
+  ~  markup replaced underneath it (htmx, Turbo, Unpoly) — umbra/vanilla
+  ~  Tab reaches the content when the dialog element itself has focus
+  ~  a raise keeps the caret where the user left it
+  ~  installing a policy over dialogs already open is minimal
+  ~  nothing in the repo still needs TypeScript 6
+  ? (✓)  ModalRegistry — project-level id and contract typing — umbra/react
+  ? (✓)  phase, exposed to the caller — umbra/react
+  ? (✓)  phase, exposed to the caller — umbra/solid
+  ? (✓)  reconcileOpen — umbra/vanilla
+
+4 open — the worklist the matrix produces, oldest first:
+    11d  ? (✓)  reconcileOpen — umbra/vanilla
+    11d  ~  a raise keeps the caret where the user left it
+    11d  ~  installing a policy over dialogs already open is minimal
+     3d  ? (✓)  phase, exposed to the caller — umbra/react
+
+2 on the watch list — nothing to do here until somebody else ships:
+    11d  ⏸ blocked  Tab reaches the content when the dialog element itself has focus
+    10d  ⏸ blocked  nothing in the repo still needs TypeScript 6
+```
+
+### Changed — a modal's contract declares what each reason closes with
+
+`ModalRegistry` entries said `{ data, reason }`: one payload for every reason a modal has. Five of
+the six declared entries carrying a payload had more than one reason, and every one of them paid for
+it at the call site — `result.data?.remember ?? false` inside `case 'confirm'`, `result.data ?? 0`
+after `reason === 'sent'`, `data ?? 'somewhere'` after `reason === 'engage'`, and an
+`isArchiveReceipt(result.data)` type guard doing at run time what narrowing should have done. Those
+`??` arms are fabricated defaults for states that cannot occur: nothing ever sent zero items.
+
+An entry now declares `closesWith`, which takes either the bare reasons or a payload per reason:
+
+```ts
+declare module 'umbra' {
+  interface ModalRegistry {
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
+  }
+}
+```
+
+**A declared payload is required, and that is the half that pays.** `close('confirm', data)` must be
+given it and a bare `action('confirm')` is rejected, since it would auto-close with nothing. Without
+that, correlation only forbids `close('cancel', x)` — a mistake nobody makes — and every `??` above
+survives. A reason that genuinely sometimes closes empty declares `confirm: Data | undefined`.
+
+**`data` and `reason` are gone rather than kept beside it.** Two keys for one act is the thing
+`src/CLAUDE.md`'s vocabulary table forbids, and the additive version needed a precedence rule for
+entries declaring both — the heuristic the design set out to avoid. The bare-union form exists so
+the 30-odd payload-free entries stay one line, the way `PortalTarget` takes a boolean or a getter.
+
+**And the pair is named by direction: `closesWith` / `opensWith`.** `closes` alone reads as a
+transitive verb — closes _what_ — where the sense is what it closes _with_, which is the phrase the
+docs already used for it. `payload` followed: it had been named after the runtime field it types
+(`OpenRequest.payload`), a rule `closesWith` does not follow, so keeping it would have been two
+naming rules for two neighbouring keys. `PayloadOf` keeps its name, since what it returns really is
+that payload. The controller binding's registered types moved to `vanilla/types.ts` in the same
+pass — in `core/` they needed type parameters whose only job was to avoid naming `DialogController`.
+
+**The internals did not move.** `CloseResult` is still the flat plain object its own doc insists on;
+the store, the engine and the resolver queue never name `CloseOf`. A union keyed by `reason` is
+opaque at a generic boundary the way a conditional is, so proving a value inhabits it inside
+`createModalStore` would have wanted an `as` — instead the correlation is stated only in the
+registered-id overloads every entry point already had, which is the one seam TypeScript sanctions
+for a signature narrower than its body can prove. The two manager doors whose _return_ narrows moved
+from object-literal members to function declarations for the same reason: only a declaration carries
+overloads.
+
+`DataOf` ends in `infer` and must keep doing so. Left un-augmented the conditional stays deferred and
+the checker compares against the union of its branches; narrowing that union to a computed key list
+resolves it to `void`, and the manager's own facade stops being assignable to the interface it
+implements. That failure is silent at every call site and loud only there.
+
+**`dialogManager.close(id, reason)` now takes only the reasons that carry nothing.** It holds no
+`TData` — the registry is keyed by string — so offering a reason whose contract declares a payload
+would be offering a close it cannot make, and `onClose` would be handed a result its own type says
+cannot exist. `PayloadFreeReasonOf` is that set, and it is exported, since the door's signature
+names it.
+
+Found by the gates rather than by reading: `oxlint`'s `no-unnecessary-condition` flagged
+`closeResult.reason === 'submit' && closeResult.data` in both form examples — a second test that had
+become dead — and `noUnusedLocals` retired the `isArchiveReceipt` guard.
+
+`CloseOf`, `DataOfReason` and `PayloadFreeReasonOf` are exported; the registered forms of the option and return types are
+`intentionallyNotExported`, on the reason already listed there for the open forms of
+`UseModalOptions` — two of each in the reference makes the reader pick.
+
+## 2026-08-23
+
+### Changed — one `noop` for the tests, and none for the library
+
+`() => {}` appeared 26 times, 24 of them a stub argument in a test: `{ onKeyDown: () => {} }`, which
+reads as something somebody meant to fill in rather than as a deliberate nothing. They share
+`src/__tests__/noop.ts` now, beside the other harness helpers.
+
+**Not exported from the root**, because the library has no site for it: a step that attaches nothing
+returns `undefined` and the caller checks, which is what the `attach*` contract already says — so
+shipping one would be exporting something the library does not run on.
+
+The helper's doc carries the one case it must not be used for: where the _identity_ is the subject.
+A test asserting that a changed callback rebuilds a lifecycle step is asserting exactly that two
+functions differ, and one shared reference would make it compare equal and quietly assert the
+opposite. That hazard turned out not to be live here — the pass those tests diff against holds
+`undefined`, so every assertion still passes — but the next one to reach for this deserves the
+warning rather than the discovery.
+
+The one `return () => {};` was a different thing wearing the same clothes: an early return handing
+back a canceller with nothing to cancel. The waiter it lived in subscribes before it opens now, for
+the reason `openAndWait` registers its resolver first — one return path, and no empty function to
+name.
+
+### Added — the playground demonstrates the surfaces this branch added
+
+Three cards, because a surface nothing demonstrates is one a reader has to take on faith — and the
+playground's own rule is that an example not placed on a page does not exist.
+
+- **"An open that lands on nothing"** (`/imperative`) — `open()` answering `false`, and the
+  `register` event closing the gap. The waiter it shows waits for the **`open`** event rather than
+  retiring on `register`, and that is the lesson rather than a detail: the version that unsubscribes
+  on `register` fails, and React's development double-mount is enough to show it — the first
+  registration is torn down and replaced, so the open lands on a modal about to unmount and the
+  second registration finds nobody listening. Watching for the fact you wanted costs one branch.
+- **"A payload the contract declares"** (`/imperative`) — `ModalContract.payload` and `PayloadOf`,
+  beside the card that asks with a payload typed into a textarea. The contrast is the point: that
+  one is genuinely `unknown` and parses, this one is asked and answered inside the project, so the
+  compiler checks the ask and no type argument is written anywhere.
+- **"Closing every one of them"** (`/stacking`) — the loop over `lookup().getOpen()` that stands in
+  for a `closeAll()` the library does not ship, since every caller wants a different filter. Its
+  controls are **inside** the dialogs: three modals in the top layer make the page under them inert,
+  so a "close them all" button on the card could not be pressed. Written on the card first, and
+  caught by driving it rather than by reading it.
+
+### Removed — the review note, now that each of its findings has a home
+
+`decouverte-et-suggestions.md` was a second place to look. Its open items are where the repo keeps
+that kind of fact: the back button and one-id-one-instance in the compatibility matrix, `portal:
+boolean` on the vanilla binding in the `portal: true` row's `why`, the documentation budget resolved
+on `main`, and the three demonstrations above. What is left of it is the CHANGELOG's job, which is
+where the reasoning for each commit already was.
+
+`onOpenRequest` receiving `unknown` stays open, and stays a decision rather than an omission — the
+`ModalRegistry` row carries the reason. `data` has one producer, the modal's own `handle.close`, so
+believing it on the receiving side is honest; `payload` has two, and the second is the whole purpose
+of the door — a microfrontend, a relay, another bundle, none of them compiled here. Typing the
+handler would state a guarantee exactly where it cannot be kept. `PayloadOf` is a root export, so
+the receiving side already has the name to parse _to_.
+
+### Fixed — six findings from reviewing this branch against `main`
+
+A review pass over the four commits above, run against the four that landed on `main` beside them.
+Each item was probed rather than read: the two coverage findings are mutation-proven, and the type
+one was found by compiling the shape the JSDoc recommends.
+
+- **The Solid and vanilla backdrop paths were asserted by nothing.** Reverting both to
+  `store.close(DISMISS_REASON)` — reintroducing the exact defect `answerDismiss` exists to prevent,
+  on two bindings of three — left all 382 component tests passing. The same mutation on React fails
+  two. Both bindings have their own backdrop-with-`onDismissRequest` test now, and both fail when
+  reverted; Solid also has the portal-host assertion it had none of.
+- **A portal host was re-read on every React render**, so a container that changed identity under an
+  open dialog made React mount a fresh, closed `<dialog>` that `syncOpenSequence` will not show
+  outside `'opening'` — the modal vanished with its store still reporting `'open'` and nothing left
+  to dismiss it. The host is held for a portal era now, re-read only when `portal` flips between
+  portaled and not, which is the structural change the teardown effect already keys on.
+- **`PortalTarget` promised what neither binding delivers.** "Asked each time the dialog is placed,
+  so a host that arrives late is picked up" is false on Solid, which resolves once at mount, and was
+  true on React only through the accident that stranded it. The contract now says what both do — the
+  host must exist when the modal is placed — and names what qualifies: a shell, a design-system
+  root, a microfrontend's mount point, not a node in the modal's own subtree. The React story used
+  its own sibling as a host and passed on a second-render coincidence; it mounts the host first now.
+- **A duplicate id emitted `register` twice against one `unregister`.** The pair exists so a caller
+  can hold an open until its dialog arrives, so a membership count that drifts defeats it. The
+  displaced registration is reported leaving, before the new one arrives.
+- **`createOpenRequest(undefined, context)` did not compile against a declared payload** — the
+  builder's own `@example`, safe there only because the example names an undeclared id. A
+  context-only overload returns `OpenRequest<never>`, which fits every contract.
+- **A second file in `type-fixtures/` was not compiled at all.** `tsconfig.registry.json` named one
+  file; a fixture added beside it looked like a gate and was not one. Discovered by a glob now.
+
+Two more, both about where a fact lives. `PortalTarget` had been inserted between `ModalPhase`'s doc
+comment and `ModalPhase`, so a public root export lost its documentation to the declaration above
+it. And `decouverte-et-suggestions.md` was holding two compatibility facts whose home is the
+matrix — the back button, now a `no-by-design` platform row with its `why`, and one-id-one-instance,
+now an answer in the `id` row rather than a silence.
+
+### Added — `portal` can name its host, not only `document.body`
+
+`portal: true` was `createPortal(node, document.body)`, hardcoded — and `document.body` is the
+right answer only for a page whose styling is global. A dialog portaled out of a themed container,
+a design-system root or a microfrontend's mount point loses whatever that ancestor was providing:
+CSS custom properties, a scoping class, a cascade layer. Silently, because the dialog still renders
+and only looks wrong. Everything else in this library is careful with roots — the stylesheet is
+adopted per `getRootNode()`, shadow DOM has a matrix row, two managers on one page have a lock
+ledger — and the portal had one destination.
+
+```tsx
+useModal({
+  id: 'filters',
+  portal: () => {
+    return themeRootRef.current;
+  },
+  render: () => {
+    return <Filters />;
+  },
+});
+```
+
+**A getter rather than an element**, for the reason `getDialog` is one: the option is read where
+the dialog is placed, and a caller writing `document.getElementById(…)` at hook-call time would be
+reading before its own tree exists. It is asked each time the dialog is placed, so a host that
+mounts late is found — React re-reads it per render, Solid once, since that binding mounts the node
+itself and there is nothing left to move.
+
+**Answering `null` is not a way to un-portal.** By then the arrangement is chosen and the placement
+CSS with it, so rendering inline would position the dialog against the wrong thing. It falls back
+to `document.body` and warns, which is the failure a host that never mounted should make: visible
+under `setLogLevel`, rather than an invisible dialog.
+
+**`umbra/vanilla` keeps a plain `boolean`**, and the narrowing is the point: there `portal` selects
+the placement and never moves the element, because reparenting the caller's markup would take its
+ids, stylesheet scope and listeners with it. Accepting a host it could only ignore is the
+silently-dropped option the type system is there to prevent.
+
+`PortalTarget` is a new root export. `portal: true` and `portal: false` behave exactly as before.
+
+### Added — `register` / `unregister` events, and an `open` that says whether it landed
+
+A modal joins the registry when its component mounts. So an imperative `dialogManager.open(id)`
+from a service, a router guard or a deep link can arrive before the dialog behind a code-split
+route exists — the ordinary case, not a typo — and it did nothing, quietly: a `log.warn`, and
+warnings are silent until `setLogLevel`. Every other door already answered (`openAndWait` resolves
+`[Error, null]`, `requestOpenAndWait` refuses with `'not-registered'`); this one did not.
+
+`open` returns whether a dialog was there to open. And `subscribe` now carries the two registry
+moments beside the two screen ones:
+
+```ts
+dialogManager.subscribe((event) => {
+  // 'open' | 'close'            — a dialog on screen
+  // 'register' | 'unregister'   — a dialog existing at all
+});
+```
+
+`ModalLookup.exists` answered "now" and nothing answered "tell me when", which is what made an
+open-when-it-arrives impossible to write without polling. `register` fires **after** the entry is
+in the map, so the dialog is openable by the time a listener hears it — the whole value of the
+event, since a listener told a moment early would find nothing to open. `unregister` fires
+**after** the `close` an unmount-while-open also emits: the dialog leaves the screen and then
+leaves the registry, and both are worth hearing separately.
+
+**No pending-open queue is shipped, and that is a decision rather than a smaller first step.** A
+held open needs an expiry, and how long a deep link should wait for a route is an application's
+question — the same reason nothing here auto-dismisses. The pair makes the ten-line version
+writable, and there is a test that writes it, because a claim that something _can_ be built in
+user-land is worth exactly one demonstration that it can.
+
+### Added — the registry types the way _in_, not only the way out
+
+`requestOpenAndWait<TId extends RegisteredModalId>` narrowed its result off the id — `DataOf<TId>`,
+`ReasonOf<TId>` — while the request it took stayed `unknown`, in the same call. The reason on
+`OpenRequest.payload` was that "the registry is keyed by string and cannot check one against a
+modal's `TData`", which was true when it was written and stopped being true when `ModalRegistry`
+landed: the overload beside it already proves the id is known at the type level.
+
+A contract may now declare a third thing, and `PayloadOf<TId>` reads it the way `DataOf` and
+`ReasonOf` read theirs:
+
+```ts
+declare module 'umbra' {
+  interface ModalRegistry {
+    'patient:merge': { payload: { patientId: string }; reason: 'merged' | 'cancel' };
+  }
+}
+
+dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } });
+//                                                     ^ Type error: it declared a string
+```
+
+**`data` is what a modal closes with, `payload` is what it opens with** — the distinction
+`OpenRequest` already drew in prose, now in the contract. The fallbacks differ for the same reason:
+`DataOf` answers `void` for an undeclared modal (it carries nothing until someone says otherwise),
+`PayloadOf` answers `unknown` (it carries whatever crossed the boundary, and `void` would be a claim
+about a stranger's message).
+
+**`requestOpen` is one generic signature, not an overload pair** — the shape `close` already uses,
+and for the reason recorded there: a failing first overload falls through to the permissive one, so
+the check a declared modal is paying for would evaporate exactly when it is wrong.
+`requestOpenAndWait` keeps its pair, because the _return_ differs between a declared id and any
+other — so both halves constrain the payload identically and neither rescues what the other
+rejected. There is a fixture for that, since it is the one way this could have been decorative.
+
+**`onOpenRequest` still hands its handler `unknown`, and that is the deliberate half.** `PayloadOf`
+types the asking side, where both call sites belong to the project and a mismatch is a mistake the
+checker can catch. The receiving side is where a message from outside the project arrives; a
+parameter annotated with a declaration nobody checked at run time would read as a guarantee that
+had never been made. Parse it — the declaration is now the type to parse _to_.
+
+Nothing changes for a project that declares no payloads: `PayloadOf` is `unknown` there, which is
+what the envelope already said.
+
+### Fixed — `onDismissRequest` answers every door, not only the keyboard
+
+The option's promise is that a controlled surface — one whose `open` is a prop — never closes its
+own dialog, because the boolean upstream would put it straight back. It kept that promise for the
+dismiss key and broke it for the pointer: `attachClickOutside` and each binding's backdrop handler
+called `store.close(DISMISS_REASON)` themselves, so a controlled modal answered Escape correctly
+and reopened itself on a backdrop click. A modal that draws no actions defaults to
+`dismissOnBackdropClick: true`, which is the arrangement most likely to meet it.
+
+The cause was structural rather than an oversight at four call sites. `canDismiss` is the one
+predicate every dismissal path shares, and each path layers its own check on top — but the _last
+step_, the one this option replaces, had no such home: it existed as a private
+`answerDismissKey` in `attach-keydown.ts`, reachable only by the three listeners in that file.
+It is `answerDismiss` in `utils/dismiss-gate.ts` now, beside the predicate it belongs with, and
+every dismissal path ends there. A fourth binding gets the behaviour by calling it.
+
+**The handler is told which door**, since one owner answering three of them could otherwise only
+guess:
+
+```ts
+onDismissRequest: (cause) => {
+  // 'dismiss-key' | 'backdrop-click' | 'click-outside'
+  if (cause === 'dismiss-key') {
+    onClose();
+  }
+  return false; // decline the rest
+};
+```
+
+`DismissCause` is a new root export, and the argument is additive: a handler that ignores it
+behaves exactly as it did. The return value still only means something on the dismiss key — its
+non-modal window listener captures, so declining leaves the press travelling to the page. Nothing
+is prevented on a pointer path, so a declined click is simply a dialog left open.
+
+Every gate above the last step is unchanged and still the library's: which key, whether an action
+claimed it, whether a popup answered first, where the pointer landed, whether `prepare` or a
+running action forbids it, and which dialog is in front.
+
 ## 2026-08-22
 
 ### Fixed — the select popup was white in dark mode, with white labels on it

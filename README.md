@@ -11,7 +11,7 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
 [![Unit coverage](https://img.shields.io/badge/unit_coverage-97%25-3fb950?style=flat-square)](#development)
-[![Component coverage](https://img.shields.io/badge/component_coverage-93%25-3fb950?style=flat-square)](#development)
+[![Component coverage](https://img.shields.io/badge/component_coverage-92%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -67,7 +67,7 @@ yours and outlives the controller.
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
 - **Who is in front is a decision, not a race** — `dialogManager.prioritize((modal) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
-- **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns the dismiss key into a report to the owner, with every gate above it — which key, an action claiming it, `prepare`, which dialog is in front — still the library's
+- **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns every dismissal — the key, a backdrop click, a click outside a panel, each naming itself — into a report to the owner, with every gate above it — which key, an action claiming it, where the pointer landed, `prepare`, which dialog is in front — still the library's
 - **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the modal closes, so a dialog dismissed while it loads drops the work it started
 - **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
 - **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
@@ -251,23 +251,31 @@ single interface:
 // src/modals.d.ts — or anywhere your tsconfig includes
 declare module 'umbra' {
   interface ModalRegistry {
-    'confirm-delete': { data: { id: string }; reason: 'confirm' | 'cancel' };
-    'session-warning': { reason: 'extend' | 'sign-out' };
+    'confirm-delete': { closesWith: { confirm: { id: string }; cancel: void } };
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
     'command-palette': Record<string, never>;
   }
 }
 ```
 
-An entry names the same two things a close result does — `reason` and `data` — and both are
-optional, so a modal with no payload declares only its reasons.
+An entry names the two directions — `closesWith` for the close, `opensWith` for the open — and both
+are optional. `closesWith` takes the bare reasons when none carries a payload, or one per reason;
+a payload declared that way is **required** when closing with that reason.
 
-From then on the id is checked wherever one is accepted:
+From then on the id is checked wherever one is accepted, in both directions:
 
 ```ts
 dialogManager.open('confirm-delete'); // fine
 dialogManager.open('confirm-delet'); // Allowed — an unknown id is a supported one
 dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another modal
+dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } }); // Type error: it declared a string
 ```
+
+`payload` types the **asking** side, where both call sites are yours. `onOpenRequest` still receives
+`unknown` on purpose — that is where a message from outside the project arrives, and a declaration
+is a contract between call sites rather than a check on what turns up. Parse it; `PayloadOf<'patient:merge'>`
+is the type to parse to.
 
 And `useModal` reads the contract off the id, so a declared modal needs no type arguments at all:
 
@@ -321,7 +329,7 @@ export const deleteAccount = async () => {
 ```
 
 `openAndWait` is the same door a hook offers, on the manager instead — so the service needs no
-component to hold one. `reason` and `data` are typed if the id is [in the registry](#declaring-your-modals-in-one-place)
+component to hold one. `reason` and `data` are typed, and correlated, if the id is [in the registry](#declaring-your-modals-in-one-place)
 and open if it is not, and there is no listener to unsubscribe or to register in the right order.
 
 Your UI layer only has to _register_ a modal with that id; the service decides when it appears.
@@ -346,6 +354,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed — on a hook, and on `dialogManager` for code with no component
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
+- `subscribe` — the same two moments plus `register` / `unregister`, so an imperative open can wait for a dialog behind a code-split route
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)
 - Debug logging
@@ -398,11 +407,11 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.73%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.66%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **92.50%** statements over 55 files. Both measured 2026-08-17, and re-measured
+~45% of the run) — **91.61%** statements over 55 files. Both measured 2026-08-25, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. `yarn coverage:update` is that rule made mechanical: it runs both commands and
 rewrites this paragraph, the badges above and CLAUDE.md's copy in one move — still a snapshot, not

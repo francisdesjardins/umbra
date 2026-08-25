@@ -220,8 +220,8 @@ including why each step declares its own inputs rather than sharing one key:
   ([core/dialog-props.ts](core/dialog-props.ts))
 - `dialogPlacement` ([core/placement.ts](core/placement.ts)) — the positioning contract as data, and
   public from the root, so a hand-written host places a dialog identically
-- `canDismiss` ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — the one predicate every dismissal
-  path shares
+- `canDismiss` / `answerDismiss` ([utils/dismiss-gate.ts](utils/dismiss-gate.ts)) — the predicate
+  every dismissal path shares, and their last step
 - `resolveAnimation` ([utils/animation-utils.ts](utils/animation-utils.ts)) — read by both the inline
   `transition` and the `transitionend` wait, so the two cannot disagree
 
@@ -435,6 +435,13 @@ useModal<TData, TReason>
 returning it, and the hooks take `ActionGate` rather than `ActionEngine<TData>`. Each reason is on
 the declaration it constrains, being a fact about that type and nothing else — as are the two
 deliberate non-derivations, `RegisteredStore` and `ModalVariant`.
+
+**A declared id's correlated close lives in the overload declarations and nowhere else**
+(`core/registered-types.ts`): `CloseOf` is a union keyed by `reason`, which is opaque at a generic
+boundary the way a conditional is, so the internals stay on the flat model and no `as` bridges
+them. `DataOf` ends in `infer` for the same law read the other way — un-augmented it stays
+deferred, the checker compares against the union of its branches, and narrowing that union is what
+stops the manager's facade from implementing its own signature.
 
 Pinned by [core/\_\_tests\_\_/type-model.test.ts](core/__tests__/type-model.test.ts) — compile-time
 assertions plus `@ts-expect-error` checks that the variant's mutual exclusion and the payload

@@ -1,13 +1,11 @@
 import { isOwnEventTarget, queryOwn } from '../utils/dialog-scope.js';
-import { canDismiss } from '../utils/dismiss-gate.js';
+import { answerDismiss, canDismiss } from '../utils/dismiss-gate.js';
 import { formatAriaKeyshortcuts, matchesHotkey } from '../utils/hotkey-utils.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
-import { DISMISS_REASON } from './dismiss-reason.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
-import type { ModalStore } from './modal-store.js';
 
 const log = createLogger('modal:keydown');
 
@@ -97,26 +95,6 @@ export function isKeyClaimedByPopup(dialog: HTMLElement, target: EventTarget | n
 const actionOwnsDismissKey = (engine: ActionGate, dismissKey: HotkeyDef | false) => {
   return dismissKey !== false && engine.ownsHotkey(dismissKey);
 };
-
-/**
- * The last step of the dismiss key, and the only one a controlled surface changes.
- *
- * Everything before this — which key, whose popup, whose foreground, which gate — is the same
- * question with the same answer whether the dialog owns its own closing or a prop does. So this
- * is where the two part, in one place rather than in each listener: `store.close` by default, a
- * report to the owner when one asked for it.
- *
- * Returns whether the press was taken, which only the window listener acts on: it captures, so a
- * press it swallows is a press the page never sees, and an owner that declined has nothing to
- * show for it.
- */
-function answerDismissKey(store: ModalStore, request: (() => boolean | void) | undefined): boolean {
-  if (!request) {
-    store.close(DISMISS_REASON);
-    return true;
-  }
-  return request() !== false;
-}
 
 /**
  * Fire the action whose hotkey this is by clicking its button, so a hotkey runs exactly the
@@ -211,7 +189,7 @@ export function attachDialogKeydown(
       }
 
       log('Dismiss key', { id: modalId, key: dismissKey });
-      answerDismissKey(store, onDismissRequest);
+      answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' });
     }
   };
 
@@ -269,7 +247,7 @@ export function attachDialogCancel(
     }
 
     log('Dismiss key (native cancel)', { id: modalId });
-    answerDismissKey(store, onDismissRequest);
+    answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' });
   };
 
   dialog.addEventListener('cancel', handleCancel);
@@ -341,7 +319,7 @@ export function attachWindowDismissKey(
     }
 
     log('Dismiss key (window capture)', { id: modalId, key: dismissKey });
-    if (!answerDismissKey(store, onDismissRequest)) {
+    if (!answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' })) {
       // The owner declined, so nothing happened and the press is not ours to swallow — the same
       // rule as the gate above, for a condition only the caller could have known.
       return;

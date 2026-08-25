@@ -1,10 +1,10 @@
 import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } from 'solid-js';
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
-import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import {
   DIALOG_CONTENT_STYLE,
   dialogAttributes,
@@ -14,6 +14,7 @@ import { createModalDirector } from '../core/modal-director.js';
 import {
   createModalRuntime,
   resolveModalOptions,
+  resolvePortalHost,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../core/modal-runtime.js';
@@ -23,6 +24,7 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
+import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
 import { useModalOutletContext } from './modal-outlet.js';
@@ -53,8 +55,8 @@ import type { ModalAnimation, UseModalOptions, UseModalReturn } from './types.js
  * the one below, which is the signature this hook has always had.
  */
 export function useModal<TId extends RegisteredModalId>(
-  options: UseModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredOptions<TId, DialogStyle, JSX.Element>
+): RegisteredReturn<TId, JSX.Element>;
 export function useModal<TData = void, TReason extends string = string>(
   options: UseModalOptions<TData, TReason>
 ): UseModalReturn<TData, TReason>;
@@ -210,7 +212,9 @@ export function useModal<TData = void, TReason extends string = string>(
         dismissWhilePreparing,
       })
     ) {
-      store.close(DISMISS_REASON);
+      // Read off `options` at the event rather than captured: this listener is attached once, and
+      // the owner's handler is a prop like any other.
+      answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
     }
   });
 
@@ -277,7 +281,10 @@ export function useModal<TData = void, TReason extends string = string>(
   if (isPortaled) {
     // The one place the surface differs from React's: a Solid modal owns its element, so the
     // binding mounts it and `Modal` is `null` — hence no outlet registration on this branch.
-    document.body.append(placed);
+    // Resolved once, unlike React's per-render read: this branch mounts the node itself and runs
+    // exactly once, so the host a moving getter would name later has nothing left to move.
+    const host = resolvePortalHost(options.portal, document.body) ?? document.body;
+    host.append(placed);
     onCleanup(() => {
       placed.remove();
     });

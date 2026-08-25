@@ -149,6 +149,32 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
 }
 
 /**
+ * Depth, not a boolean: nothing nests raises today, and a counter costs one character to make that
+ * assumption stop mattering if a plan ever lifts one dialog from inside another's teardown.
+ */
+let raiseDepth = 0;
+
+/**
+ * Whether a {@link raiseDialog} round-trip is in progress — the window the focus coordinator reads.
+ *
+ * **Every focus move inside that window is the library's, not the user's**, and telling the two
+ * apart is the whole problem: `close()` + `showModal()` makes the engine focus something, and the
+ * `focusin` it fires is indistinguishable at the listener from a person clicking a field. Recording
+ * it overwrites the memory that exists to put the caret back, which is why the dialog that was
+ * *not* holding the keyboard used to come back on the engine's choice of control.
+ *
+ * **A plain synchronous flag is enough because focus events are synchronous**: `close()`,
+ * `showModal()` and `focus()` dispatch `focusin` before they return, so every event this is meant
+ * to cover is delivered inside the `try` below. Anything arriving later is somebody's actual doing
+ * and must be recorded.
+ *
+ * @internal Not part of the public API.
+ */
+export function isRaisingDialog(): boolean {
+  return raiseDepth > 0;
+}
+
+/**
  * Lift an already-open modal dialog to the front of the top layer.
  *
  * Close-and-re-show is the only mechanism: the platform paints top-layer elements in the order
@@ -159,7 +185,10 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
  *   `umbra/vanilla`, where the listener is the caller's.
  * - **Focus is restored only when this dialog had it**, which mostly means a policy installed
  *   *late*: the first plan lifts every dialog bottom-first, and the bottom one has been up longest
- *   and is often the one being typed in. `stack-priority.ct.tsx` pins the caret.
+ *   and is often the one being typed in. `stack-priority.ct.tsx` pins the caret. A dialog that did
+ *   *not* hold it is put back in front by `showModal()`, which focuses whatever the engine picks —
+ *   the case {@link isRaisingDialog} exists for, since only the coordinator knows where the user
+ *   actually was inside it.
  * - **CSS keyed on `[open]` re-runs** — `@starting-style`, `dialog[open] { animation }`. The
  *   library's own entrance is phase-driven and unaffected.
  *
@@ -173,13 +202,18 @@ export function raiseDialog(dialog: HTMLDialogElement): boolean {
   const active = deepActiveElement(dialog.ownerDocument);
   const holdsFocus = active !== null && containsAcrossRoots(dialog, active);
 
-  dialog.close();
-  dialog.showModal();
+  raiseDepth += 1;
+  try {
+    dialog.close();
+    dialog.showModal();
 
-  if (holdsFocus && active instanceof HTMLElement && active.isConnected) {
-    // Visibly: `showModal()` above has just taken the keyboard, so this is a restore from
-    // nowhere — a button would otherwise come back silently.
-    active.focus(SHOW_THE_RING);
+    if (holdsFocus && active instanceof HTMLElement && active.isConnected) {
+      // Visibly: `showModal()` above has just taken the keyboard, so this is a restore from
+      // nowhere — a button would otherwise come back silently.
+      active.focus(SHOW_THE_RING);
+    }
+  } finally {
+    raiseDepth -= 1;
   }
   return true;
 }

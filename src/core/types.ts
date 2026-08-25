@@ -1,6 +1,6 @@
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
 import type { ModalId } from './registry.js';
-import type { DismissReason } from './dismiss-reason.js';
+import type { DismissCause, DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
 
@@ -301,24 +301,32 @@ export type UseModalBaseOptions<
    */
   readonly dismissKey?: HotkeyDef | false | undefined;
   /**
-   * Hand the dismiss key to the owner instead of closing on it.
+   * Hand every user-initiated dismissal to the owner instead of closing on it.
    *
    * **The dialog stops dismissing itself and starts reporting.** Every gate above this point is
    * unchanged and still the library's: which key, whether an action claimed it, whether a popup
-   * inside the dialog answers it first, whether a `prepare` or a running action forbids it, and —
-   * for a non-modal panel — which dialog is actually in front. All of that is decided the same
-   * way it is without this option. What changes is the last step: `store.close(DISMISS_REASON)`
-   * becomes this call, and the modal leaves the screen when the owner says so.
+   * inside the dialog answers it first, where the pointer landed, whether a `prepare` or a running
+   * action forbids it, and — for a non-modal panel — which dialog is actually in front. All of
+   * that is decided the same way it is without this option. What changes is the last step:
+   * `store.close(DISMISS_REASON)` becomes this call, and the modal leaves the screen when the
+   * owner says so.
    *
    * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself — the
    * boolean upstream is still `true` and the next render puts it back — so its only correct answer
-   * to the key is to tell the owner. This is the listener every controlled wrapper writes, and
-   * writes three times because the non-modal case cannot be heard from the dialog at all.
+   * to a dismissal is to tell the owner. This is the listener every controlled wrapper writes.
    *
-   * **Return `false` to decline the press**, for a condition only the caller can know, such as
-   * another framework's modal being on top. The non-modal window listener captures, so a press it
-   * takes is one nobody else sees; declining leaves it un-prevented and still travelling. Anything
-   * else, `undefined` included, means the request was taken.
+   * **All three doors, which is why the handler is told which one.** The dismiss key, a backdrop
+   * click and a click outside a non-modal panel are one decision reached three ways
+   * ({@link DismissCause}), and an option that covered only the key would leave a controlled modal
+   * answering Escape correctly and reopening itself on a backdrop click. Ignore the argument and
+   * the three are one rule; read it to keep them apart — "Escape asks, the backdrop does not".
+   *
+   * **Return `false` to decline**, for a condition only the caller can know, such as another
+   * framework's modal being on top. Only the dismiss key has a second reader: its non-modal window
+   * listener captures, so a press it takes is one nobody else sees, and declining leaves it
+   * un-prevented and still travelling. Nothing is prevented on the pointer paths, so a declined
+   * click is simply a dialog left open. Anything else, `undefined` included, means the request was
+   * taken.
    *
    * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings — which
    * matters because a controlled surface is usually a panel, so a template hook is where this is
@@ -329,8 +337,10 @@ export type UseModalBaseOptions<
    * useModal({
    *   id: 'filters',
    *   nonModal: true,
-   *   onDismissRequest: () => {
-   *     onClose();
+   *   dismissOnClickOutside: true,
+   *   onDismissRequest: (cause) => {
+   *     // One owner, every door — the argument is there for the wrapper that wants them apart.
+   *     onClose(cause);
    *   },
    *   render: () => {
    *     return <Filters />;
@@ -338,7 +348,7 @@ export type UseModalBaseOptions<
    * });
    * ```
    */
-  readonly onDismissRequest?: (() => boolean | void) | undefined;
+  readonly onDismissRequest?: ((cause: DismissCause) => boolean | void) | undefined;
   /**
    * Whether the dismiss key and backdrop click can close the modal while `prepare` is executing.
    * @default true
@@ -549,11 +559,16 @@ export type UseModalBaseOptions<
    */
   readonly clipContainer?: boolean | undefined;
   /**
-   * Render the `<dialog>` into `document.body` rather than where it was declared.
+   * Render the `<dialog>` somewhere other than where it was declared — `document.body` by
+   * default, or a host of your own.
    *
    * When `false` (default), the dialog renders inline in the tree.
    * Modal dialogs are promoted to the browser's top layer by `showModal()`,
    * so they are viewport-anchored regardless of ancestors.
+   *
+   * **`true` means `document.body`; a function names the host instead** — see
+   * {@link PortalTarget}, which is where the reason for the second form lives. `false` and the
+   * contained arrangement are unaffected by either.
    *
    * Non-modal dialogs never enter the top layer, so positioning depends on placement:
    * - **`portal: true`** — portaled to `document.body`, anchored to the viewport
@@ -568,7 +583,7 @@ export type UseModalBaseOptions<
    *
    * @default false
    */
-  readonly portal?: boolean | undefined;
+  readonly portal?: PortalTarget | undefined;
 };
 
 /**
@@ -664,6 +679,37 @@ export type UseModalReturn<
  * separate `isPreparing` axis — see {@link ModalRenderArgs}.
  */
 export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
+
+/**
+ * Where a portaled dialog is mounted: `document.body`, or a host the caller names.
+ *
+ * `true` is `document.body`, which is the right answer for a page whose styling is global, and the
+ * wrong one everywhere the tree the dialog left was doing something. A dialog portaled out of a
+ * themed container, a design-system root or a microfrontend's mount point loses whatever that
+ * ancestor was providing — CSS custom properties, a scoping class, a cascade layer — and the loss
+ * is silent, because the dialog still renders and only looks wrong.
+ *
+ * So the second form names the host, and is a **getter rather than an element** for the reason
+ * `getDialog` is: the option is read where the dialog is placed rather than where it is written, so
+ * a caller keeps naming the host and the binding decides when to ask.
+ *
+ * **The host has to exist by the time the modal is placed**, which is the modal's first render on
+ * `umbra/react` and its mount on `umbra/solid`. A design-system root, a themed shell, a
+ * microfrontend's mount point: all of those are already in the document when a feature component
+ * renders. A node in the modal's *own* subtree is not — the getter answers `null` there, and the
+ * fallback below is what the caller gets.
+ *
+ * **It is read once per portal era, not per render.** A container that changed identity under an
+ * open dialog would make React unmount the portal subtree and mount a fresh, closed `<dialog>` that
+ * nothing shows again — the modal would vanish with its store still reporting `'open'`. So the
+ * answer is held for as long as the modal stays portaled, and re-read only when `portal` flips
+ * between portaled and not, which is the structural change the binding already tears down for.
+ *
+ * Answering `null` is not a way to un-portal — the arrangement is already chosen by then, and the
+ * placement CSS with it. It falls back to `document.body` and warns, which is the failure a host
+ * that never mounted should make: visible under `setLogLevel`, and not an invisible dialog.
+ */
+export type PortalTarget = boolean | (() => Element | null);
 
 /**
  * Which callback of yours threw.

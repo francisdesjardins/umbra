@@ -6,7 +6,7 @@
  * reachable. It is asserted in `registry-augmented.test-d.ts`, which is compiled on its own.
  */
 
-import type { DataOf, ModalId, ReasonOf } from '../registry.js';
+import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../registry.js';
 import { dialogManager } from '../../manager/dialog-manager.js';
 import { useModal } from '../../react/use-modal.js';
 
@@ -19,15 +19,19 @@ type Assert<T extends true> = T;
 /** With nothing declared, every string is still an id. */
 export const _idAcceptsAnyString: ModalId = String(1);
 
-/** And the two derivations fall back rather than resolving to `never`. */
+/** And the three derivations fall back rather than resolving to `never`. */
 export type _ReasonFallsBack = Assert<Equals<ReasonOf<'anything'>, string>>;
 export type _DataFallsBack = Assert<Equals<DataOf<'anything'>, void>>;
+export type _PayloadFallsBack = Assert<Equals<PayloadOf<'anything'>, unknown>>;
 
 /** Every door still takes a computed id, which is what an unopted-in project relies on. */
 export function _doorsStayOpen(id: string) {
   dialogManager.open(id);
   dialogManager.close(id, 'whatever');
   dialogManager.lookup(id);
+  // An unopted-in project asks with whatever it likes: `PayloadOf` is `unknown` here, and the
+  // untyped envelope this option existed as is exactly what `unknown` still spells.
+  dialogManager.requestOpen(id, { payload: { anything: true } });
 }
 
 /** And the hook keeps the signature the docs mandate: reasons declared at the call site. */

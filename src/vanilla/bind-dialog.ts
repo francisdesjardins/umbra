@@ -1,6 +1,5 @@
 import { createActionFactory } from '../core/action-factory.js';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../core/registry.js';
-import { DISMISS_REASON } from '../core/dismiss-reason.js';
+import type { RegisteredModalId } from '../core/registry.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { attachFocusContainment } from '../core/attach-focus-containment.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
@@ -28,11 +27,18 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
+import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
 import type { ModalDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, ModalAnimation } from '../core/types.js';
-import type { BindDialogOptions, DialogController, ModalSnapshot } from './types.js';
+import type {
+  BindDialogOptions,
+  DialogController,
+  ModalSnapshot,
+  RegisteredBindOptions,
+  RegisteredController,
+} from './types.js';
 
 const log = createLogger('modal');
 
@@ -69,8 +75,8 @@ const log = createLogger('modal');
  * the one below — which is the signature `bindDialog` has always had.
  */
 export function bindDialog<TId extends RegisteredModalId>(
-  options: BindDialogOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): DialogController<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredBindOptions<TId>
+): RegisteredController<TId>;
 export function bindDialog<TData = void, TReason extends string = string>(
   options: BindDialogOptions<TData, TReason>
 ): DialogController<TData, TReason>;
@@ -152,7 +158,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
         dismissWhilePreparing: resolved.dismissWhilePreparing,
       })
     ) {
-      store.close(DISMISS_REASON);
+      answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
     }
   };
   dialog.addEventListener('click', handleDialogClick);
@@ -211,6 +217,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
           dismissOnClickOutside: resolved.dismissOnClickOutside,
           dismissWhilePreparing: resolved.dismissWhilePreparing,
           engine,
+          onDismissRequest: options.onDismissRequest,
         }),
         attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
         syncCloseSequence(ctx, {

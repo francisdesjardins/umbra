@@ -24,6 +24,7 @@ export { NonModalCustomDismissKeyHarness } from './use-modal/non-modal-custom-di
 export { PortalDefaultHarness } from './use-modal/portal-default.story';
 export { PortalOptInHarness } from './use-modal/portal-opt-in.story';
 export { PortalNonModalDefaultHarness } from './use-modal/portal-non-modal-default.story';
+export { PortalHostHarness } from './use-modal/portal-host.story';
 export { PortalNonModalOptInHarness } from './use-modal/portal-non-modal-opt-in.story';
 export { NonModalClickOutsideHarness } from './use-modal/non-modal-click-outside.story';
 export { NonModalClickOutsideDefaultHarness } from './use-modal/non-modal-click-outside-default.story';

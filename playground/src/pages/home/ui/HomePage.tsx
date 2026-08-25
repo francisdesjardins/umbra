@@ -68,10 +68,10 @@ export const HomePage = () => {
     ariaLabelledBy: 'home-hello-title',
     onClose: (result) => {
       // Shows the panel's claim rather than asserting it: the reason is typed and exhaustive, and
-      // only the branch that was handed a payload has one — `data` is optional for that reason.
+      // the contract correlates the two — only `confirm` has a payload, and there it is not optional.
       switch (result.reason) {
         case 'confirm':
-          setLastClose(`confirm · data.remember === ${String(result.data?.remember ?? false)}`);
+          setLastClose(`confirm · data.remember === ${String(result.data.remember)}`);
           return;
         case 'cancel':
           setLastClose('cancel · no data — nothing was confirmed');

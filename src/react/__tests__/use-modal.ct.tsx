@@ -23,6 +23,7 @@ import {
   NonModalStackHarness,
   PortalDefaultHarness,
   PortalNonModalDefaultHarness,
+  PortalHostHarness,
   PortalNonModalOptInHarness,
   PortalOptInHarness,
   OpenAndWaitHarness,
@@ -363,6 +364,20 @@ test.describe('useModal — portal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-parent')).toHaveText('BODY');
+  });
+
+  test('a portal host of the caller’s own is where the dialog lands', async ({ mount, page }) => {
+    // `portal: true` is `document.body`, which is the wrong answer wherever the tree the dialog
+    // left was doing something — here, declaring the custom property the dialog reads.
+    await mount(<PortalHostHarness />);
+    await page.getByRole('button', { name: 'Open' }).click();
+
+    const parent = await page.getByTestId('modal-portal-host').evaluate((node) => {
+      return node.parentElement?.dataset['testid'] ?? 'none';
+    });
+
+    expect(parent).toBe('themed-host');
+    await expect(page.getByTestId('inherited-ink')).toHaveText('rebeccapurple');
   });
 
   test('modal without portal: full lifecycle works', async ({ mount, page }) => {
@@ -1360,8 +1375,7 @@ test.describe('the phase a render can see', () => {
     await expect(component.getByTestId('hook-phase')).toHaveText('open');
     await expect(component.getByTestId('hook-visible')).toHaveText('visible');
 
-    // The shape a caller writes against `phase`. While an action runs the two agree, which is the
-    // half a harness can hold: `'closing'` has no duration here, transitions being off.
+    // The shape a caller writes against `phase`: while an action runs, the two agree.
     await component.getByTestId('publish').click();
     await expect(component.getByTestId('render-busy')).toHaveText('busy');
     await expect(component.getByTestId('render-held')).toHaveText('busy');
@@ -1371,9 +1385,17 @@ test.describe('the phase a render can see', () => {
     await expect(component.getByTestId('render-busy')).toHaveText('idle');
     await expect(component.getByTestId('render-held')).toHaveText('idle');
 
-    // `'closing'` itself is not assertable here — transitions are off in a harness, so the close
-    // finalizes with no exit to observe. The playground measures that window in a real browser.
+    // **The `'closing'` window, which this harness was long thought unable to hold.** It asks for
+    // `{ duration: 0, exitDuration: 900 }` — instant in, animated out — and the transition check
+    // read only the *entrance* duration at open, filed `0s` as "transitions are disabled" and
+    // skipped the exit entirely, so the close finalized with nothing to observe. Read at the phase
+    // that owns the question, the window is real and the render callback sees it. That is also the
+    // regression test for the configuration itself: an exit animation the caller asked for.
     await component.getByTestId('close-direct').click();
+    await expect(component.getByTestId('hook-phase')).toHaveText('closing');
+    await expect(component.getByTestId('render-phase')).toHaveText('closing');
+    // Still visible while it leaves — the distinction `phase` exists to make.
+    await expect(component.getByTestId('hook-visible')).toHaveText('visible');
     await expect(component.getByTestId('hook-phase')).toHaveText('closed');
     await expect(component.getByTestId('hook-visible')).toHaveText('gone');
   });

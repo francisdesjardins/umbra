@@ -1,4 +1,5 @@
 import type { ArchiveReceipt } from '@/pages/imperative/examples/open-request';
+import type { PrintJob } from '@/pages/imperative/examples/declared-payload';
 import type { SetupValues } from '@/pages/showcases/examples/vanilla-panel';
 import type { FormValues as MuiFormValues } from '@/pages/ui-integrations/examples/mui-form';
 import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/examples/vanilla-form';
@@ -19,55 +20,60 @@ import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/ex
 declare module 'umbra' {
   interface ModalRegistry {
     // ── Learn ────────────────────────────────────────────────────────────────
-    simple: { reason: 'confirm' };
-    'async-open': { reason: 'confirm' };
-    'prepare-failure': { reason: 'close' };
-    'no-transition-message': { reason: 'confirm' };
-    'confirm-hotkeys': { reason: 'cancel' | 'confirm' };
-    'delete-item-modal': { reason: 'cancel' | 'delete' };
-    'focus-on-open': { reason: 'delete' | 'keep' };
-    'per-action-state': { reason: 'draft' | 'publish' | 'cancel' };
-    'reactive-demo': { reason: 'cancel' | 'confirm' };
+    simple: { closesWith: 'confirm' };
+    'async-open': { closesWith: 'confirm' };
+    'prepare-failure': { closesWith: 'close' };
+    'no-transition-message': { closesWith: 'confirm' };
+    'confirm-hotkeys': { closesWith: 'cancel' | 'confirm' };
+    'delete-item-modal': { closesWith: 'cancel' | 'delete' };
+    'focus-on-open': { closesWith: 'delete' | 'keep' };
+    'per-action-state': { closesWith: 'draft' | 'publish' | 'cancel' };
+    'reactive-demo': { closesWith: 'cancel' | 'confirm' };
 
     // ── Patterns ─────────────────────────────────────────────────────────────
-    'slide-preset-drawer': { reason: 'close' };
-    'slide-preset-sheet': { reason: 'close' };
-    'slide-preset-palette': { reason: 'close' };
-    'slide-preset-inspector': { reason: 'close' };
-    'slide-corner-toast': { reason: 'dismiss' | 'timeout' };
-    'stack-panel': { reason: 'close' };
-    'stack-middle': { reason: 'save' };
-    'stack-inner': { reason: 'ack' };
-    'stack-priority-panel': { reason: 'close' };
-    'stack-priority-warning': { reason: 'acknowledge' };
-    'imperative-demo': { reason: 'confirm' | 'imperative-demo' };
-    'open-request-demo': { data: ArchiveReceipt; reason: 'confirm' | 'cancel' };
-    'controlled-filters': { reason: 'close' };
+    'slide-preset-drawer': { closesWith: 'close' };
+    'slide-preset-sheet': { closesWith: 'close' };
+    'slide-preset-palette': { closesWith: 'close' };
+    'slide-preset-inspector': { closesWith: 'close' };
+    'slide-corner-toast': { closesWith: 'dismiss' | 'timeout' };
+    'stack-panel': { closesWith: 'close' };
+    'stack-middle': { closesWith: 'save' };
+    'stack-inner': { closesWith: 'ack' };
+    'stack-priority-panel': { closesWith: 'close' };
+    'stack-priority-warning': { closesWith: 'acknowledge' };
+    'bulk-first': { closesWith: 'close' | 'close-all' | 'close-others' };
+    'bulk-second': { closesWith: 'close' | 'close-all' | 'close-others' };
+    'bulk-third': { closesWith: 'close' | 'close-all' | 'close-others' };
+    'imperative-demo': { closesWith: 'confirm' | 'imperative-demo' };
+    'open-request-demo': { closesWith: { confirm: ArchiveReceipt; cancel: void } };
+    'controlled-filters': { closesWith: 'close' };
+    'deferred-open-target': { closesWith: 'close' };
+    // The other direction: `payload` is what this one is *opened* with, checked at the ask.
+    'print-job': { opensWith: PrintJob; closesWith: 'cancel' | 'print' };
     // Opened by `deployment-service.ts`, which is a plain module with no component — exactly the
     // case the registry answers: the id is the only thing naming them from outside.
-    'deploy-confirm': { reason: 'cancel' | 'confirm' };
-    'deploy-failure': { reason: 'acknowledge' | 'retry' };
-    'outlet-demo': { reason: 'cancel' | 'confirm' };
-    'dom-events-alert': { reason: 'ok' };
-    'dom-events-panel': { reason: 'ok' };
-    'ssr-worker-demo': { reason: 'close' };
+    'deploy-confirm': { closesWith: 'cancel' | 'confirm' };
+    'deploy-failure': { closesWith: 'acknowledge' | 'retry' };
+    'outlet-demo': { closesWith: 'cancel' | 'confirm' };
+    'dom-events-alert': { closesWith: 'ok' };
+    'dom-events-panel': { closesWith: 'ok' };
+    'ssr-worker-demo': { closesWith: 'close' };
 
     // ── Showcases ────────────────────────────────────────────────────────────
-    'grocery-list': { data: number; reason: 'close' | 'sent' };
-    'grocery-confirm': { data: number; reason: 'cancel' | 'send' };
-    'cosmic-gate': { reason: 'closed' };
-    'cosmic-warp': { data: string; reason: 'abort' | 'engage' };
+    'grocery-list': { closesWith: { sent: number; close: void } };
+    'grocery-confirm': { closesWith: { send: number; cancel: void } };
+    'cosmic-gate': { closesWith: 'closed' };
+    'cosmic-warp': { closesWith: { engage: string; abort: void } };
     'vanilla-panel-steps': {
-      data: SetupValues;
-      reason: 'back' | 'close' | 'next' | 'submit';
+      closesWith: { submit: SetupValues; back: void; close: void; next: void };
     };
 
     // ── Reference ────────────────────────────────────────────────────────────
-    'vanilla-form-example': { data: VanillaFormValues; reason: 'cancel' | 'submit' };
-    'mui-form-example': { data: MuiFormValues; reason: 'cancel' | 'submit' };
+    'vanilla-form-example': { closesWith: { submit: VanillaFormValues; cancel: void } };
+    'mui-form-example': { closesWith: { submit: MuiFormValues; cancel: void } };
 
     // ── The shell's own ──────────────────────────────────────────────────────
-    'home-hello': { data: { remember: boolean }; reason: 'confirm' | 'cancel' };
+    'home-hello': { closesWith: { confirm: { remember: boolean }; cancel: void } };
     'code-viewer': Record<string, never>;
   }
 }

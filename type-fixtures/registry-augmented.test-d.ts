@@ -5,14 +5,15 @@
  * Run by `yarn type-check:registry`, which `yarn type-check` calls.
  */
 
-import type { DataOf, ModalId, ReasonOf } from '../src/core/registry.js';
-import { dialogManager } from '../src/manager/dialog-manager.js';
+import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../src/core/registry.js';
+import { createOpenRequest, dialogManager } from '../src/manager/dialog-manager.js';
 import { useModal } from '../src/react/use-modal.js';
 
 declare module '../src/core/registry.js' {
   interface ModalRegistry {
-    'delete-account': { data: { id: string }; reason: 'confirm' | 'cancel' };
-    'session-warning': { reason: 'extend' | 'sign-out' };
+    'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
+    'session-warning': { closesWith: 'extend' | 'sign-out' };
+    'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
   }
 }
 
@@ -29,13 +30,28 @@ export type _DataNarrows = Assert<Equals<DataOf<'delete-account'>, { id: string 
 /** A modal that declares no payload answers `void`, not `unknown`. */
 export type _NoDataIsVoid = Assert<Equals<DataOf<'session-warning'>, void>>;
 
+/** The other direction: what a declared modal is *opened* with. */
+export type _PayloadNarrows = Assert<Equals<PayloadOf<'patient:merge'>, { patientId: string }>>;
+
+/**
+ * And the two fallbacks differ on purpose — an undeclared close carries nothing, an undeclared
+ * open carries whatever crossed the boundary.
+ */
+export type _NoPayloadIsUnknown = Assert<Equals<PayloadOf<'session-warning'>, unknown>>;
+export type _UndeclaredPayloadIsUnknown = Assert<Equals<PayloadOf<'someone-elses-modal'>, unknown>>;
+
 /** An undeclared id keeps the open answer, which lets a project host modals it does not own. */
 export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-modal'>, string>>;
 
 export function _manager() {
   dialogManager.open('delete-account');
-  dialogManager.close('delete-account', 'confirm');
+  dialogManager.close('delete-account', 'cancel');
   dialogManager.close('delete-account', 'dismiss');
+
+  // The manager holds no payload, so it is offered only the reasons that carry none — `confirm`
+  // declares one, and closing without it would hand `onClose` a result its own type forbids.
+  // @ts-expect-error 'confirm' closes with a payload this door cannot supply
+  dialogManager.close('delete-account', 'confirm');
 
   // Checked **per id**, which is the guarantee that survives an open id space.
   // @ts-expect-error 'extend' belongs to session-warning
@@ -125,4 +141,53 @@ export async function _openAndWaitIsTyped() {
 export async function _openAndWaitStaysOpen() {
   const [, result] = await dialogManager.openAndWait('third-party-panel');
   void result;
+}
+
+/** The ask is checked against what the modal said it takes, in both doors. */
+export function _requestOpenChecksThePayload() {
+  dialogManager.requestOpen('patient:merge', { payload: { patientId: '42' } });
+  dialogManager.requestOpen('patient:merge', createOpenRequest({ patientId: '42' }));
+
+  // @ts-expect-error `patientId` is a string, and the modal declared as much
+  dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } });
+
+  // @ts-expect-error a payload of the wrong shape entirely
+  dialogManager.requestOpen('patient:merge', { payload: { patient: '42' } });
+
+  // Asking with nothing stays legal: the contract types the payload, it does not require one.
+  dialogManager.requestOpen('patient:merge');
+  dialogManager.requestOpen('patient:merge', { context: { source: 'portal:nav' } });
+
+  // And the builder's own payload-free form fits a *declared* contract too — the one shape a
+  // single generic signature got wrong, since it inferred `OpenRequest<undefined>` there.
+  dialogManager.requestOpen('patient:merge', createOpenRequest(undefined, { source: 'nav' }));
+  dialogManager.requestOpen('patient:merge', createOpenRequest());
+  void dialogManager.requestOpenAndWait('patient:merge', createOpenRequest(undefined, {}));
+  dialogManager.requestOpen('someone-elses-modal', createOpenRequest(undefined, { source: 'x' }));
+}
+
+/**
+ * The half an overload pair would have lost. `requestOpenAndWait` keeps two signatures for its
+ * *return*, so a wrong payload must fail **both** — constrained in only the first, it would fail
+ * that one and land on the permissive one, which is the shape `close` avoided by staying generic.
+ */
+export async function _requestOpenAndWaitChecksThePayloadToo() {
+  const ok = await dialogManager.requestOpenAndWait('patient:merge', {
+    payload: { patientId: '42' },
+  });
+  if (ok.accepted) {
+    const [, result] = await ok.closed;
+    void result;
+  }
+
+  await dialogManager.requestOpenAndWait('patient:merge', {
+    // @ts-expect-error the second signature must not rescue a payload the first rejected
+    payload: { patientId: 42 },
+  });
+}
+
+/** An id the registry does not name accepts anything, which is what hosting a stranger means. */
+export function _undeclaredPayloadStaysOpen() {
+  dialogManager.requestOpen('third-party-panel', { payload: { anything: true } });
+  dialogManager.requestOpen('third-party-panel', createOpenRequest('a string'));
 }

@@ -1,11 +1,14 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { DataOf, ReasonOf, RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredReturn } from '../../core/registered-types.js';
 import { useModal } from '../use-modal.js';
 import type { UseModalReturn } from '../types.js';
 import {
   DEFAULT_FADE_ANIMATION,
   buildModalOptions,
   type BaseRenderContext,
+  type RegisteredBaseRenderContext,
+  type RegisteredTemplateOptions,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
 
@@ -17,6 +20,9 @@ export type MessageModalRenderContext<
 
 /** Semantic intent of a message modal, used to drive icon and color selection in UI templates. */
 export type MessageModalType = 'info' | 'warning' | 'error' | 'success';
+
+/** {@link MessageModalRenderContext} for a declared id. */
+export type RegisteredMessageContext<TId> = RegisteredBaseRenderContext<TId>;
 
 /**
  * Options for `useMessageModal`.
@@ -71,8 +77,8 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
  * the one below — which is the signature `useMessageModal` has always had.
  */
 export function useMessageModal<TId extends RegisteredModalId>(
-  options: UseMessageModalOptions<DataOf<TId>, ReasonOf<TId>> & { readonly id: TId }
-): UseMessageModalReturn<DataOf<TId>, ReasonOf<TId>>;
+  options: RegisteredTemplateOptions<TId, RegisteredMessageContext<TId>, CSSProperties, ReactNode>
+): RegisteredReturn<TId, ReactNode>;
 export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason>;

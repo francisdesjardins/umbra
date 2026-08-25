@@ -1,4 +1,6 @@
 import type { DialogStyle } from '../core/style.js';
+import type { CloseOf, DataOf, ReasonOf } from '../core/registry.js';
+import type { RegisteredRenderArgs } from '../core/registered-types.js';
 import type {
   CloseResult,
   ModalAnimation,
@@ -54,6 +56,30 @@ export type TemplateBaseOptions<
   /** Called when the modal closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 };
+
+/**
+ * {@link TemplateBaseOptions} for a declared id: the same options, with `render` and `onClose`
+ * carrying the contract's correlated close instead of one payload for every reason. Built over
+ * {@link TemplateCommonOptions} so the exclusion list stays stated once.
+ *
+ * @internal Not exported from index.ts.
+ */
+export type RegisteredTemplateOptions<
+  TId,
+  TRenderContext,
+  TStyle extends DialogStyle = DialogStyle,
+  TNode = unknown,
+> = TemplateCommonOptions<DataOf<TId>, ReasonOf<TId>, TStyle, TNode> & {
+  /** Unique modal identifier */
+  readonly id: TId;
+  /** Render function receiving template-specific context */
+  readonly render: (ctx: TRenderContext) => TNode;
+  /** Called when the modal closes, with the payload that reason declared */
+  readonly onClose?: ((result: CloseOf<TId>) => void | Promise<void>) | undefined;
+};
+
+/** {@link BaseRenderContext} for a declared id — what every template's registered door forwards. */
+export type RegisteredBaseRenderContext<TId> = RegisteredRenderArgs<TId>;
 
 /**
  * Base context shared by all template render callbacks; template-specific contexts intersect this

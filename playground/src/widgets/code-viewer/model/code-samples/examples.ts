@@ -26,6 +26,9 @@ import imperativeSrc from '@/pages/imperative/examples/imperative.tsx?raw';
 import openRequestSrc from '@/pages/imperative/examples/open-request.tsx?raw';
 import controlledPanelSrc from '@/pages/imperative/examples/controlled-panel.tsx?raw';
 import modalOutletSrc from '@/pages/imperative/examples/modal-outlet.tsx?raw';
+import deferredOpenSrc from '@/pages/imperative/examples/deferred-open.tsx?raw';
+import declaredPayloadSrc from '@/pages/imperative/examples/declared-payload.tsx?raw';
+import closeThemAllSrc from '@/pages/stacking/examples/close-them-all.tsx?raw';
 import mfeHostFrameSrc from '@/pages/microfrontends/examples/host-frame.tsx?raw';
 // The build behind the import map: not a file to copy, but the demo's subject — how three
 // independently-written scripts end up with one manager.
@@ -65,6 +68,9 @@ export const examples: Record<string, string> = {
   'open-request': openRequestSrc,
   'controlled-panel': controlledPanelSrc,
   'modal-outlet': modalOutletSrc,
+  'deferred-open': deferredOpenSrc,
+  'declared-payload': declaredPayloadSrc,
+  'close-them-all': closeThemAllSrc,
   'mfe-host-frame': mfeHostFrameSrc,
   'mfe-host-html': mfeHostSrc,
   'mfe-checkout': mfeCheckoutSrc,

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { createStepRunner, sameInputs, type SyncStep } from '../step-runner.js';
 
 // The lifecycle executor, against a table that records instead of touching the DOM — which is what
@@ -285,9 +286,9 @@ test.describe('the context', () => {
     let built = 0;
     const runner = createStepRunner(
       [
-        { inputs: null, run: () => {} },
-        { inputs: null, run: () => {} },
-        { inputs: null, run: () => {} },
+        { inputs: null, run: noop },
+        { inputs: null, run: noop },
+        { inputs: null, run: noop },
       ],
       () => {
         built += 1;

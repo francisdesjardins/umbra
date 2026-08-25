@@ -1,0 +1,119 @@
+import { useState } from 'react';
+import { ExampleLayout } from '@/entities/example';
+import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import { AppButton } from '@/shared/ui/AppButton';
+import { dialogManager, useMessageModal } from 'umbra/react';
+
+const PANELS = [
+  { id: 'bulk-first', label: 'Unsaved draft' },
+  { id: 'bulk-second', label: 'Share settings' },
+  { id: 'bulk-third', label: 'Session expiring' },
+] as const;
+
+/**
+ * Closing every open dialog at once — a route change, a sign-out, a workspace switch.
+ *
+ * **The library ships no `closeAll()`**, and this is why: it is the loop below, over a lookup the
+ * manager already exposes, and every caller wants a different filter — all of them, all but the one
+ * that asked, only the non-modal ones. Shipping one shape would be guessing which.
+ *
+ * `getOpen()` answers in stack order and hands back a snapshot rather than a live view, so closing
+ * while iterating it is safe. Nothing here waits for an exit: a route change should not be gated on
+ * three animations.
+ */
+function closeEveryOpenDialog(except?: string): number {
+  const leaving = dialogManager
+    .lookup()
+    .getOpen()
+    .filter((modal) => {
+      return modal.id !== except;
+    });
+
+  for (const modal of leaving) {
+    dialogManager.close(modal.id, 'dismiss');
+  }
+  return leaving.length;
+}
+
+export function CloseThemAllExample() {
+  const [result, setResult] = useState<string | null>(null);
+
+  // The controls that matter live *inside* the dialogs: three modal dialogs are in the top layer,
+  // so the page underneath is inert and a "close them all" button on this card could not be
+  // pressed. Whichever panel is in front is the one a user can reach.
+  const panels = [
+    usePanel(PANELS[0], setResult),
+    usePanel(PANELS[1], setResult),
+    usePanel(PANELS[2], setResult),
+  ] as const;
+
+  return (
+    <ExampleLayout
+      result={result}
+      modals={
+        <>
+          {panels[0].Modal}
+          {panels[1].Modal}
+          {panels[2].Modal}
+        </>
+      }
+    >
+      <AppButton
+        onClick={() => {
+          for (const panel of PANELS) {
+            dialogManager.open(panel.id);
+          }
+          setResult('three open — the front one carries the controls');
+        }}
+      >
+        Open three
+      </AppButton>
+    </ExampleLayout>
+  );
+}
+
+/** Three dialogs differing only in their name, so the loop is the subject rather than the content. */
+function usePanel(panel: (typeof PANELS)[number], setResult: (value: string) => void) {
+  const { id, label } = panel;
+  return useMessageModal({
+    id,
+    ariaLabelledBy: `${id}-title`,
+    render: ({ action }) => {
+      return (
+        <MessageModal.DefaultLayout>
+          <MessageModal.Header>
+            <MessageModal.Icon variant="info" />
+            <MessageModal.Title id={`${id}-title`}>{label}</MessageModal.Title>
+          </MessageModal.Header>
+          <MessageModal.Content>
+            <Shared.Message>
+              Three dialogs are up. Closing them one at a time is what a user does; closing them
+              together is what a route change does.
+            </Shared.Message>
+          </MessageModal.Content>
+          <MessageModal.Footer>
+            <Shared.Button {...action('close')}>Close this one</Shared.Button>
+            <Shared.Button
+              {...action('close-others', () => {
+                const closed = closeEveryOpenDialog(id);
+                setResult(`closed ${String(closed)}, kept the one that asked`);
+              })}
+            >
+              Close the others
+            </Shared.Button>
+            <Shared.Button
+              {...action('close-all', () => {
+                const closed = closeEveryOpenDialog();
+                setResult(`closed ${String(closed)}`);
+              })}
+              variant="primary"
+            >
+              Close them all
+            </Shared.Button>
+          </MessageModal.Footer>
+        </MessageModal.DefaultLayout>
+      );
+    },
+  });
+}

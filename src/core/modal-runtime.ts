@@ -12,7 +12,13 @@ import type { ModalId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
-import type { AwaitedClose, ModalFailure, ModalHandle, ModalVariant } from './types.js';
+import type {
+  AwaitedClose,
+  ModalFailure,
+  ModalHandle,
+  ModalVariant,
+  PortalTarget,
+} from './types.js';
 
 const log = createLogger('modal');
 
@@ -33,7 +39,7 @@ const log = createLogger('modal');
  * single answer computed here.
  */
 export type UnresolvedModalOptions = ModalVariant & {
-  readonly portal?: boolean | undefined;
+  readonly portal?: PortalTarget | undefined;
   readonly clipContainer?: boolean | undefined;
   readonly dismissWhilePreparing?: boolean | undefined;
   readonly dismissKey?: HotkeyDef | false | undefined;
@@ -70,7 +76,9 @@ export type ResolvedModalOptions = {
  */
 export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedModalOptions {
   const isNonModal = options.nonModal ?? false;
-  const isPortaled = options.portal ?? false;
+  // A host getter is a portal too — `?? false` would leave the function itself standing in for a
+  // boolean, and every reader of `isPortaled` asks it as one.
+  const isPortaled = options.portal !== undefined && options.portal !== false;
 
   return {
     isNonModal,
@@ -156,6 +164,37 @@ export function createModalRuntime<TData = void, TReason extends string = string
 export type ModalRuntime<TData = void, TReason extends string = string> = ReturnType<
   typeof createModalRuntime<TData, TReason>
 >;
+
+/**
+ * Which element a portaled dialog is mounted into — the whole of what {@link PortalTarget} decides,
+ * in one place because both hook bindings ask it and would otherwise each answer it.
+ *
+ * **`defaultHost` is passed in rather than read as `document.body`**, so this stays a pure function
+ * of its inputs: the decision is three branches and a fallback, and none of them needs a document
+ * to be worth testing. The binding supplies the body, at the one line that already owns the DOM.
+ *
+ * @returns The host, or `null` when this dialog is not portaled at all.
+ */
+export function resolvePortalHost(
+  portal: PortalTarget | undefined,
+  defaultHost: Element
+): Element | null {
+  if (portal === undefined || portal === false) {
+    return null;
+  }
+  if (portal === true) {
+    return defaultHost;
+  }
+  const host = portal();
+  if (host !== null) {
+    return host;
+  }
+  // Not a way to un-portal: by here the placement CSS has already been chosen for a portaled
+  // dialog, and rendering it inline would position it against the wrong thing. The body is the
+  // arrangement that still works, and the warning is what says the styling left with it.
+  log.warn('Portal host resolved to null — falling back to the default host', {});
+  return defaultHost;
+}
 
 // ── Backdrop dismissal ───────────────────────────────────────────────────────
 

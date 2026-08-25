@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import type { ModalPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, type DialogManagerEvent } from '../dialog-manager.js';
 
@@ -206,5 +207,98 @@ test.describe('stack ordering', () => {
     a.close('dismiss');
     a.beginOpen();
     expect(dm.lookup().getForeground()?.id).toBe('a');
+  });
+});
+
+test.describe('a dialog that has not arrived yet', () => {
+  test('open says so rather than doing nothing quietly', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+
+    // The ordinary case, not a typo: a code-split route registers when its component mounts, and
+    // a router guard or deep link fires before that.
+    expect(dm.open('late')).toBe(false);
+
+    dm.register('late', { store });
+    expect(dm.open('late')).toBe(true);
+  });
+
+  test('register lands with the dialog already openable', () => {
+    // The whole value of the event: a listener whose reason to exist is to open what just arrived
+    // would be useless if told a moment early.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const openable: boolean[] = [];
+
+    dm.subscribe((event) => {
+      if (event.type === 'register') {
+        openable.push(dm.lookup().exists(event.id));
+      }
+    });
+
+    dm.register('m', { store });
+
+    expect(openable).toEqual([true]);
+  });
+
+  test('the events are enough to hold an open until its dialog exists', () => {
+    // The pattern this pair exists for, written out — because a claim that something *can* be
+    // built in user-land is worth exactly one demonstration that it can.
+    const dm = createDialogManager();
+    const store = createFakeStore();
+
+    const openWhenRegistered = (id: string) => {
+      if (dm.open(id)) {
+        return noop;
+      }
+      const stop = dm.subscribe((event) => {
+        if (event.type === 'register' && event.id === id) {
+          stop();
+          dm.open(id);
+        }
+      });
+      return stop;
+    };
+
+    openWhenRegistered('late');
+    expect(dm.lookup().getOpen()).toEqual([]);
+
+    dm.register('late', { store });
+
+    expect(dm.lookup().isVisible('late')).toBe(true);
+  });
+
+  test('unregister is heard too, so a waiter can be re-armed when a route unmounts', () => {
+    const dm = createDialogManager();
+    const store = createFakeStore();
+    const seen: DialogManagerEvent['type'][] = [];
+
+    dm.subscribe((event) => {
+      seen.push(event.type);
+    });
+
+    dm.register('m', { store });
+    dm.unregister('m');
+
+    expect(seen).toEqual(['register', 'unregister']);
+  });
+
+  // A duplicate id is a user-land mistake the manager already warns about, but a listener counting
+  // arrivals is the reason this pair exists: two registers against one unregister leaves it holding
+  // a waiter for an id nothing will answer.
+  test('a duplicate id reports the displaced registration leaving, so the pair stays balanced', () => {
+    const dm = createDialogManager();
+    const seen: DialogManagerEvent['type'][] = [];
+
+    dm.subscribe((event) => {
+      seen.push(event.type);
+    });
+
+    dm.register('dup', { store: createFakeStore() });
+    dm.register('dup', { store: createFakeStore() });
+    dm.unregister('dup');
+
+    expect(seen).toEqual(['register', 'unregister', 'register', 'unregister']);
+    expect(dm.lookup().exists('dup')).toBe(false);
   });
 });

@@ -6,6 +6,7 @@ import { setLogLevel } from '../../utils/logger.js';
 import {
   createModalRuntime,
   resolveModalOptions,
+  resolvePortalHost,
   shouldDismissOnBackdropClick,
   teardownModal,
 } from '../modal-runtime.js';
@@ -499,5 +500,53 @@ test.describe('teardownModal reports through onError', () => {
     await Promise.resolve();
 
     expect(failures).toHaveLength(0);
+  });
+});
+
+test.describe('resolvePortalHost', () => {
+  // Stand-ins: the decision reads no member of either, which is why it is a unit test at all.
+  const body = { id: 'body' } as unknown as Element;
+  const themed = { id: 'themed' } as unknown as Element;
+
+  test('an un-portaled dialog resolves to no host at all', () => {
+    // `null` rather than the default: the caller branches on it, and a body here would portal
+    // every inline dialog in the library.
+    expect(resolvePortalHost(undefined, body)).toBe(null);
+    expect(resolvePortalHost(false, body)).toBe(null);
+  });
+
+  test('true is the default host', () => {
+    expect(resolvePortalHost(true, body)).toBe(body);
+  });
+
+  test('a getter names its own', () => {
+    expect(
+      resolvePortalHost(() => {
+        return themed;
+      }, body)
+    ).toBe(themed);
+  });
+
+  test('the getter is read on every call rather than cached, so the binding owns the timing', () => {
+    // The reason it is a getter and not an element: a caller cannot name a node its own tree has
+    // not rendered yet.
+    let host: Element | null = null;
+    const target = () => {
+      return host;
+    };
+
+    expect(resolvePortalHost(target, body)).toBe(body);
+    host = themed;
+    expect(resolvePortalHost(target, body)).toBe(themed);
+  });
+
+  test('a getter answering null falls back rather than un-portaling', () => {
+    // By here the placement CSS is already a portaled dialog's; rendering it inline would position
+    // it against the wrong thing, so the body is the arrangement that still works.
+    expect(
+      resolvePortalHost(() => {
+        return null;
+      }, body)
+    ).toBe(body);
   });
 });

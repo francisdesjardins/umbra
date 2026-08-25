@@ -48,17 +48,6 @@ function parseArchiveRequest(data: unknown): ArchiveRequest | null {
 /** And what it closes *with* — the answer, travelling back the way the request came. */
 export type ArchiveReceipt = { readonly room: string; readonly archivedAt: string };
 
-/**
- * A predicate, not parse-or-null: `data?: unknown` comes back, and each side distrusts the other.
- */
-function isArchiveReceipt(data: unknown): data is ArchiveReceipt {
-  if (typeof data !== 'object' || data === null) {
-    return false;
-  }
-  const { room, archivedAt } = data as { room?: unknown; archivedAt?: unknown };
-  return typeof room === 'string' && typeof archivedAt === 'string';
-}
-
 /** Who is allowed to ask at all — a claim, checked against a list the owner keeps. */
 const TRUSTED_SOURCES = new Set(['shell:nav', 'deep-link']);
 
@@ -109,7 +98,7 @@ export function OpenRequestExample() {
             <Shared.Button
               variant="primary"
               {...action('confirm', (close) => {
-                // `TData` on the hook checks it here; it reaches the caller as `unknown`.
+                // The contract gives the receipt to `confirm` alone, at both ends of the trip.
                 close({ room: room ?? '—', archivedAt: new Date().toISOString() });
               })}
             >
@@ -149,8 +138,9 @@ export function OpenRequestExample() {
       setLog('The dialog vanished before it answered');
       return;
     }
-    if (!isArchiveReceipt(result.data)) {
-      // Not an error — 'cancel' and 'dismiss' close with no payload at all.
+    if (result.reason !== 'confirm') {
+      // Not an error — the contract gives a receipt to 'confirm' alone, so the other two are the
+      // ordinary way this ends and the reason is the whole test.
       setLog(`Closed with no receipt: ${result.reason}`);
       return;
     }

@@ -2,7 +2,13 @@
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
 import type { ModalStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
-import type { DataOf, ModalId, ReasonOf, RegisteredModalId } from '../core/registry.js';
+import type {
+  ModalId,
+  PayloadFreeReasonOf,
+  PayloadOf,
+  RegisteredModalId,
+} from '../core/registry.js';
+import type { AwaitedCloseOf } from '../core/registered-types.js';
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import { ensureDialogStyles } from '../core/dialog-styles.js';
@@ -32,8 +38,9 @@ type RegisteredStore = {
   /**
    * One-shot resolver for the next close, so `requestOpenAndWait` can hand back the close of a
    * dialog it does not own. Erased at `unknown`: a parameter-position callback is checked
-   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable — and the
-   * string-keyed registry cannot know `TData` anyway, as with {@link OpenRequest.payload}.
+   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable. The
+   * narrowing happens at the door instead, off the id — this port is what the registry holds, and
+   * it holds every dialog under one type.
    */
   readonly addCloseResolver: (resolve: (result: AwaitedClose<unknown>) => void) => void;
 };
@@ -59,15 +66,18 @@ export type OpenRequestContext = {
  * pretending to be typed. It crossed an ownership boundary, so the dialog that receives it
  * validates it before believing it, exactly as it would a message off the wire.
  */
-export type OpenRequest = {
+export type OpenRequest<TPayload = unknown> = {
   /**
-   * The payload, unvalidated. Parse it against your own schema before acting on it.
+   * The payload. `unknown` unless the receiving modal declared one in {@link ModalRegistry}, in
+   * which case this is that type and the ask is checked against it — see {@link PayloadOf}, and
+   * note that a declaration is a contract between two call sites rather than a validation of what
+   * arrives. Parse anything that genuinely crossed a boundary before acting on it.
    *
-   * Called `payload` and not `data` on purpose: `CloseResult.data` is the payload *this* modal
-   * declared and the type system checked, and this one is whatever crossed the boundary. Two
-   * levels of trust that share a word are two levels of trust that get confused.
+   * Called `payload` and not `data` on purpose: `CloseResult.data` is what *this* modal closes
+   * with, and this is what it was opened with. Two directions that share a word are two directions
+   * that get confused.
    */
-  readonly payload?: unknown;
+  readonly payload?: TPayload;
   /** What the caller says about itself. See {@link OpenRequestContext}. */
   readonly context?: OpenRequestContext | undefined;
 };
@@ -80,6 +90,12 @@ export type OpenRequest = {
  * (a version, a correlation id) without every caller being edited. It validates nothing and
  * cannot: only the receiving dialog knows what a good payload looks like.
  *
+ * **Two overloads, because the payload-free call has to fit a modal that declares one.** Asking
+ * with nothing is legal against any contract — {@link PayloadOf} types the payload, it does not
+ * require one — but a single generic signature inferred `OpenRequest<undefined>` there, which is
+ * not assignable to the `OpenRequest<Declared>` the door takes. `never` is: it is assignable to
+ * every payload type, and no caller can put a value in it.
+ *
  * @example
  * // The two halves, named, at the boundary.
  * dialogManager.requestOpen(
@@ -87,10 +103,21 @@ export type OpenRequest = {
  *   createOpenRequest({ patientId: '42' }, { source: 'portal:nav' })
  * );
  *
- * // No payload — just say who is asking.
+ * // No payload — just say who is asking. Fits a declared contract as well as an open one.
  * dialogManager.requestOpen('help', createOpenRequest(undefined, { source: 'shell:menu' }));
  */
-export function createOpenRequest(payload?: unknown, context?: OpenRequestContext): OpenRequest {
+export function createOpenRequest(
+  payload?: undefined,
+  context?: OpenRequestContext
+): OpenRequest<never>;
+export function createOpenRequest<TPayload>(
+  payload: TPayload,
+  context?: OpenRequestContext
+): OpenRequest<TPayload>;
+export function createOpenRequest<TPayload>(
+  payload?: TPayload,
+  context?: OpenRequestContext
+): OpenRequest<TPayload> {
   return {
     ...(payload !== undefined && { payload }),
     ...(context !== undefined && { context }),
@@ -107,6 +134,18 @@ export function createOpenRequest(payload?: unknown, context?: OpenRequestContex
  *
  * The payload comes first because it is what a handler almost always wants; the whole envelope
  * follows for the ones that also care who is asking.
+ *
+ * **`unknown`, and it stays `unknown` even for a modal the registry declares** — the one place the
+ * contract deliberately does not narrow. {@link PayloadOf} types the *asking* side, where both call
+ * sites are the project's own and a mismatch is a mistake the checker can catch. This side is where
+ * a message from outside the project arrives, and a parameter annotated with a declaration nobody
+ * checked at run time would read as a guarantee that had never been made. Parse it — the
+ * declaration is there to be the type you parse *to* — `PayloadOf<'patient:merge'>` is what a
+ * schema for this door should produce, and checking that it does is one line:
+ *
+ * ```ts
+ * const schema: z.ZodType<PayloadOf<'patient:merge'>> = z.object({ patientId: z.string() });
+ * ```
  */
 export type OpenRequestHandler = (
   payload: unknown,
@@ -120,7 +159,7 @@ export type OpenRequestHandler = (
  * supplied by the manager at dispatch, so the two shapes are genuinely different and neither is
  * a copy of the other.
  */
-export type OpenRequestDispatch = OpenRequest & {
+export type OpenRequestDispatch<TPayload = unknown> = OpenRequest<TPayload> & {
   /**
    * Refuse the request, with a reason the asker can act on.
    *
@@ -133,6 +172,22 @@ export type OpenRequestDispatch = OpenRequest & {
    */
   readonly refuse: (reason: string) => void;
 };
+
+/**
+ * {@link OpenRequestOutcome} for a declared id: the accepted branch resolves the correlated close,
+ * so a caller across a boundary switches on `reason` and reads the payload that reason declared.
+ */
+export type RegisteredOpenRequestOutcome<TId> =
+  | {
+      readonly accepted: true;
+      /** Resolves the way `openAndWait()` does, once the dialog closes. */
+      readonly closed: Promise<AwaitedCloseOf<TId>>;
+    }
+  | {
+      readonly accepted: false;
+      /** Why — see {@link OpenRequestOutcome}. */
+      readonly reason: string;
+    };
 
 /**
  * What {@link DialogManager.requestOpenAndWait} resolves to — the answer to the ask, and on the
@@ -184,6 +239,12 @@ export type RegisterOptions = {
 
 /**
  * Events emitted by the dialog manager.
+ *
+ * Two pairs, and they answer different questions. `open` / `close` are about a dialog on screen;
+ * `register` / `unregister` are about one existing at all — which is what a caller outside the
+ * component tree cannot otherwise know, since {@link ModalLookup.exists} answers "now" and nothing
+ * answered "tell me when". A dialog behind a code-split route is registered when its component
+ * mounts, so an imperative `open` before that lands on nothing.
  */
 export type DialogManagerEvent =
   | {
@@ -199,6 +260,28 @@ export type DialogManagerEvent =
       readonly id: string;
       /** The reason the modal closed with, if it had one. */
       readonly reason?: string | undefined;
+    }
+  | {
+      /**
+       * Fires when a dialog joins the registry — its component mounted, or `bindDialog` ran.
+       *
+       * **The dialog is openable by the time this arrives**, which is what makes it useful rather
+       * than merely informative: a caller holding an ask nobody could answer yet opens here.
+       * A duplicate id emits this again, the displaced registration having been released.
+       */
+      readonly type: 'register';
+      /** The modal's id. */
+      readonly id: string;
+    }
+  | {
+      /**
+       * Fires when a dialog leaves the registry — its component unmounted, or the controller was
+       * destroyed. After the `close` that an unmount-while-open also emits: the dialog leaves the
+       * screen before it leaves the registry, and both are worth hearing separately.
+       */
+      readonly type: 'unregister';
+      /** The modal's id. */
+      readonly id: string;
     };
 
 /**
@@ -331,8 +414,21 @@ export type DialogManager = {
   /** Unregister a modal store. Called internally by useModal. */
   unregister(id: ModalId): void;
 
-  /** Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}. */
-  open(id: ModalId): void;
+  /**
+   * Open a modal imperatively by id. Unconditional — see {@link DialogManager.requestOpen}.
+   *
+   * @returns Whether a dialog was there to open. **`false` is the only report this door makes**,
+   * and it is the answer to the one way an instruct fails: the id names no *registered* dialog, so
+   * nothing happened. That is not a rare mistake to guard against — a modal behind a code-split
+   * route is registered when its component mounts, and a service, router guard or deep link firing
+   * before that is the ordinary case. Every other door already answered (`openAndWait` resolves
+   * `[Error, null]`, `requestOpenAndWait` refuses with `'not-registered'`); this one only warned,
+   * and warnings are silent until `setLogLevel`.
+   *
+   * To open one that has not arrived yet, listen for it — `subscribe` reports `register`, and the
+   * dialog is openable by the time that lands.
+   */
+  open(id: ModalId): boolean;
 
   /**
    * **Ask** a modal to open, and let it say no.
@@ -347,8 +443,15 @@ export type DialogManager = {
    *
    * Fire-and-forget; when the answer matters use {@link DialogManager.requestOpenAndWait}.
    *
+   * **The payload is checked against the id** when the registry names one for it
+   * ({@link PayloadOf}) — one generic signature rather than an overload pair, for the reason
+   * {@link DialogManager.close} carries: a failing first overload falls through to the permissive
+   * one instead of erroring, so the check a declared modal is paying for would evaporate exactly
+   * when it is wrong.
+   *
    * @param id The dialog to ask.
-   * @param request What to hand its handler. Both halves are untrusted — see {@link OpenRequest}.
+   * @param request What to hand its handler. `context` is untrusted and so is a payload that
+   * genuinely crossed a boundary — see {@link OpenRequest}.
    *
    * @example
    * // The shell asks; the dialog's owner decides.
@@ -357,7 +460,7 @@ export type DialogManager = {
    *   context: { source: 'portal:nav' },
    * });
    */
-  requestOpen(id: ModalId, request?: OpenRequest): void;
+  requestOpen<TId extends ModalId>(id: TId, request?: OpenRequest<PayloadOf<NoInfer<TId>>>): void;
 
   /**
    * The same ask, with the answer — and, if it was a yes, the close that follows.
@@ -366,6 +469,11 @@ export type DialogManager = {
    * which is what a caller across a boundary needs — a refusal it never hears is a dead end. All
    * three refusals (no such dialog, no handler, an explicit `refuse`) arrive here as a reason
    * rather than only in the console. Acceptance is the default; the handler may be `async`.
+   *
+   * **Two signatures, and both constrain the payload identically** — the pair exists for the
+   * *return*, which is `DataOf`/`ReasonOf` for a declared id and open for any other. Constraining
+   * the argument in only the first is what would make it decorative: a wrong payload would fail
+   * that overload and land on this one.
    *
    * @example
    * const outcome = await dialogManager.requestOpenAndWait(
@@ -380,9 +488,12 @@ export type DialogManager = {
    */
   requestOpenAndWait<TId extends RegisteredModalId>(
     id: TId,
-    request?: OpenRequest
-  ): Promise<OpenRequestOutcome<DataOf<TId>, ReasonOf<TId>>>;
-  requestOpenAndWait(id: ModalId, request?: OpenRequest): Promise<OpenRequestOutcome>;
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<RegisteredOpenRequestOutcome<TId>>;
+  requestOpenAndWait<TId extends ModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<OpenRequestOutcome>;
 
   /**
    * Open a modal and wait for it to close — the imperative twin of a hook's `openAndWait()`, for
@@ -405,18 +516,21 @@ export type DialogManager = {
    *   await api.deleteAccount();
    * }
    */
-  openAndWait<TId extends RegisteredModalId>(
-    id: TId
-  ): Promise<AwaitedClose<DataOf<TId>, ReasonOf<TId>>>;
+  openAndWait<TId extends RegisteredModalId>(id: TId): Promise<AwaitedCloseOf<TId>>;
   openAndWait(id: ModalId): Promise<AwaitedClose<unknown>>;
 
   /**
    * Close a modal imperatively by id, with a reason.
    *
-   * Reason only: the registry is keyed by string, so nothing here knows a modal's `TData`. A
-   * payload goes through the typed doors — `handle.close(reason, data)` or an action's `close`.
+   * **Reason only, and only the reasons that carry nothing.** The registry is keyed by string, so
+   * nothing here knows a modal's `TData` — a reason whose contract declares a payload is refused
+   * rather than closed without one, which would hand `onClose` a result its own type says cannot
+   * exist. Those go through the typed doors: `handle.close(reason, data)`, or an action's `close`.
    */
-  close<TId extends ModalId>(id: TId, reason?: ReasonOf<NoInfer<TId>> | DismissReason): void;
+  close<TId extends ModalId>(
+    id: TId,
+    reason?: PayloadFreeReasonOf<NoInfer<TId>> | DismissReason
+  ): void;
 
   /**
    * Query modal state.
@@ -445,9 +559,9 @@ export type DialogManager = {
    *
    * **A policy orders each family, never across them** — modality is settled before it is asked,
    * so a big number on a panel moves it no nearer the user. Opt-in, dormant until called, and
-   * replaced rather than stacked by a second call. Installing it over dialogs already open is the
-   * one reorder that is not minimal: the top layer is untracked until then, so the first plan
-   * re-shows every open modal. Both facts are in the compatibility matrix.
+   * replaced rather than stacked by a second call. Installing it over dialogs already
+   * open is minimal too: the tracking is seeded from the stack as it stands, so the first plan
+   * lifts what the order needs rather than everything. Both facts are in the compatibility matrix.
    *
    * @returns A disposer restoring the no-policy order within each family, reordering what is on
    *   screen to match. It does nothing if a later `prioritize` already replaced the policy.
@@ -809,7 +923,47 @@ export function createDialogManager(): DialogManager {
     topLayerOrder = desired;
   }
 
+  /**
+   * Seed the top-layer tracking from the stack as it already stands, so the first plan is a plan
+   * rather than a rebuild.
+   *
+   * **Sound only before the first policy, which is exactly when it runs.** `syncStackOrder` is
+   * dormant until one exists, so nothing has raised anything, so the top layer is the open order of
+   * the modal dialogs currently open — and that is what the snapshot carries right now, ranked by
+   * `openSequence` because no policy has ranked it yet. Reading the DOM instead would be a second
+   * source for a fact the manager already holds.
+   *
+   * Without it the first plan compares against an empty `current`, which by `planRaises`' own
+   * arithmetic returns **every** open modal dialog. Measured on three dialogs in an order a policy
+   * actually changes: three round-trips without this, two with — and the earlier reading of zero
+   * either way was a synchronous read of a queued event, since `close()` fires its `close` on a
+   * later turn. The saving is one whole close-and-re-show, and it is the stack the user is looking
+   * at.
+   */
+  function seedTopLayerOrder(): void {
+    if (topLayerOrder.length > 0 || typeof document === 'undefined') {
+      return;
+    }
+
+    topLayerOrder = snapshotStore
+      .getSnapshot()
+      .openDialogs.filter((info) => {
+        if (info.nonModal) {
+          return false;
+        }
+        // The same test `syncStackOrder` makes: a dialog at phase `'opening'` is not in the top
+        // layer yet, and seeding it would claim a position the platform has not given it.
+        const element = registry.get(info.id)?.getDialog?.();
+        return element instanceof HTMLDialogElement && element.open;
+      })
+      .map((info) => {
+        return info.id;
+      });
+  }
+
   function prioritize(next: StackPriority): () => void {
+    // Before `priority` is set, while the snapshot still reads in plain open order.
+    seedTopLayerOrder();
     priority = next;
     log('Stack policy installed');
     notifyChange();
@@ -910,7 +1064,13 @@ export function createDialogManager(): DialogManager {
     const displaced = registry.get(id);
     if (displaced) {
       displaced.unsubscribe();
+      registry.delete(id);
       log.warn('Duplicate modal id — the previous registration was released', { id });
+      // Emitted, and before the `register` below, because a listener keeping membership from this
+      // pair is the reason the pair exists: two arrivals against one departure leaves it holding a
+      // waiter for an id that has gone. The entry is out of the map first, so the event is true
+      // when it fires — the same rule the `register` emission follows.
+      emit({ type: 'unregister', id });
     }
 
     registry.set(id, {
@@ -926,6 +1086,9 @@ export function createDialogManager(): DialogManager {
       openSequence: 0,
     });
     log('Registered', { id, registeredCount: registry.size });
+    // After the entry is in the map, never before: a listener's whole reason to be here is to open
+    // the dialog that just arrived, and one told about it too early would find nothing to open.
+    emit({ type: 'register', id });
     notifyChange();
   }
 
@@ -961,6 +1124,11 @@ export function createDialogManager(): DialogManager {
         openedAt: entry.openedAt,
       });
     }
+
+    // After the close, which is the order the two facts happen in: the dialog left the screen and
+    // then left the registry. There is no DOM twin of this pair — `modal:open` / `modal:close`
+    // exist so a *different bundle* can hear a dialog on screen, and a registry is one manager's.
+    emit({ type: 'unregister', id });
 
     notifyChange();
     syncStackOrder();
@@ -1106,35 +1274,55 @@ export function createDialogManager(): DialogManager {
     return { accepted: true, closed };
   }
 
+  // The two doors whose *return* narrows on a declared id. Written as declarations rather than as
+  // members of the object below, because only a declaration carries overloads — and the correlated
+  // signature is one the body cannot prove, `CloseOf` being a union the store never builds.
+  function openAndWait<TId extends RegisteredModalId>(id: TId): Promise<AwaitedCloseOf<TId>>;
+  function openAndWait(id: ModalId): Promise<AwaitedClose<unknown>>;
+  function openAndWait(id: string): Promise<AwaitedClose<unknown>> {
+    const entry = registry.get(id);
+    if (!entry) {
+      log.warn('Open skipped (not registered)', { id });
+      return Promise.resolve([new Error(`No modal registered with id "${id}"`), null]);
+    }
+    // The resolver is registered before the open, so a modal that closes inside `beginOpen` —
+    // a `prepare` that throws, a reconciliation putting it straight back — is still heard.
+    const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
+      entry.store.addCloseResolver(resolve);
+    });
+    entry.store.beginOpen();
+    return closed;
+  }
+
+  function requestOpenAndWait<TId extends RegisteredModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<RegisteredOpenRequestOutcome<TId>>;
+  function requestOpenAndWait<TId extends ModalId>(
+    id: TId,
+    request?: OpenRequest<PayloadOf<NoInfer<TId>>>
+  ): Promise<OpenRequestOutcome>;
+  function requestOpenAndWait(id: string, request: OpenRequest = {}): Promise<OpenRequestOutcome> {
+    return dispatchOpenRequest(id, request);
+  }
+
   // ── Public API (facade) ───────────────────────────────────────────────────
 
   return {
     register,
     unregister,
 
-    open(id: string): void {
+    open(id: string): boolean {
       const entry = registry.get(id);
       if (!entry) {
         log.warn('Open skipped (not registered)', { id });
-        return;
+        return false;
       }
       entry.store.beginOpen();
+      return true;
     },
 
-    openAndWait(id: string): Promise<AwaitedClose<unknown>> {
-      const entry = registry.get(id);
-      if (!entry) {
-        log.warn('Open skipped (not registered)', { id });
-        return Promise.resolve([new Error(`No modal registered with id "${id}"`), null]);
-      }
-      // The resolver is registered before the open, so a modal that closes inside `beginOpen` —
-      // a `prepare` that throws, a reconciliation putting it straight back — is still heard.
-      const closed = new Promise<AwaitedClose<unknown>>((resolve) => {
-        entry.store.addCloseResolver(resolve);
-      });
-      entry.store.beginOpen();
-      return closed;
-    },
+    openAndWait,
 
     requestOpen(id: string, request: OpenRequest = {}): void {
       // The fire-and-forget door. Deliberately not `void dispatchOpenRequest(...)` at the call
@@ -1142,9 +1330,7 @@ export function createDialogManager(): DialogManager {
       void dispatchOpenRequest(id, request);
     },
 
-    requestOpenAndWait(id: string, request: OpenRequest = {}): Promise<OpenRequestOutcome> {
-      return dispatchOpenRequest(id, request);
-    },
+    requestOpenAndWait,
 
     close(id: string, reason: string = DISMISS_REASON): void {
       const entry = registry.get(id);

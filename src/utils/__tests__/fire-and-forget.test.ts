@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { fireAndForget } from '../fire-and-forget.js';
 
 /** Wait one microtask tick so the fire-and-forget IIFE settles. */
@@ -15,7 +16,7 @@ test.describe('fireAndForget', () => {
       () => {
         called = true;
       },
-      { onError: () => {} }
+      { onError: noop }
     );
     await tick();
     expect(called).toBe(true);
@@ -28,7 +29,7 @@ test.describe('fireAndForget', () => {
         await Promise.resolve();
         called = true;
       },
-      { onError: () => {} }
+      { onError: noop }
     );
     await tick();
     expect(called).toBe(true);
@@ -95,8 +96,8 @@ test.describe('fireAndForget', () => {
 
   test('calls onSettled after success', async () => {
     let settled = false;
-    fireAndForget(() => {}, {
-      onError: () => {},
+    fireAndForget(noop, {
+      onError: noop,
       onSettled: () => {
         settled = true;
       },
@@ -112,7 +113,7 @@ test.describe('fireAndForget', () => {
         throw new Error('fail');
       },
       {
-        onError: () => {},
+        onError: noop,
         onSettled: () => {
           settled = true;
         },
@@ -124,7 +125,7 @@ test.describe('fireAndForget', () => {
 
   test('does not call onSettled when omitted', async () => {
     // Verify no TypeError from calling undefined
-    fireAndForget(() => {}, { onError: () => {} });
+    fireAndForget(noop, { onError: noop });
     await tick();
     // If we get here without an unhandled error, the test passes
   });

@@ -32,7 +32,26 @@
     "umbra/src/core/types.ts:ModalAnimation",
     "umbra/src/core/types.ts:UseModalBaseOptions",
     "umbra/src/core/types.ts:UseModalOptions",
-    "umbra/src/core/types.ts:UseModalReturn"
+    "umbra/src/core/types.ts:UseModalReturn",
+    // The same model as a *declared* id sees it, and the same reason: these are `UseModalOptions`,
+    // `UseModalReturn` and their parts with the registry's correlated close filled in, so
+    // documenting them too would put two of each in the reference and make the reader pick. A
+    // consumer meets them only as the resolved shape their own call site returns.
+    "umbra/src/core/registered-types.ts:AwaitedCloseOf",
+    "umbra/src/core/registered-types.ts:RegisteredOptions",
+    "umbra/src/core/registered-types.ts:RegisteredReturn",
+    "umbra/src/manager/dialog-manager.ts:RegisteredOpenRequestOutcome",
+    "umbra/src/templates/shared.ts:RegisteredTemplateOptions",
+    "RegisteredMessageContext",
+    "RegisteredSlideContext",
+    // Internal to the type that reads it: the one place `closes` is destructured, and the four
+    // public types derived from it are what a reader wants instead.
+    "umbra/src/core/registry.ts:ClosesWithOf",
+    // The controller binding's own four options, named only so its registered door can rebuild the
+    // option surface without omitting across `ModalVariant`.
+    "umbra/src/vanilla/types.ts:BindDialogOwnOptions",
+    "umbra/src/vanilla/types.ts:RegisteredBindOptions",
+    "umbra/src/vanilla/types.ts:RegisteredController"
   ],
   "disableSources": false,
   "treatWarningsAsErrors": true

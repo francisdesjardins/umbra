@@ -7,6 +7,7 @@ import {
   VanillaClaimlessReclaimHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
+  VanillaDismissRequestHarness,
   VanillaExplicitHostHarness,
   VanillaFailingActionHarness,
   VanillaNoHostHarness,
@@ -453,6 +454,27 @@ test.describe('bindDialog — what teardown hands back', () => {
  * option — both carry their attributes, or their absence, in the caller's own markup, which reading
  * `options.ariaLabelledBy` would be blind to.
  */
+test.describe('bindDialog — a dismissal the owner answers', () => {
+  // The seam is shared and unit-tested; what is not otherwise asserted is that *this* binding
+  // reaches it. Reverting this call site to `store.close()` passes every other test in the suite.
+  test('a backdrop click is reported to the owner instead of closing the dialog', async ({
+    mount,
+    page,
+  }) => {
+    const component = await mount(<VanillaDismissRequestHarness />);
+    await component.getByTestId('open').click();
+
+    const dialog = page.locator('dialog[data-modal-id="vanilla-dismiss-request"]');
+    await expect(dialog).toBeVisible();
+
+    await page.mouse.click(5, 5);
+
+    await expect(component.getByTestId('cause')).toHaveText('backdrop-click');
+    await page.waitForTimeout(600);
+    await expect(dialog).toBeVisible();
+  });
+});
+
 test.describe('bindDialog — the labelling diagnostic', () => {
   const labellingWarnings = (page: Page) => {
     const lines: string[] = [];
@@ -582,11 +604,18 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('vanilla-shadow-front');
 
-    // **Which control it lands on is the engine's, and pinning one broke CI.** Chromium lands on the
-    // first focusable — the newcomer's `showModal()` takes the keyboard before the raise can read
-    // where it was, and the raise's own fires a `focusin` over the coordinator's memory; WebKit keeps
-    // the field. A documented limit — see the guard in `core/attach-focus.ts` and its matrix cell.
-    expect(['shadow-confirm', 'shadow-note']).toContain(await focusedInShadow(page));
+    // **And on the control the user left, on every engine.** This is the assertion that used to
+    // accept either answer: the raise re-shows the dialog, the engine focuses something on the way
+    // back — Chromium the first focusable, WebKit the field — and the `focusin` it fires used to
+    // land on the coordinator's memory, so there was nothing left to restore from. `isRaisingDialog`
+    // closes that window, and the reclaim now treats focus-inside-but-not-where-I-remember as the
+    // signature of a move the library made. Pinning one engine broke CI before; pinning the
+    // library's own answer is what makes it the same on all three.
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-note');
   });
 
   test('a policy installed over it keeps the caret where it was', async ({ mount, page }) => {
@@ -739,13 +768,18 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     // The flag lowered and the dialog gone, with nothing asked twice.
     await expect(page.getByTestId('asked')).toHaveText('open');
 
-    // **What this does not prove, pinned so the gap is visible rather than assumed.** Deciding on
-    // `isVisible` rather than `phase` differs on exactly one input pair — `'closing'` with the flag
-    // down — and the controller never publishes that phase here: the accumulator cannot drop a
-    // notification, so this is the store's own sequence and not a batch swallowing one. Until an
-    // exit that reaches `'closing'` is observable through this surface, the assertion above holds
-    // for both forms of the decision. See the `reconcileOpen` caveat in the compatibility matrix.
-    await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closed');
+    // **The exit is a real one, and the sequence says so.** It used to read `opening,open,closed`:
+    // this harness asks for `{ duration: 0, exitDuration: 120 }`, and the transition check read the
+    // *entrance* duration at open, so the exit was skipped and `'closing'` never published. It is
+    // published now.
+    //
+    // **What this still does not prove, and it is not the pair the note used to name.** Deciding on
+    // `isVisible` rather than `phase` disagrees on `['closing', true]` **only** — the flag going back
+    // *up* mid-exit — since a closing dialog is not open and `open: false` answers `'none'` either
+    // way. That case is exhaustive at the unit level in `core/__tests__/reconcile-open.test.ts`, and
+    // it is not reachable from here: raising the flag is not a store event, so no notification lands
+    // while the phase is `'closing'` and the flag is up.
+    await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closing,closed');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });

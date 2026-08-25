@@ -508,6 +508,90 @@ function PortalApp(): Built {
   );
 }
 
+/**
+ * A portal into a host the caller owns.
+ *
+ * The host is created before `useModal` runs, which is what `PortalTarget` requires and what this
+ * binding makes unavoidable: Solid resolves the option once, in the setup body, so a getter over a
+ * node from this component's own JSX would answer `null` and land on the body.
+ */
+function PortalHostApp(): Built {
+  const host = document.createElement('div');
+  host.setAttribute('data-testid', 'solid-themed-host');
+  document.body.append(host);
+  onCleanup(() => {
+    host.remove();
+  });
+
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-portal-host',
+    ariaLabel: 'Solid portal host',
+    portal: () => {
+      return host;
+    },
+    render: () => {
+      return el(h('p', null, 'In the host'));
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
+/**
+ * A backdrop click this binding must *report* rather than act on.
+ *
+ * The seam is `answerDismiss` and it is unit-tested, but nothing asserted that this binding reaches
+ * it: a backdrop handler calling `store.close()` itself works perfectly and ignores
+ * `onDismissRequest`, which is the whole defect the option exists to prevent.
+ */
+function DismissRequestApp(): Built {
+  const [cause, setCause] = createSignal('none');
+
+  const modal = useModal<void, 'ok'>({
+    id: 'solid-dismiss-request',
+    ariaLabel: 'Solid dismiss request',
+    dismissOnBackdropClick: true,
+    onDismissRequest: (which) => {
+      setCause(which);
+      return false;
+    },
+    render: () => {
+      return el(h('p', { 'data-testid': 'inside' }, 'Body'));
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    text(cause, 'cause'),
+    h(
+      'button',
+      {
+        'data-testid': 'open',
+        onClick: () => {
+          void modal.open();
+        },
+      },
+      'Open'
+    ),
+    modal.Modal
+  );
+}
+
 /** A contained non-modal panel: positioned against a host the binding creates. */
 function ContainedApp(): Built {
   const modal = useModal<void, 'ok'>({
@@ -793,6 +877,14 @@ export const SolidDisposalApp = (): JSX.Element => {
 
 export const SolidOutletDisposalApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, OutletDisposalApp));
+};
+
+export const SolidPortalHostApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, PortalHostApp));
+};
+
+export const SolidDismissRequestApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, DismissRequestApp));
 };
 
 export const SolidPortalApp = (): JSX.Element => {

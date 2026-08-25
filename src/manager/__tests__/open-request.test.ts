@@ -88,7 +88,9 @@ test.describe('requestOpen', () => {
 
     dm.requestOpen('asked', { payload: 1 });
 
-    expect(events).toEqual([]);
+    // The registration is heard — a dialog existing is a different fact from one opening — and
+    // the request that nobody answered adds nothing after it.
+    expect(events).toEqual(['register']);
   });
 
   test('a dialog that declares no handler refuses, and stays shut', () => {

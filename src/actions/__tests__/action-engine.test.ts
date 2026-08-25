@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { keyboardEvent } from '../../__tests__/fake-events.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { createActionEngine, runDeclarationWindow } from '../action-engine.js';
@@ -51,7 +52,7 @@ test.describe('running an action', () => {
     });
     expect(engine.aggregated().error).not.toBeNull();
 
-    await engine.run('save', () => {});
+    await engine.run('save', noop);
     expect(engine.aggregated().error).toBeNull();
   });
 
@@ -236,13 +237,13 @@ test.describe('subscription', () => {
       notifications += 1;
     });
 
-    await engine.run('save', () => {});
+    await engine.run('save', noop);
 
     // Focus restoration watches the running → idle edge, so a coalesced notification loses it.
     expect(notifications).toBeGreaterThanOrEqual(2);
 
     unsubscribe();
-    await engine.run('save', () => {});
+    await engine.run('save', noop);
     expect(notifications).toBeGreaterThanOrEqual(2);
   });
 });

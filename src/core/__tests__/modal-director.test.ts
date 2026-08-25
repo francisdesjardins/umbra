@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import {
   MODAL_LIFECYCLE_SEQUENCE,
   MODAL_LIFECYCLE_STEPS,
@@ -62,9 +63,9 @@ test.describe('what each step reads', () => {
 
     expect(rebuilds('focus.sync', { phase: 'closing' })).toBe(true);
     for (const changed of [
-      { onKeyDown: () => {} },
+      { onKeyDown: noop },
       // The same hazard from a second direction: a *controlled* surface re-renders on its owner.
-      { onDismissRequest: () => {} },
+      { onDismissRequest: noop },
       { isPreparing: true },
       { dismissKey: 'Enter' },
       { containFocus: true },
@@ -98,10 +99,10 @@ test.describe('what each step reads', () => {
     for (const step of keydown) {
       expect(inputsOf(step, BASE), `${step} diverged`).toEqual(inputsOf(first, BASE));
     }
-    expect(rebuilds('attachDialogKeydown', { onKeyDown: () => {} })).toBe(true);
+    expect(rebuilds('attachDialogKeydown', { onKeyDown: noop })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { dismissKey: false })).toBe(true);
     // The listeners call it, so a stale `onDismissRequest` would answer an owner's fresh state.
-    expect(rebuilds('attachDialogKeydown', { onDismissRequest: () => {} })).toBe(true);
+    expect(rebuilds('attachDialogKeydown', { onDismissRequest: noop })).toBe(true);
     expect(rebuilds('attachDialogKeydown', { containFocus: true })).toBe(false);
   });
 
@@ -110,7 +111,7 @@ test.describe('what each step reads', () => {
     // what they are rebuilt *with*. A field dropped here disables a dismissal rule in all three
     // listeners at once, and every step still attaches — so nothing else in this file would fail.
     const engine = createActionEngine<void>('director-options');
-    const onKeyDown = () => {};
+    const onKeyDown = noop;
     const onDismissRequest = () => {
       return false;
     };
@@ -167,8 +168,8 @@ test.describe('what each step reads', () => {
       phase: 'opening',
       isPreparing: true,
       onError: undefined,
-      prepare: () => {},
-      onKeyDown: () => {},
+      prepare: noop,
+      onKeyDown: noop,
       nonModal: true,
       primaryProperty: 'transform',
       exitDuration: 321,

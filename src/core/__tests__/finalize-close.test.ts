@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { noop } from '../../__tests__/noop.js';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { finalizeModalClose } from '../finalize-close.js';
 import { createModalStore } from '../modal-store.js';
@@ -21,10 +22,6 @@ const fakeDialog = (open: boolean) => {
       return closed;
     },
   };
-};
-
-const noop = () => {
-  return;
 };
 
 // `beginOpen` schedules a frame and `close` cancels it, and Node has neither function.

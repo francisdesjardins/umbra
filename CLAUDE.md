@@ -93,7 +93,7 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-17: **92.50% over 55 files**, against unit's **96.73%**. Never add them; re-measure both or neither — **and the
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-25: **91.61% over 55 files**, against unit's **96.66%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points behind, which is why
 **`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one
@@ -145,7 +145,7 @@ by hand.
 - **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. Order decides who answers the dismiss key, which is why `isForeground` matters beyond paint. The rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), the limits in the matrix.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useModal`.
-- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`, or name them once in `ModalRegistry`. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
+- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`, or name them once in `ModalRegistry` — `closesWith: 'save' | 'cancel'`, or `closesWith: { save: Doc; cancel: void }` to give each reason its own payload, which is then **required** where declared. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
 - **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and
   Solid ^1.9.0 as optional peers, each required only by its own binding and neither by `./vanilla` |
   Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. **The peer ranges
@@ -192,7 +192,7 @@ It exists because these facts were spread over five places that disagreed with e
 **inventorying the rows produced seven defects before a cell was written.** So a new compatibility
 fact goes in the table, not in prose here — and if it is about one module, in that module's JSDoc.
 
-Three things the vocabulary buys:
+Five things the vocabulary buys:
 
 - **The two kinds of ✗ are different facts.** `✗ platform` is a browser law; `✗ by design` is a
   refusal that owes a reason — carried in `why`, which the gate requires of it and of `~`. Neither is
@@ -201,11 +201,21 @@ Three things the vocabulary buys:
   that list _is_ the backlog, from the same data. A `TODO.md` would be a second answer that drifts.
 - **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and
   not the others. The enumeration reads the _state_, and the state says done, so in a note it would
-  reach a reader of the table and not the backlog. `yarn todo` lists caveats prefixed `?`.
+  reach a reader of the table and not the backlog. `yarn todo` lists caveats prefixed `?`. **A
+  caveat owes a `question` and a `nextStep`**, both gated: one nobody can name a next step for is a
+  `note`, which is what two of the first four turned out to be.
+- **`⏸ blocked` is not work and does not print as work.** A cell waiting on typedoc's peer range or
+  on a WebKit release is neither half-working nor fixable here, so it owes a `recheck` — what to look
+  at, and the ISO date someone last did — and `yarn todo` returns it in a **second** list. Filing
+  those beside real work is what made a ten-item backlog unfinishable by construction.
+- **Every open cell carries a `since`**, and `yarn todo` sorts by it and prints the age —
+  deliberately instead of a threshold on the count: six `~` for ten days reads exactly like six
+  closed and six opened.
 
 The gate checks that every option has a row, that no row names an option that no longer exists, that
-every cited test resolves to a real file and title, and that a refusal carries its `why`. It cannot
-check that the cited test proves the cell; that part stays human.
+every cited test resolves to a real file and title, that a refusal carries its `why`, that a
+`⏸` carries its `recheck`, and that a caveat carries both halves. It cannot check that the cited
+test proves the cell; that part stays human.
 
 ## Deeper Context
 
