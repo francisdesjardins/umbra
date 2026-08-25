@@ -280,9 +280,10 @@ export function useModal<TData = void, TReason extends string = string>(
 
   let dialogNode: ReactNode;
 
-  // Asked at placement rather than remembered, so a host that mounts after this hook first ran is
-  // still found — and a caller whose host moves is followed rather than stranded on the old node.
-  // `null` here is the un-portaled answer, which is why it doubles as the branch below.
+  // Asked at placement rather than at hook time, so a host mounted by the time this first portals
+  // is found. A host that changes identity *within* an era is deliberately not followed — see the
+  // era below and `PortalTarget`'s own contract. `null` here is the un-portaled answer, which is
+  // why it doubles as the branch below.
   //
   // Guarded on `isPortaled` rather than left to `resolvePortalHost`'s own `null` branch, because
   // the *argument* is the problem: `document.body` on a server pass throws where this binding

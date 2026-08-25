@@ -149,26 +149,6 @@ function containsAcrossRoots(dialog: HTMLDialogElement, element: Element): boole
 }
 
 /**
- * Lift an already-open modal dialog to the front of the top layer.
- *
- * Close-and-re-show is the only mechanism: the platform paints top-layer elements in the order
- * they were added and `z-index` does not apply between them. Three unavoidable consequences:
- *
- * - **The native `close` event still fires**, queued, so it arrives with `dialog.open` back to
- *   `true` — the only guard a listener has for telling a raise from a real close. Matters most in
- *   `umbra/vanilla`, where the listener is the caller's.
- * - **Focus is restored only when this dialog had it**, which mostly means a policy installed
- *   *late*: the first plan lifts every dialog bottom-first, and the bottom one has been up longest
- *   and is often the one being typed in. `stack-priority.ct.tsx` pins the caret. A dialog that did
- *   *not* hold it is put back in front by `showModal()`, which focuses whatever the engine picks —
- *   the case {@link isRaisingDialog} exists for, since only the coordinator knows where the user
- *   actually was inside it.
- * - **CSS keyed on `[open]` re-runs** — `@starting-style`, `dialog[open] { animation }`. The
- *   library's own entrance is phase-driven and unaffected.
- *
- * @returns `false` when there was nothing to lift.
- */
-/**
  * Depth, not a boolean: nothing nests raises today, and a counter costs one character to make that
  * assumption stop mattering if a plan ever lifts one dialog from inside another's teardown.
  */
@@ -194,6 +174,26 @@ export function isRaisingDialog(): boolean {
   return raiseDepth > 0;
 }
 
+/**
+ * Lift an already-open modal dialog to the front of the top layer.
+ *
+ * Close-and-re-show is the only mechanism: the platform paints top-layer elements in the order
+ * they were added and `z-index` does not apply between them. Three unavoidable consequences:
+ *
+ * - **The native `close` event still fires**, queued, so it arrives with `dialog.open` back to
+ *   `true` — the only guard a listener has for telling a raise from a real close. Matters most in
+ *   `umbra/vanilla`, where the listener is the caller's.
+ * - **Focus is restored only when this dialog had it**, which mostly means a policy installed
+ *   *late*: the first plan lifts every dialog bottom-first, and the bottom one has been up longest
+ *   and is often the one being typed in. `stack-priority.ct.tsx` pins the caret. A dialog that did
+ *   *not* hold it is put back in front by `showModal()`, which focuses whatever the engine picks —
+ *   the case {@link isRaisingDialog} exists for, since only the coordinator knows where the user
+ *   actually was inside it.
+ * - **CSS keyed on `[open]` re-runs** — `@starting-style`, `dialog[open] { animation }`. The
+ *   library's own entrance is phase-driven and unaffected.
+ *
+ * @returns `false` when there was nothing to lift.
+ */
 export function raiseDialog(dialog: HTMLDialogElement): boolean {
   if (!dialog.open) {
     return false;

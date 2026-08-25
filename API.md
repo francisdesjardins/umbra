@@ -1138,14 +1138,27 @@ function openWhenRegistered(id: string) {
     return () => {};
   }
   const stop = dialogManager.subscribe((event) => {
-    if (event.type === 'register' && event.id === id) {
-      stop();
+    if (event.id !== id) {
+      return;
+    }
+    if (event.type === 'register') {
       dialogManager.open(id);
+    }
+    if (event.type === 'open') {
+      stop();
     }
   });
   return stop; // call it to give up — a timeout, a route change, an aborted deep link
 }
 ```
+
+**Retire on `open`, not on `register`** — the branch that looks redundant is the one that works.
+A registration is not a promise that the modal stays: React's development double-mount tears the
+first one down and replaces it, so an open issued on the first `register` lands on a modal about to
+unmount, and a subscription already retired hears nothing when the second arrives. Waiting for the
+fact you actually wanted costs one branch and survives every cause of that shape. The playground's
+[deferred open](playground/src/pages/imperative/examples/deferred-open.tsx) is the same waiter with
+its reasoning next to it.
 
 ### createOpenRequest
 
