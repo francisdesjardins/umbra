@@ -2,7 +2,7 @@ import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
 import { AsyncOpenExample } from '@/pages/getting-started/examples/async-open';
 import { NoTransitionMessageExample } from '@/pages/getting-started/examples/no-transition-message';
 import { PrepareFailureExample } from '@/pages/getting-started/examples/prepare-failure';
-import { SimpleModalExample } from '@/pages/getting-started/examples/simple-modal';
+import { SimpleDialogExample } from '@/pages/getting-started/examples/simple-dialog';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
 export const GettingStartedPage = () => {
@@ -19,8 +19,8 @@ export const GettingStartedPage = () => {
           <ExampleCard
             title="Simple Dialog"
             description="Basic modal with open, close, and openAndWait."
-            codeKey="simple-modal"
-            example={<SimpleModalExample />}
+            codeKey="simple-dialog"
+            example={<SimpleDialogExample />}
           />
           <ExampleCard
             title="Async Open"

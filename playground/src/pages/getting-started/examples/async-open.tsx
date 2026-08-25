@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import { ContentTransition } from '@/entities/modal-template/ui/vanilla/shared/content/ContentTransition';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
+import { ContentTransition } from '@/entities/dialog-template/ui/vanilla/shared/content/ContentTransition';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
 import { AppButton } from '@/shared/ui/AppButton';
@@ -31,7 +31,7 @@ export function AsyncOpenExample() {
   // The shape a real `useQuery` gives you — swap the import, keep everything below.
   const { data, isFetching, isSuccess, refetch, invalidate } = useQuery(profileQuery);
 
-  const asyncModal = useMessageDialog({
+  const asyncDialog = useMessageDialog({
     id: MODAL_ID,
     // A string: the pending branch has no heading to point at, the loaded one is the fetched name.
     ariaLabel: 'Profile',
@@ -112,13 +112,13 @@ export function AsyncOpenExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={asyncModal.Dialog}>
+    <ExampleLayout result={result} modals={asyncDialog.Dialog}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--app-space-2)' }}>
         <AppButton
           variant="contained"
           size="small"
           onClick={async () => {
-            const [, closeResult] = await asyncModal.openAndWait();
+            const [, closeResult] = await asyncDialog.openAndWait();
             resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
           }}
         >

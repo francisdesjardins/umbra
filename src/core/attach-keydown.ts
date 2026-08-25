@@ -206,7 +206,7 @@ export function attachDialogKeydown(
  * modal is ordinary: `showModal()` has nowhere to put it when nothing in the content is
  * focusable, and content that swaps after opening drops whatever held it. Always prevented — the
  * browser must never close the dialog behind the store. Whether ESC then dismisses is decided by
- * the usual gate. Non-modal dialogs never fire it.
+ * the usual gate. Non-dialog dialogs never fire it.
  */
 export function attachDialogCancel(
   ctx: DialogDomContext,

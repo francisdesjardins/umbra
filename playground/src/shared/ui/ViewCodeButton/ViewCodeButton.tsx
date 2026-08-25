@@ -8,8 +8,8 @@ type ViewCodeButtonProps = {
 };
 
 export function ViewCodeButton({ codeKey }: ViewCodeButtonProps) {
-  const { setSelectedExample, codeModalOpen } = useCodePane();
-  const disabled = !codeKey || !codeModalOpen;
+  const { setSelectedExample, codeDialogOpen } = useCodePane();
+  const disabled = !codeKey || !codeDialogOpen;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -17,7 +17,7 @@ export function ViewCodeButton({ codeKey }: ViewCodeButtonProps) {
       return;
     }
     setSelectedExample(codeKey);
-    codeModalOpen();
+    codeDialogOpen();
   };
 
   return (

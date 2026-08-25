@@ -1,6 +1,6 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import {
   CONFIRM_MODAL_ID,
   FAILURE_MODAL_ID,
@@ -22,7 +22,7 @@ export function ServiceLayerExample() {
     deploymentService.getLastError
   );
 
-  const confirmModal = useMessageDialog({
+  const confirmDialog = useMessageDialog({
     id: CONFIRM_MODAL_ID,
     ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
     // A dialog, not an alertdialog: the user pressed the button that raised it.
@@ -56,7 +56,7 @@ export function ServiceLayerExample() {
     },
   });
 
-  const failureModal = useMessageDialog({
+  const dialogFailure = useMessageDialog({
     id: FAILURE_MODAL_ID,
     ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
     ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,
@@ -136,8 +136,8 @@ export function ServiceLayerExample() {
         result={null}
         modals={
           <>
-            {confirmModal.Dialog}
-            {failureModal.Dialog}
+            {confirmDialog.Dialog}
+            {dialogFailure.Dialog}
           </>
         }
       >

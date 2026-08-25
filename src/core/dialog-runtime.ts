@@ -53,7 +53,7 @@ export type ResolvedDialogOptions = {
   readonly isPortaled: boolean;
   /** Modal variant only; `undefined` means "decide from whether any action was drawn". */
   readonly dismissOnBackdropClick: boolean | undefined;
-  /** Non-modal variant only. */
+  /** Non-dialog variant only. */
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly dismissKey: HotkeyDef | false;

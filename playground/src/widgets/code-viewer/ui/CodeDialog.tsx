@@ -1,0 +1,92 @@
+import { Spinner } from '@/shared/ui/Spinner';
+import { AppIconButton } from '@/shared/ui/AppButton';
+import { CloseIcon, CodeIcon } from '@/shared/ui/icons';
+import styles from '@/widgets/code-viewer/ui/CodeDialog.module.css';
+import type { DialogHandle } from 'umbra/react';
+import { Suspense } from 'react';
+import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlockLazy';
+
+/**
+ * Highlighter language by suffix — `-styles` (CSS modules), `-html` (the microfrontend host);
+ * everything else, plain `.js` included, is TSX. Renaming past a suffix picks the wrong grammar.
+ */
+const languageForCodeKey = (codeKey: string) => {
+  if (codeKey.endsWith('-styles')) {
+    return 'css';
+  }
+  return codeKey.endsWith('-html') ? 'markup' : 'tsx';
+};
+
+/**
+ * The one busy state this panel has. Both waits land here — the source being fetched and the
+ * highlighter chunk arriving — because they are one wait to the reader, and two spinners handing
+ * off between two containers looks like a fault rather than a load.
+ */
+const Busy = () => {
+  return (
+    <div className={styles['emptyState']}>
+      {/* No live region: this unmounts when the code arrives, so a region on it would be born with
+          its text rather than updated, announcing nothing. The panel takes focus on open and is
+          named by its heading. */}
+      <span style={{ display: 'inline-flex', color: 'var(--app-flame)' }}>
+        <Spinner size={18} />
+      </span>
+      <span>Loading source…</span>
+    </div>
+  );
+};
+
+export const CodeDialogContent = ({
+  code,
+  codeKey,
+  handle,
+  isLoading,
+  title,
+  titleId,
+}: {
+  code: string;
+  codeKey: string;
+  handle: DialogHandle;
+  /** Still arriving — distinct from an empty `code`, which means the key names no sample. */
+  isLoading: boolean;
+  title: string;
+  /** What the panel's `ariaLabelledBy` points at; the reference is in `model/useCodeDialog.tsx`. */
+  titleId: string;
+}) => {
+  return (
+    <div className={styles['root']}>
+      <div className={styles['header']}>
+        <CodeIcon className={styles['headerIcon']} />
+        <div className={styles['titleRow']}>
+          <h2 id={titleId} className={styles['title']}>
+            {title}
+          </h2>
+          <span className={styles['keyBadge']}>{codeKey}</span>
+        </div>
+        <AppIconButton
+          size="small"
+          aria-label="Close"
+          onClick={() => {
+            handle.close('close');
+          }}
+        >
+          <CloseIcon />
+        </AppIconButton>
+      </div>
+
+      <div className={styles['body']}>
+        {code ? (
+          <Suspense fallback={<Busy />}>
+            <CodeBlock code={code} language={languageForCodeKey(codeKey)} />
+          </Suspense>
+        ) : isLoading ? (
+          <Busy />
+        ) : (
+          <div className={styles['emptyState']}>
+            <span>No code available</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

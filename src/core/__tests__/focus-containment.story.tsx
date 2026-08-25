@@ -321,7 +321,7 @@ export function EditableOnlyHarness() {
 /**
  * A modal with a **non-modal panel opened inside it**, where the recovery's scan can meet a dialog
  * that is not its own: `focusFirstAvailable` walks a plain `querySelectorAll` where every other
- * `focus-policy.ts` lookup uses `queryOwn`. Non-modal so the dead-space click can be made at all,
+ * `focus-policy.ts` lookup uses `queryOwn`. Non-dialog so the dead-space click can be made at all,
  * and only `Shift+Tab` discriminates — it scans from the end, where the nested button sits.
  */
 export function NestedPanelScanHarness() {

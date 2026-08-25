@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
  * (app → pages → widgets → entities → shared) and a slice is entered through its public entry. As
  * prose it did not hold — a sweep found two upward provider imports and thirty past a barrel.
  * **Two exemptions**: `?raw` imports are asset reads, the alternative being a registry regenerated
- * per example (step 2 of "Adding an Example"); `entities/modal-template` has **no public entry on
+ * per example (step 2 of "Adding an Example"); `entities/dialog-template` has **no public entry on
  * purpose**, a tree being the shape templates are copied out in and the namespace import saying
  * which flavour — a barrel would flatten that.
  */
@@ -25,7 +25,7 @@ const RANK: Readonly<Record<string, number>> = {
 };
 
 /** The one slice whose surface is its tree. */
-const NO_PUBLIC_ENTRY = 'modal-template';
+const NO_PUBLIC_ENTRY = 'dialog-template';
 
 function sourceFiles(): string[] {
   const found: string[] = [];

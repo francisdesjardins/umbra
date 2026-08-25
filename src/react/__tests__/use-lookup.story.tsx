@@ -5,10 +5,10 @@ import { useLookup } from '../use-lookup.js';
 
 /** `useLookup(id)` reactivity: DialogInfo values update with no manual query. */
 export function UseLookupHarness() {
-  const info = useLookup('reactive-modal');
+  const info = useLookup('reactive-dialog');
 
   const { Dialog, dialogManager } = useDialog<void, 'done'>({
-    id: 'reactive-modal',
+    id: 'reactive-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -29,7 +29,7 @@ export function UseLookupHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('reactive-modal');
+          dialogManager.open('reactive-dialog');
         }}
       >
         Open
@@ -45,7 +45,7 @@ export function UseLookupHarness() {
 
 /** An unregistered id: the null-object default, reactively. */
 export function UseLookupUnregisteredHarness() {
-  const info = useLookup('ghost-modal');
+  const info = useLookup('ghost-dialog');
 
   return (
     <div>
@@ -65,7 +65,7 @@ export function UseLookupUnregisteredHarness() {
  * clicks anywhere else — so the preparing window is as long as the test needs and never a race.
  */
 export function UseLookupPreparingHarness() {
-  const info = useLookup('preparing-modal');
+  const info = useLookup('preparing-dialog');
 
   // Built in the initializer so `arm`/`release` never change identity; re-armed per open, so
   // reopening prepares again instead of resolving instantly.
@@ -86,7 +86,7 @@ export function UseLookupPreparingHarness() {
   });
 
   const { Dialog, dialogManager } = useDialog<void, 'done'>({
-    id: 'preparing-modal',
+    id: 'preparing-dialog',
     prepare: () => {
       return gate.arm();
     },
@@ -117,7 +117,7 @@ export function UseLookupPreparingHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('preparing-modal');
+          dialogManager.open('preparing-dialog');
         }}
       >
         Open

@@ -135,7 +135,7 @@ try {
       '  void reason;',
       '});',
       '',
-      "const info = dialogManager.lookup('some-modal');",
+      "const info = dialogManager.lookup('some-dialog');",
       'export const template = info.exists ? info.template : undefined;',
       '// @ts-expect-error registration-time facts need narrowing on `exists`',
       'export const unguarded = info.template;',

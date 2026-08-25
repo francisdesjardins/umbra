@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  */
 export function ScrollLockHarness() {
   const { Dialog, dialogManager } = useDialog<void, 'done'>({
-    id: 'scroll-lock-modal',
+    id: 'scroll-lock-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -60,7 +60,7 @@ export function ScrollLockHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-modal panel</p>
+          <p>Non-dialog panel</p>
           <button
             onClick={() => {
               handle.close('done');
@@ -78,7 +78,7 @@ export function ScrollLockHarness() {
       <div style={{ height: '250vh' }}>
         <button
           onClick={() => {
-            dialogManager.open('scroll-lock-modal');
+            dialogManager.open('scroll-lock-dialog');
           }}
         >
           Open Dialog

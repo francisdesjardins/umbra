@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
+import * as SlideDialog from '@/entities/dialog-template/ui/vanilla/slide-dialog';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
@@ -110,7 +110,7 @@ export function GroceryListExample() {
                         borderRadius: 4,
                         border: '1px solid var(--slide-border)',
                         fontSize: 'var(--font-size-xs)',
-                        color: 'var(--modal-text-secondary)',
+                        color: 'var(--dialog-text-secondary)',
                       }}
                     >
                       {item.aisle}

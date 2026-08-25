@@ -44,7 +44,7 @@ node .claude/skills/dialog-debug/probe.mjs --mode trajectory --id slide-preset-d
 
 # Does toggling a structural prop while open tear down cleanly (not stuck)?
 node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Portal --non-modal
-node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Non-modal
+node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Non-dialog
 
 # The library's own lifecycle/manager logs during open/close.
 node .claude/skills/dialog-debug/probe.mjs --mode logs --id slide-preset-drawer
@@ -59,11 +59,11 @@ node .claude/skills/dialog-debug/probe.mjs --mode slide --id slide-preset-drawer
 | ---------------------- | ------------------------------------------------------------- |
 | `--mode`               | `slide` (default) · `trajectory` · `size` · `state` · `logs`  |
 | `--dir`                | `Left`/`Right`/`Top`/`Bottom` (default: all four for `slide`) |
-| `--non-modal`          | check the Non-modal box                                       |
+| `--non-modal`          | check the Non-dialog box                                      |
 | `--portal`             | check the Portal box                                          |
 | `--unit`               | `px`/`vw`/`vh`/`%` (size mode)                                |
 | `--width` / `--height` | numbers for the SIZE pane inputs                              |
-| `--toggle`             | `Non-modal` or `Portal` (state mode)                          |
+| `--toggle`             | `Non-dialog` or `Portal` (state mode)                         |
 | `--url`                | override the dev URL (skip port auto-detect)                  |
 | `--headed` / `--slow`  | show the browser / slow it down                               |
 

@@ -38,10 +38,12 @@ export type _PayloadNarrows = Assert<Equals<PayloadOf<'patient:merge'>, { patien
  * open carries whatever crossed the boundary.
  */
 export type _NoPayloadIsUnknown = Assert<Equals<PayloadOf<'session-warning'>, unknown>>;
-export type _UndeclaredPayloadIsUnknown = Assert<Equals<PayloadOf<'someone-elses-modal'>, unknown>>;
+export type _UndeclaredPayloadIsUnknown = Assert<
+  Equals<PayloadOf<'someone-elses-dialog'>, unknown>
+>;
 
 /** An undeclared id keeps the open answer, which lets a project host modals it does not own. */
-export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-modal'>, string>>;
+export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-dialog'>, string>>;
 
 export function _manager() {
   dialogManager.open('delete-account');
@@ -58,7 +60,7 @@ export function _manager() {
   dialogManager.close('delete-account', 'extend');
 
   // An id nobody declared still works: a third-party panel, a harness, a computed name.
-  dialogManager.open('some-other-modal');
+  dialogManager.open('some-other-dialog');
 }
 
 /** Inferred from the id literal: no type argument, and both halves come back typed. */
@@ -163,7 +165,7 @@ export function _requestOpenChecksThePayload() {
   dialogManager.requestOpen('patient:merge', createOpenRequest(undefined, { source: 'nav' }));
   dialogManager.requestOpen('patient:merge', createOpenRequest());
   void dialogManager.requestOpenAndWait('patient:merge', createOpenRequest(undefined, {}));
-  dialogManager.requestOpen('someone-elses-modal', createOpenRequest(undefined, { source: 'x' }));
+  dialogManager.requestOpen('someone-elses-dialog', createOpenRequest(undefined, { source: 'x' }));
 }
 
 /**

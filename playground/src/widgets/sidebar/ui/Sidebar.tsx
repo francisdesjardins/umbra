@@ -36,13 +36,13 @@ const NAV_GROUPS: readonly NavGroup[] = [
     label: 'Learn',
     items: [
       { path: '/getting-started', label: 'Getting Started', icon: PlayArrowIcon },
-      { path: '/modal-actions', label: 'Dialog Actions', icon: SettingsIcon },
+      { path: '/dialog-actions', label: 'Dialog Actions', icon: SettingsIcon },
     ],
   },
   {
     label: 'Patterns',
     items: [
-      { path: '/slide-dialog', label: 'Slide Modals', icon: ViewSidebarIcon },
+      { path: '/slide-dialog', label: 'Slide Dialogs', icon: ViewSidebarIcon },
       { path: '/stacking', label: 'Stacking', icon: WidgetsIcon },
       { path: '/imperative', label: 'Imperative Control', icon: TuneIcon },
       { path: '/interop', label: 'Interop', icon: CodeIcon },

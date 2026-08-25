@@ -39,7 +39,7 @@ export function NonModalCustomDismissKeyHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-modal custom dismiss</p>
+          <p>Non-dialog custom dismiss</p>
           <button
             onClick={() => {
               handle.close('close');

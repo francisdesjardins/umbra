@@ -25,7 +25,7 @@ declare module 'umbra' {
     'prepare-failure': { closesWith: 'close' };
     'no-transition-message': { closesWith: 'confirm' };
     'confirm-hotkeys': { closesWith: 'cancel' | 'confirm' };
-    'delete-item-modal': { closesWith: 'cancel' | 'delete' };
+    'delete-item-dialog': { closesWith: 'cancel' | 'delete' };
     'focus-on-open': { closesWith: 'delete' | 'keep' };
     'per-action-state': { closesWith: 'draft' | 'publish' | 'cancel' };
     'reactive-demo': { closesWith: 'cancel' | 'confirm' };

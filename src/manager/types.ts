@@ -89,7 +89,7 @@ export type DialogLookup = {
    */
   getOpen(filter?: 'modal' | 'non-modal'): RegisteredDialogInfo[];
 
-  // ── Per-modal queries ───────────────────────────────────────────────────
+  // ── Per-dialog queries ───────────────────────────────────────────────────
 
   /** Whether a specific dialog is on screen, exit animation included. */
   isVisible(id: DialogId): boolean;

@@ -3,7 +3,7 @@
  * routes that index things — `/stories` and `/ui-templates` — so one module fetched everything.
  * **Groups are cut by where a sample comes from, not how its key is spelled** — `vanilla-form` is a
  * `/ui-integrations` example, `vanilla-msg-title` a template. Add a `?raw` import to `examples.ts`
- * (a route's own), `templates.ts` (`entities/modal-template`, `shared/*`) or `stories.ts` (`*.story.tsx`).
+ * (a route's own), `templates.ts` (`entities/dialog-template`, `shared/*`) or `stories.ts` (`*.story.tsx`).
  */
 const LOADERS = {
   examples: async () => {

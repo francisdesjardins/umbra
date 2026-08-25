@@ -1,7 +1,7 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
 import { CloseThemAllExample } from '@/pages/stacking/examples/close-them-all';
 import { StackPriorityExample } from '@/pages/stacking/examples/stack-priority';
-import { StackedModalsExample } from '@/pages/stacking/examples/stacked-modals';
+import { StackedDialogsExample } from '@/pages/stacking/examples/stacked-dialogs';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
 export const StackingPage = () => {
@@ -18,8 +18,8 @@ export const StackingPage = () => {
           <ExampleCard
             title="One Escape, one modal"
             description="Three modals of different kinds, each rendered inside the one below it — which is how stacking actually happens, since a dialog in the top layer swallows every click outside itself. All three declare Enter with a different meaning, and only the level in front hears it. Press Escape three times and watch the stack unwind one modal per press."
-            codeKey="stacked-modals"
-            example={<StackedModalsExample />}
+            codeKey="stacked-dialogs"
+            example={<StackedDialogsExample />}
           />
           <ExampleCard
             title="Who is in front is a decision, not a race"

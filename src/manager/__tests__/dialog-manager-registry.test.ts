@@ -133,7 +133,7 @@ test.describe('event emission', () => {
 
     const lateEvents: DialogManagerEvent[] = [];
     dm.subscribe(() => {
-      // A subscriber that lazily attaches per-modal tracking on the first event it sees.
+      // A subscriber that lazily attaches per-dialog tracking on the first event it sees.
       dm.subscribe((event) => {
         lateEvents.push(event);
       });

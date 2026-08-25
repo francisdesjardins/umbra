@@ -980,7 +980,7 @@ export const SolidOpenOrderApp = (): JSX.Element => {
 /**
  * `containFocus`, `dismissOnClickOutside`, a custom `dismissKey`, `prepare` aborted by its own close,
  * and `onOpenRequest` — one app rather than five, since they make the same claim (that these reach
- * the shared `attach*` functions from this binding's effects), each with its own probe. Non-modal:
+ * the shared `attach*` functions from this binding's effects), each with its own probe. Non-dialog:
  * `containFocus` is the Tab wrap `show()` does not give, and the union rejects the pair on a modal.
  */
 function NonModalOptionsApp(): Built {
@@ -1112,7 +1112,7 @@ export const SolidNonModalOptionsApp = (): JSX.Element => {
 
 /**
  * `reconcileOpen` from a Solid signal — a controlled `open` prop, with `createEffect` where React
- * writes `useEffect`. Non-modal, so the buttons driving the signal stay reachable outside.
+ * writes `useEffect`. Non-dialog, so the buttons driving the signal stay reachable outside.
  */
 function ReconcileApp(): Built {
   const [open, setOpen] = createSignal(false);

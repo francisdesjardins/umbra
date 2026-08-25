@@ -197,6 +197,6 @@ export type ActionFactory<TData = never, TReason extends string = string> = {
 
 /**
  * Per-action state. `isRunning` is **this** action's — the object it hangs on says so — while the
- * modal-wide aggregate is `hasRunningAction`, a bare flag having to name its own scope.
+ * dialog-wide aggregate is `hasRunningAction`, a bare flag having to name its own scope.
  */
 export type ActionState = { isRunning: boolean; error: Error | null };

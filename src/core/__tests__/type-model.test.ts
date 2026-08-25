@@ -214,7 +214,7 @@ const bogusBackdrop: DialogVariant = { nonModal: true, dismissOnBackdropClick: t
 const bogusClickOutside: DialogVariant = { nonModal: false, dismissOnClickOutside: true };
 
 // An alertdialog is modal by definition, so the non-modal branch offers `'dialog'` alone.
-const modalAlert: DialogVariant = { role: 'alertdialog' };
+const dialogAlert: DialogVariant = { role: 'alertdialog' };
 const nonModalPlain: DialogVariant = { nonModal: true, role: 'dialog' };
 
 // @ts-expect-error an alertdialog is modal by definition — the non-modal branch has no such role
@@ -225,7 +225,7 @@ test.describe('type model', () => {
     // The assertions are the `@ts-expect-error` directives above: an unused one fails the build.
     expect(dialogVariant.dismissOnBackdropClick).toBe(true);
     expect(nonModalVariant.nonModal).toBe(true);
-    expect(modalAlert.role).toBe('alertdialog');
+    expect(dialogAlert.role).toBe('alertdialog');
     expect(nonModalPlain.role).toBe('dialog');
     expect([bogusBackdrop, bogusClickOutside, bogusAlert]).toHaveLength(3);
   });

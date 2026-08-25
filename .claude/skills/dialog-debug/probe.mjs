@@ -19,12 +19,12 @@
  *   size        For every (direction × mode) combo, set width/height/unit and report the
  *               dialog's measured box so you can see which combos respond to the SIZE pane.
  *   state       Open, then toggle a structural prop while open; report whether it tore down
- *               cleanly (not stuck open) and can reopen. --toggle Non-modal|Portal.
+ *               cleanly (not stuck open) and can reopen. --toggle Non-dialog|Portal.
  *   logs        Enable `dialog:log=*`, run a small open/close/toggle sequence, print the
  *               library's own lifecycle/manager logs (register/open/close/teardown).
  *
  * Flags: --dir Left|Right|Top|Bottom  --non-modal  --portal  --unit px|vw|vh|%
- *        --width N  --height N  --toggle Non-modal|Portal  --url <url>  --headed  --slow
+ *        --width N  --height N  --toggle Non-dialog|Portal  --url <url>  --headed  --slow
  */
 import { chromium } from 'playwright';
 

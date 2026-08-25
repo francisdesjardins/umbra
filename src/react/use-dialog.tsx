@@ -46,7 +46,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  * named**. See `DismissReason`.
  * @example
  * const { openAndWait, Dialog } = useDialog<void, 'ok'>({
- *   id: 'my-modal',
+ *   id: 'my-dialog',
  *   render: ({ action }) => <button {...action('ok')}>OK</button>,
  *   onClose: (result) => console.log(result.reason),
  * });

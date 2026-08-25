@@ -1,5 +1,5 @@
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { AppButton } from '@/shared/ui/AppButton';
@@ -15,7 +15,7 @@ const resultStore = createResultStore();
 // ── Inner component — no {Dialog} in JSX ────────────────────────────────────
 
 function ConfirmDialog() {
-  const confirmModal = useMessageDialog({
+  const confirmDialog = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
@@ -51,7 +51,7 @@ function ConfirmDialog() {
         variant="contained"
         size="small"
         onClick={async () => {
-          const [, closeResult] = await confirmModal.openAndWait();
+          const [, closeResult] = await confirmDialog.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
@@ -63,7 +63,7 @@ function ConfirmDialog() {
 
 // ── Example wraps everything in DialogOutlet ────────────────────────────────
 
-export function ModalOutletExample() {
+export function DialogOutletExample() {
   const { result } = useStore(resultStore);
 
   return (

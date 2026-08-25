@@ -1,5 +1,5 @@
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
@@ -96,11 +96,11 @@ export function SlideCornerToastExample() {
             width: 'min(86vw, 360px)',
             margin: 16,
             borderRadius: 8,
-            border: '1px solid var(--modal-border)',
-            background: 'var(--modal-bg)',
-            color: 'var(--modal-text)',
+            border: '1px solid var(--dialog-border)',
+            background: 'var(--dialog-bg)',
+            color: 'var(--dialog-text)',
             fontFamily: 'var(--font-family)',
-            boxShadow: 'var(--modal-shadow)',
+            boxShadow: 'var(--dialog-shadow)',
             overflow: 'hidden',
           }}
         >
@@ -143,7 +143,7 @@ export function SlideCornerToastExample() {
                 style={{
                   fontFamily: 'monospace',
                   fontSize: 'var(--font-size-xs)',
-                  color: 'var(--modal-text-secondary)',
+                  color: 'var(--dialog-text-secondary)',
                 }}
               >
                 {isPaused
@@ -160,7 +160,7 @@ export function SlideCornerToastExample() {
               style={{
                 border: 'none',
                 background: 'transparent',
-                color: 'var(--modal-text-secondary)',
+                color: 'var(--dialog-text-secondary)',
                 cursor: 'pointer',
                 padding: 'var(--app-space-1)',
                 marginTop: -4,
@@ -197,7 +197,7 @@ export function SlideCornerToastExample() {
           </div>
           {/* The timer made visible — otherwise "it pauses on hover" is a claim, not a demo.
               A track and a scaled fill: three lines of CSS where a component library ships a bar. */}
-          <div aria-hidden style={{ height: 3, background: 'var(--modal-border)' }}>
+          <div aria-hidden style={{ height: 3, background: 'var(--dialog-border)' }}>
             <div
               style={{
                 height: '100%',

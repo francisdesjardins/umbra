@@ -42,7 +42,7 @@ specifier if they prefer a single import path.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`DialogOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Dialog}` in JSX.
 
-> **Note:** For reference UI component implementations, see `playground/src/entities/modal-template/ui/` — `vanilla/` depends on nothing, `mui/` exposes the same component names under Material UI.
+> **Note:** For reference UI component implementations, see `playground/src/entities/dialog-template/ui/` — `vanilla/` depends on nothing, `mui/` exposes the same component names under Material UI.
 
 ---
 
@@ -334,7 +334,7 @@ exhaustive over `'confirm' | 'cancel' | 'dismiss'`. The same shape gives a templ
 import { useDialog } from 'umbra/react';
 
 const modal = useDialog<void, 'confirm' | 'cancel'>({
-  id: 'my-modal',
+  id: 'my-dialog',
   ariaLabel: 'Confirm removal',
   render: ({ isPreparing, handle, action, error }) => (
     <div>
@@ -473,9 +473,9 @@ The last row is why: such a page keeps its gutter through `overflow: hidden`, so
 }
 ```
 
-Non-modal dialogs never lock scrolling.
+Non-dialog dialogs never lock scrolling.
 
-#### Non-modal positioning: contained vs. portal
+#### Non-dialog positioning: contained vs. portal
 
 A non-modal dialog never enters the top layer, so where it anchors depends on `portal`:
 
@@ -571,7 +571,7 @@ const panel = useSlideDialog({ id: 'fast-panel', direction: 'left', animation: N
 
 **Headless** message modal hook. Provides modal lifecycle and animation. The hook exports **no UI components** — users provide their own layout, title, footer, etc. in the `render` callback. Sizing constraints (min/max width, height) are user-land concerns — apply them to your content wrapper inside `render`.
 
-> **Reference implementations:** For ready-made MUI components (`MessageDialog.DefaultLayout`, `MessageDialog.Title`, `MessageDialog.Content`, `MessageDialog.Header`, `MessageDialog.Footer`, `MessageDialog.Icon`), see `playground/src/entities/modal-template/ui/mui/message-dialog/`. For `Shared.OverflowContainer`, see `playground/src/entities/modal-template/ui/mui/shared/content/OverflowContainer.tsx`. The `OverflowContainer` sets a `--scrollbar-width` CSS custom property and exposes two props:
+> **Reference implementations:** For ready-made MUI components (`MessageDialog.DefaultLayout`, `MessageDialog.Title`, `MessageDialog.Content`, `MessageDialog.Header`, `MessageDialog.Footer`, `MessageDialog.Icon`), see `playground/src/entities/dialog-template/ui/mui/message-dialog/`. For `Shared.OverflowContainer`, see `playground/src/entities/dialog-template/ui/mui/shared/content/OverflowContainer.tsx`. The `OverflowContainer` sets a `--scrollbar-width` CSS custom property and exposes two props:
 
 - `sx` – base styles forwarded to the underlying `Box` (replaces the previous
   `slotProps` pattern). `maxHeight` defaults to `sizes.maxHeight` but can be
@@ -617,7 +617,7 @@ if (result?.reason === 'confirm') {
 
 **Headless** slide-in panel hook with direction-based animation and positioning. The hook exports **no UI components** — users provide their own layout in the `render` callback.
 
-> **Reference implementations:** For ready-made MUI components (`SlideDialog.DefaultLayout`, `SlideDialog.Title`, `SlideDialog.Content`), see `playground/src/entities/modal-template/ui/mui/slide-dialog/`. These are **not** library exports — copy them into your project or write your own.
+> **Reference implementations:** For ready-made MUI components (`SlideDialog.DefaultLayout`, `SlideDialog.Title`, `SlideDialog.Content`), see `playground/src/entities/dialog-template/ui/mui/slide-dialog/`. These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
 import { useSlideDialog } from 'umbra/react';
@@ -799,11 +799,11 @@ boundary, where the owner may refuse; use this one inside it.
 
 ## Content Helpers
 
-> **Playground reference implementations only.** The `Content.*` components (`Content.Message`, `Content.Heading`, `Content.Detail`, `Content.Hint`, `Content.DetailList`, `Content.AlertContent`, `Content.Section`) are **not** exported from the library. They are available as reference implementations in `playground/src/entities/modal-template/ui/mui/shared/content/`. Copy them into your project or write your own typography/content components.
+> **Playground reference implementations only.** The `Content.*` components (`Content.Message`, `Content.Heading`, `Content.Detail`, `Content.Hint`, `Content.DetailList`, `Content.AlertContent`, `Content.Section`) are **not** exported from the library. They are available as reference implementations in `playground/src/entities/dialog-template/ui/mui/shared/content/`. Copy them into your project or write your own typography/content components.
 
 ```tsx
 // These are NOT library imports — copy from playground or write your own
-// import { Content } from 'playground/src/entities/modal-template/ui/mui/shared/content';
+// import { Content } from 'playground/src/entities/dialog-template/ui/mui/shared/content';
 
 // Simple helpers - accept children and optional sx prop
 <Content.Message>Are you sure?</Content.Message>
@@ -1253,15 +1253,15 @@ const dm = createDialogManager(); // its own registry, stack and scroll-lock cla
 ```
 
 A modal already knows which instance it belongs to: `useDialog` returns it as `dialogManager`, and
-that is what cross-modal calls inside a provider should use rather than the imported singleton.
+that is what cross-dialog calls inside a provider should use rather than the imported singleton.
 
 ### lookup — Query API
 
 Overloaded method for querying modal state. No optional chaining needed — `lookup(id)` always returns a valid `DialogInfo` (null-object default for unregistered ids).
 
 ```typescript
-// Per-modal query — always returns DialogInfo (never undefined)
-const info = dialogManager.lookup('my-modal');
+// Per-dialog query — always returns DialogInfo (never undefined)
+const info = dialogManager.lookup('my-dialog');
 info.exists; // true if registered, false otherwise
 info.isVisible; // true if phase !== 'closed'
 info.isForeground; // true if this is the dialog in front — see below
@@ -1279,10 +1279,10 @@ all.getOpen('non-modal'); // DialogInfo[] — only dialog.show() dialogs
 all.getClosed(); // DialogInfo[] — registered but closed
 all.getForeground(); // DialogInfo | undefined
 all.getRegisteredCount(); // total registered modals
-all.get('my-modal'); // same as lookup('my-modal')
-all.exists('my-modal'); // true if registered
-all.isVisible('my-modal'); // true if open
-all.isForeground('my-modal'); // true if this is the dialog in front
+all.get('my-dialog'); // same as lookup('my-dialog')
+all.exists('my-dialog'); // true if registered
+all.isVisible('my-dialog'); // true if open
+all.isForeground('my-dialog'); // true if this is the dialog in front
 
 // Counts and existence checks derive from the arrays:
 all.getOpen().length; // open count
@@ -1319,7 +1319,7 @@ first — an unregistered modal has none:
 | `nonModal`                 | `boolean` | Whether opened with `dialog.show()`                                                                                       |
 
 ```typescript
-const info = dialogManager.lookup('my-modal');
+const info = dialogManager.lookup('my-dialog');
 if (info.exists) {
   info.template; // string — no `?? ''` needed
 }
@@ -1578,7 +1578,7 @@ Proven on all three bindings, and measuring them turned up two things inference 
 | a live region rendered inside `render` announces its first content | ✗ platform | Screen readers announce a live region’s _changes_; a region inserted into the accessibility tree already holding its text is the case they miss or announce inconsistently — and `render` mounts its content in the same pass that shows the `<dialog>`, so a `role="status"` in there is born full. The same fact reaches every binding: `umbra/vanilla` markup inside a closed dialog sits under `display: none`, out of the tree, and becomes an insertion when it opens. The pattern that works is structural — a persistent, visually hidden region **outside** the dialog, written to at open time. The playground’s `useAnnouncer` (shared/lib) is that pattern, and the corner toast runs it; the library deliberately ships nothing here, for the same reason `role: "status"` is not on the option surface. |
 | a scrollable, control-less region inside a dialog stays out of the tab order | ✗ platform | Chromium and Firefox put a scroller with no focusable child into the tab order themselves — without that stop a keyboard user could never scroll the text, which is WCAG 2.1.1 applied by the engine. WebKit does not, so a dialog relying on the engines has scrollable text one browser’s keyboard cannot reach. The norm is to declare it — `tabindex="0"`, `role="region"`, an accessible name, applied only while the content actually overflows — which the reference templates’ content areas all carry through `useScrollRegion`. The library’s half is indirect and real: an explicit `tabindex` is what makes the region visible to the focus scan (the wrap, the Tab recovery, the reclaim floor), where an engine-granted stop carries no attribute a selector could name. |
 | the library’s backdrop survives forced colors | ✗ platform | Forced-colors mode (Windows High Contrast) strips author backgrounds and box-shadows: `--dialog-backdrop` is replaced by the UA’s own system scrim, and a surface drawn by shadow alone loses its silhouette entirely. Measured under emulation on the playground: a translucent system wash where the 0.7 black was, `box-shadow: none` on every surface, the focus ring forced to the system Highlight — and every reference template still delimited, because each carries a real `1px` border on the edge that matters (the same border discipline the contrast pass required for 1.4.11). The rule for a consumer is one sentence: give the dialog’s surface a border and let the mode recolour it; a shadow is decoration there, never the outline. |
-| `aria-modal` written onto the `<dialog>` | ✗ by design | The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-modal` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build. |
+| `aria-dialog` written onto the `<dialog>` | ✗ by design | The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-dialog` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build. |
 | installing a policy over dialogs already open is minimal | ✓ | Seeded at install from the stack as it already stands, so the first plan is a plan rather than a rebuild. Sound only there, and that is the only place it runs: `syncStackOrder` is dormant until a policy exists, so nothing has raised anything and the top layer **is** the open order the snapshot already carries. Against an empty `current`, `planRaises` returns every open modal dialog by its own arithmetic. **Measured on three dialogs in an order the policy actually changes** — opened high, mid, low against a policy wanting the reverse: three round-trips before, two after, and the one saved is the dialog that is already where re-showing the two above it will leave it. **The earlier reading of zero either way was the measurement, not the code**: `close()` queues its event, so a synchronous read after the install returns an empty array about half the time while the raises have already happened. The test polls for it. Installing at start-up still costs nothing and remains the advice. |
 | the adopted stylesheet reaches a dialog inside a shadow root | ✓ | `adoptedStyleSheets` does not cross a shadow boundary, so the sheet is adopted per **root** rather than per document — `showDialog` adopts into `dialog.getRootNode()` on every open, idempotent. Without it the dialog shows the UA backdrop, measured at `rgba(0, 0, 0, 0.1)`. |
 | one Escape closes only the dialog it was pressed in | ✓ | A modal opened from inside another renders its `<dialog>` in that subtree, so every event bubbles through the one underneath. `isOwnEventTarget` and `queryOwn` scope both the keydown and the hotkey dispatch. |

@@ -87,7 +87,7 @@ test.describe('harness isolation', () => {
     for (const binding of UNWRAPPED_BINDINGS) {
       expect(
         judged[binding],
-        `no ${binding} harness matched the modal-constructor pattern`
+        `no ${binding} harness matched the dialog-constructor pattern`
       ).toBeGreaterThan(0);
     }
   });

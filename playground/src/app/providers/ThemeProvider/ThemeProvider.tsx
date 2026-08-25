@@ -1,4 +1,4 @@
-import { colors } from '@/entities/modal-template/ui/shared/tokens';
+import { colors } from '@/entities/dialog-template/ui/shared/tokens';
 import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { ThemeContext } from '@/shared/lib/theme-context';
@@ -40,8 +40,8 @@ const applyMode = (mode: Mode): void => {
   const root = document.documentElement;
   root.setAttribute('data-color-scheme', mode);
   root.style.colorScheme = mode;
-  const bg = mode === 'dark' ? colors.modalBgDark : colors.modalBgLight;
-  root.style.setProperty('--modal-bg', bg);
+  const bg = mode === 'dark' ? colors.dialogBgDark : colors.dialogBgLight;
+  root.style.setProperty('--dialog-bg', bg);
   root.style.setProperty('--slide-bg', bg);
   root.style.setProperty('--form-bg', bg);
 };

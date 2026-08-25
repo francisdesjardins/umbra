@@ -1388,9 +1388,9 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     why: 'Forced-colors mode (Windows High Contrast) strips author backgrounds and box-shadows: `--dialog-backdrop` is replaced by the UA’s own system scrim, and a surface drawn by shadow alone loses its silhouette entirely. Measured under emulation on the playground: a translucent system wash where the 0.7 black was, `box-shadow: none` on every surface, the focus ring forced to the system Highlight — and every reference template still delimited, because each carries a real `1px` border on the edge that matters (the same border discipline the contrast pass required for 1.4.11). The rule for a consumer is one sentence: give the dialog’s surface a border and let the mode recolour it; a shadow is decoration there, never the outline.',
   },
   {
-    fact: '`aria-modal` written onto the `<dialog>`',
+    fact: '`aria-dialog` written onto the `<dialog>`',
     state: 'no-by-design',
-    why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-modal` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',
+    why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-dialog` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',

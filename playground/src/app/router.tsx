@@ -53,14 +53,14 @@ const apiCategoryRoute = createRoute({
   }, 'ApiCategoryPage'),
 });
 
-const modalActionsRoute = createRoute({
+const dialogActionsRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
   },
-  path: '/modal-actions',
+  path: '/dialog-actions',
   component: lazyRouteComponent(() => {
-    return import('@/pages/modal-actions');
-  }, 'ModalActionsPage'),
+    return import('@/pages/dialog-actions');
+  }, 'DialogActionsPage'),
 });
 
 const slideDialogRoute = createRoute({
@@ -176,7 +176,7 @@ const warzoneRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   gettingStartedRoute,
-  modalActionsRoute,
+  dialogActionsRoute,
   apiRoute,
   apiCategoryRoute,
   slideDialogRoute,

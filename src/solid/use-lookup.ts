@@ -24,11 +24,11 @@ export function useLookup(id: DialogId): Accessor<DialogInfo> {
 
   return () => {
     // Linear scan — n is always tiny (1-3 open modals)
-    const openModal = snapshot().openDialogs.find((d) => {
+    const openDialog = snapshot().openDialogs.find((d) => {
       return d.id === id;
     });
-    if (openModal) {
-      return openModal;
+    if (openDialog) {
+      return openDialog;
     }
 
     // Closed or unregistered — derive from imperative lookup

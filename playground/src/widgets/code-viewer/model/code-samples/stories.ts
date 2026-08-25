@@ -30,9 +30,9 @@ import storyActionsErrorSrc from 'umbra/actions/__tests__/use-dialog-actions/err
 import storyActionsHotkeySrc from 'umbra/actions/__tests__/use-dialog-actions/hotkey-controller.story.tsx?raw';
 import storyActionsDefinitionSrc from 'umbra/actions/__tests__/use-dialog-actions/definition-controller.story.tsx?raw';
 import storyFocusOnOpenSrc from 'umbra/actions/__tests__/use-dialog-actions/focus-on-open.story.tsx?raw';
-import storyStackedModalsSrc from 'umbra/react/__tests__/use-dialog/stacked-modals.story.tsx?raw';
+import storyStackedDialogsSrc from 'umbra/react/__tests__/use-dialog/stacked-dialogs.story.tsx?raw';
 import storyNestedHotkeyScopeSrc from 'umbra/react/__tests__/use-dialog/nested-hotkey-scope.story.tsx?raw';
-import storyFocusUnderAnotherModalSrc from 'umbra/react/__tests__/use-dialog/focus-under-another-modal.story.tsx?raw';
+import storyFocusUnderAnotherDialogSrc from 'umbra/react/__tests__/use-dialog/focus-under-another-dialog.story.tsx?raw';
 import storyEscWithoutFocusSrc from 'umbra/react/__tests__/use-dialog/esc-without-focus.story.tsx?raw';
 import storyStrandedFocusSrc from 'umbra/core/__tests__/stranded-focus.story.tsx?raw';
 import storyApplyStyleSrc from 'umbra/core/__tests__/apply-style.story.tsx?raw';
@@ -43,31 +43,31 @@ import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
 import storyVanillaBindSrc from 'umbra/vanilla/__tests__/bind-dialog.story.tsx?raw';
 import storySolidAppSrc from 'umbra/solid/__tests__/solid-app.ts?raw';
-import storySolidModalSrc from 'umbra/solid/__tests__/solid-dialog.story.tsx?raw';
+import storySolidDialogSrc from 'umbra/solid/__tests__/solid-dialog.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-dialog/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-dialog/busy-while-preparing.story.tsx?raw';
 import storyRenderPhaseSrc from 'umbra/react/__tests__/use-dialog/render-phase.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-dialog/styling-surface.story.tsx?raw';
 import storyActionsFocusSrc from 'umbra/actions/__tests__/use-dialog-actions/focus-restoration.story.tsx?raw';
 import storyActionsDismissCollisionSrc from 'umbra/actions/__tests__/use-dialog-actions/dismiss-key-collision.story.tsx?raw';
-import storyActionsActionBasicSrc from 'umbra/actions/__tests__/use-dialog-actions/modal-action-basic.story.tsx?raw';
-import storyActionsCustomHandlerSrc from 'umbra/actions/__tests__/use-dialog-actions/modal-action-custom-handler.story.tsx?raw';
-import storyActionsActionHotkeySrc from 'umbra/actions/__tests__/use-dialog-actions/modal-action-hotkey.story.tsx?raw';
-import storyActionsActionMultipleSrc from 'umbra/actions/__tests__/use-dialog-actions/modal-action-multiple.story.tsx?raw';
+import storyActionsActionBasicSrc from 'umbra/actions/__tests__/use-dialog-actions/dialog-action-basic.story.tsx?raw';
+import storyActionsCustomHandlerSrc from 'umbra/actions/__tests__/use-dialog-actions/dialog-action-custom-handler.story.tsx?raw';
+import storyActionsActionHotkeySrc from 'umbra/actions/__tests__/use-dialog-actions/dialog-action-hotkey.story.tsx?raw';
+import storyActionsActionMultipleSrc from 'umbra/actions/__tests__/use-dialog-actions/dialog-action-multiple.story.tsx?raw';
 import storyActionsReasonSourceSrc from 'umbra/actions/__tests__/use-dialog-actions/reason-source.story.tsx?raw';
 import storyActionsHotkeyWhilePreparingSrc from 'umbra/actions/__tests__/use-dialog-actions/hotkey-while-preparing.story.tsx?raw';
 import storyUseDialogTransitionToggleSrc from 'umbra/react/__tests__/use-dialog/transition-toggle.story.tsx?raw';
 import storyUseDialogKeyPassthroughSrc from 'umbra/react/__tests__/use-dialog/key-passthrough.story.tsx?raw';
 import storyDmScrollLockBothOpenSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-both-open.story.tsx?raw';
 import storyDmScrollLockTwoManagersSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock-two-managers.story.tsx?raw';
-import storyDmModalVariantSrc from 'umbra/manager/__tests__/dialog-manager/modal-variant.story.tsx?raw';
+import storyDmDialogVariantSrc from 'umbra/manager/__tests__/dialog-manager/dialog-variant.story.tsx?raw';
 import storyDmProviderIsolationSrc from 'umbra/manager/__tests__/dialog-manager/provider-isolation.story.tsx?raw';
 import storyUseDialogStructuralToggleSrc from 'umbra/react/__tests__/use-dialog/structural-toggle.story.tsx?raw';
 import storyActionsVanillaAriaSrc from 'umbra/actions/__tests__/use-dialog-actions/vanilla-aria-keyshortcuts.story.tsx?raw';
 import storyOpenRequestSrc from 'umbra/react/__tests__/open-request.story.tsx?raw';
 import storyDmImperativeSrc from 'umbra/manager/__tests__/dialog-manager/imperative.story.tsx?raw';
 import storyDmEventSubscribeSrc from 'umbra/manager/__tests__/dialog-manager/event-subscribe.story.tsx?raw';
-import storyDmMultiModalSrc from 'umbra/manager/__tests__/dialog-manager/multi-modal.story.tsx?raw';
+import storyDmMultiDialogSrc from 'umbra/manager/__tests__/dialog-manager/multi-dialog.story.tsx?raw';
 import storyDmScrollLockSrc from 'umbra/manager/__tests__/dialog-manager/scroll-lock.story.tsx?raw';
 import storyDmUnregisteredSrc from 'umbra/manager/__tests__/dialog-manager/unregistered-no-op.story.tsx?raw';
 import storyUseStoreSrc from '@/shared/lib/__tests__/use-store.story.tsx?raw';
@@ -92,7 +92,7 @@ import storyRestoreNotInFrontSrc from 'umbra/react/__tests__/use-dialog/restore-
 import storyShadowRootSrc from 'umbra/react/__tests__/use-dialog/shadow-root.story.tsx?raw';
 import storyVolatileKeyDownSrc from 'umbra/react/__tests__/use-dialog/volatile-keydown.story.tsx?raw';
 import storyOutletBasicSrc from 'umbra/react/__tests__/dialog-outlet/outlet-basic.story.tsx?raw';
-import storyOutletNullModalSrc from 'umbra/react/__tests__/dialog-outlet/outlet-null-modal.story.tsx?raw';
+import storyOutletNullDialogSrc from 'umbra/react/__tests__/dialog-outlet/outlet-null-dialog.story.tsx?raw';
 import storyOutletNoOutletSrc from 'umbra/react/__tests__/dialog-outlet/no-outlet.story.tsx?raw';
 import storyOutletMultiSrc from 'umbra/react/__tests__/dialog-outlet/outlet-multi.story.tsx?raw';
 import storyOutletNestedSrc from 'umbra/react/__tests__/dialog-outlet/outlet-nested.story.tsx?raw';
@@ -167,7 +167,7 @@ export const stories: Record<string, string> = {
     })
   ),
   // The mount target is this one's subject, so it is the wrapper that is shown, with the app it hosts.
-  'story-solid-shadow-root': sliceDeclarations(storySolidModalSrc, ['SolidShadowRoot']).concat(
+  'story-solid-shadow-root': sliceDeclarations(storySolidDialogSrc, ['SolidShadowRoot']).concat(
     '\n\n',
     sliceDeclarations(storySolidAppSrc, ['BasicApp'])
   ),
@@ -203,9 +203,9 @@ export const stories: Record<string, string> = {
   'story-action-hotkey': storyActionsHotkeySrc,
   'story-action-definition': storyActionsDefinitionSrc,
   'story-focus-on-open': storyFocusOnOpenSrc,
-  'story-stacked-modals': storyStackedModalsSrc,
+  'story-stacked-dialogs': storyStackedDialogsSrc,
   'story-nested-hotkey-scope': storyNestedHotkeyScopeSrc,
-  'story-focus-under-another-modal': storyFocusUnderAnotherModalSrc,
+  'story-focus-under-another-dialog': storyFocusUnderAnotherDialogSrc,
   'story-esc-without-focus': storyEscWithoutFocusSrc,
   'story-stranded-focus': storyStrandedFocusSrc,
   'story-apply-style': storyApplyStyleSrc,
@@ -230,8 +230,8 @@ export const stories: Record<string, string> = {
   'story-use-dialog-key-passthrough': storyUseDialogKeyPassthroughSrc,
   'story-dm-scroll-lock-both-open': storyDmScrollLockBothOpenSrc,
   'story-dm-scroll-lock-two-managers': storyDmScrollLockTwoManagersSrc,
-  'story-dm-modal-variant': storyDmModalVariantSrc,
-  'story-dm-modal-variant-lookup': storyDmModalVariantSrc,
+  'story-dm-modal-variant': storyDmDialogVariantSrc,
+  'story-dm-modal-variant-lookup': storyDmDialogVariantSrc,
   'story-dm-provider-isolation': storyDmProviderIsolationSrc,
   'story-dm-no-provider': storyDmProviderIsolationSrc,
   'story-use-dialog-structural-toggle': storyUseDialogStructuralToggleSrc,
@@ -240,7 +240,7 @@ export const stories: Record<string, string> = {
   'story-open-request': storyOpenRequestSrc,
   'story-dm-imperative': storyDmImperativeSrc,
   'story-dm-event-subscribe': storyDmEventSubscribeSrc,
-  'story-dm-multi-modal': storyDmMultiModalSrc,
+  'story-dm-multi-dialog': storyDmMultiDialogSrc,
   'story-dm-scroll-lock': storyDmScrollLockSrc,
   'story-dm-unregistered': storyDmUnregisteredSrc,
   'story-store-use-store': storyUseStoreSrc,
@@ -270,7 +270,7 @@ export const stories: Record<string, string> = {
   'story-use-lookup-unregistered': storyUseLookupSrc,
   'story-use-lookup-foreground': storyUseLookupSrc,
   'story-outlet-basic': storyOutletBasicSrc,
-  'story-outlet-null-modal': storyOutletNullModalSrc,
+  'story-outlet-null-dialog': storyOutletNullDialogSrc,
   'story-outlet-no-outlet': storyOutletNoOutletSrc,
   'story-outlet-multi': storyOutletMultiSrc,
   'story-outlet-nested': storyOutletNestedSrc,

@@ -125,7 +125,7 @@ test.describe('dialogManager', () => {
   }) => {
     await mount(<DomEventHarness />);
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-modal:modal');
+    await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-dialog:modal');
   });
 
   test('dialog:close fires after closing sequence with correct template and reason', async ({
@@ -135,7 +135,7 @@ test.describe('dialogManager', () => {
     await mount(<DomEventHarness />);
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await page.getByRole('button', { name: 'Close Dialog' }).click();
-    await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-modal:modal:ok');
+    await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-dialog:modal:ok');
   });
 
   test('slide modal dispatches dialog:open and dialog:close with template slide', async ({
@@ -203,7 +203,7 @@ test.describe('DialogManagerProvider', () => {
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('has-open')).toHaveText('yes');
-    await expect(page.getByTestId('dialog-no-provider-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-no-provider-dialog')).toBeVisible();
 
     await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByTestId('has-open')).toHaveText('no');
@@ -301,17 +301,17 @@ test.describe('lookup', () => {
 test.describe('modal / non-modal', () => {
   test('the modal fields update when a modal dialog opens and closes', async ({ mount, page }) => {
     await mount(<DialogVariantHarness />);
-    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('has-modal')).toHaveText('yes');
+    await expect(page.getByTestId('has-dialog')).toHaveText('yes');
     await expect(page.getByTestId('dialog-count')).toHaveText('1');
     await expect(page.getByTestId('has-non-modal')).toHaveText('no');
     await expect(page.getByTestId('non-modal-count')).toHaveText('0');
 
     await page.getByRole('button', { name: 'Close Dialog' }).click();
-    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
   });
 
@@ -325,7 +325,7 @@ test.describe('modal / non-modal', () => {
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
     await expect(page.getByTestId('non-modal-count')).toHaveText('1');
-    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
     await expect(page.getByTestId('has-any-open')).toHaveText('yes');
     await expect(page.getByTestId('open-count')).toHaveText('1');
@@ -341,19 +341,19 @@ test.describe('modal / non-modal', () => {
     // Open the non-modal first — it is clickable behind the modal one
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('2');
-    await expect(page.getByTestId('has-modal')).toHaveText('yes');
+    await expect(page.getByTestId('has-dialog')).toHaveText('yes');
     await expect(page.getByTestId('dialog-count')).toHaveText('1');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
     await expect(page.getByTestId('non-modal-count')).toHaveText('1');
 
     await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
-    await expect(page.getByTestId('has-modal')).toHaveText('no');
+    await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
 
     await page.getByRole('button', { name: 'Close Non-Modal' }).click();
@@ -371,7 +371,7 @@ test.describe('modal / non-modal', () => {
     await page.getByRole('button', { name: 'Query' }).click();
     await expect(page.getByTestId('lookup-result')).toContainText('modal:true');
     await expect(page.getByTestId('lookup-result')).toContainText('dialogCount:1');
-    await expect(page.getByTestId('lookup-result')).toContainText('dialogIds:lookup-modal');
+    await expect(page.getByTestId('lookup-result')).toContainText('dialogIds:lookup-dialog');
     await expect(page.getByTestId('lookup-result')).toContainText('nonModal:true');
     await expect(page.getByTestId('lookup-result')).toContainText('nonModalCount:1');
     await expect(page.getByTestId('lookup-result')).toContainText('nonModalIds:lookup-non-modal');
@@ -389,7 +389,7 @@ test.describe('dialogManager — scroll lock', () => {
     expect(before).not.toBeNull();
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-scroll-lock-dialog')).toBeVisible();
 
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
     await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
@@ -443,7 +443,7 @@ test.describe('dialogManager — scroll lock', () => {
     const before = await fixedMarker.boundingBox();
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-scroll-lock-dialog')).toBeVisible();
 
     // The bar pads itself from the published variable; the library never touched the element.
     const during = await fixedMarker.boundingBox();
@@ -472,7 +472,7 @@ test.describe('dialogManager — scroll lock', () => {
     await mount(<ScrollLockHarness />);
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-scroll-lock-dialog')).toBeVisible();
     const single = await page.evaluate(() => {
       return document.body.style.paddingRight;
     });
@@ -499,13 +499,13 @@ test.describe('dialogManager — scroll lock', () => {
     await mount(<ScrollLockTwoManagersHarness />);
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
-    await expect(page.getByTestId('dialog-two-managers-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-two-managers-dialog')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 
     // Registry churn in the *nested* manager — which has nothing open and so never locked.
     await page.getByRole('button', { name: 'Unmount Bystander' }).click();
 
-    await expect(page.getByTestId('dialog-two-managers-modal')).toBeVisible();
+    await expect(page.getByTestId('dialog-two-managers-dialog')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
   });
 

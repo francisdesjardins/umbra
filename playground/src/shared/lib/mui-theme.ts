@@ -113,7 +113,7 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
       },
       MuiButton: {
         // Matched on `color: 'primary'` rather than the `contained` slot: unscoped, it painted
-        // *every* filled button amber on hover, turning /modal-actions' red Delete brand-coloured.
+        // *every* filled button amber on hover, turning /dialog-actions' red Delete brand-coloured.
         variants: [
           {
             props: { variant: 'contained', color: 'primary' },

@@ -30,7 +30,7 @@ export function NonModalEscHotkeySlideHarness() {
     render: ({ action }) => {
       return (
         <div style={slidePanelStyle}>
-          <p>Non-modal panel with ESC hotkey</p>
+          <p>Non-dialog panel with ESC hotkey</p>
           <button
             {...action('cancel', {
               hotkey: Key.Escape,
@@ -61,7 +61,7 @@ export function NonModalEscHotkeySlideHarness() {
       <button data-testid="outside-button">Outside Button</button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {/* Non-modal + no-portal is "contained": the panel anchors to (and sizes against)
+      {/* Non-dialog + no-portal is "contained": the panel anchors to (and sizes against)
           its nearest positioned ancestor, so it needs a sized, relative host. */}
       <div style={{ position: 'relative', width: 480, height: 320 }}>{Dialog}</div>
     </div>

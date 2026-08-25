@@ -35,7 +35,7 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 
 **Every change to `src/` must include tests.** Story components must be declared at module scope (not inline in `test()` callbacks) and must follow React Compiler constraints — no `useMemo`/`useCallback`/`React.memo`.
 
-**Top-layer button placement**: any button or control that must be clickable while a modal is open must live inside the modal's `render` function — not in the outer harness. The native top-layer backdrop blocks all clicks outside an open `<dialog>`. For multi-modal scenarios, call `dialogManager.open(id)` from inside the first modal's `render`.
+**Top-layer button placement**: any button or control that must be clickable while a modal is open must live inside the modal's `render` function — not in the outer harness. The native top-layer backdrop blocks all clicks outside an open `<dialog>`. For multi-dialog scenarios, call `dialogManager.open(id)` from inside the first modal's `render`.
 
 ## Code Style
 
@@ -108,14 +108,14 @@ These are hard constraints — never violate them when generating code:
 - One file per example: `playground/src/pages/<route>/examples/<name>.tsx`
 - Register in [codeSamples.ts](../playground/src/widgets/code-viewer/model/codeSamples.ts) via `?raw` import
 - Add to route page via `ExampleCard` component
-- UI templates live in `playground/src/entities/modal-template/ui/{mui,vanilla}/`
+- UI templates live in `playground/src/entities/dialog-template/ui/{mui,vanilla}/`
 - Spacing: Use `gap`/`Stack` — vertical margin props (`mt`, `mb`, `marginTop`) are banned by lint
 
 ### MUI Templates & Shared Components — UI Templates page
 
 The **UI Templates** page (`playground/src/pages/ui-templates/ui/UITemplatesPage.tsx`) is a living catalogue of all MUI template components and playground shared components. **Keep it in sync** whenever you:
 
-- **Add a new component** to any of `playground/src/entities/modal-template/ui/mui/` (message-dialog, slide-dialog, form-dialog, panel-dialog, shared/content, shared/) or `playground/src/shared/ui/`:
+- **Add a new component** to any of `playground/src/entities/dialog-template/ui/mui/` (message-dialog, slide-dialog, form-dialog, panel-dialog, shared/content, shared/) or `playground/src/shared/ui/`:
   1. Add a `?raw` import for the new file in `playground/src/widgets/code-viewer/model/codeSamples.ts` following the `// MUI template components` section.
   2. Add a matching entry to the `codeSamples` record using the key convention: `template-<group>-<kebab-name>` for templates (e.g. `template-msg-my-new-component`) or `shared-component-<kebab-name>` for shared components.
   3. Add a `{ name: 'ComponentName', codeKey: '...' }` entry inside the correct `<TemplateSection>` in `UITemplatesPage.tsx`. Create a new `<TemplateSection>` block if it belongs to a new group.

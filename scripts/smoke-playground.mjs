@@ -338,7 +338,7 @@ const flows = {
    */
   async hotkey(page) {
     const checks = [];
-    await gotoRoute(page, '/modal-actions');
+    await gotoRoute(page, '/dialog-actions');
 
     const dialog = page.getByTestId('dialog-confirm-hotkeys');
     await page

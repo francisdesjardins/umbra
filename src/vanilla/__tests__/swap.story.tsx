@@ -14,7 +14,7 @@ import type { DialogController } from '../types.js';
  */
 
 const FRAGMENT = (label: string) => {
-  // No `data-testid` of its own: `bindDialog` stamps `modal-{id}`, which is what the tests ask for.
+  // No `data-testid` of its own: `bindDialog` stamps `dialog-{id}`, which is what the tests ask for.
   return `<dialog aria-label="Swapped panel">
     <p data-testid="swap-label">${label}</p>
     <button data-testid="swap-ok">OK</button>

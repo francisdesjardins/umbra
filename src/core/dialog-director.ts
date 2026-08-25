@@ -322,7 +322,7 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly DialogLifecycleStep[] = MODAL_LI
 /**
  * Build the director for one modal.
  *
- * It owns the focus coordinator — per-modal state the sequence reads, and no binding's business.
+ * It owns the focus coordinator — per-dialog state the sequence reads, and no binding's business.
  * The diffing is `createStepRunner`'s: the table above is DOM to the last line, which kept the
  * rules reading it ("detach everything stale before attaching any of it", "`destroy` clears the
  * keys") out of the unit project's reach until they moved there. What stays here is the part

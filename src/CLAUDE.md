@@ -197,7 +197,7 @@ restating any of it here is how the two drift.
 | Types                  | [core/types.ts](core/types.ts), [manager/types.ts](manager/types.ts), [actions/types.ts](actions/types.ts)                                                                               |
 
 Two rules that belong to no single file: **use the `dialogManager` a hook returned, not the static
-singleton**, for cross-modal calls, since only the first is context-aware; and the `<dialog>` is
+singleton**, for cross-dialog calls, since only the first is context-aware; and the `<dialog>` is
 `display: flex; flex-direction: column`, with **sizing user-land** through `style`.
 
 **The DOM wiring is `attach*` functions, not hooks** — `(ctx: DialogDomContext, options)`, returning a
@@ -526,11 +526,11 @@ Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](.
 
 **Solid harnesses** ([solid/\_\_tests\_\_/](solid/__tests__/)) are a Solid root hosted inside a React CT story: the story renders a `<div>`, calls Solid's `render` into it from an effect, and returns the disposer as the cleanup. They are written with `h` rather than JSX, so no Solid compiler enters the CT bundle — and nothing is lost, because hyperscript detects the getters an action's props carry and spreads them reactively, exactly as compiled JSX would.
 
-**Cross-modal in stories** — use `dialogManager` from `useDialog` return, not the static singleton:
+**Cross-dialog in stories** — use `dialogManager` from `useDialog` return, not the static singleton:
 
 ```tsx
-const { Dialog, dialogManager } = useDialog({ id: 'my-modal', ... });
-dialogManager.open('other-modal'); // ✅ context-aware
+const { Dialog, dialogManager } = useDialog({ id: 'my-dialog', ... });
+dialogManager.open('other-dialog'); // ✅ context-aware
 ```
 
 **Harness rules**: declare at module scope, not inside `test()`; follow React Compiler constraints.

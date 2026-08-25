@@ -1,6 +1,6 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import { dialogManager, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
@@ -56,9 +56,9 @@ export function ImperativeExample() {
                 style={{
                   padding: 8,
                   borderRadius: 4,
-                  border: '1px solid var(--modal-border)',
+                  border: '1px solid var(--dialog-border)',
                   fontSize: 'var(--font-size-xs)',
-                  color: 'var(--modal-text-secondary)',
+                  color: 'var(--dialog-text-secondary)',
                 }}
               >
                 Total opens: {openCount}

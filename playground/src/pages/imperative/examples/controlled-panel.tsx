@@ -1,6 +1,6 @@
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
+import * as SlideDialog from '@/entities/dialog-template/ui/vanilla/slide-dialog';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
@@ -23,7 +23,7 @@ const resultStore = createResultStore();
  * - `reconcileOpen` runs every pass rather than reacting, making the prop authoritative, and
  *   decides on `phase` not `isVisible` — the difference is a cut animation.
  * - An action whose `onAction` never calls `close` leaves the dialog, so `onClose` reports the
- *   owner's `'close'`, never `'dismiss'`. Non-modal is required: the top layer's native backdrop
+ *   owner's `'close'`, never `'dismiss'`. Non-dialog is required: the top layer's native backdrop
  *   would block the switch driving it.
  */
 export function ControlledPanelExample() {

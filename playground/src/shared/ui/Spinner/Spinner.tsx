@@ -9,7 +9,7 @@ import styles from '@/shared/ui/Spinner/Spinner.module.css';
  * control or region around it is what announces the state — a spinner that names itself competes
  * with the `role="status"` above it.
  *
- * The templates under `entities/modal-template/` keep their own copy on purpose: they are lifted
+ * The templates under `entities/dialog-template/` keep their own copy on purpose: they are lifted
  * into other people's projects and may not reach into `shared/`.
  */
 export function Spinner({ size = 18 }: { readonly size?: number | undefined }) {

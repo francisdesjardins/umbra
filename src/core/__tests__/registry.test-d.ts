@@ -37,7 +37,7 @@ export function _doorsStayOpen(id: string) {
 /** And the hook keeps the signature the docs mandate: reasons declared at the call site. */
 export function HookKeepsItsGenerics() {
   return useDialog<{ name: string }, 'save' | 'cancel'>({
-    id: 'some-modal',
+    id: 'some-dialog',
     ariaLabel: 'Some modal',
     render: ({ handle }) => {
       handle.close('save', { name: 'x' });

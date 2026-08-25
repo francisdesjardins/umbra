@@ -223,7 +223,7 @@ export type RegisterOptions = {
    * Defaults to `'modal'`. See `DialogInfo.template`.
    */
   readonly template?: string | undefined;
-  /** Non-modal dialogs never lock body scroll and never take the top layer. */
+  /** Non-dialog dialogs never lock body scroll and never take the top layer. */
   readonly nonModal?: boolean | undefined;
   /** Makes this dialog reachable by {@link DialogManager.requestOpen}. */
   readonly onOpenRequest?: OpenRequestHandler | undefined;
@@ -763,7 +763,7 @@ export function createDialogManager(): DialogManager {
 
   function emit(event: DialogManagerEvent) {
     // The copy is load-bearing, not ceremony: a `Set` iterator picks up entries added during
-    // iteration, so a listener that subscribes another one — lazily attaching per-modal
+    // iteration, so a listener that subscribes another one — lazily attaching per-dialog
     // tracking on the first event it sees, say — would deliver that same event to the
     // newcomer, which reads as a duplicate. Copying also makes self-unsubscription during
     // dispatch unambiguous. Pinned by dialog-manager-registry.test.ts.
@@ -803,7 +803,7 @@ export function createDialogManager(): DialogManager {
     // only past the guard above, so it needs no document check of its own.
     ensureDialogStyles(document);
 
-    // Non-modal dialogs never lock scrolling — only modal ones do.
+    // Non-dialog dialogs never lock scrolling — only modal ones do.
     const hasDialogOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {
       return !d.nonModal;
     });
@@ -1177,7 +1177,7 @@ export function createDialogManager(): DialogManager {
       return [...open];
     },
 
-    // ── Per-modal queries ─────────────────────────────────────────────────
+    // ── Per-dialog queries ─────────────────────────────────────────────────
 
     isVisible(id: string): boolean {
       return snapshotStore.getSnapshot().openDialogs.some((d) => {

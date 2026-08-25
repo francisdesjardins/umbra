@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
+import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import { createOpenRequest, dialogManager, useMessageDialog } from 'umbra/react';
 import type { PayloadOf } from 'umbra/react';

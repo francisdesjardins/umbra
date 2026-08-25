@@ -11,7 +11,7 @@ export function ReopenSettlesHarness() {
   const [settleCount, setSettleCount] = useState(0);
 
   const { open, Dialog } = useDialog<void, 'done'>({
-    id: 'reopen-modal',
+    id: 'reopen-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

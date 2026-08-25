@@ -9,7 +9,7 @@ export function OpenAndWaitHarness() {
   const [status, setStatus] = useState('idle');
 
   const { openAndWait, Dialog } = useDialog<void, 'done'>({
-    id: 'wait-modal',
+    id: 'wait-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

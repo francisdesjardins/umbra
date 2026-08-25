@@ -1,7 +1,7 @@
 import { ExampleLayout } from '@/entities/example';
-import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import { focusRingSpace } from '@/entities/modal-template/ui/shared/tokens';
+import * as SlideDialog from '@/entities/dialog-template/ui/vanilla/slide-dialog';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
+import { focusRingSpace } from '@/entities/dialog-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
@@ -47,7 +47,7 @@ function Panel({
           fontFamily: 'monospace',
           fontSize: '0.75rem',
           overflowX: 'auto',
-          color: 'var(--slide-text-secondary, var(--modal-text-secondary))',
+          color: 'var(--slide-text-secondary, var(--dialog-text-secondary))',
         }}
       >
         {options}
@@ -214,7 +214,7 @@ function useInspectorPreset(
             color: 'var(--slide-text)',
             fontFamily: 'var(--font-family)',
             borderLeft: '1px solid var(--slide-border)',
-            boxShadow: 'var(--modal-shadow)',
+            boxShadow: 'var(--dialog-shadow)',
           }}
         >
           <div

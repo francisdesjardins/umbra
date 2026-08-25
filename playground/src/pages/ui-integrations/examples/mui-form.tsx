@@ -104,7 +104,7 @@ export function MuiFormExample() {
             boxShadow: (theme: Theme) => {
               return `inset 0 0 0 1px ${theme.palette.divider}`;
             },
-            backgroundColor: 'var(--modal-bg)',
+            backgroundColor: 'var(--dialog-bg)',
             backgroundImage: 'none',
           }}
         >

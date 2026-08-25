@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
  * The two halves of the Penumbra rule from `playground/CLAUDE.md`, as a gate.
  *
  * Both failed as prose the first time they were tested. A mechanical sweep replacing Material's
- * transcribed constants with `--app-*` tokens reached into `entities/modal-template/` and left
+ * transcribed constants with `--app-*` tokens reached into `entities/dialog-template/` and left
  * sixteen shell references in files that are **copied into other people's apps** — where the
  * tokens do not exist, `var(--app-ease)` makes the whole `transition` invalid at computed-value
  * time and the dialog stops animating. Nothing in the playground can notice: the playground
@@ -41,7 +41,7 @@ const relative = (file: string): string => {
 
 test('the copyable templates depend on no shell token', () => {
   const offenders: string[] = [];
-  for (const file of filesUnder(join(root, 'entities', 'modal-template'), /\.(css|tsx?)$/)) {
+  for (const file of filesUnder(join(root, 'entities', 'dialog-template'), /\.(css|tsx?)$/)) {
     readFileSync(file, 'utf8')
       .split('\n')
       .forEach((line, index) => {
@@ -54,7 +54,7 @@ test('the copyable templates depend on no shell token', () => {
   expect(
     offenders,
     "Templates are copied into apps that have no --app-* sheet. Use the template's own token " +
-      'family (--modal-*, --slide-*, --form-*, --content-*, --panel-*) or a plain literal.'
+      'family (--dialog-*, --slide-*, --form-*, --content-*, --panel-*) or a plain literal.'
   ).toEqual([]);
 });
 

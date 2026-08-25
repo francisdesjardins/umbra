@@ -12,7 +12,7 @@ export function DismissWhilePreparingDisabledHarness() {
   const resolveRef = useRef<(() => void) | null>(null);
 
   const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
-    id: 'dismiss-while-preparing-modal',
+    id: 'dismiss-while-preparing-dialog',
     dismissWhilePreparing: false,
     prepare: () => {
       return new Promise<void>((resolve) => {

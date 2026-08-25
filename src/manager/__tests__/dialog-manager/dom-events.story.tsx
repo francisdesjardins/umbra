@@ -12,7 +12,7 @@ export function DomEventHarness() {
   const [log, setLog] = useState<string[]>([]);
 
   const { Dialog: DialogA, dialogManager } = useDialog<void, 'ok'>({
-    id: 'dom-ev-modal',
+    id: 'dom-ev-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -90,7 +90,7 @@ export function DomEventHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('dom-ev-modal');
+          dialogManager.open('dom-ev-dialog');
         }}
       >
         Open Dialog

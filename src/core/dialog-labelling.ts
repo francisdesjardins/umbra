@@ -7,7 +7,7 @@
  * a type, to a linter, and to a reading of the source. A dialog with no name at all is the defect
  * the option docs already call the commonest in a dialog implementation. And `role="alertdialog"`
  * on a **non-modal** dialog contradicts itself for assistive technology: an alertdialog is modal
- * by definition (the APG requires `aria-modal`), and the hook bindings' option type refuses the
+ * by definition (the APG requires `aria-dialog`), and the hook bindings' option type refuses the
  * pair — this is the same refusal for the markup `umbra/vanilla` cannot type-check.
  *
  * **There is deliberately nothing about `alertdialog` and its description.** That pairing is a

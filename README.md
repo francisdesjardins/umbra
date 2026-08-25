@@ -69,7 +69,7 @@ yours and outlives the controller.
 - **Who is in front is a decision, not a race** — `dialogManager.prioritize((modal) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
 - **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns every dismissal — the key, a backdrop click, a click outside a panel, each naming itself — into a report to the owner, with every gate above it — which key, an action claiming it, where the pointer landed, `prepare`, which dialog is in front — still the library's
 - **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the modal closes, so a dialog dismissed while it loads drops the work it started
-- **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
+- **Non-dialog panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
 - **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
 - **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
@@ -92,7 +92,7 @@ are deliberately yours.
 
 - **Native `<dialog>`, natively modal.** `showModal()` puts the dialog in the top layer and makes
   the rest of the document inert, and that is what assistive technology is told — the library never
-  writes `aria-modal`, because the attribute is redundant on a modal dialog and a lie on a
+  writes `aria-dialog`, because the attribute is redundant on a modal dialog and a lie on a
   non-modal one.
 - **The name is yours, and never invented.** `ariaLabel` / `ariaLabelledBy` / `ariaDescribedBy`
   reach the element; an absent option omits the attribute entirely, because `aria-label=""` is the
@@ -361,7 +361,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Reference Templates
 
-The library ships no UI components. Reference implementations live in `playground/src/entities/modal-template/ui/`: a full **vanilla HTML/CSS** set, since it depends on nothing, and one **MUI** family beside it — the form modal, kept as the worked proof that a component library's chrome fits over the same hooks. Copy either into your project or write your own.
+The library ships no UI components. Reference implementations live in `playground/src/entities/dialog-template/ui/`: a full **vanilla HTML/CSS** set, since it depends on nothing, and one **MUI** family beside it — the form modal, kept as the worked proof that a component library's chrome fits over the same hooks. Copy either into your project or write your own.
 
 > **If you write a custom button wrapper**, you must forward three props onto the underlying `<button>` element: `aria-keyshortcuts`, `data-focus-on-open` and `data-action-reason`. All three are how the library finds a button in the DOM — hotkeys dispatch by querying `[aria-keyshortcuts]`, `focusOnOpen` finds its button by `[data-focus-on-open]`, and the focus restore after an action re-queries `[data-action-reason]` when your renderer has replaced the node it ran on. Dropping any one of them makes that feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards all three. A wrapper that _builds_ `aria-keyshortcuts` instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 

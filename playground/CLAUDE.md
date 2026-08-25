@@ -58,7 +58,7 @@ playground/src/
 ├── app/         # main.tsx, router.tsx, providers (ThemeProvider, CodePaneProvider)
 ├── pages/       # one slice per route, each with ui/ + (optional) examples/ + index.ts
 ├── widgets/     # root-layout, top-bar, sidebar, code-viewer
-├── entities/    # example (Card/Grid/Layout/Section/StoryCard), modal-template (vanilla)
+├── entities/    # example (Card/Grid/Layout/Section/StoryCard), dialog-template (vanilla)
 ├── shared/
 │   ├── ui/      # PageLayout, SectionNav, CodeBlock, LoadingButton, ResultDisplay, ViewCodeButton
 │   └── lib/     # simulate-api-call, use-overflow, createResultStore, section-slug,
@@ -78,7 +78,7 @@ Two exemptions, each a decision rather than a leak:
 
 - **`?raw` imports are asset reads.** The `code-samples/` modules name every example's source _as
   text_; they call and render nothing. The alternative is a generated registry.
-- **`entities/modal-template` has no public entry on purpose** — its barrel re-exports nothing. The
+- **`entities/dialog-template` has no public entry on purpose** — its barrel re-exports nothing. The
   templates are a directory tree because that is the shape they are copied out in, and
   `import * as MessageDialog from '…/vanilla/message-dialog'` names the family. A barrel would
   flatten the distinction the slice exists to make.
@@ -138,7 +138,7 @@ decides where a new example goes:
 | Route              | Purpose                                                   |
 | ------------------ | --------------------------------------------------------- |
 | `/getting-started` | The core open → render → close loop                       |
-| `/modal-actions`   | Action state: `hasRunningAction`, `error`, hotkeys        |
+| `/dialog-actions`  | Action state: `hasRunningAction`, `error`, hotkeys        |
 | `/slide-dialog`    | The four slide shapes as presets, and the toast           |
 | `/stacking`        | Who is in front, and who owns the keyboard                |
 | `/imperative`      | Opening and rendering from outside the component          |
@@ -208,7 +208,7 @@ page never constructs a key — the plugin mints them and the page resolves one 
 **anchor** stays the bare name: a category renders one specifier, so `api-useDialog` is unique on its
 page and is what a reader can guess and share.
 
-## Modals are declared in one place
+## Dialogs are declared in one place
 
 [`src/app/dialog-registry.ts`](src/app/dialog-registry.ts) names every modal and what it closes with,
 so **a call site writes no type arguments** — writing them selects the other overload and lets the
@@ -270,7 +270,7 @@ Keyboard focus is part of the same gate. There is **one** global ring, declared 
 `body :focus-visible` — the descendant selector is load-bearing, since `.MuiButtonBase-root` zeroes
 the outline at equal specificity and is injected later. Do not add per-component focus styles.
 
-## Templates (`src/entities/modal-template/ui/`)
+## Templates (`src/entities/dialog-template/ui/`)
 
 Reference UI — not exported from the library; users copy them into their projects. `vanilla/`
 covers every family in pure HTML/CSS with CSS modules and dark mode, and it is the only flavour: the
@@ -297,7 +297,7 @@ All layouts use children-based composition:
 Single file per example — component + "View Code" source.
 
 1. **Create** `src/pages/<route>/examples/<name>.tsx` — hooks from `umbra/react`, templates from
-   `@/entities/modal-template/ui/vanilla/…` when one fits, wrapped in `ExampleLayout`. Unique modal
+   `@/entities/dialog-template/ui/vanilla/…` when one fits, wrapped in `ExampleLayout`. Unique modal
    ids.
 2. **Register** the `?raw` import in
    [code-samples/examples.ts](src/widgets/code-viewer/model/code-samples/examples.ts) — a route's
@@ -337,16 +337,16 @@ useMessageDialog({
 ```
 
 `ariaLabelledBy` whenever a title is already on screen — a name written twice is a name that
-drifts, which is why every `Title` and `Heading` component in `entities/modal-template/` takes an
+drifts, which is why every `Title` and `Heading` component in `entities/dialog-template/` takes an
 `id`. Use `ariaLabel` in the two cases where a reference would lie: the heading **disappears** in
 some state (`getting-started/examples/async-open.tsx` renders only a spinner while loading), or it
-**changes** while the dialog is open (`modal-actions/examples/per-action-state.tsx` goes from
+**changes** while the dialog is open (`dialog-actions/examples/per-action-state.tsx` goes from
 "Ready to publish" to "Publishing…"; a name that moves under the user disorients).
 
 `role: 'alertdialog'` is for a dialog that **interrupts** — a destructive confirm, a blocking error
 — and it always travels with `ariaDescribedBy`, because an alertdialog is announced with its
 description rather than waiting to be read. So the described element has to be worth interrupting
-for: `modal-actions/examples/focus-on-open.tsx` is a delete confirm and deliberately stays a plain
+for: `dialog-actions/examples/focus-on-open.tsx` is a delete confirm and deliberately stays a plain
 dialog, its body text being commentary about focus. Reaching for the interrupting role on every
 confirm is how it stops meaning anything.
 

@@ -20,7 +20,7 @@ test.describe('parseCssColor', () => {
 
   test('answers null rather than a guess, so a caller can leave the value alone', () => {
     expect(parseCssColor('inherit')).toBeNull();
-    expect(parseCssColor('var(--modal-bg)')).toBeNull();
+    expect(parseCssColor('var(--dialog-bg)')).toBeNull();
     expect(parseCssColor('')).toBeNull();
   });
 });

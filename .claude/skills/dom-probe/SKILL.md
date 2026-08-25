@@ -82,8 +82,8 @@ it under the dialog?" and "is my overlay `pointer-events: none`?" in one command
 # Is the dialog really in the top layer, and what is under the corner?
 node .claude/skills/dom-probe/probe.mjs --url http://127.0.0.1:4403/priorx \
   --do "click:section#direct-call-sites >> role=button[name='Archiver la salle']" \
-  --do "settle:dialog[data-testid='modal-direct-message-dialog']" \
-  --probe "toplayer:dialog[data-testid='modal-direct-message-dialog']" \
+  --do "settle:dialog[data-testid='dialog-direct-message-dialog']" \
+  --probe "toplayer:dialog[data-testid='dialog-direct-message-dialog']" \
   --probe "at:20,20"
 
 # What does an outside click actually hit — the native backdrop, or MUI's container?

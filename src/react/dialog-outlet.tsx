@@ -34,7 +34,7 @@ export function useDialogOutletContext(): DialogOutletContextValue | null {
 // render breaks concurrent rendering), so content lands one commit behind its owner — not a visible
 // frame, see the paint-timing note in `use-dialog.tsx` — and every descendant render republishes,
 // re-rendering the outlet cheaply (`children` is unchanged, so React bails out). Two redesigns
-// rejected: a portal-anchor outlet removes both but reintroduces `{Dialog}`; a per-modal host
+// rejected: a portal-anchor outlet removes both but reintroduces `{Dialog}`; a per-dialog host
 // component would confine the second, for no measurable win.
 
 type OutletSnapshot = {
@@ -82,7 +82,7 @@ type OutletStoreMethods = {
  * @example
  * ```tsx
  * function App() {
- *   // Modals opened anywhere below render here.
+ *   // Dialogs opened anywhere below render here.
  *   return (
  *     <DialogOutlet>
  *       <Dashboard />

@@ -9,7 +9,7 @@ export function BasicHarness() {
   const [lastReason, setLastReason] = useState('');
 
   const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
-    id: 'basic-modal',
+    id: 'basic-dialog',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

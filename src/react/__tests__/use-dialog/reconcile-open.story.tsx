@@ -21,7 +21,7 @@ export function ReconcileOpenHarness() {
   const modal = useDialog<void, 'close'>({
     id: 'reconcile-panel',
     ariaLabel: 'Reconciled panel',
-    // Non-modal on purpose: a `showModal()` dialog would put the prop-driving buttons out of reach.
+    // Non-dialog on purpose: a `showModal()` dialog would put the prop-driving buttons out of reach.
     nonModal: true,
     portal: true,
     animation: {

@@ -126,7 +126,7 @@ const PATTERNS_GROUP: TemplateGroup = {
 const TEMPLATE_SHARED_GROUP: TemplateGroup = {
   title: 'Template internals',
   description:
-    'Under entities/modal-template/ui/shared: read by the template families and by the shell itself, which is why they are here rather than under a flavour.',
+    'Under entities/dialog-template/ui/shared: read by the template families and by the shell itself, which is why they are here rather than under a flavour.',
   items: [
     { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
     { name: 'tokens', codeKey: 'template-util-tokens' },

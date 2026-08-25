@@ -1,5 +1,5 @@
 import { PeekingMoon } from '@/shared/ui/PeekingMoon/PeekingMoon';
-import { useCodeModal } from '@/widgets/code-viewer';
+import { useCodeDialog } from '@/widgets/code-viewer';
 import { useCodePane } from '@/shared/lib/code-pane-context';
 import { useMediaQuery } from '@/shared/lib/use-media-query';
 import { Sidebar } from '@/widgets/sidebar';
@@ -9,21 +9,21 @@ import { Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 const MainContent = () => {
-  const codeModal = useCodeModal();
-  const { setCodeModalOpen } = useCodePane();
+  const codeDialog = useCodeDialog();
+  const { setCodeDialogOpen } = useCodePane();
 
   // `open` keeps a stable identity, so it works as an effect dependency directly.
-  const { open } = codeModal;
+  const { open } = codeDialog;
   useEffect(() => {
-    setCodeModalOpen(() => {
+    setCodeDialogOpen(() => {
       return () => {
         return open();
       };
     });
     return () => {
-      setCodeModalOpen(null);
+      setCodeDialogOpen(null);
     };
-  }, [open, setCodeModalOpen]);
+  }, [open, setCodeDialogOpen]);
 
   return (
     <main className={styles['main']}>
@@ -31,7 +31,7 @@ const MainContent = () => {
       <div className={styles['content']}>
         <Outlet />
       </div>
-      {codeModal.Dialog}
+      {codeDialog.Dialog}
     </main>
   );
 };

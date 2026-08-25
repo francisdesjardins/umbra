@@ -236,7 +236,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         description:
           'A non-modal panel holding a modal holding a message modal, each rendered inside the one below it. All three declare Enter. Press Enter: only the modal in front acts. Press Escape three times: the stack unwinds one modal per press, front to back, and the log records the order.',
         component: StackedDialogsHarness,
-        codeKey: 'story-stacked-modals',
+        codeKey: 'story-stacked-dialogs',
       },
       {
         title: 'A hotkey belongs to the dialog that declared it',
@@ -250,7 +250,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         description:
           'A slow save runs in one modal while a second opens over it. When the save settles, the modal underneath restores focus — but the user is in the modal in front, and the browser refuses to focus outside the topmost dialog.',
         component: FocusUnderAnotherDialogHarness,
-        codeKey: 'story-focus-under-another-modal',
+        codeKey: 'story-focus-under-another-dialog',
       },
       {
         title: 'Escape without focus',
@@ -634,14 +634,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'dismissOnClickOutside',
         description:
-          'Non-modal with dismissOnClickOutside: true. Clicking outside the dialog closes it with reason "dismiss". Clicking inside does not.',
+          'Non-dialog with dismissOnClickOutside: true. Clicking outside the dialog closes it with reason "dismiss". Clicking inside does not.',
         component: NonModalClickOutsideHarness,
         codeKey: 'story-use-dialog-non-modal-click-outside',
       },
       {
         title: 'dismissOnClickOutside — Default (false)',
         description:
-          'Non-modal without dismissOnClickOutside set. Clicking outside does not close the dialog — default is false.',
+          'Non-dialog without dismissOnClickOutside set. Clicking outside does not close the dialog — default is false.',
         component: NonModalClickOutsideDefaultHarness,
         codeKey: 'story-use-dialog-non-modal-click-outside-default',
       },
@@ -661,7 +661,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Non-Modal Custom dismissKey',
         description:
-          'Non-modal with dismissKey: Delete. Delete closes from outside focus and does not leak. Escape ignored.',
+          'Non-dialog with dismissKey: Delete. Delete closes from outside focus and does not leak. Escape ignored.',
         component: NonModalCustomDismissKeyHarness,
         codeKey: 'story-use-dialog-non-modal-custom-dismiss-key',
       },
@@ -688,14 +688,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Portal — Non-Modal Default (Inline)',
         description:
-          'Non-modal dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
+          'Non-dialog dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
         component: PortalNonModalDefaultHarness,
         codeKey: 'story-use-dialog-portal-non-modal-default',
       },
       {
         title: 'Portal — Non-Modal Opt-In',
         description:
-          'Non-modal dialog with portal: true. Dialog is portaled to document.body. Click-through still works.',
+          'Non-dialog dialog with portal: true. Dialog is portaled to document.body. Click-through still works.',
         component: PortalNonModalOptInHarness,
         codeKey: 'story-use-dialog-portal-non-modal-opt-in',
       },
@@ -796,7 +796,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Non-Modal ESC Hotkey',
         description:
-          'Non-modal panel whose Escape is an action rather than a dismissal. ESC from outside the panel triggers the action rather than being swallowed.',
+          'Non-dialog panel whose Escape is an action rather than a dismissal. ESC from outside the panel triggers the action rather than being swallowed.',
         component: NonModalEscHotkeySlideHarness,
         codeKey: 'story-slide-non-modal-esc-hotkey',
       },
@@ -910,7 +910,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Dialog is Null',
         description: 'Verifies modal.Dialog is null when inside an outlet.',
         component: OutletNullDialogHarness,
-        codeKey: 'story-outlet-null-modal',
+        codeKey: 'story-outlet-null-dialog',
       },
       {
         title: 'No Outlet (Standard)',
@@ -919,7 +919,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-outlet-no-outlet',
       },
       {
-        title: 'Multiple Modals',
+        title: 'Multiple Dialogs',
         description: 'Two modals inside one outlet — both render without {Dialog} in JSX.',
         component: OutletMultiHarness,
         codeKey: 'story-outlet-multi',
@@ -1217,14 +1217,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Five options in one app, each with its own probe',
         description:
-          'containFocus, dismissOnClickOutside, a custom dismissKey, a prepare aborted by its own close, and onOpenRequest. One app rather than five because they make the same claim — that these reach the shared attach* functions from this binding’s effects. Non-modal throughout: containFocus is the Tab wrap show() does not give, and the union rejects the pair on a modal.',
+          'containFocus, dismissOnClickOutside, a custom dismissKey, a prepare aborted by its own close, and onOpenRequest. One app rather than five because they make the same claim — that these reach the shared attach* functions from this binding’s effects. Non-dialog throughout: containFocus is the Tab wrap show() does not give, and the union rejects the pair on a modal.',
         component: SolidNonModalOptionsHarness,
         codeKey: 'story-solid-non-modal-options',
       },
       {
         title: 'reconcileOpen driven from a Solid signal',
         description:
-          'A controlled open prop, with createEffect where React writes useEffect. Non-modal, so the buttons driving the signal stay reachable from outside the dialog.',
+          'A controlled open prop, with createEffect where React writes useEffect. Non-dialog, so the buttons driving the signal stay reachable from outside the dialog.',
         component: SolidReconcileHarness,
         codeKey: 'story-solid-reconcile',
       },
@@ -1325,11 +1325,11 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-dm-event-subscribe',
       },
       {
-        title: 'Multi-Modal Stack',
+        title: 'Multi-Dialog Stack',
         description:
           'Two nested modals opened from within each other. Tracks foreground and the stack-ordered openDialogs via useDialogManager.',
         component: MultiDialogHarness,
-        codeKey: 'story-dm-multi-modal',
+        codeKey: 'story-dm-multi-dialog',
       },
       {
         title: 'Scroll Lock Compensation',

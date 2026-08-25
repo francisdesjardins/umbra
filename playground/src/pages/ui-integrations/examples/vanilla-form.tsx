@@ -1,12 +1,12 @@
 import { AppButton } from '@/shared/ui/AppButton';
 import { ExampleLayout } from '@/entities/example';
-import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import buttonRowStyles from '@/entities/modal-template/ui/vanilla/shared/ButtonRow.module.css';
+import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
+import buttonRowStyles from '@/entities/dialog-template/ui/vanilla/shared/ButtonRow.module.css';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import styles from '@/entities/modal-template/ui/vanilla/form-dialog/styles.module.css';
+import styles from '@/entities/dialog-template/ui/vanilla/form-dialog/styles.module.css';
 import { useForm } from '@/shared/lib/use-form';
 import { useDialog } from 'umbra/react';
-import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
+import { useScrollRegion } from '@/entities/dialog-template/ui/shared/scroll-region';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'vanilla-form-example';

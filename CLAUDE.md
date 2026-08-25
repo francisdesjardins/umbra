@@ -119,9 +119,9 @@ by hand.
 
 ### Top-layer rule
 
-`showModal()` places dialogs in the browser's top layer, whose native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a modal is open must be inside the `render` callback; multi-modal means calling `dialogManager.open(id)` from inside the first modal's render. Applies to stories, tests and playground examples.
+`showModal()` places dialogs in the browser's top layer, whose native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a modal is open must be inside the `render` callback; multi-dialog means calling `dialogManager.open(id)` from inside the first modal's render. Applies to stories, tests and playground examples.
 
-**Non-modal dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
+**Non-dialog dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
 
 - `nonModal: true, portal: true` → portaled to `document.body`, viewport-anchored (`position: fixed`). Use for viewport-edge/centered non-modal panels.
 - `nonModal: true, portal: false` → **contained**: rendered inside a library-owned wrapper that is `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and positioned `absolute` against that wrapper — `CONTAINED_HOST` in [core/placement.ts](src/core/placement.ts) says why absolute rather than an in-flow block. Immune to a transformed ancestor hijacking the containing block (the jump a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) here.

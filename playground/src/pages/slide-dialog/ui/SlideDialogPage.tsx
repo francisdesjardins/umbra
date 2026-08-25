@@ -6,7 +6,7 @@ import { PageLayout } from '@/shared/ui/PageLayout';
 export const SlideDialogPage = () => {
   return (
     <PageLayout
-      title="Slide Modals"
+      title="Slide Dialogs"
       description="A panel that slides in from an edge. Two options decide the shape — the edge it comes from, and whether it fills the axis across that edge — and everything else is the same modal you already know."
     >
       <ExampleSection

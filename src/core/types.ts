@@ -202,7 +202,7 @@ export type DialogVariant =
     }
   | {
       /**
-       * Non-modal dialog (`dialog.show()`): no backdrop, stays out of the top layer so
+       * Non-dialog dialog (`dialog.show()`): no backdrop, stays out of the top layer so
        * clicks reach elements underneath, body scroll untouched. Stacking is tracked with a
        * `data-dialog-z` attribute on the `<dialog>`. See {@link DialogVariant}.
        */
@@ -210,7 +210,7 @@ export type DialogVariant =
       /** Not applicable — non-modal dialogs have no backdrop. */
       readonly dismissOnBackdropClick?: never;
       /**
-       * `'dialog'` only: an alertdialog is modal by definition (the APG requires `aria-modal`),
+       * `'dialog'` only: an alertdialog is modal by definition (the APG requires `aria-dialog`),
        * so announcing one over content the user can still reach would be a contradiction for
        * assistive technology. A non-modal surface that has something urgent to say wants a live
        * region inside its content instead.
@@ -570,7 +570,7 @@ export type UseDialogBaseOptions<
    * {@link PortalTarget}, which is where the reason for the second form lives. `false` and the
    * contained arrangement are unaffected by either.
    *
-   * Non-modal dialogs never enter the top layer, so positioning depends on placement:
+   * Non-dialog dialogs never enter the top layer, so positioning depends on placement:
    * - **`portal: true`** — portaled to `document.body`, anchored to the viewport
    *   (`position: fixed`). Use this for viewport-edge / centered non-modal panels.
    * - **`portal: false`** — "contained": the dialog renders inside a library-owned wrapper

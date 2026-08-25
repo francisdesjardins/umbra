@@ -39,7 +39,7 @@ export function EscAnsweredByNobodyHarness() {
   const [dialogReason, setDialogReason] = useState('');
 
   const front = useDialog<void, 'confirm'>({
-    id: 'esc-gap-modal',
+    id: 'esc-gap-dialog',
     // The whole point of the configuration: this dialog is in front and does not listen.
     dismissKey: false,
     animation: INSTANT,
@@ -48,7 +48,7 @@ export function EscAnsweredByNobodyHarness() {
         <div style={dialogStyle}>
           <p>Front modal, deaf to the dismiss key</p>
           {/* Inside the render, because a `showModal()` dialog puts everything else out of reach. */}
-          <button data-testid="close-modal" {...action('confirm')}>
+          <button data-testid="close-dialog" {...action('confirm')}>
             Close modal
           </button>
         </div>
@@ -68,7 +68,7 @@ export function EscAnsweredByNobodyHarness() {
         <div style={dialogStyle}>
           <p>Panel behind</p>
           <button
-            data-testid="open-modal"
+            data-testid="open-dialog"
             onClick={() => {
               void front.open();
             }}
