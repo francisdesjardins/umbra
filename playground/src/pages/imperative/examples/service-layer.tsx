@@ -2,15 +2,15 @@ import { ExampleLayout } from '@/entities/example';
 import * as MessageDialog from '@/entities/dialog-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import {
-  CONFIRM_MODAL_ID,
-  FAILURE_MODAL_ID,
+  CONFIRM_DIALOG_ID,
+  FAILURE_DIALOG_ID,
   deploymentService,
 } from '@/pages/imperative/examples/deployment-service';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 import { useSyncExternalStore } from 'react';
 
-export const DIALOG_ID = CONFIRM_MODAL_ID;
+export const DIALOG_ID = CONFIRM_DIALOG_ID;
 
 /** The React half registers the two dialogs the service opens by id and mirrors its state. */
 export function ServiceLayerExample() {
@@ -23,15 +23,15 @@ export function ServiceLayerExample() {
   );
 
   const confirmDialog = useMessageDialog({
-    id: CONFIRM_MODAL_ID,
-    ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
+    id: CONFIRM_DIALOG_ID,
+    ariaLabelledBy: `${CONFIRM_DIALOG_ID}-title`,
     // A dialog, not an alertdialog: the user pressed the button that raised it.
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="warning" />
-            <MessageDialog.Title id={`${CONFIRM_MODAL_ID}-title`}>
+            <MessageDialog.Title id={`${CONFIRM_DIALOG_ID}-title`}>
               Confirm deployment
             </MessageDialog.Title>
           </MessageDialog.Header>
@@ -56,10 +56,10 @@ export function ServiceLayerExample() {
     },
   });
 
-  const dialogFailure = useMessageDialog({
-    id: FAILURE_MODAL_ID,
-    ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
-    ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,
+  const failureDialog = useMessageDialog({
+    id: FAILURE_DIALOG_ID,
+    ariaLabelledBy: `${FAILURE_DIALOG_ID}-title`,
+    ariaDescribedBy: `${FAILURE_DIALOG_ID}-body`,
     // `alertdialog`: a blocking error raised unasked, announced with its description (the error).
     role: 'alertdialog',
     render: ({ action }) => {
@@ -67,13 +67,13 @@ export function ServiceLayerExample() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="error" />
-            <MessageDialog.Title id={`${FAILURE_MODAL_ID}-title`}>
+            <MessageDialog.Title id={`${FAILURE_DIALOG_ID}-title`}>
               Deployment failed
             </MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Shared.Message id={`${FAILURE_MODAL_ID}-body`}>{lastError}</Shared.Message>
+              <Shared.Message id={`${FAILURE_DIALOG_ID}-body`}>{lastError}</Shared.Message>
               <Shared.Hint>
                 Raised by the service after the API call rejected — no component was involved.
               </Shared.Hint>
@@ -137,7 +137,7 @@ export function ServiceLayerExample() {
         dialogs={
           <>
             {confirmDialog.Dialog}
-            {dialogFailure.Dialog}
+            {failureDialog.Dialog}
           </>
         }
       >

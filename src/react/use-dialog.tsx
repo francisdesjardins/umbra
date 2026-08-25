@@ -21,7 +21,7 @@ import {
   teardownDialog,
 } from '../core/dialog-runtime.js';
 import {
-  DEFAULT_MODAL_ANIMATION,
+  DEFAULT_DIALOG_ANIMATION,
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
@@ -134,7 +134,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   // Annotated, not inferred: un-annotated, the fallback and the caller's `DialogAnimation` stay a
   // union, and `getDialogAnimationStyles` infers its style parameter from the first branch alone.
-  const animation: DialogAnimation = animationProp ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = animationProp ?? DEFAULT_DIALOG_ANIMATION;
 
   // The resolution the inline `transition` uses, so the exit's property and timeout match it.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);

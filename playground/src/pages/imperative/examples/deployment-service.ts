@@ -3,8 +3,8 @@
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { dialogManager } from 'umbra';
 
-export const CONFIRM_MODAL_ID = 'deploy-confirm';
-export const FAILURE_MODAL_ID = 'deploy-failure';
+export const CONFIRM_DIALOG_ID = 'deploy-confirm';
+export const FAILURE_DIALOG_ID = 'deploy-failure';
 
 export type Environment = 'staging' | 'production';
 
@@ -41,7 +41,7 @@ const deploy = async (environment: Environment) => {
   // The manager's own await rather than a hand-rolled `subscribe` listener: the registry types the
   // close, so `reason` is `'cancel' | 'confirm' | 'dismiss'` and a typo in the test below is a
   // compile error — and an id nobody mounted answers instead of hanging the caller forever.
-  const [unavailable, closed] = await dialogManager.openAndWait(CONFIRM_MODAL_ID);
+  const [unavailable, closed] = await dialogManager.openAndWait(CONFIRM_DIALOG_ID);
   if (unavailable) {
     record(`Deploy to ${environment} aborted: ${unavailable.message}`);
     return;
@@ -58,7 +58,7 @@ const deploy = async (environment: Environment) => {
   } catch (error) {
     lastError = error instanceof Error ? error.message : String(error);
     record(`Deploy to ${environment} failed`);
-    dialogManager.open(FAILURE_MODAL_ID);
+    dialogManager.open(FAILURE_DIALOG_ID);
   }
 };
 
@@ -86,7 +86,7 @@ export const deploymentService = {
 
   /** Called from the failure dialog's Retry button — the service owns the retry, not the UI. */
   retry: async () => {
-    dialogManager.close(FAILURE_MODAL_ID, 'retry');
+    dialogManager.close(FAILURE_DIALOG_ID, 'retry');
     await deploy(target);
   },
 };

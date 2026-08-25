@@ -668,13 +668,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Portal — Default (Inline)',
         description:
-          'Modal dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
+          'Modal dialog without portal (default). The returned `Dialog` renders inline — parent is NOT document.body.',
         component: PortalDefaultHarness,
         codeKey: 'story-use-dialog-portal-default',
       },
       {
         title: 'Portal — Opt-In',
-        description: 'Modal dialog with portal: true. Dialog is portaled to document.body.',
+        description:
+          'Modal dialog with portal: true. The returned `Dialog` is portaled to document.body.',
         component: PortalOptInHarness,
         codeKey: 'story-use-dialog-portal-opt-in',
       },

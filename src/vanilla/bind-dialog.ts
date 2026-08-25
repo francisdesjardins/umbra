@@ -23,7 +23,7 @@ import {
 import { applyStyle } from '../core/style.js';
 import { dialogManager as singleton } from '../manager/dialog-manager.js';
 import {
-  DEFAULT_MODAL_ANIMATION,
+  DEFAULT_DIALOG_ANIMATION,
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
@@ -89,7 +89,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   const resolved = resolveDialogOptions(options);
   // Annotated for the reason React's binding gives.
-  const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = options.animation ?? DEFAULT_DIALOG_ANIMATION;
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
   const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(

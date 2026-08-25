@@ -22,7 +22,7 @@ const srcRoot = resolve(here, '..');
 const UNWRAPPED_BINDINGS = ['solid', 'vanilla'] as const;
 
 /** Importing one of these means the file builds a dialog, so it owns which registry it lands in. */
-const BUILDS_A_MODAL =
+const BUILDS_A_DIALOG =
   /from '(?:\.\.\/(?:bind-dialog|use-dialog)\.js|\.\.\/templates\/[^']+\.js|\.\.\/\.\.\/(?:solid|vanilla)\.js)'/;
 
 /** Either way of naming one: Solid wraps a provider, vanilla passes the instance. */
@@ -58,7 +58,7 @@ test.describe('harness isolation', () => {
     for (const binding of UNWRAPPED_BINDINGS) {
       for (const file of harnessFiles(binding)) {
         const source = stripComments(readFileSync(file, 'utf8'));
-        if (BUILDS_A_MODAL.test(source) && !NAMES_A_MANAGER.test(source)) {
+        if (BUILDS_A_DIALOG.test(source) && !NAMES_A_MANAGER.test(source)) {
           offenders.push(relative(srcRoot, file).replaceAll('\\', '/'));
         }
       }
@@ -78,7 +78,7 @@ test.describe('harness isolation', () => {
         return [
           binding,
           harnessFiles(binding).filter((file) => {
-            return BUILDS_A_MODAL.test(stripComments(readFileSync(file, 'utf8')));
+            return BUILDS_A_DIALOG.test(stripComments(readFileSync(file, 'utf8')));
           }).length,
         ];
       })

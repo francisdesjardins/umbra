@@ -20,7 +20,7 @@ import {
 } from '../core/dialog-runtime.js';
 import { applyStyle } from '../core/style.js';
 import {
-  DEFAULT_MODAL_ANIMATION,
+  DEFAULT_DIALOG_ANIMATION,
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
@@ -79,7 +79,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   } = resolveDialogOptions(options);
 
   // Annotated for the reason React's binding gives.
-  const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = options.animation ?? DEFAULT_DIALOG_ANIMATION;
 
   const manager = useDialogManagerContext();
 

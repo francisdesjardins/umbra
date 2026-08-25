@@ -12,7 +12,7 @@
 import { createElement as h } from 'react';
 import { useDialog } from 'umbra/react';
 
-export const SSR_MODAL_ID = 'ssr-worker-demo';
+export const SSR_DIALOG_ID = 'ssr-worker-demo';
 
 // Colours arrive as CSS variables the page sets on the host, never as values computed here: the
 // worker and the page have to emit byte-identical markup or hydration reports a mismatch, and a
@@ -49,7 +49,7 @@ const column = {
  */
 export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
   const dialog = useDialog({
-    id: SSR_MODAL_ID,
+    id: SSR_DIALOG_ID,
     ariaLabel: 'Rendered without a DOM',
     render: ({ action }) => {
       return h(

@@ -22,7 +22,7 @@ export function getPrimaryTransitionProperty(transitionProp: string): string {
  * What a bare `useDialog` animates with when the caller names no animation. Shared by every binding
  * on purpose: two copies would be two products the day one of them is tuned.
  */
-export const DEFAULT_MODAL_ANIMATION = {
+export const DEFAULT_DIALOG_ANIMATION = {
   entrance: { opacity: 1, transform: 'scale(1)' },
   exit: { opacity: 0, transform: 'scale(0.95)' },
   duration: 200,
