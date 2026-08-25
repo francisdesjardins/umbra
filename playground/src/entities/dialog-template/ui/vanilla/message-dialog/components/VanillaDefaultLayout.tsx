@@ -6,5 +6,5 @@ type VanillaDefaultLayoutProps = {
 };
 
 export function VanillaDefaultLayout({ children }: VanillaDefaultLayoutProps) {
-  return <div className={styles['modalLayout']}>{children}</div>;
+  return <div className={styles['dialogLayout']}>{children}</div>;
 }

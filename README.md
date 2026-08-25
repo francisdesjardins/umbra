@@ -75,7 +75,7 @@ yours and outlives the controller.
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the dialog on the button that matters instead of on its first input
 - **Shadow DOM** — a `<dialog>` inside a web component gets the library's backdrop (the sheet is adopted per root, since `adoptedStyleSheets` does not cross the boundary) and its focus policy asks that root rather than the document
 - **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `dialog:open` / `dialog:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
-- **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _modal_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
+- **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _dialog_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
 - **Zero runtime dependencies** — `react` / `react-dom` and `solid-js` are _optional_ peers, each needed only by its own binding; `./vanilla` and the root need neither
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
 - **A measured browser floor** — Chrome/Edge 110+, Safari 16.4+, Firefox 115+, set by what the code actually calls rather than picked; the accounting is under _Using it_ below
@@ -329,7 +329,7 @@ export const deleteAccount = async () => {
 ```
 
 `openAndWait` is the same door a hook offers, on the manager instead — so the service needs no
-component to hold one. `reason` and `data` are typed, and correlated, if the id is [in the registry](#declaring-your-modals-in-one-place)
+component to hold one. `reason` and `data` are typed, and correlated, if the id is [in the registry](#declaring-your-dialogs-in-one-place)
 and open if it is not, and there is no listener to unsubscribe or to register in the right order.
 
 Your UI layer only has to _register_ a dialog with that id; the service decides when it appears.
@@ -425,9 +425,9 @@ document-level version of the mistake the paragraph above warns about.
 
 Friendly warning, so nothing here surprises you: **I commit to `main`.** No release branches, no
 deprecation cycles, and **no semver** — a name can change between two commits if a better one
-turns up, and it does. The last three naming passes turned `isOpen` into `isVisible`, `onOpen`
-into `prepare` and `DialogInfo.modalType` into `template`, because each was describing itself
-inaccurately.
+turns up, and it does. The last four naming passes turned `isOpen` into `isVisible`, `onOpen`
+into `prepare`, `ModalInfo.modalType` into `template`, and then `useModal` — with the whole surface
+around it — into `useDialog`, because each was describing itself inaccurately.
 
 That is a deliberate trade, not neglect. The library is not published, so nobody's build breaks
 when a name improves; what you get instead is a surface that says what it means. The day I decide
@@ -447,9 +447,10 @@ in three files.
 The question is whether anyone notices. Every rename in the CHANGELOG is that noticing, written
 down: `isOpen` → `isVisible`, because the flag stayed true through the entire exit animation and
 the semantics were right — the name was the lie; `onOpen` → `prepare`, because it is work the open
-waits on and not a notification; `modalType` → `template`, because the field and the
-`data-dialog-type` attribute it
-shadowed were each right about something different. No model asked for one of those. The
+waits on and not a notification; `modalType` → `template`, because the field and the type attribute
+it shadowed were each right about something different; `useModal` → `useDialog`, because the library
+drives a `<dialog>` and _modal_ is one of that element's two variants, so the hook was named after
+half of what it does. No model asked for one of those. The
 entry-point isolation tests exist because someone knew, before it happened, exactly how a framework
 import sneaks into a framework-free core.
 

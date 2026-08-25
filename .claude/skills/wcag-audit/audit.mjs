@@ -899,18 +899,18 @@ for (const scheme of opt.schemes) {
         }
 
         const record = async (surface) => {
-          const modalTag = { scheme: where, route, surface };
+          const dialogTag = { scheme: where, route, surface };
           visited.add(`${route} ${where} — ${surface}`);
           const s = await runScan();
-          for (const f of s.text) findings.push({ ...modalTag, type: 'text', ...f });
-          for (const f of s.nonText) findings.push({ ...modalTag, type: 'non-text', ...f });
-          for (const f of s.targets) targetFindings.push({ ...modalTag, ...f });
-          for (const f of s.clipped) clipFindings.push({ ...modalTag, ...f });
-          if (s.reflow) reflowFindings.push({ ...modalTag, ...s.reflow });
+          for (const f of s.text) findings.push({ ...dialogTag, type: 'text', ...f });
+          for (const f of s.nonText) findings.push({ ...dialogTag, type: 'non-text', ...f });
+          for (const f of s.targets) targetFindings.push({ ...dialogTag, ...f });
+          for (const f of s.clipped) clipFindings.push({ ...dialogTag, ...f });
+          if (s.reflow) reflowFindings.push({ ...dialogTag, ...s.reflow });
           // Focus inside a dialog is where it matters most, and where the ring is most likely
           // to be clipped: a dialog footer is a bounded box with buttons flush against its edge.
           if (opt.focus)
-            for (const f of await walkFocus()) focusFindings.push({ ...modalTag, ...f });
+            for (const f of await walkFocus()) focusFindings.push({ ...dialogTag, ...f });
         };
         await record(`dialog via ${selector}`);
 
@@ -988,11 +988,11 @@ process.stdout.write(
 );
 process.stdout.write(`${'─'.repeat(78)}\n`);
 
-const modalSurfaces = [...visited].filter((v) => {
+const dialogSurfaces = [...visited].filter((v) => {
   return v.includes('— dialog');
 });
 process.stdout.write(
-  `${visited.size} surface(s) scanned${modalSurfaces.length ? `, ${modalSurfaces.length} of them inside a dialog` : ''}\n`
+  `${visited.size} surface(s) scanned${dialogSurfaces.length ? `, ${dialogSurfaces.length} of them inside a dialog` : ''}\n`
 );
 if (skipped.length) {
   process.stdout.write(`\n${skipped.length} step(s) did not run — these were NOT audited:\n`);

@@ -1479,7 +1479,7 @@ export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: bool
  * because with one "handed back to the first focusable" and "focus never moved" are one element.
  */
 export function VanillaClaimlessReclaimHarness() {
-  const modalRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -1489,7 +1489,7 @@ export function VanillaClaimlessReclaimHarness() {
   } | null>(null);
 
   useEffect(() => {
-    const dialogEl = modalRef.current;
+    const dialogEl = dialogRef.current;
     const panelEl = panelRef.current;
     const cancel = cancelRef.current;
     const confirm = confirmRef.current;
@@ -1545,7 +1545,7 @@ export function VanillaClaimlessReclaimHarness() {
         Open the dialog, then the panel underneath
       </button>
 
-      <dialog ref={modalRef} data-testid="vanilla-claimless-dialog">
+      <dialog ref={dialogRef} data-testid="vanilla-claimless-dialog">
         <p>Claims nothing</p>
         <button data-testid="vanilla-claimless-cancel" ref={cancelRef} type="button">
           Cancel

@@ -75,7 +75,7 @@
 }
 
 /* ========== Dialog Layout ========== */
-.modalLayout {
+.dialogLayout {
   background: var(--dialog-bg);
   color: var(--dialog-text);
   border-radius: var(--dialog-radius);
@@ -272,7 +272,7 @@
 
 /* ========== Mobile ========== */
 @media (max-width: 599px) {
-  .modalLayout {
+  .dialogLayout {
     max-width: 92vw;
     min-width: auto;
   }

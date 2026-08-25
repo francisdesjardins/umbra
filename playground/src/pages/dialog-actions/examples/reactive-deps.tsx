@@ -186,7 +186,7 @@ export function ReactiveDepsExample() {
 
   const { LiveControls } = useLiveControls();
 
-  const reactiveModal = useMessageDialog({
+  const reactiveDialog = useMessageDialog({
     id: DIALOG_ID,
     ariaLabelledBy: `${DIALOG_ID}-title`,
     dismissOnBackdropClick: false,
@@ -232,12 +232,12 @@ export function ReactiveDepsExample() {
   });
 
   return (
-    <ExampleLayout result={result} dialogs={reactiveModal.Dialog}>
+    <ExampleLayout result={result} dialogs={reactiveDialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
-          const [, closeResult] = await reactiveModal.openAndWait();
+          const [, closeResult] = await reactiveDialog.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

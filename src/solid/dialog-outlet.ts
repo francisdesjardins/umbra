@@ -37,11 +37,11 @@ export function useDialogOutletContext(): DialogOutletContextValue | null {
  * Solid component inside JSX cannot pass; the checked one is on `umbra/react`'s `DialogOutlet`.
  */
 export function DialogOutlet(props: { readonly children: JSX.Element }): JSX.Element {
-  const [dialogs, setModals] = createSignal<ReadonlyMap<string, JSX.Element>>(new Map());
+  const [dialogs, setDialogs] = createSignal<ReadonlyMap<string, JSX.Element>>(new Map());
 
   const context: DialogOutletContextValue = {
     register(id, node) {
-      setModals((current) => {
+      setDialogs((current) => {
         if (current.has(id)) {
           return current;
         }
@@ -50,7 +50,7 @@ export function DialogOutlet(props: { readonly children: JSX.Element }): JSX.Ele
       });
     },
     unregister(id) {
-      setModals((current) => {
+      setDialogs((current) => {
         if (!current.has(id)) {
           return current;
         }

@@ -308,7 +308,7 @@ wrapped, and this is the seam:
 ```tsx
 type ConfirmReason = 'confirm' | 'cancel';
 
-export const useConfirmModal = <TData = void,>(
+export const useConfirmDialog = <TData = void,>(
   options: UseMessageDialogOptions<TData, ConfirmReason>
 ): UseMessageDialogReturn<TData, ConfirmReason> => {
   return useMessageDialog<TData, ConfirmReason>(options);
@@ -318,8 +318,8 @@ export const useConfirmModal = <TData = void,>(
 Call sites keep everything the declaration buys and spend no type argument on the common case:
 
 ```tsx
-const dialog = useConfirmModal({ id: 'delete', render, onClose }); // no payload, no `<void, …>`
-const user = useConfirmModal<User>({ id: 'create-user', render, onClose }); // the one argument is the payload
+const dialog = useConfirmDialog({ id: 'delete', render, onClose }); // no payload, no `<void, …>`
+const user = useConfirmDialog<User>({ id: 'create-user', render, onClose }); // the one argument is the payload
 ```
 
 `action('confrim')` is still rejected through the wrapper, and the `switch` in `onClose` is still
@@ -788,7 +788,7 @@ if (closed.reason === 'confirm') {
 ```
 
 Same tuple, same ordering guarantee — the resolver is registered before the open, so a dialog
-dismissed inside `prepare` still resolves — and the [registry](#modalregistry) types `reason` and
+dismissed inside `prepare` still resolves — and the [registry](#dialogregistry) types `reason` and
 `data` off the id, which a `subscribe` listener cannot: `subscribe` is a broadcast over every
 dialog on the page, so one event type serves them all and `reason` there is `string`.
 
@@ -1025,7 +1025,7 @@ the entrance/exit animation, `prepare` with its `AbortSignal`, the dismiss key o
 its native `cancel` and at the window for a non-modal panel, click-outside, backdrop hit-testing,
 opening focus and restoration after a failed action, the registration that makes it addressable by
 id from another microfrontend, and the typed close. Every option documented under
-[useDialog](#usemodal-base-primitive) applies, minus `render` — with **one that means less here than
+[useDialog](#usedialog-base-primitive) applies, minus `render` — with **one that means less here than
 it does there**: `portal` selects the placement (`fixed` rather than contained) and does not move
 the element, because the `<dialog>` is markup you wrote and relocating it would take its ids, its
 stylesheet scope and its listeners with it. So `fixed` anchors to the viewport only if you placed
@@ -1105,8 +1105,8 @@ const stop = confirm.subscribe(() => {
 ```typescript
 import { dialogManager } from 'umbra';
 
-dialogManager.open('my-modal-id'); // → false when no such dialog is registered
-dialogManager.close('my-modal-id', 'confirm');
+dialogManager.open('my-dialog-id'); // → false when no such dialog is registered
+dialogManager.close('my-dialog-id', 'confirm');
 // Reason only — the registry is keyed by string, so nothing here knows a dialog's `TData`.
 // A typed payload goes through `handle.close(reason, data)` or an action's `close(data)`.
 
@@ -1636,7 +1636,7 @@ document.addEventListener(DIALOG_OPEN_EVENT, (e: Event) => {
 
 document.addEventListener(DIALOG_CLOSE_EVENT, (e: Event) => {
   const { id, template, reason, openedAt } = e.detail;
-  analytics.track('modal_hidden', {
+  analytics.track('dialog_hidden', {
     id,
     template,
     reason,
@@ -1696,7 +1696,7 @@ Reactive hook for subscribing to dialog manager state changes. Returns a snapsho
 ```typescript
 import { useDialogManager } from 'umbra/react';
 
-function ModalOverlay() {
+function DialogOverlay() {
   const { openDialogs, foreground } = useDialogManager();
 
   if (openDialogs.length === 0) return null;
@@ -1726,7 +1726,7 @@ Ordered by modality first (every non-modal dialog under every modal one), then b
 
 ---
 
-## useLookup (Reactive Per-Modal)
+## useLookup (Reactive Per-Dialog)
 
 Reactive hook for querying a single dialog's state. Returns `DialogInfo` that updates whenever any dialog opens, closes, registers, or unregisters. Uses `useSyncExternalStore` for tear-free reads.
 

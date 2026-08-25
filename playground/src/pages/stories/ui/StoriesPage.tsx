@@ -1295,14 +1295,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         description:
           'Modal and non-modal dialogs side by side — only modal ones lock body scroll, and getOpen() can be filtered to either.',
         component: DialogVariantHarness,
-        codeKey: 'story-dm-modal-variant',
+        codeKey: 'story-dm-dialog-variant',
       },
       {
         title: 'Variant Lookup Queries',
         description:
           "lookup().getOpen('dialog') / ('non-modal') read live state at call time, split by how the dialog was shown.",
         component: DialogVariantLookupHarness,
-        codeKey: 'story-dm-modal-variant-lookup',
+        codeKey: 'story-dm-dialog-variant-lookup',
       },
       {
         title: 'Provider Isolation',

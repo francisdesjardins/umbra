@@ -16,7 +16,7 @@ export function ScrollLockHarness() {
           {/* Top-layer rule: a control usable while this dialog is open lives in the render. */}
           <button
             onClick={() => {
-              dialogManager.open('scroll-lock-modal-2');
+              dialogManager.open('scroll-lock-dialog-2');
             }}
           >
             Stack Second Dialog
@@ -35,7 +35,7 @@ export function ScrollLockHarness() {
 
   // Stacked on the first: both lock, but the compensation must be applied exactly once.
   const { Dialog: Dialog2 } = useDialog<void, 'done'>({
-    id: 'scroll-lock-modal-2',
+    id: 'scroll-lock-dialog-2',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

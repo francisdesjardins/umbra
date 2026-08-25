@@ -479,7 +479,7 @@ test.describe('dialogManager — scroll lock', () => {
 
     // A second dialog must not pad again. Opened from inside the first: the backdrop blocks outside.
     await page.getByRole('button', { name: 'Stack Second Dialog' }).click();
-    await expect(page.getByTestId('dialog-scroll-lock-modal-2')).toBeVisible();
+    await expect(page.getByTestId('dialog-scroll-lock-dialog-2')).toBeVisible();
     expect(
       await page.evaluate(() => {
         return document.body.style.paddingRight;
@@ -488,7 +488,7 @@ test.describe('dialogManager — scroll lock', () => {
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 
     await page.getByRole('button', { name: 'Close Second' }).click();
-    await expect(page.getByTestId('dialog-scroll-lock-modal-2')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-scroll-lock-dialog-2')).not.toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 
     await page.getByRole('button', { name: 'Close Dialog' }).click();
