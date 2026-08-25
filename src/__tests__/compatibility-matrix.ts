@@ -1335,9 +1335,8 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'a raise keeps the caret where the user left it',
-    state: 'partial',
-    since: '2026-08-13',
-    why: 'Restored for the dialog that **held** the keyboard — the case a late policy install hits. One that did not is re-shown by `showModal()`, and where focus lands then is **the engine’s answer, not the library’s**: Chromium puts it on the dialog’s first focusable, WebKit preserves the field. So the guarantee is that the dialog in front keeps the keyboard; the position is not one, and a test that pinned a control was pinning one engine. Fixing it for real means teaching the `focusin` bookkeeping to ignore focus the library itself moves during a raise, which needs a window `raiseDialog` can publish and the coordinator can read.',
+    state: 'works',
+    why: 'Restored to **where the library last saw the keyboard inside that dialog**, which is the same answer on all three engines. A raise is `close()` + `showModal()`, so the engine focuses something on the way back — Chromium the first focusable, WebKit the field — and the `focusin` that fires is indistinguishable at the listener from a person clicking. `isRaisingDialog` (`core/dialog-lifecycle.ts`) publishes the round-trip as a window and the coordinator stops recording inside it, so the memory survives; the reclaim then reads focus-inside-but-not-where-I-remember as the signature of a move the library made. **What is still the engine\u2019s is the case with no memory to restore** \u2014 a dialog nobody had focused anything in comes back on whatever `showModal()` picks, and there is nothing truer to put there. Two states are deliberately not divergence: focus on the `<dialog>` element itself, which a dead-space click produces and which is never recorded, and a memory that has left the DOM, since falling through with one re-honours `focusOnOpen` over wherever the user had got to.',
     references: [
       {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',

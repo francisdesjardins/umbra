@@ -604,11 +604,18 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('vanilla-shadow-front');
 
-    // **Which control it lands on is the engine's, and pinning one broke CI.** Chromium lands on the
-    // first focusable — the newcomer's `showModal()` takes the keyboard before the raise can read
-    // where it was, and the raise's own fires a `focusin` over the coordinator's memory; WebKit keeps
-    // the field. A documented limit — see the guard in `core/attach-focus.ts` and its matrix cell.
-    expect(['shadow-confirm', 'shadow-note']).toContain(await focusedInShadow(page));
+    // **And on the control the user left, on every engine.** This is the assertion that used to
+    // accept either answer: the raise re-shows the dialog, the engine focuses something on the way
+    // back — Chromium the first focusable, WebKit the field — and the `focusin` it fires used to
+    // land on the coordinator's memory, so there was nothing left to restore from. `isRaisingDialog`
+    // closes that window, and the reclaim now treats focus-inside-but-not-where-I-remember as the
+    // signature of a move the library made. Pinning one engine broke CI before; pinning the
+    // library's own answer is what makes it the same on all three.
+    await expect
+      .poll(() => {
+        return focusedInShadow(page);
+      })
+      .toBe('shadow-note');
   });
 
   test('a policy installed over it keeps the caret where it was', async ({ mount, page }) => {

@@ -11,6 +11,44 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-24
 
+### Fixed — a raise puts the caret back on every engine, not on the engine's guess
+
+A raise is `close()` + `showModal()`, the only mechanism the top layer offers. The dialog that
+**held** the keyboard got it back — `raiseDialog` reads the active element before the round-trip and
+restores it after. The one that did not was left on whatever `showModal()` picks: Chromium the first
+focusable, WebKit the field. So a policy installed while a second dialog was in front handed the
+front dialog back to its confirm button and lost the field someone was typing in.
+
+**The coordinator already remembered the right answer and was having it overwritten.**
+`lastFocusInside` tracks every `focusin` inside the dialog, and the focus `showModal()` takes on the
+way back fires one — indistinguishable at the listener from a person clicking. It landed on the
+memory a fraction before anything could read it, so there was nothing left to restore from. Then the
+reclaim's guard, "focus is inside me, nothing to do", was satisfied by the wrong control.
+
+Two changes, both small, and the second is the one that could have gone wrong:
+
+- **`isRaisingDialog()`** publishes the round-trip as a window, and `remember` declines to record
+  inside it. A plain synchronous counter is enough because `close()`, `showModal()` and `focus()`
+  dispatch `focusin` before they return — anything arriving later is somebody's actual doing.
+- **The reclaim now reads focus-inside-but-not-where-I-remember** as the signature of a move the
+  library made. That is sound only because every other way focus travels inside is recorded, so the
+  memory is re-synced by the time anything asks. **Two states are deliberately not divergence**:
+  focus on the `<dialog>` element itself, which a dead-space click produces and which is never
+  recorded — reading it as divergence would yank the keyboard off a state `focus-containment.ct.tsx`
+  pins — and a memory that has left the DOM, since falling through with one sends the restore to the
+  `focusOnOpen` button, re-honouring an opening choice over wherever the user had got to.
+
+**The assertion that used to accept either answer now pins one.** "keeps the keyboard when something
+opens over it" read `expect(['shadow-confirm', 'shadow-note']).toContain(...)`, because pinning a
+control pinned an engine and broke CI. It pins `shadow-note` now and passes on Chromium, Firefox and
+WebKit — the position is the library's answer rather than the engine's. Checked the other way too:
+with the window disabled, Chromium returns `shadow-confirm` and the test fails.
+
+What stays the engine's is the case with no memory to restore: a dialog nobody had focused anything
+in comes back on whatever `showModal()` picks, and there is nothing truer to put there.
+
+The matrix cell goes `~` → `✓`, and `yarn todo` from 4 open to 3.
+
 ### Changed — the matrix worklist says which of ten things were actually work
 
 `yarn todo` printed **10 open cells** and had printed nine or ten for eleven days. The file's own

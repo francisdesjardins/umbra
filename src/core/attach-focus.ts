@@ -1,5 +1,5 @@
 import { isOwnEventTarget } from '../utils/dialog-scope.js';
-import { restoreOpenerFocus } from './dialog-lifecycle.js';
+import { isRaisingDialog, restoreOpenerFocus } from './dialog-lifecycle.js';
 import {
   activeWithin,
   captureActionRunner,
@@ -44,6 +44,30 @@ export function createFocusCoordinator(
    * both answer with whatever held focus before the press. A `click` names it on every engine.
    */
   let lastActivated: HTMLElement | null = null;
+
+  /**
+   * Whether focus sits inside this dialog somewhere **other** than where the bookkeeping last saw
+   * it — which is the signature of a move the library made rather than the user.
+   *
+   * Sound because every other way focus travels inside is recorded: a click, a Tab and a scripted
+   * `focus()` all fire `focusin`, so `lastFocusInside` is re-synced by the time anything asks. The
+   * one window that does not record is {@link isRaisingDialog}'s, and restoring the caret across it
+   * is the point.
+   *
+   * Two states are deliberately *not* divergence. **Focus on the `<dialog>` element itself** is what
+   * a dead-space click produces, and it is never recorded — reading it as divergence would yank the
+   * keyboard off a state `focus-containment.ct.tsx` pins. **A memory that has left the DOM** is no
+   * target either: falling through with one sends `preferredRestoreTarget` to the `focusOnOpen`
+   * button, re-honouring an opening choice over wherever the user had got to.
+   */
+  const divergedFromMemory = (active: Element | null, dialog: HTMLElement): boolean => {
+    return (
+      active !== dialog &&
+      lastFocusInside !== null &&
+      lastFocusInside.isConnected &&
+      active !== lastFocusInside
+    );
+  };
 
   /**
    * Which action is running, by reason.
@@ -201,6 +225,13 @@ export function createFocusCoordinator(
         };
 
         const remember = (event: Event) => {
+          // A raise is `close()` + `showModal()`, and the engine focuses something on the way back
+          // — the library's own doing, arriving here as an ordinary `focusin`. Recording it
+          // overwrites the caret this memory exists to restore, which is the whole reason the
+          // dialog that was not holding the keyboard used to come back on the engine's choice.
+          if (isRaisingDialog()) {
+            return;
+          }
           const target = ownTarget(event);
           if (target) {
             lastFocusInside = target;
@@ -251,12 +282,9 @@ export function createFocusCoordinator(
             // keyboard.
             return;
           }
-          if (dialog.contains(activeWithin(dialog))) {
-            // Ours already — though "ours" is not "where the user was": a raise re-shows the
-            // dialog and `showModal()` focuses its first control, satisfying this guard and losing
-            // a caret. Fixing it needs a window `raiseDialog` publishes and this reads, so the
-            // raise's own `focusin` stops overwriting the memory. Known limit, pinned by "keeps
-            // the keyboard when something opens over it" in `vanilla/__tests__/bind-dialog.ct.tsx`.
+          const active = activeWithin(dialog);
+          if (dialog.contains(active) && !divergedFromMemory(active, dialog)) {
+            // Ours, and standing where the memory says it should — nothing to do.
             return;
           }
           openingFocus = reclaimFocus(dialog, lastFocusInside) ?? openingFocus;
