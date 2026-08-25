@@ -25,7 +25,7 @@ export function attachClickOutside(
   ctx: ModalDomContext,
   options: ClickOutsideOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase, manager } = ctx;
+  const { store, getDialog, dialogId, phase, manager } = ctx;
   const { dismissOnClickOutside, dismissWhilePreparing, engine, onDismissRequest } = options;
 
   if (!dismissOnClickOutside || phase === 'closed') {
@@ -46,7 +46,7 @@ export function attachClickOutside(
     }
 
     // Only the topmost dialog responds — stand down if another dialog is above us.
-    if (!manager.lookup().isForeground(modalId)) {
+    if (!manager.lookup().isForeground(dialogId)) {
       return;
     }
 
@@ -59,7 +59,7 @@ export function attachClickOutside(
       return;
     }
 
-    log('Click outside', { id: modalId });
+    log('Click outside', { id: dialogId });
     answerDismiss(store, { request: onDismissRequest, cause: 'click-outside' });
   };
 

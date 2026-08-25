@@ -513,7 +513,7 @@ async function runProbe(text) {
   const rest = text.slice(colon + 1);
 
   if (verb === 'css') {
-    // Split on the LAST `=` so a selector may contain one: dialog[data-modal-id='x']=background
+    // Split on the LAST `=` so a selector may contain one: dialog[data-dialog-id='x']=background
     const eq = rest.lastIndexOf('=');
     const hasProps = eq !== -1 && !rest.slice(eq).includes(']');
     await reportCss(

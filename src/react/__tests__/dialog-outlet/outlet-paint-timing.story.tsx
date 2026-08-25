@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * The dialog node is built here but rendered by `ModalOutlet`, so it reaches the DOM one hop later.
+ * The dialog node is built here but rendered by `DialogOutlet`, so it reaches the DOM one hop later.
  * `painted-count` records what the dialog's DOM said at the next animation frame after the click —
  * what the user was about to see — and it must already match `count`, never trail a visible frame.
  */
@@ -58,8 +58,8 @@ function Inner() {
 
 export function OutletPaintTimingHarness() {
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <Inner />
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

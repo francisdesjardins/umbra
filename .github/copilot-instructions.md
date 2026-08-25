@@ -42,7 +42,7 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 - **Files**: kebab-case (`use-dialog.tsx`, `dialog-manager.ts`)
 - **Exports**: PascalCase types/components, camelCase functions/hooks
 - **Imports**: Inline type imports enforced — `import { useState, type ReactNode } from 'react'`
-- **Optional props**: Always `| undefined` suffix — `readonly animation?: ModalAnimation | undefined` (required by `exactOptionalPropertyTypes`)
+- **Optional props**: Always `| undefined` suffix — `readonly animation?: DialogAnimation | undefined` (required by `exactOptionalPropertyTypes`)
 - **Curly braces**: Always required. **Arrow params**: Always parenthesized.
 - **Unused vars**: Prefix with `_` to suppress lint errors
 - **Enums**: Use `as const` objects, not TypeScript enums (see [src/utils/keys.ts](../src/utils/keys.ts))
@@ -64,9 +64,9 @@ These are hard constraints — never violate them when generating code:
 
 - **Headless-first**: never add UI components to the library (`src/`). Zero shipped UI — users own all rendering.
 - **Minimal surface**: prefer extending `useDialog` over adding new template hooks.
-- **Asking vs instructing**: `dialogManager.open(id)` and `openAndWait(id)` instruct — the second waits for the close and resolves the same `[error, result]` tuple a hook does. `requestOpen(id, request)` asks and forgets; `requestOpenAndWait(id, request)` asks and returns an `OpenRequestOutcome` — the owner refuses with `request.refuse(reason)`, and acceptance is the default. Reach for the asking pair across an ownership boundary and the instructing one inside it. A payload crossing that boundary is `unknown` **in both directions** unless the id is in `ModalRegistry`: validate the request in `onOpenRequest`, and validate `outcome.closed`'s `data` before believing it.
-- **Ids may be declared**: a project augments `ModalRegistry` to give an id its `closesWith` (the reasons, or a payload per reason) and its `opensWith`; declaring is optional and per modal, so an undeclared id must keep working everywhere. A payload declared for a reason is required when closing with it.
-- **No abstraction leakage**: template hooks must not expose core internals (store, lifecycle refs, `ModalStoreSnapshot`).
+- **Asking vs instructing**: `dialogManager.open(id)` and `openAndWait(id)` instruct — the second waits for the close and resolves the same `[error, result]` tuple a hook does. `requestOpen(id, request)` asks and forgets; `requestOpenAndWait(id, request)` asks and returns an `OpenRequestOutcome` — the owner refuses with `request.refuse(reason)`, and acceptance is the default. Reach for the asking pair across an ownership boundary and the instructing one inside it. A payload crossing that boundary is `unknown` **in both directions** unless the id is in `DialogRegistry`: validate the request in `onOpenRequest`, and validate `outcome.closed`'s `data` before believing it.
+- **Ids may be declared**: a project augments `DialogRegistry` to give an id its `closesWith` (the reasons, or a payload per reason) and its `opensWith`; declaring is optional and per modal, so an undeclared id must keep working everywhere. A payload declared for a reason is required when closing with it.
+- **No abstraction leakage**: template hooks must not expose core internals (store, lifecycle refs, `DialogStoreSnapshot`).
 - **Bring your own everything**: animations, styling, and layout are user-land concerns — do not bake them in.
 
 ## Project Conventions

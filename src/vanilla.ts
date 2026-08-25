@@ -16,15 +16,15 @@
  */
 
 export { bindDialog } from './vanilla/bind-dialog.js';
-export type { BindDialogOptions, DialogController, ModalSnapshot } from './vanilla/types.js';
+export type { BindDialogOptions, DialogController, DialogSnapshot } from './vanilla/types.js';
 
 // The core, wholesale, so this is the one import path. The `.js` is load-bearing — see the note on
 // `./react`'s copy of this line.
 export * from './index.js';
 
-// The vocabulary a controller's callbacks speak; `CloseResult`, `ModalPhase` and
-// `ModalStoreSnapshot` are absent because the root has them.
-export type { ModalHandle, ModalVariant, AwaitedClose } from './core/types.js';
+// The vocabulary a controller's callbacks speak; `CloseResult`, `DialogPhase` and
+// `DialogStoreSnapshot` are absent because the root has them.
+export type { DialogHandle, DialogVariant, AwaitedClose } from './core/types.js';
 
 // Bound rather than rendered here, but the same actions: what `bindAction` takes and applies.
 export type {

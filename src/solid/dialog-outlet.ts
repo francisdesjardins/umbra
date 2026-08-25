@@ -11,35 +11,35 @@ import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('outlet');
 
-type ModalOutletContextValue = {
+type DialogOutletContextValue = {
   readonly register: (id: string, node: JSX.Element) => void;
   readonly unregister: (id: string) => void;
 };
 
-const ModalOutletContext = createContext<ModalOutletContextValue | null>(null);
+const DialogOutletContext = createContext<DialogOutletContextValue | null>(null);
 
 /**
  * The nearest outlet context, or `null` when none wraps the caller.
  *
  * @internal Not part of the public API.
  */
-export function useModalOutletContext(): ModalOutletContextValue | null {
-  return useContext(ModalOutletContext);
+export function useDialogOutletContext(): DialogOutletContextValue | null {
+  return useContext(DialogOutletContext);
 }
 
 /**
- * `umbra/react`'s `ModalOutlet`, contract unchanged, and cheaper: React must move a rendered
+ * `umbra/react`'s `DialogOutlet`, contract unchanged, and cheaper: React must move a rendered
  * *node* through state, so registration is an effect and every descendant re-render republishes,
  * while a Solid modal owns a real DOM element from creation — registration is a plain setup call
  * and the outlet re-renders only when a modal is added or removed.
  *
  * No `@example` deliberately — the harness type-checks examples as React JSX, which an imported
- * Solid component inside JSX cannot pass; the checked one is on `umbra/react`'s `ModalOutlet`.
+ * Solid component inside JSX cannot pass; the checked one is on `umbra/react`'s `DialogOutlet`.
  */
-export function ModalOutlet(props: { readonly children: JSX.Element }): JSX.Element {
+export function DialogOutlet(props: { readonly children: JSX.Element }): JSX.Element {
   const [modals, setModals] = createSignal<ReadonlyMap<string, JSX.Element>>(new Map());
 
-  const context: ModalOutletContextValue = {
+  const context: DialogOutletContextValue = {
     register(id, node) {
       setModals((current) => {
         if (current.has(id)) {
@@ -68,7 +68,7 @@ export function ModalOutlet(props: { readonly children: JSX.Element }): JSX.Elem
     return [...modals().values()];
   });
 
-  return createComponent(ModalOutletContext.Provider, {
+  return createComponent(DialogOutletContext.Provider, {
     value: context,
     get children(): JSX.Element {
       // Children first, so descendants have registered by the time the list below is read.

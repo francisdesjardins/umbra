@@ -4,7 +4,7 @@ import { useSlideDialog } from '../../templates/use-slide-dialog.js';
 
 /**
  * The styling surface: `--dialog-backdrop` (inherited, so overriding is a declaration, not a
- * specificity fight), `data-modal-id`/`data-modal-type` (CSS reaching one dialog or all non-modal
+ * specificity fight), `data-dialog-id`/`data-dialog-type` (CSS reaching one dialog or all non-modal
  * ones), and `style`, merged over a template's placement so a drawer's `left: 0` survives.
  */
 export function StylingSurfaceHarness() {

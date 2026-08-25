@@ -34,7 +34,7 @@ export type LabellingAttributes = {
   readonly describedBy: string | null;
   /** The `role` attribute as written on the element, `null` when absent. */
   readonly role: string | null;
-  /** Read off `data-modal-type`, so the caller's markup answers rather than the options. */
+  /** Read off `data-dialog-type`, so the caller's markup answers rather than the options. */
   readonly nonModal: boolean;
 };
 

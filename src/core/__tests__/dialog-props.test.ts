@@ -1,24 +1,26 @@
 import { expect, test } from '@playwright/test';
 import { dialogAttributes, isBackdropClick, setDialogAttributes } from '../dialog-props.js';
 
-// The attribute table both bindings spread onto their `<dialog>`. `data-modal-id` and
-// `data-modal-type` are a *contract* — user-land CSS reaches dialogs through them. The aria fields
+// The attribute table both bindings spread onto their `<dialog>`. `data-dialog-id` and
+// `data-dialog-type` are a *contract* — user-land CSS reaches dialogs through them. The aria fields
 // stay `undefined` rather than empty, or a binding would hide a missing name from an audit.
 
 test.describe('dialogAttributes', () => {
   test('carries the styling contract and the test id', () => {
     expect(
-      dialogAttributes({ modalId: 'settings', nonModal: false, isPreparing: false })
+      dialogAttributes({ dialogId: 'settings', nonModal: false, isPreparing: false })
     ).toMatchObject({
-      'data-modal-id': 'settings',
-      'data-testid': 'modal-settings',
-      'data-modal-type': 'modal',
+      'data-dialog-id': 'settings',
+      'data-testid': 'dialog-settings',
+      'data-dialog-type': 'modal',
     });
   });
 
   test('reports the variant, which is what non-modal CSS keys off', () => {
     expect(
-      dialogAttributes({ modalId: 'toast', nonModal: true, isPreparing: false })['data-modal-type']
+      dialogAttributes({ dialogId: 'toast', nonModal: true, isPreparing: false })[
+        'data-dialog-type'
+      ]
     ).toBe('non-modal');
   });
 
@@ -26,16 +28,16 @@ test.describe('dialogAttributes', () => {
     // The one attribute the library owns outright, and the one that toggles. `'false'` is written
     // rather than omitted because `setDialogAttributes` skips `undefined`.
     expect(
-      dialogAttributes({ modalId: 'slow', nonModal: false, isPreparing: true })['aria-busy']
+      dialogAttributes({ dialogId: 'slow', nonModal: false, isPreparing: true })['aria-busy']
     ).toBe('true');
     expect(
-      dialogAttributes({ modalId: 'slow', nonModal: false, isPreparing: false })['aria-busy']
+      dialogAttributes({ dialogId: 'slow', nonModal: false, isPreparing: false })['aria-busy']
     ).toBe('false');
   });
 
   test('leaves every aria field undefined when the caller named none', () => {
     const attributes = dialogAttributes({
-      modalId: 'unnamed',
+      dialogId: 'unnamed',
       nonModal: false,
       isPreparing: false,
     });
@@ -51,7 +53,7 @@ test.describe('dialogAttributes', () => {
   test('passes the caller’s name and role through untouched', () => {
     expect(
       dialogAttributes({
-        modalId: 'confirm-delete',
+        dialogId: 'confirm-delete',
         nonModal: false,
         isPreparing: false,
         ariaLabel: 'Delete item',
@@ -84,12 +86,12 @@ test.describe('setDialogAttributes', () => {
     const element = recorder();
     setDialogAttributes(
       element,
-      dialogAttributes({ modalId: 'settings', nonModal: true, isPreparing: true })
+      dialogAttributes({ dialogId: 'settings', nonModal: true, isPreparing: true })
     );
 
-    expect(element.written.get('data-modal-id')).toBe('settings');
-    expect(element.written.get('data-testid')).toBe('modal-settings');
-    expect(element.written.get('data-modal-type')).toBe('non-modal');
+    expect(element.written.get('data-dialog-id')).toBe('settings');
+    expect(element.written.get('data-testid')).toBe('dialog-settings');
+    expect(element.written.get('data-dialog-type')).toBe('non-modal');
     expect(element.written.get('aria-busy')).toBe('true');
   });
 
@@ -99,7 +101,7 @@ test.describe('setDialogAttributes', () => {
     const element = recorder();
     setDialogAttributes(
       element,
-      dialogAttributes({ modalId: 'unnamed', nonModal: false, isPreparing: false })
+      dialogAttributes({ dialogId: 'unnamed', nonModal: false, isPreparing: false })
     );
 
     expect(element.written.has('aria-label')).toBe(false);
@@ -113,7 +115,7 @@ test.describe('setDialogAttributes', () => {
     const element = recorder();
     setDialogAttributes(
       element,
-      dialogAttributes({ modalId: 'done', nonModal: false, isPreparing: false })
+      dialogAttributes({ dialogId: 'done', nonModal: false, isPreparing: false })
     );
 
     expect(element.written.get('aria-busy')).toBe('false');

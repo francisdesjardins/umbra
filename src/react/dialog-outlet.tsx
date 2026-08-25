@@ -11,12 +11,12 @@ import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('outlet');
 
-type ModalOutletContextValue = {
+type DialogOutletContextValue = {
   readonly register: (id: string, node: ReactNode) => void;
   readonly unregister: (id: string) => void;
 };
 
-const ModalOutletContext = createContext<ModalOutletContextValue | null>(null);
+const DialogOutletContext = createContext<DialogOutletContextValue | null>(null);
 
 /**
  * The nearest outlet context, or `null` when none wraps the caller — then `useDialog` returns the
@@ -24,8 +24,8 @@ const ModalOutletContext = createContext<ModalOutletContextValue | null>(null);
  *
  * @internal Not part of the public API.
  */
-export function useModalOutletContext(): ModalOutletContextValue | null {
-  return use(ModalOutletContext);
+export function useDialogOutletContext(): DialogOutletContextValue | null {
+  return use(DialogOutletContext);
 }
 
 // The outlet holds rendered *nodes* rather than a DOM anchor to portal into, because a React
@@ -84,9 +84,9 @@ type OutletStoreMethods = {
  * function App() {
  *   // Modals opened anywhere below render here.
  *   return (
- *     <ModalOutlet>
+ *     <DialogOutlet>
  *       <Dashboard />
- *     </ModalOutlet>
+ *     </DialogOutlet>
  *   );
  * }
  *
@@ -105,12 +105,12 @@ type OutletStoreMethods = {
  * }
  * ```
  */
-export function ModalOutlet({ children }: { readonly children: ReactNode }) {
+export function DialogOutlet({ children }: { readonly children: ReactNode }) {
   // Created once with the store so its identity is stable: a fresh context object per render would
   // re-render every descendant `useDialog`, which re-registers, which is a loop.
   const [init] = useState(() => {
     const store = createOutletStore();
-    const ctx: ModalOutletContextValue = {
+    const ctx: DialogOutletContextValue = {
       register: (id, node) => {
         store.register(id, node);
       },
@@ -129,11 +129,11 @@ export function ModalOutlet({ children }: { readonly children: ReactNode }) {
   );
 
   return (
-    <ModalOutletContext value={init.ctx}>
+    <DialogOutletContext value={init.ctx}>
       {children}
       {Array.from(snap.modals.entries(), ([id, node]) => {
         return <Fragment key={id}>{node}</Fragment>;
       })}
-    </ModalOutletContext>
+    </DialogOutletContext>
   );
 }

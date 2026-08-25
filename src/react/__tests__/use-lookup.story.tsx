@@ -3,7 +3,7 @@ import { dialogStyle } from '../../__tests__/story-styles.js';
 import { useDialog } from '../use-dialog.js';
 import { useLookup } from '../use-lookup.js';
 
-/** `useLookup(id)` reactivity: ModalInfo values update with no manual query. */
+/** `useLookup(id)` reactivity: DialogInfo values update with no manual query. */
 export function UseLookupHarness() {
   const info = useLookup('reactive-modal');
 

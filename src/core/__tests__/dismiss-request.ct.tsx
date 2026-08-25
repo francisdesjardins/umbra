@@ -10,9 +10,9 @@ import {
 // behaviour. The three doors are asserted separately because they were wired separately: routing
 // only the dismiss key through the owner is a version of this that passes half the file.
 
-const MODAL = 'dialog[data-modal-id="controlled-modal"]';
-const PANEL = 'dialog[data-modal-id="controlled-panel"]';
-const OUTSIDE_PANEL = 'dialog[data-modal-id="controlled-click-outside"]';
+const MODAL = 'dialog[data-dialog-id="controlled-modal"]';
+const PANEL = 'dialog[data-dialog-id="controlled-panel"]';
+const OUTSIDE_PANEL = 'dialog[data-dialog-id="controlled-click-outside"]';
 
 /** The viewport corner: backdrop for a modal, ordinary page for a panel. Never inside either box. */
 const CORNER = { x: 5, y: 5 };

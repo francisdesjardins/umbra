@@ -212,7 +212,7 @@ const flows = {
     ];
 
     for (const form of forms) {
-      const dialog = page.getByTestId(`modal-${form.id}`);
+      const dialog = page.getByTestId(`dialog-${form.id}`);
       const email = `${form.name.split(' ')[0].toLowerCase()}@example.com`;
       const isOpen = async () => {
         return dialog.evaluate((node) => {
@@ -257,7 +257,7 @@ const flows = {
     const checks = [];
     await gotoRoute(page, '/getting-started');
     const card = page.locator('[data-surface-card]', { hasText: 'Async Open' });
-    const dialog = page.getByTestId('modal-async-open');
+    const dialog = page.getByTestId('dialog-async-open');
 
     await card.getByRole('button', { name: 'Open', exact: true }).click();
     // Press while the query is still running: the loading panel has nothing focusable.
@@ -300,7 +300,7 @@ const flows = {
           const seen = [];
           const started = performance.now();
           const tick = () => {
-            const dialog = document.querySelector('[data-testid="modal-async-open"]');
+            const dialog = document.querySelector('[data-testid="dialog-async-open"]');
             // Either flavour's ContentTransition: vanilla carries its grid as a hashed class,
             // MUI writes it inline.
             const layer = dialog?.querySelector(
@@ -340,7 +340,7 @@ const flows = {
     const checks = [];
     await gotoRoute(page, '/modal-actions');
 
-    const dialog = page.getByTestId('modal-confirm-hotkeys');
+    const dialog = page.getByTestId('dialog-confirm-hotkeys');
     await page
       .getByRole('button', { name: /open confirm/i })
       .first()

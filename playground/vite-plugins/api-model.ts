@@ -29,7 +29,7 @@ const ENTRY_LABEL: Record<string, string> = {
 
 /**
  * How a symbol is addressed downstream: the specifier it ships from, then its name. The bindings
- * export the same words (`useDialog`, `ModalHandle`) with different signatures, so keying on the
+ * export the same words (`useDialog`, `DialogHandle`) with different signatures, so keying on the
  * bare name shows one binding's declaration under another's specifier.
  */
 export const symbolKey = (specifier: string, name: string): string => {
@@ -40,7 +40,7 @@ export const symbolKey = (specifier: string, name: string): string => {
 const KIND: Record<number, ApiSymbol['kind']> = {
   32: 'variable',
   64: 'function',
-  // An interface reads as a type on the page, and one of them is public: `ModalRegistry`, which a
+  // An interface reads as a type on the page, and one of them is public: `DialogRegistry`, which a
   // project augments. Unmapped, the reference silently omits the one symbol adopters must find.
   256: 'type',
   2097152: 'type',
@@ -68,30 +68,30 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'OpenRequestHandler',
       'OpenRequestOutcome',
       'RegisterOptions',
-      'ModalLookup',
-      'ModalInfo',
-      'RegisteredModalInfo',
-      'UnregisteredModalInfo',
+      'DialogLookup',
+      'DialogInfo',
+      'RegisteredDialogInfo',
+      'UnregisteredDialogInfo',
       'StackPriority',
-      'StackModal',
-      'ModalPhase',
-      'ModalStoreSnapshot',
+      'StackDialog',
+      'DialogPhase',
+      'DialogStoreSnapshot',
       'CloseResult',
-      'ModalFailure',
-      'ModalErrorSource',
+      'DialogFailure',
+      'DialogErrorSource',
       'DISMISS_REASON',
       'DismissReason',
       'DismissCause',
-      'ModalRegistry',
-      'ModalContract',
-      'ModalId',
+      'DialogRegistry',
+      'DialogContract',
+      'DialogId',
       'ReasonOf',
       'DataOf',
       'DataOfReason',
       'CloseOf',
       'PayloadOf',
       'PayloadFreeReasonOf',
-      'RegisteredModalId',
+      'RegisteredDialogId',
       'setLogLevel',
     ],
   },
@@ -123,8 +123,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
     symbols: [
       'MODAL_OPEN_EVENT',
       'MODAL_CLOSE_EVENT',
-      'ModalOpenEventDetail',
-      'ModalCloseEventDetail',
+      'DialogOpenEventDetail',
+      'DialogCloseEventDetail',
       'DialogManagerEvent',
       'DialogManagerSubscriber',
       'reconcileOpen',
@@ -181,12 +181,12 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'UseDialogOptions',
       'UseDialogBaseOptions',
       'UseDialogReturn',
-      'ModalRenderArgs',
-      'ModalHandle',
-      'ModalVariant',
-      'ModalAnimation',
+      'DialogRenderArgs',
+      'DialogHandle',
+      'DialogVariant',
+      'DialogAnimation',
       'AwaitedClose',
-      'ModalOutlet',
+      'DialogOutlet',
     ],
   },
   {
@@ -248,12 +248,12 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'UseDialogOptions',
       'UseDialogBaseOptions',
       'UseDialogReturn',
-      'ModalRenderArgs',
-      'ModalHandle',
-      'ModalVariant',
-      'ModalAnimation',
+      'DialogRenderArgs',
+      'DialogHandle',
+      'DialogVariant',
+      'DialogAnimation',
       'AwaitedClose',
-      'ModalOutlet',
+      'DialogOutlet',
     ],
   },
   {
@@ -317,9 +317,9 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'bindDialog',
       'BindDialogOptions',
       'DialogController',
-      'ModalSnapshot',
-      'ModalHandle',
-      'ModalVariant',
+      'DialogSnapshot',
+      'DialogHandle',
+      'DialogVariant',
       'AwaitedClose',
     ],
   },
@@ -992,7 +992,7 @@ async function buildModel(
   rmSync(join(cacheDir, 'html'), { recursive: true, force: true });
   const names = collectNames(root);
 
-  // Two indexes because a re-exported type is **one** reflection: `ModalHandle` is named by all
+  // Two indexes because a re-exported type is **one** reflection: `DialogHandle` is named by all
   // three bindings but materialises under whichever entry point typedoc walked first, so a binding
   // must fall back to it. `UseDialogOptions` is the opposite — two aliases, two keys, no fallback.
   const declarations = new Map<string, Declaration>();

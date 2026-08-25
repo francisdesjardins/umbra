@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -63,7 +63,7 @@ export function OutletTeardownHarness() {
   const [mounted, setMounted] = useState(true);
 
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <span data-testid="mounted">{mounted ? 'yes' : 'no'}</span>
       {mounted ? (
         <TeardownModal
@@ -72,6 +72,6 @@ export function OutletTeardownHarness() {
           }}
         />
       ) : null}
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

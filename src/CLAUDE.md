@@ -5,7 +5,7 @@
 - **[index.ts](index.ts)** — the package root: the framework-agnostic dialog manager, the
   store engine, the placement and style tables, `Key`. **Must resolve with no framework
   installed**, enforced by [\_\_tests\_\_/entry-isolation.test.ts](__tests__/entry-isolation.test.ts).
-- **[react.ts](react.ts)** — the React binding: hooks, `ModalOutlet`, the provider. Re-exports
+- **[react.ts](react.ts)** — the React binding: hooks, `DialogOutlet`, the provider. Re-exports
   the root wholesale so React apps use one specifier.
 - **[solid.ts](solid.ts)** — the Solid binding, the same surface. Everything under
   [solid/](solid/); re-exports the root wholesale too.
@@ -19,9 +19,9 @@ types either, or a Solid-only consumer needs `@types/react` in their tree to rea
 why the style type is derived from the DOM (`core/style.ts`) rather than borrowed from React —
 see [The two open knobs](#the-two-open-knobs) below.
 
-A type also belongs at the root if the root's own public surface **refers** to it: `ModalInfo`
-is a root export, so `ModalPhase` must be too, or a root consumer cannot annotate what it was
-handed. The hook-shaped types (`ModalHandle`, `ModalRenderArgs`, `ModalVariant`) are at the root
+A type also belongs at the root if the root's own public surface **refers** to it: `DialogInfo`
+is a root export, so `DialogPhase` must be too, or a root consumer cannot annotate what it was
+handed. The hook-shaped types (`DialogHandle`, `DialogRenderArgs`, `DialogVariant`) are at the root
 because they are framework-free; the two that are not — the option and return types — are the
 core model instantiated per binding.
 
@@ -66,13 +66,13 @@ like any other. What waits on it is `open()`'s promise, `isPreparing` and theref
 `dismissWhilePreparing`, and the labelling diagnostic.
 
 **`dialog` is the element, `modal` is the unit of state.** `dialogPlacement`, `dialogAttributes`,
-`DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `modal-store.ts`, `ModalPhase`,
-`ModalRenderArgs` and `modalId` are the library's record of one. `DialogManagerSnapshot.openDialogs`
+`DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `modal-store.ts`, `DialogPhase`,
+`DialogRenderArgs` and `dialogId` are the library's record of one. `DialogManagerSnapshot.openDialogs`
 reads against the rule and stays, because applying it would rename `DialogManager` itself, the
 package's front door. Add no new exceptions.
 
 Two near-misses kept on purpose, so the next pass does not re-open them: `ActionGate`/`DismissGate`
-are "gate" in two senses and the alternatives cost more than the ambiguity; `ModalRenderArgs` and
+are "gate" in two senses and the alternatives cost more than the ambiguity; `DialogRenderArgs` and
 `BaseRenderContext` are one shape under two words because the alias is the seam
 `SlideDialogRenderContext` intersects.
 
@@ -152,7 +152,7 @@ itself, there being no other clock — safe here precisely because there is no c
 frameworks: the type of a **style object** and the type of a **rendered node**. Each binding pins
 them in one small file — [react/types.ts](react/types.ts) says `CSSProperties` and `ReactNode`,
 [solid/types.ts](solid/types.ts) says `DialogStyle` and `JSX.Element` — and re-exports the four
-resulting types (`ModalAnimation`, `UseDialogBaseOptions`, `UseDialogOptions`, `UseDialogReturn`)
+resulting types (`DialogAnimation`, `UseDialogBaseOptions`, `UseDialogOptions`, `UseDialogReturn`)
 under their ordinary names. A consumer never sees a type parameter.
 
 `DialogStyle` ([core/style.ts](core/style.ts)) is the framework-free default: a mapped type over the
@@ -234,7 +234,7 @@ built:
   rule, default `rgba(0, 0, 0, 0.7)`. Inherited, so setting it anywhere is a declaration rather than
   a specificity fight. **The sheet is adopted per _root_, not per document** — see
   [core/dialog-styles.ts](core/dialog-styles.ts).
-- **`data-modal-id`** and **`data-modal-type`** on the `<dialog>` — how CSS reaches one dialog or
+- **`data-dialog-id`** and **`data-dialog-type`** on the `<dialog>` — how CSS reaches one dialog or
   every non-modal one. `data-testid` is for tests and is **not** a styling contract.
 - **`style`** — the size of the `<dialog>` box, which the library never decides. The same lever the
   template hooks pull; a template's structural styles merge _under_ a caller's.
@@ -284,8 +284,8 @@ Each wraps `useDialog` with a template-specific render context. Shared internals
 
 `buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
-- `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `ModalRenderArgs` unchanged; reports `template: 'message'`
-- `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
+- `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `DialogRenderArgs` unchanged; reports `template: 'message'`
+- `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `DialogRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
 
@@ -297,7 +297,7 @@ hook, and nothing to pass into `useDialog`.
   `action('confirm')` closes with `reason: 'confirm'`; the handler is optional, omitting it
   auto-closing with that reason.
 - **Declare the reasons and the payload** — `useDialog<Result, 'save' | 'cancel'>`, or once in
-  `ModalRegistry`. The `TReason = string` default accepts anything, costing the three things the
+  `DialogRegistry`. The `TReason = string` default accepts anything, costing the three things the
   design exists for: a mistyped `action('savee')` rejected, autocomplete, an exhaustive `switch`.
 - **`'dismiss'` is reserved, and the reservation is a type** —
   `ActionReason<TReason> = Exclude<TReason, DismissReason>`, so no action may be _named_ it, while
@@ -381,20 +381,20 @@ re-find, and that limit belongs in the matrix.
 the concept, not editing three that describe it. The chain, rooted in [core/types.ts](core/types.ts):
 
 ```
-ModalRenderArgs<TData>                ← the render-time slice:
+DialogRenderArgs<TData>                ← the render-time slice:
 │                                       { isPreparing, phase, handle, action, hasRunningAction, error }
-├── UseDialogReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
+├── UseDialogReturn<TData>   = DialogRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
 │                                                        dialogManager }
-└── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
+└── BaseRenderContext<TData>= DialogRenderArgs<TData>               (templates/shared.ts)
     ├── MessageDialogRenderContext<TData> = BaseRenderContext<TData>
     └── SlideDialogRenderContext<TData>   = BaseRenderContext<TData> & { direction }
 
 UseDialogBaseOptions<TData, …, TStyle, TNode>   ← flat, variant-free option surface
-├── UseDialogOptions<…>      = UseDialogBaseOptions<…> & ModalVariant
+├── UseDialogOptions<…>      = UseDialogBaseOptions<…> & DialogVariant
 │   ├── react/types.ts      = …<CSSProperties, ReactNode>     ← exported as `UseDialogOptions`
 │   └── solid/types.ts      = …<DialogStyle, JSX.Element>     ← exported as `UseDialogOptions`
 └── TemplateCommonOptions<…> = Omit<UseDialogBaseOptions<…>, the 5 a template owns>
-    │                          & ModalVariant
+    │                          & DialogVariant
     └── TemplateBaseOptions<TData, TRenderContext, …>
 ```
 
@@ -407,14 +407,14 @@ either: each binding re-exports the instantiation under the plain name.
 exclusion list keeps it out. Spelled the other way round — the enumeration of forwarded keys it
 replaced — a new core option reached no template and nothing failed.
 
-So a new render-time field is added to `ModalRenderArgs` **once** and reaches the hook return and
+So a new render-time field is added to `DialogRenderArgs` **once** and reaches the hook return and
 every template context, with a caveat like `isPreparing`'s (it tracks the `prepare` callback, not
 the `'opening'` phase) written in one home rather than three.
 
-**One input comes from outside the model.** `core/registry.ts` declares `ModalRegistry` for a
-consumer to augment; `ModalId`, `ReasonOf` and `DataOf` read off it, and every hook —
+**One input comes from outside the model.** `core/registry.ts` declares `DialogRegistry` for a
+consumer to augment; `DialogId`, `ReasonOf` and `DataOf` read off it, and every hook —
 `useDialog`, both templates, `bindDialog` — leads with an overload constrained to
-`RegisteredModalId`, so a declared id supplies `TData` and `TReason`. `ModalId` stays open, since a
+`RegisteredDialogId`, so a declared id supplies `TData` and `TReason`. `DialogId` stays open, since a
 project hosts modals it does not own. The augmented half is `yarn type-check:registry` over
 `type-fixtures/`, compiled alone because declaration merging is global.
 
@@ -425,9 +425,9 @@ one any of its doors accepts:
 
 ```
 useDialog<TData, TReason>
-├── ModalHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
+├── DialogHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
 ├── ActionFactory<TData, TReason>      ← the `action` in the render args
-├── createModalStore<TData, TReason>   → ModalStoreSnapshot.closeResult: CloseResult<TData, TReason>
+├── createModalStore<TData, TReason>   → DialogStoreSnapshot.closeResult: CloseResult<TData, TReason>
 └── onClose(result: CloseResult<TData, TReason>)  ·  openAndWait(): [Error, null] | [null, CloseResult]
 ```
 
@@ -435,7 +435,7 @@ useDialog<TData, TReason>
 `CloseResult` is a plain object rather than a conditional, the store _runs_ `onClose` rather than
 returning it, and the hooks take `ActionGate` rather than `ActionEngine<TData>`. Each reason is on
 the declaration it constrains, being a fact about that type and nothing else — as are the two
-deliberate non-derivations, `RegisteredStore` and `ModalVariant`.
+deliberate non-derivations, `RegisteredStore` and `DialogVariant`.
 
 **A declared id's correlated close lives in the overload declarations and nowhere else**
 (`core/registered-types.ts`): `CloseOf` is a union keyed by `reason`, which is opaque at a generic
@@ -537,6 +537,6 @@ dialogManager.open('other-modal'); // ✅ context-aware
 
 **Stories page registration**: Export from barrel → add `StoryEntry` in `StoriesPage.tsx` → register `?raw` import in `codeSamples.ts`. A story off the page is invisible: it builds, runs in CT, and nobody reaches it — **gated** by `stories-registration.test.ts`, whose exemption list is empty, so an omission is a written decision. A harness sharing a file is cut out of it by name (`sliceDeclaration`). The exception is a **parameterised** harness: `StoryEntry.component` takes no props, so one requiring them is a fixture rather than a demo and the gate skips it — give it a prop-free default if it is worth showing.
 
-**Selectors**: `<dialog data-testid="modal-{id}">`; prefer `getByTestId`/`getByRole` to CSS, with `{ exact: true }` for partial label matches.
+**Selectors**: `<dialog data-testid="dialog-{id}">`; prefer `getByTestId`/`getByRole` to CSS, with `{ exact: true }` for partial label matches.
 
 Public API: [index.ts](index.ts).

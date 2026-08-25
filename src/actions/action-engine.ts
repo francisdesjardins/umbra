@@ -32,7 +32,7 @@ export type ActionEngineSnapshot = {
 
 const IDLE: ActionState = { isRunning: false, error: null };
 
-export function createActionEngine<TData, TReason extends string = string>(modalId: string) {
+export function createActionEngine<TData, TReason extends string = string>(dialogId: string) {
   const initial: ActionEngineSnapshot = { states: {}, hasRunningAction: false, error: null };
 
   /** Every action the last completed render drew, against its hotkey if it declared one. */
@@ -80,23 +80,23 @@ export function createActionEngine<TData, TReason extends string = string>(modal
           handler: (close: ActionCloseFn<TData>) => void | Promise<void>
         ): Promise<void> {
           if (get().hasRunningAction) {
-            log.warn('Action overlap', { id: modalId, incoming: reason });
+            log.warn('Action overlap', { id: dialogId, incoming: reason });
           }
           setState(reason, { isRunning: true, error: null });
-          log('Action started', { id: modalId, reason });
+          log('Action started', { id: dialogId, reason });
           const startedAt = Date.now();
           try {
             await handler((data?: TData) => {
               // Whether a payload came, never the payload itself, which may carry user data.
-              log('Action close', { id: modalId, reason, withData: data !== undefined });
+              log('Action close', { id: dialogId, reason, withData: data !== undefined });
               closeFn?.(reason, data);
             });
-            log('Action completed', { id: modalId, reason, ms: Date.now() - startedAt });
+            log('Action completed', { id: dialogId, reason, ms: Date.now() - startedAt });
             setState(reason, { isRunning: false, error: null });
           } catch (err: unknown) {
             const error = normalizeError(err);
             log.error('Action failed', {
-              id: modalId,
+              id: dialogId,
               reason,
               error: error.message,
               ms: Date.now() - startedAt,
@@ -148,7 +148,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
       if (!warnedDismiss && reason === DISMISS_REASON) {
         warnedDismiss = true;
         log.warn('Action declared with the reserved dismiss reason — name it cancel or close', {
-          id: modalId,
+          id: dialogId,
         });
       }
       (pending ?? declared).set(reason, hotkey);

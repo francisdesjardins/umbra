@@ -2,7 +2,7 @@
  * The project-level modal registry: one place a consumer declares the modals their app has, so
  * that an id stops being a bare `string` at every door the manager offers.
  *
- * Nothing here is required. The interface ships empty, and while it is empty {@link ModalId}
+ * Nothing here is required. The interface ships empty, and while it is empty {@link DialogId}
  * accepts any string — every existing call site stays exactly as it was.
  *
  * **Declare as few or as many as you like.** An id the registry does not name still works, so a
@@ -16,7 +16,7 @@
  *
  * @example
  * declare module 'umbra' {
- *   interface ModalRegistry {
+ *   interface DialogRegistry {
  *     'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
  *     'session-warning': { reason: 'extend' | 'sign-out' };
  *   }
@@ -30,10 +30,10 @@ import type { DismissReason } from './dismiss-reason.js';
  * they are two directions with two levels of trust — what the dialog hands back, and what a stranger
  * hands in.
  *
- * **Advisory, not enforced.** `ModalRegistry` is filled by declaration merging, so nothing can check
+ * **Advisory, not enforced.** `DialogRegistry` is filled by declaration merging, so nothing can check
  * an augmentation against this; a key none of the types below reads is ignored.
  */
-export type ModalContract = {
+export type DialogContract = {
   /**
    * What this modal closes with — the reasons alone, or a payload per reason with `void` for one
    * that carries nothing:
@@ -59,25 +59,25 @@ export type ModalContract = {
 
 /** The interface a project augments. Empty as shipped — see the module doc for the shape. */
 // oxlint-disable-next-line typescript/no-empty-object-type -- the emptiness is the mechanism: only an interface merges, and it starts with no keys because the modals are the project's to name
-export interface ModalRegistry {}
+export interface DialogRegistry {}
 
 /**
  * The id every door accepts: the declared names **and** any other string, so that declaring one
  * modal does not make every undeclared one an error.
  *
- * **`(string & {})` is what keeps both halves.** A plain `keyof ModalRegistry | string` collapses
+ * **`(string & {})` is what keeps both halves.** A plain `keyof DialogRegistry | string` collapses
  * to `string` and the editor stops completing the names; the branded member is ignored by that
  * reduction, so the union survives long enough to be suggested.
  */
 // oxlint-disable-next-line typescript/no-redundant-type-constituents -- `never` only while nobody has augmented; it becomes the union of declared ids, which is the whole mechanism
-export type ModalId = keyof ModalRegistry | (string & {});
+export type DialogId = keyof DialogRegistry | (string & {});
 
 /**
  * The declared close map, or `never` for an id that declares none — the one place the `closesWith` key
  * is read, so the types below cannot disagree about what a contract said.
  */
-type ClosesWithOf<TId> = TId extends keyof ModalRegistry
-  ? ModalRegistry[TId] extends { readonly closesWith: infer TCloses }
+type ClosesWithOf<TId> = TId extends keyof DialogRegistry
+  ? DialogRegistry[TId] extends { readonly closesWith: infer TCloses }
     ? TCloses
     : never
   : never;
@@ -88,8 +88,8 @@ type ClosesWithOf<TId> = TId extends keyof ModalRegistry
  *
  * Both forms of `closesWith` answer here — the bare union as itself, the map through its keys.
  */
-export type ReasonOf<TId> = TId extends keyof ModalRegistry
-  ? ModalRegistry[TId] extends { readonly closesWith: infer TCloses }
+export type ReasonOf<TId> = TId extends keyof DialogRegistry
+  ? DialogRegistry[TId] extends { readonly closesWith: infer TCloses }
     ? TCloses extends string
       ? TCloses
       : Exclude<keyof TCloses & string, DismissReason>
@@ -121,8 +121,8 @@ export type DataOfReason<TId, TReason> =
  * stays deferred, so the checker compares against the union of its branches: narrow that union and
  * the manager's facade silently stops implementing its own interface.
  */
-export type DataOf<TId> = TId extends keyof ModalRegistry
-  ? ModalRegistry[TId] extends { readonly closesWith: infer TClosesWith }
+export type DataOf<TId> = TId extends keyof DialogRegistry
+  ? DialogRegistry[TId] extends { readonly closesWith: infer TClosesWith }
     ? TClosesWith extends string
       ? void
       : [Exclude<TClosesWith[keyof TClosesWith], void>] extends [never]
@@ -178,8 +178,8 @@ export type CloseOf<TId> =
  * at compile time can. A dialog genuinely reachable by strangers (a microfrontend bridge, a
  * `postMessage` relay) still parses before believing; what it gains here is a name to parse *to*.
  */
-export type PayloadOf<TId> = TId extends keyof ModalRegistry
-  ? ModalRegistry[TId] extends { readonly opensWith: infer TPayload }
+export type PayloadOf<TId> = TId extends keyof DialogRegistry
+  ? DialogRegistry[TId] extends { readonly opensWith: infer TPayload }
     ? TPayload
     : unknown
   : unknown;
@@ -188,4 +188,4 @@ export type PayloadOf<TId> = TId extends keyof ModalRegistry
  * Whether a project has opted in at all — the discriminator the hook overloads switch on, so that
  * an empty registry resolves to today's signature rather than to an uninhabitable one.
  */
-export type RegisteredModalId = keyof ModalRegistry;
+export type RegisteredDialogId = keyof DialogRegistry;

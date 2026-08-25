@@ -1,4 +1,4 @@
-import type { ModalAnimation } from '../core/types.js';
+import type { DialogAnimation } from '../core/types.js';
 
 /**
  * The geometry of a slide panel, as data — no framework, no hook. `useSlideDialog` is a style and an
@@ -94,7 +94,7 @@ const isHorizontal = (direction: SlideDirection): boolean => {
 export function slideAnimation(
   direction: SlideDirection,
   align: SlideAlign
-): ModalAnimation<SlideAnimationStyle> {
+): DialogAnimation<SlideAnimationStyle> {
   const t = SLIDE_TRANSFORMS[direction];
 
   const crossShift =

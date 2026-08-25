@@ -18,7 +18,7 @@
   "intentionallyNotExported": [
     "StoreBase",
     "LowercaseLetter",
-    "ModalInfoBase",
+    "DialogInfoBase",
     "BaseRenderContext",
     "TemplateBaseOptions",
     "RegisteredStore",
@@ -29,7 +29,7 @@
     // `./solid`, where they appear under the same names with the framework's own style and node
     // types filled in — documenting the open form as well would put two `UseDialogOptions` in the
     // reference and make the reader pick.
-    "umbra/src/core/types.ts:ModalAnimation",
+    "umbra/src/core/types.ts:DialogAnimation",
     "umbra/src/core/types.ts:UseDialogBaseOptions",
     "umbra/src/core/types.ts:UseDialogOptions",
     "umbra/src/core/types.ts:UseDialogReturn",
@@ -48,7 +48,7 @@
     // public types derived from it are what a reader wants instead.
     "umbra/src/core/registry.ts:ClosesWithOf",
     // The controller binding's own four options, named only so its registered door can rebuild the
-    // option surface without omitting across `ModalVariant`.
+    // option surface without omitting across `DialogVariant`.
     "umbra/src/vanilla/types.ts:BindDialogOwnOptions",
     "umbra/src/vanilla/types.ts:RegisteredBindOptions",
     "umbra/src/vanilla/types.ts:RegisteredController"

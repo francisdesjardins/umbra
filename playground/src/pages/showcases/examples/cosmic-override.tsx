@@ -14,12 +14,12 @@ export const WARP_ID = 'cosmic-warp';
 
 /**
  * `--dialog-backdrop` is the library's one visual opinion, so theming it is a declaration rather
- * than a specificity fight; `data-modal-id` reaches one dialog without knowing where it renders.
+ * than a specificity fight; `data-dialog-id` reaches one dialog without knowing where it renders.
  * The `.cosmic-*` classes below carry the parts of the interiors an inline style cannot: pseudo
  * elements, `:hover`/`:disabled`, keyframes and media queries.
  */
 const COSMIC_CSS = `
-  dialog[data-modal-id="${WARP_ID}"] {
+  dialog[data-dialog-id="${WARP_ID}"] {
     /* The corona is its own custom property so the phone can restate *only this layer*.
        On a wide screen a circle sized to the closest side is the shape: the band clears the rim
        and the fade dies at the nearest edge, with nothing cut. (The CSS default,
@@ -47,14 +47,14 @@ const COSMIC_CSS = `
      soft outer falloff, not the ring. Scoped here on purpose — the desktop shape above is the
      one that was wanted and is left exactly as it is. */
   @media (max-width: 599.98px) {
-    dialog[data-modal-id="${WARP_ID}"] {
+    dialog[data-dialog-id="${WARP_ID}"] {
       --warp-corona:
         radial-gradient(circle farthest-side at 50% 50%,
           transparent 28%, rgba(245,158,11,0.30) 46%, rgba(180,83,9,0.14) 66%, transparent 100%);
     }
   }
 
-  dialog[data-modal-id="${WARP_ID}"]::backdrop {
+  dialog[data-dialog-id="${WARP_ID}"]::backdrop {
     animation: cosmic-drift 24s linear infinite alternate;
   }
 
@@ -145,7 +145,7 @@ const COSMIC_CSS = `
   }
 
   @media (prefers-reduced-motion: reduce) {
-    dialog[data-modal-id="${WARP_ID}"]::backdrop,
+    dialog[data-dialog-id="${WARP_ID}"]::backdrop,
     .cosmic-eclipse::before,
     .cosmic-eclipse::after {
       animation: none;

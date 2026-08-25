@@ -1,4 +1,4 @@
-import type { ModalPhase } from './types.js';
+import type { DialogPhase } from './types.js';
 
 /** What a controlled wrapper should do to put its dialog back where its prop says it belongs. */
 export type OpenReconciliation = 'open' | 'close' | 'none';
@@ -42,7 +42,7 @@ export type OpenReconciliation = 'open' | 'close' | 'none';
  * }
  * ```
  */
-export function reconcileOpen(phase: ModalPhase, open: boolean): OpenReconciliation {
+export function reconcileOpen(phase: DialogPhase, open: boolean): OpenReconciliation {
   // Already on its way out. When it lands the phase changes again, which is also how a call site
   // that raised the prop mid-exit gets its dialog back.
   if (phase === 'closing') {

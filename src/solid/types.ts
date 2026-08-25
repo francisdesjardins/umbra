@@ -1,7 +1,7 @@
 import type { JSX } from 'solid-js';
 import type { DialogStyle } from '../core/style.js';
 import type {
-  ModalAnimation as ModalAnimationModel,
+  DialogAnimation as DialogAnimationModel,
   UseDialogBaseOptions as UseDialogBaseOptionsModel,
   UseDialogOptions as UseDialogOptionsModel,
   UseDialogReturn as UseDialogReturnModel,
@@ -15,9 +15,9 @@ import type {
  */
 
 /** CSS transition configuration for modal entrance/exit animations. */
-export type ModalAnimation = ModalAnimationModel;
+export type DialogAnimation = DialogAnimationModel;
 
-/** Variant-independent options for `useDialog`; `nonModal` and friends live in `ModalVariant`. */
+/** Variant-independent options for `useDialog`; `nonModal` and friends live in `DialogVariant`. */
 export type UseDialogBaseOptions<
   TData = void,
   TReason extends string = string,

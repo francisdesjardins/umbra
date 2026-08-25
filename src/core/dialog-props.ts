@@ -2,14 +2,14 @@
  * What goes on the `<dialog>` element, as data — the attributes, and the one question a backdrop
  * click asks.
  *
- * A binding builds the element; it should not also be deciding what `data-modal-type` is called
+ * A binding builds the element; it should not also be deciding what `data-dialog-type` is called
  * or re-deriving when a click counts as a backdrop click. Both are answers, and a second binding
  * that answered them slightly differently would break the styling contract for one of them.
  */
 
 /** What a binding knows about the dialog it is about to render. */
 export type DialogAttributeOptions = {
-  readonly modalId: string;
+  readonly dialogId: string;
   readonly nonModal: boolean;
   /**
    * Whether `prepare` is still running. Required rather than optional: a binding that forgot it
@@ -26,14 +26,14 @@ export type DialogAttributeOptions = {
 /**
  * The attribute set for a `<dialog>`, spreadable onto it in any binding.
  *
- * `data-modal-id` and `data-modal-type` are the styling contract — how user-land CSS reaches one
+ * `data-dialog-id` and `data-dialog-type` are the styling contract — how user-land CSS reaches one
  * dialog, or every non-modal one, without knowing anything about the tree it renders in.
  * `data-testid` is for tests and is deliberately *not* documented as a styling hook.
  */
 export type DialogAttributes = {
-  readonly 'data-modal-id': string;
+  readonly 'data-dialog-id': string;
   readonly 'data-testid': string;
-  readonly 'data-modal-type': 'modal' | 'non-modal';
+  readonly 'data-dialog-type': 'modal' | 'non-modal';
   readonly 'aria-busy': 'true' | 'false';
   readonly 'aria-label': string | undefined;
   readonly 'aria-labelledby': string | undefined;
@@ -56,13 +56,13 @@ export type DialogAttributes = {
  * rather than removing, so the value that means "done" has to be written.
  */
 export function dialogAttributes(options: DialogAttributeOptions): DialogAttributes {
-  const { modalId, nonModal, isPreparing, ariaLabel, ariaLabelledBy, ariaDescribedBy, role } =
+  const { dialogId, nonModal, isPreparing, ariaLabel, ariaLabelledBy, ariaDescribedBy, role } =
     options;
 
   return {
-    'data-modal-id': modalId,
-    'data-testid': `modal-${modalId}`,
-    'data-modal-type': nonModal ? 'non-modal' : 'modal',
+    'data-dialog-id': dialogId,
+    'data-testid': `dialog-${dialogId}`,
+    'data-dialog-type': nonModal ? 'non-modal' : 'modal',
     'aria-busy': isPreparing ? 'true' : 'false',
     'aria-label': ariaLabel,
     'aria-labelledby': ariaLabelledBy,

@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js';
-import type { RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredDialogId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
 import type { DialogStyle } from '../../core/style.js';
 import {
@@ -48,11 +48,11 @@ export type UseMessageDialogReturn<TData = void, TReason extends string = string
  * node type. Option mapping and fade animation are shared, in `templates/shared.ts`.
  */
 /**
- * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
- * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
+ * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
  * the one below — which is the signature `useMessageDialog` has always had.
  */
-export function useMessageDialog<TId extends RegisteredModalId>(
+export function useMessageDialog<TId extends RegisteredDialogId>(
   options: RegisteredTemplateOptions<TId, RegisteredMessageContext<TId>, DialogStyle, JSX.Element>
 ): RegisteredReturn<TId, JSX.Element>;
 export function useMessageDialog<TData = void, TReason extends string = string>(

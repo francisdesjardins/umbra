@@ -1,6 +1,6 @@
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import type { DismissCause, DismissReason } from '../core/dismiss-reason.js';
-import type { ModalPhase } from '../core/types.js';
+import type { DialogPhase } from '../core/types.js';
 
 /**
  * Inputs to {@link canDismiss} — everything the guard needs, with no React, DOM or action coupling;
@@ -8,8 +8,8 @@ import type { ModalPhase } from '../core/types.js';
  */
 export type DismissGate = {
   /** Current lifecycle phase of the modal. */
-  readonly phase: ModalPhase;
-  /** Whether the `prepare` callback is still executing (see `ModalStoreSnapshot.isPreparing`). */
+  readonly phase: DialogPhase;
+  /** Whether the `prepare` callback is still executing (see `DialogStoreSnapshot.isPreparing`). */
   readonly isPreparing: boolean;
   /** Whether dismissal is allowed while `prepare` is still executing. */
   readonly dismissWhilePreparing: boolean;

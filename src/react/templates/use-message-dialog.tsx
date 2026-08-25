@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredDialogId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
 import { useDialog } from '../use-dialog.js';
 import type { UseDialogReturn } from '../types.js';
@@ -55,7 +55,7 @@ export type UseMessageDialogReturn<TData = void, TReason extends string = string
  * const modal = useMessageDialog<void, 'cancel' | 'confirm'>({
  *   id: 'delete-confirm',
  *   render: ({ action }) => (
- *     <div className="modal-container">
+ *     <div className="dialog-container">
  *       <h2>Delete Item</h2>
  *       <p>Are you sure?</p>
  *       <button {...action('cancel', (close) => close())}>Cancel</button>
@@ -72,11 +72,11 @@ export type UseMessageDialogReturn<TData = void, TReason extends string = string
  * });
  */
 /**
- * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
- * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
+ * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
  * the one below — which is the signature `useMessageDialog` has always had.
  */
-export function useMessageDialog<TId extends RegisteredModalId>(
+export function useMessageDialog<TId extends RegisteredDialogId>(
   options: RegisteredTemplateOptions<TId, RegisteredMessageContext<TId>, CSSProperties, ReactNode>
 ): RegisteredReturn<TId, ReactNode>;
 export function useMessageDialog<TData = void, TReason extends string = string>(

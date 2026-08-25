@@ -1,5 +1,5 @@
 import { createActionFactory } from '../core/action-factory.js';
-import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredDialogId } from '../core/registry.js';
 import { attachClickOutside } from '../core/attach-click-outside.js';
 import { attachFocusContainment } from '../core/attach-focus-containment.js';
 import { createFocusCoordinator } from '../core/attach-focus.js';
@@ -31,11 +31,11 @@ import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
 import type { ModalDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
-import type { GetDialog, ModalAnimation } from '../core/types.js';
+import type { GetDialog, DialogAnimation } from '../core/types.js';
 import type {
   BindDialogOptions,
   DialogController,
-  ModalSnapshot,
+  DialogSnapshot,
   RegisteredBindOptions,
   RegisteredController,
 } from './types.js';
@@ -70,11 +70,11 @@ const log = createLogger('modal');
  * const [error, result] = await confirm.openAndWait();
  */
 /**
- * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
- * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
+ * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
  * the one below — which is the signature `bindDialog` has always had.
  */
-export function bindDialog<TId extends RegisteredModalId>(
+export function bindDialog<TId extends RegisteredDialogId>(
   options: RegisteredBindOptions<TId>
 ): RegisteredController<TId>;
 export function bindDialog<TData = void, TReason extends string = string>(
@@ -83,16 +83,16 @@ export function bindDialog<TData = void, TReason extends string = string>(
 export function bindDialog<TData = void, TReason extends string = string>(
   options: BindDialogOptions<TData, TReason>
 ): DialogController<TData, TReason> {
-  const modalId = options.id;
+  const dialogId = options.id;
   const { dialog } = options;
   const manager = options.manager ?? singleton;
 
   const resolved = resolveModalOptions(options);
   // Annotated for the reason React's binding gives.
-  const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(modalId);
+  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(dialogId);
   const getDialog: GetDialog = () => {
     return dialog;
   };
@@ -103,7 +103,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     setDialogAttributes(
       dialog,
       dialogAttributes({
-        modalId,
+        dialogId,
         nonModal: resolved.isNonModal,
         isPreparing: store.getSnapshot().isPreparing,
         ariaLabel: options.ariaLabel,
@@ -120,10 +120,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
     // The parent is the only host a binding that owns no markup can assume.
     const host = options.host ?? dialog.parentElement;
     if (host) {
-      host.setAttribute('data-modal-container', modalId);
+      host.setAttribute('data-dialog-container', dialogId);
       applyStyle(host, { next: resolved.placement.host });
     } else {
-      log.warn('Contained dialog has no host to position against', { id: modalId });
+      log.warn('Contained dialog has no host to position against', { id: dialogId });
     }
   }
 
@@ -131,7 +131,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  manager.register(modalId, {
+  manager.register(dialogId, {
     store,
     template: resolved.template,
     nonModal: resolved.isNonModal,
@@ -165,14 +165,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   // No render and no signal here, so the store is the clock: attachments rebuild when the phase or
   // `prepare`'s progress moves, the dependency list the other two bindings hand their effects.
-  const focus = createFocusCoordinator({ getDialog, modalId, manager }, { engine });
+  const focus = createFocusCoordinator({ getDialog, dialogId, manager }, { engine });
 
   let appliedStyle: DialogStyle | undefined;
   let detachments: (() => void)[] = [];
   let attachedFor = '';
 
-  const domContext = (phase: ModalSnapshot['phase']): ModalDomContext => {
-    return { store, getDialog, modalId, phase, manager };
+  const domContext = (phase: DialogSnapshot['phase']): ModalDomContext => {
+    return { store, getDialog, dialogId, phase, manager };
   };
 
   const sync = () => {
@@ -249,7 +249,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   // honest (see above), so a modal one is closed instead.
   if (dialog.open) {
     if (resolved.isNonModal) {
-      log('Adopting a dialog that was already open', { id: modalId });
+      log('Adopting a dialog that was already open', { id: dialogId });
       store.beginOpen();
       store.scheduleOpenTransition();
       store.finishPreparing();
@@ -257,7 +257,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
       log.warn(
         'A modal dialog cannot be adopted open — the top layer is only enterable from script, so ' +
           'this one was closed. Render it closed and call open().',
-        { id: modalId }
+        { id: dialogId }
       );
       dialog.close();
     }
@@ -328,7 +328,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     };
   };
 
-  const getSnapshot = (): ModalSnapshot => {
+  const getSnapshot = (): DialogSnapshot => {
     const { phase, isPreparing } = store.getSnapshot();
     const { hasRunningAction, error } = engine.aggregated();
     return { phase, isVisible: phase !== 'closed', isPreparing, hasRunningAction, error };
@@ -350,7 +350,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
-    teardownModal(store, { manager, modalId, dialog, onError: options.onError });
+    teardownModal(store, { manager, dialogId, dialog, onError: options.onError });
     // Destroyed mid-`prepare`, nothing else would ever clear `aria-busy` off the caller's element.
     writeAttributes();
   };

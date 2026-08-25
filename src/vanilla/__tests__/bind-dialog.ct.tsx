@@ -34,7 +34,7 @@ test.describe('bindDialog', () => {
   test('leaves the caller’s dialog closed until asked', async ({ mount, page }) => {
     await mount(<VanillaBasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
-    await expect(page.getByTestId('modal-vanilla-basic')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-vanilla-basic')).not.toBeVisible();
   });
 
   test('opens it into the top layer, and stamps the styling contract on it', async ({
@@ -46,16 +46,16 @@ test.describe('bindDialog', () => {
 
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     // `showModal()`, not `show()` — the hook bindings' default variant.
-    await expect(page.locator('dialog[data-modal-id="vanilla-basic"]:modal')).toHaveCount(1);
-    await expect(page.getByTestId('modal-vanilla-basic')).toHaveAttribute(
-      'data-modal-type',
+    await expect(page.locator('dialog[data-dialog-id="vanilla-basic"]:modal')).toHaveCount(1);
+    await expect(page.getByTestId('dialog-vanilla-basic')).toHaveAttribute(
+      'data-dialog-type',
       'modal'
     );
-    await expect(page.getByTestId('modal-vanilla-basic')).toHaveAttribute(
+    await expect(page.getByTestId('dialog-vanilla-basic')).toHaveAttribute(
       'aria-label',
       'Vanilla basic'
     );
-    await expect(page.getByTestId('modal-vanilla-basic')).toContainText('Vanilla content');
+    await expect(page.getByTestId('dialog-vanilla-basic')).toContainText('Vanilla content');
   });
 
   test('a bound action closes with its own reason', async ({ mount, page }) => {
@@ -147,7 +147,7 @@ test.describe('bindDialog', () => {
     // The unbind is how a caller retires an action, and `hasActions()` gates backdrop dismissal.
     await mount(<VanillaUnbindHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-vanilla-unbind')).toBeVisible();
+    await expect(page.getByTestId('dialog-vanilla-unbind')).toBeVisible();
 
     await page.mouse.click(5, 5);
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -211,11 +211,11 @@ test.describe('bindDialog — contained placement', () => {
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     const host = page.getByTestId('host');
-    await expect(host).toHaveAttribute('data-modal-container', 'vanilla-contained');
+    await expect(host).toHaveAttribute('data-dialog-container', 'vanilla-contained');
 
     const measured = await page.evaluate(() => {
       const hostEl = document.querySelector('[data-testid="host"]');
-      const dialog = document.querySelector('dialog[data-modal-id="vanilla-contained"]');
+      const dialog = document.querySelector('dialog[data-dialog-id="vanilla-contained"]');
       if (!(hostEl instanceof HTMLElement) || !(dialog instanceof HTMLElement)) {
         return null;
       }
@@ -248,7 +248,7 @@ test.describe('bindDialog — contained placement', () => {
     // The host is an `inset: 0` sheet over the region even closed; `pointerEvents: none` saves it.
     await mount(<VanillaContainedHarness />);
     await expect(page.getByTestId('host')).toHaveAttribute(
-      'data-modal-container',
+      'data-dialog-container',
       'vanilla-contained'
     );
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -266,7 +266,7 @@ test.describe('bindDialog — contained placement', () => {
       }
       const box = region.getBoundingClientRect();
       const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
-      return hit?.closest('dialog')?.getAttribute('data-modal-id') ?? null;
+      return hit?.closest('dialog')?.getAttribute('data-dialog-id') ?? null;
     });
     expect(covered).toBe('vanilla-contained');
   });
@@ -277,10 +277,10 @@ test.describe('bindDialog — contained placement', () => {
 
     // The parent is `wrapper` and the named host its grandparent, so the default branch cannot pass.
     await expect(page.getByTestId('host')).toHaveAttribute(
-      'data-modal-container',
+      'data-dialog-container',
       'vanilla-explicit-host'
     );
-    await expect(page.getByTestId('wrapper')).not.toHaveAttribute('data-modal-container', /.*/);
+    await expect(page.getByTestId('wrapper')).not.toHaveAttribute('data-dialog-container', /.*/);
   });
 
   test('degrades rather than throwing when there is no host at all', async ({ mount, page }) => {
@@ -290,7 +290,7 @@ test.describe('bindDialog — contained placement', () => {
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     // And styled nothing: a fallback to `document.body` would position an unrelated element.
-    await expect(page.locator('[data-modal-container]')).toHaveCount(0);
+    await expect(page.locator('[data-dialog-container]')).toHaveCount(0);
   });
 
   test('portal places without relocating', async ({ mount, page }) => {
@@ -300,11 +300,11 @@ test.describe('bindDialog — contained placement', () => {
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
-    // A `data-modal-container` here would mean the contained branch had been taken instead.
-    await expect(page.locator('[data-modal-container]')).toHaveCount(0);
+    // A `data-dialog-container` here would mean the contained branch had been taken instead.
+    await expect(page.locator('[data-dialog-container]')).toHaveCount(0);
 
     const measured = await page.evaluate(() => {
-      const dialog = document.querySelector('dialog[data-modal-id="vanilla-portal"]');
+      const dialog = document.querySelector('dialog[data-dialog-id="vanilla-portal"]');
       const transformed = document.querySelector('[data-testid="transformed"]');
       if (!(dialog instanceof HTMLElement) || !(transformed instanceof HTMLElement)) {
         return null;
@@ -364,7 +364,7 @@ test.describe('bindDialog — subscription and teardown', () => {
     await expect(page.getByTestId('registered')).toHaveText('no');
     // `destroy()` closes what it unregisters, so a leaked subscription has a transition to hear.
     await expect(page.getByTestId('after-destroy')).toHaveText('no');
-    await expect(page.locator('dialog[data-modal-id="vanilla-destroy"][open]')).toHaveCount(0);
+    await expect(page.locator('dialog[data-dialog-id="vanilla-destroy"][open]')).toHaveCount(0);
   });
 });
 
@@ -375,7 +375,7 @@ test.describe('bindDialog — open requests', () => {
     await page.getByTestId('ask-nicely').click();
 
     await expect(page.getByTestId('outcome')).toHaveText('accepted');
-    await expect(page.locator('dialog[data-modal-id="vanilla-request"]:modal')).toHaveCount(1);
+    await expect(page.locator('dialog[data-dialog-id="vanilla-request"]:modal')).toHaveCount(1);
   });
 
   test('a refused request reports why, and nothing opens', async ({ mount, page }) => {
@@ -384,7 +384,7 @@ test.describe('bindDialog — open requests', () => {
     await page.getByTestId('ask-rudely').click();
 
     await expect(page.getByTestId('outcome')).toHaveText('refused:wrong payload');
-    await expect(page.locator('dialog[data-modal-id="vanilla-request"]')).not.toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-request"]')).not.toBeVisible();
   });
 });
 
@@ -430,7 +430,7 @@ test.describe('bindDialog — what teardown hands back', () => {
     await mount(<VanillaBusyHarness />);
     await page.getByTestId('open').click();
 
-    const dialog = page.locator('dialog[data-modal-id="vanilla-busy"]');
+    const dialog = page.locator('dialog[data-dialog-id="vanilla-busy"]');
     await expect(dialog).toHaveAttribute('aria-busy', 'true');
 
     await page.getByTestId('destroy').click();
@@ -441,7 +441,7 @@ test.describe('bindDialog — what teardown hands back', () => {
     await mount(<VanillaBusyHarness />);
     await page.getByTestId('open').click();
 
-    const dialog = page.locator('dialog[data-modal-id="vanilla-busy"]');
+    const dialog = page.locator('dialog[data-dialog-id="vanilla-busy"]');
     await expect(dialog).toHaveAttribute('aria-busy', 'true');
 
     await page.getByTestId('release').click();
@@ -464,7 +464,7 @@ test.describe('bindDialog — a dismissal the owner answers', () => {
     const component = await mount(<VanillaDismissRequestHarness />);
     await component.getByTestId('open').click();
 
-    const dialog = page.locator('dialog[data-modal-id="vanilla-dismiss-request"]');
+    const dialog = page.locator('dialog[data-dialog-id="vanilla-dismiss-request"]');
     await expect(dialog).toBeVisible();
 
     await page.mouse.click(5, 5);
@@ -491,7 +491,7 @@ test.describe('bindDialog — the labelling diagnostic', () => {
 
     await mount(<VanillaLabellingHarness />);
     await page.getByTestId('open-broken').click();
-    await expect(page.locator('dialog[data-modal-id="vanilla-broken-label"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-broken-label"]')).toBeVisible();
     await page.waitForTimeout(300);
 
     expect(warnings).toHaveLength(1);
@@ -504,7 +504,7 @@ test.describe('bindDialog — the labelling diagnostic', () => {
 
     await mount(<VanillaLabellingHarness />);
     await page.getByTestId('open-nameless').click();
-    await expect(page.locator('dialog[data-modal-id="vanilla-nameless"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-nameless"]')).toBeVisible();
     await page.waitForTimeout(300);
 
     expect(warnings).toHaveLength(1);
@@ -529,7 +529,7 @@ test.describe('a shadow-root dialog in a stack', () => {
         }
         element = inner;
       }
-      return element?.closest('dialog')?.getAttribute('data-modal-id') ?? null;
+      return element?.closest('dialog')?.getAttribute('data-dialog-id') ?? null;
     });
   }
 
@@ -547,7 +547,7 @@ test.describe('a shadow-root dialog in a stack', () => {
   async function focusedDialogInShadow(page: Page): Promise<string | null> {
     return page.evaluate(() => {
       const root = document.querySelector('[data-testid="shadow-stack-host"]')?.shadowRoot;
-      return root?.activeElement?.closest('dialog')?.getAttribute('data-modal-id') ?? null;
+      return root?.activeElement?.closest('dialog')?.getAttribute('data-dialog-id') ?? null;
     });
   }
 
@@ -562,7 +562,7 @@ test.describe('a shadow-root dialog in a stack', () => {
     await component.getByTestId('open-shadow-front').click();
     // Dispatched, not clicked: the shadow dialog is modal, so this button is under its backdrop.
     await component.getByTestId('open-light-over').dispatchEvent('click');
-    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-light-over"]')).toBeVisible();
 
     // `prioritize` is inherited, so nothing else would fail if a binding stopped reaching it.
     await expect
@@ -595,7 +595,7 @@ test.describe('a shadow-root dialog in a stack', () => {
       .toBe('shadow-note');
 
     await component.getByTestId('open-light-over').dispatchEvent('click');
-    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-light-over"]')).toBeVisible();
 
     // About the **dialog**, not the control, and from a root where a document check reads "gone".
     await expect
@@ -669,7 +669,7 @@ test.describe('a shadow-root dialog in a stack', () => {
     await expect(component.getByTestId('native-closes')).toHaveText('0');
 
     await component.getByTestId('open-light-over').dispatchEvent('click');
-    await expect(page.locator('dialog[data-modal-id="vanilla-light-over"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-light-over"]')).toBeVisible();
 
     // A raise is `close()` + `showModal()`, and `close()` *queues* its event, so `dialog.open` is back
     // at `true` when the caller's own listener runs — the only way to tell a raise from a real close.
@@ -785,7 +785,7 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
 });
 
 test.describe('bindDialog — a dialog the server rendered open', () => {
-  const DIALOG = 'dialog[data-modal-id="vanilla-server-open"]';
+  const DIALOG = 'dialog[data-dialog-id="vanilla-server-open"]';
 
   /** What the three sources of truth say, which is the whole point: they must agree. */
   const state = async (page: Page) => {
@@ -827,13 +827,13 @@ test.describe('bindDialog — a dialog that claimed no opening focus', () => {
     const component = await mount(<VanillaClaimlessReclaimHarness />);
     await component.getByTestId('open-both').click();
 
-    await expect(page.locator('dialog[data-modal-id="vanilla-claimless"]')).toBeVisible();
-    await expect(page.locator('dialog[data-modal-id="vanilla-claimless-panel"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-claimless"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-claimless-panel"]')).toBeVisible();
 
     // Nothing outside the modal holds it: a keyboard on `<body>` under the top layer is unreachable.
     await expect(
       page.locator(
-        ':focus:not(dialog[data-modal-id="vanilla-claimless"], dialog[data-modal-id="vanilla-claimless"] *)'
+        ':focus:not(dialog[data-dialog-id="vanilla-claimless"], dialog[data-dialog-id="vanilla-claimless"] *)'
       )
     ).toHaveCount(0);
     // The *first* focusable, not the last — the half only two buttons can show.
@@ -849,14 +849,14 @@ test.describe('bindDialog — onError', () => {
     const component = await mount(<VanillaPrepareFailureHarness />);
     await component.getByTestId('vpf-open').click();
 
-    await expect(page.locator('dialog[data-modal-id="vanilla-prepare-failure"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-prepare-failure"]')).toBeVisible();
 
     await expect(component.getByTestId('vpf-sources')).toHaveText('prepare');
     await expect(component.getByTestId('vpf-message')).toHaveText('report is unavailable');
 
     // A report, not a veto. `aria-busy`, on the caller's markup, says the settle reached the element.
     await expect(component.getByTestId('vpf-preparing')).toHaveText('ready');
-    await expect(page.locator('dialog[data-modal-id="vanilla-prepare-failure"]')).toHaveAttribute(
+    await expect(page.locator('dialog[data-dialog-id="vanilla-prepare-failure"]')).toHaveAttribute(
       'aria-busy',
       'false'
     );

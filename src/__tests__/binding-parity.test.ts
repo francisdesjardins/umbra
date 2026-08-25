@@ -119,7 +119,7 @@ test.describe('the controller binding', () => {
     expect(vanilla.has('DialogController')).toBe(true);
 
     // Each of these presumes a renderer — shipping one here ships the UI the library refuses to.
-    for (const rendering of ['useDialog', 'useMessageDialog', 'useSlideDialog', 'ModalOutlet']) {
+    for (const rendering of ['useDialog', 'useMessageDialog', 'useSlideDialog', 'DialogOutlet']) {
       expect(vanilla.has(rendering), `./vanilla should not export ${rendering}`).toBe(false);
     }
   });

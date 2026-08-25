@@ -1,16 +1,16 @@
 /**
  * What a declared registry buys, compiled on its own because declaration merging is global:
- * augmenting `ModalRegistry` in the main project would narrow ids for every other type test there.
+ * augmenting `DialogRegistry` in the main project would narrow ids for every other type test there.
  *
  * Run by `yarn type-check:registry`, which `yarn type-check` calls.
  */
 
-import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../src/core/registry.js';
+import type { DataOf, DialogId, PayloadOf, ReasonOf } from '../src/core/registry.js';
 import { createOpenRequest, dialogManager } from '../src/manager/dialog-manager.js';
 import { useDialog } from '../src/react/use-dialog.js';
 
 declare module '../src/core/registry.js' {
-  interface ModalRegistry {
+  interface DialogRegistry {
     'delete-account': { closesWith: { confirm: { id: string }; cancel: void } };
     'session-warning': { closesWith: 'extend' | 'sign-out' };
     'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
@@ -103,8 +103,8 @@ export function Undeclared() {
   });
 }
 
-/** `ModalId` stays assignable from any string, which is what makes the above compile. */
-export const _idAcceptsAnyString: ModalId = String(1);
+/** `DialogId` stays assignable from any string, which is what makes the above compile. */
+export const _idAcceptsAnyString: DialogId = String(1);
 
 /** Does the generic `requestOpenAndWait` really hand back a typed close, or only compile? */
 export async function _requestOpenAndWaitIsTyped() {

@@ -1,4 +1,4 @@
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -89,9 +89,9 @@ function ModalB() {
  */
 export function OutletMultiHarness() {
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <ModalA />
       <ModalB />
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

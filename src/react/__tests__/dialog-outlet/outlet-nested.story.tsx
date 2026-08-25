@@ -1,4 +1,4 @@
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -89,11 +89,11 @@ function OuterScopeModal() {
  */
 export function OutletNestedHarness() {
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <OuterScopeModal />
-      <ModalOutlet>
+      <DialogOutlet>
         <InnerScopeModal />
-      </ModalOutlet>
-    </ModalOutlet>
+      </DialogOutlet>
+    </DialogOutlet>
   );
 }

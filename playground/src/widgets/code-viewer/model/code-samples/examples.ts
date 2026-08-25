@@ -25,7 +25,7 @@ import vanillaPanelSrc from '@/pages/showcases/examples/vanilla-panel.tsx?raw';
 import imperativeSrc from '@/pages/imperative/examples/imperative.tsx?raw';
 import openRequestSrc from '@/pages/imperative/examples/open-request.tsx?raw';
 import controlledPanelSrc from '@/pages/imperative/examples/controlled-panel.tsx?raw';
-import modalOutletSrc from '@/pages/imperative/examples/modal-outlet.tsx?raw';
+import modalOutletSrc from '@/pages/imperative/examples/dialog-outlet.tsx?raw';
 import deferredOpenSrc from '@/pages/imperative/examples/deferred-open.tsx?raw';
 import declaredPayloadSrc from '@/pages/imperative/examples/declared-payload.tsx?raw';
 import closeThemAllSrc from '@/pages/stacking/examples/close-them-all.tsx?raw';
@@ -67,7 +67,7 @@ export const examples: Record<string, string> = {
   imperative: imperativeSrc,
   'open-request': openRequestSrc,
   'controlled-panel': controlledPanelSrc,
-  'modal-outlet': modalOutletSrc,
+  'dialog-outlet': modalOutletSrc,
   'deferred-open': deferredOpenSrc,
   'declared-payload': declaredPayloadSrc,
   'close-them-all': closeThemAllSrc,

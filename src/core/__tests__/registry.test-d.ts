@@ -6,7 +6,7 @@
  * reachable. It is asserted in `registry-augmented.test-d.ts`, which is compiled on its own.
  */
 
-import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../registry.js';
+import type { DataOf, DialogId, PayloadOf, ReasonOf } from '../registry.js';
 import { dialogManager } from '../../manager/dialog-manager.js';
 import { useDialog } from '../../react/use-dialog.js';
 
@@ -17,7 +17,7 @@ type Equals<A, B> =
 type Assert<T extends true> = T;
 
 /** With nothing declared, every string is still an id. */
-export const _idAcceptsAnyString: ModalId = String(1);
+export const _idAcceptsAnyString: DialogId = String(1);
 
 /** And the three derivations fall back rather than resolving to `never`. */
 export type _ReasonFallsBack = Assert<Equals<ReasonOf<'anything'>, string>>;

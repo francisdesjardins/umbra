@@ -133,7 +133,7 @@ import {
   OutletPaintTimingHarness,
   OutletTeardownHarness,
   OutletNullModalHarness,
-} from 'umbra/react/__tests__/modal-outlet.story';
+} from 'umbra/react/__tests__/dialog-outlet.story';
 import {
   BasicHarness,
   CustomDismissKeyHarness,
@@ -372,7 +372,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-labelling-diagnostics',
       },
       {
-        title: 'A name delivered a commit late, through ModalOutlet',
+        title: 'A name delivered a commit late, through DialogOutlet',
         description:
           'The other silence. Rendering through the outlet puts the labelled content in a commit after the dialog’s own, so the same too-early check would fire here too — on markup that arrives correctly, one frame later.',
         component: OutletLabelHarness,
@@ -568,7 +568,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The styling surface',
         description:
-          'The whole of it: --dialog-backdrop for the backdrop, data-modal-id and data-modal-type to reach one dialog or every non-modal one from CSS. No class names to learn, and nothing that requires knowing how the tree is built.',
+          'The whole of it: --dialog-backdrop for the backdrop, data-dialog-id and data-dialog-type to reach one dialog or every non-modal one from CSS. No class names to learn, and nothing that requires knowing how the tree is built.',
         component: StylingSurfaceHarness,
         codeKey: 'story-styling-surface',
       },
@@ -613,7 +613,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Non-Modal Dialog',
         description:
-          'Opens with dialog.show() instead of showModal(). No backdrop, clicks pass through, z-index tracked via data-modal-z.',
+          'Opens with dialog.show() instead of showModal(). No backdrop, clicks pass through, z-index tracked via data-dialog-z.',
         component: NonModalHarness,
         codeKey: 'story-use-dialog-non-modal',
       },
@@ -902,7 +902,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
     stories: [
       {
         title: 'Basic Outlet',
-        description: 'Modal renders via ModalOutlet — no {Modal} placed in JSX.',
+        description: 'Modal renders via DialogOutlet — no {Modal} placed in JSX.',
         component: OutletBasicHarness,
         codeKey: 'story-outlet-basic',
       },
@@ -1355,7 +1355,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Lookup — Find',
         description:
-          'Tests lookup(id) for registered and unregistered modals. Displays ModalInfo fields.',
+          'Tests lookup(id) for registered and unregistered modals. Displays DialogInfo fields.',
         component: LookupFindHarness,
         codeKey: 'story-dm-lookup-find',
       },

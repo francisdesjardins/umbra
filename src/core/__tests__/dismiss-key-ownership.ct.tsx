@@ -4,7 +4,7 @@ import { DismissKeyOwnershipHarness, KeyClaimProbeHarness } from './dismiss-key-
 // The dismiss key over an overlay that answers it itself. A non-modal dialog listens at the window
 // in capture, which is what makes the key work wherever focus is — and what would take it away.
 
-const PANEL = 'dialog[data-modal-id="dismiss-ownership"]';
+const PANEL = 'dialog[data-dialog-id="dismiss-ownership"]';
 
 // Long enough for a close to finish its exit and run `onClose`. Every "stands down" assertion is a
 // positive one and Playwright retries only failures, so waiting first makes it an observation.

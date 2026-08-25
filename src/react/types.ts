@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type {
-  ModalAnimation as ModalAnimationModel,
+  DialogAnimation as DialogAnimationModel,
   UseDialogBaseOptions as UseDialogBaseOptionsModel,
   UseDialogOptions as UseDialogOptionsModel,
   UseDialogReturn as UseDialogReturnModel,
@@ -15,18 +15,18 @@ import type {
 /**
  * CSS transition configuration for modal entrance/exit animations.
  * @example
- * const fade: ModalAnimation = {
+ * const fade: DialogAnimation = {
  *   entrance: { opacity: 1, transform: 'scale(1)' },
  *   exit: { opacity: 0, transform: 'scale(0.95)' },
  *   duration: 200,
  *   transitionProperty: 'opacity, transform',
  * };
  */
-export type ModalAnimation = ModalAnimationModel<CSSProperties>;
+export type DialogAnimation = DialogAnimationModel<CSSProperties>;
 
 /**
  * Variant-independent options for `useDialog`: `nonModal` and `dismissOnBackdropClick` live in
- * `ModalVariant`, `UseDialogOptions` intersects the two, template hooks `Pick` from this flat one.
+ * `DialogVariant`, `UseDialogOptions` intersects the two, template hooks `Pick` from this flat one.
  */
 export type UseDialogBaseOptions<
   TData = void,

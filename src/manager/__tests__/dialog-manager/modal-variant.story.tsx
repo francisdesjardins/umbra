@@ -73,7 +73,7 @@ export function ModalVariantHarness() {
       <span data-testid="has-any-open">{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="open-count">{openDialogs.length}</span>
       <span data-testid="has-modal">{modal.length > 0 ? 'yes' : 'no'}</span>
-      <span data-testid="modal-count">{modal.length}</span>
+      <span data-testid="dialog-count">{modal.length}</span>
       <span data-testid="has-non-modal">{nonModal.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="non-modal-count">{nonModal.length}</span>
       {Modal1}
@@ -83,7 +83,7 @@ export function ModalVariantHarness() {
 }
 
 /**
- * Tests the getOpen() filter argument on the ModalLookup API.
+ * Tests the getOpen() filter argument on the DialogLookup API.
  */
 export function ModalVariantLookupHarness() {
   const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
@@ -102,7 +102,7 @@ export function ModalVariantLookupHarness() {
                 el.textContent = [
                   `modal:${String(modalOpen.length > 0)}`,
                   `modalCount:${String(modalOpen.length)}`,
-                  `modalIds:${modalOpen
+                  `dialogIds:${modalOpen
                     .map((m) => {
                       return m.id;
                     })

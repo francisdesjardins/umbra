@@ -194,7 +194,7 @@ name shows one binding's signature under another's specifier. Two things follow:
   different types.
 - **Links follow the category table, not the declaration.** `PrintContext.resolve` asks where
   `CATEGORIES` renders a name for _this_ specifier, then for the core. So `UseDialogOptions` in a
-  Solid signature links to the Solid chapter and `ModalPhase` beside it links to the core's,
+  Solid signature links to the Solid chapter and `DialogPhase` beside it links to the core's,
   whichever module typedoc happened to walk first.
 
 Beyond the doc comments the projection adds a **printed signature** per symbol with every referenced
@@ -210,7 +210,7 @@ page and is what a reader can guess and share.
 
 ## Modals are declared in one place
 
-[`src/app/modal-registry.ts`](src/app/modal-registry.ts) names every modal and what it closes with,
+[`src/app/dialog-registry.ts`](src/app/dialog-registry.ts) names every modal and what it closes with,
 so **a call site writes no type arguments** — writing them selects the other overload and lets the
 two drift. Add a modal, add a line. Not enforced complete, which is what lets `/stories` render the
 library's own harnesses.

@@ -36,7 +36,7 @@ export function PortalNonModalOptInHarness() {
       );
     },
     prepare: () => {
-      const dialog = document.querySelector('[data-testid="modal-portal-non-modal-opt-in"]');
+      const dialog = document.querySelector('[data-testid="dialog-portal-non-modal-opt-in"]');
       setDialogParent(dialog?.parentElement?.tagName ?? 'unknown');
     },
     onClose: (result) => {

@@ -6,7 +6,7 @@ import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
 import { useMessageDialog } from 'umbra/react';
-import type { ModalFailure } from 'umbra/react';
+import type { DialogFailure } from 'umbra/react';
 
 export const MODAL_ID = 'prepare-failure';
 
@@ -21,7 +21,7 @@ const resultStore = createResultStore();
 export function PrepareFailureExample() {
   const { result } = useStore(resultStore);
   const [shouldFail, setShouldFail] = useState(true);
-  const [failure, setFailure] = useState<ModalFailure | null>(null);
+  const [failure, setFailure] = useState<DialogFailure | null>(null);
 
   const modal = useMessageDialog({
     id: MODAL_ID,
@@ -34,7 +34,7 @@ export function PrepareFailureExample() {
         throw new Error('The profile service did not answer.');
       }
     },
-    // `ModalFailure` is a root export, so a handler can live outside the call; `source` is a closed
+    // `DialogFailure` is a root export, so a handler can live outside the call; `source` is a closed
     // union, so a new one is a compile error rather than a string compare that stops matching.
     onError: (reported) => {
       setFailure(reported);

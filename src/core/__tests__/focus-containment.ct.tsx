@@ -16,7 +16,7 @@ import {
  * and never fires reads identically in the source.
  */
 
-const PANEL = 'dialog[data-modal-id="focus-containment"]';
+const PANEL = 'dialog[data-dialog-id="focus-containment"]';
 
 async function focused(page: Page): Promise<string> {
   return page.evaluate(() => {
@@ -81,7 +81,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
     await expect(page.locator(PANEL)).toBeVisible();
 
     await page.getByTestId('dead-space').click();
-    expect(await focused(page)).toBe('modal-focus-containment');
+    expect(await focused(page)).toBe('dialog-focus-containment');
 
     await page.keyboard.press('Tab');
 
@@ -117,7 +117,7 @@ test.describe('what counts as a stop', () => {
     // matches and the browser never stops on, so the "last" compared against is unreachable.
     const component = await mount(<RovingToolbarHarness />);
     await component.getByTestId('open').click();
-    await expect(page.locator('dialog[data-modal-id="focus-containment-toolbar"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="focus-containment-toolbar"]')).toBeVisible();
 
     await page.getByTestId('inside-last').focus();
     await page.keyboard.press('Tab');
@@ -130,7 +130,7 @@ test.describe('what counts as a stop', () => {
     // cannot answer it — the marker is reached by the browser rather than told about.
     const component = await mount(<FramedContentHarness />);
     await component.getByTestId('open').click();
-    await expect(page.locator('dialog[data-modal-id="focus-containment-frame"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="focus-containment-frame"]')).toBeVisible();
 
     await page.getByTestId('editor').focus();
     await page.keyboard.press('Tab');
@@ -159,7 +159,7 @@ test.describe('what counts as a stop', () => {
     // every engine: missing from the scan, the wrap's only candidate is where the press started.
     const component = await mount(<EditableContentHarness />);
     await component.getByTestId('open').click();
-    await expect(page.locator('dialog[data-modal-id="focus-containment-editable"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="focus-containment-editable"]')).toBeVisible();
 
     await page.getByTestId('inside-first').focus();
     await page.keyboard.press('Shift+Tab');
@@ -176,11 +176,11 @@ test.describe('what counts as a stop', () => {
     const component = await mount(<EditableOnlyHarness />);
     await component.getByTestId('open').click();
     await expect(
-      page.locator('dialog[data-modal-id="focus-containment-editable-only"]')
+      page.locator('dialog[data-dialog-id="focus-containment-editable-only"]')
     ).toBeVisible();
 
     await page.getByTestId('dead-space').click();
-    expect(await focused(page)).toBe('modal-focus-containment-editable-only');
+    expect(await focused(page)).toBe('dialog-focus-containment-editable-only');
 
     await page.keyboard.press('Tab');
 
@@ -205,7 +205,7 @@ test.describe('the dead-space click, whatever containFocus says', () => {
     await expect(page.locator(PANEL)).toBeVisible();
 
     await page.getByTestId('dead-space').click();
-    expect(await focused(page)).toBe('modal-focus-containment');
+    expect(await focused(page)).toBe('dialog-focus-containment');
 
     await page.keyboard.press('Tab');
 
@@ -224,7 +224,7 @@ test.describe('the dead-space click, whatever containFocus says', () => {
         await expect(page.locator(PANEL)).toBeVisible();
 
         await page.getByTestId('dead-space').click();
-        expect(await focused(page)).toBe('modal-focus-containment');
+        expect(await focused(page)).toBe('dialog-focus-containment');
 
         await page.keyboard.press('Tab');
 
@@ -259,15 +259,15 @@ test.describe('the recovery scan and a dialog nested inside this one', () => {
   }) => {
     const component = await mount(<NestedPanelScanHarness />);
     await component.getByTestId('open-outer').click();
-    await expect(page.locator('dialog[data-modal-id="nested-scan-outer"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="nested-scan-outer"]')).toBeVisible();
 
     await page.getByTestId('outer-open-panel').click();
-    await expect(page.locator('dialog[data-modal-id="nested-scan-panel"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="nested-scan-panel"]')).toBeVisible();
 
     // Low in the dead space, clear of the panel overlaying the top of the region — the ordinary
     // way focus lands on a `<dialog>` element.
     await page.getByTestId('outer-dead-space').click({ position: { x: 200, y: 230 } });
-    expect(await focused(page)).toBe('modal-nested-scan-outer');
+    expect(await focused(page)).toBe('dialog-nested-scan-outer');
 
     await page.keyboard.press('Shift+Tab');
 

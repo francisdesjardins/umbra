@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import type { ModalId } from '../core/registry.js';
+import type { DialogId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-manager.js';
-import type { ModalInfo } from '../manager/types.js';
+import type { DialogInfo } from '../manager/types.js';
 
 /**
- * One modal's `ModalInfo`, updating whenever any modal opens or closes, through
+ * One modal's `DialogInfo`, updating whenever any modal opens or closes, through
  * `useSyncExternalStore` for tear-free reads. An open modal answers with a stable reference from
  * the snapshot, a closed or unregistered one from `lookup(id)`. Scoped to the nearest
  * `DialogManagerProvider`, or the singleton when there is none.
@@ -20,7 +20,7 @@ import type { ModalInfo } from '../manager/types.js';
 function lookupIn(
   id: string,
   source: { readonly manager: DialogManager; readonly snapshot: DialogManagerSnapshot }
-): ModalInfo {
+): DialogInfo {
   const { manager, snapshot } = source;
   // Linear scan — n is always tiny (1-3 open modals)
   const openModal = snapshot.openDialogs.find((d) => {
@@ -34,7 +34,7 @@ function lookupIn(
   return manager.lookup(id);
 }
 
-export function useLookup(id: ModalId): ModalInfo {
+export function useLookup(id: DialogId): DialogInfo {
   const manager = useDialogManagerContext();
   // Server-readable for the reason on `useDialog`: nothing here asks the DOM anything.
   const snapshot = useSyncExternalStore(

@@ -174,7 +174,7 @@ test.describe('teardownModal', () => {
 
     teardownModal(store, {
       manager: dm,
-      modalId: 'teardown-open',
+      dialogId: 'teardown-open',
       dialog: null,
       onError: undefined,
     });
@@ -194,7 +194,7 @@ test.describe('teardownModal', () => {
 
     teardownModal(store, {
       manager: dm,
-      modalId: 'teardown-waiting',
+      dialogId: 'teardown-waiting',
       dialog: null,
       onError: undefined,
     });
@@ -219,7 +219,7 @@ test.describe('teardownModal', () => {
     expect(store.getSnapshot().phase).toBe('closed');
     teardownModal(store, {
       manager: dm,
-      modalId: 'teardown-closed',
+      dialogId: 'teardown-closed',
       dialog: null,
       onError: undefined,
     });
@@ -438,7 +438,7 @@ test.describe('teardownModal reports a failing onClose', () => {
     try {
       teardownModal(store, {
         manager: dm,
-        modalId: 'teardown-throws',
+        dialogId: 'teardown-throws',
         dialog: null,
         onError: undefined,
       });
@@ -468,7 +468,7 @@ test.describe('teardownModal reports through onError', () => {
     const failures: { readonly error: Error; readonly source: string }[] = [];
     teardownModal(store, {
       manager: dm,
-      modalId: 'teardown-on-error',
+      dialogId: 'teardown-on-error',
       dialog: null,
       onError: (failure) => {
         failures.push(failure);
@@ -491,7 +491,7 @@ test.describe('teardownModal reports through onError', () => {
     const failures: unknown[] = [];
     teardownModal(store, {
       manager: dm,
-      modalId: 'teardown-quiet',
+      dialogId: 'teardown-quiet',
       dialog: null,
       onError: (failure) => {
         failures.push(failure);

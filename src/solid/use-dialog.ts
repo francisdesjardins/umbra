@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createRenderEffect, getOwner, onCleanup } from 'solid-js';
 import { insert } from 'solid-js/web';
 import type { JSX } from 'solid-js';
-import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredDialogId } from '../core/registry.js';
 import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
@@ -27,10 +27,10 @@ import {
 import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
-import { useModalOutletContext } from './modal-outlet.js';
+import { useDialogOutletContext } from './dialog-outlet.js';
 import type { DialogStyle } from '../core/style.js';
-import type { GetDialog, ModalRenderArgs } from '../core/types.js';
-import type { ModalAnimation, UseDialogOptions, UseDialogReturn } from './types.js';
+import type { GetDialog, DialogRenderArgs } from '../core/types.js';
+import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types.js';
 
 /**
  * `umbra/solid`'s core hook — the same `useDialog` as React's, over the same core.
@@ -50,11 +50,11 @@ import type { ModalAnimation, UseDialogOptions, UseDialogReturn } from './types.
  */
 /**
  * The registered door, first so a declared id is matched by it — whether the caller wrote the id as
- * a literal and let it infer, or named it as the one type argument. While `ModalRegistry` is empty
- * `RegisteredModalId` is `never`, this overload is uninhabitable, and every call falls through to
+ * a literal and let it infer, or named it as the one type argument. While `DialogRegistry` is empty
+ * `RegisteredDialogId` is `never`, this overload is uninhabitable, and every call falls through to
  * the one below, which is the signature this hook has always had.
  */
-export function useDialog<TId extends RegisteredModalId>(
+export function useDialog<TId extends RegisteredDialogId>(
   options: RegisteredOptions<TId, DialogStyle, JSX.Element>
 ): RegisteredReturn<TId, JSX.Element>;
 export function useDialog<TData = void, TReason extends string = string>(
@@ -63,7 +63,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 export function useDialog<TData = void, TReason extends string = string>(
   options: UseDialogOptions<TData, TReason>
 ): UseDialogReturn<TData, TReason> {
-  const modalId = options.id;
+  const dialogId = options.id;
 
   // The defaults and the variant narrowing, from the one place both bindings read them.
   const {
@@ -79,11 +79,11 @@ export function useDialog<TData = void, TReason extends string = string>(
   } = resolveModalOptions(options);
 
   // Annotated for the reason React's binding gives.
-  const animation: ModalAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
 
   const manager = useDialogManagerContext();
 
-  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(modalId);
+  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(dialogId);
 
   const snapshot = fromStore(store);
   const actionState = fromStore(engine);
@@ -100,7 +100,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     setDialogAttributes(
       dialog,
       dialogAttributes({
-        modalId,
+        dialogId,
         nonModal: isNonModal,
         isPreparing: snapshot().isPreparing,
         ariaLabel: options.ariaLabel,
@@ -132,7 +132,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   let placed: HTMLElement = dialog;
   if (placement.host) {
     const host = document.createElement('div');
-    host.setAttribute('data-modal-container', modalId);
+    host.setAttribute('data-dialog-container', dialogId);
     applyStyle(host, { next: placement.host });
     host.append(dialog);
     placed = host;
@@ -170,7 +170,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     return snapshot().phase !== 'closed';
   });
 
-  const renderArgs: ModalRenderArgs<TData, TReason> = {
+  const renderArgs: DialogRenderArgs<TData, TReason> = {
     handle,
     action,
     get isPreparing() {
@@ -223,7 +223,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // everything comes off in `destroy()` instead. It tracks what the body reads, the snapshot and
   // the option getters, which is Solid's half of "never a pass behind".
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
-  const director = createModalDirector({ store, getDialog, modalId, manager, engine });
+  const director = createModalDirector({ store, getDialog, dialogId, manager, engine });
 
   createEffect(() => {
     const snap = snapshot();
@@ -251,7 +251,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
-  manager.register(modalId, {
+  manager.register(dialogId, {
     store,
     template,
     nonModal: isNonModal,
@@ -271,10 +271,10 @@ export function useDialog<TData = void, TReason extends string = string>(
     // One cleanup rather than two: Solid runs an owner's cleanups in reverse registration order,
     // so a pair would read as the opposite of what it does. Detachments first, as in React.
     director.destroy();
-    teardownModal(store, { manager, modalId, dialog: getDialog(), onError: options.onError });
+    teardownModal(store, { manager, dialogId, dialog: getDialog(), onError: options.onError });
   });
 
-  const outlet = useModalOutletContext();
+  const outlet = useDialogOutletContext();
 
   let Modal: JSX.Element = placed;
 
@@ -290,9 +290,9 @@ export function useDialog<TData = void, TReason extends string = string>(
     });
     Modal = null;
   } else if (outlet) {
-    outlet.register(modalId, placed);
+    outlet.register(dialogId, placed);
     onCleanup(() => {
-      outlet.unregister(modalId);
+      outlet.unregister(dialogId);
     });
     Modal = null;
   }

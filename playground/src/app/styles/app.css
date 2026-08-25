@@ -118,7 +118,7 @@ dialog {
 
 /* Background scroll while a modal is open — critical on mobile, where touch-scrolling passes
    through the native backdrop. Non-modal dialogs leave scroll intact. */
-html:has(dialog[open][data-modal-type='modal']) {
+html:has(dialog[open][data-dialog-type='modal']) {
   overflow: hidden;
 }
 
@@ -127,7 +127,7 @@ html:has(dialog[open][data-modal-type='modal']) {
    element only — the slide/fade defaults are inline there, which is why the `!important` is
    required and safe. */
 @media (prefers-reduced-motion: reduce) {
-  dialog[data-modal-id] {
+  dialog[data-dialog-id] {
     transition: none !important;
   }
 }

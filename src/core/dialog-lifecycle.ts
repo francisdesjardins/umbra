@@ -51,7 +51,7 @@ const openerFocus = new WeakMap<HTMLDialogElement, HTMLElement>();
  * Open the dialog in the requested mode and stamp its stacking z-index.
  *
  * @param nonModal - `dialog.show()` (normal flow, no top layer) vs `dialog.showModal()` (top layer).
- * @param zIndex - resolved z-index; also mirrored onto `data-modal-z` for debugging.
+ * @param zIndex - resolved z-index; also mirrored onto `data-dialog-z` for debugging.
  */
 export function showDialog(
   dialog: HTMLDialogElement,
@@ -112,14 +112,14 @@ export function restoreOpenerFocus(dialog: HTMLDialogElement): void {
 }
 
 /**
- * Write the stacking z-index onto a dialog, mirrored onto `data-modal-z` for debugging.
+ * Write the stacking z-index onto a dialog, mirrored onto `data-dialog-z` for debugging.
  *
  * Its own function because the stamp outlives the show: a policy can reorder open dialogs, and for
  * a non-modal one — never in the top layer — this is the whole of what moving it means.
  */
 export function stampZIndex(dialog: HTMLElement, zIndex: number): void {
   dialog.style.zIndex = String(zIndex);
-  dialog.dataset['modalZ'] = String(zIndex);
+  dialog.dataset['dialogZ'] = String(zIndex);
 }
 
 /**

@@ -13,15 +13,15 @@ test.describe('useSlideDialog', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
-    await expect(page.getByTestId('modal-slide-basic')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).not.toBeVisible();
   });
 
   test('opens from specified direction', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
-    await expect(page.getByTestId('modal-slide-basic')).toContainText('Slide content');
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).toContainText('Slide content');
   });
 
   test('passes direction to render context', async ({ mount, page }) => {
@@ -33,7 +33,7 @@ test.describe('useSlideDialog', () => {
   test('closes with reason via handle.close()', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Close Panel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('close');
@@ -42,7 +42,7 @@ test.describe('useSlideDialog', () => {
   test('closes with reason "dismiss" on Escape key', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
@@ -73,7 +73,7 @@ test.describe('useSlideDialog', () => {
   }) => {
     await mount(<NonModalEscHotkeySlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-non-modal-esc-hotkey-slide')).toBeVisible();
+    await expect(page.getByTestId('dialog-non-modal-esc-hotkey-slide')).toBeVisible();
 
     // Focus outside: the window capture listener must delegate to cancel, not swallow ESC.
     await page.getByTestId('outside-button').focus();
@@ -87,12 +87,12 @@ test.describe('useSlideDialog', () => {
     await mount(<BasicSlideHarness />);
 
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Close Panel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
@@ -107,7 +107,7 @@ test.describe('useSlideDialog', () => {
 
     // Two layers had to move for this click to land: the host (`absolute; inset: 0` over the stage
     // whether open or not) and the closed dialog, kept in layout by the inline `display: flex`.
-    await expect(page.getByTestId('modal-contained-positioning-slide')).toHaveCSS(
+    await expect(page.getByTestId('dialog-contained-positioning-slide')).toHaveCSS(
       'display',
       'none'
     );
@@ -122,7 +122,7 @@ test.describe('useSlideDialog', () => {
     await mount(<ContainedPositioningSlideHarness direction="bottom" />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
 
-    const dialog = page.getByTestId('modal-contained-positioning-slide');
+    const dialog = page.getByTestId('dialog-contained-positioning-slide');
     await expect(dialog).toBeVisible();
 
     const style = await dialog.getAttribute('style');
@@ -132,7 +132,7 @@ test.describe('useSlideDialog', () => {
     expect(style).not.toContain('dvh');
 
     // The owned relative container is what establishes the stable containing block.
-    const wrapper = page.locator('[data-modal-container="contained-positioning-slide"]');
+    const wrapper = page.locator('[data-dialog-container="contained-positioning-slide"]');
     await expect(wrapper).toHaveCount(1);
 
     // Must be `clip`, not `hidden`: a transformed descendant still grows the scroll area under
@@ -158,7 +158,7 @@ test.describe('useSlideDialog', () => {
       await mount(<ContainedPositioningSlideHarness direction={direction} />);
       await page.getByRole('button', { name: 'Open Panel' }).click();
 
-      const dialog = page.getByTestId('modal-contained-positioning-slide');
+      const dialog = page.getByTestId('dialog-contained-positioning-slide');
       await expect(dialog).toBeVisible();
       await page.waitForTimeout(400);
 
@@ -218,7 +218,7 @@ test.describe('useSlideDialog', () => {
       await mount(<AlignSlideHarness direction={direction} align={align} />);
       await page.getByRole('button', { name: 'Open Panel' }).click();
 
-      const dialog = page.getByTestId('modal-align-slide');
+      const dialog = page.getByTestId('dialog-align-slide');
       await expect(dialog).toBeVisible();
       await page.waitForTimeout(400);
 
@@ -262,7 +262,7 @@ test.describe('useSlideDialog', () => {
     const positions = await page.evaluate(async () => {
       const seen: number[] = [];
       const dq = () => {
-        return document.querySelector('[data-testid="modal-align-slide"]');
+        return document.querySelector('[data-testid="dialog-align-slide"]');
       };
       const t0 = performance.now();
       await new Promise<void>((res) => {
@@ -295,7 +295,7 @@ test.describe('useSlideDialog', () => {
     // Many distinct x positions → it slid. A jump/pop would yield one or two.
     expect(new Set(positions).size).toBeGreaterThan(5);
 
-    const transform = await page.getByTestId('modal-align-slide').evaluate((el) => {
+    const transform = await page.getByTestId('dialog-align-slide').evaluate((el) => {
       return getComputedStyle(el).transform;
     });
     // matrix(a,b,c,d,tx,ty) — tx settles at 0 (slid fully in), ty is the -50% self-shift.
@@ -311,7 +311,7 @@ test.describe('useSlideDialog', () => {
     await mount(<AlignSlideHarness direction="right" align="stretch" />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
 
-    const dialog = page.getByTestId('modal-align-slide');
+    const dialog = page.getByTestId('dialog-align-slide');
     await expect(dialog).toBeVisible();
     await page.waitForTimeout(400);
 
@@ -327,8 +327,8 @@ test.describe('useSlideDialog', () => {
   test('uses dynamic viewport units (dvh/dvw) for dialog sizing', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
-    await expect(page.getByTestId('modal-slide-basic')).toBeVisible();
-    const style = await page.getByTestId('modal-slide-basic').getAttribute('style');
+    await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
+    const style = await page.getByTestId('dialog-slide-basic').getAttribute('style');
     expect(style).toContain('dvh');
   });
 });

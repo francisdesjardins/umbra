@@ -133,7 +133,7 @@ export type Cell = OpenSince & {
 
 /** One option, and what it does and does not combine with. */
 export type OptionRow = {
-  /** Must be a member of `UseDialogBaseOptions` or `ModalVariant` — the gate checks both ways. */
+  /** Must be a member of `UseDialogBaseOptions` or `DialogVariant` — the gate checks both ways. */
   readonly option: string;
   readonly dependsOn?: readonly string[];
   readonly excludes?: readonly string[];
@@ -183,7 +183,7 @@ export type PlatformRow = OpenSince & {
 // ── Axis A — option × option ──────────────────────────────────────────────────
 //
 // One row per option, and the interesting column is `enforcement`: **two pairs are `TYPE`
-// today**, both through `ModalVariant`'s discriminated union and both pinned by `@ts-expect-error`
+// today**, both through `DialogVariant`'s discriminated union and both pinned by `@ts-expect-error`
 // assertions in `core/__tests__/type-model.test.ts` — `nonModal` against the two dismissal
 // options, and `nonModal: true` against `role: 'alertdialog'`. Everything else is a function that
 // narrows at run time, or a sentence.
@@ -405,7 +405,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   {
     option: 'template',
     enforcement: 'RUNTIME',
-    note: 'Free-form, and read by exactly one library path: the `StackModal` handed to a `prioritize` policy. That is how "every drawer under every alert" is expressed.',
+    note: 'Free-form, and read by exactly one library path: the `StackDialog` handed to a `prioritize` policy. That is how "every drawer under every alert" is expressed.',
     references: [
       {
         file: 'src/manager/__tests__/stack-order.test.ts',
@@ -443,7 +443,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'nonModal',
     excludes: ['dismissOnBackdropClick when true', 'dismissOnClickOutside when false'],
     enforcement: 'TYPE',
-    note: '**The one pair the checker holds.** `ModalVariant` is a discriminated union, so the wrong dismissal option for the variant is a compile error rather than an option that is silently read by nobody.',
+    note: '**The one pair the checker holds.** `DialogVariant` is a discriminated union, so the wrong dismissal option for the variant is a compile error rather than an option that is silently read by nobody.',
     references: [
       {
         file: 'src/core/__tests__/type-model.test.ts',
@@ -562,12 +562,12 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
-    capability: 'ModalOutlet',
+    capability: 'DialogOutlet',
     react: {
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/modal-outlet.ct.tsx',
+          file: 'src/react/__tests__/dialog-outlet.ct.tsx',
           title: 'renders modal via outlet without {Modal} in JSX',
         },
       ],
@@ -627,7 +627,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
   },
   {
     capability: 'useLookup',
-    react: { state: 'works', note: 'Returns the `ModalInfo` object.' },
+    react: { state: 'works', note: 'Returns the `DialogInfo` object.' },
     solid: {
       state: 'works',
       note: 'Returns an accessor: a discriminated union cannot survive being spread into getters without losing the narrowing.',
@@ -644,10 +644,10 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
-    capability: 'ModalRegistry — project-level id and contract typing',
+    capability: 'DialogRegistry — project-level id and contract typing',
     react: {
       state: 'works',
-      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useDialog`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useDialog<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
+      note: 'A consumer augments `DialogRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useDialog`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useDialog<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
     },
     solid: {
       state: 'works',
@@ -1741,7 +1741,7 @@ export function renderMatrix(): string {
 
   lines.push('### Option × option', '');
   lines.push(
-    'One row per option a caller can pass. The **held by** column is the one to read: `TYPE` means the checker rejects the wrong combination, `RUNTIME` means a named function narrows or refuses, `PROSE` means a sentence and nothing else — so every `PROSE` row is a candidate to become one of the other two. **Two pairs are `TYPE` today**, both through `ModalVariant`: `nonModal` against the two dismissal options, and `nonModal: true` against `role: "alertdialog"`.'
+    'One row per option a caller can pass. The **held by** column is the one to read: `TYPE` means the checker rejects the wrong combination, `RUNTIME` means a named function narrows or refuses, `PROSE` means a sentence and nothing else — so every `PROSE` row is a candidate to become one of the other two. **Two pairs are `TYPE` today**, both through `DialogVariant`: `nonModal` against the two dismissal options, and `nonModal: true` against `role: "alertdialog"`.'
   );
   lines.push('');
   lines.push('| Option | Held by | Notes |');

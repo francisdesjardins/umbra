@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { dialogPlacement } from '../../core/placement.js';
-import type { ModalAnimation } from '../../core/types.js';
+import type { DialogAnimation } from '../../core/types.js';
 import {
   DEFAULT_DURATION,
   DEFAULT_TRANSITION_PROPERTY,
@@ -9,7 +9,7 @@ import {
   resolveAnimation,
 } from '../animation-utils.js';
 
-const baseAnimation: ModalAnimation = {
+const baseAnimation: DialogAnimation = {
   entrance: { opacity: 1, transform: 'scale(1)' },
   exit: { opacity: 0, transform: 'scale(0.95)' },
   duration: 200,
@@ -42,7 +42,7 @@ test.describe('resolveAnimation', () => {
   });
 
   test('defaults duration and transitionProperty when omitted', () => {
-    const anim: ModalAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
+    const anim: DialogAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
     const resolved = resolveAnimation(anim);
     expect(resolved.entranceDuration).toBe(DEFAULT_DURATION);
     expect(resolved.transitionProperty).toBe(DEFAULT_TRANSITION_PROPERTY);
@@ -69,7 +69,7 @@ test.describe('resolveAnimation', () => {
   test('agrees with the transition the style builder emits', () => {
     // The exit listener waits on `primaryProperty` for `exitDuration`; a mismatch stalls the close
     // until the fallback timeout fires.
-    const anim: ModalAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
+    const anim: DialogAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
     const { primaryProperty, exitDuration } = resolveAnimation(anim);
     const transition = String(getDialogAnimationStyles('closing', { animation: anim }).transition);
     expect(transition).toBe(`${primaryProperty} ${String(exitDuration)}ms ease-out`);
@@ -115,19 +115,19 @@ test.describe('getDialogAnimationStyles', () => {
   });
 
   test('falls back to duration when exitDuration is omitted', () => {
-    const anim: ModalAnimation = { ...baseAnimation, exitDuration: undefined };
+    const anim: DialogAnimation = { ...baseAnimation, exitDuration: undefined };
     const styles = getDialogAnimationStyles('closing', { animation: anim });
     expect(styles.transition).toContain('200ms');
   });
 
   test('defaults transitionProperty to "opacity" when not set', () => {
-    const anim: ModalAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
+    const anim: DialogAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
     const styles = getDialogAnimationStyles('closing', { animation: anim });
     expect(String(styles.transition)).toContain('opacity');
   });
 
   test('defaults duration to 200ms when not set', () => {
-    const anim: ModalAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
+    const anim: DialogAnimation = { entrance: { opacity: 1 }, exit: { opacity: 0 } };
     const styles = getDialogAnimationStyles('open', { animation: anim });
     expect(styles.transition).toContain('200ms');
   });

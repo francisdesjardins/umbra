@@ -1,4 +1,4 @@
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -31,7 +31,7 @@ function ModalNullChecker() {
       >
         Open Modal
       </button>
-      <span data-testid="modal-is-null">{Modal === null ? 'yes' : 'no'}</span>
+      <span data-testid="dialog-is-null">{Modal === null ? 'yes' : 'no'}</span>
     </div>
   );
 }
@@ -41,8 +41,8 @@ function ModalNullChecker() {
  */
 export function OutletNullModalHarness() {
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <ModalNullChecker />
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

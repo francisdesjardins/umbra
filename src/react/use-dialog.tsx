@@ -9,7 +9,7 @@ import {
 import { createPortal } from 'react-dom';
 import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
-import type { RegisteredModalId } from '../core/registry.js';
+import type { RegisteredDialogId } from '../core/registry.js';
 import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
 import { createModalDirector } from '../core/modal-director.js';
@@ -27,10 +27,10 @@ import {
 } from '../utils/animation-utils.js';
 import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
-import { useModalOutletContext } from './modal-outlet.js';
+import { useDialogOutletContext } from './dialog-outlet.js';
 import type { GetDialog } from '../core/types.js';
 import type { OpenRequestDispatch } from '../manager/dialog-manager.js';
-import type { ModalAnimation, UseDialogOptions, UseDialogReturn } from './types.js';
+import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types.js';
 
 /**
  * Core modal hook that renders a native `<dialog>` with animation, backdrop handling and typed
@@ -53,11 +53,11 @@ import type { ModalAnimation, UseDialogOptions, UseDialogReturn } from './types.
  */
 /**
  * The registered door, first so a declared id is matched by it — whether the caller wrote the id
- * as a literal and let it infer, or named it as the one type argument. While `ModalRegistry` is
- * empty `RegisteredModalId` is `never`, this overload is uninhabitable, and every call falls
+ * as a literal and let it infer, or named it as the one type argument. While `DialogRegistry` is
+ * empty `RegisteredDialogId` is `never`, this overload is uninhabitable, and every call falls
  * through to the one below, which is the signature this hook has always had.
  */
-export function useDialog<TId extends RegisteredModalId>(
+export function useDialog<TId extends RegisteredDialogId>(
   options: RegisteredOptions<TId, CSSProperties, ReactNode>
 ): RegisteredReturn<TId, ReactNode>;
 export function useDialog<TData = void, TReason extends string = string>(
@@ -67,7 +67,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   options: UseDialogOptions<TData, TReason>
 ): UseDialogReturn<TData, TReason> {
   const {
-    id: modalId,
+    id: dialogId,
     render,
     animation: animationProp,
     style: styleProp,
@@ -104,7 +104,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // Built once: fresh doors each render would force consumers through refs and defeat memoization
   // inside `render`, and React Compiler cannot hoist them — they capture a value it treats opaque.
   const [init] = useState(() => {
-    const runtime = createModalRuntime<TData, TReason>(modalId);
+    const runtime = createModalRuntime<TData, TReason>(dialogId);
 
     // Safe to pass around: the closure captures the ref but never reads `.current` during render.
     const getDialog: GetDialog = () => {
@@ -117,7 +117,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   // Kept likewise: the director remembers each step's attachment and where opening focus landed.
   const [director] = useState(() => {
-    return createModalDirector({ store, getDialog, modalId, manager, engine });
+    return createModalDirector({ store, getDialog, dialogId, manager, engine });
   });
 
   // The same reader serves the server: both stores are in-memory and DOM-free, so a server pass and
@@ -132,9 +132,9 @@ export function useDialog<TData = void, TReason extends string = string>(
     return actionSnap;
   });
 
-  // Annotated, not inferred: un-annotated, the fallback and the caller's `ModalAnimation` stay a
+  // Annotated, not inferred: un-annotated, the fallback and the caller's `DialogAnimation` stay a
   // union, and `getDialogAnimationStyles` infers its style parameter from the first branch alone.
-  const animation: ModalAnimation = animationProp ?? DEFAULT_MODAL_ANIMATION;
+  const animation: DialogAnimation = animationProp ?? DEFAULT_MODAL_ANIMATION;
 
   // The resolution the inline `transition` uses, so the exit's property and timeout match it.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
@@ -191,7 +191,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   const acceptsOpenRequests = onOpenRequest !== undefined;
 
   useEffect(() => {
-    manager.register(modalId, {
+    manager.register(dialogId, {
       store,
       template,
       nonModal: isNonModal,
@@ -208,7 +208,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     return () => {
       teardownModal(store, {
         manager,
-        modalId,
+        dialogId,
         dialog: getDialog(),
         onError: (failure) => {
           errorHandler.current?.(failure);
@@ -216,7 +216,7 @@ export function useDialog<TData = void, TReason extends string = string>(
       });
     };
     // `isPortaled` is a dep the body never reads: like `nonModal`, it changes the structure.
-  }, [acceptsOpenRequests, manager, getDialog, isNonModal, modalId, template, isPortaled, store]);
+  }, [acceptsOpenRequests, manager, getDialog, isNonModal, dialogId, template, isPortaled, store]);
 
   // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s and the answer is
   // `answerDismiss`'s — a controlled surface hears this door the way it hears the dismiss key. It
@@ -240,7 +240,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     }
   };
 
-  const outlet = useModalOutletContext();
+  const outlet = useDialogOutletContext();
 
   // A declaration window, so the engine learns which actions this pass drew: re-declaring rather
   // than accumulating stops a hotkey outliving its button and suppressing the dismiss key.
@@ -262,7 +262,7 @@ export function useDialog<TData = void, TReason extends string = string>(
       ref={dialogRef}
       // Styling surface and accessible name, from the table both bindings read (`dialog-props.ts`).
       {...dialogAttributes({
-        modalId,
+        dialogId,
         nonModal: isNonModal,
         isPreparing: snap.isPreparing,
         ariaLabel,
@@ -313,7 +313,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     // The dialog's `absolute` positioning resolves against this host (closest positioned ancestor
     // wins), immune to transforms above, and it fills its parent so a slide anchors to that region.
     dialogNode = (
-      <div data-modal-container={modalId} style={placement.host}>
+      <div data-dialog-container={dialogId} style={placement.host}>
         {dialogElement}
       </div>
     );
@@ -329,18 +329,18 @@ export function useDialog<TData = void, TReason extends string = string>(
     if (!outlet) {
       return;
     }
-    outlet.register(modalId, dialogNode);
+    outlet.register(dialogId, dialogNode);
   });
 
-  // Unmount-only: the outlet/modalId identities are stable in practice.
+  // Unmount-only: the outlet/dialogId identities are stable in practice.
   useEffect(() => {
     if (!outlet) {
       return;
     }
     return () => {
-      outlet.unregister(modalId);
+      outlet.unregister(dialogId);
     };
-  }, [modalId, outlet]);
+  }, [dialogId, outlet]);
 
   const Modal: ReactNode = outlet ? null : dialogNode;
 

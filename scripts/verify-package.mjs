@@ -5,7 +5,7 @@
  * failures outlive a release. Against `dist/` — both entries resolve (types included) under
  * `moduleResolution: NodeNext`; the root's graph imports no `react` (the optional-peer promise);
  * the React binding re-exports the root; the promised inference survives into the `.d.ts` (the
- * `DocumentEventMap` augmentation, `ModalInfo`'s `exists` discrimination, the typed close payload,
+ * `DocumentEventMap` augmentation, `DialogInfo`'s `exists` discrimination, the typed close payload,
  * a payload declared once on an action and *inferred* at the modal), each with a matching
  * `@ts-expect-error` so a widened type fails too. Run after `yarn build`; in `prepublishOnly`.
  */
@@ -73,13 +73,13 @@ try {
     [
       "import { dialogManager, createDialogManager, createStore } from 'umbra';",
       "import { normalizeError, Key, setLogLevel } from 'umbra';",
-      "import type { ModalInfo, ModalPhase, DialogManager } from 'umbra';",
+      "import type { DialogInfo, DialogPhase, DialogManager } from 'umbra';",
       'export const used = [dialogManager, createDialogManager, createStore,',
       '  normalizeError, Key, setLogLevel];',
-      'export type Used = [ModalInfo, DialogManager];',
+      'export type Used = [DialogInfo, DialogManager];',
       '// A root consumer must be able to name the types the ones it was handed refer to.',
-      'declare const info: ModalInfo;',
-      'export const phase: ModalPhase = info.phase;',
+      'declare const info: DialogInfo;',
+      'export const phase: DialogPhase = info.phase;',
     ].join('\n')
   );
 
@@ -88,9 +88,9 @@ try {
     join(sandbox, 'react-entry.ts'),
     [
       "import { useDialog, useMessageDialog, useSlideDialog } from 'umbra/react';",
-      "import { ModalOutlet, dialogManager } from 'umbra/react';",
+      "import { DialogOutlet, dialogManager } from 'umbra/react';",
       'export const used = [useDialog, useMessageDialog, useSlideDialog,',
-      '  ModalOutlet, dialogManager];',
+      '  DialogOutlet, dialogManager];',
     ].join('\n')
   );
 
@@ -110,9 +110,9 @@ try {
     join(sandbox, 'solid-entry.ts'),
     [
       "import { useDialog, useMessageDialog, useSlideDialog } from 'umbra/solid';",
-      "import { ModalOutlet, fromStore, dialogManager } from 'umbra/solid';",
+      "import { DialogOutlet, fromStore, dialogManager } from 'umbra/solid';",
       'export const used = [useDialog, useMessageDialog, useSlideDialog,',
-      '  ModalOutlet, fromStore, dialogManager];',
+      '  DialogOutlet, fromStore, dialogManager];',
     ].join('\n')
   );
 
@@ -123,7 +123,7 @@ try {
     [
       "import { MODAL_OPEN_EVENT, MODAL_CLOSE_EVENT, dialogManager } from 'umbra';",
       "import { useDialog } from 'umbra/react';",
-      "import type { ModalHandle } from 'umbra/react';",
+      "import type { DialogHandle } from 'umbra/react';",
       '',
       '// No cast: the augmentation must survive into the published declarations.',
       'document.addEventListener(MODAL_OPEN_EVENT, (event) => {',
@@ -140,7 +140,7 @@ try {
       '// @ts-expect-error registration-time facts need narrowing on `exists`',
       'export const unguarded = info.template;',
       '',
-      'declare const typed: ModalHandle<{ id: string }>;',
+      'declare const typed: DialogHandle<{ id: string }>;',
       "typed.close('ok', { id: 'a' });",
       '// @ts-expect-error the payload is the one the modal declares, not `unknown`',
       "typed.close('ok', 42);",
@@ -368,7 +368,7 @@ report(!solidSource.includes('compiler-runtime'), {
 
   // A closed dialog, and closed is the only honest server answer: the top layer is enterable from
   // `showModal()` alone, so no served HTML can hand back an open modal one.
-  const rendered = html.includes('<dialog') && html.includes('data-modal-id="ssr-check"');
+  const rendered = html.includes('<dialog') && html.includes('data-dialog-id="ssr-check"');
   report(threw === '' && rendered && !html.includes(' open'), {
     label: 'the React binding server-renders — a closed <dialog>, with no DOM in scope',
     detail: threw !== '' ? threw : rendered ? '' : `rendered nothing useful: ${html.slice(0, 80)}`,

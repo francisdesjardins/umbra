@@ -13,7 +13,7 @@ import { useMessageDialog } from '../src/react/templates/use-message-dialog.js';
 import type { CloseOf, DataOf, ReasonOf } from '../src/core/registry.js';
 
 declare module '../src/core/registry.js' {
-  interface ModalRegistry {
+  interface DialogRegistry {
     'archive-room': {
       closesWith: {
         confirm: { room: string };

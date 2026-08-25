@@ -1,7 +1,7 @@
 import { createStore } from '../store/index.js';
 import { createLogger } from '../utils/logger.js';
 import type { DismissReason } from './dismiss-reason.js';
-import type { CloseResolver, CloseResult, ModalStoreSnapshot } from './types.js';
+import type { CloseResolver, CloseResult, DialogStoreSnapshot } from './types.js';
 
 const log = createLogger('modal');
 
@@ -21,7 +21,7 @@ const log = createLogger('modal');
  * `openAndWait()` — agree on one payload type without a single assertion.
  */
 export function createModalStore<TData = unknown, TReason extends string = string>(id: string) {
-  const initial: ModalStoreSnapshot<TData, TReason> = {
+  const initial: DialogStoreSnapshot<TData, TReason> = {
     phase: 'closed',
     isPreparing: false,
     closeResult: null,

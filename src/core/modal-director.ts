@@ -14,14 +14,14 @@ import {
 import { createStepRunner } from './step-runner.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { DismissCause } from './dismiss-reason.js';
-import type { ModalId } from './registry.js';
+import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { FocusCoordinator } from './attach-focus.js';
 import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
 import type { ModalStore } from './modal-store.js';
 import type { StepInputs, StepTeardown } from './step-runner.js';
-import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
+import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 
 /**
  * Who asks the lifecycle's decisions, in what order, and on which pass.
@@ -76,14 +76,14 @@ import type { GetDialog, ModalFailure, ModalPhase } from './types.js';
 // ── What the director is handed ──────────────────────────────────────────────
 
 /**
- * The modal being directed — fixed for its whole lifetime, so no step lists any of it, `modalId`
+ * The modal being directed — fixed for its whole lifetime, so no step lists any of it, `dialogId`
  * included: the store, engine and focus coordinator take the id once at build and never look
  * again. React's registration effect does list it, which is what re-registers a changed `id`.
  */
 export type ModalDirectorContext = {
   readonly store: ModalStore;
   readonly getDialog: GetDialog;
-  readonly modalId: ModalId;
+  readonly dialogId: DialogId;
   readonly manager: DialogManager;
   readonly engine: ActionGate;
 };
@@ -95,10 +95,10 @@ export type ModalDirectorContext = {
  * knows which fields belong to which step — that split is the whole point of the file.
  */
 export type ModalLifecyclePass = {
-  readonly phase: ModalPhase;
+  readonly phase: DialogPhase;
   readonly isPreparing: boolean;
   readonly prepare: ((signal: AbortSignal) => void | Promise<void>) | undefined;
-  readonly onError: ((failure: ModalFailure) => void) | undefined;
+  readonly onError: ((failure: DialogFailure) => void) | undefined;
   readonly onKeyDown: ((event: KeyboardEvent) => void) | undefined;
   readonly nonModal: boolean;
   /** The transition property whose `transitionend` settles the close. */
@@ -329,11 +329,11 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly ModalLifecycleStep[] = MODAL_LIF
  * that is about modals — which steps exist, what each reads, and the context they share.
  */
 export function createModalDirector(ctx: ModalDirectorContext) {
-  const { store, getDialog, modalId, manager, engine } = ctx;
+  const { store, getDialog, dialogId, manager, engine } = ctx;
 
   const parts: StepParts = {
     engine,
-    focus: createFocusCoordinator({ getDialog, modalId, manager }, { engine }),
+    focus: createFocusCoordinator({ getDialog, dialogId, manager }, { engine }),
   };
 
   const runner = createStepRunner<ModalLifecyclePass, ModalDomContext>(
@@ -347,7 +347,7 @@ export function createModalDirector(ctx: ModalDirectorContext) {
     }),
     // Once per pass, so no two steps can read different phases.
     (pass) => {
-      return { store, getDialog, modalId, phase: pass.phase, manager };
+      return { store, getDialog, dialogId, phase: pass.phase, manager };
     }
   );
 

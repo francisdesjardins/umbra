@@ -3,8 +3,8 @@ import type { DismissReason } from './dismiss-reason.js';
 import type { CloseOf, DataOf, DataOfReason, ReasonOf } from './registry.js';
 import type { DialogStyle } from './style.js';
 import type {
-  ModalRenderArgs,
-  ModalVariant,
+  DialogRenderArgs,
+  DialogVariant,
   UseDialogBaseOptions,
   UseDialogReturn,
 } from './types.js';
@@ -35,7 +35,7 @@ type CloseArgs<TId, TReason> = TReason extends DismissReason
       : [reason: TReason, data: DataOfReason<TId, TReason>]
     : never;
 
-/** {@link ModalHandle} for a declared id — `close` typed per reason rather than per modal. */
+/** {@link DialogHandle} for a declared id — `close` typed per reason rather than per modal. */
 export type RegisteredHandle<TId> = {
   /** Close with a reason and, when that reason declares one, its payload. */
   readonly close: <TReason extends ReasonOf<TId> | DismissReason>(
@@ -71,9 +71,9 @@ export type RegisteredActionFactory<TId> = {
   readonly isRunning: (reason: Exclude<ReasonOf<TId>, DismissReason>) => boolean;
 };
 
-/** {@link ModalRenderArgs} with the two members a declared contract sharpens. */
+/** {@link DialogRenderArgs} with the two members a declared contract sharpens. */
 export type RegisteredRenderArgs<TId> = Omit<
-  ModalRenderArgs<DataOf<TId>, ReasonOf<TId>>,
+  DialogRenderArgs<DataOf<TId>, ReasonOf<TId>>,
   'action' | 'handle'
 > & {
   readonly handle: RegisteredHandle<TId>;
@@ -87,7 +87,7 @@ export type AwaitedCloseOf<TId> =
 /**
  * Options for a declared id.
  *
- * `Omit` runs over the **flat** base and `ModalVariant` is intersected back afterwards: over the
+ * `Omit` runs over the **flat** base and `DialogVariant` is intersected back afterwards: over the
  * union directly it would collapse the two branches into one object and lose the mutual exclusion
  * `nonModal` buys — the same reason `TemplateCommonOptions` is built this way.
  */
@@ -99,7 +99,7 @@ export type RegisteredOptions<
   UseDialogBaseOptions<DataOf<TId>, ReasonOf<TId>, TStyle, TNode>,
   'id' | 'onClose' | 'render'
 > &
-  ModalVariant & {
+  DialogVariant & {
     /** Unique modal identifier — read once, when the modal is built. */
     readonly id: TId;
     /** Render function for modal content. Receives modal state as arguments. */

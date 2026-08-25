@@ -3,7 +3,7 @@ import { reconcileOpen } from '../../core/reconcile-open.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { bindDialog } from '../bind-dialog.js';
-import type { ModalPhase } from '../../core/types.js';
+import type { DialogPhase } from '../../core/types.js';
 import type { DialogController } from '../types.js';
 
 /**
@@ -1295,14 +1295,14 @@ export function VanillaReconcileHarness() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [controller, setController] = useState<Bound<'close'> | null>(null);
   const [wanted, setWanted] = useState(false);
-  const [phase, setPhase] = useState<ModalPhase>('closed');
+  const [phase, setPhase] = useState<DialogPhase>('closed');
   /**
    * Every phase the controller published, not only the latest. Reading the current one loses any
    * transition that shares a React batch with the next — which is what `'closing'` does when an exit
    * settles quickly — and deciding on `isVisible` differs from deciding on `phase` **only** while the
    * phase is `'closing'`. Without this the harness never observes the window the decision turns on.
    */
-  const [phasesSeen, setPhasesSeen] = useState<ModalPhase[]>([]);
+  const [phasesSeen, setPhasesSeen] = useState<DialogPhase[]>([]);
   const [openCount, setOpenCount] = useState(0);
   const [asked, setAsked] = useState<string[]>([]);
 

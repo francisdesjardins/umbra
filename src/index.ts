@@ -23,8 +23,8 @@ export type {
   DialogManager,
   DialogManagerEvent,
   DialogManagerSubscriber,
-  ModalCloseEventDetail,
-  ModalOpenEventDetail,
+  DialogCloseEventDetail,
+  DialogOpenEventDetail,
   OpenRequest,
   OpenRequestContext,
   OpenRequestDispatch,
@@ -34,22 +34,22 @@ export type {
 } from './manager/dialog-manager.js';
 
 export type {
-  ModalInfo,
-  ModalLookup,
-  RegisteredModalInfo,
-  UnregisteredModalInfo,
+  DialogInfo,
+  DialogLookup,
+  RegisteredDialogInfo,
+  UnregisteredDialogInfo,
 } from './manager/types.js';
 
 // Both halves of `dialogManager.prioritize`: an app declares such a policy in its own module.
-export type { StackModal, StackPriority } from './manager/stack-order.js';
+export type { StackDialog, StackPriority } from './manager/stack-order.js';
 
-// The vocabulary the manager's own surface speaks: a consumer who can name `ModalInfo` but not
-// `ModalPhase` cannot write the annotation it requires. The hook-shaped types beside them describe
+// The vocabulary the manager's own surface speaks: a consumer who can name `DialogInfo` but not
+// `DialogPhase` cannot write the annotation it requires. The hook-shaped types beside them describe
 // rendering, so they stay on a binding.
-export type { CloseResult, ModalPhase, ModalStoreSnapshot, PortalTarget } from './core/types.js';
+export type { CloseResult, DialogPhase, DialogStoreSnapshot, PortalTarget } from './core/types.js';
 
-// The registry, and the types derived from it. `ModalRegistry` is exported so a project can
-// augment it — an interface nobody can name is an interface nobody can merge into — and `ModalId`
+// The registry, and the types derived from it. `DialogRegistry` is exported so a project can
+// augment it — an interface nobody can name is an interface nobody can merge into — and `DialogId`
 // because it is what every door on the manager now says, so a consumer annotating one needs it.
 // `CloseOf` is here for the same reason: it is what a declared modal's close *is*, so a function
 // taking one has to be able to say so.
@@ -57,19 +57,19 @@ export type {
   CloseOf,
   DataOf,
   DataOfReason,
-  ModalContract,
-  ModalId,
-  ModalRegistry,
+  DialogContract,
+  DialogId,
+  DialogRegistry,
   PayloadFreeReasonOf,
   PayloadOf,
   ReasonOf,
-  RegisteredModalId,
+  RegisteredDialogId,
 } from './core/registry.js';
 
-// The same rule for `onError`'s payload: `ModalErrorSource` ships beside `ModalFailure` because its
+// The same rule for `onError`'s payload: `DialogErrorSource` ships beside `DialogFailure` because its
 // doc promises an exhaustive `switch`, and one whose type has no name is not one. (`docs:check`
 // cannot ask for these, reaching them only through `UseDialogBaseOptions`.)
-export type { ModalErrorSource, ModalFailure } from './core/types.js';
+export type { DialogErrorSource, DialogFailure } from './core/types.js';
 
 // The reserved close reason, value and type: `CloseResult.reason` is `TReason | DismissReason`, and
 // comparing against it should not mean retyping the string.

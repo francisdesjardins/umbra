@@ -8,7 +8,7 @@ import type {
   useSlideDialog,
 } from '../../react/templates/use-slide-dialog.js';
 import type { useDialog } from '../../react/use-dialog.js';
-import type { CloseResult, ModalHandle, ModalRenderArgs, ModalVariant } from '../types.js';
+import type { CloseResult, DialogHandle, DialogRenderArgs, DialogVariant } from '../types.js';
 // React's instantiations, not the core model: the hooks asserted are React's, so the types they
 // must agree with are the ones carrying `ReactNode`.
 import type { UseDialogBaseOptions, UseDialogReturn } from '../../react/types.js';
@@ -16,7 +16,7 @@ import type { UseDialogBaseOptions, UseDialogReturn } from '../../react/types.js
 /**
  * Compile-time assertions on the public type model, checked by `yarn type-check`; the runtime
  * bodies exist only so the file is a test. These relationships are *derivations* —
- * `UseDialogReturn` and `BaseRenderContext` are expressed in terms of `ModalRenderArgs` — and
+ * `UseDialogReturn` and `BaseRenderContext` are expressed in terms of `DialogRenderArgs` — and
  * flattening one back into a literal object type compiles while silently desyncing the three.
  */
 
@@ -27,33 +27,33 @@ type Extends<T extends U, U> = T;
 type Equals<A extends B, B extends C, C = A> = A;
 
 // What lets `render` read live state without touching the value the hook is still producing.
-export type _ReturnProvidesRenderArgs = Extends<UseDialogReturn, ModalRenderArgs>;
+export type _ReturnProvidesRenderArgs = Extends<UseDialogReturn, DialogRenderArgs>;
 
-export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, ModalRenderArgs>;
+export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, DialogRenderArgs>;
 
-// Extended rather than redefined, so a field added to `ModalRenderArgs` reaches every template.
+// Extended rather than redefined, so a field added to `DialogRenderArgs` reaches every template.
 export type _SlideContextExtendsBase = Extends<SlideDialogRenderContext, BaseRenderContext>;
 
 export type _RenderArgsCarryTheFactory = Equals<
-  ModalRenderArgs<Payload>['action'],
+  DialogRenderArgs<Payload>['action'],
   ActionFactory<Payload>
 >;
 
 type Payload = { readonly id: number };
 
 export type _RenderHandleTakesPayload = Equals<
-  Parameters<ModalRenderArgs<Payload>['handle']['close']>,
+  Parameters<DialogRenderArgs<Payload>['handle']['close']>,
   [reason?: string | undefined, data?: Payload | undefined]
 >;
 
 export type _SlideHandleTakesPayload = Equals<
   SlideDialogRenderContext<Payload>['handle'],
-  ModalHandle<Payload>
+  DialogHandle<Payload>
 >;
 
 // `void` makes `data` unusable rather than absent, so assert the *rejection* — the part users
 // rely on.
-const voidHandle: ModalHandle = { close: noop };
+const voidHandle: DialogHandle = { close: noop };
 // @ts-expect-error a modal with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 
@@ -204,21 +204,21 @@ const templateOptions: TemplateCommonOptions = {};
 templateOptions.animation = undefined;
 
 // A dismissal option that does not apply to a variant is a type error, not a silent no-op.
-const modalVariant: ModalVariant = { dismissOnBackdropClick: true };
-const nonModalVariant: ModalVariant = { nonModal: true, dismissOnClickOutside: true };
+const modalVariant: DialogVariant = { dismissOnBackdropClick: true };
+const nonModalVariant: DialogVariant = { nonModal: true, dismissOnClickOutside: true };
 
 // @ts-expect-error a non-modal dialog has no backdrop to click
-const bogusBackdrop: ModalVariant = { nonModal: true, dismissOnBackdropClick: true };
+const bogusBackdrop: DialogVariant = { nonModal: true, dismissOnBackdropClick: true };
 
 // @ts-expect-error a modal dialog uses dismissOnBackdropClick, not click-outside
-const bogusClickOutside: ModalVariant = { nonModal: false, dismissOnClickOutside: true };
+const bogusClickOutside: DialogVariant = { nonModal: false, dismissOnClickOutside: true };
 
 // An alertdialog is modal by definition, so the non-modal branch offers `'dialog'` alone.
-const modalAlert: ModalVariant = { role: 'alertdialog' };
-const nonModalPlain: ModalVariant = { nonModal: true, role: 'dialog' };
+const modalAlert: DialogVariant = { role: 'alertdialog' };
+const nonModalPlain: DialogVariant = { nonModal: true, role: 'dialog' };
 
 // @ts-expect-error an alertdialog is modal by definition — the non-modal branch has no such role
-const bogusAlert: ModalVariant = { nonModal: true, role: 'alertdialog' };
+const bogusAlert: DialogVariant = { nonModal: true, role: 'alertdialog' };
 
 test.describe('type model', () => {
   test('the documented variant combinations are the ones that compile', () => {
@@ -236,7 +236,7 @@ test.describe('type model', () => {
 
   test('render args carry exactly the render-time fields', () => {
     // Anything added lands in every template context and in the hook return — a deliberate edit.
-    const keys: readonly (keyof ModalRenderArgs)[] = [
+    const keys: readonly (keyof DialogRenderArgs)[] = [
       'isPreparing',
       'phase',
       'handle',

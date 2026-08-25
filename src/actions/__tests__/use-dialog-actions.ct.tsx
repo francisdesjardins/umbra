@@ -29,13 +29,13 @@ test.describe('actions declared by use', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
-    await expect(page.getByTestId('modal-ctrl-basic')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-basic')).not.toBeVisible();
   });
 
   test('opens modal with action buttons', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-basic')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
   });
@@ -80,7 +80,7 @@ test.describe('actions declared by use', () => {
   test('Enter hotkey triggers confirm action', async ({ mount, page }) => {
     await mount(<HotkeyActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
@@ -89,7 +89,7 @@ test.describe('actions declared by use', () => {
   test('Escape hotkey triggers cancel action instead of dismiss', async ({ mount, page }) => {
     await mount(<HotkeyActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
@@ -127,7 +127,7 @@ test.describe('actions declared by use', () => {
   test('action buttons have aria-keyshortcuts when hotkey is declared', async ({ mount, page }) => {
     await mount(<HotkeyActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
       'aria-keyshortcuts',
       'Enter'
@@ -146,7 +146,7 @@ test.describe('actions declared by use', () => {
     // modified hotkey catches a stale spelling in the attribute or in the dispatch selector.
     await mount(<HotkeyActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-hotkey')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
 
     await expect(page.getByTestId('modified-hotkey')).toHaveAttribute(
       'aria-keyshortcuts',
@@ -160,14 +160,14 @@ test.describe('actions declared by use', () => {
   test('focus returns inside the dialog after a failed action', async ({ mount, page }) => {
     await mount(<FocusRestorationHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-focus')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-focus')).toBeVisible();
     await expect(page.getByTestId('ok-btn')).toBeFocused();
     // The failing action disables its own button, so focus falls to the body first.
     await page.getByTestId('bad-btn').click();
     // Must land back inside the dialog — otherwise no keyboard. Which button is pinned separately.
     expect(
       await page.evaluate(() => {
-        const dialog = document.querySelector('[data-testid="modal-ctrl-focus"]');
+        const dialog = document.querySelector('[data-testid="dialog-ctrl-focus"]');
         return dialog?.contains(document.activeElement) ?? false;
       })
     ).toBe(true);
@@ -179,7 +179,7 @@ test.describe('actions declared by use', () => {
   }) => {
     await mount(<DismissKeyActionCollisionHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-ctrl-dismiss-collision')).toBeVisible();
+    await expect(page.getByTestId('dialog-ctrl-dismiss-collision')).toBeVisible();
 
     // Delete is both the dismissKey and the action hotkey — action should win
     await page.keyboard.press('Delete');
@@ -192,7 +192,7 @@ test.describe('callable actions', () => {
   test('no-handler callable closes modal with action reason', async ({ mount, page }) => {
     await mount(<ModalActionBasicHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-action-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-action-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
@@ -230,7 +230,7 @@ test.describe('callable actions', () => {
   test('aria-keyshortcuts forwarded through render prop', async ({ mount, page }) => {
     await mount(<ModalActionHotkeyHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-action-hotkey')).toBeVisible();
+    await expect(page.getByTestId('dialog-action-hotkey')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
       'aria-keyshortcuts',
       'Enter'
@@ -257,7 +257,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
   }) => {
     await mount(<VanillaAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-vanilla-aria')).toBeVisible();
+    await expect(page.getByTestId('dialog-vanilla-aria')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
       'aria-keyshortcuts',
       'Enter'
@@ -285,7 +285,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
   }) => {
     await mount(<BrokenAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
-    await expect(page.getByTestId('modal-broken-aria')).toBeVisible();
+    await expect(page.getByTestId('dialog-broken-aria')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).not.toHaveAttribute(
       'aria-keyshortcuts'
     );
@@ -304,7 +304,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     // path rather than native dismiss — so the modal stays open on both.
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    await expect(page.getByTestId('modal-broken-aria')).toBeVisible();
+    await expect(page.getByTestId('dialog-broken-aria')).toBeVisible();
   });
 });
 
@@ -507,7 +507,7 @@ test.describe('the props an action spreads onto a button', () => {
     await expect(dom).toHaveAttribute('data-loading', 'false');
 
     await page.keyboard.press('Enter');
-    await expect(page.getByTestId('modal-dom-safe-spread')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-dom-safe-spread')).not.toBeVisible();
   });
 
   test('do not submit a surrounding form', async ({ mount, page }) => {
@@ -705,6 +705,6 @@ test.describe('action.isRunning — the per-action question, away from the butto
     await page.getByTestId('release-btn').click();
 
     // Released, the handler closes on its own reason and takes the readouts with it.
-    await expect(page.getByTestId('modal-action-is-running')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-action-is-running')).not.toBeVisible();
   });
 });

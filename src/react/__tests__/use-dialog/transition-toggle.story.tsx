@@ -10,7 +10,7 @@ const dropLogging = () => {
   setLogLevel(false);
 };
 
-const DISABLE_RULE = `dialog[data-testid='modal-transition-toggle'] { transition: none !important; }`;
+const DISABLE_RULE = `dialog[data-testid='dialog-transition-toggle'] { transition: none !important; }`;
 
 /**
  * The same `<dialog>` element, opened once with CSS transitions live and once with them

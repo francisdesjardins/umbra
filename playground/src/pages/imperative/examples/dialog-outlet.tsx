@@ -3,7 +3,7 @@ import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { AppButton } from '@/shared/ui/AppButton';
-import { ModalOutlet, useMessageDialog } from 'umbra/react';
+import { DialogOutlet, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'outlet-demo';
@@ -27,7 +27,7 @@ function ConfirmDialog() {
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
-              This modal renders via <code>{'<ModalOutlet>'}</code> — there is no{' '}
+              This modal renders via <code>{'<DialogOutlet>'}</code> — there is no{' '}
               <code>{'{modal.Modal}'}</code> in the component JSX.
             </Shared.Message>
           </MessageDialog.Content>
@@ -61,17 +61,17 @@ function ConfirmDialog() {
   );
 }
 
-// ── Example wraps everything in ModalOutlet ────────────────────────────────
+// ── Example wraps everything in DialogOutlet ────────────────────────────────
 
 export function ModalOutletExample() {
   const { result } = useStore(resultStore);
 
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
         <ConfirmDialog />
         <ResultDisplay result={result} />
       </div>
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

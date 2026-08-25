@@ -10,7 +10,7 @@ import {
 } from './focus-policy.js';
 import { chooseActionRunner, preferredRestoreTarget } from '../utils/focus-restore-policy.js';
 import type { FocusCoordinatorOptions, ModalDomContext } from './attach-types.js';
-import type { ModalPhase } from './types.js';
+import type { DialogPhase } from './types.js';
 
 /**
  * The scheduling half of the focus policy — where `focus-policy.ts`'s decisions are asked. A
@@ -20,10 +20,10 @@ import type { ModalPhase } from './types.js';
  * @internal Not part of the public API.
  */
 export function createFocusCoordinator(
-  ctx: Pick<ModalDomContext, 'getDialog' | 'modalId' | 'manager'>,
+  ctx: Pick<ModalDomContext, 'getDialog' | 'dialogId' | 'manager'>,
   options: FocusCoordinatorOptions
 ) {
-  const { getDialog, modalId, manager } = ctx;
+  const { getDialog, dialogId, manager } = ctx;
   const { engine } = options;
 
   let openingFocus: HTMLElement | null = null;
@@ -92,7 +92,7 @@ export function createFocusCoordinator(
      *
      * Call it whenever the phase changes, tearing down the previous attachment first.
      */
-    sync(phase: ModalPhase): (() => void) | undefined {
+    sync(phase: DialogPhase): (() => void) | undefined {
       // Clear on close, but after the floor: by this pass the platform's own restore has had its
       // turn, so a keyboard still on `<body>` is one the close stranded. See `restoreOpenerFocus`.
       if (phase === 'closed') {
@@ -115,7 +115,9 @@ export function createFocusCoordinator(
         const dialog = getDialog();
         if (dialog) {
           settled = true;
-          openingFocus = manager.lookup().isForeground(modalId) ? settleOpeningFocus(dialog) : null;
+          openingFocus = manager.lookup().isForeground(dialogId)
+            ? settleOpeningFocus(dialog)
+            : null;
         }
       }
 
@@ -140,7 +142,7 @@ export function createFocusCoordinator(
           // user is looking at has no claim on their keyboard. A guard rather than an assumption —
           // Chromium's top-layer inertness makes this `focus()` a silent no-op, WebKit lets it
           // through, and CI found the difference.
-          if (!manager.lookup().isForeground(modalId)) {
+          if (!manager.lookup().isForeground(dialogId)) {
             return;
           }
           // The captured element first — it is the one that actually ran the action — then the same
@@ -274,7 +276,7 @@ export function createFocusCoordinator(
           if (!dialog?.open) {
             return;
           }
-          const info = manager.lookup(modalId);
+          const info = manager.lookup(dialogId);
           if (!info.isForeground || (info.exists && info.nonModal)) {
             // Modal only, as a rule: a non-modal panel never owned the page's focus, and its
             // dismiss key comes from `attachWindowDismissKey`, which answers wherever focus is. A
@@ -312,7 +314,7 @@ export function createFocusCoordinator(
 
           const giveItBack = (control: HTMLElement) => {
             const dialog = getDialog();
-            const info = manager.lookup(modalId);
+            const info = manager.lookup(dialogId);
             // The same three guards the stack path uses, for the same reasons — and one more: if
             // focus has since landed somewhere real, the user moved on and this is stale.
             if (

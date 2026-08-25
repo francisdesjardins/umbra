@@ -3,9 +3,9 @@ import type { CloseOf, DataOf, ReasonOf } from '../core/registry.js';
 import type { RegisteredRenderArgs } from '../core/registered-types.js';
 import type {
   CloseResult,
-  ModalAnimation,
-  ModalRenderArgs,
-  ModalVariant,
+  DialogAnimation,
+  DialogRenderArgs,
+  DialogVariant,
   UseDialogBaseOptions,
 } from '../core/types.js';
 
@@ -17,7 +17,7 @@ import type {
  * the exclusion list keeps it out; an enumeration of forwarded keys would let it reach no template
  * at all, with nothing to fail. The five exclusions: `id`, `render` and `onClose` are redeclared by
  * {@link TemplateBaseOptions} (`render` with the template's own context type), while `template` and
- * `clipContainer` are the template's to set. Intersected with `ModalVariant` directly, so the union
+ * `clipContainer` are the template's to set. Intersected with `DialogVariant` directly, so the union
  * is not double-intersected the way omitting from `UseDialogOptions` would.
  *
  * @internal Not exported from index.ts.
@@ -31,7 +31,7 @@ export type TemplateCommonOptions<
   UseDialogBaseOptions<TData, TReason, TStyle, TNode>,
   'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 > &
-  ModalVariant;
+  DialogVariant;
 
 /**
  * {@link TemplateCommonOptions} plus the `id`, `render` and `onClose` every template requires;
@@ -83,7 +83,7 @@ export type RegisteredBaseRenderContext<TId> = RegisteredRenderArgs<TId>;
 
 /**
  * Base context shared by all template render callbacks; template-specific contexts intersect this
- * with their extra fields (`useSlideDialog` adds `direction`). It *is* `ModalRenderArgs`, not a copy,
+ * with their extra fields (`useSlideDialog` adds `direction`). It *is* `DialogRenderArgs`, not a copy,
  * because that is what templates forward — so a new render-time field is added once in the core and
  * no template can drift into a subtly different `isPreparing`.
  *
@@ -92,7 +92,7 @@ export type RegisteredBaseRenderContext<TId> = RegisteredRenderArgs<TId>;
  *
  * @internal Not exported from index.ts.
  */
-export type BaseRenderContext<TData = void, TReason extends string = string> = ModalRenderArgs<
+export type BaseRenderContext<TData = void, TReason extends string = string> = DialogRenderArgs<
   TData,
   TReason
 >;
@@ -108,7 +108,7 @@ export const DEFAULT_FADE_ANIMATION = {
   duration: 300,
   exitDuration: 150,
   transitionProperty: 'opacity',
-} satisfies ModalAnimation;
+} satisfies DialogAnimation;
 
 /**
  * The caller's structural styles over the template's, or whichever one exists. A function with a
@@ -146,7 +146,7 @@ export function buildModalOptions<
 >(
   options: TemplateBaseOptions<TData, TRenderContext, TReason, TStyle, TNode>,
   defaults: {
-    readonly animation: ModalAnimation<TStyle>;
+    readonly animation: DialogAnimation<TStyle>;
     readonly style?: TStyle | undefined;
     readonly template?: UseDialogBaseOptions['template'];
   }

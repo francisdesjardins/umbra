@@ -5,7 +5,7 @@ import { reconcileOpen } from '../../core/reconcile-open.js';
 import { createOpenRequest } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { DialogManagerProvider } from '../dialog-manager-context.js';
-import { ModalOutlet } from '../modal-outlet.js';
+import { DialogOutlet } from '../dialog-outlet.js';
 import { useMessageDialog } from '../templates/use-message-dialog.js';
 import { useSlideDialog } from '../templates/use-slide-dialog.js';
 import { useDialogManager } from '../use-dialog-manager.js';
@@ -205,7 +205,7 @@ function OutletInner(): Built {
     null,
     text(() => {
       return modal.Modal === null ? 'null' : 'node';
-    }, 'modal-slot'),
+    }, 'dialog-slot'),
     h(
       'button',
       {
@@ -463,7 +463,7 @@ function OutletDisposalApp(): Built {
       },
       'Unmount'
     ),
-    h(ModalOutlet, null, () => {
+    h(DialogOutlet, null, () => {
       return mounted()
         ? el(
             h(OutletDisposalInner, {
@@ -493,7 +493,7 @@ function PortalApp(): Built {
     { 'data-testid': 'portal-host' },
     text(() => {
       return modal.Modal === null ? 'null' : 'node';
-    }, 'modal-slot'),
+    }, 'dialog-slot'),
     h(
       'button',
       {
@@ -860,7 +860,7 @@ export const SolidDeclarationApp = (): JSX.Element => {
 };
 
 export const SolidOutletApp = (): JSX.Element => {
-  return el(h(DialogManagerProvider, null, h(ModalOutlet, null, OutletInner)));
+  return el(h(DialogManagerProvider, null, h(DialogOutlet, null, OutletInner)));
 };
 
 export const SolidSlideApp = (): JSX.Element => {

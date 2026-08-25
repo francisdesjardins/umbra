@@ -33,7 +33,7 @@ const log = createLogger('modal:lifecycle');
  * is what stops the work happening twice.
  */
 export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOptions): void {
-  const { store, getDialog, modalId, phase, manager } = ctx;
+  const { store, getDialog, dialogId, phase, manager } = ctx;
   const { prepare, nonModal, onError } = options;
 
   if (phase !== 'opening') {
@@ -45,16 +45,16 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
     return;
   }
 
-  log('Showing dialog', { id: modalId, nonModal });
+  log('Showing dialog', { id: dialogId, nonModal });
 
-  showDialog(dialog, { nonModal, zIndex: manager.getZIndex(modalId) });
+  showDialog(dialog, { nonModal, zIndex: manager.getZIndex(dialogId) });
 
   // The one moment the manager cannot see for itself: it observes *stores*, and a store reaching
   // `'opening'` is a dialog that has not been shown. So a stack policy would only get to reorder a
   // frame later — one painted frame with the wrong dialog in front. Here it is still the same task
   // as the `showModal()` above, so the reorder lands before anything is painted. A no-op unless
   // `prioritize` was called.
-  manager.syncStackOrder(modalId);
+  manager.syncStackOrder(dialogId);
 
   store.scheduleOpenTransition();
 
@@ -65,11 +65,11 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
     fireAndForget(
       async () => {
         await prepare(signal);
-        log('prepare completed', { id: modalId });
+        log('prepare completed', { id: dialogId });
       },
       {
         onError: (error) => {
-          log.error('prepare failed', { id: modalId, error: error.message });
+          log.error('prepare failed', { id: dialogId, error: error.message });
           // After the log and before `finishPreparing`, so a caller reading `isPreparing` from
           // inside this sees the state the failure happened in rather than the settled one.
           onError?.({ error, source: 'prepare' });
@@ -107,7 +107,7 @@ export function syncCloseSequence(
   ctx: ModalDomContext,
   options: CloseSequenceOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase } = ctx;
+  const { store, getDialog, dialogId, phase } = ctx;
   const { nonModal, primaryProperty, exitDuration, onError } = options;
 
   const dialog = getDialog();
@@ -135,17 +135,17 @@ export function syncCloseSequence(
       finalizeModalClose(store, {
         dialog,
         onCloseError: (error) => {
-          log.error('onClose callback failed', { id: modalId, error: error.message });
+          log.error('onClose callback failed', { id: dialogId, error: error.message });
           onError?.({ error, source: 'onClose' });
         },
       });
     },
     log: (how) => {
       if (how === 'fallback-timeout') {
-        log.warn('Animation fallback timeout', { id: modalId, exitDuration });
+        log.warn('Animation fallback timeout', { id: dialogId, exitDuration });
         return;
       }
-      log('Close finished', { id: modalId, how });
+      log('Close finished', { id: dialogId, how });
     },
   });
 }
@@ -170,7 +170,7 @@ const reported = new WeakSet<Element>();
  * caller has not been able to render yet — a modal that shows a spinner while it loads is the
  * documented normal case, not an edge one, and a component test on two bindings pins that it stays
  * quiet there. That guard is the whole of the timing this needs: by the phase `'open'`, every
- * binding has committed its content, `ModalOutlet` included. That one was the suspect — it
+ * binding has committed its content, `DialogOutlet` included. That one was the suspect — it
  * registers its node from an effect, a commit behind — and it is not one, because the phase
  * reaches `'open'` on its own frame, after the outlet has rendered. Deferring a frame on top of
  * that was tried, measured against all three cases, and changed nothing; it is not here.
@@ -179,7 +179,7 @@ export function syncLabellingDiagnostics(
   ctx: ModalDomContext,
   options: LabellingDiagnosticsOptions
 ): void {
-  const { getDialog, modalId, phase } = ctx;
+  const { getDialog, dialogId, phase } = ctx;
 
   const dialog = getDialog();
   if (!dialog) {
@@ -210,7 +210,7 @@ export function syncLabellingDiagnostics(
       role: dialog.getAttribute('role'),
       // Off the element like everything else here: in `umbra/vanilla` both the role and the
       // variant are the caller's markup, and the option type never saw either.
-      nonModal: dialog.getAttribute('data-modal-type') === 'non-modal',
+      nonModal: dialog.getAttribute('data-dialog-type') === 'non-modal',
     },
     // The element's own tree, which is what the platform resolves an IDREF against — so for a
     // dialog in a shadow root, an id out in the light DOM genuinely resolves to nothing for a
@@ -221,6 +221,6 @@ export function syncLabellingDiagnostics(
   );
 
   for (const problem of problems) {
-    log.warn(`Dialog labelling — ${problem}`, { id: modalId });
+    log.warn(`Dialog labelling — ${problem}`, { id: dialogId });
   }
 }

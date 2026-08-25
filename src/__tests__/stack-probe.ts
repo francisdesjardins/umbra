@@ -11,17 +11,17 @@ import type { Page } from '@playwright/test';
 /**
  * The dialog under the centre of the viewport, hit-tested with `elementFromPoint` so the top layer
  * counts the way it does for a click. Harnesses must size their dialogs to overlap at the centre.
- * @returns the `data-modal-id` of the front dialog, or `null` when the centre is not over one.
+ * @returns the `data-dialog-id` of the front dialog, or `null` when the centre is not over one.
  */
 export async function frontDialogId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-    return hit?.closest('dialog')?.dataset['modalId'] ?? null;
+    return hit?.closest('dialog')?.dataset['dialogId'] ?? null;
   });
 }
 
 /**
- * Every open dialog, bottom first, by the `data-modal-z` stamp — the only durable DOM trace of
+ * Every open dialog, bottom first, by the `data-dialog-z` stamp — the only durable DOM trace of
  * stack position, so asserting on it also checks the stamp is *rewritten* on reorder. Light DOM
  * only: `querySelectorAll` cannot cross a shadow boundary (`vanilla/__tests__/bind-dialog.ct.tsx`).
  */
@@ -30,8 +30,8 @@ export async function paintedStackOrder(page: Page): Promise<string[]> {
     return [...document.querySelectorAll<HTMLElement>('dialog[open]')]
       .map((dialog) => {
         return {
-          id: dialog.dataset['modalId'] ?? '',
-          z: Number(dialog.dataset['modalZ'] ?? '0'),
+          id: dialog.dataset['dialogId'] ?? '',
+          z: Number(dialog.dataset['dialogZ'] ?? '0'),
         };
       })
       .sort((a, b) => {
@@ -49,6 +49,6 @@ export async function paintedStackOrder(page: Page): Promise<string[]> {
  */
 export async function focusedDialogId(page: Page): Promise<string | null> {
   return page.evaluate(() => {
-    return document.activeElement?.closest('dialog')?.dataset['modalId'] ?? null;
+    return document.activeElement?.closest('dialog')?.dataset['dialogId'] ?? null;
   });
 }

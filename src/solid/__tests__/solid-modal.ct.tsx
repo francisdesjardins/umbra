@@ -36,7 +36,7 @@ test.describe('useDialog (Solid)', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
-    await expect(page.getByTestId('modal-solid-basic')).not.toBeVisible();
+    await expect(page.getByTestId('dialog-solid-basic')).not.toBeVisible();
   });
 
   test('opens when open() is called, and reaches the top layer', async ({ mount, page }) => {
@@ -44,10 +44,10 @@ test.describe('useDialog (Solid)', () => {
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('is-visible')).toHaveText('open');
-    await expect(page.getByTestId('modal-solid-basic')).toBeVisible();
-    await expect(page.getByTestId('modal-solid-basic')).toContainText('Solid content');
+    await expect(page.getByTestId('dialog-solid-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-basic')).toContainText('Solid content');
     // `showModal()`, not `show()` — React's default variant.
-    await expect(page.locator('dialog[data-modal-id="solid-basic"]:modal')).toHaveCount(1);
+    await expect(page.locator('dialog[data-dialog-id="solid-basic"]:modal')).toHaveCount(1);
   });
 
   test('an action closes with its own reason', async ({ mount, page }) => {
@@ -62,7 +62,7 @@ test.describe('useDialog (Solid)', () => {
   test('Escape dismisses', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-basic')).toBeVisible();
 
     await page.keyboard.press('Escape');
 
@@ -74,7 +74,7 @@ test.describe('useDialog (Solid)', () => {
   test('an action hotkey runs the same path its button does', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-basic')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-basic')).toBeVisible();
 
     await page.keyboard.press('Enter');
 
@@ -93,7 +93,7 @@ test.describe('useDialog (Solid)', () => {
     await mount(<SolidBusyHarness />);
     await page.getByTestId('open-busy').click();
 
-    const dialog = page.locator('dialog[data-modal-id="solid-busy"]');
+    const dialog = page.locator('dialog[data-dialog-id="solid-busy"]');
     await expect(page.getByRole('dialog', { name: 'Solid loading' })).toBeVisible();
     await expect(page.getByTestId('busy-preparing')).toHaveText('preparing');
     await expect(dialog).toHaveAttribute('aria-busy', 'true');
@@ -162,7 +162,7 @@ test.describe('useDialog (Solid)', () => {
     // learns only from the factory's `onCleanup`. Backdrop dismissal makes that observable.
     await mount(<SolidDeclarationHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-declaration')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-declaration')).toBeVisible();
 
     await page.mouse.click(5, 5);
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -176,11 +176,11 @@ test.describe('useDialog (Solid)', () => {
 
   test('an outlet renders the dialog and Modal becomes null', async ({ mount, page }) => {
     await mount(<SolidOutletHarness />);
-    await expect(page.getByTestId('modal-slot')).toHaveText('null');
+    await expect(page.getByTestId('dialog-slot')).toHaveText('null');
 
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-outlet')).toBeVisible();
-    await expect(page.getByTestId('modal-solid-outlet')).toContainText('Rendered by the outlet');
+    await expect(page.getByTestId('dialog-solid-outlet')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-outlet')).toContainText('Rendered by the outlet');
   });
 });
 
@@ -190,7 +190,7 @@ test.describe('template hooks (Solid)', () => {
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('direction')).toHaveText('right');
-    await expect(page.getByTestId('modal-solid-slide')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-slide')).toBeVisible();
   });
 
   test('the template’s context stays live, because it is merged and not spread', async ({
@@ -227,7 +227,7 @@ test.describe('template hooks (Solid)', () => {
     await mount(<SolidMessageHarness />);
     await page.getByTestId('open').click();
 
-    await expect(page.getByTestId('modal-solid-message')).toContainText('Message body');
+    await expect(page.getByTestId('dialog-solid-message')).toContainText('Message body');
     await expect(page.getByTestId('lookup-type')).toHaveText('message');
 
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -252,14 +252,14 @@ test.describe('what Solid does on the way out', () => {
     // React's own regression once: a missed teardown dependency orphaned an open top-layer dialog.
     await mount(<SolidDisposalHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-disposal')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-disposal')).toBeVisible();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     // From inside: an open dialog owns the top layer, so the outer button is unclickable.
     await page.getByTestId('unmount-from-inside').click();
 
     await expect(page.getByTestId('registration')).toHaveText('gone');
-    await expect(page.locator('dialog[data-modal-id="solid-disposal"]')).toHaveCount(0);
+    await expect(page.locator('dialog[data-dialog-id="solid-disposal"]')).toHaveCount(0);
     await expect(page.locator('dialog:modal')).toHaveCount(0);
   });
 
@@ -267,11 +267,11 @@ test.describe('what Solid does on the way out', () => {
     // Without `outlet.unregister` the outlet keeps rendering a modal whose graph is gone.
     await mount(<SolidOutletDisposalHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-outlet-disposal')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-outlet-disposal')).toBeVisible();
 
     await page.getByTestId('unmount-from-inside').click();
 
-    await expect(page.locator('dialog[data-modal-id="solid-outlet-disposal"]')).toHaveCount(0);
+    await expect(page.locator('dialog[data-dialog-id="solid-outlet-disposal"]')).toHaveCount(0);
   });
 });
 
@@ -286,7 +286,7 @@ test.describe('umbra/solid — a dismissal this binding must report', () => {
     await mount(<SolidDismissRequestHarness />);
     await page.getByTestId('open').click();
 
-    const dialog = page.locator('dialog[data-modal-id="solid-dismiss-request"]');
+    const dialog = page.locator('dialog[data-dialog-id="solid-dismiss-request"]');
     await expect(dialog).toBeVisible();
 
     await page.mouse.click(5, 5);
@@ -301,14 +301,14 @@ test.describe('placement (Solid)', () => {
   test('portal: true mounts the dialog itself and leaves Modal null', async ({ mount, page }) => {
     // The one place the hook surfaces differ: Solid owns the element, mounts it, returns `null`.
     await mount(<SolidPortalHarness />);
-    await expect(page.getByTestId('modal-slot')).toHaveText('null');
+    await expect(page.getByTestId('dialog-slot')).toHaveText('null');
 
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-portal')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-portal')).toBeVisible();
 
     expect(
       await page.evaluate(() => {
-        const dialog = document.querySelector('[data-modal-id="solid-portal"]');
+        const dialog = document.querySelector('[data-dialog-id="solid-portal"]');
         return dialog?.parentElement === document.body;
       })
     ).toBe(true);
@@ -319,11 +319,11 @@ test.describe('placement (Solid)', () => {
   test('a portal host of the caller’s own is where the dialog lands', async ({ mount, page }) => {
     await mount(<SolidPortalHostHarness />);
     await page.getByTestId('open').click();
-    await expect(page.getByTestId('modal-solid-portal-host')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-portal-host')).toBeVisible();
 
     expect(
       await page.evaluate(() => {
-        const dialog = document.querySelector('[data-modal-id="solid-portal-host"]');
+        const dialog = document.querySelector('[data-dialog-id="solid-portal-host"]');
         return dialog?.parentElement?.getAttribute('data-testid');
       })
     ).toBe('solid-themed-host');
@@ -334,8 +334,8 @@ test.describe('placement (Solid)', () => {
     await mount(<SolidContainedHarness />);
     await page.getByTestId('open').click();
 
-    await expect(page.getByTestId('modal-solid-contained')).toBeVisible();
-    const host = page.locator('[data-modal-container="solid-contained"]');
+    await expect(page.getByTestId('dialog-solid-contained')).toBeVisible();
+    const host = page.locator('[data-dialog-container="solid-contained"]');
     await expect(host).toHaveCount(1);
     // `absolute`, so the host covers its region rather than taking part in the flow.
     expect(
@@ -368,7 +368,7 @@ test.describe('placement (Solid)', () => {
     await expect(page.getByTestId('outer-error')).toHaveText('boom failed');
     await expect(page.getByTestId('inner-error')).toHaveText('boom failed');
     await expect(page.getByTestId('outer-running')).toHaveText('idle');
-    await expect(page.getByTestId('modal-solid-live-state')).toBeVisible();
+    await expect(page.getByTestId('dialog-solid-live-state')).toBeVisible();
   });
 });
 
@@ -398,7 +398,7 @@ test.describe('the labelling diagnostic (Solid)', () => {
 
     await mount(<SolidLabellingHarness />);
     await page.getByTestId('open-dangling').click();
-    await expect(page.locator('dialog[data-modal-id="solid-dangling"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-dangling"]')).toBeVisible();
     await page.waitForTimeout(300);
 
     expect(labelling(warnings)).toHaveLength(1);
@@ -427,7 +427,7 @@ test.describe('prioritize (Solid)', () => {
     await mount(<SolidOpenOrderHarness />);
     await page.getByTestId('solid-sp-open-warning').click();
     await page.getByTestId('solid-sp-open-panel').click();
-    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-sp-panel"]')).toBeVisible();
 
     await expect
       .poll(() => {
@@ -440,7 +440,7 @@ test.describe('prioritize (Solid)', () => {
     await mount(<SolidStackPriorityHarness />);
     await page.getByTestId('solid-sp-open-warning').click();
     await page.getByTestId('solid-sp-open-panel').click();
-    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-sp-panel"]')).toBeVisible();
 
     // Nothing in `src/solid/` implements this, so nothing else would notice if it stopped arriving.
     await expect
@@ -448,7 +448,7 @@ test.describe('prioritize (Solid)', () => {
         return frontDialogId(page);
       })
       .toBe('solid-sp-warning');
-    await expect(page.locator('dialog[data-modal-id="solid-sp-panel"]')).toHaveAttribute(
+    await expect(page.locator('dialog[data-dialog-id="solid-sp-panel"]')).toHaveAttribute(
       'open',
       ''
     );
@@ -631,13 +631,13 @@ test.describe('a dialog that claimed no opening focus (Solid)', () => {
     const component = await mount(<SolidClaimlessReclaimHarness />);
     await component.getByTestId('solid-open-both').click();
 
-    await expect(page.locator('dialog[data-modal-id="solid-claimless"]')).toBeVisible();
-    await expect(page.locator('dialog[data-modal-id="solid-claimless-panel"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-claimless"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-claimless-panel"]')).toBeVisible();
 
     // Nothing outside holds it: a keyboard on `<body>` under the top layer hears nothing.
     await expect(
       page.locator(
-        ':focus:not(dialog[data-modal-id="solid-claimless"], dialog[data-modal-id="solid-claimless"] *)'
+        ':focus:not(dialog[data-dialog-id="solid-claimless"], dialog[data-dialog-id="solid-claimless"] *)'
       )
     ).toHaveCount(0);
     // The *first* action, not the last — the half two buttons are there to show.
@@ -653,7 +653,7 @@ test.describe('onError (Solid)', () => {
     const component = await mount(<SolidPrepareFailureHarness />);
     await component.getByTestId('solid-pf-open').click();
 
-    await expect(page.locator('dialog[data-modal-id="solid-prepare-failure"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="solid-prepare-failure"]')).toBeVisible();
 
     await expect(component.getByTestId('solid-pf-sources')).toHaveText('prepare');
     await expect(component.getByTestId('solid-pf-message')).toHaveText('report is unavailable');
@@ -661,7 +661,7 @@ test.describe('onError (Solid)', () => {
     // A report, not a veto — and the half that was invisible before the option existed.
     await expect(component.getByTestId('solid-pf-visible')).toHaveText('open');
     await expect(component.getByTestId('solid-pf-preparing')).toHaveText('ready');
-    await expect(page.locator('dialog[data-modal-id="solid-prepare-failure"]')).toHaveAttribute(
+    await expect(page.locator('dialog[data-dialog-id="solid-prepare-failure"]')).toHaveAttribute(
       'aria-busy',
       'false'
     );

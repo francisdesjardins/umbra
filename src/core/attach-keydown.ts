@@ -128,7 +128,7 @@ export function attachDialogKeydown(
   ctx: ModalDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase } = ctx;
+  const { store, getDialog, dialogId, phase } = ctx;
   const { isPreparing, onKeyDown, dismissKey, engine, dismissWhilePreparing, onDismissRequest } =
     options;
 
@@ -188,7 +188,7 @@ export function attachDialogKeydown(
         return;
       }
 
-      log('Dismiss key', { id: modalId, key: dismissKey });
+      log('Dismiss key', { id: dialogId, key: dismissKey });
       answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' });
     }
   };
@@ -212,7 +212,7 @@ export function attachDialogCancel(
   ctx: ModalDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase } = ctx;
+  const { store, getDialog, dialogId, phase } = ctx;
   const { isPreparing, dismissKey, engine, dismissWhilePreparing, onDismissRequest } = options;
 
   const dialog = getDialog();
@@ -246,7 +246,7 @@ export function attachDialogCancel(
       return;
     }
 
-    log('Dismiss key (native cancel)', { id: modalId });
+    log('Dismiss key (native cancel)', { id: dialogId });
     answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' });
   };
 
@@ -266,7 +266,7 @@ export function attachWindowDismissKey(
   ctx: ModalDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
-  const { store, getDialog, modalId, phase, manager } = ctx;
+  const { store, getDialog, dialogId, phase, manager } = ctx;
   const { isPreparing, dismissKey, engine, nonModal, dismissWhilePreparing, onDismissRequest } =
     options;
 
@@ -279,7 +279,7 @@ export function attachWindowDismissKey(
       return;
     }
     // Only the topmost dialog intercepts the dismiss key — stand down if another dialog is above us.
-    if (!manager.lookup().isForeground(modalId)) {
+    if (!manager.lookup().isForeground(dialogId)) {
       return;
     }
 
@@ -318,7 +318,7 @@ export function attachWindowDismissKey(
       return;
     }
 
-    log('Dismiss key (window capture)', { id: modalId, key: dismissKey });
+    log('Dismiss key (window capture)', { id: dialogId, key: dismissKey });
     if (!answerDismiss(store, { request: onDismissRequest, cause: 'dismiss-key' })) {
       // The owner declined, so nothing happened and the press is not ours to swallow — the same
       // rule as the gate above, for a condition only the caller could have known.

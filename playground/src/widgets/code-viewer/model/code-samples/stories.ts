@@ -23,8 +23,8 @@ import storyUseDialogDismissWhilePreparingSrc from 'umbra/react/__tests__/use-di
 import storyUseDialogReopenSettlesSrc from 'umbra/react/__tests__/use-dialog/reopen-settles.story.tsx?raw';
 import storyUseDialogStableIdentitySrc from 'umbra/react/__tests__/use-dialog/stable-identity.story.tsx?raw';
 import storyUseDialogBackdropHitTestSrc from 'umbra/react/__tests__/use-dialog/backdrop-hit-test.story.tsx?raw';
-import storyOutletPaintTimingSrc from 'umbra/react/__tests__/modal-outlet/outlet-paint-timing.story.tsx?raw';
-import storyOutletTeardownSrc from 'umbra/react/__tests__/modal-outlet/outlet-teardown.story.tsx?raw';
+import storyOutletPaintTimingSrc from 'umbra/react/__tests__/dialog-outlet/outlet-paint-timing.story.tsx?raw';
+import storyOutletTeardownSrc from 'umbra/react/__tests__/dialog-outlet/outlet-teardown.story.tsx?raw';
 import storyActionsBasicSrc from 'umbra/actions/__tests__/use-dialog-actions/basic-controller.story.tsx?raw';
 import storyActionsErrorSrc from 'umbra/actions/__tests__/use-dialog-actions/error-controller.story.tsx?raw';
 import storyActionsHotkeySrc from 'umbra/actions/__tests__/use-dialog-actions/hotkey-controller.story.tsx?raw';
@@ -91,11 +91,11 @@ import storyReconcileOpenSrc from 'umbra/react/__tests__/use-dialog/reconcile-op
 import storyRestoreNotInFrontSrc from 'umbra/react/__tests__/use-dialog/restore-not-in-front.story.tsx?raw';
 import storyShadowRootSrc from 'umbra/react/__tests__/use-dialog/shadow-root.story.tsx?raw';
 import storyVolatileKeyDownSrc from 'umbra/react/__tests__/use-dialog/volatile-keydown.story.tsx?raw';
-import storyOutletBasicSrc from 'umbra/react/__tests__/modal-outlet/outlet-basic.story.tsx?raw';
-import storyOutletNullModalSrc from 'umbra/react/__tests__/modal-outlet/outlet-null-modal.story.tsx?raw';
-import storyOutletNoOutletSrc from 'umbra/react/__tests__/modal-outlet/no-outlet.story.tsx?raw';
-import storyOutletMultiSrc from 'umbra/react/__tests__/modal-outlet/outlet-multi.story.tsx?raw';
-import storyOutletNestedSrc from 'umbra/react/__tests__/modal-outlet/outlet-nested.story.tsx?raw';
+import storyOutletBasicSrc from 'umbra/react/__tests__/dialog-outlet/outlet-basic.story.tsx?raw';
+import storyOutletNullModalSrc from 'umbra/react/__tests__/dialog-outlet/outlet-null-modal.story.tsx?raw';
+import storyOutletNoOutletSrc from 'umbra/react/__tests__/dialog-outlet/no-outlet.story.tsx?raw';
+import storyOutletMultiSrc from 'umbra/react/__tests__/dialog-outlet/outlet-multi.story.tsx?raw';
+import storyOutletNestedSrc from 'umbra/react/__tests__/dialog-outlet/outlet-nested.story.tsx?raw';
 import storyMsgBasicSrc from 'umbra/react/__tests__/use-message-dialog/basic-message.story.tsx?raw';
 import storyMsgOpenAndWaitSrc from 'umbra/react/__tests__/use-message-dialog/open-and-wait-message.story.tsx?raw';
 import storyMsgAsyncOpenSrc from 'umbra/react/__tests__/use-message-dialog/async-open-message.story.tsx?raw';

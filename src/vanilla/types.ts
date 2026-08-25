@@ -5,9 +5,9 @@ import type { CloseOf, DataOf, DataOfReason, ReasonOf } from '../core/registry.j
 import type { DialogStyle } from '../core/style.js';
 import type {
   AwaitedClose,
-  ModalHandle,
-  ModalPhase,
-  ModalVariant,
+  DialogHandle,
+  DialogPhase,
+  DialogVariant,
   UseDialogBaseOptions,
 } from '../core/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
@@ -22,12 +22,12 @@ export type BindDialogOptions<TData = void, TReason extends string = string> = O
   UseDialogBaseOptions<TData, TReason, DialogStyle, never>,
   'render'
 > &
-  ModalVariant &
+  DialogVariant &
   BindDialogOwnOptions;
 
 /**
  * The four this binding adds to the shared option surface, named so the registered door can rebuild
- * that surface rather than `Omit` over it — `ModalVariant` is a union, and omitting across one
+ * that surface rather than `Omit` over it — `DialogVariant` is a union, and omitting across one
  * collapses the two branches into a single object whose mutual exclusion is gone.
  *
  * @internal Not exported from index.ts.
@@ -70,11 +70,11 @@ export type BindDialogOwnOptions = {
 
 /**
  * The live state of a bound dialog, read through {@link DialogController.getSnapshot}. `Modal`, not
- * `Dialog`: it holds no element — it is what `ModalStoreSnapshot` describes for the hook bindings.
+ * `Dialog`: it holds no element — it is what `DialogStoreSnapshot` describes for the hook bindings.
  */
-export type ModalSnapshot = {
+export type DialogSnapshot = {
   /** Where the `<dialog>` is in its lifecycle. */
-  readonly phase: ModalPhase;
+  readonly phase: DialogPhase;
   /** `phase !== 'closed'` — still true through the exit animation. */
   readonly isVisible: boolean;
   /** Whether `prepare` is still running. */
@@ -96,7 +96,7 @@ export type DialogController<TData = void, TReason extends string = string> = {
   /** Open it and resolve with how it closed — see the note on the hook bindings' `openAndWait`. */
   readonly openAndWait: () => Promise<AwaitedClose<TData, TReason>>;
   /** Close it imperatively, with a reason and the payload this dialog declares. */
-  readonly handle: ModalHandle<TData, TReason>;
+  readonly handle: DialogHandle<TData, TReason>;
   /**
    * Turn a button into one of this dialog's actions and keep it in step: `action(reason)`'s props,
    * plus the half a renderer does elsewhere — the click handler, `aria-keyshortcuts` and
@@ -119,7 +119,7 @@ export type DialogController<TData = void, TReason extends string = string> = {
   /** Subscribe to every state change — the dialog's phases and its actions alike. */
   readonly subscribe: (listener: () => void) => () => void;
   /** Read the current state. */
-  readonly getSnapshot: () => ModalSnapshot;
+  readonly getSnapshot: () => DialogSnapshot;
   /** Unregister, close if open, settle every waiter, and detach every listener. */
   readonly destroy: () => void;
   /** The manager this dialog is registered with. */
@@ -157,13 +157,13 @@ export type RegisteredController<TId> = Omit<
 
 /**
  * {@link BindDialogOptions} for a declared id. Rebuilt from the flat base rather than `Omit`ted out
- * of the assembled type, `ModalVariant` being a union that omitting across would flatten.
+ * of the assembled type, `DialogVariant` being a union that omitting across would flatten.
  */
 export type RegisteredBindOptions<TId> = Omit<
   UseDialogBaseOptions<DataOf<TId>, ReasonOf<TId>, DialogStyle, never>,
   'id' | 'onClose' | 'render'
 > &
-  ModalVariant &
+  DialogVariant &
   BindDialogOwnOptions & {
     /** Unique modal identifier — read once, when the dialog is bound. */
     readonly id: TId;

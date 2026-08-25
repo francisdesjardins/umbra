@@ -2,7 +2,7 @@ import { Spinner } from '@/shared/ui/Spinner';
 import { AppIconButton } from '@/shared/ui/AppButton';
 import { CloseIcon, CodeIcon } from '@/shared/ui/icons';
 import styles from '@/widgets/code-viewer/ui/CodeModal.module.css';
-import type { ModalHandle } from 'umbra/react';
+import type { DialogHandle } from 'umbra/react';
 import { Suspense } from 'react';
 import { CodeBlock } from '@/shared/ui/CodeBlock/CodeBlockLazy';
 
@@ -46,7 +46,7 @@ export const CodeModalContent = ({
 }: {
   code: string;
   codeKey: string;
-  handle: ModalHandle;
+  handle: DialogHandle;
   /** Still arriving — distinct from an empty `code`, which means the key names no sample. */
   isLoading: boolean;
   title: string;

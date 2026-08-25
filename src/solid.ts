@@ -9,7 +9,7 @@
  *   signals, so inside JSX each subscribes that one expression. Therefore **do not destructure the
  *   render args** — `render: ({ isPreparing })` freezes the value, as destructuring props does
  *   anywhere in Solid; read through the context, `render: (ctx) => <Show when={ctx.isPreparing}>…`.
- * - {@link useLookup} returns an accessor, because `ModalInfo` is a discriminated union and an
+ * - {@link useLookup} returns an accessor, because `DialogInfo` is a discriminated union and an
  *   object of getters cannot be one without losing the narrowing.
  * - `portal: true` leaves `Modal` as `null`: a Solid modal owns its element, so the binding mounts
  *   it into `document.body` and there is nothing left for the caller to place.
@@ -19,7 +19,7 @@
  */
 
 export { useDialog } from './solid/use-dialog.js';
-export { ModalOutlet } from './solid/modal-outlet.js';
+export { DialogOutlet } from './solid/dialog-outlet.js';
 
 export { useMessageDialog } from './solid/templates/use-message-dialog.js';
 export { useSlideDialog } from './solid/templates/use-slide-dialog.js';
@@ -36,13 +36,13 @@ export { fromStore } from './solid/from-store.js';
 // the note on `./react`'s copy of this line.
 export * from './index.js';
 
-// `CloseResult`, `ModalPhase` and `ModalStoreSnapshot` are absent: the root re-export has them.
-export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from './core/types.js';
+// `CloseResult`, `DialogPhase` and `DialogStoreSnapshot` are absent: the root re-export has them.
+export type { DialogHandle, DialogRenderArgs, DialogVariant, AwaitedClose } from './core/types.js';
 
 // The four the core leaves open, turned to Solid: `DialogStyle` and `JSX.Element` — `./react`'s
 // names and meanings, a different instantiation.
 export type {
-  ModalAnimation,
+  DialogAnimation,
   UseDialogBaseOptions,
   UseDialogOptions,
   UseDialogReturn,

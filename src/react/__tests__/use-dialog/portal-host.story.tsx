@@ -41,7 +41,7 @@ function PortaledModal({ host }: { readonly host: Element }) {
       );
     },
     prepare: () => {
-      const dialog = document.querySelector('[data-testid="modal-portal-host"]');
+      const dialog = document.querySelector('[data-testid="dialog-portal-host"]');
       setInheritedInk(
         dialog ? getComputedStyle(dialog).getPropertyValue('--story-ink').trim() : 'no dialog'
       );

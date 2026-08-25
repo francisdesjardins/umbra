@@ -27,7 +27,7 @@ test.describe('a dialog whose markup is swapped underneath it', () => {
     // their absence is the swap's signature and the cheapest thing a caller can assert against.
     const onScreen = page.locator('[data-testid="swap-host"] dialog');
     await expect(onScreen).toHaveCount(1);
-    await expect(onScreen).not.toHaveAttribute('data-modal-id', 'vanilla-swap');
+    await expect(onScreen).not.toHaveAttribute('data-dialog-id', 'vanilla-swap');
 
     // The controller answers, to the node it was handed — which is no longer in the document, so
     // nothing on screen opens and the caller is left with a dialog that cannot be driven at all.
@@ -49,7 +49,7 @@ test.describe('a dialog whose markup is swapped underneath it', () => {
     // The new element opens, reports its phase, and its action closes it — the whole surface, over
     // markup the first controller never saw.
     await page.getByTestId('swap-open').click();
-    await expect(page.getByTestId('modal-vanilla-swap')).toHaveAttribute('open', '');
+    await expect(page.getByTestId('dialog-vanilla-swap')).toHaveAttribute('open', '');
     await expect(page.getByTestId('swap-phase')).toHaveText('open');
 
     await page.getByTestId('swap-ok').click();

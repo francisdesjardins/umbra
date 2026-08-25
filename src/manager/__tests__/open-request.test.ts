@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { createModalStore } from '../../core/modal-store.js';
-import type { ModalPhase, AwaitedClose } from '../../core/types.js';
+import type { DialogPhase, AwaitedClose } from '../../core/types.js';
 import { createDialogManager, createOpenRequest, type OpenRequest } from '../dialog-manager.js';
 
 /**
@@ -14,7 +14,7 @@ import { createDialogManager, createOpenRequest, type OpenRequest } from '../dia
 /** The manager's `RegisteredStore` contract, and nothing more. */
 function createFakeStore() {
   const listeners = new Set<() => void>();
-  let phase: ModalPhase = 'closed';
+  let phase: DialogPhase = 'closed';
   let isPreparing = false;
   const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 

@@ -6,7 +6,7 @@
  * React app imports this one path. A binding's job is small and this file is the map of it.
  */
 
-export { ModalOutlet } from './react/modal-outlet.js';
+export { DialogOutlet } from './react/dialog-outlet.js';
 export { useDialog } from './react/use-dialog.js';
 
 export { useMessageDialog } from './react/templates/use-message-dialog.js';
@@ -23,13 +23,13 @@ export { useLookup } from './react/use-lookup.js';
 // still had them all. `scripts/verify-package.mjs` fails on any extensionless specifier.
 export * from './index.js';
 
-// `CloseResult`, `ModalPhase` and `ModalStoreSnapshot` are absent: naming them again would be a
+// `CloseResult`, `DialogPhase` and `DialogStoreSnapshot` are absent: naming them again would be a
 // duplicate export, not a convenience.
-export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from './core/types.js';
+export type { DialogHandle, DialogRenderArgs, DialogVariant, AwaitedClose } from './core/types.js';
 
 // The four the core leaves open, with style and node turned to `CSSProperties` and `ReactNode`.
 export type {
-  ModalAnimation,
+  DialogAnimation,
   UseDialogBaseOptions,
   UseDialogOptions,
   UseDialogReturn,

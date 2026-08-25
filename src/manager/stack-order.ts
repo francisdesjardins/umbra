@@ -8,21 +8,21 @@
  * `dialog-manager.ts`.
  */
 
-import type { RegisteredModalInfo } from './types.js';
+import type { RegisteredDialogInfo } from './types.js';
 
 /**
  * What a stack policy is told about a dialog: what it **is**, not what it is doing. The three
- * fields {@link RegisteredModalInfo} has and this does not are the design — `isForeground` is what
+ * fields {@link RegisteredDialogInfo} has and this does not are the design — `isForeground` is what
  * the policy decides, and a priority keyed on `phase`/`isPreparing` would restack the top layer
  * under the user's hands.
  */
-export type StackModal = Pick<RegisteredModalInfo, 'id' | 'template' | 'nonModal'>;
+export type StackDialog = Pick<RegisteredDialogInfo, 'id' | 'template' | 'nonModal'>;
 
 /**
  * How far to the front a dialog belongs. Higher is nearer the user; ties keep open order, so a
  * policy only says where it disagrees, and it ranks a dialog **among its own family** — see
  * `orderStack`. Called on every open dialog whenever the stack changes, so it must be cheap
- * and must not depend on anything that moves: {@link StackModal} is what it may read, and
+ * and must not depend on anything that moves: {@link StackDialog} is what it may read, and
  * `DialogManager.prioritize` has the whole story.
  *
  * @example
@@ -31,10 +31,10 @@ export type StackModal = Pick<RegisteredModalInfo, 'id' | 'template' | 'nonModal
  *   return modal.template === 'alert' ? 100 : 0;
  * });
  */
-export type StackPriority = (modal: StackModal) => number;
+export type StackPriority = (modal: StackDialog) => number;
 
 /** What `orderStack` needs of a candidate: the policy's input, plus the open order. */
-export type StackCandidate = StackModal & {
+export type StackCandidate = StackDialog & {
   /** The manager's monotonic open counter — the tiebreak, and the whole order with no policy. */
   readonly openSequence: number;
 };

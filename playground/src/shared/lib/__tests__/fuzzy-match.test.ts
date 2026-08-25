@@ -13,7 +13,7 @@ const SYMBOLS = [
   'Key',
   'KeyValue',
   'shallowEqual',
-  'ModalOutlet',
+  'DialogOutlet',
 ];
 
 const best = (query: string) => {
@@ -132,7 +132,7 @@ test.describe('fuzzyRank', () => {
   });
 
   test('drops non-matches entirely', () => {
-    expect(names('outlet')).toEqual(['ModalOutlet']);
+    expect(names('outlet')).toEqual(['DialogOutlet']);
   });
 
   test('returns nothing for a query that matches nothing', () => {

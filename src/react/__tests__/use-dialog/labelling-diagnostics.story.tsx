@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { setLogLevel } from '../../../utils/logger.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
@@ -7,7 +7,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 /**
  * The three shapes the labelling diagnostic must tell apart. Two it has to stay quiet about — a
  * name that exists only once `prepare` settles, and one delivered a commit late through
- * `ModalOutlet` — which is why the check is deferred and gated behind the logger; noise on correct
+ * `DialogOutlet` — which is why the check is deferred and gated behind the logger; noise on correct
  * code is worse than no check.
  */
 
@@ -139,8 +139,8 @@ export function OutletLabelHarness() {
   useDebugLogging();
 
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <OutletInner />
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

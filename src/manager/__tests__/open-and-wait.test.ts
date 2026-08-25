@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { createModalStore } from '../../core/modal-store.js';
-import type { AwaitedClose, ModalPhase } from '../../core/types.js';
+import type { AwaitedClose, DialogPhase } from '../../core/types.js';
 import { createDialogManager } from '../dialog-manager.js';
 
 /**
@@ -14,7 +14,7 @@ import { createDialogManager } from '../dialog-manager.js';
 /** A store that resolves its close resolvers, which is the half `openAndWait` reads. */
 function createResolvingStore(options: { readonly closeDuringOpen?: AwaitedClose<unknown> } = {}) {
   const listeners = new Set<() => void>();
-  let phase: ModalPhase = 'closed';
+  let phase: DialogPhase = 'closed';
   const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
 
   const notify = () => {

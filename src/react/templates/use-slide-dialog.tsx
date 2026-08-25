@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { RegisteredModalId } from '../../core/registry.js';
+import type { RegisteredDialogId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
 import type { UseDialogReturn } from '../types.js';
 import { useDialog } from '../use-dialog.js';
@@ -81,11 +81,11 @@ export type UseSlideDialogReturn<TData = void, TReason extends string = string> 
  * });
  */
 /**
- * The registered door, first so a declared id is matched by it. While `ModalRegistry` is empty
- * `RegisteredModalId` is `never`, the overload is uninhabitable, and every call falls through to
+ * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
+ * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
  * the one below — which is the signature `useSlideDialog` has always had.
  */
-export function useSlideDialog<TId extends RegisteredModalId>(
+export function useSlideDialog<TId extends RegisteredDialogId>(
   options: RegisteredTemplateOptions<TId, RegisteredSlideContext<TId>, CSSProperties, ReactNode> & {
     readonly direction: SlideDirection;
     readonly align?: SlideAlign | undefined;

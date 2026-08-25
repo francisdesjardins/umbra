@@ -102,9 +102,9 @@ export function EscAnsweredByNobodyHarness() {
         Open panel
       </button>
       <span data-testid="panel-visible">{panel.isVisible ? 'open' : 'closed'}</span>
-      <span data-testid="modal-visible">{front.isVisible ? 'open' : 'closed'}</span>
+      <span data-testid="dialog-visible">{front.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="panel-reason">{panelReason}</span>
-      <span data-testid="modal-reason">{modalReason}</span>
+      <span data-testid="dialog-reason">{modalReason}</span>
       <span data-testid="presses-seen">{pressesSeenByPage}</span>
       {panel.Modal}
       {front.Modal}

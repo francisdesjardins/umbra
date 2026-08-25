@@ -18,7 +18,7 @@ import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/ex
  * reasons; `code-viewer` declares neither.
  */
 declare module 'umbra' {
-  interface ModalRegistry {
+  interface DialogRegistry {
     // ── Learn ────────────────────────────────────────────────────────────────
     simple: { closesWith: 'confirm' };
     'async-open': { closesWith: 'confirm' };

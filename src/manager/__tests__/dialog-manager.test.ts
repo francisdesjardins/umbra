@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import type { ModalPhase, AwaitedClose } from '../../core/types.js';
+import type { DialogPhase, AwaitedClose } from '../../core/types.js';
 import {
   type MODAL_CLOSE_EVENT,
   type MODAL_OPEN_EVENT,
   createDialogManager,
   type DialogManagerEvent,
-  type ModalCloseEventDetail,
-  type ModalOpenEventDetail,
+  type DialogCloseEventDetail,
+  type DialogOpenEventDetail,
 } from '../dialog-manager.js';
 
 /**
@@ -18,11 +18,11 @@ type Equals<A extends B, B extends C, C = A> = A;
 
 export type _OpenEventIsMapped = Equals<
   DocumentEventMap[typeof MODAL_OPEN_EVENT],
-  CustomEvent<ModalOpenEventDetail>
+  CustomEvent<DialogOpenEventDetail>
 >;
 export type _CloseEventIsMapped = Equals<
   DocumentEventMap[typeof MODAL_CLOSE_EVENT],
-  CustomEvent<ModalCloseEventDetail>
+  CustomEvent<DialogCloseEventDetail>
 >;
 
 /**
@@ -31,7 +31,7 @@ export type _CloseEventIsMapped = Equals<
  */
 function createFakeStore() {
   const listeners = new Set<() => void>();
-  let phase: ModalPhase = 'closed';
+  let phase: DialogPhase = 'closed';
   let isPreparing = false;
   let closeReason: string | undefined;
   const closeResolvers: ((result: AwaitedClose<unknown>) => void)[] = [];
@@ -79,7 +79,7 @@ function createFakeStore() {
         closeResult: closeReason === undefined ? null : { reason: closeReason },
       };
     },
-    transition(next: ModalPhase, opening = false): void {
+    transition(next: DialogPhase, opening = false): void {
       phase = next;
       isPreparing = opening;
       notify();

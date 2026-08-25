@@ -1,5 +1,5 @@
 import type { ActionFactory, HotkeyDef } from '../actions/types.js';
-import type { ModalId } from './registry.js';
+import type { DialogId } from './registry.js';
 import type { DismissCause, DismissReason } from './dismiss-reason.js';
 import type { DialogManager, OpenRequestHandler } from '../manager/dialog-manager.js';
 import type { DialogStyle } from './style.js';
@@ -48,14 +48,14 @@ export type AwaitedClose<TData = void, TReason extends string = string> =
  * {@link DialogStyle}; the React binding pins it to React's `CSSProperties`.
  *
  * @example
- * const fade: ModalAnimation = {
+ * const fade: DialogAnimation = {
  *   entrance: { opacity: 1, transform: 'scale(1)' },
  *   exit: { opacity: 0, transform: 'scale(0.95)' },
  *   duration: 200,
  *   transitionProperty: 'opacity, transform',
  * };
  */
-export type ModalAnimation<TStyle extends DialogStyle = DialogStyle> = {
+export type DialogAnimation<TStyle extends DialogStyle = DialogStyle> = {
   /** CSS properties applied during entrance (after animation starts) */
   readonly entrance: TStyle;
   /** CSS properties applied during exit (and before entrance starts) */
@@ -80,7 +80,7 @@ export type ModalAnimation<TStyle extends DialogStyle = DialogStyle> = {
  * modal declared `useDialog<{ id: string }>` rejects `close('ok', 42)`, and the default
  * (`void`) rejects a payload altogether.
  */
-export type ModalHandle<TData = void, TReason extends string = string> = {
+export type DialogHandle<TData = void, TReason extends string = string> = {
   /** Close the modal with a reason and, if the modal declares one, a payload. */
   readonly close: (reason?: TReason | DismissReason, data?: TData) => void;
 };
@@ -97,7 +97,7 @@ export type ModalHandle<TData = void, TReason extends string = string> = {
  *
  * @typeParam TData - The modal's close payload type, carried through to `handle.close`.
  */
-export type ModalRenderArgs<TData = void, TReason extends string = string> = {
+export type DialogRenderArgs<TData = void, TReason extends string = string> = {
   /**
    * Whether the `prepare` callback is still running — the dialog is on screen, its content is
    * not ready yet. Render a loading state on it; use `isVisible` (or `phase`) for presence.
@@ -109,7 +109,7 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
    */
   readonly isPreparing: boolean;
   /**
-   * The dialog's own phase — the same value {@link ModalInfo} carries.
+   * The dialog's own phase — the same value {@link DialogInfo} carries.
    *
    * The render callback decides what is on screen, so it needs to know whether it still *is*.
    * An action stops running the moment its handler resolves — before the exit animation — so a
@@ -119,9 +119,9 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
    * `isVisible` on the hook's return answers the other question, "is there a dialog", which is
    * the one the page outside it asks.
    */
-  readonly phase: ModalPhase;
+  readonly phase: DialogPhase;
   /** Imperative close handle, typed with the modal's close payload. */
-  readonly handle: ModalHandle<TData, TReason>;
+  readonly handle: DialogHandle<TData, TReason>;
   /**
    * Declare an action and get the props for its button, in one expression.
    *
@@ -166,11 +166,11 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
  *
  * Used by `UseDialogOptions` and `TemplateCommonOptions`.
  */
-export type ModalVariant =
+export type DialogVariant =
   | {
       /**
        * Modal dialog (`dialog.showModal()`): backdrop, browser top layer, body scroll
-       * locked. See {@link ModalVariant} for the non-modal alternative.
+       * locked. See {@link DialogVariant} for the non-modal alternative.
        * @default false
        */
       readonly nonModal?: false | undefined;
@@ -204,7 +204,7 @@ export type ModalVariant =
       /**
        * Non-modal dialog (`dialog.show()`): no backdrop, stays out of the top layer so
        * clicks reach elements underneath, body scroll untouched. Stacking is tracked with a
-       * `data-modal-z` attribute on the `<dialog>`. See {@link ModalVariant}.
+       * `data-dialog-z` attribute on the `<dialog>`. See {@link DialogVariant}.
        */
       readonly nonModal: true;
       /** Not applicable — non-modal dialogs have no backdrop. */
@@ -229,10 +229,10 @@ export type ModalVariant =
 
 /**
  * Variant-independent options for `useDialog`. Does not include `nonModal` or
- * `dismissOnBackdropClick` — those live in `ModalVariant`.
+ * `dismissOnBackdropClick` — those live in `DialogVariant`.
  *
- * `UseDialogOptions` is `UseDialogBaseOptions & ModalVariant`; template hooks
- * also `Pick` from this flat type without intersecting with `ModalVariant`.
+ * `UseDialogOptions` is `UseDialogBaseOptions & DialogVariant`; template hooks
+ * also `Pick` from this flat type without intersecting with `DialogVariant`.
  *
  * @typeParam TStyle - The style object type this binding speaks.
  * @typeParam TNode - What this binding's `render` returns and what it renders.
@@ -251,11 +251,11 @@ export type UseDialogBaseOptions<
    * new name and keeps answering to the old one everywhere else. Give a modal one id for its
    * lifetime, and mount a different modal if you need a different name.
    */
-  readonly id: ModalId;
+  readonly id: DialogId;
   /** Render function for modal content. Receives modal state as arguments. */
-  readonly render: (args: ModalRenderArgs<TData, TReason>) => TNode;
+  readonly render: (args: DialogRenderArgs<TData, TReason>) => TNode;
   /** CSS transition animation configuration */
-  readonly animation?: ModalAnimation<TStyle> | undefined;
+  readonly animation?: DialogAnimation<TStyle> | undefined;
   /**
    * Structural styles for the `<dialog>` element itself: how big the box is and where it sits.
    *
@@ -511,7 +511,7 @@ export type UseDialogBaseOptions<
    *   },
    * });
    */
-  readonly onError?: ((failure: ModalFailure) => void) | undefined;
+  readonly onError?: ((failure: DialogFailure) => void) | undefined;
   /**
    * The dialog's accessible name, for the common case where the name is a string you already
    * have. A dialog without one is announced as just "dialog", which is the single most common
@@ -531,9 +531,9 @@ export type UseDialogBaseOptions<
   readonly ariaDescribedBy?: string | undefined;
   /**
    * Which template built this dialog — a free-form label the library carries and never interprets.
-   * See `ModalInfo.template`.
+   * See `DialogInfo.template`.
    *
-   * One library path *reads* it, without deciding anything: it is on the `StackModal` handed to a
+   * One library path *reads* it, without deciding anything: it is on the `StackDialog` handed to a
    * {@link DialogManager.prioritize} policy, which is the point — "every drawer under every
    * alert" is a rule about kinds of dialog, and `template` is the only thing that names a kind.
    *
@@ -543,7 +543,7 @@ export type UseDialogBaseOptions<
    * kind of dialog from another without keeping its own id-to-kind table.
    *
    * **Not the modal/non-modal distinction**, which is `nonModal` and reaches the DOM as
-   * `data-modal-type`. That one is the library's and has two values; this one is yours and has
+   * `data-dialog-type`. That one is the library's and has two values; this one is yours and has
    * as many as you like.
    *
    * @default 'modal'
@@ -598,7 +598,7 @@ export type UseDialogOptions<
   TReason extends string = string,
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
-> = UseDialogBaseOptions<TData, TReason, TStyle, TNode> & ModalVariant;
+> = UseDialogBaseOptions<TData, TReason, TStyle, TNode> & DialogVariant;
 
 /**
  * Return type of `useDialog`.
@@ -610,7 +610,7 @@ export type UseDialogReturn<
   TData = void,
   TReason extends string = string,
   TNode = unknown,
-> = ModalRenderArgs<TData, TReason> & {
+> = DialogRenderArgs<TData, TReason> & {
   /**
    * Open the modal. Resolves after `prepare` completes.
    * Always settles: joins an in-flight open, or resolves immediately when
@@ -628,7 +628,7 @@ export type UseDialogReturn<
    */
   readonly isVisible: boolean;
   /**
-   * The node to render — place it in your markup. `null` when a `ModalOutlet` above this modal
+   * The node to render — place it in your markup. `null` when a `DialogOutlet` above this modal
    * has taken it, since the outlet renders it instead.
    */
   readonly Modal: TNode;
@@ -676,9 +676,9 @@ export type UseDialogReturn<
  * - `'closing'` — exit transition running; settles to `'closed'` on completion
  *
  * This is the `<dialog>`'s own lifecycle. Whether the modal's *content* is ready is the
- * separate `isPreparing` axis — see {@link ModalRenderArgs}.
+ * separate `isPreparing` axis — see {@link DialogRenderArgs}.
  */
-export type ModalPhase = 'closed' | 'opening' | 'open' | 'closing';
+export type DialogPhase = 'closed' | 'opening' | 'open' | 'closing';
 
 /**
  * Where a portaled dialog is mounted: `document.body`, or a host the caller names.
@@ -718,7 +718,7 @@ export type PortalTarget = boolean | (() => Element | null);
  * instead of comparing spellings — and so adding a third source is a change a consumer's
  * exhaustive `switch` is told about.
  */
-export type ModalErrorSource = 'prepare' | 'onClose';
+export type DialogErrorSource = 'prepare' | 'onClose';
 
 /**
  * A callback of yours that threw, and which one it was.
@@ -726,11 +726,11 @@ export type ModalErrorSource = 'prepare' | 'onClose';
  * One object rather than two parameters, for the reason every option surface here takes one: a
  * third field is then an addition rather than a signature change at every call site.
  */
-export type ModalFailure = {
+export type DialogFailure = {
   /** Normalized — a non-`Error` throw arrives here wrapped, never raw. */
   readonly error: Error;
   /** Which callback it came out of. */
-  readonly source: ModalErrorSource;
+  readonly source: DialogErrorSource;
 };
 
 export type CloseResolver<TData = unknown, TReason extends string = string> = (
@@ -745,10 +745,10 @@ export type CloseResolver<TData = unknown, TReason extends string = string> = (
  * *reader* of the snapshot (the dialog manager, a devtool) is generic over every modal;
  * `useDialog<TData>` instantiates it with the payload its own store carries.
  */
-export type ModalStoreSnapshot<TData = unknown, TReason extends string = string> = {
+export type DialogStoreSnapshot<TData = unknown, TReason extends string = string> = {
   /** Where the `<dialog>` is in its lifecycle. */
-  readonly phase: ModalPhase;
-  /** Whether `prepare` is still running — see `ModalRenderArgs`. */
+  readonly phase: DialogPhase;
+  /** Whether `prepare` is still running — see `DialogRenderArgs`. */
   readonly isPreparing: boolean;
   /**
    * Last close result — the same `CloseResult` the public `onClose` and `openAndWait`

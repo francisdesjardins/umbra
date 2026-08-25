@@ -32,7 +32,7 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 | Specifier       | Contents                                                                                                                                                                                                                                                                                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`) and `setLogLevel`. **No framework.** |
-| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                 |
+| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `DialogOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                |
 | `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                                                                |
 | `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — whose `bindAction` is a **member of the controller it returns**, not a second export. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                |
 
@@ -250,7 +250,7 @@ single interface:
 ```ts
 // src/modals.d.ts — or anywhere your tsconfig includes
 declare module 'umbra' {
-  interface ModalRegistry {
+  interface DialogRegistry {
     'confirm-delete': { closesWith: { confirm: { id: string }; cancel: void } };
     'session-warning': { closesWith: 'extend' | 'sign-out' };
     'patient:merge': { opensWith: { patientId: string }; closesWith: 'merged' | 'cancel' };
@@ -344,8 +344,8 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `useDialog` — Base primitive
 - `useMessageDialog` / `useSlideDialog` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
-- `dialogPlacement` / `ModalAnimation` — where a non-modal dialog sits, and how any of them animates
-- `ModalOutlet` — render registered modals from one place instead of placing `{modal.Modal}`
+- `dialogPlacement` / `DialogAnimation` — where a non-modal dialog sits, and how any of them animates
+- `DialogOutlet` — render registered modals from one place instead of placing `{modal.Modal}`
 - `umbra/solid` — the three differences from the React chapter, all of them the renderer's, plus `fromStore`
 - `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, reading state without a renderer, and what happens to a `<dialog>` the server sent already open
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
@@ -386,7 +386,7 @@ setLogLevel('*');
 | `modal:lifecycle`     | prepare, showModal, labelling checks |
 | `modal:keydown`       | ESC dismiss, user onKeyDown          |
 | `modal:click-outside` | Click-outside for non-modal dialogs  |
-| `outlet`              | ModalOutlet registration             |
+| `outlet`              | DialogOutlet registration            |
 | `action`              | Action start/end, state changes      |
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Development
@@ -426,7 +426,7 @@ document-level version of the mistake the paragraph above warns about.
 Friendly warning, so nothing here surprises you: **I commit to `main`.** No release branches, no
 deprecation cycles, and **no semver** — a name can change between two commits if a better one
 turns up, and it does. The last three naming passes turned `isOpen` into `isVisible`, `onOpen`
-into `prepare` and `ModalInfo.modalType` into `template`, because each was describing itself
+into `prepare` and `DialogInfo.modalType` into `template`, because each was describing itself
 inaccurately.
 
 That is a deliberate trade, not neglect. The library is not published, so nobody's build breaks
@@ -448,7 +448,7 @@ The question is whether anyone notices. Every rename in the CHANGELOG is that no
 down: `isOpen` → `isVisible`, because the flag stayed true through the entire exit animation and
 the semantics were right — the name was the lie; `onOpen` → `prepare`, because it is work the open
 waits on and not a notification; `modalType` → `template`, because the field and the
-`data-modal-type` attribute it
+`data-dialog-type` attribute it
 shadowed were each right about something different. No model asked for one of those. The
 entry-point isolation tests exist because someone knew, before it happened, exactly how a framework
 import sneaks into a framework-free core.

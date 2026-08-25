@@ -113,7 +113,7 @@ Console errors, warnings and uncaught exceptions are reported at the end unless 
 - **Selectors do not cross into iframes.** For a framed page, point `--match` (or `--launch`) at
   the frame's own URL and drive it as a page.
 - `--probe css:` splits on the **last** `=`, so a selector may contain one:
-  `css:dialog[data-modal-id='x']=background,border-top-width` works.
+  `css:dialog[data-dialog-id='x']=background,border-top-width` works.
 
 ## Related
 

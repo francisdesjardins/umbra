@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { reconcileOpen } from '../reconcile-open.js';
-import type { ModalPhase } from '../types.js';
+import type { DialogPhase } from '../types.js';
 
 // `reconcileOpen` over every input it can be handed. Four phases and two booleans is eight cases,
 // so the table is exhaustive rather than representative — a spot check leaves a corner to drift.
 
-const CASES: readonly (readonly [ModalPhase, boolean, 'open' | 'close' | 'none'])[] = [
+const CASES: readonly (readonly [DialogPhase, boolean, 'open' | 'close' | 'none'])[] = [
   // Closed and asked to open: the only case that opens.
   ['closed', true, 'open'],
   ['closed', false, 'none'],

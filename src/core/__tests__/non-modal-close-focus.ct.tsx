@@ -6,7 +6,7 @@ import { NonModalCloseRestoreHarness } from './non-modal-close-focus.story.js';
 // restore the previously focused element for `show()` too, but only when focus is still inside the
 // dialog at close time. The library adds nothing here; the matrix cites this as the measurement.
 
-const PANEL = 'dialog[data-modal-id="nonmodal-close-restore"]';
+const PANEL = 'dialog[data-dialog-id="nonmodal-close-restore"]';
 
 async function focused(page: Page): Promise<string> {
   return page.evaluate(() => {

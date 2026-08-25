@@ -55,7 +55,7 @@ const opts = {
   axis: val('--axis', null),
 };
 
-const TID = `[data-testid="modal-${opts.id}"]`;
+const TID = `[data-testid="dialog-${opts.id}"]`;
 
 /**
  * There is no configurator any more: each slide shape is its own preset with its own modal id

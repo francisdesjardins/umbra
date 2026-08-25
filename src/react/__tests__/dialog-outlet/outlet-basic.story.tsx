@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ModalOutlet } from '../../modal-outlet.js';
+import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -43,15 +43,15 @@ function InnerModal({ onCloseReason }: { readonly onCloseReason: (r: string) => 
 }
 
 /**
- * Modal renders via ModalOutlet — no {Modal} placed in JSX.
+ * Modal renders via DialogOutlet — no {Modal} placed in JSX.
  */
 export function OutletBasicHarness() {
   const [lastReason, setLastReason] = useState('');
 
   return (
-    <ModalOutlet>
+    <DialogOutlet>
       <InnerModal onCloseReason={setLastReason} />
       <span data-testid="last-reason">{lastReason}</span>
-    </ModalOutlet>
+    </DialogOutlet>
   );
 }

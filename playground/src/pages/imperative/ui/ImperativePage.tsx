@@ -3,7 +3,7 @@ import { ControlledPanelExample } from '@/pages/imperative/examples/controlled-p
 import { DeclaredPayloadExample } from '@/pages/imperative/examples/declared-payload';
 import { DeferredOpenExample } from '@/pages/imperative/examples/deferred-open';
 import { ImperativeExample } from '@/pages/imperative/examples/imperative';
-import { ModalOutletExample } from '@/pages/imperative/examples/modal-outlet';
+import { ModalOutletExample } from '@/pages/imperative/examples/dialog-outlet';
 import { OpenRequestExample } from '@/pages/imperative/examples/open-request';
 import { ServiceLayerExample } from '@/pages/imperative/examples/service-layer';
 import { PageLayout } from '@/shared/ui/PageLayout';
@@ -79,9 +79,9 @@ export const ImperativePage = () => {
       >
         <ExampleGrid columns={1}>
           <ExampleCard
-            title="ModalOutlet"
-            description="Wrap a subtree with ModalOutlet — inner useDialog calls render automatically, no {modal.Modal} needed."
-            codeKey="modal-outlet"
+            title="DialogOutlet"
+            description="Wrap a subtree with DialogOutlet — inner useDialog calls render automatically, no {modal.Modal} needed."
+            codeKey="dialog-outlet"
             example={<ModalOutletExample />}
           />
         </ExampleGrid>

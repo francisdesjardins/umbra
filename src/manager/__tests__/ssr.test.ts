@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { AwaitedClose, ModalPhase } from '../../core/types.js';
+import type { AwaitedClose, DialogPhase } from '../../core/types.js';
 import { createDialogManager } from '../dialog-manager.js';
 import {
   createLockOwner,
@@ -31,7 +31,7 @@ test('the unit project really has no document', () => {
 /** Minimal `RegisteredStore` — the phase machine and nothing else a server pass would touch. */
 function createServerStore() {
   const listeners = new Set<() => void>();
-  let phase: ModalPhase = 'closed';
+  let phase: DialogPhase = 'closed';
   let closeReason: string | undefined;
 
   const notify = () => {

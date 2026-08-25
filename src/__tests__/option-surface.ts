@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// The body of `export type <name>`, `=` to closing brace — brace-counted, because `ModalVariant`'s
+// The body of `export type <name>`, `=` to closing brace — brace-counted, because `DialogVariant`'s
 // union and `UseDialogBaseOptions`'s nested function types make a line-regex cut early, silently.
 function typeBody(source: string, name: string): string {
   const start = source.indexOf(`export type ${name}`);
@@ -52,7 +52,7 @@ function membersOf(body: string): string[] {
 }
 
 /**
- * Every option a caller can pass: `UseDialogBaseOptions`'s flat surface plus `ModalVariant`, the
+ * Every option a caller can pass: `UseDialogBaseOptions`'s flat surface plus `DialogVariant`, the
  * modal/non-modal union holding the three dismissal options. A consumer sees one object — their
  * intersection, `UseDialogOptions` — so the matrix asks about one list.
  */
@@ -60,6 +60,6 @@ export function collectOptionNames(): string[] {
   const source = readFileSync(resolve(SRC_ROOT, 'core', 'types.ts'), 'utf8');
   return [
     ...membersOf(typeBody(source, 'UseDialogBaseOptions')),
-    ...membersOf(typeBody(source, 'ModalVariant')),
+    ...membersOf(typeBody(source, 'DialogVariant')),
   ];
 }

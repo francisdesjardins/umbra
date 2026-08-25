@@ -1,11 +1,11 @@
 import type { Accessor } from 'solid-js';
-import type { ModalId } from '../core/registry.js';
+import type { DialogId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
-import type { ModalInfo } from '../manager/types.js';
+import type { DialogInfo } from '../manager/types.js';
 
 /**
- * One modal's live state. **An accessor, forced rather than chosen**: `ModalInfo` is a
+ * One modal's live state. **An accessor, forced rather than chosen**: `DialogInfo` is a
  * discriminated union (`info.exists` narrows it) and an object of getters would flatten the
  * discriminant away, so this one is `info()` while {@link useDialogManager} is not.
  *
@@ -15,7 +15,7 @@ import type { ModalInfo } from '../manager/types.js';
  *   return info().exists && info().isVisible ? 'Open' : 'Closed';
  * };
  */
-export function useLookup(id: ModalId): Accessor<ModalInfo> {
+export function useLookup(id: DialogId): Accessor<DialogInfo> {
   const manager = useDialogManagerContext();
   const snapshot = fromStore({
     subscribe: manager.subscribeSnapshot,

@@ -8,15 +8,15 @@ import { finalizeModalClose } from './finalize-close.js';
 import { createModalStore } from './modal-store.js';
 import { dialogPlacement, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
-import type { ModalId } from './registry.js';
+import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { ModalStore } from './modal-store.js';
 import type {
   AwaitedClose,
-  ModalFailure,
-  ModalHandle,
-  ModalVariant,
+  DialogFailure,
+  DialogHandle,
+  DialogVariant,
   PortalTarget,
 } from './types.js';
 
@@ -38,7 +38,7 @@ const log = createLogger('modal');
  * rather than `UseDialogOptions<…>`: it takes four type parameters, and none of them affects a
  * single answer computed here.
  */
-export type UnresolvedModalOptions = ModalVariant & {
+export type UnresolvedModalOptions = DialogVariant & {
   readonly portal?: PortalTarget | undefined;
   readonly clipContainer?: boolean | undefined;
   readonly dismissWhilePreparing?: boolean | undefined;
@@ -119,10 +119,10 @@ export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedMo
  * opaque).
  */
 export function createModalRuntime<TData = void, TReason extends string = string>(
-  modalId: ModalId
+  dialogId: DialogId
 ) {
-  const store = createModalStore<TData, TReason>(modalId);
-  const engine = createActionEngine<TData, TReason>(modalId);
+  const store = createModalStore<TData, TReason>(dialogId);
+  const engine = createActionEngine<TData, TReason>(dialogId);
   engine.bindClose((reason, data) => {
     store.close(reason, data);
   });
@@ -151,7 +151,7 @@ export function createModalRuntime<TData = void, TReason extends string = string
     return closed;
   };
 
-  const handle: ModalHandle<TData, TReason> = {
+  const handle: DialogHandle<TData, TReason> = {
     close: (reason = DISMISS_REASON, data?: TData) => {
       store.close(reason, data);
     },
@@ -260,20 +260,20 @@ export function shouldDismissOnBackdropClick(
  */
 export type TeardownOptions = {
   readonly manager: DialogManager;
-  readonly modalId: ModalId;
+  readonly dialogId: DialogId;
   readonly dialog: HTMLDialogElement | null;
   /** Where a throwing `onClose` goes on the unmount path — the same channel the close path uses. */
-  readonly onError: ((failure: ModalFailure) => void) | undefined;
+  readonly onError: ((failure: DialogFailure) => void) | undefined;
 };
 
 export function teardownModal(store: ModalStore, options: TeardownOptions): void {
-  const { manager, modalId, dialog, onError } = options;
+  const { manager, dialogId, dialog, onError } = options;
   const wasOpen = store.getSnapshot().phase !== 'closed';
 
-  manager.unregister(modalId);
+  manager.unregister(dialogId);
 
   if (wasOpen) {
-    log('Tearing down open modal', { id: modalId });
+    log('Tearing down open modal', { id: dialogId });
 
     // If not already closing, this initiates the close with a 'dismiss' reason so `closeResult`
     // is set for both `onClose` and the close resolvers (it also cancels any pending open frame).
@@ -283,7 +283,7 @@ export function teardownModal(store: ModalStore, options: TeardownOptions): void
     finalizeModalClose(store, {
       dialog,
       onCloseError: (error) => {
-        log.error('onClose callback failed during cleanup', { id: modalId, error: error.message });
+        log.error('onClose callback failed during cleanup', { id: dialogId, error: error.message });
         // The unmount path reports through the same channel as the close path. Without this an
         // `onClose` that throws is visible when the modal closes and invisible when it is
         // unmounted while open — the same failure, reported or not by how it happened to end.

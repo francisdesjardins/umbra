@@ -44,8 +44,8 @@ test('with a policy the high-priority dialog stays in front of a later open', as
     .toBe('sp-warning');
 
   // A raise is a re-show, not a close: the dialog pushed under is still there to be dealt with.
-  await expect(page.locator('dialog[data-modal-id="sp-panel"]')).toHaveAttribute('open', '');
-  await expect(page.locator('dialog[data-modal-id="sp-warning"]')).toHaveAttribute('open', '');
+  await expect(page.locator('dialog[data-dialog-id="sp-panel"]')).toHaveAttribute('open', '');
+  await expect(page.locator('dialog[data-dialog-id="sp-warning"]')).toHaveAttribute('open', '');
 });
 
 test('being in front means being the one the mouse and the keyboard reach', async ({
@@ -60,7 +60,7 @@ test('being in front means being the one the mouse and the keyboard reach', asyn
   // A hit-tested click: under the panel's backdrop it would time out rather than land.
   await component.getByTestId('acknowledge').click();
 
-  await expect(page.locator('dialog[data-modal-id="sp-warning"]')).not.toHaveAttribute('open', '');
+  await expect(page.locator('dialog[data-dialog-id="sp-warning"]')).not.toHaveAttribute('open', '');
   await expect
     .poll(() => {
       return frontDialogId(page);
@@ -93,7 +93,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await expect(component.getByTestId('mr-policy')).toHaveText('on');
 
     await component.getByTestId('mr-open-all').click();
-    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
 
     // `mr-low` arrived last and ranks lowest: two raises, the only place that loop runs with two.
     await expect
@@ -115,7 +115,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
 
     // Opened with no policy at all, so the last one in is in front — `mr-low`.
     await component.getByTestId('mr-open-all').click();
-    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
     await expect
       .poll(() => {
         return frontDialogId(page);
@@ -125,7 +125,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
 
     // Paint order moving under dialogs already up: in Node this path stops at the `document` guard.
-    await expect(page.locator('dialog[data-modal-id="mr-high"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-high"]')).toBeVisible();
     await expect
       .poll(() => {
         return frontDialogId(page);
@@ -142,7 +142,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     const component = await mount(<MultiRaiseHarness />);
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await component.getByTestId('mr-open-all').click();
-    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
     await expect
       .poll(() => {
         return frontDialogId(page);
@@ -153,7 +153,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     await expect(component.getByTestId('mr-policy')).toHaveText('off');
 
     // The only thing exercising the clause that keeps `syncStackOrder` awake one sync past removal.
-    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
     await expect
       .poll(() => {
         return frontDialogId(page);
@@ -180,9 +180,9 @@ test.describe('what a late install costs', () => {
     await page.evaluate(() => {
       const raised: string[] = [];
       (globalThis as unknown as { raised: string[] }).raised = raised;
-      for (const dialog of document.querySelectorAll('dialog[data-modal-id]')) {
+      for (const dialog of document.querySelectorAll('dialog[data-dialog-id]')) {
         dialog.addEventListener('close', () => {
-          raised.push(dialog.getAttribute('data-modal-id') ?? '?');
+          raised.push(dialog.getAttribute('data-dialog-id') ?? '?');
         });
       }
     });
@@ -200,7 +200,7 @@ test.describe('what a late install costs', () => {
     // Opened with no policy at all — high, then mid, then low — so the top layer is open order and
     // the policy wants the exact reverse: an arrangement it genuinely has to change.
     await component.getByTestId('mr-open-all').click();
-    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
     await expect
       .poll(() => {
         return paintedStackOrder(page);
@@ -235,7 +235,7 @@ test.describe('a policy installed under an open dialog', () => {
   test('does not move the caret out of the field it was in', async ({ mount, page }) => {
     const component = await mount(<LatePolicyFocusHarness />);
     await component.getByTestId('lp-open').click();
-    await expect(page.locator('dialog[data-modal-id="lp-only"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="lp-only"]')).toBeVisible();
 
     await page.getByTestId('lp-input').click();
     await page.getByTestId('lp-input').fill('mid-sentence');

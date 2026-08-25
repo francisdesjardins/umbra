@@ -34,7 +34,7 @@ export function PortalDefaultHarness() {
       );
     },
     prepare: () => {
-      const dialog = document.querySelector('[data-testid="modal-portal-default"]');
+      const dialog = document.querySelector('[data-testid="dialog-portal-default"]');
       setDialogParent(dialog?.parentElement?.tagName ?? 'unknown');
     },
     onClose: (result) => {

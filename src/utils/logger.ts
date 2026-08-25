@@ -6,7 +6,7 @@
  *
  * Enable with `localStorage.setItem('dialog:log', '*')` — also `'modal'`, `'modal,action'`,
  * `'dialog:modal'` — or {@link setLogLevel}. Namespaces: `manager` (the singleton), `outlet`
- * (ModalOutlet registration), `modal` (useDialog core), `modal:lifecycle` (open/close DOM),
+ * (DialogOutlet registration), `modal` (useDialog core), `modal:lifecycle` (open/close DOM),
  * `modal:keydown` (dismiss key), `modal:click-outside`, `action` (actions, hotkeys).
  *
  * **Privacy**: opt-in, debug-only, console-only — nothing persisted or transmitted. Never logged:

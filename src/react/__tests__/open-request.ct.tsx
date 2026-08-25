@@ -32,7 +32,7 @@ test.describe('a dialog asked to open by someone else', () => {
 
     await expect(component.getByTestId('trail')).toHaveText('refused (mfa1)');
     await expect(component.getByTestId('phase')).toHaveText('closed');
-    await expect(page.locator('dialog[data-modal-id="asked"]')).toBeHidden();
+    await expect(page.locator('dialog[data-dialog-id="asked"]')).toBeHidden();
   });
 
   test('its own `open()` does not go through the handler', async ({ mount, page }) => {
@@ -41,7 +41,7 @@ test.describe('a dialog asked to open by someone else', () => {
 
     await component.getByTestId('own-open').click();
 
-    await expect(page.locator('dialog[data-modal-id="asked"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="asked"]')).toBeVisible();
     await expect(component.getByTestId('trail')).toHaveText('');
   });
 
@@ -50,7 +50,7 @@ test.describe('a dialog asked to open by someone else', () => {
 
     await component.getByTestId('instruct').click();
 
-    await expect(page.locator('dialog[data-modal-id="asked"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="asked"]')).toBeVisible();
     await expect(component.getByTestId('trail')).toHaveText('');
   });
 });
@@ -70,6 +70,6 @@ test.describe('a dialog that declared no handler', () => {
 
     await component.getByTestId('instruct').click();
 
-    await expect(page.locator('dialog[data-modal-id="unasked"]')).toBeVisible();
+    await expect(page.locator('dialog[data-dialog-id="unasked"]')).toBeVisible();
   });
 });

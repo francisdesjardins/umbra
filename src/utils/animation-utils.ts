@@ -1,6 +1,6 @@
 import type { DialogPlacement } from '../core/placement.js';
 import type { DialogStyle } from '../core/style.js';
-import type { ModalAnimation, ModalPhase } from '../core/types.js';
+import type { DialogAnimation, DialogPhase } from '../core/types.js';
 
 /**
  * Extract the primary transition property from a comma-separated list.
@@ -28,15 +28,15 @@ export const DEFAULT_MODAL_ANIMATION = {
   duration: 200,
   exitDuration: 150,
   transitionProperty: 'opacity, transform',
-} satisfies ModalAnimation;
+} satisfies DialogAnimation;
 
-/** Entrance duration (ms) applied when `ModalAnimation.duration` is omitted. */
+/** Entrance duration (ms) applied when `DialogAnimation.duration` is omitted. */
 export const DEFAULT_DURATION = 200;
 
-/** CSS `transition-property` applied when `ModalAnimation.transitionProperty` is omitted. */
+/** CSS `transition-property` applied when `DialogAnimation.transitionProperty` is omitted. */
 export const DEFAULT_TRANSITION_PROPERTY = 'opacity';
 
-/** A {@link ModalAnimation} with every optional field resolved to a concrete value. */
+/** A {@link DialogAnimation} with every optional field resolved to a concrete value. */
 export type ResolvedAnimation = {
   /** Entrance duration in ms. */
   readonly entranceDuration: number;
@@ -52,11 +52,11 @@ export type ResolvedAnimation = {
 };
 
 /**
- * Resolve a {@link ModalAnimation}'s optional fields to concrete values — the single place that
+ * Resolve a {@link DialogAnimation}'s optional fields to concrete values — the single place that
  * knows the defaults, read by the style builder below and by `syncCloseSequence`, so a dialog's
  * declared transition and the exit listener waiting on it can never disagree.
  */
-export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
+export function resolveAnimation(animation: DialogAnimation): ResolvedAnimation {
   const entranceDuration = animation.duration ?? DEFAULT_DURATION;
   const transitionProperty = animation.transitionProperty ?? DEFAULT_TRANSITION_PROPERTY;
 
@@ -71,7 +71,7 @@ export function resolveAnimation(animation: ModalAnimation): ResolvedAnimation {
 /** Everything the `<dialog>`'s computed style is built from, beyond the phase. */
 export type DialogAnimationStyleOptions<TStyle extends DialogStyle> = {
   /** Entrance/exit CSS, durations and transition-property. */
-  readonly animation: ModalAnimation<TStyle>;
+  readonly animation: DialogAnimation<TStyle>;
   /**
    * Structural styles applied by template hooks (e.g. slide positioning). Regular users should
    * style their content inside the `render` callback instead.
@@ -101,7 +101,7 @@ const UNPLACED: DialogPlacement = { host: null, dialog: {}, backdrop: null };
  * @typeParam TStyle - The style object type this binding speaks, inferred from `animation`.
  */
 export function getDialogAnimationStyles<TStyle extends DialogStyle>(
-  phase: ModalPhase,
+  phase: DialogPhase,
   options: DialogAnimationStyleOptions<TStyle>
 ): DialogStyle & Partial<TStyle> {
   const { animation, customStyle, placement = UNPLACED } = options;

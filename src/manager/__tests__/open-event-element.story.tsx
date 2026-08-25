@@ -11,7 +11,7 @@ type Seen = {
   readonly findableFromDocument: boolean;
 };
 
-function useOpenEventProbe(modalId: string): Seen | null {
+function useOpenEventProbe(dialogId: string): Seen | null {
   const [seen, setSeen] = useState<Seen | null>(null);
 
   useEffect(() => {
@@ -19,15 +19,15 @@ function useOpenEventProbe(modalId: string): Seen | null {
       const { id, element } = event.detail;
       setSeen({
         id,
-        isTheDialog: element instanceof HTMLDialogElement && element.dataset['modalId'] === id,
-        findableFromDocument: document.querySelector(`dialog[data-modal-id="${id}"]`) !== null,
+        isTheDialog: element instanceof HTMLDialogElement && element.dataset['dialogId'] === id,
+        findableFromDocument: document.querySelector(`dialog[data-dialog-id="${id}"]`) !== null,
       });
     };
     document.addEventListener(MODAL_OPEN_EVENT, onOpen);
     return () => {
       document.removeEventListener(MODAL_OPEN_EVENT, onOpen);
     };
-  }, [modalId]);
+  }, [dialogId]);
 
   return seen;
 }
