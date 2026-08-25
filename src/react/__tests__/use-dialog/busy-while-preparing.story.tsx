@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * A dialog on screen whose content is not there yet — the documented normal state of a loading
- * modal, and what `aria-busy` on the element is for.
+ * dialog, and what `aria-busy` on the element is for.
  *
  * The gate is released from a button *inside* the dialog: a `showModal()` dialog is in the top
  * layer, so nothing outside it is clickable while it is open.

@@ -33,7 +33,7 @@ const writeStoredMode = (mode: Mode): void => {
  * Everything keyed on the mode, in one place so the module-level seed and the effect cannot
  * disagree. `data-color-scheme` is what the app tokens and the vanilla CSS modules read;
  * `color-scheme` rides along because CSS cannot reach what the UA paints on its own — a native
- * `<select>` popup most visibly. The modal surface vars sit on `:root` because dialogs inherit
+ * `<select>` popup most visibly. The dialog surface vars sit on `:root` because dialogs inherit
  * custom properties through the DOM, top layer included.
  */
 const applyMode = (mode: Mode): void => {

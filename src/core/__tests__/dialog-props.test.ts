@@ -12,7 +12,7 @@ test.describe('dialogAttributes', () => {
     ).toMatchObject({
       'data-dialog-id': 'settings',
       'data-testid': 'dialog-settings',
-      'data-dialog-type': 'modal',
+      'data-dialog-type': 'dialog',
     });
   });
 

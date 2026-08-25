@@ -18,7 +18,7 @@
  *   effect of a commit before it runs any of them, for the same reason.
  * - **`destroy` clears the keys, not just the teardowns.** A runner that only ran its teardowns
  *   would still believe every step attached, so the next `sync` would rebuild nothing — which is a
- *   modal that works on mount and is inert after a remount, and passes in one React mode.
+ *   dialog that works on mount and is inert after a remount, and passes in one React mode.
  *
  * @internal Not part of the public API.
  */

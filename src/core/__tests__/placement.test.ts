@@ -41,7 +41,7 @@ test.describe('dialogPlacement', () => {
   test('the host is not a hit target; the dialog inside it is', () => {
     const { host, dialog } = dialogPlacement({ nonModal: true });
 
-    // The host covers its region for the modal's whole life; this pair keeps the trigger clickable.
+    // The host covers its region for the dialog's whole life; this pair keeps the trigger clickable.
     expect(host).toMatchObject({ pointerEvents: 'none' });
     expect(dialog).toMatchObject({ pointerEvents: 'auto' });
   });
@@ -78,7 +78,7 @@ test.describe('the scrim a non-modal dialog has to draw itself', () => {
   });
 
   test('reads the same custom property the native backdrop does', () => {
-    // So a theme moves both, and a panel is not a different shade from a modal beside it.
+    // So a theme moves both, and a panel is not a different shade from a dialog beside it.
     for (const options of [{ nonModal: true }, { nonModal: true, portal: true }]) {
       expect(dialogPlacement(options).backdrop?.background).toContain('--dialog-backdrop');
     }

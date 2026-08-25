@@ -11,7 +11,7 @@ type VanillaPanelContentProps = {
 };
 
 /**
- * Scrollable content area for big modals, filling the vertical space between the header and any
+ * Scrollable content area for big dialogs, filling the vertical space between the header and any
  * footer.
  */
 export function VanillaPanelContent({ children, padding = true, label }: VanillaPanelContentProps) {

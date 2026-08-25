@@ -3,7 +3,7 @@ import styles from '@/entities/dialog-template/ui/vanilla/shared/content/styles.
 
 type HeadingProps = {
   readonly children: ReactNode;
-  /** What a form modal's `ariaLabelledBy` points at. */
+  /** What a form dialog's `ariaLabelledBy` points at. */
   readonly id?: string | undefined;
 };
 

@@ -1,7 +1,7 @@
 /**
  * `'dismiss'` — the library's own close reason, in one place so it cannot drift.
  *
- * It means **the modal was dismissed rather than acted on**: the dismiss key, a backdrop click, a
+ * It means **the dialog was dismissed rather than acted on**: the dismiss key, a backdrop click, a
  * click outside a non-modal panel, or teardown while it was still open. None of them runs an
  * action, because there is no action to run — the first three close the store directly unless the
  * caller asked to answer for them ({@link DismissCause}), and teardown asks nobody.
@@ -14,7 +14,7 @@
  * keeps meaning exactly one thing.
  *
  * **The exclusion reaches as far as the declared union does, and no further.** `ActionReason` is
- * an `Exclude`, and `Exclude<string, 'dismiss'>` is `string` — so a modal that left `TReason` at
+ * an `Exclude`, and `Exclude<string, 'dismiss'>` is `string` — so a dialog that left `TReason` at
  * its default is told nothing by the checker, which is why the engine warns at declaration too.
  * Belt and braces, and the braces are the only thing holding for the call site that skipped the
  * one rule the design asks for.

@@ -49,7 +49,7 @@ test.describe('bindDialog', () => {
     await expect(page.locator('dialog[data-dialog-id="vanilla-basic"]:modal')).toHaveCount(1);
     await expect(page.getByTestId('dialog-vanilla-basic')).toHaveAttribute(
       'data-dialog-type',
-      'modal'
+      'dialog'
     );
     await expect(page.getByTestId('dialog-vanilla-basic')).toHaveAttribute(
       'aria-label',
@@ -560,7 +560,7 @@ test.describe('a shadow-root dialog in a stack', () => {
     await expect(component.getByTestId('policy')).toHaveText('on');
 
     await component.getByTestId('open-shadow-front').click();
-    // Dispatched, not clicked: the shadow dialog is modal, so this button is under its backdrop.
+    // Dispatched, not clicked: the shadow dialog is dialog, so this button is under its backdrop.
     await component.getByTestId('open-light-over').dispatchEvent('click');
     await expect(page.locator('dialog[data-dialog-id="vanilla-light-over"]')).toBeVisible();
 
@@ -830,7 +830,7 @@ test.describe('bindDialog — a dialog that claimed no opening focus', () => {
     await expect(page.locator('dialog[data-dialog-id="vanilla-claimless"]')).toBeVisible();
     await expect(page.locator('dialog[data-dialog-id="vanilla-claimless-panel"]')).toBeVisible();
 
-    // Nothing outside the modal holds it: a keyboard on `<body>` under the top layer is unreachable.
+    // Nothing outside the dialog holds it: a keyboard on `<body>` under the top layer is unreachable.
     await expect(
       page.locator(
         ':focus:not(dialog[data-dialog-id="vanilla-claimless"], dialog[data-dialog-id="vanilla-claimless"] *)'
@@ -842,7 +842,7 @@ test.describe('bindDialog — a dialog that claimed no opening focus', () => {
 });
 
 test.describe('bindDialog — onError', () => {
-  test('a prepare that throws is reported, and the modal still settles', async ({
+  test('a prepare that throws is reported, and the dialog still settles', async ({
     mount,
     page,
   }) => {

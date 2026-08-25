@@ -8,7 +8,7 @@ type VanillaPanelContainerProps = {
 };
 
 /**
- * Full-size container for big/complex modals (wizards, large forms, tables): a flex-column frame
+ * Full-size container for big/complex dialogs (wizards, large forms, tables): a flex-column frame
  * with a border and background, leaving dividers and spacing to the caller.
  *
  * ```tsx

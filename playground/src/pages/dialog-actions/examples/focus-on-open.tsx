@@ -7,7 +7,7 @@ import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { Key, useMessageDialog } from 'umbra/react';
 
-export const MODAL_ID = 'focus-on-open';
+export const DIALOG_ID = 'focus-on-open';
 
 /** The chip the MUI `Chip` drew here: a pill of quiet text on the hover wash. */
 const chipStyle: CSSProperties = {
@@ -46,7 +46,7 @@ function useFocusedLabel(active: boolean) {
 }
 
 /**
- * Which button the modal opens on, and where focus goes when an action fails. The text field is
+ * Which button the dialog opens on, and where focus goes when an action fails. The text field is
  * first on purpose: `showModal()` would focus it, so focus on *Keep* proves the option did it.
  */
 export function FocusOnOpenExample() {
@@ -55,9 +55,9 @@ export function FocusOnOpenExample() {
   const [isVisible, setIsVisible] = useState(false);
   const focused = useFocusedLabel(isVisible);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     // Not `alertdialog`: it announces its description, and this body is focus commentary.
     prepare: () => {
       setIsVisible(true);
@@ -68,7 +68,7 @@ export function FocusOnOpenExample() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="warning" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete this file?</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>Delete this file?</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
@@ -77,10 +77,10 @@ export function FocusOnOpenExample() {
                 own. Focus is on <strong>Keep</strong> instead, because that action asked for it.
               </Shared.Message>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
-                <FormDialog.Label htmlFor={`${MODAL_ID}-reason`}>
+                <FormDialog.Label htmlFor={`${DIALOG_ID}-reason`}>
                   Reason (optional)
                 </FormDialog.Label>
-                <FormDialog.Input id={`${MODAL_ID}-reason`} />
+                <FormDialog.Input id={`${DIALOG_ID}-reason`} />
               </div>
               <span
                 style={{
@@ -133,7 +133,7 @@ export function FocusOnOpenExample() {
   });
 
   return (
-    <ExampleLayout result={outcome} modals={modal.Dialog}>
+    <ExampleLayout result={outcome} dialogs={dialog.Dialog}>
       <div
         style={{
           display: 'flex',
@@ -148,13 +148,13 @@ export function FocusOnOpenExample() {
           style={{ alignSelf: 'flex-start' }}
           onClick={async () => {
             setOutcome(null);
-            await modal.open();
+            await dialog.open();
           }}
         >
           Delete a file
         </AppButton>
         <div style={{ display: 'flex', gap: 'var(--app-space-2)', flexWrap: 'wrap' }}>
-          <span style={chipStyle}>focus: {isVisible ? focused : 'modal closed'}</span>
+          <span style={chipStyle}>focus: {isVisible ? focused : 'dialog closed'}</span>
           <span style={chipStyle}>delete attempts: {String(attempts)}</span>
         </div>
         <p

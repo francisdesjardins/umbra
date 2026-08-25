@@ -2,14 +2,14 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MODAL_LIFECYCLE_SEQUENCE } from '../core/dialog-director.js';
+import { DIALOG_LIFECYCLE_SEQUENCE } from '../core/dialog-director.js';
 
 /**
  * The order the shared lifecycle is wired in, and who is allowed to write it down.
  *
  * The *sequence* the framework-free decisions are asked in is a decision, and an unnamed one is
  * one no test can reach. `core/dialog-director.ts` wires the steps once and derives
- * `MODAL_LIFECYCLE_SEQUENCE` from that table; what is left is what a type cannot hold — the
+ * `DIALOG_LIFECYCLE_SEQUENCE` from that table; what is left is what a type cannot hold — the
  * order is recorded here, no hook binding wires a step behind the director's back, and
  * `umbra/vanilla`, which does not use the director, still wires all nine in its own order. Only
  * **effect-time** steps are compared: source order proxies run order in vanilla's single `sync()`
@@ -76,7 +76,7 @@ function sourceOf(file: string): string {
 function orderIn(file: string): string[] {
   const source = sourceOf(file);
 
-  return MODAL_LIFECYCLE_SEQUENCE.map((step) => {
+  return DIALOG_LIFECYCLE_SEQUENCE.map((step) => {
     return [source.indexOf(`${step}(`), step] as const;
   })
     .filter(([at]) => {
@@ -93,17 +93,17 @@ function orderIn(file: string): string[] {
 test.describe('wiring order', () => {
   test('the director runs the lifecycle in the order this file records', () => {
     expect(
-      [...MODAL_LIFECYCLE_SEQUENCE],
+      [...DIALOG_LIFECYCLE_SEQUENCE],
       'core/dialog-director.ts changed the order it runs the shared lifecycle in. That is a decision about when showModal() runs relative to the listeners and the focus policy — update RECORDED_SEQUENCE and say why in the commit.'
     ).toEqual(RECORDED_SEQUENCE);
   });
 
   test('no hook binding wires a lifecycle step itself', () => {
     // A binding that reaches past the director for one step takes back the scheduling decision the
-    // director exists to own — silently, because the modal still works.
+    // director exists to own — silently, because the dialog still works.
     for (const [binding, file] of Object.entries(DIRECTED)) {
       const source = sourceOf(file);
-      const wired = MODAL_LIFECYCLE_SEQUENCE.filter((step) => {
+      const wired = DIALOG_LIFECYCLE_SEQUENCE.filter((step) => {
         return source.includes(`${step}(`);
       });
       expect(
@@ -118,7 +118,7 @@ test.describe('wiring order', () => {
     // vacuous for a step the controller never calls, which is where a dropped step would hide.
     expect(orderIn(CONTROLLER)).toEqual(RECORDED_CONTROLLER);
     expect(RECORDED_CONTROLLER.length, 'the controller is missing an effect-time step').toBe(
-      MODAL_LIFECYCLE_SEQUENCE.length
+      DIALOG_LIFECYCLE_SEQUENCE.length
     );
   });
 
@@ -126,8 +126,8 @@ test.describe('wiring order', () => {
     // If the two orders ever match, the controller has adopted the director and the divergence is
     // closed; a third order means a hook binding went its own way, which the test above catches.
     const same =
-      RECORDED_CONTROLLER.join(' → ') === [...MODAL_LIFECYCLE_SEQUENCE].join(' → ') &&
-      orderIn(CONTROLLER).join(' → ') === [...MODAL_LIFECYCLE_SEQUENCE].join(' → ');
+      RECORDED_CONTROLLER.join(' → ') === [...DIALOG_LIFECYCLE_SEQUENCE].join(' → ') &&
+      orderIn(CONTROLLER).join(' → ') === [...DIALOG_LIFECYCLE_SEQUENCE].join(' → ');
     expect(
       same,
       "The controller now runs the director's order. That closes UNRECONCILED — say so there, or move it onto the director outright."

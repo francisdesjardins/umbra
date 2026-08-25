@@ -33,7 +33,7 @@ import {
  */
 
 test.describe('useDialog (Solid)', () => {
-  test('modal is initially closed', async ({ mount, page }) => {
+  test('dialog is initially closed', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-solid-basic')).not.toBeVisible();
@@ -239,7 +239,7 @@ test.describe('what Solid does on the way out', () => {
   // Disposal in Solid is a branch replaced: the old owner goes and its `onCleanup`s run. All three
   // paths measured at zero executions before these tests existed.
 
-  test('a disposed modal unregisters itself from the manager', async ({ mount, page }) => {
+  test('a disposed dialog unregisters itself from the manager', async ({ mount, page }) => {
     await mount(<SolidDisposalHarness />);
     await expect(page.getByTestId('registration')).toHaveText('registered');
 
@@ -263,8 +263,8 @@ test.describe('what Solid does on the way out', () => {
     await expect(page.locator('dialog:modal')).toHaveCount(0);
   });
 
-  test('an outlet forgets a modal that was disposed inside it', async ({ mount, page }) => {
-    // Without `outlet.unregister` the outlet keeps rendering a modal whose graph is gone.
+  test('an outlet forgets a dialog that was disposed inside it', async ({ mount, page }) => {
+    // Without `outlet.unregister` the outlet keeps rendering a dialog whose graph is gone.
     await mount(<SolidOutletDisposalHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-outlet-disposal')).toBeVisible();
@@ -349,7 +349,7 @@ test.describe('placement (Solid)', () => {
     mount,
     page,
   }) => {
-    // The copy for the trigger *outside* the modal. Getters over signals, so reaching the return
+    // The copy for the trigger *outside* the dialog. Getters over signals, so reaching the return
     // and staying live once there are two claims and the type system checks only the first.
     await mount(<SolidLiveStateHarness />);
     await expect(page.getByTestId('outer-preparing')).toHaveText('ready');
@@ -364,7 +364,7 @@ test.describe('placement (Solid)', () => {
     await page.getByRole('button', { name: 'Boom' }).click();
     await expect(page.getByTestId('outer-running')).toHaveText('running');
 
-    // The error lands on both sides of the seam, and a failed action leaves the modal up to retry.
+    // The error lands on both sides of the seam, and a failed action leaves the dialog up to retry.
     await expect(page.getByTestId('outer-error')).toHaveText('boom failed');
     await expect(page.getByTestId('inner-error')).toHaveText('boom failed');
     await expect(page.getByTestId('outer-running')).toHaveText('idle');
@@ -646,7 +646,7 @@ test.describe('a dialog that claimed no opening focus (Solid)', () => {
 });
 
 test.describe('onError (Solid)', () => {
-  test('a prepare that throws is reported, and the modal still settles', async ({
+  test('a prepare that throws is reported, and the dialog still settles', async ({
     mount,
     page,
   }) => {

@@ -48,7 +48,7 @@ import {
 } from './use-dialog.story';
 
 test.describe('useDialog', () => {
-  test('modal is initially closed', async ({ mount, page }) => {
+  test('dialog is initially closed', async ({ mount, page }) => {
     await mount(<BasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-basic-dialog')).not.toBeVisible();
@@ -88,7 +88,7 @@ test.describe('useDialog', () => {
     await expect(page.getByTestId('last-reason')).toHaveText('dismiss');
   });
 
-  test('open() settles immediately when the modal is already open (regression)', async ({
+  test('open() settles immediately when the dialog is already open (regression)', async ({
     mount,
     page,
   }) => {
@@ -136,12 +136,12 @@ test.describe('useDialog', () => {
 });
 
 test.describe('useDialog — data-dialog-type', () => {
-  test('modal dialog has data-dialog-type="modal"', async ({ mount, page }) => {
+  test('modal dialog has data-dialog-type="dialog"', async ({ mount, page }) => {
     await mount(<BasicHarness />);
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-basic-dialog')).toHaveAttribute(
       'data-dialog-type',
-      'modal'
+      'dialog'
     );
   });
 
@@ -383,7 +383,7 @@ test.describe('useDialog — portal', () => {
     await expect(page.getByTestId('inherited-ink')).toHaveText('rebeccapurple');
   });
 
-  test('modal without portal: full lifecycle works', async ({ mount, page }) => {
+  test('dialog without portal: full lifecycle works', async ({ mount, page }) => {
     await mount(<PortalDefaultHarness />);
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-portal-default')).toBeVisible();
@@ -557,7 +557,7 @@ test.describe('useDialog — returned identities', () => {
 });
 
 test.describe('useDialog — backdrop click hit testing', () => {
-  test('a keyboard-activated button does not dismiss the modal (its click reports clientX/Y of 0)', async ({
+  test('a keyboard-activated button does not dismiss the dialog (its click reports clientX/Y of 0)', async ({
     mount,
     page,
   }) => {
@@ -666,7 +666,7 @@ test.describe('a non-modal panel and the page keyboard', () => {
 });
 
 test.describe('ESC does not depend on where focus is', () => {
-  test('closes a modal whose content holds nothing focusable', async ({ mount, page }) => {
+  test('closes a dialog whose content holds nothing focusable', async ({ mount, page }) => {
     await mount(<EscWithoutFocusHarness />);
     await page.getByRole('button', { name: 'Open Unfocusable' }).click();
     await expect(page.getByTestId('unfocusable-is-visible')).toHaveText('open');
@@ -785,7 +785,7 @@ test.describe('the styling surface', () => {
     await expect(page.locator('dialog[data-dialog-id="styling-surface"]')).toBeVisible();
     await expect(page.locator('dialog[data-dialog-id="styling-surface"]')).toHaveAttribute(
       'data-dialog-type',
-      'modal'
+      'dialog'
     );
     // The variant attribute pairs with it: `dialog[data-dialog-type='non-modal']` reaches all at once.
     await expect(page.locator('dialog[data-dialog-id="styling-surface-slide"]')).toHaveCount(1);
@@ -888,7 +888,7 @@ test.describe('aria-busy while prepare runs', () => {
     await expect(dialog).toHaveAttribute('aria-busy', 'false');
   });
 
-  test('a modal with no prepare is not busy to begin with', async ({ mount, page }) => {
+  test('a dialog with no prepare is not busy to begin with', async ({ mount, page }) => {
     // Written, not merely absent, so "never busy" and "busy forever" cannot look the same.
     await mount(<BusyWhilePreparingHarness />);
     await page.getByRole('button', { name: 'Open Instant' }).click();
@@ -899,7 +899,7 @@ test.describe('aria-busy while prepare runs', () => {
   });
 });
 
-test.describe('prepare is told when the modal goes away', () => {
+test.describe('prepare is told when the dialog goes away', () => {
   test('closing aborts the work it started', async ({ mount, page }) => {
     const component = await mount(<OnOpenAbortHarness />);
     await component.getByRole('button', { name: 'Open' }).click();
@@ -930,7 +930,7 @@ test.describe('prepare is told when the modal goes away', () => {
   });
 });
 
-test.describe('modals working together', () => {
+test.describe('dialogs working together', () => {
   const openAllThree = async (page: Page) => {
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
@@ -938,7 +938,7 @@ test.describe('modals working together', () => {
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle,message');
   };
 
-  test('the dismiss key unwinds the stack one modal per press, front to back', async ({
+  test('the dismiss key unwinds the stack one dialog per press, front to back', async ({
     mount,
     page,
   }) => {
@@ -959,7 +959,7 @@ test.describe('modals working together', () => {
     );
   });
 
-  test('a hotkey fires on the modal in front, and only there', async ({ mount, page }) => {
+  test('a hotkey fires on the dialog in front, and only there', async ({ mount, page }) => {
     // All three declare Enter; only the front one may run it.
     await mount(<StackedDialogsHarness />);
     await openAllThree(page);
@@ -970,24 +970,24 @@ test.describe('modals working together', () => {
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
   });
 
-  test('the modal underneath keeps its own hotkey once it is back in front', async ({
+  test('the dialog underneath keeps its own hotkey once it is back in front', async ({
     mount,
     page,
   }) => {
     await mount(<StackedDialogsHarness />);
     await openAllThree(page);
 
-    await page.keyboard.press('Enter'); // acknowledges the message modal
+    await page.keyboard.press('Enter'); // acknowledges the message dialog
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
-    await page.keyboard.press('Enter'); // now the middle modal is in front
+    await page.keyboard.press('Enter'); // now the middle dialog is in front
     await expect(page.getByTestId('stack-saves')).toHaveText('1');
     await expect(page.getByTestId('stack-visible')).toHaveText('panel');
   });
 });
 
 test.describe('a hotkey belongs to the dialog that declared it', () => {
-  test('an outer modal never dispatches through a nested dialog’s button', async ({
+  test('an outer dialog never dispatches through a nested dialog’s button', async ({
     mount,
     page,
   }) => {
@@ -997,7 +997,7 @@ test.describe('a hotkey belongs to the dialog that declared it', () => {
     await page.getByTestId('nested-open-inner').click();
     await expect(page.getByTestId('nested-inner-btn')).toBeVisible();
 
-    // Focus back in the outer modal — legitimate here, a non-modal panel blocks nothing.
+    // Focus back in the outer dialog — legitimate here, a non-modal panel blocks nothing.
     await page.getByTestId('nested-outer-btn').focus();
     await page.keyboard.press('Enter');
 
@@ -1006,7 +1006,7 @@ test.describe('a hotkey belongs to the dialog that declared it', () => {
 });
 
 test.describe('the mouse across a stack', () => {
-  test('a non-modal stands down while a modal is above it, and takes over once it is not', async ({
+  test('a non-modal stands down while a dialog is above it, and takes over once it is not', async ({
     mount,
     page,
   }) => {
@@ -1015,7 +1015,7 @@ test.describe('the mouse across a stack', () => {
     await page.getByTestId('panel-open-middle').click();
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
 
-    // The corner is the modal's backdrop; nothing blocks the pointer for the panel, which dismisses
+    // The corner is the dialog's backdrop; nothing blocks the pointer for the panel, which dismisses
     // on click-outside — it stands down only because it is not in front.
     await page.mouse.click(20, 20);
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
@@ -1029,7 +1029,7 @@ test.describe('the mouse across a stack', () => {
     await expect(page.getByTestId('stack-log')).toHaveText('middle:dismiss | panel:dismiss');
   });
 
-  test('a click on an action button reaches only the modal it belongs to', async ({
+  test('a click on an action button reaches only the dialog it belongs to', async ({
     mount,
     page,
   }) => {
@@ -1047,7 +1047,7 @@ test.describe('the mouse across a stack', () => {
 });
 
 test.describe('the stack and the no-focus Escape path', () => {
-  test('one press still unwinds one modal when focus is outside the dialogs', async ({
+  test('one press still unwinds one dialog when focus is outside the dialogs', async ({
     mount,
     page,
   }) => {
@@ -1068,8 +1068,8 @@ test.describe('the stack and the no-focus Escape path', () => {
   });
 });
 
-test.describe('focus while another modal is in front', () => {
-  test('a settling action does not pull focus out of the modal above it', async ({
+test.describe('focus while another dialog is in front', () => {
+  test('a settling action does not pull focus out of the dialog above it', async ({
     mount,
     page,
   }) => {
@@ -1081,7 +1081,7 @@ test.describe('focus while another modal is in front', () => {
     await page.getByTestId('over-field').focus();
     await expect(page.getByTestId('over-field')).toBeFocused();
 
-    // The modal underneath restores focus when its action settles, but that is not its focus to move.
+    // The dialog underneath restores focus when its action settles, but that is not its focus to move.
     await expect(page.getByTestId('under-done')).toHaveText('1');
     await expect(page.getByTestId('over-field')).toBeFocused();
   });
@@ -1201,7 +1201,7 @@ test.describe('the labelling diagnostic', () => {
  * composition, the class of gap the compatibility matrix exists to surface.
  */
 test.describe('useDialog — the dismiss key answered by nobody', () => {
-  test('a deaf modal in front leaves the panel behind alone, and the press reaches the page', async ({
+  test('a deaf dialog in front leaves the panel behind alone, and the press reaches the page', async ({
     mount,
     page,
   }) => {
@@ -1209,7 +1209,7 @@ test.describe('useDialog — the dismiss key answered by nobody', () => {
     await page.getByTestId('open-panel').click();
     await expect(page.getByTestId('panel-visible')).toHaveText('open');
 
-    // From inside the panel's render, the only place a button stays clickable under a modal.
+    // From inside the panel's render, the only place a button stays clickable under a dialog.
     await page.getByTestId('open-dialog').click();
     await expect(page.getByTestId('dialog-visible')).toHaveText('open');
 
@@ -1339,11 +1339,11 @@ test.describe('a dialog inside a shadow root', () => {
 
 /**
  * `onError` — a caller's callback that threw, reported while everything else carries on. Each
- * assertion pair is "the failure was reported" **and** "the modal settled anyway"; the first alone
+ * assertion pair is "the failure was reported" **and** "the dialog settled anyway"; the first alone
  * would pass on a dialog left stuck announcing itself busy.
  */
 test.describe('onError', () => {
-  test('a prepare that throws is reported, and the modal still settles', async ({
+  test('a prepare that throws is reported, and the dialog still settles', async ({
     mount,
     page,
   }) => {

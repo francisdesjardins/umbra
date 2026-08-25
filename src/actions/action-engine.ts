@@ -8,7 +8,7 @@ import type { ActionCloseFn, ActionReason, ActionState, HotkeyDef } from './type
 const log = createLogger('action');
 
 /**
- * Execution and state for a modal's actions — a store plus a handler runner, React-free so a second
+ * Execution and state for a dialog's actions — a store plus a handler runner, React-free so a second
  * binding needs it unchanged; `useDialog` owns one and hands out the `action()` factory that writes
  * to it, so nothing has to be handed *in*. Actions are declared by being rendered, each pass
  * re-declaring what it draws, so a stale hotkey cannot keep suppressing the dismiss key.
@@ -126,7 +126,7 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
       return store.run(reason, handler);
     },
 
-    /** The modal's own close function, bound once by `useDialog`. */
+    /** The dialog's own close function, bound once by `useDialog`. */
     bindClose(fn: (reason: TReason | DismissReason, data?: TData) => void): void {
       closeFn = fn;
     },
@@ -139,7 +139,7 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
 
     /**
      * Called by the `action()` factory as each button is drawn. The guard is the runtime half of a
-     * rule the type only half-delivers — a modal left at the default `TReason` gets no error, and
+     * rule the type only half-delivers — a dialog left at the default `TReason` gets no error, and
      * is the one most likely to name a button `'dismiss'` without meaning what that produces.
      * Warned rather than refused, since only the close it reports suffers; once per engine, because
      * React re-declares every pass.
@@ -184,7 +184,7 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
     },
 
     /**
-     * Whether an action already owns the modal's dismiss key. Read at keydown rather than
+     * Whether an action already owns the dialog's dismiss key. Read at keydown rather than
      * captured during render, because the actions are only known once render has run.
      */
     ownsHotkey(candidate: HotkeyDef): boolean {
@@ -198,8 +198,8 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
     },
 
     /**
-     * Whether this modal drew any actions at all — backdrop dismissal is opt-out without them and
-     * opt-in with them, a modal offering buttons wanting to be dismissed through one.
+     * Whether this dialog drew any actions at all — backdrop dismissal is opt-out without them and
+     * opt-in with them, a dialog offering buttons wanting to be dismissed through one.
      */
     hasActions(): boolean {
       return declared.size > 0;

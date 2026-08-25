@@ -62,7 +62,7 @@ questions (asked in order, after every step)
                           to "why did my click do nothing"
   rects:<sel>[,<sel>...]  box + position/z-index/pointer-events/display for each selector
   styles:<sel>=<prop>[,<prop>...]   specific computed properties
-  toplayer:<sel>          whether the element matches :modal (really in the top layer)
+  toplayer:<sel>          whether the element matches :dialog (really in the top layer)
   events:<x>,<y>          click there and report the capture-phase target of mousedown/click
   count:<sel>             how many match
   text:<sel>              its innerText, trimmed
@@ -193,7 +193,7 @@ async function ask(question) {
       if (!el) {
         return 'ABSENT';
       }
-      return el.matches(':modal') ? 'yes (:modal)' : 'no — rendered inline, not in the top layer';
+      return el.matches(':modal') ? 'yes (:dialog)' : 'no — rendered inline, not in the top layer';
     }, rest);
     console.log(`toplayer ${rest}: ${value}`);
     return;

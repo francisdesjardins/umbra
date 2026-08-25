@@ -40,7 +40,7 @@ import type {
   RegisteredController,
 } from './types.js';
 
-const log = createLogger('modal');
+const log = createLogger('dialog');
 
 /**
  * Drive a `<dialog>` you wrote yourself, with everything the hook bindings give theirs.

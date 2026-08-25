@@ -6,15 +6,15 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { createOpenRequest, dialogManager, useMessageDialog } from 'umbra/react';
 import type { PayloadOf } from 'umbra/react';
 
-const MODAL_ID = 'print-job';
+const DIALOG_ID = 'print-job';
 
 /** Exported because the registry names it — a payload type becomes part of the app's vocabulary. */
 export type PrintJob = { readonly copies: number; readonly colour: boolean };
 
 /**
- * The other half of the registry: what a modal is *opened* with.
+ * The other half of the registry: what a dialog is *opened* with.
  *
- * `data` is what a modal closes with and `payload` is what it opens with, and `PayloadOf` reads the
+ * `data` is what a dialog closes with and `payload` is what it opens with, and `PayloadOf` reads the
  * second the way `DataOf` reads the first. The card beside this one — "an open the dialog may
  * refuse" — is the same door with the opposite trust: its payload is typed into a textarea, so it
  * arrives `unknown` and is parsed. This one is asked and answered inside the project, so the
@@ -41,13 +41,13 @@ export function DeclaredPayloadExample() {
   const [result, setResult] = useState<string | null>(null);
   const [asked, setAsked] = useState<PayloadOf<'print-job'> | null>(null);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     onOpenRequest: (payload) => {
       // `unknown` in, parsed to the declared shape. A refusal would be `request.refuse(reason)`.
       setAsked(parsePrintJob(payload));
-      void modal.open();
+      void dialog.open();
     },
     onClose: (closed) => {
       setResult(closed.reason === 'print' ? 'sent to the printer' : `closed: ${closed.reason}`);
@@ -57,7 +57,7 @@ export function DeclaredPayloadExample() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="info" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>
               Confirm the print job
             </MessageDialog.Title>
           </MessageDialog.Header>
@@ -80,7 +80,7 @@ export function DeclaredPayloadExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
         onClick={() => {
           setCopies((n) => {
@@ -105,7 +105,7 @@ export function DeclaredPayloadExample() {
         onClick={() => {
           // Checked against the contract: `{ copies: '2' }` or a stray key is a compile error here,
           // and no type argument is written anywhere — the id is what carries the shape.
-          dialogManager.requestOpen(MODAL_ID, createOpenRequest({ copies, colour }));
+          dialogManager.requestOpen(DIALOG_ID, createOpenRequest({ copies, colour }));
         }}
       >
         Ask to print

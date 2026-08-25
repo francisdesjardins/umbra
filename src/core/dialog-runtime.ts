@@ -20,10 +20,10 @@ import type {
   PortalTarget,
 } from './types.js';
 
-const log = createLogger('modal');
+const log = createLogger('dialog');
 
 /**
- * The parts of a modal that are the same in every binding — options in, doors out, teardown.
+ * The parts of a dialog that are the same in every binding — options in, doors out, teardown.
  *
  * Everything here was written twice before Solid existed and was identical both times, which is
  * the only test that matters for "does this belong in the core". What is left in a binding after
@@ -53,7 +53,7 @@ export type ResolvedDialogOptions = {
   readonly isPortaled: boolean;
   /** Modal variant only; `undefined` means "decide from whether any action was drawn". */
   readonly dismissOnBackdropClick: boolean | undefined;
-  /** Non-dialog variant only. */
+  /** Non-modal variant only. */
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly dismissKey: HotkeyDef | false;
@@ -93,7 +93,7 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
     // focus is on the `<dialog>` itself — which WebKit otherwise swallows. So `nonModal: false`
     // does not make this inert, and reading it out here would be the bug.
     containFocus: options.containFocus ?? false,
-    template: options.template ?? 'modal',
+    template: options.template ?? 'dialog',
     // Where this dialog is positioned from, and what it has to be positioned *against*. The
     // rules — and why a contained dialog needs a host at all — live in `core/placement.ts`.
     placement: dialogPlacement({
@@ -107,14 +107,14 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
 // ── The runtime ──────────────────────────────────────────────────────────────
 
 /**
- * The modal's state and the three doors onto it, built once per modal.
+ * The dialog's state and the three doors onto it, built once per dialog.
  *
- * The engine is created here rather than handed in, so it can be wired straight to this modal's
+ * The engine is created here rather than handed in, so it can be wired straight to this dialog's
  * `close`: nothing has to bridge the two because nothing built it anywhere else.
  *
  * React holds the result in a `useState` initializer and Solid simply keeps the value, but both
  * get the same guarantee for the same reason — `open`, `openAndWait` and `handle` close over the
- * store alone, so their identity is stable for the modal's lifetime. In React that is what lets
+ * store alone, so their identity is stable for the dialog's lifetime. In React that is what lets
  * them be used as effect dependencies (the compiler cannot memoize them: it treats the store as
  * opaque).
  */
@@ -210,10 +210,10 @@ export type BackdropDismissOptions = {
 };
 
 /**
- * Whether this click should dismiss the modal — the full chain, in order.
+ * Whether this click should dismiss the dialog — the full chain, in order.
  *
  * Four questions, and each one exists: a non-modal dialog has no backdrop at all; dismissal is
- * opt-out without actions and opt-in with them (a modal offering buttons wants to be dismissed
+ * opt-out without actions and opt-in with them (a dialog offering buttons wants to be dismissed
  * through one); the shared gate covers phase, `prepare` and a running action; and only then does
  * the geometry decide whether the pointer actually landed outside the box.
  */
@@ -250,11 +250,11 @@ export function shouldDismissOnBackdropClick(
 // ── Teardown ─────────────────────────────────────────────────────────────────
 
 /**
- * Unregister the modal and settle everything still waiting on it.
+ * Unregister the dialog and settle everything still waiting on it.
  *
  * Called from a React effect cleanup and from a Solid `onCleanup`, and the body is the same
- * because none of it is scheduling: a modal torn down while open is a close nobody reported, and
- * a modal torn down while closed can still have a resolver waiting for a close that will now
+ * because none of it is scheduling: a dialog torn down while open is a close nobody reported, and
+ * a dialog torn down while closed can still have a resolver waiting for a close that will now
  * never come. `store.abandon()` is unconditional for that second case — after a normal close both
  * queues are already drained, so it costs nothing where it does not apply.
  */
@@ -273,7 +273,7 @@ export function teardownDialog(store: DialogStore, options: TeardownOptions): vo
   manager.unregister(dialogId);
 
   if (wasOpen) {
-    log('Tearing down open modal', { id: dialogId });
+    log('Tearing down open dialog', { id: dialogId });
 
     // If not already closing, this initiates the close with a 'dismiss' reason so `closeResult`
     // is set for both `onClose` and the close resolvers (it also cancels any pending open frame).
@@ -285,7 +285,7 @@ export function teardownDialog(store: DialogStore, options: TeardownOptions): vo
       onCloseError: (error) => {
         log.error('onClose callback failed during cleanup', { id: dialogId, error: error.message });
         // The unmount path reports through the same channel as the close path. Without this an
-        // `onClose` that throws is visible when the modal closes and invisible when it is
+        // `onClose` that throws is visible when the dialog closes and invisible when it is
         // unmounted while open — the same failure, reported or not by how it happened to end.
         onError?.({ error, source: 'onClose' });
       },

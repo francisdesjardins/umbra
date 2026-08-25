@@ -10,7 +10,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  */
 export function DialogVariantHarness() {
   const { openDialogs } = useDialogManager();
-  const modal = openDialogs.filter((d) => {
+  const dialog = openDialogs.filter((d) => {
     return !d.nonModal;
   });
   const nonModal = openDialogs.filter((d) => {
@@ -72,8 +72,8 @@ export function DialogVariantHarness() {
       </button>
       <span data-testid="has-any-open">{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="open-count">{openDialogs.length}</span>
-      <span data-testid="has-dialog">{modal.length > 0 ? 'yes' : 'no'}</span>
-      <span data-testid="dialog-count">{modal.length}</span>
+      <span data-testid="has-dialog">{dialog.length > 0 ? 'yes' : 'no'}</span>
+      <span data-testid="dialog-count">{dialog.length}</span>
       <span data-testid="has-non-modal">{nonModal.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="non-modal-count">{nonModal.length}</span>
       {Dialog1}
@@ -95,12 +95,12 @@ export function DialogVariantLookupHarness() {
           <button
             onClick={() => {
               const q = dialogManager.lookup();
-              const dialogOpen = q.getOpen('modal');
+              const dialogOpen = q.getOpen('dialog');
               const nonModalOpen = q.getOpen('non-modal');
               const el = document.getElementById('lookup-result');
               if (el) {
                 el.textContent = [
-                  `modal:${String(dialogOpen.length > 0)}`,
+                  `dialog:${String(dialogOpen.length > 0)}`,
                   `dialogCount:${String(dialogOpen.length)}`,
                   `dialogIds:${dialogOpen
                     .map((m) => {

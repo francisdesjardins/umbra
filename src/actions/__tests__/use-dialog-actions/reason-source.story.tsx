@@ -6,7 +6,7 @@ import { useDialog } from '../../../react/use-dialog.js';
 type SaveResult = { readonly id: number };
 
 /**
- * The reason an action is declared with is the reason the modal closes with, and the payload the
+ * The reason an action is declared with is the reason the dialog closes with, and the payload the
  * hook declares is what its `close(data)` accepts — end to end, into `onClose`.
  */
 export function ReasonSourceHarness() {
@@ -25,7 +25,7 @@ export function ReasonSourceHarness() {
           >
             Save
           </button>
-          {/* Not `action('dismiss')` — that reason is the library's, for a modal nobody
+          {/* Not `action('dismiss')` — that reason is the library's, for a dialog nobody
               acted on. A button *is* an act, so it carries its own name. */}
           <button {...action('close')}>Close</button>
         </div>

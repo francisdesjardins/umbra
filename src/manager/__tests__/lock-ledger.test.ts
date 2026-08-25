@@ -16,7 +16,7 @@ test.describe('the first claim and the last release', () => {
   });
 
   test('a repeat claim by the same owner is not a second edge', () => {
-    // Stacked modals claim on every open; a second `true` is a second helping of padding.
+    // Stacked dialogs claim on every open; a second `true` is a second helping of padding.
     const ledger = createLockLedger();
     const owner = createLockOwner();
 
@@ -29,7 +29,7 @@ test.describe('the first claim and the last release', () => {
 
   test('a second owner claims without re-applying, and releasing it does not let go', () => {
     // Each manager releases when it sees nothing of its own open; with last-writer-wins, `second`
-    // going away drops a lock `first` still holds and the page scrolls behind an open modal.
+    // going away drops a lock `first` still holds and the page scrolls behind an open dialog.
     const ledger = createLockLedger();
     const first = createLockOwner();
     const second = createLockOwner();
@@ -73,7 +73,7 @@ test.describe('what an owner is', () => {
   });
 
   test('re-claiming after a full release is an edge again', () => {
-    // Not one-shot: a manager closing its last modal and opening another applies it again.
+    // Not one-shot: a manager closing its last dialog and opening another applies it again.
     const ledger = createLockLedger();
     const owner = createLockOwner();
 

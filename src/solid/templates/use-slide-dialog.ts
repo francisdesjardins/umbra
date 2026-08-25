@@ -63,7 +63,7 @@ export type UseSlideDialogReturn<TData = void, TReason extends string = string> 
 >;
 
 /**
- * Headless template hook for a slide-in panel modal — `umbra/react`'s, and which edge it pins to
+ * Headless template hook for a slide-in panel dialog — `umbra/react`'s, and which edge it pins to
  * and how far it travels are `templates/slide-geometry.ts`'s, which neither binding owns.
  */
 /**

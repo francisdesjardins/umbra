@@ -24,7 +24,7 @@ export function PortalNonModalOptInHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-dialog content</p>
+          <p>Non-modal content</p>
           <button
             onClick={() => {
               handle.close('confirm');

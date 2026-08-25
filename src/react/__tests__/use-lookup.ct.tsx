@@ -7,7 +7,7 @@ import {
 } from './use-lookup.story';
 
 test.describe('useLookup', () => {
-  test('reactively reflects modal open/close state', async ({ mount, page }) => {
+  test('reactively reflects dialog open/close state', async ({ mount, page }) => {
     await mount(<UseLookupHarness />);
 
     await expect(page.getByTestId('exists')).toHaveText('true');
@@ -64,12 +64,12 @@ test.describe('useLookup', () => {
     await expect(page.getByTestId('is-visible')).toHaveText('false');
     await expect(page.getByTestId('is-preparing')).toHaveText('false');
 
-    // A modal closed while still preparing must not come back reporting itself ready.
+    // A dialog closed while still preparing must not come back reporting itself ready.
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('is-preparing')).toHaveText('true');
   });
 
-  test('foreground tracking updates reactively across stacked modals', async ({ mount, page }) => {
+  test('foreground tracking updates reactively across stacked dialogs', async ({ mount, page }) => {
     await mount(<UseLookupForegroundHarness />);
 
     await expect(page.getByTestId('a-open')).toHaveText('false');

@@ -4,7 +4,7 @@
   --content-text-primary: #1a1a1a;
   --content-text-secondary: #666666;
   /* `.hint` is prose a reader is meant to read, not an inactive control, so 1.4.3 applies to it
-     in full. The #999999 it used to be measured 2.85:1 on the modal surface. */
+     in full. The #999999 it used to be measured 2.85:1 on the dialog surface. */
   --content-text-disabled: #6f6f6f;
   --content-alert-bg: rgba(2, 136, 209, 0.1);
   /* Measured against the tint above once composited (#e6f3fa), not against the page: the alert
@@ -202,7 +202,7 @@
   padding-block: var(--content-spacing-sm);
   /* Ring room for the controls inside; no negative margin to cancel it — this box is itself
      focusable when it overflows, and its own ring needs the parent's reserve, which a negative
-     margin would consume (measured: clipped left/right inside the modal content). */
+     margin would consume (measured: clipped left/right inside the dialog content). */
   padding-inline: var(--content-focus-ring-space);
   scroll-padding: var(--content-focus-ring-space);
 }

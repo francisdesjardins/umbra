@@ -58,7 +58,7 @@ export function ContainedPositioningSlideHarness({
       <span data-testid="behind-clicks">{behindClicks}</span>
       <div data-testid="stage" style={stageStyle}>
         {/* Fills the stage, underneath the library's host. The host covers this region for
-            the whole life of the modal, closed included — if it takes hits, this is dead. */}
+            the whole life of the dialog, closed included — if it takes hits, this is dead. */}
         <button
           data-testid="behind"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}

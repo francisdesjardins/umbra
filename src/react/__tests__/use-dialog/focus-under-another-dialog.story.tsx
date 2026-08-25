@@ -3,12 +3,12 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A modal running a slow action, with a second modal opened over it while that action is still
+ * A dialog running a slow action, with a second dialog opened over it while that action is still
  * in flight — a background save and a confirm on top of it, which is ordinary.
  *
- * Both are modal: only a dialog in the top layer can hold focus while another is open, so
- * this is the shape where the question is even askable. When the save settles, the modal
- * underneath restores focus — and the modal in front is the one the user is actually in.
+ * Both are dialog: only a dialog in the top layer can hold focus while another is open, so
+ * this is the shape where the question is even askable. When the save settles, the dialog
+ * underneath restores focus — and the dialog in front is the one the user is actually in.
  */
 export function FocusUnderAnotherDialogHarness() {
   const [done, setDone] = useState(0);

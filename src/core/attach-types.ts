@@ -7,7 +7,7 @@ import type { DialogStore } from './dialog-store.js';
 import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 
 /**
- * What every `attach*` function needs to know about the modal it is wiring.
+ * What every `attach*` function needs to know about the dialog it is wiring.
  *
  * Nothing here is any framework's, which is the point of the file. An `attach*` function is handed
  * this, wires DOM listeners, and returns a teardown — so a binding's job at each seam is to call it

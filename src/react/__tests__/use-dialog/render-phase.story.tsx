@@ -13,7 +13,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * plain path, and the one an assertion can hold to.
  */
 export function RenderPhaseHarness() {
-  const modal = useDialog<void, 'publish' | 'close'>({
+  const dialog = useDialog<void, 'publish' | 'close'>({
     id: 'render-phase',
     ariaLabel: 'Render phase',
     animation: {
@@ -59,17 +59,17 @@ export function RenderPhaseHarness() {
 
   return (
     <div>
-      <span data-testid="hook-phase">{modal.phase}</span>
-      <span data-testid="hook-visible">{modal.isVisible ? 'visible' : 'gone'}</span>
+      <span data-testid="hook-phase">{dialog.phase}</span>
+      <span data-testid="hook-visible">{dialog.isVisible ? 'visible' : 'gone'}</span>
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

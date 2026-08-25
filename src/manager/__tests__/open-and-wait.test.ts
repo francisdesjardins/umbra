@@ -36,7 +36,7 @@ function createResolvingStore(options: { readonly closeDuringOpen?: AwaitedClose
     beginOpen(): void {
       phase = 'opening';
       notify();
-      // The window a `prepare` that throws opens: the modal is closed again before `beginOpen`
+      // The window a `prepare` that throws opens: the dialog is closed again before `beginOpen`
       // has returned, so a caller that registered afterwards would wait forever.
       if (options.closeDuringOpen) {
         phase = 'closed';
@@ -84,7 +84,7 @@ test.describe('openAndWait', () => {
 
     const [error, result] = await dm.openAndWait('nobody-registered-this');
 
-    expect(error?.message).toBe('No modal registered with id "nobody-registered-this"');
+    expect(error?.message).toBe('No dialog registered with id "nobody-registered-this"');
     expect(result).toBeNull();
   });
 

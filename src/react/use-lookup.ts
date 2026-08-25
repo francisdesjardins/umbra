@@ -5,8 +5,8 @@ import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-man
 import type { DialogInfo } from '../manager/types.js';
 
 /**
- * One modal's `DialogInfo`, updating whenever any modal opens or closes, through
- * `useSyncExternalStore` for tear-free reads. An open modal answers with a stable reference from
+ * One dialog's `DialogInfo`, updating whenever any dialog opens or closes, through
+ * `useSyncExternalStore` for tear-free reads. An open dialog answers with a stable reference from
  * the snapshot, a closed or unregistered one from `lookup(id)`. Scoped to the nearest
  * `DialogManagerProvider`, or the singleton when there is none.
  *
@@ -22,7 +22,7 @@ function lookupIn(
   source: { readonly manager: DialogManager; readonly snapshot: DialogManagerSnapshot }
 ): DialogInfo {
   const { manager, snapshot } = source;
-  // Linear scan — n is always tiny (1-3 open modals)
+  // Linear scan — n is always tiny (1-3 open dialogs)
   const openDialog = snapshot.openDialogs.find((d) => {
     return d.id === id;
   });
@@ -45,7 +45,7 @@ export function useLookup(id: DialogId): DialogInfo {
 
   // `snapshot` is passed rather than read inside, and it is the difference between working and
   // silently freezing: the closed branch reads mutable state through `manager.lookup(id)`, so
-  // inline the compiler memoises on `manager` and `id` — neither moves when a modal registers —
+  // inline the compiler memoises on `manager` and `id` — neither moves when a dialog registers —
   // and the hook repeats its first answer for ever. Naming the snapshot makes it the dependency it
   // already was; uncompiled the two look identical, which is why this took the compiled bundle.
   return lookupIn(id, { manager, snapshot });

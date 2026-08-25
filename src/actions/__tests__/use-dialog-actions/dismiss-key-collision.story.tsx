@@ -4,7 +4,7 @@ import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests that when a actions action's hotkey matches the modal's dismissKey,
+ * Tests that when a actions action's hotkey matches the dialog's dismissKey,
  * the action fires instead of the built-in dismiss. Here both use Key.Delete.
  */
 export function DismissKeyActionCollisionHarness() {

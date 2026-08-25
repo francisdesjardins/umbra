@@ -35,7 +35,7 @@ function useOpenEventProbe(dialogId: string): Seen | null {
 /** A dialog in the document, where a query would have worked and the event agrees. */
 export function OpenEventInDocumentHarness() {
   const seen = useOpenEventProbe('open-event-plain');
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'open-event-plain',
     ariaLabel: 'Plain',
     render: () => {
@@ -49,13 +49,13 @@ export function OpenEventInDocumentHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -73,7 +73,7 @@ export function OpenEventInShadowHarness() {
     }
   }, []);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'open-event-shadow',
     ariaLabel: 'In a shadow root',
     render: () => {
@@ -88,14 +88,14 @@ export function OpenEventInShadowHarness() {
         data-testid="open"
         disabled={shadow === null}
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
       <div ref={hostRef} />
-      {shadow !== null && createPortal(modal.Dialog, shadow)}
+      {shadow !== null && createPortal(dialog.Dialog, shadow)}
     </>
   );
 }

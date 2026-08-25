@@ -11,7 +11,7 @@ type ButtonRowProps = {
 };
 
 /**
- * Where a modal's actions sit, for every vanilla template, owning placement and not chrome — one
+ * Where a dialog's actions sit, for every vanilla template, owning placement and not chrome — one
  * rule copied three ways drifts: 8px gap in the message footer, 16px in the form footer, and no
  * `display: flex` at all in the slide footer, leaving two actions left-aligned and touching.
  */

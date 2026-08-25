@@ -1,4 +1,4 @@
-/* Where a modal's actions sit, for every vanilla template.
+/* Where a dialog's actions sit, for every vanilla template.
    One rule, because three copies of it had already drifted: the message footer flexed its buttons
    to the trailing edge with an 8px gap, the form footer used 16, and the slide footer had no
    `display: flex` at all — so two actions there sat left-aligned and touching. Nothing had to go
@@ -6,7 +6,7 @@
 .buttonRow {
   display: flex;
   justify-content: flex-end;
-  /* 8, which is what the message modal always used. Two actions belong to each other, so they sit
+  /* 8, which is what the message dialog always used. Two actions belong to each other, so they sit
      closer than the gap between unrelated blocks. */
   gap: 8px;
   /* A long pair of labels on a narrow panel wraps rather than overflowing the dialog. */

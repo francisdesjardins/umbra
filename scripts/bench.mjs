@@ -179,7 +179,7 @@ console.log('The stack order is three keys over `toSorted`, and runs on every sn
     return Array.from({ length: count }, (_, i) => {
       return {
         id: `d-${String(i)}`,
-        template: 'modal',
+        template: 'dialog',
         nonModal: i % 4 === 0,
         openSequence: i,
       };
@@ -188,17 +188,17 @@ console.log('The stack order is three keys over `toSorted`, and runs on every sn
 
   const four = dialogs(4);
   const fifty = dialogs(50);
-  const policy = (modal) => {
-    return modal.nonModal ? 1 : 2;
+  const policy = (dialog) => {
+    return dialog.nonModal ? 1 : 2;
   };
 
   // The load-bearing half, and a **count** rather than a duration: "one call per dialog, not one per
   // comparison" is what `orderStack` ranking up front buys, and timing cannot tell the two apart on
   // a small stack — four dialogs cost the same either way. A counting policy answers exactly.
   let calls = 0;
-  orderStack(fifty, (modal) => {
+  orderStack(fifty, (dialog) => {
     calls += 1;
-    return policy(modal);
+    return policy(dialog);
   });
   console.log(`  the policy was asked ${String(calls)} times for 50 dialogs (must be 50)`);
   if (calls !== fifty.length) {

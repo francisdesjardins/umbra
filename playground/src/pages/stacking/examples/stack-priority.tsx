@@ -19,12 +19,12 @@ const PANEL_ID = 'stack-priority-panel';
  * The stack order as a policy rather than a race, with the race reproduced first. Position is the
  * order `showModal()` landed in, unscheduled across independent features (a timer, a deep link), so
  * losing leaves the warning inert behind the panel's backdrop; the switch raises it **while both
- * are open**, closing nothing. It is repeated inside both dialogs because a modal swallows clicks.
+ * are open**, closing nothing. It is repeated inside both dialogs because a dialog swallows clicks.
  */
-const prioritizeAlerts: StackPriority = (modal) => {
+const prioritizeAlerts: StackPriority = (dialog) => {
   // Higher is nearer the user and ties keep open order. A real project keys this on
-  // `modal.template`; scoped to one id here because the playground shares one manager.
-  return modal.id === WARNING_ID ? 100 : 0;
+  // `dialog.template`; scoped to one id here because the playground shares one manager.
+  return dialog.id === WARNING_ID ? 100 : 0;
 };
 
 function PolicySwitch({
@@ -221,7 +221,7 @@ export function StackPriorityExample() {
               .join(' → ')}`
           : null
       }
-      modals={
+      dialogs={
         <>
           {warning.Dialog}
           {panel.Dialog}

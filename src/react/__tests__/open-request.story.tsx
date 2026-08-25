@@ -16,7 +16,7 @@ export function OpenRequestHarness() {
     });
   };
 
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'asked',
     onOpenRequest: (payload: unknown, { context }: OpenRequest) => {
       const from = context?.source ?? 'anonyme';
@@ -30,7 +30,7 @@ export function OpenRequestHarness() {
       }
       setAccepted((payload as { id: number }).id);
       note(`accepted (${from})`);
-      void modal.open();
+      void dialog.open();
     },
     render: ({ action }) => {
       return (
@@ -51,13 +51,13 @@ export function OpenRequestHarness() {
       <button
         data-testid="own-open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         L’avertissement ouvre le sien
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }
@@ -107,7 +107,7 @@ function Caller() {
 export function RefusesEverythingHarness() {
   const info = useLookup('unasked');
   const dialogManager = useDialogManagerContext();
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'unasked',
     render: () => {
       return <p style={{ padding: '1rem' }}>Ouverte</p>;
@@ -135,7 +135,7 @@ export function RefusesEverythingHarness() {
       >
         Instruct
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

@@ -116,9 +116,9 @@ dialog {
   color: inherit;
 }
 
-/* Background scroll while a modal is open — critical on mobile, where touch-scrolling passes
-   through the native backdrop. Non-dialog dialogs leave scroll intact. */
-html:has(dialog[open][data-dialog-type='modal']) {
+/* Background scroll while a dialog is open — critical on mobile, where touch-scrolling passes
+   through the native backdrop. Non-modal dialogs leave scroll intact. */
+html:has(dialog[open][data-dialog-type='dialog']) {
   overflow: hidden;
 }
 

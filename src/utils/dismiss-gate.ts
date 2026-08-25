@@ -7,22 +7,22 @@ import type { DialogPhase } from '../core/types.js';
  * `hasRunningAction` is read from the actions bridge at the call site as a plain boolean.
  */
 export type DismissGate = {
-  /** Current lifecycle phase of the modal. */
+  /** Current lifecycle phase of the dialog. */
   readonly phase: DialogPhase;
   /** Whether the `prepare` callback is still executing (see `DialogStoreSnapshot.isPreparing`). */
   readonly isPreparing: boolean;
   /** Whether dismissal is allowed while `prepare` is still executing. */
   readonly dismissWhilePreparing: boolean;
-  /** Whether a modal action is currently in flight. */
+  /** Whether a dialog action is currently in flight. */
   readonly hasRunningAction: boolean;
 };
 
 /**
  * Whether a user-initiated dismissal (dismiss key, backdrop click, click outside) may close the
- * modal right now — the single source of truth for what every dismissal path shares:
+ * dialog right now — the single source of truth for what every dismissal path shares:
  * `attachDialogKeydown`, `attachDialogCancel`, `attachWindowDismissKey`, `attachClickOutside` and
  * `shouldDismissOnBackdropClick`, each of which adds its own check on top (backdrop opt-in, hotkey
- * suppression, foreground, hit testing). A modal already `'closing'` or `'closed'` cannot be
+ * suppression, foreground, hit testing). A dialog already `'closing'` or `'closed'` cannot be
  * dismissed again — `store.close()` is a no-op there, so this just avoids the round trip.
  */
 export function canDismiss({
@@ -34,7 +34,7 @@ export function canDismiss({
   if (phase === 'closed' || phase === 'closing') {
     return false;
   }
-  // An in-flight action owns the modal until it settles.
+  // An in-flight action owns the dialog until it settles.
   if (hasRunningAction) {
     return false;
   }
@@ -45,7 +45,7 @@ export function canDismiss({
  * What {@link answerDismiss} needs of a store — the one call it makes, declared as the requirement
  * rather than derived from `DialogStore`, so this module keeps its DOM-free, store-free reach.
  *
- * A method rather than a property: parameters are checked bivariantly on a method, so a modal that
+ * A method rather than a property: parameters are checked bivariantly on a method, so a dialog that
  * narrowed its reasons still satisfies the port. The manager's `RegisteredStore` is written this
  * way for the same reason.
  */

@@ -70,8 +70,8 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
       return undefined;
     }
     // Once at start-up: one rule, one place, for parts of the app that never learn of each other.
-    return dialogManager.prioritize((modal) => {
-      return modal.template === 'alert' ? 100 : 0;
+    return dialogManager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 100 : 0;
     });
   }, [withPolicy, dialogManager]);
 
@@ -131,11 +131,11 @@ export function MultiRaiseHarness() {
     if (!policyOn) {
       return undefined;
     }
-    return dialogManager.prioritize((modal) => {
-      if (modal.id === 'mr-high') {
+    return dialogManager.prioritize((dialog) => {
+      if (dialog.id === 'mr-high') {
         return 20;
       }
-      return modal.id === 'mr-mid' ? 10 : 0;
+      return dialog.id === 'mr-mid' ? 10 : 0;
     });
   }, [policyOn, dialogManager]);
 

@@ -55,7 +55,7 @@ export function OpenRequestExample() {
   const [room, setRoom] = useState<string | null>(null);
   const [log, setLog] = useState<string | null>(null);
 
-  const modal = useMessageDialog({
+  const dialog = useMessageDialog({
     id: 'open-request-demo',
     ariaLabelledBy: 'open-request-demo-title',
 
@@ -76,7 +76,7 @@ export function OpenRequestExample() {
 
       // State first, so the dialog renders once with its data instead of opening empty.
       setRoom(parsed.room);
-      void modal.open();
+      void dialog.open();
     },
 
     render: ({ action }) => {
@@ -148,7 +148,7 @@ export function OpenRequestExample() {
   };
 
   return (
-    <ExampleLayout modals={modal.Dialog} result={log}>
+    <ExampleLayout dialogs={dialog.Dialog} result={log}>
       <div
         style={{
           display: 'flex',

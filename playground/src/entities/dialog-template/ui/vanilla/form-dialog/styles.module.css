@@ -228,7 +228,7 @@
 }
 
 /* Placement comes from `Shared.ButtonRow`; this is the chrome that is this template's own. The gap
-   between the two actions used to be `--form-spacing` (16) where the message modal used 8, which
+   between the two actions used to be `--form-spacing` (16) where the message dialog used 8, which
    is the drift a single owner exists to prevent. */
 .formFooter {
   flex-shrink: 0;

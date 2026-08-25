@@ -4,7 +4,7 @@ import { useDialogManager } from '../../../react/use-dialog-manager.js';
 import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/** A modal registering with the nearest manager, exposing state via `label`-scoped testids. */
+/** A dialog registering with the nearest manager, exposing state via `label`-scoped testids. */
 function ScopedDialog({ id, label }: { readonly id: string; readonly label: string }) {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
@@ -48,7 +48,7 @@ function ScopedDialog({ id, label }: { readonly id: string; readonly label: stri
 }
 
 /**
- * Two modals in separate `DialogManagerProvider`s: each registry is isolated, so opening in one
+ * Two dialogs in separate `DialogManagerProvider`s: each registry is isolated, so opening in one
  * scope must not move the other's dialog count or state.
  */
 export function ProviderIsolationHarness() {
@@ -74,7 +74,7 @@ export function NoProviderHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Singleton modal</p>
+          <p>Singleton dialog</p>
           <button
             onClick={() => {
               handle.close('done');

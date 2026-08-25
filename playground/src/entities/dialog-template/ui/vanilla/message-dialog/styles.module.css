@@ -67,7 +67,7 @@
   /* Semantic colors need lighter variants on a dark surface — the light-mode values are
      mid-dark tones (e.g. #d32f2f on #121212) that fall short of readable contrast. These
      match the canonical dark-palette variants, and keep the vanilla templates consistent
-     with each other (the form modal already used #66bb6a for success in dark). */
+     with each other (the form dialog already used #66bb6a for success in dark). */
   --color-success: #66bb6a;
   --color-error: #f44336;
   --color-warning: #ffa726;

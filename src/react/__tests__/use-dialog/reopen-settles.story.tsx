@@ -3,7 +3,7 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Regression: open() must always settle. Calling open() while the modal is
+ * Regression: open() must always settle. Calling open() while the dialog is
  * already open resolves immediately instead of hanging forever (and calling
  * it during the opening sequence joins the in-flight open).
  */

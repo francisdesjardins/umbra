@@ -33,7 +33,7 @@ const openCountStore = createImmerStore(
 export function ImperativeExample() {
   const { openCount, result } = useStore(openCountStore);
 
-  const modal = useMessageDialog({
+  const dialog = useMessageDialog({
     id: 'imperative-demo',
     ariaLabelledBy: 'imperative-demo-title',
     render: ({ action }) => {
@@ -91,7 +91,7 @@ export function ImperativeExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"

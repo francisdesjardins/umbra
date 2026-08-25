@@ -232,30 +232,30 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-focus-on-open',
       },
       {
-        title: 'One Escape, one modal',
+        title: 'One Escape, one dialog',
         description:
-          'A non-modal panel holding a modal holding a message modal, each rendered inside the one below it. All three declare Enter. Press Enter: only the modal in front acts. Press Escape three times: the stack unwinds one modal per press, front to back, and the log records the order.',
+          'A non-modal panel holding a dialog holding a message dialog, each rendered inside the one below it. All three declare Enter. Press Enter: only the dialog in front acts. Press Escape three times: the stack unwinds one dialog per press, front to back, and the log records the order.',
         component: StackedDialogsHarness,
         codeKey: 'story-stacked-dialogs',
       },
       {
         title: 'A hotkey belongs to the dialog that declared it',
         description:
-          'An open non-modal panel sits inside a modal, before the modal’s own button in document order, and both declare Enter. Dispatch finds its button in the DOM — an unscoped lookup takes the first match and runs the wrong action. Enter here must fire "outer", never "inner".',
+          'An open non-modal panel sits inside a dialog, before the dialog’s own button in document order, and both declare Enter. Dispatch finds its button in the DOM — an unscoped lookup takes the first match and runs the wrong action. Enter here must fire "outer", never "inner".',
         component: NestedHotkeyScopeHarness,
         codeKey: 'story-nested-hotkey-scope',
       },
       {
-        title: 'Focus is not stolen by the modal underneath',
+        title: 'Focus is not stolen by the dialog underneath',
         description:
-          'A slow save runs in one modal while a second opens over it. When the save settles, the modal underneath restores focus — but the user is in the modal in front, and the browser refuses to focus outside the topmost dialog.',
+          'A slow save runs in one dialog while a second opens over it. When the save settles, the dialog underneath restores focus — but the user is in the dialog in front, and the browser refuses to focus outside the topmost dialog.',
         component: FocusUnderAnotherDialogHarness,
         codeKey: 'story-focus-under-another-dialog',
       },
       {
         title: 'Escape without focus',
         description:
-          'A modal whose content holds nothing focusable. showModal() has nowhere to put focus, so the keydown listener never hears the key — the browser’s own cancel carries it instead, and the dialog still closes rather than desyncing from the store.',
+          'A dialog whose content holds nothing focusable. showModal() has nowhere to put focus, so the keydown listener never hears the key — the browser’s own cancel carries it instead, and the dialog still closes rather than desyncing from the store.',
         component: EscWithoutFocusHarness,
         codeKey: 'story-esc-without-focus',
       },
@@ -269,7 +269,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The recovery scans its own dialog, not the one inside it',
         description:
-          'A modal holding an open non-modal panel, where the recovery’s scan can meet a dialog that is not its own. Scanned with a plain querySelectorAll it reaches the nested panel’s controls, which Shift+Tab makes plain: it walks from the end, so the wrong subtree is the first thing it finds.',
+          'A dialog holding an open non-modal panel, where the recovery’s scan can meet a dialog that is not its own. Scanned with a plain querySelectorAll it reaches the nested panel’s controls, which Shift+Tab makes plain: it walks from the end, so the wrong subtree is the first thing it finds.',
         component: NestedPanelScanHarness,
         codeKey: 'story-focus-containment',
       },
@@ -304,7 +304,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A panel opening underneath does not take the keyboard',
         description:
-          'A non-modal panel opens beneath a modal that holds focus. It claims focusOnOpen on purpose, so the test cannot pass merely because nothing asked for focus — the dialog in front must keep it anyway. It opens from inside the modal’s render because the top layer swallows outside clicks.',
+          'A non-modal panel opens beneath a dialog that holds focus. It claims focusOnOpen on purpose, so the test cannot pass merely because nothing asked for focus — the dialog in front must keep it anyway. It opens from inside the dialog’s render because the top layer swallows outside clicks.',
         component: OpeningFocusForegroundHarness,
         codeKey: 'story-opening-focus-foreground',
       },
@@ -330,7 +330,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-apply-style',
       },
       {
-        title: 'Telling “open” from “ready” from outside the modal',
+        title: 'Telling “open” from “ready” from outside the dialog',
         description:
           'phase describes the <dialog>, so opening is one frame wide however long prepare takes — isPreparing is the other axis, and a watcher that conflates them reports ready while the work is still running. prepare is held on a promise released from a button inside the dialog, because the top layer swallows a click anywhere else.',
         component: UseLookupPreparingHarness,
@@ -353,7 +353,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The one arrangement where nobody answers the dismiss key',
         description:
-          'A modal with dismissKey: false in front of a non-modal panel. Both halves decline correctly — the panel is no longer the foreground, the modal was told not to listen — and nothing closing is the right outcome, since dismissing the panel behind would close a dialog the user is not looking at.',
+          'A dialog with dismissKey: false in front of a non-modal panel. Both halves decline correctly — the panel is no longer the foreground, the dialog was told not to listen — and nothing closing is the right outcome, since dismissing the panel behind would close a dialog the user is not looking at.',
         component: EscAnsweredByNobodyHarness,
         codeKey: 'story-esc-answered-by-nobody',
       },
@@ -381,14 +381,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'prepare is handed an AbortSignal that fires on close',
         description:
-          'Without it a request outlives what asked for it: landing on a closed modal, or still in flight when the next open starts its own — which is how a reopened dialog shows the previous attempt’s answer. The work here settles only through the signal, so nothing can pass by accident.',
+          'Without it a request outlives what asked for it: landing on a closed dialog, or still in flight when the next open starts its own — which is how a reopened dialog shows the previous attempt’s answer. The work here settles only through the signal, so nothing can pass by accident.',
         component: OnOpenAbortHarness,
         codeKey: 'story-on-open-abort',
       },
       {
         title: 'openAndWait waits for the next close, not a previous one',
         description:
-          'A close resolver must be registered before the open, because replaying an earlier close is a wrong answer rather than a late one — which is why addCloseResolver is not public. prepare widens the window: a modal dismissed while it runs closes before anything would naively have subscribed.',
+          'A close resolver must be registered before the open, because replaying an earlier close is a wrong answer rather than a late one — which is why addCloseResolver is not public. prepare widens the window: a dialog dismissed while it runs closes before anything would naively have subscribed.',
         component: OpenAndWaitOrderingHarness,
         codeKey: 'story-open-and-wait-ordering',
       },
@@ -409,7 +409,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'An action settling underneath does not take the keyboard',
         description:
-          'Two non-modal panels, deliberately: behind a modal everything is inert, so the restore’s focus() is a silent no-op and the rule appears to hold whatever the code does. Nothing is inert here, so every engine would steal — and the guard has to be the library’s own.',
+          'Two non-modal panels, deliberately: behind a dialog everything is inert, so the restore’s focus() is a silent no-op and the rule appears to hold whatever the code does. Nothing is inert here, so every engine would steal — and the guard has to be the library’s own.',
         component: RestoreNotInFrontHarness,
         codeKey: 'story-restore-not-in-front',
       },
@@ -477,7 +477,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-dismiss-key-ownership',
       },
       {
-        title: 'A modal whose Escape is a request, not a close',
+        title: 'A dialog whose Escape is a request, not a close',
         description:
           'The dialog reports and the state above it decides, as in any controlled wrapper. One that closed itself would leave the boolean upstream still saying true, and the next render would put it straight back on screen.',
         component: ControlledDialogHarness,
@@ -528,14 +528,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A control that disables itself keeps the keyboard',
         description:
-          'Press "Do background work". The button disables itself while it runs, so the engine blurs it and focus lands on the page — where a modal’s keydown listener cannot hear it, leaving every hotkey dead but Escape, which the platform’s own cancel carries. The ring comes back to that button when it re-enables, and never to OK: parking an ordinary "saving…" on the confirm button is how the next Enter commits the dialog.',
+          'Press "Do background work". The button disables itself while it runs, so the engine blurs it and focus lands on the page — where a dialog’s keydown listener cannot hear it, leaving every hotkey dead but Escape, which the platform’s own cancel carries. The ring comes back to that button when it re-enables, and never to OK: parking an ordinary "saving…" on the confirm button is how the next Enter commits the dialog.',
         component: StrandedFocusHarness,
         codeKey: 'story-stranded-focus',
       },
       {
         title: 'Restoring focus after a failed action',
         description:
-          'The button that ran is disabled while it runs, so focus falls to the body. When the action fails, focus returns to the autofocus target — otherwise the modal would answer to nothing but the mouse.',
+          'The button that ran is disabled while it runs, so focus falls to the body. When the action fails, focus returns to the autofocus target — otherwise the dialog would answer to nothing but the mouse.',
         component: FocusRestorationHarness,
         codeKey: 'story-action-focus',
       },
@@ -554,7 +554,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'aria-busy while prepare runs',
         description:
-          'A dialog is on screen well before an async prepare settles — phase "open" with isPreparing true is the normal state of a loading modal. The <dialog> carries aria-busy for exactly that window, and carries "false" once it closes, so the off state is reachable rather than welded on.',
+          'A dialog is on screen well before an async prepare settles — phase "open" with isPreparing true is the normal state of a loading dialog. The <dialog> carries aria-busy for exactly that window, and carries "false" once it closes, so the off state is reachable rather than welded on.',
         component: BusyWhilePreparingHarness,
         codeKey: 'story-busy-while-preparing',
       },
@@ -600,7 +600,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Structural Prop Toggle',
         description:
-          'Flipping nonModal/portal while open changes the rendered structure, which a native <dialog> cannot survive — the modal is torn down and closed cleanly instead of being left stuck.',
+          'Flipping nonModal/portal while open changes the rendered structure, which a native <dialog> cannot survive — the dialog is torn down and closed cleanly instead of being left stuck.',
         component: StructuralToggleHarness,
         codeKey: 'story-use-dialog-structural-toggle',
       },
@@ -634,14 +634,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'dismissOnClickOutside',
         description:
-          'Non-dialog with dismissOnClickOutside: true. Clicking outside the dialog closes it with reason "dismiss". Clicking inside does not.',
+          'Non-modal with dismissOnClickOutside: true. Clicking outside the dialog closes it with reason "dismiss". Clicking inside does not.',
         component: NonModalClickOutsideHarness,
         codeKey: 'story-use-dialog-non-modal-click-outside',
       },
       {
         title: 'dismissOnClickOutside — Default (false)',
         description:
-          'Non-dialog without dismissOnClickOutside set. Clicking outside does not close the dialog — default is false.',
+          'Non-modal without dismissOnClickOutside set. Clicking outside does not close the dialog — default is false.',
         component: NonModalClickOutsideDefaultHarness,
         codeKey: 'story-use-dialog-non-modal-click-outside-default',
       },
@@ -661,7 +661,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Non-Modal Custom dismissKey',
         description:
-          'Non-dialog with dismissKey: Delete. Delete closes from outside focus and does not leak. Escape ignored.',
+          'Non-modal with dismissKey: Delete. Delete closes from outside focus and does not leak. Escape ignored.',
         component: NonModalCustomDismissKeyHarness,
         codeKey: 'story-use-dialog-non-modal-custom-dismiss-key',
       },
@@ -688,14 +688,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Portal — Non-Modal Default (Inline)',
         description:
-          'Non-dialog dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
+          'Non-modal dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
         component: PortalNonModalDefaultHarness,
         codeKey: 'story-use-dialog-portal-non-modal-default',
       },
       {
         title: 'Portal — Non-Modal Opt-In',
         description:
-          'Non-dialog dialog with portal: true. Dialog is portaled to document.body. Click-through still works.',
+          'Non-modal dialog with portal: true. Dialog is portaled to document.body. Click-through still works.',
         component: PortalNonModalOptInHarness,
         codeKey: 'story-use-dialog-portal-non-modal-opt-in',
       },
@@ -716,7 +716,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Reopen Settles',
         description:
-          'Regression: open() always settles — calling it while the modal is already open resolves immediately instead of hanging.',
+          'Regression: open() always settles — calling it while the dialog is already open resolves immediately instead of hanging.',
         component: ReopenSettlesHarness,
         codeKey: 'story-use-dialog-reopen-settles',
       },
@@ -737,7 +737,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
     ],
   },
   {
-    label: 'Message modals',
+    label: 'Message dialogs',
     stories: [
       {
         title: 'Basic Harness',
@@ -753,7 +753,8 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Async Open',
-        description: 'prepare with a 500 ms async delay. Shows isPreparing state inside the modal.',
+        description:
+          'prepare with a 500 ms async delay. Shows isPreparing state inside the dialog.',
         component: AsyncOpenMessageHarness,
         codeKey: 'story-msg-async-open',
       },
@@ -796,7 +797,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Non-Modal ESC Hotkey',
         description:
-          'Non-dialog panel whose Escape is an action rather than a dismissal. ESC from outside the panel triggers the action rather than being swallowed.',
+          'Non-modal panel whose Escape is an action rather than a dismissal. ESC from outside the panel triggers the action rather than being swallowed.',
         component: NonModalEscHotkeySlideHarness,
         codeKey: 'story-slide-non-modal-esc-hotkey',
       },
@@ -808,14 +809,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Basic Actions',
         description:
-          'Confirm/cancel actions close the modal with their reason. Custom state increments via set() and a snapshot reads it after close.',
+          'Confirm/cancel actions close the dialog with their reason. Custom state increments via set() and a snapshot reads it after close.',
         component: BasicActionsHarness,
         codeKey: 'story-action-basic',
       },
       {
         title: 'Error State',
         description:
-          'An action that throws populates the modal’s aggregated error. The error message is displayed inside the modal.',
+          'An action that throws populates the dialog’s aggregated error. The error message is displayed inside the dialog.',
         component: ErrorActionsHarness,
         codeKey: 'story-action-error',
       },
@@ -829,7 +830,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Action Identity & Payload',
         description:
-          'The reason an action is given is its identity: it names the action and it is what the modal closes with, payload included.',
+          'The reason an action is given is its identity: it names the action and it is what the dialog closes with, payload included.',
         component: ReasonSourceHarness,
         codeKey: 'story-action-reason-source',
       },
@@ -842,7 +843,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Definition Pattern',
-        description: 'A standalone createStore beside the modal, incremented from inside it.',
+        description: 'A standalone createStore beside the dialog, incremented from inside it.',
         component: DefinitionActionsHarness,
         codeKey: 'story-action-definition',
       },
@@ -908,7 +909,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Dialog is Null',
-        description: 'Verifies modal.Dialog is null when inside an outlet.',
+        description: 'Verifies dialog.Dialog is null when inside an outlet.',
         component: OutletNullDialogHarness,
         codeKey: 'story-outlet-null-dialog',
       },
@@ -920,28 +921,28 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       },
       {
         title: 'Multiple Dialogs',
-        description: 'Two modals inside one outlet — both render without {Dialog} in JSX.',
+        description: 'Two dialogs inside one outlet — both render without {Dialog} in JSX.',
         component: OutletMultiHarness,
         codeKey: 'story-outlet-multi',
       },
       {
         title: 'Nested Outlets',
         description:
-          'Inner outlet captures the inner modal; outer outlet captures the outer modal.',
+          'Inner outlet captures the inner dialog; outer outlet captures the outer dialog.',
         component: OutletNestedHarness,
         codeKey: 'story-outlet-nested',
       },
       {
         title: 'Paint Timing',
         description:
-          'Outlet-rendered content is published one hop later than a modal you place yourself. That hop must complete within the same frame — painted-count must already match count.',
+          'Outlet-rendered content is published one hop later than a dialog you place yourself. That hop must complete within the same frame — painted-count must already match count.',
         component: OutletPaintTimingHarness,
         codeKey: 'story-outlet-paint-timing',
       },
       {
         title: 'Teardown',
         description:
-          'A modal that unmounts while open must be dropped from the outlet’s map. Left registered, the outlet goes on rendering a <dialog> for a hook that no longer exists — on screen, in the top layer, and driven by nothing.',
+          'A dialog that unmounts while open must be dropped from the outlet’s map. Left registered, the outlet goes on rendering a <dialog> for a hook that no longer exists — on screen, in the top layer, and driven by nothing.',
         component: OutletTeardownHarness,
         codeKey: 'story-outlet-teardown',
       },
@@ -1077,7 +1078,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-vanilla-reconcile',
       },
       {
-        title: 'A modal that claimed no opening focus',
+        title: 'A dialog that claimed no opening focus',
         description:
           'A non-modal panel opens underneath it. With no focusOnOpen marker to aim at, the reclaim falls through to dialog.focus(), which an open <dialog> refuses. Two focusables, because with one “handed back to the first focusable” and “focus never moved” are the same element.',
         component: VanillaClaimlessReclaimHarness,
@@ -1126,7 +1127,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The live fields on the hook’s return, read outside render',
         description:
-          'The copy a trigger button reads while the modal works. They are getters over signals here, so “reaches the return” and “stays live” are two claims and only the first is a type error — which is why all of it is asserted outside render, where a frozen getter never moves.',
+          'The copy a trigger button reads while the dialog works. They are getters over signals here, so “reaches the return” and “stays live” are two claims and only the first is a type error — which is why all of it is asserted outside render, where a frozen getter never moves.',
         component: SolidLiveStateHarness,
         codeKey: 'story-solid-live-state',
       },
@@ -1182,7 +1183,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A portal into a host the caller owns',
         description:
-          'Solid resolves the host once, in the setup body, so it has to exist before the modal does — a shell or a design-system root, not a node from the modal’s own JSX.',
+          'Solid resolves the host once, in the setup body, so it has to exist before the dialog does — a shell or a design-system root, not a node from the dialog’s own JSX.',
         component: SolidPortalHostHarness,
         codeKey: 'story-solid-portal-host',
       },
@@ -1217,14 +1218,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Five options in one app, each with its own probe',
         description:
-          'containFocus, dismissOnClickOutside, a custom dismissKey, a prepare aborted by its own close, and onOpenRequest. One app rather than five because they make the same claim — that these reach the shared attach* functions from this binding’s effects. Non-dialog throughout: containFocus is the Tab wrap show() does not give, and the union rejects the pair on a modal.',
+          'containFocus, dismissOnClickOutside, a custom dismissKey, a prepare aborted by its own close, and onOpenRequest. One app rather than five because they make the same claim — that these reach the shared attach* functions from this binding’s effects. Non-modal throughout: containFocus is the Tab wrap show() does not give, and the union rejects the pair on a dialog.',
         component: SolidNonModalOptionsHarness,
         codeKey: 'story-solid-non-modal-options',
       },
       {
         title: 'reconcileOpen driven from a Solid signal',
         description:
-          'A controlled open prop, with createEffect where React writes useEffect. Non-dialog, so the buttons driving the signal stay reachable from outside the dialog.',
+          'A controlled open prop, with createEffect where React writes useEffect. Non-modal, so the buttons driving the signal stay reachable from outside the dialog.',
         component: SolidReconcileHarness,
         codeKey: 'story-solid-reconcile',
       },
@@ -1271,7 +1272,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Imperative Open / Close',
         description:
-          'Opens and closes a modal via dialogManager.open/close(). Tracks open state (openDialogs) and close reason reactively.',
+          'Opens and closes a dialog via dialogManager.open/close(). Tracks open state (openDialogs) and close reason reactively.',
         component: ImperativeHarness,
         codeKey: 'story-dm-imperative',
       },
@@ -1285,7 +1286,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Two Managers, Both Open',
         description:
-          'The other half: both managers hold an open modal, so both claim the body scroll lock. The first to close must release nothing — which is why the lock counts owners in a Set rather than a boolean.',
+          'The other half: both managers hold an open dialog, so both claim the body scroll lock. The first to close must release nothing — which is why the lock counts owners in a Set rather than a boolean.',
         component: ScrollLockBothOpenHarness,
         codeKey: 'story-dm-scroll-lock-both-open',
       },
@@ -1299,14 +1300,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Variant Lookup Queries',
         description:
-          "lookup().getOpen('modal') / ('non-modal') read live state at call time, split by how the dialog was shown.",
+          "lookup().getOpen('dialog') / ('non-modal') read live state at call time, split by how the dialog was shown.",
         component: DialogVariantLookupHarness,
         codeKey: 'story-dm-modal-variant-lookup',
       },
       {
         title: 'Provider Isolation',
         description:
-          'Two DialogManagerProviders, two registries. Opening a modal in one scope leaves the counts in the other untouched.',
+          'Two DialogManagerProviders, two registries. Opening a dialog in one scope leaves the counts in the other untouched.',
         component: ProviderIsolationHarness,
         codeKey: 'story-dm-provider-isolation',
       },
@@ -1327,7 +1328,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Multi-Dialog Stack',
         description:
-          'Two nested modals opened from within each other. Tracks foreground and the stack-ordered openDialogs via useDialogManager.',
+          'Two nested dialogs opened from within each other. Tracks foreground and the stack-ordered openDialogs via useDialogManager.',
         component: MultiDialogHarness,
         codeKey: 'story-dm-multi-dialog',
       },
@@ -1348,40 +1349,40 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'DOM Events',
         description:
-          'Listens to dialog:open and dialog:close on document. Verifies id, template, and reason in the CustomEvent detail for both modal and slide types.',
+          'Listens to dialog:open and dialog:close on document. Verifies id, template, and reason in the CustomEvent detail for both dialog and slide types.',
         component: DomEventHarness,
         codeKey: 'story-dm-dom-events',
       },
       {
         title: 'Lookup — Find',
         description:
-          'Tests lookup(id) for registered and unregistered modals. Displays DialogInfo fields.',
+          'Tests lookup(id) for registered and unregistered dialogs. Displays DialogInfo fields.',
         component: LookupFindHarness,
         codeKey: 'story-dm-lookup-find',
       },
       {
         title: 'Lookup — Collection',
         description:
-          'Tests lookup().getOpen(), getClosed(), and getRegisteredCount() with multiple registered modals.',
+          'Tests lookup().getOpen(), getClosed(), and getRegisteredCount() with multiple registered dialogs.',
         component: LookupCollectionHarness,
         codeKey: 'story-dm-lookup-collection',
       },
       {
         title: 'Lookup — Foreground',
-        description: 'Tests lookup().getForeground() and isForeground() with stacked modals.',
+        description: 'Tests lookup().getForeground() and isForeground() with stacked dialogs.',
         component: LookupForegroundHarness,
         codeKey: 'story-dm-lookup-foreground',
       },
       {
         title: 'Lookup — Unregistered',
-        description: 'Tests lookup(id) null-object default for unregistered modal ids.',
+        description: 'Tests lookup(id) null-object default for unregistered dialog ids.',
         component: LookupUnregisteredHarness,
         codeKey: 'story-dm-lookup-unregistered',
       },
     ],
   },
   {
-    label: 'Observing modal state',
+    label: 'Observing dialog state',
     stories: [
       {
         title: 'Reactive Dialog State',
@@ -1393,13 +1394,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Unregistered Dialog',
         description:
-          'useLookup(id) returns null-object default reactively for unregistered modal ids.',
+          'useLookup(id) returns null-object default reactively for unregistered dialog ids.',
         component: UseLookupUnregisteredHarness,
         codeKey: 'story-use-lookup-unregistered',
       },
       {
         title: 'Foreground Tracking',
-        description: 'useLookup(id) reactively tracks isForeground across stacked modals.',
+        description: 'useLookup(id) reactively tracks isForeground across stacked dialogs.',
         component: UseLookupForegroundHarness,
         codeKey: 'story-use-lookup-foreground',
       },

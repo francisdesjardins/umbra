@@ -38,31 +38,31 @@ export function useDialogOutletContext(): DialogOutletContextValue | null {
 // component would confine the second, for no measurable win.
 
 type OutletSnapshot = {
-  readonly modals: ReadonlyMap<string, ReactNode>;
+  readonly dialogs: ReadonlyMap<string, ReactNode>;
 };
 
 function createOutletStore() {
   // Annotated, not type arguments — two of those match `createStore`'s generic overload by arity.
-  const initial: OutletSnapshot = { modals: new Map() };
+  const initial: OutletSnapshot = { dialogs: new Map() };
 
   return createStore(initial, {
     builder: ({ set }): OutletStoreMethods => {
-      const modals = new Map<string, ReactNode>();
+      const dialogs = new Map<string, ReactNode>();
 
       return {
         register(id: string, node: ReactNode): void {
-          const isNew = !modals.has(id);
+          const isNew = !dialogs.has(id);
           if (isNew) {
-            log('Registering modal', { id });
+            log('Registering dialog', { id });
           }
-          modals.set(id, node);
-          set({ modals: new Map(modals) });
+          dialogs.set(id, node);
+          set({ dialogs: new Map(dialogs) });
         },
 
         unregister(id: string): void {
-          if (modals.delete(id)) {
-            log('Unregistering modal', { id });
-            set({ modals: new Map(modals) });
+          if (dialogs.delete(id)) {
+            log('Unregistering dialog', { id });
+            set({ dialogs: new Map(dialogs) });
           }
         },
       };
@@ -77,7 +77,7 @@ type OutletStoreMethods = {
 
 /**
  * Scoped outlet that renders the dialogs of every descendant `useDialog` call, so nothing has to
- * place `{modal.Dialog}` in JSX. Inside one a modal registers here instead and its `Dialog` becomes
+ * place `{dialog.Dialog}` in JSX. Inside one a dialog registers here instead and its `Dialog` becomes
  * `null` — destructuring still works, it renders nothing. Outlets nest: the nearest wins.
  * @example
  * ```tsx
@@ -131,7 +131,7 @@ export function DialogOutlet({ children }: { readonly children: ReactNode }) {
   return (
     <DialogOutletContext value={init.ctx}>
       {children}
-      {Array.from(snap.modals.entries(), ([id, node]) => {
+      {Array.from(snap.dialogs.entries(), ([id, node]) => {
         return <Fragment key={id}>{node}</Fragment>;
       })}
     </DialogOutletContext>

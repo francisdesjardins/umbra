@@ -33,14 +33,14 @@ import type { OpenRequestDispatch } from '../manager/dialog-manager.js';
 import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types.js';
 
 /**
- * Core modal hook that renders a native `<dialog>` with animation, backdrop handling and typed
+ * Core dialog hook that renders a native `<dialog>` with animation, backdrop handling and typed
  * close results. Actions are declared by being rendered: the `action` given to `render` names a
  * reason, binds a handler and returns its button's props, in one expression. **What is React's
  * here is the scheduling and nothing else** — every decision, and the order they are asked in, is
  * `core/`'s, `core/dialog-director.ts`'s in particular.
  *
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
- * @typeParam TReason - The reasons this modal closes with; declare a union
+ * @typeParam TReason - The reasons this dialog closes with; declare a union
  * (`useDialog<Result, 'save' | 'cancel'>`) rather than take the `string` default. `'dismiss'` is
  * always among them — Escape, backdrop click, teardown — and is the one reason **no action may be
  * named**. See `DismissReason`.
@@ -121,9 +121,9 @@ export function useDialog<TData = void, TReason extends string = string>(
   });
 
   // The same reader serves the server: both stores are in-memory and DOM-free, so a server pass and
-  // hydration's first pass read the identical freshly-closed modal. Required rather than optional —
+  // hydration's first pass read the identical freshly-closed dialog. Required rather than optional —
   // `useSyncExternalStore` throws without a third argument, taking the server render of any page
-  // that mounts a modal down with it.
+  // that mounts a dialog down with it.
   const snap = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
 
@@ -292,7 +292,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // that is what `verify:package` does.
   // Held across renders, and re-read only when `portal` flips between portaled and not — the one
   // structural change, and the one the teardown effect already treats as such. Re-reading it every
-  // render is what a getter invites and what strands an open modal: a container of a different
+  // render is what a getter invites and what strands an open dialog: a container of a different
   // identity makes React unmount the portal subtree and mount a *fresh*, closed `<dialog>`, and
   // `syncOpenSequence` will not show it again outside `'opening'`. The dialog vanishes with the
   // store still reporting `phase: 'open'`, and nothing on screen left to dismiss.

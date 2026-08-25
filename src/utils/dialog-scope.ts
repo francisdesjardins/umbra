@@ -1,7 +1,7 @@
 /**
  * Scoping a query to one dialog's *own* content. Nested `<dialog>` elements are the normal shape
- * here: a modal in the top layer swallows every click outside itself, so the documented way to open
- * a second modal puts it in the first's subtree — and a plain `querySelector` on the outer dialog
+ * here: a dialog in the top layer swallows every click outside itself, so the documented way to open
+ * a second dialog puts it in the first's subtree — and a plain `querySelector` on the outer dialog
  * would reach into the inner one.
  */
 
@@ -34,8 +34,8 @@ export function queryAllOwn(dialog: HTMLElement, selector: string): HTMLElement[
 
 /**
  * Whether an event raised at `target` belongs to `dialog` rather than to a dialog nested inside it.
- * A keydown in a nested dialog bubbles through its ancestors, so without this the modal underneath
- * answers keys pressed in the modal above it. Public because a control a caller places inside a
+ * A keydown in a nested dialog bubbles through its ancestors, so without this the dialog underneath
+ * answers keys pressed in the dialog above it. Public because a control a caller places inside a
  * `<dialog>` may bind a key there too, and needs the same rule rather than a second copy of it.
  *
  * @example

@@ -72,7 +72,7 @@ test.describe('taking the focus back', () => {
     await expect(page.getByTestId('rf-front-input')).toHaveValue('half a sentence');
   });
 
-  test('the modal left behind by a close ends up with the keyboard', async ({ mount, page }) => {
+  test('the dialog left behind by a close ends up with the keyboard', async ({ mount, page }) => {
     // Two modal dialogs with a policy keeping one underneath. **This characterises rather than
     // fixes**: a raise *re-records* the platform's previously-focused element, so the front
     // dialog's native close hands the keyboard back into the one behind. Measured, not deduced —
@@ -119,7 +119,7 @@ test.describe('a dialog that claimed no opening focus still gets its keyboard ba
     await expect(page.locator('dialog[data-dialog-id="reclaim-no-claim"]')).toBeVisible();
     await expect(page.locator('dialog[data-dialog-id="reclaim-panel"]')).toBeVisible();
 
-    // Asserted as "nothing outside the modal holds it", which stays true wherever inside it landed.
+    // Asserted as "nothing outside the dialog holds it", which stays true wherever inside it landed.
     await expect(
       page.locator(
         ':focus:not(dialog[data-dialog-id="reclaim-no-claim"], dialog[data-dialog-id="reclaim-no-claim"] *)'

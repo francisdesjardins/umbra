@@ -190,7 +190,7 @@
   justify-content: center;
 }
 
-/* ── The hello modal's interior ─────────────────────────────────────────────────
+/* ── The hello dialog's interior ─────────────────────────────────────────────────
    Page-owned on purpose — the library ships no UI, so the front page brings its own, on the
    same tokens as the shell. The lift is a dialog's: the one place this shell spends a shadow. */
 .helloCard {

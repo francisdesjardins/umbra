@@ -4,10 +4,10 @@ import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 type ExampleLayoutProps = {
   readonly result: string | null;
   readonly children: ReactNode;
-  readonly modals: ReactNode;
+  readonly dialogs: ReactNode;
 };
 
-export function ExampleLayout({ result, children, modals }: ExampleLayoutProps) {
+export function ExampleLayout({ result, children, dialogs }: ExampleLayoutProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
       <div
@@ -21,7 +21,7 @@ export function ExampleLayout({ result, children, modals }: ExampleLayoutProps) 
         {children}
       </div>
       <ResultDisplay result={result} />
-      {modals}
+      {dialogs}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { DialogManagerProvider } from '../../../react/dialog-manager-context.js'
 import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/** The nested manager's own modal, opened from inside the outer one. */
+/** The nested manager's own dialog, opened from inside the outer one. */
 function InnerDialog() {
   const { open, Dialog, isVisible } = useDialog<void, 'done'>({
     id: 'both-open-inner',
@@ -26,7 +26,7 @@ function InnerDialog() {
   return (
     <div>
       <span data-testid="inner-visible">{isVisible ? 'open' : 'closed'}</span>
-      {/* Rendered inside the outer modal's subtree, so it is clickable while that one owns the
+      {/* Rendered inside the outer dialog's subtree, so it is clickable while that one owns the
           top layer — the documented way to stack. */}
       <button
         data-testid="open-inner"

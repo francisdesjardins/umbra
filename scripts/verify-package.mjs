@@ -6,7 +6,7 @@
  * `moduleResolution: NodeNext`; the root's graph imports no `react` (the optional-peer promise);
  * the React binding re-exports the root; the promised inference survives into the `.d.ts` (the
  * `DocumentEventMap` augmentation, `DialogInfo`'s `exists` discrimination, the typed close payload,
- * a payload declared once on an action and *inferred* at the modal), each with a matching
+ * a payload declared once on an action and *inferred* at the dialog), each with a matching
  * `@ts-expect-error` so a widened type fails too. Run after `yarn build`; in `prepublishOnly`.
  */
 import { execFileSync } from 'node:child_process';
@@ -142,12 +142,12 @@ try {
       '',
       'declare const typed: DialogHandle<{ id: string }>;',
       "typed.close('ok', { id: 'a' });",
-      '// @ts-expect-error the payload is the one the modal declares, not `unknown`',
+      '// @ts-expect-error the payload is the one the dialog declares, not `unknown`',
       "typed.close('ok', 42);",
       '',
       '// Reasons declared on the hook are enforced at every door. This holds only if the',
       '// published declarations carry `TReason` through the factory, the handle and onClose.',
-      "const modal = useDialog<{ id: string }, 'save' | 'cancel'>({",
+      "const dialog = useDialog<{ id: string }, 'save' | 'cancel'>({",
       "  id: 'declared',",
       '  render: ({ action, handle }) => {',
       "    action('save', (close) => { close({ id: 'a' }); });",
@@ -163,7 +163,7 @@ try {
       '    void [reason, id];',
       '  },',
       '});',
-      'void modal.hasRunningAction;',
+      'void dialog.hasRunningAction;',
     ].join('\n')
   );
 
@@ -337,7 +337,7 @@ report(!solidSource.includes('compiler-runtime'), {
 //
 // Every hook here reads its store through `useSyncExternalStore`, which throws outright when no
 // server reader is given — so a single missing third argument takes down the whole render of any
-// page that mounts a modal, and does it in the consumer's app rather than in this repo. Asserted on
+// page that mounts a dialog, and does it in the consumer's app rather than in this repo. Asserted on
 // the built artifact for the reason the compiler checks are: the source cannot show whether what
 // shipped still does it.
 //

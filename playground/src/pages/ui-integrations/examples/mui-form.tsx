@@ -12,7 +12,7 @@ import { useForm } from '@/shared/lib/use-form';
 import { useDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'mui-form-example';
+export const DIALOG_ID = 'mui-form-example';
 
 export type FormValues = { name: string; email: string };
 
@@ -32,7 +32,7 @@ export function MuiFormExample() {
   const { result } = useStore(resultStore);
 
   const form = useForm<FormValues>({
-    id: MODAL_ID,
+    id: DIALOG_ID,
     initialValues: { name: '', email: '' },
     // Not shared: the mechanism belongs in `shared/lib`, the domain rule to the example.
     validate: (values) => {
@@ -53,8 +53,8 @@ export function MuiFormExample() {
 
   // Payload and reasons once: `action('submmit')` would not compile, and `onClose` is exhaustive.
   const formDialog = useDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     prepare: () => {
       form.reset();
     },
@@ -74,7 +74,7 @@ export function MuiFormExample() {
       // fields are getters for the benefit of a fine-grained renderer; under Solid, pulling one out
       // into a `const` would freeze it.
       const submit = action('submit', async (close) => {
-        // `submit` calls back only if nothing is wrong, and no `close` keeps the modal open.
+        // `submit` calls back only if nothing is wrong, and no `close` keeps the dialog open.
         await form.submit(async (values) => {
           // Deterministic, so the two-UI comparison is not a coin toss.
           await new Promise((resolve) => {
@@ -117,7 +117,7 @@ export function MuiFormExample() {
             }}
           >
             <Box sx={{ mb: 2, '& > *': { display: 'block' } }}>
-              <Typography id={`${MODAL_ID}-title`} variant="h6" color="text.primary">
+              <Typography id={`${DIALOG_ID}-title`} variant="h6" color="text.primary">
                 Create User
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -176,9 +176,9 @@ export function MuiFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formDialog.Dialog}>
+    <ExampleLayout result={result} dialogs={formDialog.Dialog}>
       {/* The shell's button, not MUI's: the trigger is the playground's chrome, and the two cards
-          on this page must differ in the modal alone for the comparison to say anything. That MUI's
+          on this page must differ in the dialog alone for the comparison to say anything. That MUI's
           button takes `action()`'s props is proven in the footer, where it matters. */}
       <AppButton
         variant="contained"

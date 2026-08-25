@@ -9,7 +9,7 @@ export const GettingStartedPage = () => {
   return (
     <PageLayout
       title="Getting Started"
-      description="The core loop — open a modal, render its content, read how it closed, and hear about it when your own callback throws. Every other page builds on these."
+      description="The core loop — open a dialog, render its content, read how it closed, and hear about it when your own callback throws. Every other page builds on these."
     >
       <ExampleSection
         title="Core patterns"
@@ -18,7 +18,7 @@ export const GettingStartedPage = () => {
         <ExampleGrid>
           <ExampleCard
             title="Simple Dialog"
-            description="Basic modal with open, close, and openAndWait."
+            description="Basic dialog with open, close, and openAndWait."
             codeKey="simple-dialog"
             example={<SimpleDialogExample />}
           />
@@ -30,7 +30,7 @@ export const GettingStartedPage = () => {
           />
           <ExampleCard
             title="When prepare fails"
-            description="The same shape when the fetch throws. prepare runs after the dialog is shown, so a throw does not stop it opening — without onError the modal announces itself ready with nothing in it."
+            description="The same shape when the fetch throws. prepare runs after the dialog is shown, so a throw does not stop it opening — without onError the dialog announces itself ready with nothing in it."
             codeKey="prepare-failure"
             example={<PrepareFailureExample />}
           />

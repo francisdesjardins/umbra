@@ -7,7 +7,7 @@
 // before rendering anything. The same reason `public/mfe/` uses `createElement`: a file that has to
 // run where nothing compiled it cannot afford a transform's assumptions.
 //
-// Free of MUI too: a worker bundle pulls in whatever this imports, and the point is that a modal
+// Free of MUI too: a worker bundle pulls in whatever this imports, and the point is that a dialog
 // needs no DOM to be *described*.
 import { createElement as h } from 'react';
 import { useDialog } from 'umbra/react';
@@ -42,13 +42,13 @@ const column = {
 } as const;
 
 /**
- * A modal declared the ordinary way, and that is the whole claim: nothing here is written for the
+ * A dialog declared the ordinary way, and that is the whole claim: nothing here is written for the
  * server. `useDialog` closes over its own store, `Dialog` is a `<dialog>` React can describe without a
  * document, and what comes back is a **closed** dialog — the only honest answer, since the top layer
  * is enterable from `showModal()` alone and no served HTML can hand one back open.
  */
 export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: SSR_MODAL_ID,
     ariaLabel: 'Rendered without a DOM',
     render: ({ action }) => {
@@ -80,11 +80,11 @@ export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
         type: 'button',
         'data-testid': 'ssr-worker-open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open the hydrated dialog'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }

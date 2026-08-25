@@ -22,7 +22,7 @@ declare module '../src/core/registry.js' {
     };
     /** Every reason payload-free — the shape that must still resolve to `void`, not `never`. */
     'shift-notice': { closesWith: { acknowledge: void; snooze: void } };
-    /** The bare-union form: the same thing said shorter, for a modal where none carries one. */
+    /** The bare-union form: the same thing said shorter, for a dialog where none carries one. */
     'shift-brief': { closesWith: 'acknowledge' | 'snooze' };
     'archive-iface': { closesWith: ArchiveCloses };
   }
@@ -51,7 +51,7 @@ export type _ReasonsAreTheKeys = Assert<Equals<ReasonOf<'archive-room'>, 'cancel
 /** `DataOf` is the flat model's opensWith: the union of what the reasons carry, `void` dropped. */
 export type _DataIsTheUnionWithoutVoid = Assert<Equals<DataOf<'archive-room'>, { room: string }>>;
 
-/** All-`void` reasons answer `void`, the same as a modal that declared no payload at all. */
+/** All-`void` reasons answer `void`, the same as a dialog that declared no payload at all. */
 export type _AllVoidIsVoid = Assert<Equals<DataOf<'shift-notice'>, void>>;
 
 /** An `interface` reads the same as a type literal — it matches no `Record<…>` pattern. */

@@ -9,7 +9,7 @@ import { useDialog } from 'umbra/react';
 import { useScrollRegion } from '@/entities/dialog-template/ui/shared/scroll-region';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'vanilla-form-example';
+export const DIALOG_ID = 'vanilla-form-example';
 
 export type FormValues = { name: string; email: string };
 
@@ -30,7 +30,7 @@ export function VanillaFormExample() {
   const { result } = useStore(resultStore);
 
   const form = useForm<FormValues>({
-    id: MODAL_ID,
+    id: DIALOG_ID,
     initialValues: { name: '', email: '' },
     validate: (values) => {
       return {
@@ -55,8 +55,8 @@ export function VanillaFormExample() {
 
   // Same two type arguments as the MUI version; only the markup below differs.
   const formDialog = useDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     prepare: () => {
       form.reset();
     },
@@ -67,7 +67,7 @@ export function VanillaFormExample() {
           style={{ minWidth: 'min(475px, 100%)', maxWidth: 'min(800px, 100%)', maxHeight: '70vh' }}
         >
           <div className={styles['formHeader']}>
-            <Shared.Heading id={`${MODAL_ID}-title`}>Create User</Shared.Heading>
+            <Shared.Heading id={`${DIALOG_ID}-title`}>Create User</Shared.Heading>
             <Shared.Detail>Fill out the form below to create a new user account.</Shared.Detail>
             {error && (
               <Shared.Alert title="Error" severity="error">
@@ -78,14 +78,14 @@ export function VanillaFormExample() {
 
           <div className={styles['formContent']} ref={contentRef} {...regionProps}>
             <div className={styles['fieldGroup']}>
-              <label htmlFor={`${MODAL_ID}-name`} className={styles['label']}>
+              <label htmlFor={`${DIALOG_ID}-name`} className={styles['label']}>
                 Name
               </label>
               {/* Spread, not enumerated: naming `id`/`type`/`value`/`onChange` by hand is how a
                   wrapper drops `onBlur`, `name`, `aria-invalid` and `aria-describedby` — losing
                   blur-time validation and the error association without anything failing. */}
               <input
-                id={`${MODAL_ID}-name`}
+                id={`${DIALOG_ID}-name`}
                 type="text"
                 className={`${styles['input']}${form.errors.name === undefined ? '' : ` ${styles['error']}`}`}
                 {...form.field('name')}
@@ -99,11 +99,11 @@ export function VanillaFormExample() {
             </div>
 
             <div className={styles['fieldGroup']}>
-              <label htmlFor={`${MODAL_ID}-email`} className={styles['label']}>
+              <label htmlFor={`${DIALOG_ID}-email`} className={styles['label']}>
                 Email
               </label>
               <input
-                id={`${MODAL_ID}-email`}
+                id={`${DIALOG_ID}-email`}
                 type="email"
                 className={`${styles['input']}${form.errors.email === undefined ? '' : ` ${styles['error']}`}`}
                 {...form.field('email')}
@@ -148,7 +148,7 @@ export function VanillaFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formDialog.Dialog}>
+    <ExampleLayout result={result} dialogs={formDialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"

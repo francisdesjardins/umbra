@@ -14,7 +14,7 @@ export function NonModalCloseRestoreHarness({
 }: {
   readonly closeVia: 'action' | 'handle';
 }) {
-  const modal = useDialog<void, 'done'>({
+  const dialog = useDialog<void, 'done'>({
     id: 'nonmodal-close-restore',
     nonModal: true,
     ariaLabel: 'Closable panel',
@@ -42,13 +42,13 @@ export function NonModalCloseRestoreHarness({
       <button
         data-testid="trigger"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }

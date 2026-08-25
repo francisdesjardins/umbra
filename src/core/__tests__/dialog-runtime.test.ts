@@ -11,7 +11,7 @@ import {
   teardownDialog,
 } from '../dialog-runtime.js';
 
-// The parts of a modal both bindings share, tested where they live rather than twice through two
+// The parts of a dialog both bindings share, tested where they live rather than twice through two
 // renderers — before the second binding, every answer here was only exercised through React.
 
 // The store cancels a pending frame on every close, and Node has none — see `fake-frames.ts`.
@@ -24,13 +24,13 @@ test.afterEach(() => {
 });
 
 test.describe('resolveDialogOptions', () => {
-  test('applies the defaults a bare modal relies on', () => {
+  test('applies the defaults a bare dialog relies on', () => {
     expect(resolveDialogOptions({})).toMatchObject({
       isNonModal: false,
       isPortaled: false,
       dismissWhilePreparing: true,
       dismissKey: 'Escape',
-      template: 'modal',
+      template: 'dialog',
       // `undefined`, not `false`: "decide from whether any action was drawn", a third state.
       dismissOnBackdropClick: undefined,
       dismissOnClickOutside: false,
@@ -165,10 +165,10 @@ test.describe('createDialogRuntime', () => {
 });
 
 test.describe('teardownDialog', () => {
-  test('closes an open modal and reports it through onClose', () => {
+  test('closes an open dialog and reports it through onClose', () => {
     const dm = createDialogManager();
     const { store } = createDialogRuntime('teardown-open');
-    dm.register('teardown-open', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-open', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 
     const reasons: string[] = [];
@@ -188,10 +188,10 @@ test.describe('teardownDialog', () => {
     expect(dm.lookup('teardown-open').exists).toBe(false);
   });
 
-  test('a modal torn down while open still reports its close to a waiter', async () => {
+  test('a dialog torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
     const { store, openAndWait } = createDialogRuntime('teardown-waiting');
-    dm.register('teardown-waiting', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-waiting', { store, template: 'dialog', nonModal: false });
 
     const closed = openAndWait();
     store.finishPreparing();
@@ -203,18 +203,18 @@ test.describe('teardownDialog', () => {
       onError: undefined,
     });
 
-    // Not the abandoned branch: the modal *was* open, so the waiter gets a reason, not an error.
+    // Not the abandoned branch: the dialog *was* open, so the waiter gets a reason, not an error.
     const [error, result] = await closed;
     expect(error).toBeNull();
     expect(result).toEqual({ reason: 'dismiss' });
   });
 
-  test('settles a waiter on a modal that is destroyed while closed', async () => {
+  test('settles a waiter on a dialog that is destroyed while closed', async () => {
     // Why `abandon()` is unconditional: a resolver answers the *next* close, so one queued on a
-    // modal that never reopens stays pending for the life of the process.
+    // dialog that never reopens stays pending for the life of the process.
     const dm = createDialogManager();
     const { store } = createDialogRuntime('teardown-closed');
-    dm.register('teardown-closed', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-closed', { store, template: 'dialog', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
       store.addCloseResolver(resolve);
@@ -313,7 +313,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     }
   });
 
-  test('an explicit `true` opts a modal with actions back in', () => {
+  test('an explicit `true` opts a dialog with actions back in', () => {
     const frames = installFakeFrames();
     try {
       const { store } = createDialogRuntime('backdrop-explicit');
@@ -362,7 +362,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     }
   });
 
-  test('a closed modal never dismisses, whatever the pointer did', () => {
+  test('a closed dialog never dismisses, whatever the pointer did', () => {
     const { store } = createDialogRuntime('backdrop-closed');
     expect(store.getSnapshot().phase).toBe('closed');
     expect(
@@ -420,7 +420,7 @@ test.describe('teardownDialog reports a failing onClose', () => {
     // Teardown has nobody left to catch a throwing `onClose`; `fireAndForget` logs it instead.
     const dm = createDialogManager();
     const { store } = createDialogRuntime<void, 'save'>('teardown-throws');
-    dm.register('teardown-throws', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-throws', { store, template: 'dialog', nonModal: false });
 
     store.setOnClose(() => {
       throw new Error('cleanup exploded');
@@ -437,7 +437,7 @@ test.describe('teardownDialog reports a failing onClose', () => {
     console.debug = () => {
       return;
     };
-    setLogLevel('modal');
+    setLogLevel('dialog');
 
     try {
       teardownDialog(store, {
@@ -463,7 +463,7 @@ test.describe('teardownDialog reports through onError', () => {
     // The gap: `onClose` failures reached `onError` on the close path but not on unmount.
     const dm = createDialogManager();
     const { store } = createDialogRuntime('teardown-on-error');
-    dm.register('teardown-on-error', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-on-error', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
     store.setOnClose(() => {
       throw new Error('cleanup exploded');
@@ -489,7 +489,7 @@ test.describe('teardownDialog reports through onError', () => {
     // Failures only — a consumer wiring a reporter must not get an event per normal unmount.
     const dm = createDialogManager();
     const { store } = createDialogRuntime('teardown-quiet');
-    dm.register('teardown-quiet', { store, template: 'modal', nonModal: false });
+    dm.register('teardown-quiet', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 
     const failures: unknown[] = [];

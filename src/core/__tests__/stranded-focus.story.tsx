@@ -15,7 +15,7 @@ export function StrandedFocusHarness() {
   const [busy, setBusy] = useState(false);
   const [runs, setRuns] = useState(0);
 
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'stranded-focus',
     ariaLabel: 'Stranded focus',
     render: ({ action }) => {
@@ -59,12 +59,12 @@ export function StrandedFocusHarness() {
       <button
         data-testid="stranded-open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

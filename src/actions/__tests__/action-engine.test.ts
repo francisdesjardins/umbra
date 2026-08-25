@@ -25,7 +25,7 @@ test.describe('running an action', () => {
   test('captures what a handler throws instead of letting it escape', async () => {
     const engine = createActionEngine<void>('throw');
 
-    // Not re-thrown: a rejection in user markup breaks the modal. It surfaces on `error` instead.
+    // Not re-thrown: a rejection in user markup breaks the dialog. It surfaces on `error` instead.
     await engine.run('save', () => {
       throw new Error('nope');
     });
@@ -71,7 +71,7 @@ test.describe('running an action', () => {
   });
 
   test('one running action is visible to every other', async () => {
-    // What `disabled` on every button reads: the aggregate is the modal's, not the action's.
+    // What `disabled` on every button reads: the aggregate is the dialog's, not the action's.
     const engine = createActionEngine<void>('overlap');
     let seen = false;
 
@@ -115,7 +115,7 @@ test.describe('the declaration window', () => {
   });
 
   test('undeclare retires an action, and with it the backdrop opt-in', () => {
-    // `hasActions()` gates backdrop dismiss, so a stale one leaves a spent modal silently opt-in.
+    // `hasActions()` gates backdrop dismiss, so a stale one leaves a spent dialog silently opt-in.
     const engine = createActionEngine<void>('undeclare');
     engine.declare('confirm', 'Enter');
     expect(engine.hasActions()).toBe(true);
@@ -224,7 +224,7 @@ test.describe('hotkeys', () => {
   });
 
   test('hasActions is false until something is drawn', () => {
-    // The default that follows: a modal drawing no actions is dismissible by a backdrop click.
+    // The default that follows: a dialog drawing no actions is dismissible by a backdrop click.
     expect(createActionEngine<void>('empty').hasActions()).toBe(false);
   });
 });

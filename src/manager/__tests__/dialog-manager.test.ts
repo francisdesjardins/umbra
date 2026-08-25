@@ -26,7 +26,7 @@ export type _CloseEventIsMapped = Equals<
 >;
 
 /**
- * Minimal stand-in for the modal store, satisfying `RegisteredStore`. `transition()` drives the
+ * Minimal stand-in for the dialog store, satisfying `RegisteredStore`. `transition()` drives the
  * phase machine as the real store does, including retaining the close reason through 'closed'.
  */
 function createFakeStore() {
@@ -201,7 +201,7 @@ test.describe('createDialogManager', () => {
   });
 
   test('unregistering a closed dialog reports no second close', () => {
-    // A modal that closed then unmounted is already reported; a second close puts observers behind.
+    // A dialog that closed then unmounted is already reported; a second close puts observers behind.
     const dm = createDialogManager();
     const store = createFakeStore();
     const events: DialogManagerEvent[] = [];
@@ -269,21 +269,21 @@ test.describe('createDialogManager', () => {
 
   test('modal and non-modal dialogs are counted separately', () => {
     const dm = createDialogManager();
-    const modal = createFakeStore();
+    const dialog = createFakeStore();
     const nonModal = createFakeStore();
-    dm.register('modal', { store: modal, template: 'modal', nonModal: false });
-    dm.register('non-modal', { store: nonModal, template: 'modal', nonModal: true });
+    dm.register('dialog', { store: dialog, template: 'dialog', nonModal: false });
+    dm.register('non-modal', { store: nonModal, template: 'dialog', nonModal: true });
 
-    openFully(modal);
+    openFully(dialog);
     openFully(nonModal);
 
     const lookup = dm.lookup();
     expect(lookup.getOpen()).toHaveLength(2);
     expect(
-      lookup.getOpen('modal').map((d) => {
+      lookup.getOpen('dialog').map((d) => {
         return d.id;
       })
-    ).toEqual(['modal']);
+    ).toEqual(['dialog']);
     expect(
       lookup.getOpen('non-modal').map((d) => {
         return d.id;
@@ -312,7 +312,7 @@ test.describe('createDialogManager', () => {
     expect(info.openedAt).toBe(0);
   });
 
-  test('lookup(id) on a registered-but-closed modal reports closed state', () => {
+  test('lookup(id) on a registered-but-closed dialog reports closed state', () => {
     const dm = createDialogManager();
     const store = createFakeStore();
     dm.register('idle', { store });
@@ -354,7 +354,7 @@ test.describe('createDialogManager', () => {
   });
 
   test('lookup().isVisible asks the snapshot, not the registry', () => {
-    // Unlike `lookup(id).isVisible`, this reads `openDialogs` — a closed modal is absent from it.
+    // Unlike `lookup(id).isVisible`, this reads `openDialogs` — a closed dialog is absent from it.
     const dm = createDialogManager();
     const open = createFakeStore();
     const idle = createFakeStore();
@@ -373,7 +373,7 @@ test.describe('createDialogManager', () => {
   });
 
   test('a store notification that moves no phase is not a transition', () => {
-    // Only phase and `isPreparing` concern the manager; without the guard a modal with a running
+    // Only phase and `isPreparing` concern the manager; without the guard a dialog with a running
     // action reports one open per keystroke to anything counting them.
     const dm = createDialogManager();
     const store = createFakeStore();

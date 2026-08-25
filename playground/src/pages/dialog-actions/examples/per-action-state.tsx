@@ -9,7 +9,7 @@ import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 
-export const MODAL_ID = 'per-action-state';
+export const DIALOG_ID = 'per-action-state';
 
 const resultStore = createResultStore();
 
@@ -21,7 +21,7 @@ const slow = (ms: number) => {
 };
 
 /** The shell's spinner, taking the dialog's own primary rather than the page's — this renders
- * inside a vanilla modal, whose palette is the template's. */
+ * inside a vanilla dialog, whose palette is the template's. */
 function ActionSpinner() {
   return (
     <span style={{ display: 'inline-flex', color: 'var(--color-primary)' }}>
@@ -37,11 +37,11 @@ function ActionSpinner() {
  */
 export function PerActionStateExample() {
   const { result } = useStore(resultStore);
-  // Which handler started: `phase` says the modal is leaving, not what it was doing.
+  // Which handler started: `phase` says the dialog is leaving, not what it was doing.
   const [started, setStarted] = useState<'draft' | 'publish' | null>(null);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
     // A string, not the heading: it is a status changing under the user, and a name must not.
     ariaLabel: 'Publish post',
     dismissOnBackdropClick: false,
@@ -64,9 +64,9 @@ export function PerActionStateExample() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               {/* Not an action's button: it locks for publish only, so a draft still takes edits. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
-                <FormDialog.Label htmlFor={`${MODAL_ID}-note`}>Release note</FormDialog.Label>
+                <FormDialog.Label htmlFor={`${DIALOG_ID}-note`}>Release note</FormDialog.Label>
                 <textarea
-                  id={`${MODAL_ID}-note`}
+                  id={`${DIALOG_ID}-note`}
                   rows={2}
                   disabled={publishing}
                   defaultValue="Ship the per-action state."
@@ -127,13 +127,13 @@ export function PerActionStateExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
           setStarted(null);
-          const [, closeResult] = await modal.openAndWait();
+          const [, closeResult] = await dialog.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

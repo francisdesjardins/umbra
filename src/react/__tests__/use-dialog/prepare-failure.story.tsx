@@ -14,7 +14,7 @@ export function PrepareFailureHarness() {
   const [failures, setFailures] = useState<DialogErrorSource[]>([]);
   const [message, setMessage] = useState('none');
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'prepare-failure',
     ariaLabel: 'Prepare that fails',
     prepare: async () => {
@@ -42,16 +42,16 @@ export function PrepareFailureHarness() {
       <button
         data-testid="pf-open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      <span data-testid="pf-visible">{modal.isVisible ? 'open' : 'closed'}</span>
+      <span data-testid="pf-visible">{dialog.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="pf-sources">{failures.join(',') || 'none'}</span>
       <span data-testid="pf-message">{message}</span>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

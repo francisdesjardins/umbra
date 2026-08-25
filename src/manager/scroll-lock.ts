@@ -1,5 +1,5 @@
 /**
- * Body scroll lock with scrollbar-width compensation — plain DOM, held while at least one *modal*
+ * Body scroll lock with scrollbar-width compensation — plain DOM, held while at least one *dialog*
  * (`showModal()`) dialog is open. Hiding `overflow` removes a classic scrollbar and widens the
  * viewport by its width, shifting every centered or right-aligned element (the ~15px "jump"), so
  * the same amount is reserved as body padding. `position: fixed` elements are *not* touched —
@@ -72,7 +72,7 @@ export function compensationPadding(computedPaddingRight: string, reclaimed: num
 
 /**
  * Claim the body scroll lock for `owner`, applying it on the first claim and idempotent per owner —
- * so stacked modals within one manager never double-pad and repeat claims are free.
+ * so stacked dialogs within one manager never double-pad and repeat claims are free.
  *
  * @param owner - Identity of the claimant (a dialog manager instance's token).
  */

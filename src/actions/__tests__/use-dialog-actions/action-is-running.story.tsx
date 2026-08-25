@@ -43,7 +43,7 @@ export function ActionIsRunningHarness() {
           </button>
           {/* Inside `render`, because `showModal()` puts the dialog in the top layer and the
               native backdrop swallows every click outside it. Not a detail of this harness —
-              the rule for any control that has to stay clickable while a modal is open. */}
+              the rule for any control that has to stay clickable while a dialog is open. */}
           <button
             onClick={() => {
               release();

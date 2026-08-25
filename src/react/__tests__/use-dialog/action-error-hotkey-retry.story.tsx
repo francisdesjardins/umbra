@@ -9,7 +9,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * The button is the dialog's autofocus target and goes `disabled` for as long as the action
  * runs, so focus falls to `<body>` in the meantime. Unless it is put back inside the dialog
  * once the action settles, the dialog's keydown listener never hears the retry: the hotkey is
- * dead for the rest of the modal's life and only the mouse can recover it.
+ * dead for the rest of the dialog's life and only the mouse can recover it.
  */
 export function ActionErrorHotkeyRetryHarness() {
   const [attempts, setAttempts] = useState(0);

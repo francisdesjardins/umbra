@@ -10,7 +10,7 @@ export function DismissKeyOwnershipHarness() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [closed, setClosed] = useState(false);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'dismiss-ownership',
     nonModal: true,
     ariaLabel: 'Panel with overlays',
@@ -54,13 +54,13 @@ export function DismissKeyOwnershipHarness() {
         data-testid="open-panel"
         onClick={() => {
           setClosed(false);
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open the panel
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
 
       {/* Portaled out of the dialog, the way a picker mounts its popup — and holding focus. */}
       {pickerOpen &&

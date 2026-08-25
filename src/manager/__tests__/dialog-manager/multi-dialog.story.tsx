@@ -6,8 +6,8 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * Tests stack queries: foreground and openDialogs ordering via useDialogManager.
  * openDialogs is sorted by open time, so it doubles as the stack order.
  *
- * Flow: "Open First" → inside first modal click "Open Second" → inside second
- * modal click "Close Second" → inside first modal click "Close First".
+ * Flow: "Open First" → inside first dialog click "Open Second" → inside second
+ * dialog click "Close Second" → inside first dialog click "Close First".
  * This ensures all interactions happen with the topmost dialog, which is the
  * only one that can receive clicks in the native top layer.
  */
@@ -19,7 +19,7 @@ export function MultiDialogHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>First modal</p>
+          <p>First dialog</p>
           <button
             onClick={() => {
               dialogManager.open('dm-second');
@@ -44,7 +44,7 @@ export function MultiDialogHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Second modal</p>
+          <p>Second dialog</p>
           <button
             onClick={() => {
               handle.close('close');

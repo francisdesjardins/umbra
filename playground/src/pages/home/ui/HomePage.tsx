@@ -19,9 +19,9 @@ import { useDialog } from 'umbra/react';  // the React binding
 import { useDialog } from 'umbra/solid';  // …or the Solid one, same surface
 import { bindDialog } from 'umbra/vanilla'; // …or none: drive your own <dialog>`;
 
-const HELLO = `// The first type argument is what this modal closes *with*; the second, the
+const HELLO = `// The first type argument is what this dialog closes *with*; the second, the
 // reasons it may close for. Both come back to \`onClose\`, both are exhaustive.
-const modal = useDialog<{ remember: boolean }, 'confirm' | 'cancel'>({
+const dialog = useDialog<{ remember: boolean }, 'confirm' | 'cancel'>({
   id: 'hello',
   ariaLabel: 'Hello',
   // Every field an action returns is a DOM prop, so this spread fits a bare
@@ -54,7 +54,7 @@ const modal = useDialog<{ remember: boolean }, 'confirm' | 'cancel'>({
   onClose: ({ reason, data }) => report(reason, data?.remember),
 });`;
 
-/** What the site says before it starts explaining: what this is, how to get it, and one live modal. */
+/** What the site says before it starts explaining: what this is, how to get it, and one live dialog. */
 export const HomePage = () => {
   const { isDarkMode } = useTheme();
 
@@ -188,7 +188,7 @@ export const HomePage = () => {
                 await hello.open();
               }}
             >
-              Open a modal
+              Open a dialog
             </AppButton>
             {/* Real anchors wearing the button recipe: a button-with-navigate would drop new-tab
                 and copy-link. */}
@@ -234,7 +234,7 @@ export const HomePage = () => {
               to: '/showcases',
               phase: 'first-quarter',
               title: 'Stacking and focus',
-              body: 'One Escape closes one modal; a shared hotkey fires at one level only.',
+              body: 'One Escape closes one dialog; a shared hotkey fires at one level only.',
             },
             {
               to: '/api',

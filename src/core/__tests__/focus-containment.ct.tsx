@@ -214,7 +214,7 @@ test.describe('the dead-space click, whatever containFocus says', () => {
 
   for (const nonModal of [false, true]) {
     for (const containFocus of [false, true]) {
-      const shape = `${nonModal ? 'non-modal' : 'modal'}, containFocus=${String(containFocus)}`;
+      const shape = `${nonModal ? 'non-modal' : 'dialog'}, containFocus=${String(containFocus)}`;
 
       test(`Tab reaches the content — ${shape}`, async ({ mount, page }) => {
         const component = await mount(

@@ -4,11 +4,11 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A modal holding an open **non-modal** panel in its own subtree, both declaring `Enter`.
+ * A dialog holding an open **non-modal** panel in its own subtree, both declaring `Enter`.
  *
- * Non-dialog is the case that makes this reachable: it does not block, so focus can be in the
- * outer modal while the inner dialog is open — the outer modal legitimately dispatches its own
- * hotkey. The panel is rendered *before* the outer modal's own button on purpose, because a
+ * Non-modal is the case that makes this reachable: it does not block, so focus can be in the
+ * outer dialog while the inner dialog is open — the outer dialog legitimately dispatches its own
+ * hotkey. The panel is rendered *before* the outer dialog's own button on purpose, because a
  * hotkey is dispatched by finding the button in the DOM: an unscoped lookup takes the first
  * match in document order, which is the panel's, and the wrong action runs.
  */

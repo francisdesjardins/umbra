@@ -17,8 +17,8 @@ const DialogManagerContext = createContext(dialogManager);
  * The dialog manager this part of the tree is scoped to — the nearest `DialogManagerProvider`'s,
  * or the singleton. The imperative counterpart to {@link useDialogManager}: that one returns a
  * *snapshot* and re-renders on every open and close, this one never re-renders. Use it when a
- * component that owns no modal has to drive one — `open(id)` from a toolbar, `lookup(id)` in a
- * guard — without reaching past a provider. Inside a modal, prefer `useDialog`'s own.
+ * component that owns no dialog has to drive one — `open(id)` from a toolbar, `lookup(id)` in a
+ * guard — without reaching past a provider. Inside a dialog, prefer `useDialog`'s own.
  *
  * @example
  * function OpenSettingsButton() {

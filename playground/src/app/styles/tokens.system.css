@@ -77,7 +77,7 @@
   --app-icon-sm: 20px;
 
   /* ── Stacking ────────────────────────────────────────────────────────────────────────
-     Small numbers, deliberately. The dialog manager assigns 1300+ and a modal `<dialog>` paints
+     Small numbers, deliberately. The dialog manager assigns 1300+ and a dialog `<dialog>` paints
      in the top layer where no `z-index` reaches it at all, so the shell only ever has to order
      itself against itself. */
   --app-z-backdrop: 20;

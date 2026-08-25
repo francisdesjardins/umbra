@@ -25,12 +25,12 @@ export const DialogActionsPage = () => {
 
       <ExampleSection
         title="Actions & hotkeys"
-        description="The reason is the action's identity: it names the action and it is what the modal closes with. Spread the returned props onto any button you like."
+        description="The reason is the action's identity: it names the action and it is what the dialog closes with. Spread the returned props onto any button you like."
       >
         <ExampleGrid>
           <ExampleCard
             title="Confirm with Hotkeys"
-            description="Two actions, each with a hotkey declared on it. Press Enter to confirm, Escape to cancel — the modal dispatches by clicking the button, so the key path is the click path."
+            description="Two actions, each with a hotkey declared on it. Press Enter to confirm, Escape to cancel — the dialog dispatches by clicking the button, so the key path is the click path."
             codeKey="confirm-with-hotkeys"
             example={<ConfirmWithHotkeysExample />}
           />
@@ -48,7 +48,7 @@ export const DialogActionsPage = () => {
           />
           <ExampleCard
             title="Which action is running?"
-            description="Spreading an action's props gives that button data-loading and disables it while the handler runs. What the rest of the modal does with that is yours: this one keeps the field editable for a draft and locks it for a publish."
+            description="Spreading an action's props gives that button data-loading and disables it while the handler runs. What the rest of the dialog does with that is yours: this one keeps the field editable for a draft and locks it for a publish."
             codeKey="per-action-state"
             example={<PerActionStateExample />}
           />
@@ -57,12 +57,12 @@ export const DialogActionsPage = () => {
 
       <ExampleSection
         title="Reactive dependencies"
-        description="No dependency arrays — React Compiler tracks what the render callback reads, so store mutations reach an already-open modal."
+        description="No dependency arrays — React Compiler tracks what the render callback reads, so store mutations reach an already-open dialog."
       >
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Reactive State"
-            description="Live state mutation via createStore — updates reflect instantly inside the modal."
+            description="Live state mutation via createStore — updates reflect instantly inside the dialog."
             codeKey="reactive-deps"
             example={<ReactiveDepsExample />}
           />

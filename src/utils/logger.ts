@@ -4,10 +4,10 @@
  * carries a monotonic `#0001` id shared across namespaces: note the latest, do the thing you are
  * investigating, then read everything above it.
  *
- * Enable with `localStorage.setItem('dialog:log', '*')` — also `'modal'`, `'modal,action'`,
- * `'dialog:modal'` — or {@link setLogLevel}. Namespaces: `manager` (the singleton), `outlet`
- * (DialogOutlet registration), `modal` (useDialog core), `modal:lifecycle` (open/close DOM),
- * `modal:keydown` (dismiss key), `modal:click-outside`, `action` (actions, hotkeys).
+ * Enable with `localStorage.setItem('dialog:log', '*')` — also `'dialog'`, `'dialog,action'`,
+ * `'dialog:dialog'` — or {@link setLogLevel}. Namespaces: `manager` (the singleton), `outlet`
+ * (DialogOutlet registration), `dialog` (useDialog core), `dialog:lifecycle` (open/close DOM),
+ * `dialog:keydown` (dismiss key), `dialog:click-outside`, `action` (actions, hotkeys).
  *
  * **Privacy**: opt-in, debug-only, console-only — nothing persisted or transmitted. Never logged:
  * the `close(data)` payload (only a `withData` flag), the close result, render content, store state.
@@ -29,10 +29,10 @@ const storageKey = 'dialog:log';
  */
 const colors: Readonly<Record<string, string>> = {
   manager: '#4CAF50',
-  modal: '#2196F3',
-  'modal:lifecycle': '#03A9F4',
-  'modal:keydown': '#009688',
-  'modal:click-outside': '#00BCD4',
+  dialog: '#2196F3',
+  'dialog:lifecycle': '#03A9F4',
+  'dialog:keydown': '#009688',
+  'dialog:click-outside': '#00BCD4',
   action: '#FF9800',
   // A step off `#AB47BC`, the one hue the shared ink cannot clear (4.36:1).
   outlet: '#BA68C8',
@@ -83,10 +83,17 @@ function getPattern(): string | null {
 
 const namespacePrefix = 'dialog:';
 
-/** Strip the `dialog:` prefix so both `'modal'` and `'dialog:modal'` work. */
-function normalize(token: string): string {
+/**
+ * The spellings one pattern token may mean — both, when it starts with the prefix.
+ *
+ * `dialog:` is the storage prefix, so `'dialog:dialog'` is the long way to write `'dialog'`. It is
+ * now also the start of three real namespaces, so stripping unconditionally would read
+ * `'dialog:lifecycle'` as `'lifecycle'` and match nothing at all. Trying both costs one comparison
+ * and cannot go wrong here: no namespace is named after any other's suffix.
+ */
+function candidates(token: string): readonly string[] {
   const t = token.trim();
-  return t.startsWith(namespacePrefix) ? t.slice(namespacePrefix.length) : t;
+  return t.startsWith(namespacePrefix) ? [t, t.slice(namespacePrefix.length)] : [t];
 }
 
 function matches(namespace: string): boolean {
@@ -98,8 +105,9 @@ function matches(namespace: string): boolean {
     return true;
   }
   return pattern.split(',').some((p) => {
-    const n = normalize(p);
-    return namespace === n || namespace.startsWith(n + ':');
+    return candidates(p).some((n) => {
+      return namespace === n || namespace.startsWith(n + ':');
+    });
   });
 }
 
@@ -120,8 +128,8 @@ export type Logger = {
 // ── Factory ─────────────────────────────────────────────────────────────────
 
 /**
- * The badge colour for a namespace: its own, or the *nearest* ancestor's — so `modal:lifecycle:deep`
- * takes `modal:lifecycle`'s and a family that split its hue out keeps it down the whole branch.
+ * The badge colour for a namespace: its own, or the *nearest* ancestor's — so `dialog:lifecycle:deep`
+ * takes `dialog:lifecycle`'s and a family that split its hue out keeps it down the whole branch.
  */
 function resolveColor(namespace: string): string {
   if (colors[namespace]) {
@@ -135,11 +143,11 @@ function resolveColor(namespace: string): string {
 /**
  * Create a namespaced logger instance.
  *
- * @param namespace - Logger namespace (e.g. `'modal'`, `'modal:lifecycle'`)
+ * @param namespace - Logger namespace (e.g. `'dialog'`, `'dialog:lifecycle'`)
  * @returns A callable logger with `.warn()` and `.error()` methods
  *
  * @example
- * const log = createLogger('modal');
+ * const log = createLogger('dialog');
  * log('Open requested', { id: 'confirm' });
  * log.warn('Double open ignored', { id: 'confirm' });
  * log.error('onClose failed', { id: 'confirm', error: err.message });
@@ -197,14 +205,14 @@ export function createLogger(namespace: string): Logger {
 /**
  * Programmatically enable or disable debug logging.
  *
- * @param pattern - Namespace filter (`'*'` for all, `'modal,action'` for some), or `false` to disable.
+ * @param pattern - Namespace filter (`'*'` for all, `'dialog,action'` for some), or `false` to disable.
  * @param persist - Write to `localStorage` so the setting survives reloads. Defaults to `false`.
  *
  * @example
  * import { setLogLevel } from 'umbra';
  *
  * setLogLevel('*'); // enable all, session only
- * setLogLevel('modal', true); // enable modal logs, persisted
+ * setLogLevel('dialog', true); // enable dialog logs, persisted
  * setLogLevel(false); // disable all
  */
 export function setLogLevel(pattern: string | false, persist = false): void {

@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 /**
  * `openAndWait` against the window that makes it necessary: a close resolver waits for the *next*
  * close (replaying a previous one is a wrong answer, not a late one), so it must be registered
- * first — which is why `addCloseResolver` is not public. `prepare` widens the window: a modal
+ * first — which is why `addCloseResolver` is not public. `prepare` widens the window: a dialog
  * dismissed while it runs closes before an open that resolves after `prepare` returns.
  */
 export function OpenAndWaitOrderingHarness() {

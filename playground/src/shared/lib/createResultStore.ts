@@ -2,7 +2,7 @@ import { createStore } from 'umbra/react';
 
 /**
  * A module-level store for a single `result: string | null` — the playground's standard way to show
- * what happened after a modal closes. Call once at module scope, read with `useStore`.
+ * what happened after a dialog closes. Call once at module scope, read with `useStore`.
  *
  * @example
  * const resultStore = createResultStore(); // onClose: (r) => resultStore.setResult(r.reason)

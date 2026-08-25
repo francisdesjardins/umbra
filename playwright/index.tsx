@@ -5,7 +5,7 @@ import { DialogManagerProvider } from '../src/react/dialog-manager-context.js';
  * Global test wrapper applied to every Playwright CT mount.
  *
  * Wraps all components in a `DialogManagerProvider` so each test gets an
- * isolated dialog manager instance — modal registrations and state never
+ * isolated dialog manager instance — dialog registrations and state never
  * leak between tests.
  *
  * Extend this wrapper when additional providers are needed (e.g. theme,

@@ -10,7 +10,7 @@ function InnerScopeDialog() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Inner outlet modal</p>
+          <p>Inner outlet dialog</p>
           <button
             onClick={() => {
               dialogManager.open('outlet-nested-outer');
@@ -50,7 +50,7 @@ function OuterScopeDialog() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Outer outlet modal</p>
+          <p>Outer outlet dialog</p>
           <button
             onClick={() => {
               dialogManager.open('outlet-nested-inner');
@@ -85,7 +85,7 @@ function OuterScopeDialog() {
 }
 
 /**
- * Nested outlets: inner outlet scope captures the inner modal.
+ * Nested outlets: inner outlet scope captures the inner dialog.
  */
 export function OutletNestedHarness() {
   return (

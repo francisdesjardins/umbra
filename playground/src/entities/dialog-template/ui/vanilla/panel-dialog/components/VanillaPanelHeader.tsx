@@ -6,7 +6,7 @@ type VanillaPanelHeaderProps = {
 };
 
 /**
- * Header shell for big/complex modals — padding only; compose a `<Divider />` after it for visual
+ * Header shell for big/complex dialogs — padding only; compose a `<Divider />` after it for visual
  * separation, and a `HeaderActionLayout` inside it. See `PanelContainer` for the full composition.
  */
 export function VanillaPanelHeader({ children }: VanillaPanelHeaderProps) {

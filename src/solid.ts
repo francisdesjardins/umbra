@@ -3,7 +3,7 @@
  *
  * A sibling of `./react`, not a port: both sit on the same core, and each adds only how its
  * framework schedules effects and owns nodes. **The surface is React's**, deliberately, so a team
- * running both writes the same modal twice with the same words. Three differences, all renderer:
+ * running both writes the same dialog twice with the same words. Three differences, all renderer:
  *
  * - Live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are **getters** over
  *   signals, so inside JSX each subscribes that one expression. Therefore **do not destructure the
@@ -11,7 +11,7 @@
  *   anywhere in Solid; read through the context, `render: (ctx) => <Show when={ctx.isPreparing}>…`.
  * - {@link useLookup} returns an accessor, because `DialogInfo` is a discriminated union and an
  *   object of getters cannot be one without losing the narrowing.
- * - `portal: true` leaves `Dialog` as `null`: a Solid modal owns its element, so the binding mounts
+ * - `portal: true` leaves `Dialog` as `null`: a Solid dialog owns its element, so the binding mounts
  *   it into `document.body` and there is nothing left for the caller to place.
  *
  * Solid is an **optional** peer dependency — this entry point is the only thing that touches it —

@@ -2,7 +2,7 @@
 
 Interactive demo app, vanilla-first: the learning routes render their dialog interiors with the
 vanilla HTML/CSS templates, because the library is headless and the demos should not suggest it goes
-with a component library. MUI is the demonstrated _exception_ — **one card**, the form modal on
+with a component library. MUI is the demonstrated _exception_ — **one card**, the form dialog on
 `/ui-integrations`, written against MUI directly. One worked pair carries that claim; four charged
 four times the upkeep for it, and a template layer over the pair charged upkeep to hide the one line
 worth reading.
@@ -210,9 +210,9 @@ page and is what a reader can guess and share.
 
 ## Dialogs are declared in one place
 
-[`src/app/dialog-registry.ts`](src/app/dialog-registry.ts) names every modal and what it closes with,
+[`src/app/dialog-registry.ts`](src/app/dialog-registry.ts) names every dialog and what it closes with,
 so **a call site writes no type arguments** — writing them selects the other overload and lets the
-two drift. Add a modal, add a line. Not enforced complete, which is what lets `/stories` render the
+two drift. Add a dialog, add a line. Not enforced complete, which is what lets `/stories` render the
 library's own harnesses.
 
 ## Page composition
@@ -297,7 +297,7 @@ All layouts use children-based composition:
 Single file per example — component + "View Code" source.
 
 1. **Create** `src/pages/<route>/examples/<name>.tsx` — hooks from `umbra/react`, templates from
-   `@/entities/dialog-template/ui/vanilla/…` when one fits, wrapped in `ExampleLayout`. Unique modal
+   `@/entities/dialog-template/ui/vanilla/…` when one fits, wrapped in `ExampleLayout`. Unique dialog
    ids.
 2. **Register** the `?raw` import in
    [code-samples/examples.ts](src/widgets/code-viewer/model/code-samples/examples.ts) — a route's
@@ -327,12 +327,12 @@ and one that only checks the option is present blesses `ariaLabel: ''`.
 The convention is derived from the id you already wrote, so there is nothing to invent:
 
 ```tsx
-const MODAL_ID = 'delete-item';
+const DIALOG_ID = 'delete-item';
 
 useMessageDialog({
-  id: MODAL_ID,
-  ariaLabelledBy: `${MODAL_ID}-title`,
-  render: () => <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete item</MessageDialog.Title>,
+  id: DIALOG_ID,
+  ariaLabelledBy: `${DIALOG_ID}-title`,
+  render: () => <MessageDialog.Title id={`${DIALOG_ID}-title`}>Delete item</MessageDialog.Title>,
 });
 ```
 
@@ -385,7 +385,7 @@ renaming it silently downgrades a stylesheet to TSX highlighting.
 
 ## Testing
 
-**Pages and examples do not need tests; `shared/lib/` does.** A card that renders a modal is covered
+**Pages and examples do not need tests; `shared/lib/` does.** A card that renders a dialog is covered
 by the library's own suite and by `yarn smoke`. A helper in `shared/lib/` is different in kind: it is
 written to be **copied into someone else's project**, which is a claim that it works, and thirteen
 already carry tests in `shared/lib/__tests__/`.

@@ -7,7 +7,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useRef, useState } from 'react';
 import { useSlideDialog } from 'umbra/react';
 
-export const MODAL_ID = 'slide-corner-toast';
+export const DIALOG_ID = 'slide-corner-toast';
 
 const resultStore = createResultStore();
 
@@ -61,7 +61,7 @@ export function SlideCornerToastExample() {
   const isPaused = hovered || focusedInside;
 
   const toast = useSlideDialog({
-    id: MODAL_ID,
+    id: DIALOG_ID,
     direction: 'right',
     ariaLabel: 'Notification',
     align: 'start',
@@ -225,7 +225,7 @@ export function SlideCornerToastExample() {
       return;
     }
     // The updater stays pure: React may run one during a render, and closing from inside it writes
-    // to the modal store mid-render — “Cannot update a component while rendering a different
+    // to the dialog store mid-render — “Cannot update a component while rendering a different
     // component” on every toast that ran out on its own.
     const id = window.setInterval(() => {
       setRemaining((left) => {
@@ -246,7 +246,7 @@ export function SlideCornerToastExample() {
   }, [isVisible, remaining, handle]);
 
   return (
-    <ExampleLayout result={result} modals={toast.Dialog}>
+    <ExampleLayout result={result} dialogs={toast.Dialog}>
       <AppButton
         variant="contained"
         size="small"

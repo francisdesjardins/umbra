@@ -3,7 +3,7 @@ import { createLogger } from '../utils/logger.js';
 import type { DismissReason } from './dismiss-reason.js';
 import type { CloseResolver, CloseResult, DialogStoreSnapshot } from './types.js';
 
-const log = createLogger('modal');
+const log = createLogger('dialog');
 
 /**
  * The whole `useDialog` state machine, with no framework in it — `createStore` for the
@@ -16,7 +16,7 @@ const log = createLogger('modal');
  *
  * DOM access stays outside, behind a getter, or the store taints as ref-like to the React Compiler.
  *
- * @typeParam TData - The close payload this modal carries. `useDialog<TData>` instantiates
+ * @typeParam TData - The close payload this dialog carries. `useDialog<TData>` instantiates
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
  * `openAndWait()` — agree on one payload type without a single assertion.
  */
@@ -34,7 +34,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
       let rafId = 0;
 
       /**
-       * Aborted when the modal closes, so work `prepare` started can be dropped.
+       * Aborted when the dialog closes, so work `prepare` started can be dropped.
        *
        * Here rather than in the React binding because the three moments it turns on — an open
        * starting, a close starting, a teardown — are this store's transitions and nothing else's.
@@ -142,7 +142,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
 
         /**
          * Begin closing with the given reason. Returns `false` (a no-op) when the
-         * modal is already `'closing'` or `'closed'`, which is what makes every
+         * dialog is already `'closing'` or `'closed'`, which is what makes every
          * dismissal path safe to call blindly.
          */
         close(reason: TReason | DismissReason, data?: TData): boolean {
@@ -191,7 +191,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
          * Settle every waiter that is never going to get an answer.
          *
          * A close-resolver settles from {@link finalize}, which only runs on a real close — and a
-         * modal can be destroyed without one, unmounted while closed or having never opened. Any
+         * dialog can be destroyed without one, unmounted while closed or having never opened. Any
          * promise still waiting would then stay pending for the life of the process, holding its
          * continuation alive while the awaiting code silently never resumes.
          *
@@ -218,7 +218,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
         },
 
         /**
-         * The signal handed to `prepare`, aborted when the modal closes.
+         * The signal handed to `prepare`, aborted when the dialog closes.
          *
          * Created on demand as well as on open, so a caller reading it before the first open gets a
          * live signal rather than having to handle `null`.
@@ -251,7 +251,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
 /**
  * The concrete store `createDialogStore` produces.
  *
- * `TData` defaults to `unknown` so consumers that are generic over *any* modal — the internal
+ * `TData` defaults to `unknown` so consumers that are generic over *any* dialog — the internal
  * hook context, `finalizeDialogClose` — can name the type without becoming generic themselves.
  * Every member is either a method (bivariant) or covariant in `TData`, which is what makes a
  * `DialogStore<Specific>` assignable to a plain `DialogStore` at those boundaries.

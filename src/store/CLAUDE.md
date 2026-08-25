@@ -14,7 +14,7 @@ The whole thing is small (a `Set` of listeners + `get`/`set`), but it still earn
 
 - **POJO snapshots** — methods live beside the state, in the builder, so `getSnapshot()` is clone/serialize-safe and selector-stable.
 - **One flat API** — `set(next | (prev) => next)`, `reset()`, and context injection, zustand-style.
-- **`useSyncExternalStore` contract** — every store satisfies `{ subscribe, getSnapshot }`, so the modal store, the action engine, the manager and any reader compose over one shape.
+- **`useSyncExternalStore` contract** — every store satisfies `{ subscribe, getSnapshot }`, so the dialog store, the action engine, the manager and any reader compose over one shape.
 
 ## Two store modes
 
@@ -26,7 +26,7 @@ There are **no reserved keys** — the store contract (`subscribe`/`getSnapshot`
 ## What ships, and what does not
 
 `createStore` and `StoreContract` are exported, on one rule: **export what the library runs on and
-would otherwise be duplicated; do not export what it does not use.** The modal store, the action
+would otherwise be duplicated; do not export what it does not use.** The dialog store, the action
 engine, the outlet and the manager are all built on `createStore`, so it stays in `src/` regardless
 — keeping it private would only force a second copy into the playground. `StoreContract` comes with
 it.
@@ -42,7 +42,7 @@ and the framework's primitive stayed a view of it — which is the argument for
 Everything built _over_ the engine is not exported. `useStore`, `createStoreContext`, `watch` and
 `shallowEqual` had no caller inside the library, and a dialog manager is not where anyone looks for
 state management — least of all when the same author ships `stardust` for exactly that. They live in
-`playground/src/shared/lib/` as reference code, on the same terms as the modal templates. A consumer
+`playground/src/shared/lib/` as reference code, on the same terms as the dialog templates. A consumer
 needs none of them to read a store: `StoreContract` is what `useSyncExternalStore` takes.
 
 ## Primitives

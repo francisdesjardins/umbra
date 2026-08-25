@@ -24,7 +24,7 @@ export type DialogHostStyle = {
   readonly overflow?: 'clip' | undefined;
 };
 
-/** Positioning styles for the `<dialog>` itself — empty for a top-layer (modal) dialog. */
+/** Positioning styles for the `<dialog>` itself — empty for a top-layer (dialog) dialog. */
 export type DialogPositionStyle = {
   readonly position?: 'fixed' | 'absolute' | undefined;
   readonly inset?: 0 | undefined;
@@ -131,7 +131,7 @@ const CONTAINED_BACKDROP: DialogBackdropStyle = {
  *
  * Three cases, and the reason each exists:
  *
- * - **modal** — `showModal()` puts the dialog in the top layer, above everything and anchored
+ * - **dialog** — `showModal()` puts the dialog in the top layer, above everything and anchored
  *   to the viewport whatever its ancestors do. No host, no positioning.
  * - **non-modal, portaled** — rendered into `document.body`, so `fixed` anchors it to the
  *   viewport. Use for edge-anchored or centred panels that float over the page.

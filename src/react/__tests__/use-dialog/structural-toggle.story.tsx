@@ -3,7 +3,7 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests that changing a *structural* prop (`portal`) while the modal is open tears the
+ * Tests that changing a *structural* prop (`portal`) while the dialog is open tears the
  * dialog down cleanly rather than leaving it stuck open.
  *
  * A native `<dialog>` cannot survive being remounted into a different DOM structure

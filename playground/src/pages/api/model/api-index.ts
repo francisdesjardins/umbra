@@ -69,7 +69,7 @@ export const neighboursOf = (id: string) => {
 
 export type SymbolHit = { readonly symbol: ApiSymbol; readonly match: FuzzyMatch };
 
-/** Names only: summaries return half of ninety for "modal"; {@link fuzzyRank} handles typos. */
+/** Names only: summaries return half of ninety for "dialog"; {@link fuzzyRank} handles typos. */
 export const searchSymbols = (query: string): readonly SymbolHit[] => {
   if (query.trim() === '') {
     return [];

@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'reactive-demo';
+export const DIALOG_ID = 'reactive-demo';
 
 // ── Module-level store ────────────────────────────────────────────────────
 
@@ -187,15 +187,15 @@ export function ReactiveDepsExample() {
   const { LiveControls } = useLiveControls();
 
   const reactiveModal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     dismissOnBackdropClick: false,
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant={severity} />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>
               Reactive Dependencies Demo
             </MessageDialog.Title>
           </MessageDialog.Header>
@@ -206,7 +206,7 @@ export function ReactiveDepsExample() {
                 Counter value: <strong>{count}</strong>
               </Shared.Alert>
               <Shared.Hint>
-                This modal content updates automatically when count, message, or severity change.
+                This dialog content updates automatically when count, message, or severity change.
                 Use the controls below to test reactivity!
               </Shared.Hint>
 
@@ -232,7 +232,7 @@ export function ReactiveDepsExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={reactiveModal.Dialog}>
+    <ExampleLayout result={result} dialogs={reactiveModal.Dialog}>
       <AppButton
         variant="contained"
         size="small"

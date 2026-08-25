@@ -4,7 +4,7 @@ import { createStepRunner, sameInputs, type SyncStep } from '../step-runner.js';
 
 // The lifecycle executor, against a table that records instead of touching the DOM — which is what
 // these assertions needed: inside `createDialogDirector` the only table is real `<dialog>`s, so a
-// listener order that quietly changes and a modal inert after a remount were prose, not tests.
+// listener order that quietly changes and a dialog inert after a remount were prose, not tests.
 
 type Log = string[];
 
@@ -250,7 +250,7 @@ test.describe('destroy', () => {
   });
 
   // **The other invariant with no assertion.** A runner that only ran its teardowns would still
-  // believe every step attached, so the next identical `sync` rebuilds nothing: a modal that works
+  // believe every step attached, so the next identical `sync` rebuilds nothing: a dialog that works
   // on mount and is inert after a remount, and it passes in one React mode.
   test('clears the keys, so an identical pass afterwards attaches again', () => {
     const log: Log = [];

@@ -1,6 +1,6 @@
 # Project Guidelines
 
-Headless React dialog/modal library (`umbra`) — zero shipped UI (users bring their own: MUI, vanilla) and zero runtime dependencies (state layer is a hand-rolled reactive cell). See [CLAUDE.md](../CLAUDE.md) and [src/CLAUDE.md](../src/CLAUDE.md) for deeper context.
+Headless React dialog library (`umbra`) — zero shipped UI (users bring their own: MUI, vanilla) and zero runtime dependencies (state layer is a hand-rolled reactive cell). See [CLAUDE.md](../CLAUDE.md) and [src/CLAUDE.md](../src/CLAUDE.md) for deeper context.
 
 ## Build and Test
 
@@ -35,7 +35,7 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 
 **Every change to `src/` must include tests.** Story components must be declared at module scope (not inline in `test()` callbacks) and must follow React Compiler constraints — no `useMemo`/`useCallback`/`React.memo`.
 
-**Top-layer button placement**: any button or control that must be clickable while a modal is open must live inside the modal's `render` function — not in the outer harness. The native top-layer backdrop blocks all clicks outside an open `<dialog>`. For multi-dialog scenarios, call `dialogManager.open(id)` from inside the first modal's `render`.
+**Top-layer button placement**: any button or control that must be clickable while a dialog is open must live inside the dialog's `render` function — not in the outer harness. The native top-layer backdrop blocks all clicks outside an open `<dialog>`. For multi-dialog scenarios, call `dialogManager.open(id)` from inside the first dialog's `render`.
 
 ## Code Style
 
@@ -65,7 +65,7 @@ These are hard constraints — never violate them when generating code:
 - **Headless-first**: never add UI components to the library (`src/`). Zero shipped UI — users own all rendering.
 - **Minimal surface**: prefer extending `useDialog` over adding new template hooks.
 - **Asking vs instructing**: `dialogManager.open(id)` and `openAndWait(id)` instruct — the second waits for the close and resolves the same `[error, result]` tuple a hook does. `requestOpen(id, request)` asks and forgets; `requestOpenAndWait(id, request)` asks and returns an `OpenRequestOutcome` — the owner refuses with `request.refuse(reason)`, and acceptance is the default. Reach for the asking pair across an ownership boundary and the instructing one inside it. A payload crossing that boundary is `unknown` **in both directions** unless the id is in `DialogRegistry`: validate the request in `onOpenRequest`, and validate `outcome.closed`'s `data` before believing it.
-- **Ids may be declared**: a project augments `DialogRegistry` to give an id its `closesWith` (the reasons, or a payload per reason) and its `opensWith`; declaring is optional and per modal, so an undeclared id must keep working everywhere. A payload declared for a reason is required when closing with it.
+- **Ids may be declared**: a project augments `DialogRegistry` to give an id its `closesWith` (the reasons, or a payload per reason) and its `opensWith`; declaring is optional and per dialog, so an undeclared id must keep working everywhere. A payload declared for a reason is required when closing with it.
 - **No abstraction leakage**: template hooks must not expose core internals (store, lifecycle refs, `DialogStoreSnapshot`).
 - **Bring your own everything**: animations, styling, and layout are user-land concerns — do not bake them in.
 
@@ -126,7 +126,7 @@ The **UI Templates** page (`playground/src/pages/ui-templates/ui/UITemplatesPage
 
 ### Debug Logging
 
-Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `modal`, `modal:lifecycle`, `modal:keydown`, `modal:click-outside`, `action`. Factory: `const log = createLogger('namespace')`.
+Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `dialog`, `dialog:lifecycle`, `dialog:keydown`, `dialog:click-outside`, `action`. Factory: `const log = createLogger('namespace')`.
 
 ## Integration Points
 

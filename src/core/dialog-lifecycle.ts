@@ -294,7 +294,7 @@ export function runDialogExit(
 
 /**
  * The whole exit: which of three ways this dialog ends, finishing exactly once whichever it was.
- * A binding knows *when* a modal entered `'closing'`; what happens next is a property of
+ * A binding knows *when* a dialog entered `'closing'`; what happens next is a property of
  * `<dialog>` and the declared animation, so a second binding inherits it rather than re-deriving
  * three branches and a double-fire guard.
  *

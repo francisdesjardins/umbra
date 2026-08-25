@@ -17,7 +17,7 @@ const VISUALLY_HIDDEN: CSSProperties = {
 /**
  * A live region that exists **before** it has anything to say, which is the whole trick. Screen
  * readers announce a region's *changes*, and one inserted into the accessibility tree already
- * holding its text is the case they miss — exactly what `role="status"` inside a modal's `render`
+ * holding its text is the case they miss — exactly what `role="status"` inside a dialog's `render`
  * produces, since the content mounts in the same pass that shows the `<dialog>`. The fix is
  * structural: the region lives *outside* the dialog, mounted from the first render.
  *

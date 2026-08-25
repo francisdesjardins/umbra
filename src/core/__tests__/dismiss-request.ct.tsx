@@ -14,7 +14,7 @@ const MODAL = 'dialog[data-dialog-id="controlled-dialog"]';
 const PANEL = 'dialog[data-dialog-id="controlled-panel"]';
 const OUTSIDE_PANEL = 'dialog[data-dialog-id="controlled-click-outside"]';
 
-/** The viewport corner: backdrop for a modal, ordinary page for a panel. Never inside either box. */
+/** The viewport corner: backdrop for a dialog, ordinary page for a panel. Never inside either box. */
 const CORNER = { x: 5, y: 5 };
 
 /** Long enough for a close to have run its exit, so "still visible" is an observation. */

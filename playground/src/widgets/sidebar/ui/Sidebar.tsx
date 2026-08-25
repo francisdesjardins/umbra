@@ -126,7 +126,7 @@ export const Sidebar = ({ isMobile, mobileOpen, onClose }: SidebarProps) => {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
 
-  // The overlay answers Escape the way the modal drawer it replaces did.
+  // The overlay answers Escape the way the dialog drawer it replaces did.
   useEffect(() => {
     if (!isMobile || !mobileOpen) {
       return;

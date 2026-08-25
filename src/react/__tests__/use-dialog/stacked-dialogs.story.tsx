@@ -6,9 +6,9 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Three modals of different kinds, stacked, each rendered inside the one below it — not a
- * contrivance: a modal in the top layer swallows every click outside itself, so whatever opens a
- * second modal lives in the first one's `render`, and every event in the inner one bubbles through
+ * Three dialogs of different kinds, stacked, each rendered inside the one below it — not a
+ * contrivance: a dialog in the top layer swallows every click outside itself, so whatever opens a
+ * second dialog lives in the first one's `render`, and every event in the inner one bubbles through
  * the outer. All three declare `Enter`, the overlap under test: only the level in front hears it.
  * The log records what closed, in order, so a dismiss key can be shown to unwind one per press.
  */
@@ -51,7 +51,7 @@ export function StackedDialogsHarness() {
     },
   });
 
-  // Middle: holds the message modal in its own subtree.
+  // Middle: holds the message dialog in its own subtree.
   const middle = useDialog<void, 'save'>({
     id: 'stack-middle',
     ariaLabel: 'Middle',
@@ -89,7 +89,7 @@ export function StackedDialogsHarness() {
     },
   });
 
-  // Bottom: a non-modal slide panel, holding the modal in its own subtree.
+  // Bottom: a non-modal slide panel, holding the dialog in its own subtree.
   const panel = useSlideDialog<void, 'close'>({
     id: 'stack-panel',
     ariaLabel: 'Panel',

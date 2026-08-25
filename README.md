@@ -25,7 +25,7 @@ vanilla and a web component.
 
 ---
 
-A **headless**, fully typed dialog/modal manager. The core is plain TypeScript with no framework in it; **React, Solid and vanilla ship as three bindings over it**. The two hook bindings share a surface — same names, same options, same typed close — and the vanilla one is a _controller_ for a `<dialog>` you wrote yourself. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
+A **headless**, fully typed dialog manager. The core is plain TypeScript with no framework in it; **React, Solid and vanilla ship as three bindings over it**. The two hook bindings share a surface — same names, same options, same typed close — and the vanilla one is a _controller_ for a `<dialog>` you wrote yourself. The library exports zero UI components — you bring your own (MUI, Tailwind, vanilla HTML/CSS).
 
 ## <img src="docs/brand/moon-first-quarter.svg" width="18" height="18" alt="" /> Entry points
 
@@ -66,13 +66,13 @@ yours and outlives the controller.
 - **Which action is running, not just that one is** — `action.isRunning('publish')` is the per-action state anywhere the button's own `data-loading` cannot reach: a header, a locked field, a status line. `hasRunningAction` stays the aggregate
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
-- **Who is in front is a decision, not a race** — `dialogManager.prioritize((modal) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
+- **Who is in front is a decision, not a race** — `dialogManager.prioritize((dialog) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
 - **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns every dismissal — the key, a backdrop click, a click outside a panel, each naming itself — into a report to the owner, with every gate above it — which key, an action claiming it, where the pointer landed, `prepare`, which dialog is in front — still the library's
-- **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the modal closes, so a dialog dismissed while it loads drops the work it started
-- **Non-dialog panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
-- **Go-style `openAndWait()`** — `const [err, result] = await modal.openAndWait()`; one call, and the only order that cannot lose the close
-- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
-- **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
+- **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the dialog closes, so a dialog dismissed while it loads drops the work it started
+- **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
+- **Go-style `openAndWait()`** — `const [err, result] = await dialog.openAndWait()`; one call, and the only order that cannot lose the close
+- **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the dialog dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a dialog opened from inside another never answers to the one in front of it
+- **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the dialog on the button that matters instead of on its first input
 - **Shadow DOM** — a `<dialog>` inside a web component gets the library's backdrop (the sheet is adopted per root, since `adoptedStyleSheets` does not cross the boundary) and its focus policy asks that root rather than the document
 - **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `dialog:open` / `dialog:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
 - **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _modal_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
@@ -90,16 +90,16 @@ where each cites the test that proves it on which engine and which binding — i
 **WCAG 2.2 chapter**, criterion by criterion, that says which halves are the library's and which
 are deliberately yours.
 
-- **Native `<dialog>`, natively modal.** `showModal()` puts the dialog in the top layer and makes
+- **Native `<dialog>`, natively dialog.** `showModal()` puts the dialog in the top layer and makes
   the rest of the document inert, and that is what assistive technology is told — the library never
-  writes `aria-dialog`, because the attribute is redundant on a modal dialog and a lie on a
+  writes `aria-modal`, because the attribute is redundant on a modal dialog and a lie on a
   non-modal one.
 - **The name is yours, and never invented.** `ariaLabel` / `ariaLabelledBy` / `ariaDescribedBy`
   reach the element; an absent option omits the attribute entirely, because `aria-label=""` is the
   spelling that hides a nameless dialog from an audit. A shipped diagnostic (silent until
   `setLogLevel`) reports a reference that resolves to nothing, a dialog with no accessible name at
   all, and `role="alertdialog"` on a non-modal dialog — the one role pairing the type system
-  already refuses on the hook bindings, an alertdialog being modal by definition.
+  already refuses on the hook bindings, an alertdialog being dialog by definition.
 - **`aria-busy` is the one attribute the library owns.** Written both ways, `"false"` included,
   tracking `prepare` — a dialog is never left silently announcing itself as loading.
 - **The hotkey attribute is the mechanism.** A hotkey dispatches by querying
@@ -169,7 +169,7 @@ There is no action config and nothing to pass in.
 import { useMessageDialog } from 'umbra/react';
 
 function ConfirmDelete() {
-  const modal = useMessageDialog<void, 'confirm' | 'cancel'>({
+  const dialog = useMessageDialog<void, 'confirm' | 'cancel'>({
     id: 'confirm-delete',
     ariaLabelledBy: 'confirm-delete-title',
     render: ({ action }) => (
@@ -191,24 +191,24 @@ function ConfirmDelete() {
 
   return (
     <>
-      <button onClick={() => modal.open()}>Delete</button>
-      {modal.Dialog}
+      <button onClick={() => dialog.open()}>Delete</button>
+      {dialog.Dialog}
     </>
   );
 }
 ```
 
-The reason **is** the action's identity: it names the action and it is what the modal closes
+The reason **is** the action's identity: it names the action and it is what the dialog closes
 with, so there is nothing to keep in sync.
 
 ### Typed close payloads and closed reasons
 
-A modal declares what it closes with, and optionally _which reasons it may close with_:
+A dialog declares what it closes with, and optionally _which reasons it may close with_:
 
 ```tsx
 type User = { id: string; name: string };
 
-const modal = useDialog<User, 'submit' | 'cancel'>({
+const dialog = useDialog<User, 'submit' | 'cancel'>({
   id: 'create-user',
   render: ({ action, hasRunningAction }) => (
     <>
@@ -240,15 +240,15 @@ you get three things: a mistyped `action('submmit')` is a compile error, the rea
 autocompletes, and the `switch` above is **exhaustive**. `'dismiss'` is always in the union
 because the library produces it itself, on Escape, on a backdrop click and on teardown.
 
-### Declaring your modals in one place
+### Declaring your dialogs in one place
 
-Everything above is declared at the call site, which is fine until the app has forty modals and a
+Everything above is declared at the call site, which is fine until the app has forty dialogs and a
 bug report names one by id. Then two questions get hard: **which component owns `confirm-delete`**,
-and **what does it close with**. A project can answer both once, by declaring its modals in a
+and **what does it close with**. A project can answer both once, by declaring its dialogs in a
 single interface:
 
 ```ts
-// src/modals.d.ts — or anywhere your tsconfig includes
+// src/dialogs.d.ts — or anywhere your tsconfig includes
 declare module 'umbra' {
   interface DialogRegistry {
     'confirm-delete': { closesWith: { confirm: { id: string }; cancel: void } };
@@ -268,7 +268,7 @@ From then on the id is checked wherever one is accepted, in both directions:
 ```ts
 dialogManager.open('confirm-delete'); // fine
 dialogManager.open('confirm-delet'); // Allowed — an unknown id is a supported one
-dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another modal
+dialogManager.close('confirm-delete', 'extend'); // Type error: that reason belongs to another dialog
 dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } }); // Type error: it declared a string
 ```
 
@@ -277,10 +277,10 @@ dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } }); // T
 is a contract between call sites rather than a check on what turns up. Parse it; `PayloadOf<'patient:merge'>`
 is the type to parse to.
 
-And `useDialog` reads the contract off the id, so a declared modal needs no type arguments at all:
+And `useDialog` reads the contract off the id, so a declared dialog needs no type arguments at all:
 
 ```tsx
-const modal = useDialog({
+const dialog = useDialog({
   id: 'confirm-delete',
   render: ({ handle }) => <button onClick={() => handle.close('confirm', { id })}>Delete</button>,
   onClose: (result) => {
@@ -298,7 +298,7 @@ that pays off during a bug hunt rather than at the keyboard.
 Three things to know before adopting it:
 
 - **Declare as few as you like.** An id the registry does not name still works, so you can adopt
-  one modal at a time — and an app can host modals it does not own. The trade is that a mistyped
+  one dialog at a time — and an app can host dialogs it does not own. The trade is that a mistyped
   id is not an error: what a declared entry buys is its _contract_, not exhaustiveness.
 - **Payload types have to be exported** to be named in the registry. Types that were local to one
   component become part of the app's vocabulary, which is usually an improvement and is always
@@ -306,7 +306,7 @@ Three things to know before adopting it:
 - **Nothing changes if you skip it.** The interface ships empty, and while it is empty an id is
   the `string` it has always been — no new errors, and the per-call-site `useDialog<TData, TReason>`
   form keeps working exactly as documented above. Both forms are supported; the registry is the one
-  that scales with the number of modals.
+  that scales with the number of dialogs.
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Without a framework
 
@@ -332,7 +332,7 @@ export const deleteAccount = async () => {
 component to hold one. `reason` and `data` are typed, and correlated, if the id is [in the registry](#declaring-your-modals-in-one-place)
 and open if it is not, and there is no listener to unsubscribe or to register in the right order.
 
-Your UI layer only has to _register_ a modal with that id; the service decides when it appears.
+Your UI layer only has to _register_ a dialog with that id; the service decides when it appears.
 For a dialog the service does not own, `requestOpenAndWait(id, request)` asks instead of
 instructing and comes back with the owner's answer — a reason if it refused, the close if it did
 not.
@@ -345,7 +345,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `useMessageDialog` / `useSlideDialog` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
 - `dialogPlacement` / `DialogAnimation` — where a non-modal dialog sits, and how any of them animates
-- `DialogOutlet` — render registered modals from one place instead of placing `{modal.Dialog}`
+- `DialogOutlet` — render registered dialogs from one place instead of placing `{dialog.Dialog}`
 - `umbra/solid` — the three differences from the React chapter, all of them the renderer's, plus `fromStore`
 - `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, reading state without a renderer, and what happens to a `<dialog>` the server sent already open
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
@@ -361,7 +361,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Reference Templates
 
-The library ships no UI components. Reference implementations live in `playground/src/entities/dialog-template/ui/`: a full **vanilla HTML/CSS** set, since it depends on nothing, and one **MUI** family beside it — the form modal, kept as the worked proof that a component library's chrome fits over the same hooks. Copy either into your project or write your own.
+The library ships no UI components. Reference implementations live in `playground/src/entities/dialog-template/ui/`: a full **vanilla HTML/CSS** set, since it depends on nothing, and one **MUI** family beside it — the form dialog, kept as the worked proof that a component library's chrome fits over the same hooks. Copy either into your project or write your own.
 
 > **If you write a custom button wrapper**, you must forward three props onto the underlying `<button>` element: `aria-keyshortcuts`, `data-focus-on-open` and `data-action-reason`. All three are how the library finds a button in the DOM — hotkeys dispatch by querying `[aria-keyshortcuts]`, `focusOnOpen` finds its button by `[data-focus-on-open]`, and the focus restore after an action re-queries `[data-action-reason]` when your renderer has replaced the node it ran on. Dropping any one of them makes that feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards all three. A wrapper that _builds_ `aria-keyshortcuts` instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 
@@ -372,22 +372,22 @@ The library ships no UI components. Reference implementations live in `playgroun
 localStorage.setItem('dialog:log', '*');
 
 // Specific namespaces:
-localStorage.setItem('dialog:log', 'modal,action');
+localStorage.setItem('dialog:log', 'dialog,action');
 
 // Programmatic:
 import { setLogLevel } from 'umbra';
 setLogLevel('*');
 ```
 
-| Namespace             | Description                          |
-| --------------------- | ------------------------------------ |
-| `manager`             | Registration, stack state            |
-| `modal`               | Open/close/unmount lifecycle         |
-| `modal:lifecycle`     | prepare, showModal, labelling checks |
-| `modal:keydown`       | ESC dismiss, user onKeyDown          |
-| `modal:click-outside` | Click-outside for non-modal dialogs  |
-| `outlet`              | DialogOutlet registration            |
-| `action`              | Action start/end, state changes      |
+| Namespace              | Description                          |
+| ---------------------- | ------------------------------------ |
+| `manager`              | Registration, stack state            |
+| `dialog`               | Open/close/unmount lifecycle         |
+| `dialog:lifecycle`     | prepare, showModal, labelling checks |
+| `dialog:keydown`       | ESC dismiss, user onKeyDown          |
+| `dialog:click-outside` | Click-outside for non-modal dialogs  |
+| `outlet`               | DialogOutlet registration            |
+| `action`               | Action start/end, state changes      |
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Development
 

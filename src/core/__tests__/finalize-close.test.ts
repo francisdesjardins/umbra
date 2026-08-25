@@ -118,7 +118,7 @@ test.describe('finalizeDialogClose', () => {
     await Promise.resolve();
 
     expect(errors).toEqual(['onClose exploded']);
-    // And the close still completed — a caller's failing callback is not the modal's problem.
+    // And the close still completed — a caller's failing callback is not the dialog's problem.
     expect(store.getSnapshot().phase).toBe('closed');
   });
 });

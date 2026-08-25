@@ -8,7 +8,7 @@ type VanillaPanelFooterProps = {
 };
 
 /**
- * Footer for big/complex modals — padding and action alignment only; compose a `<Divider />`
+ * Footer for big/complex dialogs — padding and action alignment only; compose a `<Divider />`
  * before it for visual separation. See `PanelContainer` for the full composition.
  */
 export function VanillaPanelFooter({ children, justify = 'end' }: VanillaPanelFooterProps) {

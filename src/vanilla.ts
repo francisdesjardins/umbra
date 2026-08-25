@@ -3,7 +3,7 @@
  *
  * Deliberately **not** the shape of the other two: they render a dialog *and* its contents, which
  * a vanilla binding could match only by shipping a renderer. So this one is a **controller** — the
- * markup is yours, the lifecycle is ours. Everything a modal *is* (phases and animation, `prepare`
+ * markup is yours, the lifecycle is ours. Everything a dialog *is* (phases and animation, `prepare`
  * with its `AbortSignal`, the dismiss key on the dialog, on native `cancel` and at the window for a
  * non-modal panel, click-outside, backdrop hit-testing, opening focus and restoration after a failed
  * action, the registration that makes it addressable by id from another microfrontend, the typed

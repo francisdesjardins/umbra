@@ -53,7 +53,7 @@ function membersOf(body: string): string[] {
 
 /**
  * Every option a caller can pass: `UseDialogBaseOptions`'s flat surface plus `DialogVariant`, the
- * modal/non-modal union holding the three dismissal options. A consumer sees one object — their
+ * dialog/non-modal union holding the three dismissal options. A consumer sees one object — their
  * intersection, `UseDialogOptions` — so the matrix asks about one list.
  */
 export function collectOptionNames(): string[] {

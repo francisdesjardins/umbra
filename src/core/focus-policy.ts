@@ -105,7 +105,7 @@ export function focusFirstAvailable(dialog: HTMLDialogElement, fromEnd: boolean)
  *
  * `document.activeElement` is the wrong question for a dialog inside a shadow root: it answers
  * with the *host* element, and `dialog.contains(host)` is false, so every check below silently
- * concluded that focus had left the dialog. The visible cost was a modal in a web component
+ * concluded that focus had left the dialog. The visible cost was a dialog in a web component
  * putting focus on itself after a failed action instead of back on the button that ran it —
  * the retry is under that hand, and the docs promise it.
  *
@@ -134,7 +134,7 @@ function focusInside(dialog: HTMLElement): HTMLElement | null {
 /**
  * Hand the opening focus to the action that asked for it, and report where focus actually is.
  *
- * Scoped to the dialog's own content: a modal opened from inside this one renders its
+ * Scoped to the dialog's own content: a dialog opened from inside this one renders its
  * `<dialog>` in this subtree, and its buttons are not ours to focus.
  *
  * @returns the element now holding focus inside the dialog, or `null` if focus is elsewhere —
@@ -205,7 +205,7 @@ export function captureActionRunner(dialog: HTMLDialogElement | null): HTMLEleme
 /**
  * Put focus back inside the dialog, verifying rather than assuming.
  *
- * Focusing a `disabled` element is a silent no-op and focus on `<body>` is a modal with no
+ * Focusing a `disabled` element is a silent no-op and focus on `<body>` is a dialog with no
  * keyboard (its keydown listener only hears keys raised inside it), so the preferred target is
  * tried, then checked, with the dialog itself as the floor.
  *

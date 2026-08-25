@@ -8,23 +8,23 @@ import { useStore } from '@/shared/lib/use-store';
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export const MODAL_ID = 'confirm-hotkeys';
+export const DIALOG_ID = 'confirm-hotkeys';
 
 const resultStore = createResultStore();
 
 export function ConfirmWithHotkeysExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     // A plain dialog, not an `alertdialog`: this asks, it does not interrupt.
     render: ({ action, hasRunningAction, error, phase }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="info" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Confirm Action</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>Confirm Action</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
@@ -79,13 +79,13 @@ export function ConfirmWithHotkeysExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"
-        disabled={modal.hasRunningAction}
+        disabled={dialog.hasRunningAction}
         onClick={async () => {
-          const [, closeResult] = await modal.openAndWait();
+          const [, closeResult] = await dialog.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

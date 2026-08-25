@@ -63,8 +63,8 @@ test.describe('prioritize', () => {
     manager.register('warning', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide' });
 
-    manager.prioritize((modal) => {
-      return modal.template === 'alert' ? 100 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 100 : 0;
     });
 
     manager.open('warning');
@@ -81,8 +81,8 @@ test.describe('prioritize', () => {
     const manager = createDialogManager();
     manager.register('warning', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide' });
-    manager.prioritize((modal) => {
-      return modal.template === 'alert' ? 1 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 1 : 0;
     });
 
     manager.open('warning');
@@ -100,8 +100,8 @@ test.describe('prioritize', () => {
     manager.open('panel');
     expect(stackOf(manager)).toEqual(['warning', 'panel']);
 
-    manager.prioritize((modal) => {
-      return modal.template === 'alert' ? 100 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 100 : 0;
     });
 
     expect(stackOf(manager)).toEqual(['panel', 'warning']);
@@ -111,8 +111,8 @@ test.describe('prioritize', () => {
     const manager = createDialogManager();
     manager.register('warning', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide' });
-    const stop = manager.prioritize((modal) => {
-      return modal.template === 'alert' ? 100 : 0;
+    const stop = manager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 100 : 0;
     });
 
     manager.open('warning');
@@ -128,11 +128,11 @@ test.describe('prioritize', () => {
     const manager = createDialogManager();
     manager.register('a', { store: createFakeStore() });
     manager.register('b', { store: createFakeStore() });
-    const stopFirst = manager.prioritize((modal) => {
-      return modal.id === 'a' ? 1 : 0;
+    const stopFirst = manager.prioritize((dialog) => {
+      return dialog.id === 'a' ? 1 : 0;
     });
-    manager.prioritize((modal) => {
-      return modal.id === 'b' ? 1 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.id === 'b' ? 1 : 0;
     });
 
     manager.open('a');
@@ -150,8 +150,8 @@ test.describe('prioritize', () => {
     manager.register('warning', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide' });
     manager.register('other', { store: createFakeStore(), template: 'slide' });
-    manager.prioritize((modal) => {
-      return modal.template === 'alert' ? 100 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.template === 'alert' ? 100 : 0;
     });
 
     manager.open('warning');
@@ -184,43 +184,43 @@ test.describe('prioritize', () => {
 
   test('a non-modal dialog is under every modal one, whatever the policy asks for', () => {
     const manager = createDialogManager();
-    manager.register('modal', { store: createFakeStore(), template: 'alert' });
+    manager.register('dialog', { store: createFakeStore(), template: 'alert' });
     manager.register('panel', { store: createFakeStore(), template: 'slide', nonModal: true });
     // A big number ranks the panel against other panels only: no `z-index` reaches the top layer.
-    manager.prioritize((modal) => {
-      return modal.nonModal ? 1000 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.nonModal ? 1000 : 0;
     });
 
-    manager.open('modal');
+    manager.open('dialog');
     manager.open('panel');
 
-    expect(stackOf(manager)).toEqual(['panel', 'modal']);
-    expect(manager.getSnapshot().foreground?.id).toBe('modal');
+    expect(stackOf(manager)).toEqual(['panel', 'dialog']);
+    expect(manager.getSnapshot().foreground?.id).toBe('dialog');
     // Not cosmetic: naming the panel foreground sends Escape to the dialog underneath.
     expect(manager.lookup().isForeground('panel')).toBe(false);
     expect(manager.getZIndex('panel')).toBe(manager.zIndexBase);
-    expect(manager.getZIndex('modal')).toBe(manager.zIndexBase + 1);
+    expect(manager.getZIndex('dialog')).toBe(manager.zIndexBase + 1);
   });
 
   test('and it holds with no policy at all, which is the default that changed', () => {
     const manager = createDialogManager();
-    manager.register('modal', { store: createFakeStore() });
+    manager.register('dialog', { store: createFakeStore() });
     manager.register('panel', { store: createFakeStore(), nonModal: true });
 
     // The panel opens *later*, so open order alone would put it in front.
-    manager.open('modal');
+    manager.open('dialog');
     manager.open('panel');
 
-    expect(stackOf(manager)).toEqual(['panel', 'modal']);
-    expect(manager.getSnapshot().foreground?.id).toBe('modal');
+    expect(stackOf(manager)).toEqual(['panel', 'dialog']);
+    expect(manager.getSnapshot().foreground?.id).toBe('dialog');
   });
 
   test('within one family the policy still decides', () => {
     const manager = createDialogManager();
     manager.register('first-panel', { store: createFakeStore(), nonModal: true });
     manager.register('second-panel', { store: createFakeStore(), nonModal: true });
-    manager.prioritize((modal) => {
-      return modal.id === 'first-panel' ? 5 : 0;
+    manager.prioritize((dialog) => {
+      return dialog.id === 'first-panel' ? 5 : 0;
     });
 
     manager.open('first-panel');

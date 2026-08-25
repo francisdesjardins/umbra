@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Reusable Playwright probe: drives a modal in the playground by id and measures it.
+ * Reusable Playwright probe: drives a dialog in the playground by id and measures it.
  *
  * Run from the PROJECT ROOT (so `playwright` resolves from node_modules) with the dev
  * server (`npm run dev`) running. Auto-detects the Vite port (3000–3010) unless --url given.
@@ -19,12 +19,12 @@
  *   size        For every (direction × mode) combo, set width/height/unit and report the
  *               dialog's measured box so you can see which combos respond to the SIZE pane.
  *   state       Open, then toggle a structural prop while open; report whether it tore down
- *               cleanly (not stuck open) and can reopen. --toggle Non-dialog|Portal.
+ *               cleanly (not stuck open) and can reopen. --toggle Non-modal|Portal.
  *   logs        Enable `dialog:log=*`, run a small open/close/toggle sequence, print the
  *               library's own lifecycle/manager logs (register/open/close/teardown).
  *
  * Flags: --dir Left|Right|Top|Bottom  --non-modal  --portal  --unit px|vw|vh|%
- *        --width N  --height N  --toggle Non-dialog|Portal  --url <url>  --headed  --slow
+ *        --width N  --height N  --toggle Non-modal|Portal  --url <url>  --headed  --slow
  */
 import { chromium } from 'playwright';
 
@@ -47,7 +47,7 @@ const opts = {
   url: val('--url', null),
   headed: has('--headed'),
   slow: has('--slow'),
-  // Any modal on any page; the slide presets are the default target.
+  // Any dialog on any page; the slide presets are the default target.
   id: val('--id', 'slide-preset-drawer'),
   route: val('--route', '/slide-dialog'),
   openLabel: val('--open-label', 'Right drawer'),
@@ -58,7 +58,7 @@ const opts = {
 const TID = `[data-testid="dialog-${opts.id}"]`;
 
 /**
- * There is no configurator any more: each slide shape is its own preset with its own modal id
+ * There is no configurator any more: each slide shape is its own preset with its own dialog id
  * (`slide-preset-drawer`, `-sheet`, `-palette`, `-inspector`), so a shape is selected by probing
  * a different `--id` rather than by driving controls. Pass `--axis x|y` to say which way the
  * target moves.
@@ -224,7 +224,7 @@ async function main() {
     const page = await newPage(browser);
     const logs = [];
     page.on('console', (m) => {
-      if (/dialog:(modal|manager|lifecycle)/.test(m.text()))
+      if (/dialog:(dialog|manager|lifecycle)/.test(m.text()))
         logs.push(
           m
             .text()

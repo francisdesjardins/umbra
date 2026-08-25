@@ -2,10 +2,10 @@ import { createContext, use } from 'react';
 
 /**
  * Shared state for the source-code viewer: only *what* to show (`selectedExample`) and the
- * opener the root layout publishes once its slide modal is mounted
+ * opener the root layout publishes once its slide dialog is mounted
  * (`codeDialogOpen`), so any `ViewCodeButton` in the tree drives one viewer instance. It lives in
  * `shared` because of who consumes it — `ViewCodeButton` is `shared/ui`, and under Feature-Sliced
- * Design may not reach up into `app` or `widgets`. Contract here, provider and modal above.
+ * Design may not reach up into `app` or `widgets`. Contract here, provider and dialog above.
  */
 export type CodePaneContextValue = {
   selectedExample: string | null;

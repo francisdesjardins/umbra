@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { noop } from '../../__tests__/noop.js';
 import {
-  MODAL_LIFECYCLE_SEQUENCE,
-  MODAL_LIFECYCLE_STEPS,
+  DIALOG_LIFECYCLE_SEQUENCE,
+  DIALOG_LIFECYCLE_STEPS,
   keydownOptions,
   type DialogLifecyclePass,
   type DialogLifecycleStep,
@@ -30,7 +30,7 @@ const BASE: DialogLifecyclePass = {
 };
 
 function inputsOf(step: DialogLifecycleStep, pass: DialogLifecyclePass): readonly unknown[] | null {
-  const spec = MODAL_LIFECYCLE_STEPS.find((candidate) => {
+  const spec = DIALOG_LIFECYCLE_STEPS.find((candidate) => {
     return candidate.step === step;
   });
   if (!spec) {
@@ -153,7 +153,7 @@ test.describe('what each step reads', () => {
 
   test('the phase rebuilds everything that can be rebuilt', () => {
     // Every step is phase-driven, so one sitting out a phase change keeps stale listeners alive.
-    for (const step of MODAL_LIFECYCLE_SEQUENCE) {
+    for (const step of DIALOG_LIFECYCLE_SEQUENCE) {
       if (inputsOf(step, BASE) === null) {
         continue;
       }
@@ -183,7 +183,7 @@ test.describe('what each step reads', () => {
     };
     const carried = new Set<unknown>(Object.values(distinct));
 
-    for (const step of MODAL_LIFECYCLE_SEQUENCE) {
+    for (const step of DIALOG_LIFECYCLE_SEQUENCE) {
       for (const input of inputsOf(step, distinct) ?? []) {
         expect(carried.has(input), `${step} reads something the pass does not carry`).toBe(true);
       }

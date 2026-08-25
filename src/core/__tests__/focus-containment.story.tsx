@@ -13,7 +13,7 @@ export function FocusContainmentHarness({
   readonly containFocus: boolean;
   readonly nonModal?: boolean;
 }) {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment',
     ...(nonModal ? { nonModal: true as const } : { nonModal: false as const }),
     containFocus,
@@ -46,13 +46,13 @@ export function FocusContainmentHarness({
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -63,7 +63,7 @@ export function FocusContainmentHarness({
  * land *after* the real last stop, so "the last one" never matches and the wrap never fires.
  */
 export function RovingToolbarHarness() {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment-toolbar',
     nonModal: true,
     containFocus: true,
@@ -111,13 +111,13 @@ export function RovingToolbarHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -127,7 +127,7 @@ export function RovingToolbarHarness() {
  * `keydown` approach cannot see the Tab that leaves it — but the browser walks onto a marker.
  */
 export function FramedContentHarness() {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment-frame',
     nonModal: true,
     containFocus: true,
@@ -156,13 +156,13 @@ export function FramedContentHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -174,7 +174,7 @@ export function FramedContentHarness() {
 export function HiddenStopHarness() {
   const [hideMiddle, setHideMiddle] = useState(false);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment-hidden',
     nonModal: true,
     containFocus: true,
@@ -214,13 +214,13 @@ export function HiddenStopHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -230,7 +230,7 @@ export function HiddenStopHarness() {
  * tag, so a scan of those never proposes it and the wrap hands focus back where it started.
  */
 export function EditableContentHarness() {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment-editable',
     nonModal: true,
     containFocus: true,
@@ -262,13 +262,13 @@ export function EditableContentHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -279,7 +279,7 @@ export function EditableContentHarness() {
  * the recovery is the unconditional half and must not need the flag.
  */
 export function EditableOnlyHarness() {
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'focus-containment-editable-only',
     nonModal: true,
     ariaLabel: 'Editor panel',
@@ -307,28 +307,28 @@ export function EditableOnlyHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
 
 /**
- * A modal with a **non-modal panel opened inside it**, where the recovery's scan can meet a dialog
+ * A dialog with a **non-modal panel opened inside it**, where the recovery's scan can meet a dialog
  * that is not its own: `focusFirstAvailable` walks a plain `querySelectorAll` where every other
- * `focus-policy.ts` lookup uses `queryOwn`. Non-dialog so the dead-space click can be made at all,
+ * `focus-policy.ts` lookup uses `queryOwn`. Non-modal so the dead-space click can be made at all,
  * and only `Shift+Tab` discriminates — it scans from the end, where the nested button sits.
  */
 export function NestedPanelScanHarness() {
   const panel = useDialog({
     id: 'nested-scan-panel',
     nonModal: true,
-    ariaLabel: 'Panel inside the modal',
+    ariaLabel: 'Panel inside the dialog',
     // Sized so it overlays the top of the region and leaves the dead space below it clickable —
     // a full-region panel would swallow the click that puts focus on the `<dialog>` element.
     style: { width: '120px', height: '90px' },
@@ -343,7 +343,7 @@ export function NestedPanelScanHarness() {
 
   const outer = useDialog({
     id: 'nested-scan-outer',
-    ariaLabel: 'Outer modal',
+    ariaLabel: 'Outer dialog',
     style: { width: '420px', height: '420px' },
     render: () => {
       return (

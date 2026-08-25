@@ -2,7 +2,7 @@ import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-// ── Harness: multiple modals in one outlet ─────────────────────────────────
+// ── Harness: multiple dialogs in one outlet ─────────────────────────────────
 
 function DialogA() {
   const { open, isVisible, dialogManager } = useDialog<void, 'done-a'>({
@@ -85,7 +85,7 @@ function DialogB() {
 }
 
 /**
- * Two modals inside one outlet — both render without {Dialog} in JSX.
+ * Two dialogs inside one outlet — both render without {Dialog} in JSX.
  */
 export function OutletMultiHarness() {
   return (

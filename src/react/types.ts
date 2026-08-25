@@ -13,7 +13,7 @@ import type {
  */
 
 /**
- * CSS transition configuration for modal entrance/exit animations.
+ * CSS transition configuration for dialog entrance/exit animations.
  * @example
  * const fade: DialogAnimation = {
  *   entrance: { opacity: 1, transform: 'scale(1)' },
@@ -36,7 +36,7 @@ export type UseDialogBaseOptions<
 /**
  * Options for `useDialog`.
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
- * @typeParam TReason - The reasons this modal closes with. Declare them: the `string` default
+ * @typeParam TReason - The reasons this dialog closes with. Declare them: the `string` default
  * accepts anything, costing the typo-safety and exhaustive `switch` the design exists for.
  */
 export type UseDialogOptions<TData = void, TReason extends string = string> = UseDialogOptionsModel<

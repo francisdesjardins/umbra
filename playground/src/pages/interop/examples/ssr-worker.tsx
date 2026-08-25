@@ -97,7 +97,7 @@ export function SsrWorkerExample() {
     <ExampleLayout
       // The dialog belongs to the hydrated component, which renders its own `Dialog` inside the host
       // below — this example places none of its own.
-      modals={null}
+      dialogs={null}
       result={
         error !== null
           ? `The worker refused: ${error}`

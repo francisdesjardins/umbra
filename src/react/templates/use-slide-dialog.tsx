@@ -62,7 +62,7 @@ export type UseSlideDialogReturn<TData = void, TReason extends string = string> 
 >;
 
 /**
- * Headless template hook for a slide-in panel modal: it configures the slide animation and the
+ * Headless template hook for a slide-in panel dialog: it configures the slide animation and the
  * dialog's positioning from the direction, and you bring the UI. By default the panel stretches
  * across the cross axis (a full-height side drawer or full-width top/bottom sheet); a non-stretch
  * `align` pins a content-sized one — a corner toast, a palette — that you size in `render`.

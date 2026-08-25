@@ -26,19 +26,19 @@ export type OpenReconciliation = 'open' | 'close' | 'none';
  * @example
  * ```tsx
  * function Panel({ open }: { open: boolean }) {
- *   const modal = useDialog<void, 'close'>({ id: 'panel', render: () => <p>…</p> });
+ *   const dialog = useDialog<void, 'close'>({ id: 'panel', render: () => <p>…</p> });
  *   const { phase } = useLookup('panel');
  *
  *   useEffect(() => {
  *     const next = reconcileOpen(phase, open);
  *     if (next === 'open') {
- *       void modal.open();
+ *       void dialog.open();
  *     } else if (next === 'close') {
- *       modal.handle.close('close');
+ *       dialog.handle.close('close');
  *     }
- *   }, [phase, open, modal]);
+ *   }, [phase, open, dialog]);
  *
- *   return modal.Dialog;
+ *   return dialog.Dialog;
  * }
  * ```
  */

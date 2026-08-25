@@ -3,7 +3,7 @@ import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-// ── Harness: a modal unmounting out from under its outlet ──────────────────
+// ── Harness: a dialog unmounting out from under its outlet ──────────────────
 
 function TeardownDialog({ onRemove }: { readonly onRemove: () => void }) {
   const { open, isVisible } = useDialog<void, 'close'>({
@@ -52,10 +52,10 @@ function TeardownDialog({ onRemove }: { readonly onRemove: () => void }) {
 }
 
 /**
- * A modal that can unmount while the outlet is still rendering it.
+ * A dialog that can unmount while the outlet is still rendering it.
  *
  * The outlet keeps a map of registered nodes, and registration is the half every other test here
- * exercises. This is the other half: a modal whose component goes away has to be dropped from that
+ * exercises. This is the other half: a dialog whose component goes away has to be dropped from that
  * map, or the outlet goes on rendering a `<dialog>` for a hook that no longer exists — visible on
  * screen, registered with the manager, and answerable by nothing.
  */

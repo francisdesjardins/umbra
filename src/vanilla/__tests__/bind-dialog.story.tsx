@@ -1085,8 +1085,8 @@ export function VanillaShadowStackHarness() {
     if (!policyOn || !manager) {
       return undefined;
     }
-    return manager.prioritize((modal) => {
-      return modal.id === 'vanilla-shadow-front' ? 10 : 0;
+    return manager.prioritize((dialog) => {
+      return dialog.id === 'vanilla-shadow-front' ? 10 : 0;
     });
   }, [policyOn, manager]);
 
@@ -1473,7 +1473,7 @@ export function VanillaServerOpenHarness({ nonModal }: { readonly nonModal: bool
 }
 
 /**
- * A modal claiming no opening focus, a non-modal panel opening underneath — the claimless half of
+ * A dialog claiming no opening focus, a non-modal panel opening underneath — the claimless half of
  * {@link VanillaShadowStackHarness}, whose `focusOnOpen` gives the reclaim a marker to aim at.
  * Without one it falls through to `dialog.focus()`, which an open `<dialog>` refuses. Two focusables,
  * because with one "handed back to the first focusable" and "focus never moved" are one element.
@@ -1484,7 +1484,7 @@ export function VanillaClaimlessReclaimHarness() {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const [controllers, setControllers] = useState<{
-    readonly modal: Bound<'confirm' | 'cancel'>;
+    readonly dialog: Bound<'confirm' | 'cancel'>;
     readonly panel: Bound<'close'>;
   } | null>(null);
 
@@ -1498,10 +1498,10 @@ export function VanillaClaimlessReclaimHarness() {
     }
 
     const instance = createDialogManager();
-    const modal = bindDialog<void, 'confirm' | 'cancel'>({
+    const dialog = bindDialog<void, 'confirm' | 'cancel'>({
       id: 'vanilla-claimless',
       dialog: dialogEl,
-      ariaLabel: 'Vanilla modal claiming no opening focus',
+      ariaLabel: 'Vanilla dialog claiming no opening focus',
       manager: instance,
       style: { width: '260px', height: '200px' },
     });
@@ -1517,15 +1517,15 @@ export function VanillaClaimlessReclaimHarness() {
     });
 
     // Neither takes `focusOnOpen`, which is what puts this harness on the floor's path.
-    const unbindCancel = modal.bindAction(cancel, { reason: 'cancel' });
-    const unbindConfirm = modal.bindAction(confirm, { reason: 'confirm' });
+    const unbindCancel = dialog.bindAction(cancel, { reason: 'cancel' });
+    const unbindConfirm = dialog.bindAction(confirm, { reason: 'confirm' });
 
-    setControllers({ modal, panel });
+    setControllers({ dialog, panel });
 
     return () => {
       unbindCancel();
       unbindConfirm();
-      modal.destroy();
+      dialog.destroy();
       panel.destroy();
       setControllers(null);
     };
@@ -1536,13 +1536,13 @@ export function VanillaClaimlessReclaimHarness() {
       <button
         data-testid="open-both"
         onClick={() => {
-          void controllers?.modal.open().then(() => {
+          void controllers?.dialog.open().then(() => {
             return controllers.panel.open();
           });
         }}
         type="button"
       >
-        Open the modal, then the panel underneath
+        Open the dialog, then the panel underneath
       </button>
 
       <dialog ref={modalRef} data-testid="vanilla-claimless-dialog">

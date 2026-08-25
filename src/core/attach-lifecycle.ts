@@ -11,7 +11,7 @@ import type {
   OpenSequenceOptions,
 } from './attach-types.js';
 
-const log = createLogger('modal:lifecycle');
+const log = createLogger('dialog:lifecycle');
 
 /**
  * The `<dialog>` lifecycle, driven by phase — with no framework deciding what a phase is.
@@ -167,7 +167,7 @@ const reported = new WeakSet<Element>();
  * means something.
  *
  * **Not before `prepare` has settled**, because a name may legitimately point at a heading the
- * caller has not been able to render yet — a modal that shows a spinner while it loads is the
+ * caller has not been able to render yet — a dialog that shows a spinner while it loads is the
  * documented normal case, not an edge one, and a component test on two bindings pins that it stays
  * quiet there. That guard is the whole of the timing this needs: by the phase `'open'`, every
  * binding has committed its content, `DialogOutlet` included. That one was the suspect — it

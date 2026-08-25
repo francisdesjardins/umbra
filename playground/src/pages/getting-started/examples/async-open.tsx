@@ -8,7 +8,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'async-open';
+export const DIALOG_ID = 'async-open';
 
 const resultStore = createResultStore();
 
@@ -32,7 +32,7 @@ export function AsyncOpenExample() {
   const { data, isFetching, isSuccess, refetch, invalidate } = useQuery(profileQuery);
 
   const asyncDialog = useMessageDialog({
-    id: MODAL_ID,
+    id: DIALOG_ID,
     // A string: the pending branch has no heading to point at, the loaded one is the fetched name.
     ariaLabel: 'Profile',
     // Awaiting here is what makes `open()` resolve with the data already in.
@@ -84,7 +84,7 @@ export function AsyncOpenExample() {
                   Plan: <strong>{data?.plan}</strong> — fetched at {data?.fetchedAt}
                 </Shared.Message>
 
-                {/* Refetch here: only `isFetching` flips. The modal is already prepared. */}
+                {/* Refetch here: only `isFetching` flips. The dialog is already prepared. */}
                 {axes}
 
                 <Shared.Button
@@ -112,7 +112,7 @@ export function AsyncOpenExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={asyncDialog.Dialog}>
+    <ExampleLayout result={result} dialogs={asyncDialog.Dialog}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--app-space-2)' }}>
         <AppButton
           variant="contained"

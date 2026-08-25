@@ -6,7 +6,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * Pins the identity of `open` / `openAndWait` / `handle` across arbitrary
  * re-renders and across a full open → close lifecycle.
  *
- * All three close over the modal store alone, so they are built once in the
+ * All three close over the dialog store alone, so they are built once in the
  * hook's `useState` initializer. A consumer must be able to hand them straight
  * to an effect dependency array or a memoized child without shuttling them
  * through a ref first.
@@ -14,7 +14,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function StableIdentityHarness() {
   const [tick, setTick] = useState(0);
 
-  const modal = useDialog<void, 'confirm'>({
+  const dialog = useDialog<void, 'confirm'>({
     id: 'stable-identity',
     render: ({ handle }) => {
       return (
@@ -35,16 +35,16 @@ export function StableIdentityHarness() {
   // Captured on the first render only — subsequent renders compare against it.
   const [first] = useState(() => {
     return {
-      open: modal.open,
-      openAndWait: modal.openAndWait,
-      handle: modal.handle,
+      open: dialog.open,
+      openAndWait: dialog.openAndWait,
+      handle: dialog.handle,
     };
   });
 
   const stable =
-    first.open === modal.open &&
-    first.openAndWait === modal.openAndWait &&
-    first.handle === modal.handle;
+    first.open === dialog.open &&
+    first.openAndWait === dialog.openAndWait &&
+    first.handle === dialog.handle;
 
   return (
     <div>
@@ -59,15 +59,15 @@ export function StableIdentityHarness() {
       </button>
       <button
         onClick={async () => {
-          await modal.open();
+          await dialog.open();
         }}
       >
         Open Dialog
       </button>
       <span data-testid="tick">{tick}</span>
-      <span data-testid="is-visible">{modal.isVisible ? 'open' : 'closed'}</span>
+      <span data-testid="is-visible">{dialog.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="identity">{stable ? 'stable' : 'changed'}</span>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

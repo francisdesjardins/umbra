@@ -1,5 +1,5 @@
 /**
- * Compile-time assertions for the modal registry, in the state the package ships: **empty**.
+ * Compile-time assertions for the dialog registry, in the state the package ships: **empty**.
  *
  * The augmented half cannot live here — declaration merging is global, so a project's ids would
  * leak into every other type test in this project and the fallback under test would stop being
@@ -38,7 +38,7 @@ export function _doorsStayOpen(id: string) {
 export function HookKeepsItsGenerics() {
   return useDialog<{ name: string }, 'save' | 'cancel'>({
     id: 'some-dialog',
-    ariaLabel: 'Some modal',
+    ariaLabel: 'Some dialog',
     render: ({ handle }) => {
       handle.close('save', { name: 'x' });
       // @ts-expect-error the declared reasons are still enforced

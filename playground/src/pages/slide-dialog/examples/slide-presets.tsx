@@ -326,7 +326,7 @@ export function SlidePresetsExample() {
   return (
     <ExampleLayout
       result={result}
-      modals={
+      dialogs={
         <>
           {drawer.Dialog}
           {sheet.Dialog}

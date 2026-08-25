@@ -13,7 +13,7 @@ export function ScrollLockHarness() {
       return (
         <div style={dialogStyle}>
           <p>Modal dialog</p>
-          {/* Top-layer rule: a control usable while this modal is open lives in the render. */}
+          {/* Top-layer rule: a control usable while this dialog is open lives in the render. */}
           <button
             onClick={() => {
               dialogManager.open('scroll-lock-modal-2');
@@ -60,7 +60,7 @@ export function ScrollLockHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Non-dialog panel</p>
+          <p>Non-modal panel</p>
           <button
             onClick={() => {
               handle.close('done');

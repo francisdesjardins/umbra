@@ -3,7 +3,7 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A modal whose content holds nothing focusable — a loading panel, a bare message.
+ * A dialog whose content holds nothing focusable — a loading panel, a bare message.
  *
  * `showModal()` has nowhere to put focus in that case, so it stays outside the dialog. Any ESC
  * handling that lives on the dialog element therefore never sees the key, and the browser's own

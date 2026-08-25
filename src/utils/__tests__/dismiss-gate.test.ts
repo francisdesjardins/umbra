@@ -5,7 +5,7 @@ import type { DismissCause, DismissReason } from '../../core/dismiss-reason.js';
 import type { DismissGate } from '../dismiss-gate.js';
 import { answerDismiss, canDismiss } from '../dismiss-gate.js';
 
-/** A modal that is open, idle, and freely dismissable. */
+/** A dialog that is open, idle, and freely dismissable. */
 const dismissable: DismissGate = {
   phase: 'open',
   isPreparing: false,
@@ -14,7 +14,7 @@ const dismissable: DismissGate = {
 };
 
 test.describe('canDismiss', () => {
-  test('allows dismissal of an open, idle modal', () => {
+  test('allows dismissal of an open, idle dialog', () => {
     expect(canDismiss(dismissable)).toBe(true);
   });
 
@@ -24,11 +24,11 @@ test.describe('canDismiss', () => {
 
   // ── Phase gating ──────────────────────────────────────────────────────────
 
-  test('blocks dismissal of a closed modal', () => {
+  test('blocks dismissal of a closed dialog', () => {
     expect(canDismiss({ ...dismissable, phase: 'closed' })).toBe(false);
   });
 
-  test('blocks dismissal of a modal already playing its exit animation', () => {
+  test('blocks dismissal of a dialog already playing its exit animation', () => {
     // store.close() is a no-op in 'closing'; gating here avoids the round trip.
     expect(canDismiss({ ...dismissable, phase: 'closing' })).toBe(false);
   });
@@ -142,7 +142,7 @@ test.describe('answerDismiss', () => {
     expect(target.closed).toEqual([]);
   });
 
-  test('a declined dismissal still leaves the modal alone', () => {
+  test('a declined dismissal still leaves the dialog alone', () => {
     // Declining is about what the *page* sees next; it is never a second way to close.
     const target = recordingTarget();
 

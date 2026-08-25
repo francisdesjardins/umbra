@@ -1,11 +1,11 @@
 ---
 name: dialog-debug
-description: Debug dialog/slide-dialog animation, positioning and lifecycle state by driving a real browser against any modal in the playground and measuring what actually renders. Use when a modal visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
+description: Debug dialog/slide-dialog animation, positioning and lifecycle state by driving a real browser against any dialog in the playground and measuring what actually renders. Use when a dialog visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
 ---
 
 # Dialog Debug
 
-A reusable Playwright probe (`probe.mjs`) that drives **any modal in the playground** by its id
+A reusable Playwright probe (`probe.mjs`) that drives **any dialog in the playground** by its id
 and measures what the browser actually paints — transform trajectories, per-frame rendered
 positions, box sizes, teardown behavior, and the library's own debug logs. Use it instead of
 writing (and throwing away) one-off scripts.
@@ -32,7 +32,7 @@ positions** — the reliable signal for "did it actually slide?".
 
 ```bash
 # Did every direction actually slide (not jump/pop)? distinct>=8 = slide, <=2 = jump.
-node .claude/skills/dialog-debug/probe.mjs --mode slide                 # modal, all 4 dirs
+node .claude/skills/dialog-debug/probe.mjs --mode slide                 # dialog, all 4 dirs
 node .claude/skills/dialog-debug/probe.mjs --mode slide --non-modal     # contained
 node .claude/skills/dialog-debug/probe.mjs --mode slide --portal        # portal
 node .claude/skills/dialog-debug/probe.mjs --mode slide --id slide-preset-drawer
@@ -44,7 +44,7 @@ node .claude/skills/dialog-debug/probe.mjs --mode trajectory --id slide-preset-d
 
 # Does toggling a structural prop while open tear down cleanly (not stuck)?
 node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Portal --non-modal
-node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Non-dialog
+node .claude/skills/dialog-debug/probe.mjs --mode state --toggle Non-modal
 
 # The library's own lifecycle/manager logs during open/close.
 node .claude/skills/dialog-debug/probe.mjs --mode logs --id slide-preset-drawer
@@ -59,11 +59,11 @@ node .claude/skills/dialog-debug/probe.mjs --mode slide --id slide-preset-drawer
 | ---------------------- | ------------------------------------------------------------- |
 | `--mode`               | `slide` (default) · `trajectory` · `size` · `state` · `logs`  |
 | `--dir`                | `Left`/`Right`/`Top`/`Bottom` (default: all four for `slide`) |
-| `--non-modal`          | check the Non-dialog box                                      |
+| `--non-modal`          | check the Non-modal box                                       |
 | `--portal`             | check the Portal box                                          |
 | `--unit`               | `px`/`vw`/`vh`/`%` (size mode)                                |
 | `--width` / `--height` | numbers for the SIZE pane inputs                              |
-| `--toggle`             | `Non-dialog` or `Portal` (state mode)                         |
+| `--toggle`             | `Non-modal` or `Portal` (state mode)                          |
 | `--url`                | override the dev URL (skip port auto-detect)                  |
 | `--headed` / `--slow`  | show the browser / slow it down                               |
 

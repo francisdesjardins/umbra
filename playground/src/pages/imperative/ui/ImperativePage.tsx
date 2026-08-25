@@ -18,19 +18,19 @@ export const ImperativePage = () => {
   return (
     <PageLayout
       title="Imperative Control"
-      description="Opening a modal from somewhere that is not the component holding it — a service, a router guard, a worker, or a boolean prop one level up. Where the dialog's markup ends up is the same question asked about the render rather than the open, so it is here too."
+      description="Opening a dialog from somewhere that is not the component holding it — a service, a router guard, a worker, or a boolean prop one level up. Where the dialog's markup ends up is the same question asked about the render rather than the open, so it is here too."
     >
       <SectionNav sections={SECTIONS} />
 
       <ExampleSection
         id="imperative-control"
         title="Imperative control"
-        description="dialogManager drives modals by id from anywhere. It is the package root — plain TypeScript that never imports React — so a service, a router guard or a worker can raise a dialog without a component."
+        description="dialogManager drives dialogs by id from anywhere. It is the package root — plain TypeScript that never imports React — so a service, a router guard or a worker can raise a dialog without a component."
       >
         <ExampleGrid>
           <ExampleCard
             title="Imperative Open / Close"
-            description="Open and close modals via dialogManager.open() / .close() — no React ref needed. Module-level createStore tracks open count across renders."
+            description="Open and close dialogs via dialogManager.open() / .close() — no React ref needed. Module-level createStore tracks open count across renders."
             codeKey="imperative"
             example={<ImperativeExample />}
           />
@@ -42,13 +42,13 @@ export const ImperativePage = () => {
           />
           <ExampleCard
             title="An open that lands on nothing"
-            description="A modal joins the registry when its component mounts, so an open from a service or a deep link can arrive before the dialog behind a code-split route exists. open() answers whether it landed, and the register event is what lets a caller hold the ask until it does — ten lines, in user-land, because how long to wait is the application's question."
+            description="A dialog joins the registry when its component mounts, so an open from a service or a deep link can arrive before the dialog behind a code-split route exists. open() answers whether it landed, and the register event is what lets a caller hold the ask until it does — ten lines, in user-land, because how long to wait is the application's question."
             codeKey="deferred-open"
             example={<DeferredOpenExample />}
           />
           <ExampleCard
             title="A payload the contract declares"
-            description="The other direction of the registry: data is what a modal closes with, payload is what it opens with. The ask is checked against the contract with no type argument written anywhere — while the handler still receives unknown, because this is the door a microfrontend comes through and the declaration is what to parse to."
+            description="The other direction of the registry: data is what a dialog closes with, payload is what it opens with. The ask is checked against the contract with no type argument written anywhere — while the handler still receives unknown, because this is the door a microfrontend comes through and the declaration is what to parse to."
             codeKey="declared-payload"
             example={<DeclaredPayloadExample />}
           />
@@ -60,7 +60,7 @@ export const ImperativePage = () => {
           />
           <ExampleCard
             title="Service Layer — the React half"
-            description="Registers the two modals the service opens by id and mirrors its state through useSyncExternalStore. It orchestrates nothing: no flow logic lives in the component."
+            description="Registers the two dialogs the service opens by id and mirrors its state through useSyncExternalStore. It orchestrates nothing: no flow logic lives in the component."
             codeKey="imperative-service-layer"
             example={<ServiceLayerExample />}
           />
@@ -80,7 +80,7 @@ export const ImperativePage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="DialogOutlet"
-            description="Wrap a subtree with DialogOutlet — inner useDialog calls render automatically, no {modal.Dialog} needed."
+            description="Wrap a subtree with DialogOutlet — inner useDialog calls render automatically, no {dialog.Dialog} needed."
             codeKey="dialog-outlet"
             example={<DialogOutletExample />}
           />

@@ -11,6 +11,83 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-25
 
+### Changed — `modal` was never the noun: the whole surface says `dialog`
+
+The library drives one thing, and it is a native `<dialog>`. Every path ends there: `bindDialog`
+takes an `HTMLDialogElement` by type, the React binding renders the element, Solid calls
+`document.createElement('dialog')`, and the lifecycle is the element's own `show()` / `showModal()`
+/ `close()`. It drives that element in **two variants**, modal and non-modal — so a hook named
+`useModal` that returned a non-modal dialog whenever `nonModal: true` was passed had the wrong word
+in the most visible position in the package.
+
+**The rule, which settles every name without a case-by-case argument:**
+
+> `dialog` is the **noun** — the element. `modal` is the **adjective** — one of its two variants.
+
+So `useModal` is `useDialog`, and `nonModal`, `showModal()`, the CSS `:modal` pseudo-class,
+`aria-modal` and the phrase _a modal dialog_ are all untouched. They are the adjective, and three of
+them are the platform's own words.
+
+#### The public surface
+
+| Was                                               | Now                                                  |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| `useModal`, `UseModalOptions`, `UseModalReturn`   | `useDialog`, `UseDialogOptions`, `UseDialogReturn`   |
+| `useMessageModal` / `useSlideModal`               | `useMessageDialog` / `useSlideDialog`                |
+| `ModalOutlet`                                     | `DialogOutlet`                                       |
+| `ModalPhase`, `ModalVariant`, `ModalAnimation`    | `DialogPhase`, `DialogVariant`, `DialogAnimation`    |
+| `ModalHandle`, `ModalRenderArgs`, `ModalInfo`     | `DialogHandle`, `DialogRenderArgs`, `DialogInfo`     |
+| `ModalRegistry`, `ModalId`, `ModalContract`       | `DialogRegistry`, `DialogId`, `DialogContract`       |
+| `ModalFailure`, `ModalErrorSource`, `ModalLookup` | `DialogFailure`, `DialogErrorSource`, `DialogLookup` |
+| `StackModal`                                      | `StackDialog`                                        |
+| the returned node — `modal.Modal`                 | `dialog.Dialog`                                      |
+
+A project that augments the registry renames the interface in its `declare module` block;
+everything else a type-check will point at.
+
+#### What a type-check will **not** point at
+
+Five contracts are strings, so nothing fails until it silently stops working. This is the list worth
+reading twice:
+
+- **DOM attributes** — `data-modal-id` → **`data-dialog-id`**, plus `data-modal-z`,
+  `data-modal-type` and `data-modal-container`. `data-dialog-id` is a documented styling hook, so a
+  stylesheet selecting `dialog[data-modal-id="…"]` stops matching.
+- **DOM events** — `MODAL_OPEN_EVENT` / `MODAL_CLOSE_EVENT` still exist under
+  `DIALOG_OPEN_EVENT` / `DIALOG_CLOSE_EVENT`, but their **values** changed too: `'modal:open'` →
+  `'dialog:open'`, `'modal:close'` → `'dialog:close'`. A listener registered by hand — an analytics
+  hook, a microfrontend outside the import graph — goes quiet.
+- **Log namespaces** — `modal`, `modal:lifecycle`, `modal:keydown`, `modal:click-outside` are now
+  `dialog`, `dialog:lifecycle`, `dialog:keydown`, `dialog:click-outside`. The storage key
+  `dialog:log` is unchanged.
+- **The generated test id** — `dialogAttributes` stamps `data-testid="dialog-<id>"` where it stamped
+  `modal-<id>`.
+- **Playground routes** — `/slide-modal` → `/slide-dialog`, `/modal-actions` → `/dialog-actions`,
+  and the playground's `--modal-*` CSS custom properties are `--dialog-*`.
+
+#### Three defects the sweep found, which is the argument for doing it by hand
+
+A rename of ~9,000 occurrences is a mechanical job with one hard part, and the hard part is that
+`modal` is a noun **and** an adjective spelled identically. Each of these was a pattern eating the
+adjective:
+
+- **`aria-modal` became `aria-dialog`** — an attribute that does not exist — because the guard on the
+  trailing `-modal` form was written for `non-modal` and nothing else. Seven sites, in the passage
+  documenting why the library refuses to write that attribute.
+- **The CSS `:modal` pseudo-class became `:dialog`** in eleven places, five of them Playwright
+  selectors. Two were **passing vacuously**: `expect(locator('dialog:modal')).toHaveCount(0)` is
+  just as true of a selector that matches nothing at all, so the assertion survived losing its
+  meaning. The other three failed loudly, which is how it was found.
+- **The logger's namespace prefix collided with a namespace.** `dialog:` is the storage prefix — so
+  `'dialog:modal'` was the long way to write `'modal'` — and stripping it unconditionally was
+  correct while no namespace began with `dialog:`. After the rename three do, and
+  `setLogLevel('dialog:lifecycle')` was being read as `'lifecycle'` and matching nothing. Both
+  spellings are tried now, and two tests pin it.
+
+`CHANGELOG.md` itself is the one file the sweep never touched: this file's own header says entries
+are left as written, and renaming a symbol inside a 2026-05 entry would make it name something that
+did not exist for another three months.
+
 ### Changed — the two form examples show the markup, and the MUI template layer is gone
 
 `/ui-integrations` exists to put one form beside itself in two flavours, so the diff between the two

@@ -19,7 +19,7 @@ export type MessageDialogRenderContext<
   TReason extends string = string,
 > = BaseRenderContext<TData, TReason>;
 
-/** Semantic intent of a message modal, used to drive icon and color selection in UI templates. */
+/** Semantic intent of a message dialog, used to drive icon and color selection in UI templates. */
 export type MessageDialogType = 'info' | 'warning' | 'error' | 'success';
 
 /** {@link MessageDialogRenderContext} for a declared id. */
@@ -44,7 +44,7 @@ export type UseMessageDialogReturn<TData = void, TReason extends string = string
 >;
 
 /**
- * Headless template hook for a standard message/confirmation modal — `umbra/react`'s, but for the
+ * Headless template hook for a standard message/confirmation dialog — `umbra/react`'s, but for the
  * node type. Option mapping and fade animation are shared, in `templates/shared.ts`.
  */
 /**

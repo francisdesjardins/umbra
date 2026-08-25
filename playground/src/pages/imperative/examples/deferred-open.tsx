@@ -5,12 +5,12 @@ import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import { dialogManager, useMessageDialog } from 'umbra/react';
 
-const MODAL_ID = 'deferred-open-target';
+const DIALOG_ID = 'deferred-open-target';
 
 /**
  * Opening a dialog that has not arrived yet.
  *
- * A modal joins the registry when its component mounts, so an imperative open from a service, a
+ * A dialog joins the registry when its component mounts, so an imperative open from a service, a
  * router guard or a deep link can land before the dialog behind a code-split route exists. That is
  * the ordinary case, not a typo — and it used to do nothing quietly, because a `log.warn` is
  * invisible until `setLogLevel`.
@@ -22,7 +22,7 @@ const MODAL_ID = 'deferred-open-target';
  * **It waits for the dialog to be open, not for the register that let it try.** Retiring the
  * subscription on `register` is the version that fails, and React's own development double-mount is
  * enough to show it: the first registration is torn down and replaced, so an open fired at it lands
- * on a modal that is about to be unmounted, and the second registration finds nobody listening.
+ * on a dialog that is about to be unmounted, and the second registration finds nobody listening.
  * Watching for the fact you wanted costs one more branch and survives every cause of that shape.
  */
 function openWhenItArrives(id: string, onOpened: (how: string) => void): () => void {
@@ -65,11 +65,11 @@ export function DeferredOpenExample() {
   return (
     <ExampleLayout
       result={log.length === 0 ? null : log.join(' · ')}
-      modals={mounted ? <DeferredTarget /> : null}
+      dialogs={mounted ? <DeferredTarget /> : null}
     >
       <AppButton
         onClick={() => {
-          const landed = dialogManager.open(MODAL_ID);
+          const landed = dialogManager.open(DIALOG_ID);
           record(landed ? 'open() → true' : 'open() → false, nothing registered');
         }}
       >
@@ -80,7 +80,7 @@ export function DeferredOpenExample() {
         onClick={() => {
           setWaiting(true);
           record('waiting for it to arrive…');
-          openWhenItArrives(MODAL_ID, (how) => {
+          openWhenItArrives(DIALOG_ID, (how) => {
             setWaiting(false);
             record(how);
           });
@@ -115,15 +115,15 @@ export function DeferredOpenExample() {
 
 /** The dialog behind the code-split route: it exists only while this is mounted. */
 function DeferredTarget() {
-  const modal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="success" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>It arrived</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>It arrived</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
@@ -139,5 +139,5 @@ function DeferredTarget() {
     },
   });
 
-  return modal.Dialog;
+  return dialog.Dialog;
 }

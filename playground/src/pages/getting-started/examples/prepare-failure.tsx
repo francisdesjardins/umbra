@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useMessageDialog } from 'umbra/react';
 import type { DialogFailure } from 'umbra/react';
 
-export const MODAL_ID = 'prepare-failure';
+export const DIALOG_ID = 'prepare-failure';
 
 const resultStore = createResultStore();
 
@@ -23,8 +23,8 @@ export function PrepareFailureExample() {
   const [shouldFail, setShouldFail] = useState(true);
   const [failure, setFailure] = useState<DialogFailure | null>(null);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
     ariaLabel: 'Profile',
     prepare: async () => {
       await new Promise((resolve) => {
@@ -78,7 +78,7 @@ export function PrepareFailureExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <div
         style={{
           display: 'flex',
@@ -92,7 +92,7 @@ export function PrepareFailureExample() {
           size="small"
           onClick={() => {
             setFailure(null);
-            void modal.open();
+            void dialog.open();
           }}
         >
           Open

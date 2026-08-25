@@ -85,7 +85,7 @@ function Checkout() {
       const ok = action('ok', { hotkey: Key.Enter, focusOnOpen: true });
       return h(
         'div',
-        // `checkout` is what tints this dialog with its owner's colour — the modal Billing can
+        // `checkout` is what tints this dialog with its owner's colour — the dialog Billing can
         // ask for still looks like Checkout's, because Checkout is the one that renders it.
         { className: 'panel checkout' },
         h('div', { className: 'owner' }, "Checkout's dialog"),

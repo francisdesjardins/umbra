@@ -35,7 +35,7 @@ type CloseArgs<TId, TReason> = TReason extends DismissReason
       : [reason: TReason, data: DataOfReason<TId, TReason>]
     : never;
 
-/** {@link DialogHandle} for a declared id — `close` typed per reason rather than per modal. */
+/** {@link DialogHandle} for a declared id — `close` typed per reason rather than per dialog. */
 export type RegisteredHandle<TId> = {
   /** Close with a reason and, when that reason declares one, its payload. */
   readonly close: <TReason extends ReasonOf<TId> | DismissReason>(
@@ -100,11 +100,11 @@ export type RegisteredOptions<
   'id' | 'onClose' | 'render'
 > &
   DialogVariant & {
-    /** Unique modal identifier — read once, when the modal is built. */
+    /** Unique dialog identifier — read once, when the dialog is built. */
     readonly id: TId;
-    /** Render function for modal content. Receives modal state as arguments. */
+    /** Render function for dialog content. Receives dialog state as arguments. */
     readonly render: (args: RegisteredRenderArgs<TId>) => TNode;
-    /** Called when the modal closes, with the reason and the payload that reason declared. */
+    /** Called when the dialog closes, with the reason and the payload that reason declared. */
     readonly onClose?: ((result: CloseOf<TId>) => void | Promise<void>) | undefined;
   };
 
@@ -114,6 +114,6 @@ export type RegisteredReturn<TId, TNode = unknown> = Omit<
   'action' | 'handle' | 'openAndWait'
 > &
   RegisteredRenderArgs<TId> & {
-    /** Open the modal and resolve with how it closed — see {@link UseDialogReturn.openAndWait}. */
+    /** Open the dialog and resolve with how it closed — see {@link UseDialogReturn.openAndWait}. */
     readonly openAndWait: () => Promise<AwaitedCloseOf<TId>>;
   };

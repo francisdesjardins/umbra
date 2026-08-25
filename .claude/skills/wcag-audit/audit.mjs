@@ -428,7 +428,7 @@ function SCANNER() {
    * check: the UA caps a `<dialog>` at `calc(100% - 6px - 2em)` — 337px on a 375px phone — so a
    * panel sized `min(600px, 92vw)` asks for 345 and is clipped by eight pixels, losing its right
    * rounded corner. Nothing passes the viewport, the document never scrolls sideways, and a
-   * reflow check comparing to `innerWidth` reports a clean page while the modal is visibly cut.
+   * reflow check comparing to `innerWidth` reports a clean page while the dialog is visibly cut.
    * Four panels here were wrong this way and the viewport-relative pass called all four fine.
    */
   for (const dialog of document.querySelectorAll('dialog[open]')) {
@@ -565,7 +565,7 @@ function FOCUS_PROBE() {
    *
    * `outline-offset` puts the ring past the element's border box, and any ancestor that is not
    * `overflow: visible` clips at its own padding box — so a control sitting flush against the
-   * edge of a bounded container (a modal footer, a scroll area) loses the side of the ring that
+   * edge of a bounded container (a dialog footer, a scroll area) loses the side of the ring that
    * reaches the edge. It looks like a rendering glitch and it is a real loss of the indicator.
    */
   const st = getComputedStyle(el);
@@ -577,7 +577,7 @@ function FOCUS_PROBE() {
       // The walk stops at an open dialog. `showModal()` promotes it to the top layer, where it is
       // painted outside its DOM ancestors' boxes and none of their `overflow` applies — so
       // continuing up reports the card the dialog happens to be declared inside as a clipper,
-      // which is how this first read: a real clip on the modal footer, and a phantom above it.
+      // which is how this first read: a real clip on the dialog footer, and a phantom above it.
       if (n.tagName === 'DIALOG' && n.hasAttribute('open')) break;
       const s = getComputedStyle(n);
       if (s.overflowX === 'visible' && s.overflowY === 'visible') continue;
@@ -789,7 +789,7 @@ const walkFocus = async () => {
 /**
  * Click something, within a root, by CSS selector or by visible text.
  *
- * `text:Delete` rather than a selector, because the interesting buttons in a modal are named and
+ * `text:Delete` rather than a selector, because the interesting buttons in a dialog are named and
  * not classed — a generated class name is the wrong handle for “the one that says Delete”, and
  * CSS has no text predicate. Answers false when nothing matches, so a step that does not apply
  * to this route is skipped rather than failing the run.
@@ -838,7 +838,7 @@ if (opt.crawl) {
 
 const findings = [];
 const focusFindings = [];
-// What was actually looked at, and what was asked for and not found. A green report over a modal
+// What was actually looked at, and what was asked for and not found. A green report over a dialog
 // that never opened is the failure mode this whole tool would be worthless for.
 const visited = new Set();
 const skipped = [];
@@ -908,16 +908,16 @@ for (const scheme of opt.schemes) {
           for (const f of s.clipped) clipFindings.push({ ...modalTag, ...f });
           if (s.reflow) reflowFindings.push({ ...modalTag, ...s.reflow });
           // Focus inside a dialog is where it matters most, and where the ring is most likely
-          // to be clipped: a modal footer is a bounded box with buttons flush against its edge.
+          // to be clipped: a dialog footer is a bounded box with buttons flush against its edge.
           if (opt.focus)
             for (const f of await walkFocus()) focusFindings.push({ ...modalTag, ...f });
         };
-        await record(`modal via ${selector}`);
+        await record(`dialog via ${selector}`);
 
         /**
-         * The states a modal only reaches once someone presses something inside it.
+         * The states a dialog only reaches once someone presses something inside it.
          *
-         * A modal at rest is the easy half. The error banner a failed action renders, the busy
+         * A dialog at rest is the easy half. The error banner a failed action renders, the busy
          * state a running one shows — those are new colours on a surface the resting scan never
          * saw, and they are the ones most likely to have been styled by hand.
          */
@@ -932,7 +932,7 @@ for (const scheme of opt.schemes) {
             skipped.push(`${route} ${where}: --then ${step} closed the dialog — nothing to scan`);
             break;
           }
-          await record(`modal via ${selector} → ${step}`);
+          await record(`dialog via ${selector} → ${step}`);
         }
 
         await press('Escape');
@@ -989,7 +989,7 @@ process.stdout.write(
 process.stdout.write(`${'─'.repeat(78)}\n`);
 
 const modalSurfaces = [...visited].filter((v) => {
-  return v.includes('— modal');
+  return v.includes('— dialog');
 });
 process.stdout.write(
   `${visited.size} surface(s) scanned${modalSurfaces.length ? `, ${modalSurfaces.length} of them inside a dialog` : ''}\n`

@@ -32,97 +32,118 @@ test.describe('createLogger / setLogLevel', () => {
     setLogLevel(false);
   });
   test('logger is silent when no pattern is set', () => {
-    const log = createLogger('modal');
+    const log = createLogger('dialog');
     log('should not emit');
     expect(debugCalls).toHaveLength(0);
   });
 
   test('setLogLevel("*") enables all namespaces', () => {
     setLogLevel('*');
-    createLogger('modal')('modal msg');
+    createLogger('dialog')('dialog msg');
     createLogger('action')('action msg');
     createLogger('manager')('manager msg');
     expect(debugCalls).toHaveLength(3);
   });
 
   test('setLogLevel(namespace) enables exact namespace', () => {
-    setLogLevel('modal');
-    createLogger('modal')('enabled');
+    setLogLevel('dialog');
+    createLogger('dialog')('enabled');
     expect(debugCalls).toHaveLength(1);
   });
 
   test('setLogLevel(namespace) enables sub-namespace via colon prefix match', () => {
-    setLogLevel('modal');
-    createLogger('modal:lifecycle')('sub-namespace');
+    setLogLevel('dialog');
+    createLogger('dialog:lifecycle')('sub-namespace');
     expect(debugCalls).toHaveLength(1);
   });
 
   test('setLogLevel(namespace) does not enable unrelated namespace', () => {
-    setLogLevel('modal');
+    setLogLevel('dialog');
     createLogger('action')('should not fire');
     expect(debugCalls).toHaveLength(0);
   });
 
   test('setLogLevel comma-separated enables all listed namespaces', () => {
-    setLogLevel('modal,action');
-    createLogger('modal')('m');
+    setLogLevel('dialog,action');
+    createLogger('dialog')('m');
     createLogger('action')('a');
     createLogger('manager')('should not fire');
     expect(debugCalls).toHaveLength(2);
   });
 
   test('setLogLevel accepts "dialog:" prefixed form', () => {
-    setLogLevel('dialog:modal');
-    createLogger('modal')('prefixed pattern');
+    setLogLevel('dialog:dialog');
+    createLogger('dialog')('prefixed pattern');
     expect(debugCalls).toHaveLength(1);
+  });
+
+  // The storage prefix and a namespace now share their first word, so a token starting `dialog:`
+  // is ambiguous by construction: it may be the prefixed form of `lifecycle` or the namespace
+  // `dialog:lifecycle` itself. Only the second exists, and stripping unconditionally matched
+  // neither.
+  test('a sub-namespace is reachable by its own name, prefix or not', () => {
+    setLogLevel('dialog:lifecycle');
+    createLogger('dialog:lifecycle')('by its own name');
+    expect(debugCalls).toHaveLength(1);
+
+    setLogLevel('dialog:dialog:lifecycle');
+    createLogger('dialog:lifecycle')('by the prefixed form');
+    expect(debugCalls).toHaveLength(2);
+  });
+
+  test('a sub-namespace pattern does not enable its siblings or its parent', () => {
+    setLogLevel('dialog:lifecycle');
+    createLogger('dialog:keydown')('should not fire');
+    createLogger('dialog')('should not fire either');
+    expect(debugCalls).toHaveLength(0);
   });
 
   test('setLogLevel(false) disables after being enabled', () => {
     setLogLevel('*');
     setLogLevel(false);
-    createLogger('modal')('should not fire');
+    createLogger('dialog')('should not fire');
     expect(debugCalls).toHaveLength(0);
   });
 
   test('logger.warn routes to console.warn', () => {
     setLogLevel('*');
-    createLogger('modal').warn('a warning');
+    createLogger('dialog').warn('a warning');
     expect(warnCalls).toHaveLength(1);
     expect(debugCalls).toHaveLength(0);
   });
 
   test('logger.error routes to console.error', () => {
     setLogLevel('*');
-    createLogger('modal').error('an error');
+    createLogger('dialog').error('an error');
     expect(errorCalls).toHaveLength(1);
     expect(debugCalls).toHaveLength(0);
   });
 
   test('logger includes namespace prefix in the message', () => {
     setLogLevel('*');
-    createLogger('modal')('open');
+    createLogger('dialog')('open');
     const firstArg = debugCalls[0]?.[0];
     const formatStr = typeof firstArg === 'string' ? firstArg : JSON.stringify(firstArg ?? '');
-    expect(formatStr).toContain('dialog:modal');
+    expect(formatStr).toContain('dialog:dialog');
   });
 
   test('logger passes data object as additional argument when provided', () => {
     setLogLevel('*');
-    createLogger('modal')('msg', { id: 'confirm' });
+    createLogger('dialog')('msg', { id: 'confirm' });
     // With data: 6 args — format, labelStyle, resetStyle, idStyle, resetStyle, data
     expect(debugCalls[0]).toHaveLength(6);
   });
 
   test('logger omits data argument when none provided', () => {
     setLogLevel('*');
-    createLogger('modal')('msg');
+    createLogger('dialog')('msg');
     // Without data: 5 args — format, labelStyle, resetStyle, idStyle, resetStyle
     expect(debugCalls[0]).toHaveLength(5);
   });
 
   test('each emitted log carries a monotonic #id', () => {
     setLogLevel('*');
-    const log = createLogger('modal');
+    const log = createLogger('dialog');
     log('first');
     log('second');
     const firstFormat = String(debugCalls[0]?.[0]);
@@ -151,12 +172,12 @@ test.describe('persistence and namespace colours', () => {
 
   test('setLogLevel persists through storage when asked, and survives its absence', () => {
     // Node has no window: `getStorage()` answers `null`, so the write is a no-op, not a throw.
-    setLogLevel('modal', true);
-    createLogger('modal')('enabled and persisted');
+    setLogLevel('dialog', true);
+    createLogger('dialog')('enabled and persisted');
     expect(debugCalls).toHaveLength(1);
 
     setLogLevel(false, true);
-    createLogger('modal')('should not fire');
+    createLogger('dialog')('should not fire');
     expect(debugCalls).toHaveLength(1);
   });
 
@@ -164,8 +185,8 @@ test.describe('persistence and namespace colours', () => {
     // `resolveColor` drops one `:` segment at a time and stops at the first match. Both the near
     // and the deep walk, since asserting only the deep one would pass on a plain table lookup.
     setLogLevel('*');
-    createLogger('modal:lifecycle')('parent');
-    createLogger('modal:lifecycle:deep')('child');
+    createLogger('dialog:lifecycle')('parent');
+    createLogger('dialog:lifecycle:deep')('child');
     createLogger('action')('other family');
     createLogger('action:sub:deeper')('two levels below an entry that does not exist');
 
@@ -209,10 +230,10 @@ test.describe('namespace labels do not depend on the console theme', () => {
 
   const NAMESPACES = [
     'manager',
-    'modal',
-    'modal:lifecycle',
-    'modal:keydown',
-    'modal:click-outside',
+    'dialog',
+    'dialog:lifecycle',
+    'dialog:keydown',
+    'dialog:click-outside',
     'action',
     'outlet',
     'nothing-like-this',

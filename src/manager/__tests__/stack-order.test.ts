@@ -8,7 +8,7 @@ import { orderStack, planRaises, type StackCandidate, type StackPriority } from 
  */
 
 function candidate(id: string, over: Partial<StackCandidate> & { openSequence: number }) {
-  return { id, template: 'modal', nonModal: false, ...over };
+  return { id, template: 'dialog', nonModal: false, ...over };
 }
 
 function ids(candidates: readonly StackCandidate[]): string[] {
@@ -52,8 +52,8 @@ test.describe('orderStack', () => {
         candidate('panel', { openSequence: 1, nonModal: true }),
         candidate('alert', { openSequence: 2 }),
       ],
-      (modal) => {
-        return modal.nonModal ? 100 : 0;
+      (dialog) => {
+        return dialog.nonModal ? 100 : 0;
       }
     );
 
@@ -68,8 +68,8 @@ test.describe('orderStack', () => {
         candidate('alert', { openSequence: 3 }),
         candidate('confirm', { openSequence: 4 }),
       ],
-      (modal) => {
-        return modal.id === 'panel-b' || modal.id === 'alert' ? -10 : 0;
+      (dialog) => {
+        return dialog.id === 'panel-b' || dialog.id === 'alert' ? -10 : 0;
       }
     );
 
@@ -77,8 +77,8 @@ test.describe('orderStack', () => {
   });
 
   test('higher priority sits nearer the front, which is the end of the array', () => {
-    const priority: StackPriority = (modal) => {
-      return modal.id === 'warning' ? 100 : 0;
+    const priority: StackPriority = (dialog) => {
+      return dialog.id === 'warning' ? 100 : 0;
     };
 
     // The warning opened first and would be at the bottom on open order alone.
@@ -91,8 +91,8 @@ test.describe('orderStack', () => {
   });
 
   test('a tie keeps open order, so a policy only has to say where it disagrees', () => {
-    const priority: StackPriority = (modal) => {
-      return modal.template === 'slide' ? -10 : 0;
+    const priority: StackPriority = (dialog) => {
+      return dialog.template === 'slide' ? -10 : 0;
     };
 
     const ordered = orderStack(
@@ -109,8 +109,8 @@ test.describe('orderStack', () => {
 
   test('the policy is told what a dialog is, and asked once per dialog', () => {
     const seen: string[] = [];
-    const priority: StackPriority = (modal) => {
-      seen.push(`${modal.id}/${modal.template}/${String(modal.nonModal)}`);
+    const priority: StackPriority = (dialog) => {
+      seen.push(`${dialog.id}/${dialog.template}/${String(dialog.nonModal)}`);
       return 0;
     };
 
@@ -124,15 +124,15 @@ test.describe('orderStack', () => {
     );
 
     // Once each: a comparator would ask O(n log n) times, and a policy may be a lookup.
-    expect(seen).toEqual(['a/slide/false', 'b/modal/true', 'c/modal/false']);
+    expect(seen).toEqual(['a/slide/false', 'b/dialog/true', 'c/dialog/false']);
   });
 
   test('a policy that throws costs that dialog its opinion, not the stack its order', () => {
-    const priority: StackPriority = (modal) => {
-      if (modal.id === 'boom') {
+    const priority: StackPriority = (dialog) => {
+      if (dialog.id === 'boom') {
         throw new Error('policy is broken');
       }
-      return modal.id === 'top' ? 5 : 0;
+      return dialog.id === 'top' ? 5 : 0;
     };
 
     // The alternative is snapshot recomputation throwing on every transition of every dialog.
@@ -149,8 +149,8 @@ test.describe('orderStack', () => {
   });
 
   test('NaN is treated as no opinion, because a NaN comparator has no order at all', () => {
-    const priority: StackPriority = (modal) => {
-      return modal.id === 'bad' ? Number.NaN : 1;
+    const priority: StackPriority = (dialog) => {
+      return dialog.id === 'bad' ? Number.NaN : 1;
     };
 
     const ordered = orderStack(

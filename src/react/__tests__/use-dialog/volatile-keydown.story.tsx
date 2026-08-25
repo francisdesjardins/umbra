@@ -4,7 +4,7 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * A modal whose `onKeyDown` is an inline arrow — a new function every render, the normal spelling —
+ * A dialog whose `onKeyDown` is an inline arrow — a new function every render, the normal spelling —
  * with an action that renders while it runs. The regression fixture for the director's granularity:
  * `focus.sync` remembers for one attachment that an action is running, and that memory recognises
  * running → idle and returns focus to the button. A director keyed on the union of every step's

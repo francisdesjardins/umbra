@@ -27,11 +27,11 @@ export type StackDialog = Pick<RegisteredDialogInfo, 'id' | 'template' | 'nonMod
  *
  * @example
  * // The session warning outranks whatever a deep link raised.
- * dialogManager.prioritize((modal) => {
- *   return modal.template === 'alert' ? 100 : 0;
+ * dialogManager.prioritize((dialog) => {
+ *   return dialog.template === 'alert' ? 100 : 0;
  * });
  */
-export type StackPriority = (modal: StackDialog) => number;
+export type StackPriority = (dialog: StackDialog) => number;
 
 /** What `orderStack` needs of a candidate: the policy's input, plus the open order. */
 export type StackCandidate = StackDialog & {

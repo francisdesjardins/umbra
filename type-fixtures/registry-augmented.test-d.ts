@@ -27,10 +27,10 @@ type Assert<T extends true> = T;
 export type _ReasonNarrows = Assert<Equals<ReasonOf<'delete-account'>, 'confirm' | 'cancel'>>;
 export type _DataNarrows = Assert<Equals<DataOf<'delete-account'>, { id: string }>>;
 
-/** A modal that declares no payload answers `void`, not `unknown`. */
+/** A dialog that declares no payload answers `void`, not `unknown`. */
 export type _NoDataIsVoid = Assert<Equals<DataOf<'session-warning'>, void>>;
 
-/** The other direction: what a declared modal is *opened* with. */
+/** The other direction: what a declared dialog is *opened* with. */
 export type _PayloadNarrows = Assert<Equals<PayloadOf<'patient:merge'>, { patientId: string }>>;
 
 /**
@@ -42,7 +42,7 @@ export type _UndeclaredPayloadIsUnknown = Assert<
   Equals<PayloadOf<'someone-elses-dialog'>, unknown>
 >;
 
-/** An undeclared id keeps the open answer, which lets a project host modals it does not own. */
+/** An undeclared id keeps the open answer, which lets a project host dialogs it does not own. */
 export type _UndeclaredStaysOpen = Assert<Equals<ReasonOf<'someone-elses-dialog'>, string>>;
 
 export function _manager() {
@@ -93,7 +93,7 @@ export function Explicit() {
   });
 }
 
-/** A modal the registry never named still declares, with its reasons left open. */
+/** A dialog the registry never named still declares, with its reasons left open. */
 export function Undeclared() {
   return useDialog({
     id: 'third-party-panel',
@@ -145,12 +145,12 @@ export async function _openAndWaitStaysOpen() {
   void result;
 }
 
-/** The ask is checked against what the modal said it takes, in both doors. */
+/** The ask is checked against what the dialog said it takes, in both doors. */
 export function _requestOpenChecksThePayload() {
   dialogManager.requestOpen('patient:merge', { payload: { patientId: '42' } });
   dialogManager.requestOpen('patient:merge', createOpenRequest({ patientId: '42' }));
 
-  // @ts-expect-error `patientId` is a string, and the modal declared as much
+  // @ts-expect-error `patientId` is a string, and the dialog declared as much
   dialogManager.requestOpen('patient:merge', { payload: { patientId: 42 } });
 
   // @ts-expect-error a payload of the wrong shape entirely

@@ -114,7 +114,7 @@ billing.bindAction(document.getElementById('mfa2-approve'), {
     log('note', `approved ${pending?.amount ?? 0}$`);
     // The answer travels back the way the request came: a payload, not just a word. `close(id,
     // reason)` on the manager cannot carry one — the registry is keyed by string and knows no
-    // modal's payload type — which is why a binding's own close is the door that can.
+    // dialog's payload type — which is why a binding's own close is the door that can.
     close({
       transactionId: `TX-${String(1000 + Math.floor(Math.random() * 9000))}`,
       amount: pending?.amount ?? 0,

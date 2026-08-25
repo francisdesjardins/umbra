@@ -49,11 +49,11 @@ export type TemplateBaseOptions<
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
 > = TemplateCommonOptions<TData, TReason, TStyle, TNode> & {
-  /** Unique modal identifier */
+  /** Unique dialog identifier */
   readonly id: string;
   /** Render function receiving template-specific context */
   readonly render: (ctx: TRenderContext) => TNode;
-  /** Called when the modal closes with the close result */
+  /** Called when the dialog closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
 };
 
@@ -70,11 +70,11 @@ export type RegisteredTemplateOptions<
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
 > = TemplateCommonOptions<DataOf<TId>, ReasonOf<TId>, TStyle, TNode> & {
-  /** Unique modal identifier */
+  /** Unique dialog identifier */
   readonly id: TId;
   /** Render function receiving template-specific context */
   readonly render: (ctx: TRenderContext) => TNode;
-  /** Called when the modal closes, with the payload that reason declared */
+  /** Called when the dialog closes, with the payload that reason declared */
   readonly onClose?: ((result: CloseOf<TId>) => void | Promise<void>) | undefined;
 };
 
@@ -87,7 +87,7 @@ export type RegisteredBaseRenderContext<TId> = RegisteredRenderArgs<TId>;
  * because that is what templates forward — so a new render-time field is added once in the core and
  * no template can drift into a subtly different `isPreparing`.
  *
- * @typeParam TData - The modal's close payload, so a template's `handle.close` is as typed as
+ * @typeParam TData - The dialog's close payload, so a template's `handle.close` is as typed as
  * the core one.
  *
  * @internal Not exported from index.ts.

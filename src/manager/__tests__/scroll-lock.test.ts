@@ -59,7 +59,7 @@ test.describe('compensationPadding', () => {
 /**
  * The module with no document — this project *is* that environment; a browser always has one.
  * Each entry point guards on `typeof document`, and the manager calls all three from
- * `syncBodyScrollLock`, which a server render hits when a modal registers: a `ReferenceError`.
+ * `syncBodyScrollLock`, which a server render hits when a dialog registers: a `ReferenceError`.
  */
 test.describe('without a document', () => {
   test('getScrollbarWidth reports no gutter rather than reaching for one', () => {

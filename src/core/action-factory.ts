@@ -5,7 +5,7 @@ import type { ActionCloseFn, ActionFactory, ActionReason, ActionState } from '..
 /**
  * What an action does when it is given no handler: close with its own reason.
  *
- * Typed at `never` rather than at the modal's payload, which is what makes it usable as the
+ * Typed at `never` rather than at the dialog's payload, which is what makes it usable as the
  * default for every action — a handler that ignores its `close` argument fits any payload.
  */
 const autoClose: (close: ActionCloseFn) => void = (close) => {
@@ -27,7 +27,7 @@ type DeclareAction<TData, TReason extends string> = (
 ) => ReturnType<ActionFactory<TData, TReason>>;
 
 /**
- * Build the `action` factory a modal's `render` is handed.
+ * Build the `action` factory a dialog's `render` is handed.
  *
  * Calling the factory declares the action — the only place an action is ever declared — and
  * returns the props for its button. None of that is renderer work: the props are DOM props, the
@@ -40,7 +40,7 @@ type DeclareAction<TData, TReason extends string> = (
  * `disabled` subscribes that one attribute to the engine — no re-render, no wrapper, and no
  * second factory that returns accessors instead.
  *
- * @param engine - The modal's action engine; `declare` and `run` go here.
+ * @param engine - The dialog's action engine; `declare` and `run` go here.
  * @param readState - The engine's state *as the binding sees it*. React passes its
  *   `useSyncExternalStore` value, Solid passes a signal accessor — which is the whole reason
  *   this is a parameter rather than a call to `engine.getSnapshot()` inside.

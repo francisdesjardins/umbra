@@ -11,7 +11,7 @@ import type { DialogStyle } from './style.js';
 // ── Close Results ─────────────────────────────────────────────────────────────
 
 /**
- * Result of a modal close: the reason, plus the payload if the modal declares one.
+ * Result of a dialog close: the reason, plus the payload if the dialog declares one.
  *
  * A plain object, not a conditional: the `void` default makes `data` unusable anyway, and a
  * conditional is opaque at every generic boundary the result crosses (store, resolver queue,
@@ -25,7 +25,7 @@ export type CloseResult<TData = void, TReason extends string = string> = {
    * (at the `string` default the engine can only warn at declaration). See {@link DismissReason}.
    */
   readonly reason: TReason | DismissReason;
-  /** The payload, when the modal declares one. */
+  /** The payload, when the dialog declares one. */
   readonly data?: TData | undefined;
 };
 
@@ -42,7 +42,7 @@ export type AwaitedClose<TData = void, TReason extends string = string> =
 // ── Animation ────────────────────────────────────────────────────────────────
 
 /**
- * CSS transition configuration for modal entrance/exit animations.
+ * CSS transition configuration for dialog entrance/exit animations.
  *
  * @typeParam TStyle - The style object type this binding speaks. Defaults to the framework-free
  * {@link DialogStyle}; the React binding pins it to React's `CSSProperties`.
@@ -72,21 +72,21 @@ export type DialogAnimation<TStyle extends DialogStyle = DialogStyle> = {
 // ── Dialog Handle ───────────────────────────────────────────────────────────────
 
 /**
- * Imperative handle for closing a modal, returned from `useDialog` and passed to
- * the `render` callback. Distinct from the modal's *actions*, which are its buttons: `handle`
- * closes the modal, an action is what the user presses to get there.
+ * Imperative handle for closing a dialog, returned from `useDialog` and passed to
+ * the `render` callback. Distinct from the dialog's *actions*, which are its buttons: `handle`
+ * closes the dialog, an action is what the user presses to get there.
  *
- * @typeParam TData - The modal's close payload type. `close` accepts exactly this, so a
- * modal declared `useDialog<{ id: string }>` rejects `close('ok', 42)`, and the default
+ * @typeParam TData - The dialog's close payload type. `close` accepts exactly this, so a
+ * dialog declared `useDialog<{ id: string }>` rejects `close('ok', 42)`, and the default
  * (`void`) rejects a payload altogether.
  */
 export type DialogHandle<TData = void, TReason extends string = string> = {
-  /** Close the modal with a reason and, if the modal declares one, a payload. */
+  /** Close the dialog with a reason and, if the dialog declares one, a payload. */
   readonly close: (reason?: TReason | DismissReason, data?: TData) => void;
 };
 
 /**
- * What a modal's `render` callback is given: the slice of live modal state that is available
+ * What a dialog's `render` callback is given: the slice of live dialog state that is available
  * *during* render, without reaching back into the hook's return value (which would be a TDZ
  * error, since `render` is passed to the call that produces it).
  *
@@ -95,7 +95,7 @@ export type DialogHandle<TData = void, TReason extends string = string> = {
  * it, so every template's render context inherits the same two fields with the same meaning.
  * Adding a render-time field here reaches all of them at once.
  *
- * @typeParam TData - The modal's close payload type, carried through to `handle.close`.
+ * @typeParam TData - The dialog's close payload type, carried through to `handle.close`.
  */
 export type DialogRenderArgs<TData = void, TReason extends string = string> = {
   /**
@@ -104,7 +104,7 @@ export type DialogRenderArgs<TData = void, TReason extends string = string> = {
    *
    * A second axis, not a phase. `phase` describes the `<dialog>` itself and reaches `'open'`
    * on the animation frame after it is shown, which is usually well before an async `prepare`
-   * settles — so `phase: 'open'` with `isPreparing: true` is the normal state of a modal
+   * settles — so `phase: 'open'` with `isPreparing: true` is the normal state of a dialog
    * that loads something.
    */
   readonly isPreparing: boolean;
@@ -120,7 +120,7 @@ export type DialogRenderArgs<TData = void, TReason extends string = string> = {
    * the one the page outside it asks.
    */
   readonly phase: DialogPhase;
-  /** Imperative close handle, typed with the modal's close payload. */
+  /** Imperative close handle, typed with the dialog's close payload. */
   readonly handle: DialogHandle<TData, TReason>;
   /**
    * Declare an action and get the props for its button, in one expression.
@@ -131,14 +131,14 @@ export type DialogRenderArgs<TData = void, TReason extends string = string> = {
    */
   readonly action: ActionFactory<TData, TReason>;
   /**
-   * True while **any** action on this modal is running.
+   * True while **any** action on this dialog is running.
    *
    * Named for its scope, because there are three of these and the word alone never said which:
-   * an action's own `loading` is that button, `hasRunningAction` is the whole modal, and
+   * an action's own `loading` is that button, `hasRunningAction` is the whole dialog, and
    * `isPreparing` is the `prepare` that has nothing to do with actions at all.
    */
   readonly hasRunningAction: boolean;
-  /** The last error thrown by any action on this modal, or `null`. */
+  /** The last error thrown by any action on this dialog, or `null`. */
   readonly error: Error | null;
 };
 
@@ -150,7 +150,7 @@ export type DialogRenderArgs<TData = void, TReason extends string = string> = {
  * Modal vs non-modal, as a discriminated union — and the single home for the distinction the
  * two branches only summarise.
  *
- * A **modal** dialog (`showModal()`) draws a backdrop, is promoted into the browser's top
+ * A **dialog** dialog (`showModal()`) draws a backdrop, is promoted into the browser's top
  * layer, and locks body scroll. Because it owns the top layer it is positioned against the
  * viewport regardless of its ancestors, and anything that must stay clickable while it is open
  * has to be rendered inside the dialog.
@@ -175,10 +175,10 @@ export type DialogVariant =
        */
       readonly nonModal?: false | undefined;
       /**
-       * Whether a backdrop click dismisses the modal.
-       * Defaults to `false` once the render pass has drawn any action (a modal offering
+       * Whether a backdrop click dismisses the dialog.
+       * Defaults to `false` once the render pass has drawn any action (a dialog offering
        * buttons wants to be dismissed through one) — pass `true` to opt back in — and to
-       * `true` for a modal that draws none.
+       * `true` for a dialog that draws none.
        */
       readonly dismissOnBackdropClick?: boolean | undefined;
       /** Not applicable — modal dialogs use `dismissOnBackdropClick` instead. */
@@ -193,7 +193,7 @@ export type DialogVariant =
        * that contradicts its own element.
        *
        * On the variant rather than the flat surface, because the union is what carries the other
-       * half of that reasoning: an alertdialog is modal by definition, so the non-modal branch
+       * half of that reasoning: an alertdialog is dialog by definition, so the non-modal branch
        * does not offer it.
        *
        * @default 'dialog'
@@ -202,7 +202,7 @@ export type DialogVariant =
     }
   | {
       /**
-       * Non-dialog dialog (`dialog.show()`): no backdrop, stays out of the top layer so
+       * Non-modal dialog (`dialog.show()`): no backdrop, stays out of the top layer so
        * clicks reach elements underneath, body scroll untouched. Stacking is tracked with a
        * `data-dialog-z` attribute on the `<dialog>`. See {@link DialogVariant}.
        */
@@ -210,7 +210,7 @@ export type DialogVariant =
       /** Not applicable — non-modal dialogs have no backdrop. */
       readonly dismissOnBackdropClick?: never;
       /**
-       * `'dialog'` only: an alertdialog is modal by definition (the APG requires `aria-dialog`),
+       * `'dialog'` only: an alertdialog is dialog by definition (the APG requires `aria-modal`),
        * so announcing one over content the user can still reach would be a contradiction for
        * assistive technology. A non-modal surface that has something urgent to say wants a live
        * region inside its content instead.
@@ -244,15 +244,15 @@ export type UseDialogBaseOptions<
   TNode = unknown,
 > = {
   /**
-   * Unique modal identifier — **read once, when the modal is built**.
+   * Unique dialog identifier — **read once, when the dialog is built**.
    *
    * The store, the action engine and the lifecycle director all take it at construction and never
-   * look again, so changing it is not a rename: the modal re-registers with the manager under the
+   * look again, so changing it is not a rename: the dialog re-registers with the manager under the
    * new name and keeps answering to the old one everywhere else. Give a modal one id for its
-   * lifetime, and mount a different modal if you need a different name.
+   * lifetime, and mount a different dialog if you need a different name.
    */
   readonly id: DialogId;
-  /** Render function for modal content. Receives modal state as arguments. */
+  /** Render function for dialog content. Receives dialog state as arguments. */
   readonly render: (args: DialogRenderArgs<TData, TReason>) => TNode;
   /** CSS transition animation configuration */
   readonly animation?: DialogAnimation<TStyle> | undefined;
@@ -295,7 +295,7 @@ export type UseDialogBaseOptions<
    */
   readonly style?: TStyle | undefined;
   /**
-   * Key that dismisses the modal. Accepts any `HotkeyDef` string (e.g. `Key.Escape`,
+   * Key that dismisses the dialog. Accepts any `HotkeyDef` string (e.g. `Key.Escape`,
    * `'Ctrl+3'`) or `false` to disable key-based dismissal entirely.
    * @default Key.Escape ('Escape')
    */
@@ -308,7 +308,7 @@ export type UseDialogBaseOptions<
    * inside the dialog answers it first, where the pointer landed, whether a `prepare` or a running
    * action forbids it, and — for a non-modal panel — which dialog is actually in front. All of
    * that is decided the same way it is without this option. What changes is the last step:
-   * `store.close(DISMISS_REASON)` becomes this call, and the modal leaves the screen when the
+   * `store.close(DISMISS_REASON)` becomes this call, and the dialog leaves the screen when the
    * owner says so.
    *
    * **What it is for.** A surface whose `open` is a prop cannot let its dialog close itself — the
@@ -317,12 +317,12 @@ export type UseDialogBaseOptions<
    *
    * **All three doors, which is why the handler is told which one.** The dismiss key, a backdrop
    * click and a click outside a non-modal panel are one decision reached three ways
-   * ({@link DismissCause}), and an option that covered only the key would leave a controlled modal
+   * ({@link DismissCause}), and an option that covered only the key would leave a controlled dialog
    * answering Escape correctly and reopening itself on a backdrop click. Ignore the argument and
    * the three are one rule; read it to keep them apart — "Escape asks, the backdrop does not".
    *
    * **Return `false` to decline**, for a condition only the caller can know, such as another
-   * framework's modal being on top. Only the dismiss key has a second reader: its non-modal window
+   * framework's dialog being on top. Only the dismiss key has a second reader: its non-modal window
    * listener captures, so a press it takes is one nobody else sees, and declining leaves it
    * un-prevented and still travelling. Nothing is prevented on the pointer paths, so a declined
    * click is simply a dialog left open. Anything else, `undefined` included, means the request was
@@ -350,7 +350,7 @@ export type UseDialogBaseOptions<
    */
   readonly onDismissRequest?: ((cause: DismissCause) => boolean | void) | undefined;
   /**
-   * Whether the dismiss key and backdrop click can close the modal while `prepare` is executing.
+   * Whether the dismiss key and backdrop click can close the dialog while `prepare` is executing.
    * @default true
    */
   readonly dismissWhilePreparing?: boolean | undefined;
@@ -360,7 +360,7 @@ export type UseDialogBaseOptions<
    * **What it is for.** `showModal()` makes the rest of the document inert, so a modal dialog is
    * contained by the browser. `show()` does not, and a non-modal dialog is an ordinary part of the
    * page: a few tab presses walk out of it into whatever is behind. That is correct for a toast or
-   * a popover and wrong for a panel that behaves like a modal in everything but its stacking, so
+   * a popover and wrong for a panel that behaves like a dialog in everything but its stacking, so
    * it is asked for rather than assumed.
    *
    * **Nothing to set on a modal dialog**, which is worth saying because the neighbouring behaviour
@@ -392,7 +392,7 @@ export type UseDialogBaseOptions<
    * without it, every such request is refused. `dialogManager.open(id)` is a different door and
    * is unaffected either way.
    *
-   * **Nothing opens by itself here.** Accept by calling this modal's own `open()`; refuse with
+   * **Nothing opens by itself here.** Accept by calling this dialog's own `open()`; refuse with
    * `request.refuse(reason)`, so a caller using `requestOpenAndWait` learns why instead of
    * watching nothing happen. Returning without either also refuses — silently, which is the
    * right default for a request nobody agreed to and the wrong one across a boundary.
@@ -428,7 +428,7 @@ export type UseDialogBaseOptions<
    *
    * **`preventDefault()` takes the whole press, not just the dismissal.** A prevented event stops
    * the pipeline where it is, so for that key the popup-claim check, the **action hotkey dispatch**
-   * and the dismiss key are all skipped. Preventing Escape to hold a modal open is the common case
+   * and the dismiss key are all skipped. Preventing Escape to hold a dialog open is the common case
    * and does what it looks like; preventing a key some action declared as its hotkey stops that
    * action from firing, which does not.
    *
@@ -439,20 +439,20 @@ export type UseDialogBaseOptions<
   /**
    * Make the content usable — the work that has to happen before the dialog is worth reading.
    *
-   * Called as the modal opens, after the `<dialog>` is shown and the entrance transition is
+   * Called as the dialog opens, after the `<dialog>` is shown and the entrance transition is
    * scheduled, not before it. An async one runs *alongside* the entrance animation, and
    * `isPreparing` stays `true` until it settles; that is the loading window the render callback
    * is given, and `open()` resolves only once this has.
    *
-   * **A gate, not a notification**, which is why it is not called `onOpen`: it holds the modal's
+   * **A gate, not a notification**, which is why it is not called `onOpen`: it holds the dialog's
    * `isPreparing` and the promise `open()` returns. To be *told* a dialog opened — without
    * gating anything — use `dialogManager.subscribe` or the `dialog:open` DOM event, which fires
    * at the start of the sequence and is the one that genuinely means "on open".
    *
-   * Handed an `AbortSignal` that fires when the modal closes, so work started here can be
+   * Handed an `AbortSignal` that fires when the dialog closes, so work started here can be
    * dropped when nobody is waiting for it any more. A dialog dismissed while it is still loading
    * is the ordinary case, not an edge one, and without this the request outlives the thing that
-   * asked for it — it lands on a closed modal, and a slow one can still be in flight when the
+   * asked for it — it lands on a closed dialog, and a slow one can still be in flight when the
    * next open starts its own.
    *
    * Ignoring the parameter is fine and stays the common case: a `() => …` callback is assignable
@@ -465,11 +465,11 @@ export type UseDialogBaseOptions<
    * };
    * ```
    *
-   * Work the *caller* started elsewhere — a query fired from the click that opened the modal —
+   * Work the *caller* started elsewhere — a query fired from the click that opened the dialog —
    * is not this signal's to cancel: the dialog never knew about it. Cancel that where it began.
    */
   readonly prepare?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
-  /** Called when the modal closes with the close result */
+  /** Called when the dialog closes with the close result */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
   /**
    * One of **your** callbacks threw, and the library caught it rather than let it escape.
@@ -482,10 +482,10 @@ export type UseDialogBaseOptions<
    * **Two of them cannot reach you any other way**, which is the whole reason this exists:
    *
    * - `prepare` throws. The dialog is already on screen — it is shown before `prepare` starts —
-   *   and `isPreparing` settles either way, so `aria-busy` flips to `false` and the modal
-   *   announces itself ready. Without this, a modal whose content failed to load is
+   *   and `isPreparing` settles either way, so `aria-busy` flips to `false` and the dialog
+   *   announces itself ready. Without this, a dialog whose content failed to load is
    *   indistinguishable from one that loaded fine.
-   * - `onClose` throws. It runs as the modal finalizes, detached, with nothing left rendering,
+   * - `onClose` throws. It runs as the dialog finalizes, detached, with nothing left rendering,
    *   so there is no render pass to surface it in and no promise for it to reject.
    *
    * The ones that are **not** here are not oversights. An action's throw is already the `error`
@@ -501,7 +501,7 @@ export type UseDialogBaseOptions<
    *   id: 'invoice',
    *   prepare: loadInvoice,
    *   onError: ({ error, source }) => {
-   *     reportToSentry(error, { modal: 'invoice', source });
+   *     reportToSentry(error, { dialog: 'invoice', source });
    *     if (source === 'prepare') {
    *       setLoadFailed(true);
    *     }
@@ -542,11 +542,11 @@ export type UseDialogBaseOptions<
    * cross-cutting listener — analytics, a handler that only cares about drawers — can tell one
    * kind of dialog from another without keeping its own id-to-kind table.
    *
-   * **Not the modal/non-modal distinction**, which is `nonModal` and reaches the DOM as
+   * **Not the dialog/non-modal distinction**, which is `nonModal` and reaches the DOM as
    * `data-dialog-type`. That one is the library's and has two values; this one is yours and has
    * as many as you like.
    *
-   * @default 'modal'
+   * @default 'dialog'
    */
   readonly template?: string | undefined;
   /**
@@ -570,7 +570,7 @@ export type UseDialogBaseOptions<
    * {@link PortalTarget}, which is where the reason for the second form lives. `false` and the
    * contained arrangement are unaffected by either.
    *
-   * Non-dialog dialogs never enter the top layer, so positioning depends on placement:
+   * Non-modal dialogs never enter the top layer, so positioning depends on placement:
    * - **`portal: true`** — portaled to `document.body`, anchored to the viewport
    *   (`position: fixed`). Use this for viewport-edge / centered non-modal panels.
    * - **`portal: false`** — "contained": the dialog renders inside a library-owned wrapper
@@ -612,9 +612,9 @@ export type UseDialogReturn<
   TNode = unknown,
 > = DialogRenderArgs<TData, TReason> & {
   /**
-   * Open the modal. Resolves after `prepare` completes.
+   * Open the dialog. Resolves after `prepare` completes.
    * Always settles: joins an in-flight open, or resolves immediately when
-   * the modal is already open (or closing — no reopen is queued).
+   * the dialog is already open (or closing — no reopen is queued).
    */
   readonly open: () => Promise<void>;
   /**
@@ -622,29 +622,29 @@ export type UseDialogReturn<
    * animation.
    *
    * That is what a trigger wants (`{!isVisible && <button/>}` must not flash back while the
-   * panel is still sliding away) and it is why this is not called `isOpen`: a modal in
+   * panel is still sliding away) and it is why this is not called `isOpen`: a dialog in
    * `'closing'` is visible and is no longer open, and one name cannot honestly be both. When the
    * distinction matters — measuring, focusing, deciding a dialog has settled — read `phase`.
    */
   readonly isVisible: boolean;
   /**
-   * The node to render — place it in your markup. `null` when a `DialogOutlet` above this modal
+   * The node to render — place it in your markup. `null` when a `DialogOutlet` above this dialog
    * has taken it, since the outlet renders it instead.
    */
   readonly Dialog: TNode;
   /**
-   * Open the modal and resolve with how it closed — the two halves in one call, in the only
+   * Open the dialog and resolve with how it closed — the two halves in one call, in the only
    * order that is safe.
    *
    * **The only door that awaits a close, and deliberately.** A close resolver answers the
    * *next* close — replaying a previous one would be a wrong answer rather than a late one — so
    * it has to be registered before anything can close. `prepare` opens exactly that window: a
-   * modal dismissed while it runs closes *inside* an open that resolves after `prepare` has
+   * dialog dismissed while it runs closes *inside* an open that resolves after `prepare` has
    * returned, and a resolver added on the line afterwards would wait forever, with no error and
    * no timeout. This registers first, which is why the store's `addCloseResolver` is internal
    * and the surface never lets a caller choose the order.
    *
-   * The other end of that window is refused rather than answered: called while the modal is
+   * The other end of that window is refused rather than answered: called while the dialog is
    * `'closing'`, this resolves `[Error, null]`. No reopen is queued (see `open`), so the exit in
    * flight belongs to whoever asked for it — handing back its reason would report a decision this
    * caller never caused, for a dialog it never saw.
@@ -660,14 +660,14 @@ export type UseDialogReturn<
    * }
    */
   readonly openAndWait: () => Promise<AwaitedClose<TData, TReason>>;
-  /** The dialog manager instance this modal is registered with. */
+  /** The dialog manager instance this dialog is registered with. */
   readonly dialogManager: DialogManager;
 };
 
 // ── Dialog Store Types ────────────────────────────────────────────────────────
 
 /**
- * Lifecycle phase of a modal instance.
+ * Lifecycle phase of a dialog instance.
  *
  * - `'closed'` — not shown; the `<dialog>` is mounted but not open
  * - `'opening'` — an open was requested; the `<dialog>` is shown and the entrance frame is
@@ -675,7 +675,7 @@ export type UseDialogReturn<
  * - `'open'` — entrance transition running or finished
  * - `'closing'` — exit transition running; settles to `'closed'` on completion
  *
- * This is the `<dialog>`'s own lifecycle. Whether the modal's *content* is ready is the
+ * This is the `<dialog>`'s own lifecycle. Whether the dialog's *content* is ready is the
  * separate `isPreparing` axis — see {@link DialogRenderArgs}.
  */
 export type DialogPhase = 'closed' | 'opening' | 'open' | 'closing';
@@ -693,16 +693,16 @@ export type DialogPhase = 'closed' | 'opening' | 'open' | 'closing';
  * `getDialog` is: the option is read where the dialog is placed rather than where it is written, so
  * a caller keeps naming the host and the binding decides when to ask.
  *
- * **The host has to exist by the time the modal is placed**, which is the modal's first render on
+ * **The host has to exist by the time the dialog is placed**, which is the dialog's first render on
  * `umbra/react` and its mount on `umbra/solid`. A design-system root, a themed shell, a
  * microfrontend's mount point: all of those are already in the document when a feature component
- * renders. A node in the modal's *own* subtree is not — the getter answers `null` there, and the
+ * renders. A node in the dialog's *own* subtree is not — the getter answers `null` there, and the
  * fallback below is what the caller gets.
  *
  * **It is read once per portal era, not per render.** A container that changed identity under an
  * open dialog would make React unmount the portal subtree and mount a fresh, closed `<dialog>` that
- * nothing shows again — the modal would vanish with its store still reporting `'open'`. So the
- * answer is held for as long as the modal stays portaled, and re-read only when `portal` flips
+ * nothing shows again — the dialog would vanish with its store still reporting `'open'`. So the
+ * answer is held for as long as the dialog stays portaled, and re-read only when `portal` flips
  * between portaled and not, which is the structural change the binding already tears down for.
  *
  * Answering `null` is not a way to un-portal — the arrangement is already chosen by then, and the
@@ -738,11 +738,11 @@ export type CloseResolver<TData = unknown, TReason extends string = string> = (
 ) => void;
 
 /**
- * Immutable snapshot of a modal's internal state, consumed via `useSyncExternalStore`.
- * Available for use cases that need low-level access to modal phase and opening state.
+ * Immutable snapshot of a dialog's internal state, consumed via `useSyncExternalStore`.
+ * Available for use cases that need low-level access to dialog phase and opening state.
  *
- * @typeParam TData - The modal's close payload type. Defaults to `unknown` because a
- * *reader* of the snapshot (the dialog manager, a devtool) is generic over every modal;
+ * @typeParam TData - The dialog's close payload type. Defaults to `unknown` because a
+ * *reader* of the snapshot (the dialog manager, a devtool) is generic over every dialog;
  * `useDialog<TData>` instantiates it with the payload its own store carries.
  */
 export type DialogStoreSnapshot<TData = unknown, TReason extends string = string> = {

@@ -7,7 +7,7 @@ import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogKeydownOptions, DialogDomContext } from './attach-types.js';
 
-const log = createLogger('modal:keydown');
+const log = createLogger('dialog:keydown');
 
 /**
  * Find the button a hotkey is wired to — by its `aria-keyshortcuts` value — then focus and click
@@ -18,9 +18,9 @@ const log = createLogger('modal:keydown');
  *
  * It lives here rather than beside `formatAriaKeyshortcuts`, its only other collaborator: this is
  * the one DOM function in that pair's file, and hosting it kept an otherwise pure module out of
- * reach of the unit project. `queryOwn` scopes it to `dialog`'s own content — a modal opened from
+ * reach of the unit project. `queryOwn` scopes it to `dialog`'s own content — a dialog opened from
  * inside this one lives in this subtree, and clicking its button from here would fire the action
- * of a modal that is not even in front.
+ * of a dialog that is not even in front.
  */
 function clickHotkeyButton(dialog: HTMLElement, def: HotkeyDef): void {
   const button = queryOwn(
@@ -80,7 +80,7 @@ export function isKeyClaimedByPopup(dialog: HTMLElement, target: EventTarget | n
 /**
  * Three listeners answer the dismiss key, and all three are plain DOM.
  *
- * Which key dismisses, whether an action has claimed it, and whether the modal is in a state to
+ * Which key dismisses, whether an action has claimed it, and whether the dialog is in a state to
  * be dismissed at all are questions about a `<dialog>` and a store — no framework has an opinion.
  * A binding decides *when* to attach and detach; each function here returns the teardown for
  * exactly what it attached.
@@ -138,9 +138,9 @@ export function attachDialogKeydown(
   }
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    // A modal opened from inside this one renders its `<dialog>` in this subtree, so its
+    // A dialog opened from inside this one renders its `<dialog>` in this subtree, so its
     // keydowns bubble through here. They are not ours: without this, one Escape unwinds the
-    // whole stack at once and a key both modals declare fires at every level it passes.
+    // whole stack at once and a key both dialogs declare fires at every level it passes.
     if (!isOwnEventTarget(dialog, event.target)) {
       return;
     }
@@ -203,10 +203,10 @@ export function attachDialogKeydown(
  * The native `cancel` event, which fires for Escape regardless of where focus is.
  *
  * The keydown listener above only hears keys raised inside the dialog, and focus outside an open
- * modal is ordinary: `showModal()` has nowhere to put it when nothing in the content is
+ * dialog is ordinary: `showModal()` has nowhere to put it when nothing in the content is
  * focusable, and content that swaps after opening drops whatever held it. Always prevented — the
  * browser must never close the dialog behind the store. Whether ESC then dismisses is decided by
- * the usual gate. Non-dialog dialogs never fire it.
+ * the usual gate. Non-modal dialogs never fire it.
  */
 export function attachDialogCancel(
   ctx: DialogDomContext,

@@ -37,7 +37,7 @@ export type HotkeyDef =
 // ── Actions ──────────────────────────────────────────────────────────────────
 
 /**
- * Closes the modal with its action's reason, taking the modal's declared payload if it has one.
+ * Closes the dialog with its action's reason, taking the dialog's declared payload if it has one.
  *
  * @example
  * action('confirm', async (close) => {
@@ -90,7 +90,7 @@ export type ActionButtonProps = {
   'aria-busy': boolean;
   /** ARIA keyboard shortcut label, set when the action declared a `hotkey`. */
   'aria-keyshortcuts'?: string | undefined;
-  /** The modal's opening focus, set when the action declared `focusOnOpen` — see its doc. */
+  /** The dialog's opening focus, set when the action declared `focusOnOpen` — see its doc. */
   'data-focus-on-open'?: true | undefined;
   /**
    * The action's reason, so its button can be **found again** rather than remembered.
@@ -110,10 +110,10 @@ export type ActionButtonProps = {
  * `onClick` runs **before** the action and can cancel it with `preventDefault()` — the protocol
  * `useDialog`'s `onKeyDown` uses. Fixed, so that spreading cannot quietly lose behaviour.
  *
- * @typeParam TData - The modal's close payload.
+ * @typeParam TData - The dialog's close payload.
  */
 export type ActionOptions<TData = never> = {
-  /** What the action does. Omit to auto-close the modal with the action's reason. */
+  /** What the action does. Omit to auto-close the dialog with the action's reason. */
   readonly onAction?: ((close: ActionCloseFn<TData>) => void | Promise<void>) | undefined;
   /** Runs first; call `preventDefault()` to stop the action from running. */
   readonly onClick?: ((event: ActionClickEvent) => void) | undefined;
@@ -123,11 +123,11 @@ export type ActionOptions<TData = never> = {
   readonly type?: 'button' | 'submit' | undefined;
   /**
    * Keyboard shortcut, dispatched by finding the button whose `aria-keyshortcuts` matches — so it
-   * runs exactly the path a click does. A collision with the modal's `dismissKey` defers dismissal.
+   * runs exactly the path a click does. A collision with the dialog's `dismissKey` defers dismissal.
    */
   readonly hotkey?: HotkeyDef | undefined;
   /**
-   * Take the modal's opening focus instead of the first focusable element in it: `showModal()`
+   * Take the dialog's opening focus instead of the first focusable element in it: `showModal()`
    * focuses a form's first input, rarely what a confirmation dialog wants and never what a
    * destructive one does, so mark the starting point and `Enter` acts on the choice you meant.
    *
@@ -145,7 +145,7 @@ export type ActionOptions<TData = never> = {
  * action is used: nothing is passed into `useDialog`, an action existing because it is rendered, and
  * `reason` **is** its identity — the name and the close reason both, so nothing drifts.
  *
- * @typeParam TData - The modal's close payload, so `close(data)` is as typed as the modal.
+ * @typeParam TData - The dialog's close payload, so `close(data)` is as typed as the dialog.
  * @typeParam TReason - The declared reasons; at the `string` default any is accepted, so declare a
  *   union on `useDialog` for autocomplete and an exhaustive `switch` in `onClose`.
  *

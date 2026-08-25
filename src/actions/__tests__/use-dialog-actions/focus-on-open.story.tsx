@@ -3,7 +3,7 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * An action claiming the modal's opening focus.
+ * An action claiming the dialog's opening focus.
  *
  * The input is deliberately first in the DOM: it is what `showModal()` focuses on its own, so a
  * test cannot pass by accident — focus reaching `Cancel` means the option did it. The confirm

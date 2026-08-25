@@ -10,7 +10,7 @@ export type AppButtonLook = {
  * The button recipe as a class list, for the elements that cannot be an `AppButton`.
  *
  * Two of those exist and both are deliberate. A **link** dressed as a button has to stay a real
- * `<a>`, or new-tab and copy-link stop working. A **modal action's** button has to be one the
+ * `<a>`, or new-tab and copy-link stop working. A **dialog action's** button has to be one the
  * example writes itself, because `action(...)` spreads `aria-keyshortcuts`, `data-focus-on-open`
  * and `data-action-reason` onto it and a wrapper that enumerates props drops them silently.
  *

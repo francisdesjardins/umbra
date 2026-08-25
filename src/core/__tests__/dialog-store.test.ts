@@ -3,7 +3,7 @@ import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frame
 import { createDialogStore } from '../dialog-store.js';
 import type { AwaitedClose } from '../types.js';
 
-// The modal state machine — `useDialog`'s logic with React removed, so every transition is
+// The dialog state machine — `useDialog`'s logic with React removed, so every transition is
 // assertable without a browser. The store schedules its own animation frame, so these tests
 // install a controllable `requestAnimationFrame`: frames advance only when the test says so,
 // which is what makes the "close cancels a pending open frame" assertions deterministic.
@@ -59,7 +59,7 @@ test.describe('createDialogStore — opening', () => {
     expect(settled).toBe(2);
   });
 
-  test('beginOpen on an already-open modal settles immediately', () => {
+  test('beginOpen on an already-open dialog settles immediately', () => {
     const store = createDialogStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
@@ -161,7 +161,7 @@ test.describe('createDialogStore — closing', () => {
     store.close('dismiss');
     expect(frames.pending()).toBe(0);
 
-    // The cancelled frame must not resurrect the modal into 'open' after it closed.
+    // The cancelled frame must not resurrect the dialog into 'open' after it closed.
     frames.flush();
     expect(store.getSnapshot().phase).toBe('closing');
   });
@@ -248,7 +248,7 @@ test.describe('createDialogStore — closing', () => {
       settled = true;
     });
 
-    // Teardown while opening: the open() promise must not outlive the modal.
+    // Teardown while opening: the open() promise must not outlive the dialog.
     store.close('dismiss');
     store.finalize();
     expect(settled).toBe(true);

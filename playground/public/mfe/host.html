@@ -326,7 +326,7 @@
       /* The surface goes on `.panel`, not on `dialog` — and that is the library's contract,
          not a workaround. It writes `background: transparent; border: none; padding: 0` on the
          element it owns, so the dialog is a box you fill: a stylesheet rule on `dialog` loses to
-         those styles and the modal comes out invisible. Billing's hand-written <dialog> would
+         those styles and the dialog comes out invisible. Billing's hand-written <dialog> would
          escape that, since nothing styles it; keeping every panel on the same rule is what stops
          the three microfrontends from looking like three different products. */
       dialog {
@@ -343,7 +343,7 @@
         background: rgba(2, 6, 23, 0.62);
       }
       /* The dialog wears its owner's colour — the one thing a screenshot of this demo has to
-         say on its own is which microfrontend a modal came from. */
+         say on its own is which microfrontend a dialog came from. */
       .panel {
         /* One pixel off the dialog's edge, and that is the fix for a real artifact rather than a
            nicety. A `<dialog>` is `width: fit-content`, so its box lands on a fraction — the three

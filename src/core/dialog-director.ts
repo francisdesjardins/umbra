@@ -76,7 +76,7 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 // ── What the director is handed ──────────────────────────────────────────────
 
 /**
- * The modal being directed — fixed for its whole lifetime, so no step lists any of it, `dialogId`
+ * The dialog being directed — fixed for its whole lifetime, so no step lists any of it, `dialogId`
  * included: the store, engine and focus coordinator take the id once at build and never look
  * again. React's registration effect does list it, which is what re-registers a changed `id`.
  */
@@ -112,7 +112,7 @@ export type DialogLifecyclePass = {
   readonly dismissOnClickOutside: boolean;
 };
 
-/** What a step needs beyond the pass and the DOM context, built once per modal. */
+/** What a step needs beyond the pass and the DOM context, built once per dialog. */
 type StepParts = {
   readonly engine: ActionGate;
   readonly focus: FocusCoordinator;
@@ -186,9 +186,9 @@ const keydownInputs = (pass: DialogLifecyclePass): StepInputs => {
  * The order, as the thing that runs it.
  *
  * There is no separate declaration of the sequence to drift from this one:
- * {@link MODAL_LIFECYCLE_SEQUENCE} is derived from the table below.
+ * {@link DIALOG_LIFECYCLE_SEQUENCE} is derived from the table below.
  */
-export const MODAL_LIFECYCLE_STEPS = [
+export const DIALOG_LIFECYCLE_STEPS = [
   {
     /** Advance the native lifecycle — the `showModal()` / `show()` that puts the dialog on screen. */
     step: 'syncOpenSequence',
@@ -304,14 +304,14 @@ export const MODAL_LIFECYCLE_STEPS = [
 ] as const satisfies readonly DialogLifecycleStepSpec[];
 
 /** One step of the shared lifecycle, by name. */
-export type DialogLifecycleStep = (typeof MODAL_LIFECYCLE_STEPS)[number]['step'];
+export type DialogLifecycleStep = (typeof DIALOG_LIFECYCLE_STEPS)[number]['step'];
 
 /**
  * The order the shared lifecycle runs in, as data — for the gates that check a binding against it.
  *
  * Derived rather than written, so it cannot disagree with what actually runs.
  */
-export const MODAL_LIFECYCLE_SEQUENCE: readonly DialogLifecycleStep[] = MODAL_LIFECYCLE_STEPS.map(
+export const DIALOG_LIFECYCLE_SEQUENCE: readonly DialogLifecycleStep[] = DIALOG_LIFECYCLE_STEPS.map(
   (spec) => {
     return spec.step;
   }
@@ -320,13 +320,13 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly DialogLifecycleStep[] = MODAL_LI
 // ── The executor ─────────────────────────────────────────────────────────────
 
 /**
- * Build the director for one modal.
+ * Build the director for one dialog.
  *
  * It owns the focus coordinator — per-dialog state the sequence reads, and no binding's business.
  * The diffing is `createStepRunner`'s: the table above is DOM to the last line, which kept the
  * rules reading it ("detach everything stale before attaching any of it", "`destroy` clears the
  * keys") out of the unit project's reach until they moved there. What stays here is the part
- * that is about modals — which steps exist, what each reads, and the context they share.
+ * that is about dialogs — which steps exist, what each reads, and the context they share.
  */
 export function createDialogDirector(ctx: DialogDirectorContext) {
   const { store, getDialog, dialogId, manager, engine } = ctx;
@@ -337,7 +337,7 @@ export function createDialogDirector(ctx: DialogDirectorContext) {
   };
 
   const runner = createStepRunner<DialogLifecyclePass, DialogDomContext>(
-    MODAL_LIFECYCLE_STEPS.map((spec) => {
+    DIALOG_LIFECYCLE_STEPS.map((spec) => {
       return {
         inputs: spec.inputs,
         run: (dom, pass) => {

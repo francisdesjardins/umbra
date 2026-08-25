@@ -13,7 +13,7 @@ const focused = (page: Page) => {
 };
 
 /**
- * A modal's keyboard is its focus: `attachDialogKeydown` listens on the dialog and hears only what
+ * A dialog's keyboard is its focus: `attachDialogKeydown` listens on the dialog and hears only what
  * is raised inside it, so focus on `<body>` leaves every hotkey dead and the platform's own `cancel`
  * answering Escape alone. A control that disables itself is blurred by the engine and lands there.
  */

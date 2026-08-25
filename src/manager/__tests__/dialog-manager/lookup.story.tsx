@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-/** `lookup(id)` over two registered modals and an unknown id; queries fire from button clicks. */
+/** `lookup(id)` over two registered dialogs and an unknown id; queries fire from button clicks. */
 export function LookupFindHarness() {
   const [result, setResult] = useState('');
 
@@ -93,7 +93,7 @@ export function LookupFindHarness() {
   );
 }
 
-/** Collection-level queries — `getOpen`, `getClosed`, counts — over three modals, two opened. */
+/** Collection-level queries — `getOpen`, `getClosed`, counts — over three dialogs, two opened. */
 export function LookupCollectionHarness() {
   const [stats, setStats] = useState('');
 
@@ -190,7 +190,7 @@ export function LookupCollectionHarness() {
   );
 }
 
-/** `getForeground` and `isForeground` with two stacked modals. */
+/** `getForeground` and `isForeground` with two stacked dialogs. */
 export function LookupForegroundHarness() {
   const [foregroundId, setForegroundId] = useState('');
   const [isFgA, setIsFgA] = useState('');

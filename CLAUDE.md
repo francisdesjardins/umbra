@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Framework-agnostic dialog/modal manager, with React, Solid and vanilla shipped as three bindings
+Framework-agnostic dialog manager, with React, Solid and vanilla shipped as three bindings
 over it. No UI components exported; users bring their own.
 
 **Every `CLAUDE.md` carries a word budget, deliberately left with 10% of headroom. Spend it rather
@@ -22,7 +22,7 @@ the optional layer.
 
 _Hook_ bindings — `./react` and `./solid` — **render**: a `render` callback returns the content and
 the binding returns a `Dialog` to place. They share a surface down to the file names, so a team
-running both writes the same modal twice with the same words. Three differences, all the renderer's:
+running both writes the same dialog twice with the same words. Three differences, all the renderer's:
 Solid's live values are getters over signals — so **do not destructure the render args** —
 `useLookup` returns an accessor, and `portal: true` mounts the dialog itself, leaving `Dialog` as
 `null`.
@@ -119,9 +119,9 @@ by hand.
 
 ### Top-layer rule
 
-`showModal()` places dialogs in the browser's top layer, whose native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a modal is open must be inside the `render` callback; multi-dialog means calling `dialogManager.open(id)` from inside the first modal's render. Applies to stories, tests and playground examples.
+`showModal()` places dialogs in the browser's top layer, whose native backdrop blocks clicks outside the `<dialog>`. Any button clickable while a dialog is open must be inside the `render` callback; multi-dialog means calling `dialogManager.open(id)` from inside the first dialog's render. Applies to stories, tests and playground examples.
 
-**Non-dialog dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
+**Non-modal dialogs never enter the top layer**, so their positioning depends on placement — see the `portal` doc in [core/types.ts](src/core/types.ts):
 
 - `nonModal: true, portal: true` → portaled to `document.body`, viewport-anchored (`position: fixed`). Use for viewport-edge/centered non-modal panels.
 - `nonModal: true, portal: false` → **contained**: rendered inside a library-owned wrapper that is `position: absolute; inset: 0` over your nearest sized, positioned ancestor, and positioned `absolute` against that wrapper — `CONTAINED_HOST` in [core/placement.ts](src/core/placement.ts) says why absolute rather than an in-flow block. Immune to a transformed ancestor hijacking the containing block (the jump a `fixed` inline dialog hits), but it fills its nearest **sized** ancestor — provide a sized, positioned host or the panel collapses. Slide templates size to `100%` (not `100dvw/dvh`) here.
@@ -142,8 +142,8 @@ by hand.
 - **React Compiler** (`babel-plugin-react-compiler`, target `'19'`): no `useMemo`/`useCallback`/`React.memo`, no ref writes during render, no property assignment on `useState` values. Full rules in [src/CLAUDE.md](src/CLAUDE.md#react-compiler).
 - **TypeScript strict**: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature`
 - **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward three props** — `aria-keyshortcuts`, `data-focus-on-open`, `data-action-reason` — because all three are queried out of the DOM, so dropping one makes that feature silently do nothing. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
-- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. Order decides who answers the dismiss key, which is why `isForeground` matters beyond paint. The rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), the limits in the matrix.
-- **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
+- **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((dialog) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. Order decides who answers the dismiss key, which is why `isForeground` matters beyond paint. The rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), the limits in the matrix.
+- **A dialog only answers for its own subtree**: a dialog opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the dialog underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useDialog`.
 - **Declare the reasons**: `useDialog<TData, 'save' | 'cancel'>`, or name them once in `DialogRegistry` — `closesWith: 'save' | 'cancel'`, or `closesWith: { save: Doc; cancel: void }` to give each reason its own payload, which is then **required** where declared. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
 - **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and

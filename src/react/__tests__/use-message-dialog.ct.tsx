@@ -7,7 +7,7 @@ import {
 } from './use-message-dialog.story';
 
 test.describe('useMessageDialog', () => {
-  test('modal is initially closed', async ({ mount, page }) => {
+  test('dialog is initially closed', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-msg-basic')).not.toBeVisible();

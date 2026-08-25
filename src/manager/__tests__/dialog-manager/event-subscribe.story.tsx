@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests dialogManager.subscribe() — records open/close events as a CSV string.
- * Close button is inside the modal for top-layer compatibility.
+ * Close button is inside the dialog for top-layer compatibility.
  */
 export function EventSubscribeHarness() {
   const [events, setEvents] = useState<string[]>([]);

@@ -21,7 +21,7 @@ const ITEMS: readonly Item[] = [
 /**
  * One flow end to end: a panel that edits, a confirm inside it, an async action that can fail, a
  * typed payload back out, over a shopping list kept boring so no domain noun is in the way. The
- * confirm opens from the panel's render because a modal swallows outside clicks; the nested
+ * confirm opens from the panel's render because a dialog swallows outside clicks; the nested
  * `<dialog>`s each keep their own Escape and hotkey.
  */
 export function GroceryListExample() {
@@ -150,7 +150,7 @@ export function GroceryListExample() {
   });
 
   return (
-    <ExampleLayout result={outcome} modals={list.Dialog}>
+    <ExampleLayout result={outcome} dialogs={list.Dialog}>
       <AppButton
         variant="contained"
         size="small"

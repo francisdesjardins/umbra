@@ -26,13 +26,13 @@ import {
 const SENTINEL_PAYLOAD = 'SENTINEL_PAYLOAD_9271';
 
 test.describe('actions declared by use', () => {
-  test('modal is initially closed', async ({ mount, page }) => {
+  test('dialog is initially closed', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-ctrl-basic')).not.toBeVisible();
   });
 
-  test('opens modal with action buttons', async ({ mount, page }) => {
+  test('opens dialog with action buttons', async ({ mount, page }) => {
     await mount(<BasicActionsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-basic')).toBeVisible();
@@ -189,7 +189,7 @@ test.describe('actions declared by use', () => {
 });
 
 test.describe('callable actions', () => {
-  test('no-handler callable closes modal with action reason', async ({ mount, page }) => {
+  test('no-handler callable closes dialog with action reason', async ({ mount, page }) => {
     await mount(<DialogActionBasicHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-action-basic')).toBeVisible();
@@ -301,7 +301,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     await mount(<BrokenAriaKeyshortcutsHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     // Without aria-keyshortcuts neither hotkey dispatches, and Escape still routes to the action
-    // path rather than native dismiss — so the modal stays open on both.
+    // path rather than native dismiss — so the dialog stays open on both.
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-broken-aria')).toBeVisible();
@@ -331,7 +331,7 @@ test.describe('action lifecycle logging', () => {
     });
   }
 
-  test('logs started → close → completed with the modal id, never the payload', async ({
+  test('logs started → close → completed with the dialog id, never the payload', async ({
     mount,
     page,
   }) => {
@@ -602,7 +602,7 @@ test.describe('focusOnOpen', () => {
   });
 
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
-    // The claimed button decides where the modal opens; after a failure, whoever ran the action.
+    // The claimed button decides where the dialog opens; after a failure, whoever ran the action.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect

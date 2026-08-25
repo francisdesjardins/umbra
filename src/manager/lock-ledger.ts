@@ -4,7 +4,7 @@
  * A globally-targeted lock — `document.body` is one body however many dialog managers a page builds
  * — cannot be a shared boolean: each manager releases when it observes a transition with nothing of
  * its own open, so last-writer-wins drops a lock another still holds. So claims are per owner and
- * idempotent, released only when the last goes; stacked modals within one manager claim once, and a
+ * idempotent, released only when the last goes; stacked dialogs within one manager claim once, and a
  * lock compensating the layout twice would shift the page it exists to hold still. **The two
  * booleans make this a decision rather than a `Set`**: a rule restated at the call site is one the
  * next call site gets slightly wrong.

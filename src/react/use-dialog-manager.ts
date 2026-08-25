@@ -5,21 +5,21 @@ import { useDialogManagerContext } from './dialog-manager-context.js';
 export type { DialogManagerSnapshot };
 
 /**
- * An immutable `DialogManagerSnapshot` that updates whenever modals open or close, through
+ * An immutable `DialogManagerSnapshot` that updates whenever dialogs open or close, through
  * `useSyncExternalStore` for tear-free reads. Scoped to the nearest `DialogManagerProvider`, or
  * the singleton when there is none.
  *
  * @example
  * function DialogCounter() {
  *   const { openDialogs } = useDialogManager();
- *   return <span>{openDialogs.length} modals open</span>;
+ *   return <span>{openDialogs.length} dialogs open</span>;
  * }
  *
  * @example
  * function TopDialogIndicator() {
  *   const { foreground } = useDialogManager();
  *   if (!foreground) return null;
- *   return <span>Top modal: {foreground.id}</span>;
+ *   return <span>Top dialog: {foreground.id}</span>;
  * }
  */
 export function useDialogManager(): DialogManagerSnapshot {

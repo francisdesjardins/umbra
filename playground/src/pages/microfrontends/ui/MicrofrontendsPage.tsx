@@ -58,7 +58,7 @@ export const MicrofrontendsPage = () => {
       <ExampleSection
         id="the-four-panels"
         title="The four panels"
-        description="Four ways of writing the same modal, none of which imports another. Read Checkout and Support side by side: the useDialog call is the same call. Then Billing, which does not render at all. Then Audit, which is not even in the same DOM tree."
+        description="Four ways of writing the same dialog, none of which imports another. Read Checkout and Support side by side: the useDialog call is the same call. Then Billing, which does not render at all. Then Audit, which is not even in the same DOM tree."
       >
         <ExampleGrid columns={2}>
           <ExampleCard

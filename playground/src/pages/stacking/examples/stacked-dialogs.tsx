@@ -19,7 +19,7 @@ const chipStyle: CSSProperties = {
 };
 
 /**
- * Three modals of different kinds, stacked: all three declare `Enter` differently and only the
+ * Three dialogs of different kinds, stacked: all three declare `Enter` differently and only the
  * front one may hear it. Each renders **inside** the one below, because a top-layer dialog swallows
  * outside clicks, so every inner event bubbles through the outer ones and the library scopes it.
  */
@@ -46,7 +46,7 @@ export function StackedDialogsExample() {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
-            <MessageDialog.Title>Level 3 — message modal</MessageDialog.Title>
+            <MessageDialog.Title>Level 3 — message dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
@@ -84,7 +84,7 @@ export function StackedDialogsExample() {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
-            <MessageDialog.Title>Level 2 — modal</MessageDialog.Title>
+            <MessageDialog.Title>Level 2 — dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
@@ -137,7 +137,7 @@ export function StackedDialogsExample() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Shared.Message>
                 Open the levels above, then press <kbd>Escape</kbd> three times. One press closes
-                one modal, front to back — the counters below say which level heard what.
+                one dialog, front to back — the counters below say which level heard what.
               </Shared.Message>
               <Shared.Button
                 variant="primary"
@@ -172,7 +172,7 @@ export function StackedDialogsExample() {
   });
 
   return (
-    <ExampleLayout result={log.at(-1) ?? null} modals={panel.Dialog}>
+    <ExampleLayout result={log.at(-1) ?? null} dialogs={panel.Dialog}>
       <div
         style={{
           display: 'flex',

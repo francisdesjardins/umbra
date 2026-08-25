@@ -29,7 +29,7 @@ const INITIAL_HEIGHT = 660;
  * is the manager and not the renderer. Push Checkout past Billing's approval limit and a request
  * crosses three of them: React asks plain JS, plain JS refuses and hands the refusal to Solid.
  *
- * No `ExampleLayout`: no trigger row, no modal of ours, no result — it all happens in the frame.
+ * No `ExampleLayout`: no trigger row, no dialog of ours, no result — it all happens in the frame.
  */
 export function HostFrame() {
   const [reloadKey, setReloadKey] = useState(0);

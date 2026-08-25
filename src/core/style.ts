@@ -33,7 +33,7 @@ type CssPropertyName = {
  * keep the type its users expect while the core stays free of both.
  *
  * Values are `string | number` and are written verbatim: a bare number is *not* given a `px`
- * suffix. React's `style` prop does add one, so a React modal styled through the `style` option
+ * suffix. React's `style` prop does add one, so a React dialog styled through the `style` option
  * keeps that behaviour (the value never passes through {@link applyStyle}); everywhere else,
  * write the unit.
  */

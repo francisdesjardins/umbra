@@ -17,7 +17,7 @@ function BystanderDialog() {
 /**
  * Two managers, one body: the outer one holds the lock while the nested provider's manager has
  * only a mounted-never-opened bystander, so its registry churn must not release a lock it never
- * took. The toggle sits inside the modal's render because that modal owns the top layer.
+ * took. The toggle sits inside the dialog's render because that dialog owns the top layer.
  */
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);

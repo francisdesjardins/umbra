@@ -297,12 +297,12 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   {
     option: 'onKeyDown',
     enforcement: 'RUNTIME',
-    note: 'Scoped with `isOwnEventTarget`, so a modal opened from inside this one does not deliver its keys here on the way up.',
+    note: 'Scoped with `isOwnEventTarget`, so a dialog opened from inside this one does not deliver its keys here on the way up.',
   },
   {
     option: 'onError',
     enforcement: 'RUNTIME',
-    note: 'Userland errors only, and only the two with nowhere else to go: a throwing `prepare` (the dialog is already shown and `isPreparing` settles either way, so the modal announces itself ready) and a throwing `onClose` (detached, with nothing left rendering). An action’s throw is already the render args’ `error`, `render` reaches the framework’s error boundary, and `onKeyDown` / `onClick` escape to the DOM listener that called them — none of those arrive here. The library’s own failures never do either: routing them into a consumer callback would make a bug unreportable. A report, not a veto — the close still completes.',
+    note: 'Userland errors only, and only the two with nowhere else to go: a throwing `prepare` (the dialog is already shown and `isPreparing` settles either way, so the dialog announces itself ready) and a throwing `onClose` (detached, with nothing left rendering). An action’s throw is already the render args’ `error`, `render` reaches the framework’s error boundary, and `onKeyDown` / `onClick` escape to the DOM listener that called them — none of those arrive here. The library’s own failures never do either: routing them into a consumer callback would make a bug unreportable. A report, not a veto — the close still completes.',
     references: [
       {
         file: 'src/core/__tests__/finalize-close.test.ts',
@@ -325,11 +325,11 @@ export const OPTION_ROWS: readonly OptionRow[] = [
       },
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
-        title: 'a prepare that throws is reported, and the modal still settles',
+        title: 'a prepare that throws is reported, and the dialog still settles',
       },
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
-        title: 'a modal with no prepare is not busy to begin with',
+        title: 'a dialog with no prepare is not busy to begin with',
       },
     ],
   },
@@ -394,7 +394,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'role',
     excludes: ['nonModal: true (for `"alertdialog"`)'],
     enforcement: 'TYPE',
-    note: 'A closed union, and it narrows with the variant: the modal branch offers `"dialog" | "alertdialog"`, the non-modal branch `"dialog"` alone — an alertdialog is modal by definition, so the pair is unwritable rather than merely wrong. Deliberately not the whole ARIA surface — a `<dialog>` is a dialog, and a surface that is not one wants a live region inside it. For the markup the type cannot see, `umbra/vanilla`’s hand-written `role="alertdialog"` on a non-modal dialog is the labelling diagnostic’s third finding.',
+    note: 'A closed union, and it narrows with the variant: the modal branch offers `"dialog" | "alertdialog"`, the non-modal branch `"dialog"` alone — an alertdialog is dialog by definition, so the pair is unwritable rather than merely wrong. Deliberately not the whole ARIA surface — a `<dialog>` is a dialog, and a surface that is not one wants a live region inside it. For the markup the type cannot see, `umbra/vanilla`’s hand-written `role="alertdialog"` on a non-modal dialog is the labelling diagnostic’s third finding.',
     references: [
       {
         file: 'src/core/__tests__/dialog-labelling.test.ts',
@@ -456,7 +456,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     dependsOn: ['nonModal: false', 'at least one declared action'],
     excludes: ['dismissOnClickOutside'],
     enforcement: 'TYPE',
-    note: 'Opt-in, and gated on `hasActions()` as well — a modal that has drawn no action does not dismiss on its backdrop, which is why `undeclare` matters beyond stale hotkeys.',
+    note: 'Opt-in, and gated on `hasActions()` as well — a dialog that has drawn no action does not dismiss on its backdrop, which is why `undeclare` matters beyond stale hotkeys.',
     references: [
       {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
@@ -568,7 +568,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/react/__tests__/dialog-outlet.ct.tsx',
-          title: 'renders modal via outlet without {Dialog} in JSX',
+          title: 'renders dialog via outlet without {Dialog} in JSX',
         },
       ],
     },
@@ -647,7 +647,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'DialogRegistry — project-level id and contract typing',
     react: {
       state: 'works',
-      note: 'A consumer augments `DialogRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useDialog`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useDialog<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
+      note: 'A consumer augments `DialogRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useDialog`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the dialog said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared dialog needs no type arguments at all; the per-call-site `useDialog<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per dialog, not all-or-nothing: an undeclared id still works, which is what lets a project host dialogs it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
     },
     solid: {
       state: 'works',
@@ -662,7 +662,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'register / unregister, so an open can wait for its dialog',
     react: {
       state: 'works',
-      note: 'A modal joins the registry when its component mounts, so an imperative `open` from a service, a router guard or a deep link can arrive before the dialog behind a code-split route exists. Every other door already reported that — `openAndWait` resolves `[Error, null]`, `requestOpenAndWait` refuses with `not-registered` — while `open` only warned, and warnings are silent until `setLogLevel`. It answers `false` now, and `subscribe` carries the two registry moments beside the two screen ones, so the ask can be held until the dialog arrives. **No queue is shipped**: a pending open needs an expiry, and how long a deep link should wait for a route is the application’s question, the same reason nothing here auto-dismisses.',
+      note: 'A dialog joins the registry when its component mounts, so an imperative `open` from a service, a router guard or a deep link can arrive before the dialog behind a code-split route exists. Every other door already reported that — `openAndWait` resolves `[Error, null]`, `requestOpenAndWait` refuses with `not-registered` — while `open` only warned, and warnings are silent until `setLogLevel`. It answers `false` now, and `subscribe` carries the two registry moments beside the two screen ones, so the ask can be held until the dialog arrives. **No queue is shipped**: a pending open needs an expiry, and how long a deep link should wait for a route is the application’s question, the same reason nothing here auto-dismisses.',
       references: [
         {
           file: 'src/manager/__tests__/dialog-manager-registry.test.ts',
@@ -843,7 +843,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/react/__tests__/use-dialog.ct.tsx',
-          title: 'a prepare that throws is reported, and the modal still settles',
+          title: 'a prepare that throws is reported, and the dialog still settles',
         },
       ],
     },
@@ -853,7 +853,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/solid/__tests__/solid-dialog.ct.tsx',
-          title: 'a prepare that throws is reported, and the modal still settles',
+          title: 'a prepare that throws is reported, and the dialog still settles',
         },
       ],
     },
@@ -863,7 +863,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
-          title: 'a prepare that throws is reported, and the modal still settles',
+          title: 'a prepare that throws is reported, and the dialog still settles',
         },
       ],
     },
@@ -1202,7 +1202,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'a server render (`renderToString`)',
     react: {
       state: 'works',
-      note: 'Every hook reads its store through `useSyncExternalStore`, which **throws** rather than degrades when given no server reader — one missing argument takes down the render of any page that mounts a modal. All five pass their ordinary `getSnapshot` as the server one, which is sound because the stores are in-memory and DOM-free: the server reads a freshly-closed modal and hydration reads the identical thing. What it emits is a closed `<dialog>`, the only honest answer, since the top layer is enterable from `showModal()` alone. Asserted by `verify:package` on the built artifact — and it inspects the markup, because a hook that rendered nothing would also not throw.',
+      note: 'Every hook reads its store through `useSyncExternalStore`, which **throws** rather than degrades when given no server reader — one missing argument takes down the render of any page that mounts a dialog. All five pass their ordinary `getSnapshot` as the server one, which is sound because the stores are in-memory and DOM-free: the server reads a freshly-closed dialog and hydration reads the identical thing. What it emits is a closed `<dialog>`, the only honest answer, since the top layer is enterable from `showModal()` alone. Asserted by `verify:package` on the built artifact — and it inspects the markup, because a hook that rendered nothing would also not throw.',
     },
     solid: {
       state: 'no-by-design',
@@ -1293,7 +1293,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     ],
   },
   {
-    fact: 'a server-rendered `<dialog open>` can be modal',
+    fact: 'a server-rendered `<dialog open>` can be dialog',
     state: 'no-platform',
     why: 'The top layer is enterable only through `showModal()` from script, so an `open` attribute in served HTML is **by definition** a non-modal open — no backdrop, nothing inert. It is the one thing SSR cannot hand a dialog. `bindDialog` adopts such a dialog when the caller asked for `nonModal`, and closes it otherwise rather than claiming a containment the element does not have.',
     references: [
@@ -1337,7 +1337,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'a raise hands the keyboard back to a dialog that claimed no `focusOnOpen`',
     state: 'works',
-    why: 'A panel opening underneath runs the platform’s focusing steps and takes the keyboard from the dialog in front. `reclaimFocus` undoes it, and with a claim there is something to aim at — **without one there was not**: the fallback was `dialog.focus()`, which an open `<dialog>` refuses, so the modal stayed on screen with focus on `<body>` and every hotkey but Escape dead. The floor is the dialog’s **first focusable** instead. Which one that is depends on how the confirmation is read: focusing a candidate and asking the `document` who holds it is wrong inside a shadow root — it answers with the *host*, so the scan walks past a candidate that took focus and the dialog ends on its **last** control. `focusFirstAvailable` asks the dialog’s own root — and scans only this dialog’s own controls, which the row below carries.\n\nProven on all three bindings, and measuring them turned up two things inference had got wrong. **The theft itself is Chromium’s**: on Firefox and WebKit a non-modal `show()` underneath does not take the keyboard from a modal in the top layer, so the dialog keeps it with no repair at all — disabling both repair paths leaves those two engines green. And on `umbra/vanilla` the floor is **not** the delivering path: `bind-dialog.ts` runs `focus.sync` *before* `syncOpenSequence` where the director runs it after, so its `focusin` bookkeeping hears the opening autofocus that the hook bindings’ misses, `preferred` is set, and the floor is never reached. Either path suffices there — measured by disabling each alone (green) and both together (red).',
+    why: 'A panel opening underneath runs the platform’s focusing steps and takes the keyboard from the dialog in front. `reclaimFocus` undoes it, and with a claim there is something to aim at — **without one there was not**: the fallback was `dialog.focus()`, which an open `<dialog>` refuses, so the dialog stayed on screen with focus on `<body>` and every hotkey but Escape dead. The floor is the dialog’s **first focusable** instead. Which one that is depends on how the confirmation is read: focusing a candidate and asking the `document` who holds it is wrong inside a shadow root — it answers with the *host*, so the scan walks past a candidate that took focus and the dialog ends on its **last** control. `focusFirstAvailable` asks the dialog’s own root — and scans only this dialog’s own controls, which the row below carries.\n\nProven on all three bindings, and measuring them turned up two things inference had got wrong. **The theft itself is Chromium’s**: on Firefox and WebKit a non-modal `show()` underneath does not take the keyboard from a dialog in the top layer, so the dialog keeps it with no repair at all — disabling both repair paths leaves those two engines green. And on `umbra/vanilla` the floor is **not** the delivering path: `bind-dialog.ts` runs `focus.sync` *before* `syncOpenSequence` where the director runs it after, so its `focusin` bookkeeping hears the opening autofocus that the hook bindings’ misses, `preferred` is set, and the floor is never reached. Either path suffices there — measured by disabling each alone (green) and both together (red).',
     references: [
       {
         file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
@@ -1388,9 +1388,9 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     why: 'Forced-colors mode (Windows High Contrast) strips author backgrounds and box-shadows: `--dialog-backdrop` is replaced by the UA’s own system scrim, and a surface drawn by shadow alone loses its silhouette entirely. Measured under emulation on the playground: a translucent system wash where the 0.7 black was, `box-shadow: none` on every surface, the focus ring forced to the system Highlight — and every reference template still delimited, because each carries a real `1px` border on the edge that matters (the same border discipline the contrast pass required for 1.4.11). The rule for a consumer is one sentence: give the dialog’s surface a border and let the mode recolour it; a shadow is decoration there, never the outline.',
   },
   {
-    fact: '`aria-dialog` written onto the `<dialog>`',
+    fact: '`aria-modal` written onto the `<dialog>`',
     state: 'no-by-design',
-    why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-dialog` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',
+    why: 'The library never writes it, and that is the correct spelling of the fact rather than an omission: `showModal()` exposes the modal state to assistive technology itself (HTML-AAM maps a dialog in the modal state, and the top layer makes the rest of the document genuinely inert), so the attribute adds nothing on the modal variant — and on the non-modal one it would be a lie, announcing an inertness `show()` does not produce. A hand-written `aria-modal` is the marker of a `<div>` pretending to be a dialog, which is the thing this library exists to not build.',
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',
@@ -1417,15 +1417,15 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'one Escape closes only the dialog it was pressed in',
     state: 'works',
-    why: 'A modal opened from inside another renders its `<dialog>` in that subtree, so every event bubbles through the one underneath. `isOwnEventTarget` and `queryOwn` scope both the keydown and the hotkey dispatch.',
+    why: 'A dialog opened from inside another renders its `<dialog>` in that subtree, so every event bubbles through the one underneath. `isOwnEventTarget` and `queryOwn` scope both the keydown and the hotkey dispatch.',
     references: [
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
-        title: 'the dismiss key unwinds the stack one modal per press, front to back',
+        title: 'the dismiss key unwinds the stack one dialog per press, front to back',
       },
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
-        title: 'an outer modal never dispatches through a nested dialog’s button',
+        title: 'an outer dialog never dispatches through a nested dialog’s button',
       },
     ],
   },
@@ -1443,12 +1443,12 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'Escape is always answered by someone',
     state: 'no-by-design',
-    why: 'Put a modal with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the modal was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both halves of that are asserted.',
+    why: 'Put a dialog with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the dialog was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both halves of that are asserted.',
     references: [
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
         title:
-          'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
+          'a deaf dialog in front leaves the panel behind alone, and the press reaches the page',
       },
     ],
   },
@@ -1554,7 +1554,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
       },
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
-        title: 'the dismiss key unwinds the stack one modal per press, front to back',
+        title: 'the dismiss key unwinds the stack one dialog per press, front to back',
       },
     ],
   },
@@ -1563,7 +1563,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'No Keyboard Trap',
     level: 'A',
     state: 'works',
-    why: 'A modal dialog is exited by Escape through the native `cancel`, wherever focus is; a non-modal one lets Tab walk out by default, and `containFocus` — the opt-in wrap — never claims the dismiss key. Even the deliberate dead end (a modal with `dismissKey: false` in front of a panel) leaves the press travelling, so the application can still answer it.',
+    why: 'A modal dialog is exited by Escape through the native `cancel`, wherever focus is; a non-modal one lets Tab walk out by default, and `containFocus` — the opt-in wrap — never claims the dismiss key. Even the deliberate dead end (a dialog with `dismissKey: false` in front of a panel) leaves the press travelling, so the application can still answer it.',
     references: [
       {
         file: 'src/core/__tests__/focus-containment.ct.tsx',
@@ -1572,7 +1572,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
         title:
-          'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
+          'a deaf dialog in front leaves the panel behind alone, and the press reaches the page',
       },
     ],
   },

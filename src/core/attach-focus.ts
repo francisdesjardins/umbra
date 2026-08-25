@@ -200,7 +200,7 @@ export function createFocusCoordinator(
       const unsubscribe = engine.subscribe(check);
 
       // Remember focus as it arrives, scoped with `isOwnEventTarget`: both events bubble, and a
-      // nested modal renders in this subtree, so the one underneath would restore to its button.
+      // nested dialog renders in this subtree, so the one underneath would restore to its button.
       //
       // **Bound to the root, and the dialog resolved per event.** Binding to the element is the
       // obvious shape and it silently stops working: a renderer that replaces the `<dialog>` leaves
@@ -280,7 +280,7 @@ export function createFocusCoordinator(
           if (!info.isForeground || (info.exists && info.nonModal)) {
             // Dialog only, as a rule: a non-modal panel never owned the page's focus, and its
             // dismiss key comes from `attachWindowDismissKey`, which answers wherever focus is. A
-            // modal has no such listener — its keydown is scoped to itself — so focus is its
+            // dialog has no such listener — its keydown is scoped to itself — so focus is its
             // keyboard.
             return;
           }
@@ -295,7 +295,7 @@ export function createFocusCoordinator(
 
         // ── …and when a control inside strands it ──────────────────────────
         //
-        // The stack is not the only way a modal loses its keyboard: a control that disables itself
+        // The stack is not the only way a dialog loses its keyboard: a control that disables itself
         // — the shape of every loading button — is blurred by the engine, and focus lands on
         // `<body>`, where this dialog's keydown listener cannot hear it. Only the platform's own
         // `cancel` still works, which is why such a dialog answers Escape and no other hotkey.

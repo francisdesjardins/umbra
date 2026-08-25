@@ -146,8 +146,8 @@ const flows = {
     return checks;
   },
 
-  /** A modal opens from a card and Escape dismisses it. */
-  async modal(page) {
+  /** A dialog opens from a card and Escape dismisses it. */
+  async dialog(page) {
     const checks = [];
     await gotoRoute(page, '/getting-started');
     await page.getByRole('button', { name: 'Open', exact: true }).first().click();
@@ -205,7 +205,7 @@ const flows = {
     const checks = [];
     await gotoRoute(page, '/ui-integrations');
 
-    // By modal id, not "whatever is open": the previous one may still be exiting with `open` set.
+    // By dialog id, not "whatever is open": the previous one may still be exiting with `open` set.
     const forms = [
       { id: 'mui-form-example', trigger: /open mui form/i, name: 'Ada Lovelace' },
       { id: 'vanilla-form-example', trigger: /open vanilla form/i, name: 'Grace Hopper' },
@@ -249,7 +249,7 @@ const flows = {
   },
 
   /**
-   * One Escape closes a modal whose content holds nothing focusable: `showModal()` then puts focus
+   * One Escape closes a dialog whose content holds nothing focusable: `showModal()` then puts focus
    * outside the dialog, a dialog-element keydown listener never sees the key, and the browser's own
    * cancel closes it behind the store's back. Only the real page produces that condition itself.
    */
@@ -364,7 +364,7 @@ const flows = {
         return n.hasAttribute('open');
       }));
     });
-    checks.push([closed, 'pressing the declared hotkey closes the modal']);
+    checks.push([closed, 'pressing the declared hotkey closes the dialog']);
 
     const text = ((await page.locator('body').textContent()) ?? '').replace(/\s+/g, ' ');
     checks.push([/Closed: confirm/.test(text), "it closed with the action's own reason"]);

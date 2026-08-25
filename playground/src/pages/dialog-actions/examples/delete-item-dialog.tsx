@@ -8,7 +8,7 @@ import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
-export const MODAL_ID = 'delete-item-dialog';
+export const DIALOG_ID = 'delete-item-dialog';
 
 // ── Module-level store ────────────────────────────────────────────────────
 
@@ -39,10 +39,10 @@ const resultStore = createResultStore();
 function useDeleteItemDialog(options: { onDelete: (itemId: string) => Promise<void> }) {
   const { itemName } = useStore(deleteItemStore);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
-    ariaDescribedBy: `${MODAL_ID}-body`,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
+    ariaDescribedBy: `${DIALOG_ID}-body`,
     // A destructive confirm interrupts, and an alertdialog is announced with its description.
     role: 'alertdialog',
     render: ({ action, hasRunningAction, error, phase }) => {
@@ -50,11 +50,11 @@ function useDeleteItemDialog(options: { onDelete: (itemId: string) => Promise<vo
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="error" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete Item</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>Delete Item</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
-              <Shared.Message id={`${MODAL_ID}-body`}>
+              <Shared.Message id={`${DIALOG_ID}-body`}>
                 Are you sure you want to delete <strong>&quot;{itemName}&quot;</strong>?
               </Shared.Message>
               <Shared.Alert severity="warning">This action cannot be undone.</Shared.Alert>
@@ -103,12 +103,12 @@ function useDeleteItemDialog(options: { onDelete: (itemId: string) => Promise<vo
   // `openAndWait` registers the resolver before the open, so a close during `prepare` is not missed.
   const openForItem = (id: string, name: string) => {
     deleteItemStore.prepareForItem(id, name);
-    return modal.openAndWait();
+    return dialog.openAndWait();
   };
 
   return {
     openForItem,
-    Dialog: modal.Dialog,
+    Dialog: dialog.Dialog,
   };
 }
 
@@ -122,7 +122,7 @@ export function DeleteItemDialogExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={deleteDialog.Dialog}>
+    <ExampleLayout result={result} dialogs={deleteDialog.Dialog}>
       <AppButton
         variant="contained"
         color="error"

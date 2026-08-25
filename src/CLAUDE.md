@@ -34,7 +34,7 @@ last row was found by a reader noticing a comment used a word to mean something 
 | Concept                        | The word                      | Not                                          |
 | ------------------------------ | ----------------------------- | -------------------------------------------- |
 | `showModal()` vs `show()`      | **modal / non-modal**         | blocking / non-blocking                      |
-| Which template built a dialog  | **`template`**                | `modalType`, kind, category                  |
+| Which template built a dialog  | **`template`**                | kind, category, a second `type` field        |
 | An unconditional transition    | **`beginOpen`**               | `requestOpen` (that one asks and may fail)   |
 | Closed with nobody acting      | **`DISMISS_REASON`**          | a `'dismiss'` literal anywhere in `src/`     |
 | The work an open waits on      | **`prepare` / `isPreparing`** | `onOpen` (that one reports; this is awaited) |
@@ -65,11 +65,17 @@ starting it, so the dialog reaches `'open'` either way and one that throws is lo
 like any other. What waits on it is `open()`'s promise, `isPreparing` and therefore `aria-busy`,
 `dismissWhilePreparing`, and the labelling diagnostic.
 
-**`dialog` is the element, `modal` is the unit of state.** `dialogPlacement`, `dialogAttributes`,
-`DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `dialog-store.ts`, `DialogPhase`,
-`DialogRenderArgs` and `dialogId` are the library's record of one. `DialogManagerSnapshot.openDialogs`
-reads against the rule and stays, because applying it would rename `DialogManager` itself, the
-package's front door. Add no new exceptions.
+**`dialog` is the noun, `modal` is the adjective.** The library drives one thing — a native
+`<dialog>` — and drives it in two variants, so the element gets the name and the variant gets the
+qualifier. `useDialog`, `DialogPhase`, `dialog-store.ts`, `dialogId` and `data-dialog-id` are the
+noun; `nonModal`, `showModal()`, the CSS `:modal` pseudo-class and the phrase _a modal dialog_ are
+the adjective and must stay that way. **There is no third word**: the state record and the element
+are one concept here, and splitting them again is what this rule replaced.
+
+The adjective is easy to sweep away by accident, so it is worth knowing where it hides: inside
+`non-modal` (where a hyphen is the only boundary), inside `dialog:modal` (a platform selector, not
+a namespace), and in front of `dialog` (`a modal dialog` is correct English; `a dialog dialog` is
+how you find out a pattern went too far).
 
 Two near-misses kept on purpose, so the next pass does not re-open them: `ActionGate`/`DismissGate`
 are "gate" in two senses and the alternatives cost more than the ambiguity; `DialogRenderArgs` and
@@ -262,7 +268,7 @@ invent one — so it takes the caller's and **omits the attribute entirely when 
 `role` is deliberately not the whole ARIA surface: a `<dialog>` _is_ a dialog, and a surface that is
 not one — a toast, a popover — wants a live region **inside** it rather than a role contradicting its
 element. **It narrows with the variant**: `'alertdialog'` is the modal branch's alone, an alertdialog
-being modal by definition — the pair is a type error on the hook bindings, and on `umbra/vanilla`'s
+being dialog by definition — the pair is a type error on the hook bindings, and on `umbra/vanilla`'s
 hand-written markup the labelling diagnostic reports it. **`role: 'alertdialog'` does not require
 `ariaDescribedBy`**; that was considered and rejected, on the rule in
 [core/dialog-labelling.ts](core/dialog-labelling.ts).
@@ -341,8 +347,8 @@ that reaches the DOM, and both the dispatch selector and `engine.ownsHotkey` are
 `formatHotkeyLabel` produces the human form (`Ctrl+Enter`) and is for reading only. They agree by
 construction, and how is in [utils/hotkey-utils.ts](utils/hotkey-utils.ts).
 
-**Scoped to the declaring dialog** ([utils/dialog-scope.ts](utils/dialog-scope.ts)). A modal opened
-from inside another renders its `<dialog>` in that subtree, so its events bubble through every modal
+**Scoped to the declaring dialog** ([utils/dialog-scope.ts](utils/dialog-scope.ts)). A dialog opened
+from inside another renders its `<dialog>` in that subtree, so its events bubble through every dialog
 underneath: `isOwnEventTarget` drops those at the keydown listener and `queryOwn` keeps dispatch off
 a nested dialog's buttons. Without them one Escape unwinds the whole stack.
 
@@ -415,12 +421,12 @@ the `'opening'` phase) written in one home rather than three.
 consumer to augment; `DialogId`, `ReasonOf` and `DataOf` read off it, and every hook —
 `useDialog`, both templates, `bindDialog` — leads with an overload constrained to
 `RegisteredDialogId`, so a declared id supplies `TData` and `TReason`. `DialogId` stays open, since a
-project hosts modals it does not own. The augmented half is `yarn type-check:registry` over
+project hosts dialogs it does not own. The augmented half is `yarn type-check:registry` over
 `type-fixtures/`, compiled alone because declaration merging is global.
 
 ### The payload flows
 
-`TData` is threaded through every hop of the close path, so the payload a modal declares is the only
+`TData` is threaded through every hop of the close path, so the payload a dialog declares is the only
 one any of its doors accepts:
 
 ```
@@ -501,13 +507,13 @@ uncompiled.
 
 ## Code Organization
 
-1. Side effects → an `attach*` function in `core/` (framework-free, returns its teardown), plus a step in `MODAL_LIFECYCLE_STEPS` saying where it runs and what it reads. Adding it to a binding instead is the mistake the director exists to prevent, and `wiring-order.test.ts` fails on it — a new one goes in the core even if only one binding needs it today
+1. Side effects → an `attach*` function in `core/` (framework-free, returns its teardown), plus a step in `DIALOG_LIFECYCLE_STEPS` saying where it runs and what it reads. Adding it to a binding instead is the mistake the director exists to prevent, and `wiring-order.test.ts` fails on it — a new one goes in the core even if only one binding needs it today
 2. Pure functions → `utils/`
 3. Compiler ref complaints → inline the handler
 4. State → the `store/` module ([store/CLAUDE.md](store/CLAUDE.md)) — hand-rolled reactive cell, zero runtime deps
-5. Types → `core/types.ts` (the framework-free model, generic over style and node), `react/types.ts` and `solid/types.ts` (the two instantiations), `core/style.ts` (`DialogStyle`), `manager/types.ts` (lookup), `actions/types.ts` (modal actions)
+5. Types → `core/types.ts` (the framework-free model, generic over style and node), `react/types.ts` and `solid/types.ts` (the two instantiations), `core/style.ts` (`DialogStyle`), `manager/types.ts` (lookup), `actions/types.ts` (dialog actions)
 6. Template shared → `templates/shared.ts`
-7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` an action reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land in `playground/src/shared/lib/`, copied like the modal templates. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**, for the lifecycle's own detached callbacks
+7. Error handling → `normalizeError` (`utils/normalize-error.ts`) is the one general-purpose helper the root exports: it produces the `Error` an action reports, and a caller composing its own handler wants the same normalisation. Async **coordination** — a mutex, single-flight, a fetch-state machine — is user-land in `playground/src/shared/lib/`, copied like the dialog templates. `fireAndForget` (`utils/fire-and-forget.ts`) is **internal**, for the lifecycle's own detached callbacks
 8. Framework-free store observation → `store.subscribe(listener)` and read `getSnapshot()`; that pair is the whole contract. React consumes it through `useSyncExternalStore` with no adapter; Solid's is `fromStore` (`solid/from-store.ts`), six lines, and public because every Solid consumer would otherwise write it
 
 ### State (store module)
@@ -518,11 +524,11 @@ State management lives in [store/](store/) — a hand-rolled reactive cell (a `S
 
 ## Debug Logging
 
-`createLogger(namespace)` ([utils/logger.ts](utils/logger.ts)). Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `modal`, `modal:lifecycle`, `modal:keydown`, `modal:click-outside`, `action`.
+`createLogger(namespace)` ([utils/logger.ts](utils/logger.ts)). Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `dialog`, `dialog:lifecycle`, `dialog:keydown`, `dialog:click-outside`, `action`.
 
 ## Testing Details
 
-Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](../playwright/index.tsx), so each gets isolated state. That wrapper is **React's**: a Solid harness wraps itself in Solid's, or its modals register with the module-level singleton and leak between tests.
+Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](../playwright/index.tsx), so each gets isolated state. That wrapper is **React's**: a Solid harness wraps itself in Solid's, or its dialogs register with the module-level singleton and leak between tests.
 
 **Solid harnesses** ([solid/\_\_tests\_\_/](solid/__tests__/)) are a Solid root hosted inside a React CT story: the story renders a `<div>`, calls Solid's `render` into it from an effect, and returns the disposer as the cleanup. They are written with `h` rather than JSX, so no Solid compiler enters the CT bundle — and nothing is lost, because hyperscript detects the getters an action's props carry and spreads them reactively, exactly as compiled JSX would.
 

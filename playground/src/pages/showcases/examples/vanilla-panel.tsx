@@ -206,15 +206,15 @@ function Field({
 
 // ── Component ──────────────────────────────────────────────────────────────
 
-export const MODAL_ID = 'vanilla-panel-steps';
+export const DIALOG_ID = 'vanilla-panel-steps';
 
 export function VanillaPanelExample() {
   const { result } = useStore(resultStore);
   const setup = useStore(setupStore);
 
   // Template hooks infer the payload from `actions`; `submit` is the only one carrying a payload.
-  const modal = useMessageDialog({
-    id: MODAL_ID,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
     // A string: the heading is the *step* and changes three times while the dialog stays open.
     ariaLabel: 'Project setup',
     render: ({ action, error }) => {
@@ -274,7 +274,7 @@ export function VanillaPanelExample() {
 
                   {/* ── "Jump to" dropdown — the element the platform already ships ── */}
                   <SelectionDropdown
-                    id={`${MODAL_ID}-step`}
+                    id={`${DIALOG_ID}-step`}
                     aria-label="Jump to step"
                     compact
                     value={setup.step}
@@ -328,18 +328,18 @@ export function VanillaPanelExample() {
               {setup.step === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <Shared.Heading>Core settings</Shared.Heading>
-                  <Field label="Pipeline name" htmlFor={`${MODAL_ID}-name`}>
+                  <Field label="Pipeline name" htmlFor={`${DIALOG_ID}-name`}>
                     <FormDialog.Input
-                      id={`${MODAL_ID}-name`}
+                      id={`${DIALOG_ID}-name`}
                       value={setup.name}
                       onChange={(e) => {
                         setupStore.setName(e.target.value);
                       }}
                     />
                   </Field>
-                  <Field label="Environment" htmlFor={`${MODAL_ID}-environment`}>
+                  <Field label="Environment" htmlFor={`${DIALOG_ID}-environment`}>
                     <SelectionDropdown
-                      id={`${MODAL_ID}-environment`}
+                      id={`${DIALOG_ID}-environment`}
                       value={setup.environment}
                       onChange={(e) => {
                         setupStore.setEnvironment(e.target.value);
@@ -353,7 +353,7 @@ export function VanillaPanelExample() {
                   </Field>
                   <RadioRow
                     legend="Region"
-                    name={`${MODAL_ID}-region`}
+                    name={`${DIALOG_ID}-region`}
                     value={setup.region}
                     options={[
                       { value: 'us-east-1', label: 'US East' },
@@ -371,9 +371,9 @@ export function VanillaPanelExample() {
               {setup.step === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <Shared.Heading>Access control</Shared.Heading>
-                  <Field label="Access level" htmlFor={`${MODAL_ID}-access`}>
+                  <Field label="Access level" htmlFor={`${DIALOG_ID}-access`}>
                     <SelectionDropdown
-                      id={`${MODAL_ID}-access`}
+                      id={`${DIALOG_ID}-access`}
                       value={setup.accessLevel}
                       onChange={(e) => {
                         setupStore.setAccessLevel(e.target.value);
@@ -407,7 +407,7 @@ export function VanillaPanelExample() {
                   </label>
                   <RadioRow
                     legend="Run schedule"
-                    name={`${MODAL_ID}-schedule`}
+                    name={`${DIALOG_ID}-schedule`}
                     value={setup.schedule}
                     options={[
                       { value: 'hourly', label: 'Hourly' },
@@ -523,12 +523,12 @@ export function VanillaPanelExample() {
     },
   });
 
-  // ── Open the modal and await how it closed ───────────────────────────────
+  // ── Open the dialog and await how it closed ───────────────────────────────
 
   const handleOpen = () => {
     void (async () => {
       try {
-        const [err, closeResult] = await modal.openAndWait();
+        const [err, closeResult] = await dialog.openAndWait();
         if (err !== null) {
           resultStore.setResult(`Error: ${err.message}`);
           return;
@@ -547,7 +547,7 @@ export function VanillaPanelExample() {
   };
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <Shared.Button variant="primary" onClick={handleOpen}>
         Open Vanilla Panel
       </Shared.Button>

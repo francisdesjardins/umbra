@@ -11,9 +11,9 @@ const INSTANT = {
 } as const;
 
 /**
- * The one configuration in which no dialog answers the dismiss key: a modal with
+ * The one configuration in which no dialog answers the dismiss key: a dialog with
  * `dismissKey: false` in front of a non-modal panel. Each half correctly declines — the panel is no
- * longer the foreground, the modal was told not to listen — and nothing closing is the right
+ * longer the foreground, the dialog was told not to listen — and nothing closing is the right
  * outcome, since dismissing the panel behind would close what the user cannot see. So the question
  * is not "does something close" but "is the press still available to the page": a library that
  * swallows a key it refuses to act on leaves the application with a dead keyboard.
@@ -46,10 +46,10 @@ export function EscAnsweredByNobodyHarness() {
     render: ({ action }) => {
       return (
         <div style={dialogStyle}>
-          <p>Front modal, deaf to the dismiss key</p>
+          <p>Front dialog, deaf to the dismiss key</p>
           {/* Inside the render, because a `showModal()` dialog puts everything else out of reach. */}
           <button data-testid="close-dialog" {...action('confirm')}>
-            Close modal
+            Close dialog
           </button>
         </div>
       );
@@ -73,7 +73,7 @@ export function EscAnsweredByNobodyHarness() {
               void front.open();
             }}
           >
-            Open the modal over it
+            Open the dialog over it
           </button>
           <button
             data-testid="close-panel"

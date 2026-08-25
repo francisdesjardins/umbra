@@ -216,7 +216,7 @@ export function CosmicOverrideExample() {
       const engage = action('engage', {
         hotkey: Key.Enter,
         onAction: async (close) => {
-          // Throws now and then, which is the point: a failed action keeps the modal open and
+          // Throws now and then, which is the point: a failed action keeps the dialog open and
           // leaves the reason on `error`.
           await simulateApiCall('Warp charge', 900);
           close(pickSector());
@@ -258,7 +258,7 @@ export function CosmicOverrideExample() {
             }}
           >
             The corona burning behind this panel is the browser&apos;s own <code>::backdrop</code>,
-            restyled by one selector in this file — clicking it does nothing, because this modal
+            restyled by one selector in this file — clicking it does nothing, because this dialog
             refuses that dismissal. Escape still works, and Enter engages, because the action
             declared the hotkey and nothing else had to.
           </p>

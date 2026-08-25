@@ -10,9 +10,9 @@ export function ControlledDialogHarness() {
   const [cause, setCause] = useState<DismissCause | ''>('');
   const [allow, setAllow] = useState(false);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'controlled-dialog',
-    ariaLabel: 'A controlled modal',
+    ariaLabel: 'A controlled dialog',
     onDismissRequest: (dismissedBy) => {
       setRequests((count) => {
         return count + 1;
@@ -21,7 +21,7 @@ export function ControlledDialogHarness() {
       setCause(dismissedBy);
       // The owner acts only once it has decided to, which is the whole point of the two steps.
       if (allow) {
-        modal.handle.close('dismiss');
+        dialog.handle.close('dismiss');
       }
     },
     render: () => {
@@ -53,13 +53,13 @@ export function ControlledDialogHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }
@@ -72,7 +72,7 @@ export function ControlledPanelHarness() {
   const [declining, setDeclining] = useState(false);
   const [pageSaw, setPageSaw] = useState(0);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'controlled-panel',
     nonModal: true,
     ariaLabel: 'A controlled panel',
@@ -111,7 +111,7 @@ export function ControlledPanelHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
@@ -129,7 +129,7 @@ export function ControlledPanelHarness() {
       <button data-testid="outside" type="button">
         Outside the panel
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }
@@ -141,7 +141,7 @@ export function ControlledPanelHarness() {
 export function ControlledClickOutsideHarness() {
   const [causes, setCauses] = useState<DismissCause[]>([]);
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'controlled-click-outside',
     nonModal: true,
     dismissOnClickOutside: true,
@@ -166,13 +166,13 @@ export function ControlledClickOutsideHarness() {
       <button
         data-testid="open"
         onClick={() => {
-          void modal.open();
+          void dialog.open();
         }}
         type="button"
       >
         Open
       </button>
-      {modal.Dialog}
+      {dialog.Dialog}
     </>
   );
 }

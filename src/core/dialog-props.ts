@@ -33,7 +33,7 @@ export type DialogAttributeOptions = {
 export type DialogAttributes = {
   readonly 'data-dialog-id': string;
   readonly 'data-testid': string;
-  readonly 'data-dialog-type': 'modal' | 'non-modal';
+  readonly 'data-dialog-type': 'dialog' | 'non-modal';
   readonly 'aria-busy': 'true' | 'false';
   readonly 'aria-label': string | undefined;
   readonly 'aria-labelledby': string | undefined;
@@ -51,7 +51,7 @@ export type DialogAttributes = {
  *
  * `aria-busy` is the opposite case and is always given a value, `'false'` included. It is the one
  * attribute here the library owns outright rather than relays, and it *toggles* — a dialog on
- * screen while `prepare` runs is the documented normal state of a loading modal, and the state it
+ * screen while `prepare` runs is the documented normal state of a loading dialog, and the state it
  * leaves. Absence cannot express the off half, since {@link setDialogAttributes} skips `undefined`
  * rather than removing, so the value that means "done" has to be written.
  */
@@ -62,7 +62,7 @@ export function dialogAttributes(options: DialogAttributeOptions): DialogAttribu
   return {
     'data-dialog-id': dialogId,
     'data-testid': `dialog-${dialogId}`,
-    'data-dialog-type': nonModal ? 'non-modal' : 'modal',
+    'data-dialog-type': nonModal ? 'non-modal' : 'dialog',
     'aria-busy': isPreparing ? 'true' : 'false',
     'aria-label': ariaLabel,
     'aria-labelledby': ariaLabelledBy,
@@ -147,7 +147,7 @@ export type BackdropDialog = {
  * anything originating in the content bubbles up with a descendant as its target. Checking that
  * first is what makes the coordinate test safe — a keyboard-activated button dispatches a click
  * with `clientX`/`clientY` of 0, which lies outside a centred dialog's rect and would otherwise
- * read as a backdrop click and dismiss the modal.
+ * read as a backdrop click and dismiss the dialog.
  *
  * The coordinate test is still needed after it: the dialog's own box can extend past its content
  * (padding, a template's sizing), so a click on the element is not necessarily a click outside

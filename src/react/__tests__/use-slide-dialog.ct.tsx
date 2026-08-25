@@ -10,7 +10,7 @@ import {
 } from './use-slide-dialog.story';
 
 test.describe('useSlideDialog', () => {
-  test('modal is initially closed', async ({ mount, page }) => {
+  test('dialog is initially closed', async ({ mount, page }) => {
     await mount(<BasicSlideHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-slide-basic')).not.toBeVisible();

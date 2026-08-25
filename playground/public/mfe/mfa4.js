@@ -176,12 +176,12 @@ class AuditPanel extends HTMLElement {
 
     // Same levers Billing pulls, on markup a shadow root away. `focusOnOpen` and `hotkey` are the
     // two that have to find their button through `document.activeElement` and a `querySelector`,
-    // and the failing action below is the third: after it settles, the modal puts focus back on
+    // and the failing action below is the third: after it settles, the dialog puts focus back on
     // whoever ran it — which means the library had to have *recorded* who that was, across the
     // boundary, at the one instant it could be read.
     audit.bindAction($('dismiss'), { reason: 'dismissed', focusOnOpen: true });
 
-    // Deliberately throws. An action that fails leaves the modal open with its error reported,
+    // Deliberately throws. An action that fails leaves the dialog open with its error reported,
     // and the keyboard has to stay usable — the retry belongs under the hand of the button that
     // was just pressed.
     audit.bindAction($('escalate'), {

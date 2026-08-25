@@ -6,7 +6,7 @@
 // about React being optional, made twice.
 //
 // No JSX and no build step (Solid's JSX *is* a build step), so `h` is what a browser can run
-// as-is — the mirror of Checkout's `createElement`. What is not a compromise: the modal itself is
+// as-is — the mirror of Checkout's `createElement`. What is not a compromise: the dialog itself is
 // the real binding, fine-grained reactivity included. `action(...)` returns props whose live
 // fields are getters, and Solid's hyperscript detects them and tracks each one, so the button's
 // `disabled` follows the running action without anything re-rendering.
@@ -98,7 +98,7 @@ function Support() {
 
       return h(
         'div',
-        // `support` is what tints this dialog with its owner's colour — the modal Billing asked
+        // `support` is what tints this dialog with its owner's colour — the dialog Billing asked
         // for still looks like Support's, because Support is the one that renders it.
         { class: 'panel support' },
         h('div', { class: 'owner' }, "Support's dialog"),

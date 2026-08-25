@@ -46,7 +46,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  * backdrop click dismisses, never returns to false.
  *
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
- * @typeParam TReason - The reasons this modal closes with. Declare them.
+ * @typeParam TReason - The reasons this dialog closes with. Declare them.
  */
 /**
  * The registered door, first so a declared id is matched by it — whether the caller wrote the id as
@@ -190,7 +190,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   };
 
   // Keyed on visibility alone, not the whole snapshot: `isPreparing` reaches the content as a
-  // getter, so a modal that starts loading updates the part that reads it instead of redrawing.
+  // getter, so a dialog that starts loading updates the part that reads it instead of redrawing.
   insert(content, () => {
     if (!isVisible()) {
       return null;
@@ -281,7 +281,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   let Dialog: JSX.Element = placed;
 
   if (isPortaled) {
-    // The one place the surface differs from React's: a Solid modal owns its element, so the
+    // The one place the surface differs from React's: a Solid dialog owns its element, so the
     // binding mounts it and `Dialog` is `null` — hence no outlet registration on this branch.
     // Resolved once, unlike React's per-render read: this branch mounts the node itself and runs
     // exactly once, so the host a moving getter would name later has nothing left to move.

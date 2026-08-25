@@ -6,7 +6,7 @@ import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 
-export const MODAL_ID = 'simple';
+export const DIALOG_ID = 'simple';
 
 const resultStore = createResultStore();
 
@@ -14,23 +14,23 @@ export function SimpleDialogExample() {
   const { result } = useStore(resultStore);
 
   const simpleDialog = useMessageDialog({
-    id: MODAL_ID,
+    id: DIALOG_ID,
     // Points at the heading rather than repeating it — a name written twice drifts; the id derives
-    // from the modal's own, already unique.
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    // from the dialog's own, already unique.
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="success" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Simple Dialog</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>Simple Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.OverflowContainer style={{ maxHeight: '20vh' }}>
               {/* The paragraphs own their spacing — a vanilla template ships no layout to inherit. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
                 <Shared.Message>
-                  This modal uses MessageDialog.Content with a scrollable container to handle
+                  This dialog uses MessageDialog.Content with a scrollable container to handle
                   overflow text. When the content exceeds the available height, the container
                   becomes scrollable while the title and footer remain fixed.
                 </Shared.Message>
@@ -64,7 +64,7 @@ export function SimpleDialogExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={simpleDialog.Dialog}>
+    <ExampleLayout result={result} dialogs={simpleDialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"

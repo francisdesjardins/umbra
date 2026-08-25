@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests imperative open/close and open-state derivation via useDialogManager.
- * "Force Close via Manager" is inside the modal because the native top layer
+ * "Force Close via Manager" is inside the dialog because the native top layer
  * backdrop makes outside elements un-clickable while the dialog is open.
  */
 export function ImperativeHarness() {
@@ -17,7 +17,7 @@ export function ImperativeHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Imperative modal</p>
+          <p>Imperative dialog</p>
           <button
             onClick={() => {
               handle.close('close');

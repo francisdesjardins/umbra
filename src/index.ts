@@ -51,7 +51,7 @@ export type { CloseResult, DialogPhase, DialogStoreSnapshot, PortalTarget } from
 // The registry, and the types derived from it. `DialogRegistry` is exported so a project can
 // augment it — an interface nobody can name is an interface nobody can merge into — and `DialogId`
 // because it is what every door on the manager now says, so a consumer annotating one needs it.
-// `CloseOf` is here for the same reason: it is what a declared modal's close *is*, so a function
+// `CloseOf` is here for the same reason: it is what a declared dialog's close *is*, so a function
 // taking one has to be able to say so.
 export type {
   CloseOf,
@@ -95,7 +95,7 @@ export type { DialogStyle, StyleTarget, StyleWrite } from './core/style.js';
 // key, it has none of our dismiss listeners to inherit the rule from, and a second copy drifts.
 export { isKeyClaimedByPopup } from './core/attach-keydown.js';
 
-// Its sibling, for the same callers: the top layer swallows outside clicks, so a second modal opens
+// Its sibling, for the same callers: the top layer swallows outside clicks, so a second dialog opens
 // inside the first and its keys bubble through — the outer one must drop them or answer for it.
 export { isOwnEventTarget } from './utils/dialog-scope.js';
 
@@ -104,7 +104,7 @@ export { isOwnEventTarget } from './utils/dialog-scope.js';
 export { reconcileOpen } from './core/reconcile-open.js';
 export type { OpenReconciliation } from './core/reconcile-open.js';
 
-// The reactive cell the modal store, the action engine, the outlet and the manager all run on. The
+// The reactive cell the dialog store, the action engine, the outlet and the manager all run on. The
 // rule is **export what the library runs on and would otherwise be duplicated** — private, this
 // would force a second copy into the playground. `StoreContract` is the `{ subscribe, getSnapshot }`
 // pair `useSyncExternalStore`, Solid's `from` and a Vue `ref` bridge consume; what is built *over*

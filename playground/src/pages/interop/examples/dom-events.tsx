@@ -44,7 +44,7 @@ export function DomEventsExample() {
             <MessageDialog.Title id={`${ALERT_ID}-title`}>Message Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
-            <Shared.Message>A regular modal — type will be &quot;modal&quot;.</Shared.Message>
+            <Shared.Message>A regular dialog — type will be &quot;dialog&quot;.</Shared.Message>
           </MessageDialog.Content>
           <MessageDialog.Footer>
             <Shared.Button variant="primary" {...action('ok')}>
@@ -67,7 +67,7 @@ export function DomEventsExample() {
             <SlideDialog.Title id={`${PANEL_ID}-title`}>Slide Panel</SlideDialog.Title>
           </SlideDialog.Header>
           <SlideDialog.Content>
-            <Shared.Message>A slide modal — type will be &quot;slide&quot;.</Shared.Message>
+            <Shared.Message>A slide dialog — type will be &quot;slide&quot;.</Shared.Message>
           </SlideDialog.Content>
           <SlideDialog.Footer>
             <Shared.Button variant="primary" {...action('ok')}>
@@ -80,7 +80,7 @@ export function DomEventsExample() {
   });
 
   useEffect(() => {
-    // These fire on `document` for *every* modal, whichever manager raised it, so an analytics
+    // These fire on `document` for *every* dialog, whichever manager raised it, so an analytics
     // listener needs no import. The filter is a demo concession; an app would not filter.
     const OWN = new Set([ALERT_ID, PANEL_ID]);
 
@@ -137,8 +137,8 @@ export function DomEventsExample() {
               color: 'var(--app-text-secondary)',
             }}
           >
-            No events yet — open a modal to see <code>dialog:open</code> / <code>dialog:close</code>{' '}
-            fire on <code>document</code>
+            No events yet — open a dialog to see <code>dialog:open</code> /{' '}
+            <code>dialog:close</code> fire on <code>document</code>
           </p>
         ) : (
           eventLog.map((entry, i) => {
@@ -148,7 +148,7 @@ export function DomEventsExample() {
       </div>
 
       <ExampleLayout
-        modals={
+        dialogs={
           <>
             {alert.Dialog}
             {panel.Dialog}

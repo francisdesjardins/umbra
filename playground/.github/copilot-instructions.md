@@ -18,7 +18,7 @@ Each example is a **single file** that serves as both runnable component and "Vi
 2. **Register** in [codeSamples.ts](../src/widgets/code-viewer/model/codeSamples.ts) via `?raw` import
 3. **Add** to route page via `ExampleCard` with matching `codeKey`
 
-Use unique modal `id` values per example. For multiple modals: `modals={<>{a.Dialog}{b.Dialog}</>}`.
+Use unique dialog `id` values per example. For multiple dialogs: `dialogs={<>{a.Dialog}{b.Dialog}</>}`.
 
 ## Templates
 
@@ -37,7 +37,7 @@ TanStack Router — routes: `/` (the landing page), `/getting-started`, `/dialog
 
 - Spacing: Use `gap`/`Stack` — vertical margin props (`mt`, `mb`, `marginTop`, `marginBottom`, `gutterBottom`) are **banned by lint**
 - `open()` / `openAndWait()` / `handle` are reference-stable — pass them straight to effects and memoized children. Use `openAndWait()` to open and await the close in one call; there is no `waitForClose`
-- `ExampleLayout` props: `children` = action buttons, `modals` = modal portals, `result` = result string
+- `ExampleLayout` props: `children` = action buttons, `dialogs` = dialog portals, `result` = result string
 
 ## Testing
 

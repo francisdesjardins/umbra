@@ -69,7 +69,7 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
   {
     title: 'PanelDialog',
     description:
-      'Components for large, complex full-panel modals — with its own Divider, since there is no component library to borrow one from.',
+      'Components for large, complex full-panel dialogs — with its own Divider, since there is no component library to borrow one from.',
     items: [
       { name: 'PanelContainer', codeKey: 'vanilla-panel-panel-container' },
       { name: 'PanelHeader', codeKey: 'vanilla-panel-panel-header' },

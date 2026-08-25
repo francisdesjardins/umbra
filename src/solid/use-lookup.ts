@@ -5,7 +5,7 @@ import { fromStore } from './from-store.js';
 import type { DialogInfo } from '../manager/types.js';
 
 /**
- * One modal's live state. **An accessor, forced rather than chosen**: `DialogInfo` is a
+ * One dialog's live state. **An accessor, forced rather than chosen**: `DialogInfo` is a
  * discriminated union (`info.exists` narrows it) and an object of getters would flatten the
  * discriminant away, so this one is `info()` while {@link useDialogManager} is not.
  *
@@ -23,7 +23,7 @@ export function useLookup(id: DialogId): Accessor<DialogInfo> {
   });
 
   return () => {
-    // Linear scan — n is always tiny (1-3 open modals)
+    // Linear scan — n is always tiny (1-3 open dialogs)
     const openDialog = snapshot().openDialogs.find((d) => {
       return d.id === id;
     });

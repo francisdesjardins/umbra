@@ -4,7 +4,7 @@ import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests custom dismissKey: modal closes on Delete, not on Escape.
+ * Tests custom dismissKey: dialog closes on Delete, not on Escape.
  */
 export function CustomDismissKeyHarness() {
   const [lastReason, setLastReason] = useState('');
@@ -15,7 +15,7 @@ export function CustomDismissKeyHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Custom dismiss key modal</p>
+          <p>Custom dismiss key dialog</p>
           <button
             onClick={() => {
               handle.close('close');

@@ -54,7 +54,7 @@ export type _SlideHandleTakesPayload = Equals<
 // `void` makes `data` unusable rather than absent, so assert the *rejection* — the part users
 // rely on.
 const voidHandle: DialogHandle = { close: noop };
-// @ts-expect-error a modal with no declared payload takes no payload
+// @ts-expect-error a dialog with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 
 // Declared reasons buy what `string` cannot: a mistyped reason rejected, a constrained
@@ -132,7 +132,7 @@ export function useDismissInTheDeclaredUnion() {
       action('save');
       // @ts-expect-error declared or not, the library's own reason is never an action's name
       action('dismiss');
-      // It stays a reason this modal closes with, and the handle still takes it.
+      // It stays a reason this dialog closes with, and the handle still takes it.
       handle.close('dismiss');
       return null;
     },
@@ -171,7 +171,7 @@ export type _SlideKeepsReasons = Equals<
   UseDialogReturn<Payload, Reasons>
 >;
 
-// Left undeclared, a modal accepts any reason — the permissive default.
+// Left undeclared, a dialog accepts any reason — the permissive default.
 function useLooseReasons() {
   return useDialogT<Payload>({
     id: 'i',
@@ -213,11 +213,11 @@ const bogusBackdrop: DialogVariant = { nonModal: true, dismissOnBackdropClick: t
 // @ts-expect-error a modal dialog uses dismissOnBackdropClick, not click-outside
 const bogusClickOutside: DialogVariant = { nonModal: false, dismissOnClickOutside: true };
 
-// An alertdialog is modal by definition, so the non-modal branch offers `'dialog'` alone.
+// An alertdialog is dialog by definition, so the non-modal branch offers `'dialog'` alone.
 const dialogAlert: DialogVariant = { role: 'alertdialog' };
 const nonModalPlain: DialogVariant = { nonModal: true, role: 'dialog' };
 
-// @ts-expect-error an alertdialog is modal by definition — the non-modal branch has no such role
+// @ts-expect-error an alertdialog is dialog by definition — the non-modal branch has no such role
 const bogusAlert: DialogVariant = { nonModal: true, role: 'alertdialog' };
 
 test.describe('type model', () => {

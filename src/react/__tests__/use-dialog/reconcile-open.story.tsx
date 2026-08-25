@@ -18,10 +18,10 @@ export function ReconcileOpenHarness() {
   const [openCount, setOpenCount] = useState(0);
   const [reconciliations, setReconciliations] = useState<string[]>([]);
 
-  const modal = useDialog<void, 'close'>({
+  const dialog = useDialog<void, 'close'>({
     id: 'reconcile-panel',
     ariaLabel: 'Reconciled panel',
-    // Non-dialog on purpose: a `showModal()` dialog would put the prop-driving buttons out of reach.
+    // Non-modal on purpose: a `showModal()` dialog would put the prop-driving buttons out of reach.
     nonModal: true,
     portal: true,
     animation: {
@@ -78,11 +78,11 @@ export function ReconcileOpenHarness() {
       setOpenCount((count) => {
         return count + 1;
       });
-      void modal.open();
+      void dialog.open();
     } else if (next === 'close') {
-      modal.handle.close('close');
+      dialog.handle.close('close');
     }
-  }, [phase, open, modal]);
+  }, [phase, open, dialog]);
 
   return (
     <div>
@@ -106,7 +106,7 @@ export function ReconcileOpenHarness() {
         data-testid="open-behind-its-back"
         onClick={() => {
           // Somewhere else in the app opens it by id, with the prop still false.
-          modal.dialogManager.open('reconcile-panel');
+          dialog.dialogManager.open('reconcile-panel');
         }}
       >
         Open it imperatively
@@ -115,7 +115,7 @@ export function ReconcileOpenHarness() {
       <span data-testid="phase">{phase}</span>
       <span data-testid="open-count">{openCount}</span>
       <span data-testid="reconciliations">{reconciliations.join(',')}</span>
-      {modal.Dialog}
+      {dialog.Dialog}
     </div>
   );
 }

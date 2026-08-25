@@ -23,7 +23,7 @@ export const ShowcasesPage = () => {
           />
           <ExampleCard
             title="A three-step wizard"
-            description="The panel-dialog family, and the heaviest layout here: a truncating title, a jump-to dropdown, step navigation in a space-between footer, and two actions that deliberately do not close the modal."
+            description="The panel-dialog family, and the heaviest layout here: a truncating title, a jump-to dropdown, step navigation in a space-between footer, and two actions that deliberately do not close the dialog."
             codeKey="vanilla-panel"
             example={<VanillaPanelExample />}
           />

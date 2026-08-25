@@ -23,7 +23,7 @@ const resultStore = createResultStore();
  * - `reconcileOpen` runs every pass rather than reacting, making the prop authoritative, and
  *   decides on `phase` not `isVisible` — the difference is a cut animation.
  * - An action whose `onAction` never calls `close` leaves the dialog, so `onClose` reports the
- *   owner's `'close'`, never `'dismiss'`. Non-dialog is required: the top layer's native backdrop
+ *   owner's `'close'`, never `'dismiss'`. Non-modal is required: the top layer's native backdrop
  *   would block the switch driving it.
  */
 export function ControlledPanelExample() {
@@ -31,7 +31,7 @@ export function ControlledPanelExample() {
   /** The owner's state. In a real wrapper this is a prop, and this component is `<Filters open>`. */
   const [open, setOpen] = useState(false);
 
-  const modal = useSlideDialog({
+  const dialog = useSlideDialog({
     id: PANEL_ID,
     direction: 'right',
     nonModal: true,
@@ -87,18 +87,18 @@ export function ControlledPanelExample() {
 
   const { phase } = useLookup(PANEL_ID);
 
-  // `modal` is fresh every render; `reconcileOpen` answers `'none'` unless prop and phase disagree.
+  // `dialog` is fresh every render; `reconcileOpen` answers `'none'` unless prop and phase disagree.
   useEffect(() => {
     const next = reconcileOpen(phase, open);
     if (next === 'open') {
-      void modal.open();
+      void dialog.open();
     } else if (next === 'close') {
-      modal.handle.close('close');
+      dialog.handle.close('close');
     }
-  }, [phase, open, modal]);
+  }, [phase, open, dialog]);
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <label
         style={{
           display: 'flex',

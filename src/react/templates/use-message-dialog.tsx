@@ -18,7 +18,7 @@ export type MessageDialogRenderContext<
   TReason extends string = string,
 > = BaseRenderContext<TData, TReason>;
 
-/** Semantic intent of a message modal, used to drive icon and color selection in UI templates. */
+/** Semantic intent of a message dialog, used to drive icon and color selection in UI templates. */
 export type MessageDialogType = 'info' | 'warning' | 'error' | 'success';
 
 /** {@link MessageDialogRenderContext} for a declared id. */
@@ -27,7 +27,7 @@ export type RegisteredMessageContext<TId> = RegisteredBaseRenderContext<TId>;
 /**
  * Options for `useMessageDialog`.
  * @typeParam TData - Typed data payload from close, declared here and nowhere else. Default `void`.
- * @typeParam TReason - The reasons this modal closes with; declare them, see `useDialog`.
+ * @typeParam TReason - The reasons this dialog closes with; declare them, see `useDialog`.
  */
 export type UseMessageDialogOptions<
   TData = void,
@@ -47,12 +47,12 @@ export type UseMessageDialogReturn<TData = void, TReason extends string = string
 >;
 
 /**
- * Headless template hook for a standard message/confirmation modal. Bring your own UI in the
+ * Headless template hook for a standard message/confirmation dialog. Bring your own UI in the
  * render callback and use the `action` factory for async actions with per-button loading.
  * @typeParam TData - Typed data payload from close. Defaults to `void`.
- * @typeParam TReason - The reasons this modal closes with; declare them, see `useDialog`.
+ * @typeParam TReason - The reasons this dialog closes with; declare them, see `useDialog`.
  * @example
- * const modal = useMessageDialog<void, 'cancel' | 'confirm'>({
+ * const dialog = useMessageDialog<void, 'cancel' | 'confirm'>({
  *   id: 'delete-confirm',
  *   render: ({ action }) => (
  *     <div className="dialog-container">

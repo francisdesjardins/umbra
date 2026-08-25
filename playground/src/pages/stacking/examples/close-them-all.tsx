@@ -26,12 +26,12 @@ function closeEveryOpenDialog(except?: string): number {
   const leaving = dialogManager
     .lookup()
     .getOpen()
-    .filter((modal) => {
-      return modal.id !== except;
+    .filter((dialog) => {
+      return dialog.id !== except;
     });
 
-  for (const modal of leaving) {
-    dialogManager.close(modal.id, 'dismiss');
+  for (const dialog of leaving) {
+    dialogManager.close(dialog.id, 'dismiss');
   }
   return leaving.length;
 }
@@ -51,7 +51,7 @@ export function CloseThemAllExample() {
   return (
     <ExampleLayout
       result={result}
-      modals={
+      dialogs={
         <>
           {panels[0].Dialog}
           {panels[1].Dialog}

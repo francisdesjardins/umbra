@@ -56,7 +56,7 @@ Exit code is 1 when anything failed, so it drops into a gate.
 
 ## The states a resting page never shows
 
-A modal at rest is the easy half. The error banner a failed action renders and the busy state a
+A dialog at rest is the easy half. The error banner a failed action renders and the busy state a
 running one shows are new colours on a surface the resting scan never saw — and the most likely
 to have been styled by hand.
 
@@ -69,7 +69,7 @@ named and not classed — a generated class name is the wrong handle for "the on
 Delete", and CSS has no text predicate. A plain CSS selector works too.
 
 The report always prints **how many surfaces it scanned and how many were inside a dialog**, and
-lists any `--open` / `--then` that matched nothing. A green report over a modal that never opened
+lists any `--open` / `--then` that matched nothing. A green report over a dialog that never opened
 is the one failure mode that would make this tool worse than useless.
 
 ## Focus is measured with a real Tab, and it has to be

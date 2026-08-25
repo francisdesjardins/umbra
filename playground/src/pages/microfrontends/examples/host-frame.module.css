@@ -28,7 +28,7 @@
   background: var(--app-paper);
 }
 
-/* Capped on a phone so it scrolls itself, and that is about the modals: `showModal()` centres in
+/* Capped on a phone so it scrolls itself, and that is about the dialogs: `showModal()` centres in
    **its own** viewport, and an iframe sized to its whole document has one as tall as that
    document — 1802px at a 390px screen, so the dialog centres 900px down and the reader sees
    nothing. Capping makes the frame's viewport what is on screen; the cost is a nested scroll

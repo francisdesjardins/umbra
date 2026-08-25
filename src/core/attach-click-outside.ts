@@ -2,7 +2,7 @@ import { answerDismiss, canDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
 import type { ClickOutsideOptions, DialogDomContext } from './attach-types.js';
 
-const log = createLogger('modal:click-outside');
+const log = createLogger('dialog:click-outside');
 
 /**
  * Dismiss a non-modal dialog when the user clicks outside its bounds.
@@ -12,7 +12,7 @@ const log = createLogger('modal:click-outside');
  * running, and — unless `dismissWhilePreparing` — while `prepare` is still preparing. Only the
  * dialog **in front** responds, which is a stricter test than "the topmost non-modal": no non-modal
  * dialog is in front while a modal one is open, so a panel under a modal dialog answers no
- * click-outside. Harmless in practice — the modal's own backdrop swallows the pointer first — and
+ * click-outside. Harmless in practice — the dialog's own backdrop swallows the pointer first — and
  * worth stating, because the sentence it replaces described a different rule.
  *
  * Only meaningful for non-modal dialogs; a modal one has a backdrop, and the backdrop click is

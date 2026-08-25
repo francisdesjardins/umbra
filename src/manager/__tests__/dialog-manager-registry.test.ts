@@ -167,12 +167,12 @@ test.describe('event emission', () => {
 });
 
 test.describe('stack ordering', () => {
-  test('modals opened in the same millisecond stack in open order, not registration order', () => {
+  test('dialogs opened in the same millisecond stack in open order, not registration order', () => {
     const dm = createDialogManager();
     const bottom = createFakeStore();
     const top = createFakeStore();
 
-    // Registration order reversed against open order: two modals opened in one synchronous block
+    // Registration order reversed against open order: two dialogs opened in one synchronous block
     // land in the same millisecond, where `Date.now()` cannot separate them.
     dm.register('top', { store: top });
     dm.register('bottom', { store: bottom });
@@ -189,11 +189,11 @@ test.describe('stack ordering', () => {
           return info.id;
         })
     ).toEqual(['bottom', 'top']);
-    // z-index must follow the same order, or the newer modal renders behind the older one.
+    // z-index must follow the same order, or the newer dialog renders behind the older one.
     expect(dm.getZIndex('top')).toBeGreaterThan(dm.getZIndex('bottom'));
   });
 
-  test('reopening moves a modal to the top of the stack', () => {
+  test('reopening moves a dialog to the top of the stack', () => {
     const dm = createDialogManager();
     const a = createFakeStore();
     const b = createFakeStore();

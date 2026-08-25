@@ -12,7 +12,7 @@ export function UseLookupHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Reactive modal</p>
+          <p>Reactive dialog</p>
           <button
             onClick={() => {
               handle.close('done');
@@ -59,7 +59,7 @@ export function UseLookupUnregisteredHarness() {
 }
 
 /**
- * A watcher outside the modal telling "open" from "ready". `phase` describes the `<dialog>`, so
+ * A watcher outside the dialog telling "open" from "ready". `phase` describes the `<dialog>`, so
  * `'opening'` is one frame wide however long prepare takes; `isPreparing` is the other axis.
  * `prepare` is held on a promise released from a button inside the dialog — the top layer swallows
  * clicks anywhere else — so the preparing window is as long as the test needs and never a race.
@@ -93,7 +93,7 @@ export function UseLookupPreparingHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Preparing modal</p>
+          <p>Preparing dialog</p>
           <button
             onClick={() => {
               gate.release();
@@ -130,7 +130,7 @@ export function UseLookupPreparingHarness() {
   );
 }
 
-/** Foreground tracking across two modals. */
+/** Foreground tracking across two dialogs. */
 export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');

@@ -37,7 +37,7 @@ function BasicApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
   const [slow, setSlow] = createSignal(false);
 
-  const modal = useDialog<void, 'confirm' | 'cancel'>({
+  const dialog = useDialog<void, 'confirm' | 'cancel'>({
     id: 'solid-basic',
     ariaLabel: 'Solid basic',
     prepare: async () => {
@@ -94,7 +94,7 @@ function BasicApp(): Built {
     'div',
     null,
     text(() => {
-      return modal.isVisible ? 'open' : 'closed';
+      return dialog.isVisible ? 'open' : 'closed';
     }, 'is-visible'),
     text(lastReason, 'last-reason'),
     h(
@@ -102,7 +102,7 @@ function BasicApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
@@ -113,7 +113,7 @@ function BasicApp(): Built {
         'data-testid': 'open-slow',
         onClick: () => {
           setSlow(true);
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open slowly'
@@ -123,14 +123,14 @@ function BasicApp(): Built {
       {
         'data-testid': 'open-and-wait',
         onClick: () => {
-          void modal.openAndWait().then(([, result]) => {
+          void dialog.openAndWait().then(([, result]) => {
             setLastReason(`awaited:${result?.reason ?? 'none'}`);
           });
         },
       },
       'Open and wait'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -142,7 +142,7 @@ function BasicApp(): Built {
 function DeclarationApp(): Built {
   const [withAction, setWithAction] = createSignal(true);
 
-  const modal = useDialog<void, 'confirm'>({
+  const dialog = useDialog<void, 'confirm'>({
     id: 'solid-declaration',
     ariaLabel: 'Solid declaration',
     render: (ctx) => {
@@ -174,25 +174,25 @@ function DeclarationApp(): Built {
     'div',
     null,
     text(() => {
-      return modal.isVisible ? 'open' : 'closed';
+      return dialog.isVisible ? 'open' : 'closed';
     }, 'is-visible'),
     h(
       'button',
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
 /** An outlet takes the dialog, and `Dialog` becomes `null` — the same contract React's has. */
 function OutletInner(): Built {
-  const modal = useDialog<void, 'confirm'>({
+  const dialog = useDialog<void, 'confirm'>({
     id: 'solid-outlet',
     ariaLabel: 'Solid outlet',
     render: () => {
@@ -204,14 +204,14 @@ function OutletInner(): Built {
     'div',
     null,
     text(() => {
-      return modal.Dialog === null ? 'null' : 'node';
+      return dialog.Dialog === null ? 'null' : 'node';
     }, 'dialog-slot'),
     h(
       'button',
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
@@ -287,7 +287,7 @@ function SlideApp(): Built {
 function MessageApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
 
-  const modal = useMessageDialog<void, 'confirm'>({
+  const dialog = useMessageDialog<void, 'confirm'>({
     id: 'solid-message',
     ariaLabel: 'Solid message',
     render: (ctx) => {
@@ -315,12 +315,12 @@ function MessageApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -330,7 +330,7 @@ function MessageApp(): Built {
  * hyperscript re-runs it and disposes the owner of the branch it replaces — Solid's unmount.
  */
 function DisposalInner(props: { readonly dispose: () => void }): Built {
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-disposal',
     ariaLabel: 'Solid disposal',
     render: () => {
@@ -363,12 +363,12 @@ function DisposalInner(props: { readonly dispose: () => void }): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -411,7 +411,7 @@ function DisposalApp(): Built {
 
 /** The same disposal, one level down: the outlet has to forget it too. */
 function OutletDisposalInner(props: { readonly dispose: () => void }): Built {
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-outlet-disposal',
     ariaLabel: 'Solid outlet disposal',
     render: () => {
@@ -440,7 +440,7 @@ function OutletDisposalInner(props: { readonly dispose: () => void }): Built {
     {
       'data-testid': 'open',
       onClick: () => {
-        void modal.open();
+        void dialog.open();
       },
     },
     'Open'
@@ -479,7 +479,7 @@ function OutletDisposalApp(): Built {
 
 /** `portal: true` — the binding mounts the element itself, and `Dialog` stays null. */
 function PortalApp(): Built {
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-portal',
     ariaLabel: 'Solid portal',
     portal: true,
@@ -492,19 +492,19 @@ function PortalApp(): Built {
     'div',
     { 'data-testid': 'portal-host' },
     text(() => {
-      return modal.Dialog === null ? 'null' : 'node';
+      return dialog.Dialog === null ? 'null' : 'node';
     }, 'dialog-slot'),
     h(
       'button',
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -523,7 +523,7 @@ function PortalHostApp(): Built {
     host.remove();
   });
 
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-portal-host',
     ariaLabel: 'Solid portal host',
     portal: () => {
@@ -542,12 +542,12 @@ function PortalHostApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -561,7 +561,7 @@ function PortalHostApp(): Built {
 function DismissRequestApp(): Built {
   const [cause, setCause] = createSignal('none');
 
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-dismiss-request',
     ariaLabel: 'Solid dismiss request',
     dismissOnBackdropClick: true,
@@ -583,18 +583,18 @@ function DismissRequestApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
 /** A contained non-modal panel: positioned against a host the binding creates. */
 function ContainedApp(): Built {
-  const modal = useDialog<void, 'ok'>({
+  const dialog = useDialog<void, 'ok'>({
     id: 'solid-contained',
     ariaLabel: 'Solid contained',
     nonModal: true,
@@ -611,22 +611,22 @@ function ContainedApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
 /**
- * The live fields on the **hook's return** — the copy a trigger button reads while the modal works.
+ * The live fields on the **hook's return** — the copy a trigger button reads while the dialog works.
  * Getters over signals here, so "reaches the return" and "stays live" are two claims and only the
  * first is a type error; all of it is asserted *outside* `render`, where a frozen getter never moves.
  */
 function LiveStateApp(): Built {
-  const modal = useDialog<void, 'boom'>({
+  const dialog = useDialog<void, 'boom'>({
     id: 'solid-live-state',
     ariaLabel: 'Solid live state',
     prepare: async () => {
@@ -665,25 +665,25 @@ function LiveStateApp(): Built {
     'div',
     null,
     text(() => {
-      return modal.isPreparing ? 'preparing' : 'ready';
+      return dialog.isPreparing ? 'preparing' : 'ready';
     }, 'outer-preparing'),
     text(() => {
-      return modal.hasRunningAction ? 'running' : 'idle';
+      return dialog.hasRunningAction ? 'running' : 'idle';
     }, 'outer-running'),
     text(() => {
-      return modal.error?.message ?? 'none';
+      return dialog.error?.message ?? 'none';
     }, 'outer-error'),
     h(
       'button',
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -696,7 +696,7 @@ function BusyApp(): Built {
   // A signal, not a `let`: the gate is set from inside an async callback.
   const [release, setRelease] = createSignal<(() => void) | undefined>();
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'solid-busy',
     ariaLabel: 'Solid loading',
     prepare: async () => {
@@ -737,12 +737,12 @@ function BusyApp(): Built {
       {
         'data-testid': 'open-busy',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -944,8 +944,8 @@ function stackPriorityApp(withPolicy: boolean): () => Built {
 
     if (withPolicy) {
       onCleanup(
-        warning.dialogManager.prioritize((modal) => {
-          return modal.template === 'alert' ? 100 : 0;
+        warning.dialogManager.prioritize((dialog) => {
+          return dialog.template === 'alert' ? 100 : 0;
         })
       );
     }
@@ -980,8 +980,8 @@ export const SolidOpenOrderApp = (): JSX.Element => {
 /**
  * `containFocus`, `dismissOnClickOutside`, a custom `dismissKey`, `prepare` aborted by its own close,
  * and `onOpenRequest` — one app rather than five, since they make the same claim (that these reach
- * the shared `attach*` functions from this binding's effects), each with its own probe. Non-dialog:
- * `containFocus` is the Tab wrap `show()` does not give, and the union rejects the pair on a modal.
+ * the shared `attach*` functions from this binding's effects), each with its own probe. Non-modal:
+ * `containFocus` is the Tab wrap `show()` does not give, and the union rejects the pair on a dialog.
  */
 function NonModalOptionsApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
@@ -990,7 +990,7 @@ function NonModalOptionsApp(): Built {
   const [holdPrepare, setHoldPrepare] = createSignal(false);
   const [refuse, setRefuse] = createSignal(false);
 
-  const modal = useDialog<void, 'inside'>({
+  const dialog = useDialog<void, 'inside'>({
     id: 'solid-non-modal-options',
     ariaLabel: 'Solid non-modal options',
     nonModal: true,
@@ -1052,7 +1052,7 @@ function NonModalOptionsApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
@@ -1063,7 +1063,7 @@ function NonModalOptionsApp(): Built {
         'data-testid': 'open-held',
         onClick: () => {
           setHoldPrepare(true);
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open with a slow prepare'
@@ -1073,7 +1073,7 @@ function NonModalOptionsApp(): Built {
       {
         'data-testid': 'close-mid-prepare',
         onClick: () => {
-          modal.handle.close('inside');
+          dialog.handle.close('inside');
         },
       },
       'Close while preparing'
@@ -1084,7 +1084,7 @@ function NonModalOptionsApp(): Built {
         'data-testid': 'request',
         onClick: () => {
           setRefuse(true);
-          void modal.dialogManager
+          void dialog.dialogManager
             .requestOpenAndWait('solid-non-modal-options', createOpenRequest())
             .then((outcome) => {
               // `reason` is required on the refused branch, so a `??` fallback lints as unreachable.
@@ -1097,12 +1097,12 @@ function NonModalOptionsApp(): Built {
     // Deliberately outside the panel, and wide, so a click on it is a click outside.
     h('button', { 'data-testid': 'outside', style: 'width: 120px' }, 'Outside'),
     text(() => {
-      return modal.isVisible ? 'open' : 'closed';
+      return dialog.isVisible ? 'open' : 'closed';
     }, 'is-visible'),
     text(lastReason, 'last-reason'),
     text(prepareOutcome, 'prepare-outcome'),
     text(requestOutcome, 'request-outcome'),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -1112,14 +1112,14 @@ export const SolidNonModalOptionsApp = (): JSX.Element => {
 
 /**
  * `reconcileOpen` from a Solid signal — a controlled `open` prop, with `createEffect` where React
- * writes `useEffect`. Non-dialog, so the buttons driving the signal stay reachable outside.
+ * writes `useEffect`. Non-modal, so the buttons driving the signal stay reachable outside.
  */
 function ReconcileApp(): Built {
   const [open, setOpen] = createSignal(false);
   const [openCount, setOpenCount] = createSignal(0);
   const [asked, setAsked] = createSignal<string[]>([]);
 
-  const modal = useDialog<void, 'close'>({
+  const dialog = useDialog<void, 'close'>({
     id: 'solid-reconcile',
     ariaLabel: 'Solid reconcile',
     nonModal: true,
@@ -1172,9 +1172,9 @@ function ReconcileApp(): Built {
       setOpenCount((n) => {
         return n + 1;
       });
-      void modal.open();
+      void dialog.open();
     } else if (next === 'close') {
-      modal.handle.close('close');
+      dialog.handle.close('close');
     }
   });
 
@@ -1206,7 +1206,7 @@ function ReconcileApp(): Built {
       {
         'data-testid': 'open-behind-its-back',
         onClick: () => {
-          modal.dialogManager.open('solid-reconcile');
+          dialog.dialogManager.open('solid-reconcile');
         },
       },
       'Open imperatively'
@@ -1224,7 +1224,7 @@ function ReconcileApp(): Built {
     text(() => {
       return asked().join(',');
     }, 'asked'),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -1233,7 +1233,7 @@ export const SolidReconcileApp = (): JSX.Element => {
 };
 
 /**
- * Focus restored after a failed action: **modal**, **two** focusables, since the target is whoever
+ * Focus restored after a failed action: **dialog**, **two** focusables, since the target is whoever
  * held focus when the action started — one cannot tell a restore from focus never moving, non-modal
  * lets focus sit outside. Async and rejecting, the shape where focus can be elsewhere when it
  * settles.
@@ -1246,7 +1246,7 @@ export const SolidReconcileApp = (): JSX.Element => {
 function FailedActionApp(): Built {
   const [failures, setFailures] = createSignal(0);
 
-  const modal = useDialog<void, 'boom'>({
+  const dialog = useDialog<void, 'boom'>({
     id: 'solid-failed-action',
     ariaLabel: 'Solid failed action',
     render: ({ action }) => {
@@ -1287,21 +1287,21 @@ function FailedActionApp(): Built {
       {
         'data-testid': 'open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
     text(() => {
-      return modal.isVisible ? 'open' : 'closed';
+      return dialog.isVisible ? 'open' : 'closed';
     }, 'is-visible'),
     text(() => {
       return String(failures());
     }, 'failures'),
     text(() => {
-      return modal.error?.message ?? 'none';
+      return dialog.error?.message ?? 'none';
     }, 'error'),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 
@@ -1317,9 +1317,9 @@ export const SolidFailedActionApp = (): JSX.Element => {
  * placed the opening focus. Two actions, since with one a restore and a stay are the same element.
  */
 function ClaimlessReclaimApp(): Built {
-  const modal = useDialog<void, 'confirm' | 'cancel'>({
+  const dialog = useDialog<void, 'confirm' | 'cancel'>({
     id: 'solid-claimless',
-    ariaLabel: 'Solid modal claiming no opening focus',
+    ariaLabel: 'Solid dialog claiming no opening focus',
     render: (ctx) => {
       return el(
         h(
@@ -1354,15 +1354,15 @@ function ClaimlessReclaimApp(): Built {
       {
         'data-testid': 'solid-open-both',
         onClick: () => {
-          // Chained, not two clicks: once the modal is up this button is under its backdrop.
-          void modal.open().then(() => {
+          // Chained, not two clicks: once the dialog is up this button is under its backdrop.
+          void dialog.open().then(() => {
             return panel.open();
           });
         },
       },
-      'Open the modal, then the panel underneath'
+      'Open the dialog, then the panel underneath'
     ),
-    modal.Dialog,
+    dialog.Dialog,
     // `null` under `portal: true`; kept for symmetry with React's harness, where it places the panel.
     panel.Dialog
   );
@@ -1381,7 +1381,7 @@ function PrepareFailureApp(): Built {
   const [sources, setSources] = createSignal<string[]>([]);
   const [message, setMessage] = createSignal('none');
 
-  const modal = useDialog({
+  const dialog = useDialog({
     id: 'solid-prepare-failure',
     ariaLabel: 'Solid prepare that fails',
     prepare: async () => {
@@ -1416,19 +1416,19 @@ function PrepareFailureApp(): Built {
       {
         'data-testid': 'solid-pf-open',
         onClick: () => {
-          void modal.open();
+          void dialog.open();
         },
       },
       'Open'
     ),
     text(() => {
-      return modal.isVisible ? 'open' : 'closed';
+      return dialog.isVisible ? 'open' : 'closed';
     }, 'solid-pf-visible'),
     text(() => {
       return sources().join(',') || 'none';
     }, 'solid-pf-sources'),
     text(message, 'solid-pf-message'),
-    modal.Dialog
+    dialog.Dialog
   );
 }
 

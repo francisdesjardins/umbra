@@ -10,9 +10,9 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 import { useSyncExternalStore } from 'react';
 
-export const MODAL_ID = CONFIRM_MODAL_ID;
+export const DIALOG_ID = CONFIRM_MODAL_ID;
 
-/** The React half registers the two modals the service opens by id and mirrors its state. */
+/** The React half registers the two dialogs the service opens by id and mirrors its state. */
 export function ServiceLayerExample() {
   // The service's subscribe + getters are already `useSyncExternalStore`'s contract.
   const activity = useSyncExternalStore(deploymentService.subscribe, deploymentService.getActivity);
@@ -134,7 +134,7 @@ export function ServiceLayerExample() {
 
       <ExampleLayout
         result={null}
-        modals={
+        dialogs={
           <>
             {confirmDialog.Dialog}
             {dialogFailure.Dialog}

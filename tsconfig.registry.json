@@ -4,7 +4,7 @@
   // Discovered, not listed. A named `files` array meant a second fixture compiled as nothing at
   // all — no error, no test, just a file that looks like a gate and is not one; the empty `include`
   // is what keeps `src/` out of the program root, which is the only reason the list was there.
-  // Every fixture shares one program, so two of them declaring the same modal id is a real error
+  // Every fixture shares one program, so two of them declaring the same dialog id is a real error
   // rather than an isolation problem: the registry they augment is global in a consumer too.
   "include": ["type-fixtures/**/*.test-d.ts"]
 }

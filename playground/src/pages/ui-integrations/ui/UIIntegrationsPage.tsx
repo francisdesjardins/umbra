@@ -8,10 +8,10 @@ export const UIIntegrationsPage = () => {
   return (
     <PageLayout
       title="UI Integrations"
-      description="The library exports no UI, so the only question worth a page is what happens when the chrome is someone else's. One modal, built twice."
+      description="The library exports no UI, so the only question worth a page is what happens when the chrome is someone else's. One dialog, built twice."
     >
       <ExampleSection
-        title="The same modal, two stacks"
+        title="The same dialog, two stacks"
         description="Both files call one useForm and one useDialog, declare the same actions and return the same typed payload. Everything they disagree about is markup. Material UI supplies Box, Stack, TextField and a theme; the <dialog>, the focus and the close reasons stay the library's."
       >
         <ExampleGrid>
@@ -26,7 +26,7 @@ export const UIIntegrationsPage = () => {
           <MuiIsland>
             <ExampleCard
               title="MUI Form Dialog"
-              description="The same modal in MUI fields, inside its own ThemeProvider — the only place the vendor chunk is asked for."
+              description="The same dialog in MUI fields, inside its own ThemeProvider — the only place the vendor chunk is asked for."
               codeKey="mui-form"
               example={<MuiFormExample />}
             />

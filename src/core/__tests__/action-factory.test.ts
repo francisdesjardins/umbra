@@ -98,7 +98,7 @@ test.describe('the live props', () => {
   });
 
   test('disable this button while *another* action runs', () => {
-    // `data-loading` is this action's, `disabled` is the modal's — two scopes, so two props.
+    // `data-loading` is this action's, `disabled` is the dialog's — two scopes, so two props.
     const engine = createActionEngine<void>('other');
     const snapshot: ActionEngineSnapshot = {
       states: { other: { isRunning: true, error: null } },

@@ -6,7 +6,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'no-transition-message';
+export const DIALOG_ID = 'no-transition-message';
 
 const NO_ANIMATION = {
   entrance: { opacity: 1 },
@@ -21,20 +21,20 @@ const resultStore = createResultStore();
 export function NoTransitionMessageExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageDialog({
-    id: MODAL_ID,
+  const dialog = useMessageDialog({
+    id: DIALOG_ID,
     animation: NO_ANIMATION,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>No Transition</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>No Transition</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
-              This modal opens and closes instantly — no fade animation. Useful when your PO insists
-              transitions feel slow.
+              This dialog opens and closes instantly — no fade animation. Useful when your PO
+              insists transitions feel slow.
             </Shared.Message>
           </MessageDialog.Content>
           <MessageDialog.Footer>
@@ -51,12 +51,12 @@ export function NoTransitionMessageExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Dialog}>
+    <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"
         onClick={async () => {
-          const [, closeResult] = await modal.openAndWait();
+          const [, closeResult] = await dialog.openAndWait();
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >

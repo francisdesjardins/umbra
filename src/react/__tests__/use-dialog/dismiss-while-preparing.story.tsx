@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
  * Tests dismissWhilePreparing: false — ESC is blocked while prepare is running.
- * The "Resolve" button inside the modal resolves the prepare promise so the
+ * The "Resolve" button inside the dialog resolves the prepare promise so the
  * test can verify that ESC works again once loading completes.
  */
 export function DismissWhilePreparingDisabledHarness() {
@@ -63,7 +63,7 @@ export function DismissWhilePreparingDisabledHarness() {
 }
 
 /**
- * Tests dismissWhilePreparing: true (default) — ESC closes the modal even while
+ * Tests dismissWhilePreparing: true (default) — ESC closes the dialog even while
  * prepare is still running.
  */
 export function DismissWhilePreparingDefaultHarness() {

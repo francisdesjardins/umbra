@@ -6,7 +6,7 @@ import { AppButton } from '@/shared/ui/AppButton';
 import { DialogOutlet, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
-export const MODAL_ID = 'outlet-demo';
+export const DIALOG_ID = 'outlet-demo';
 
 // ── Module-level store — accessible by both inner and outer components ─────
 
@@ -16,19 +16,19 @@ const resultStore = createResultStore();
 
 function ConfirmDialog() {
   const confirmDialog = useMessageDialog({
-    id: MODAL_ID,
-    ariaLabelledBy: `${MODAL_ID}-title`,
+    id: DIALOG_ID,
+    ariaLabelledBy: `${DIALOG_ID}-title`,
     render: ({ action }) => {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="info" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Outlet Dialog</MessageDialog.Title>
+            <MessageDialog.Title id={`${DIALOG_ID}-title`}>Outlet Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
-              This modal renders via <code>{'<DialogOutlet>'}</code> — there is no{' '}
-              <code>{'{modal.Dialog}'}</code> in the component JSX.
+              This dialog renders via <code>{'<DialogOutlet>'}</code> — there is no{' '}
+              <code>{'{dialog.Dialog}'}</code> in the component JSX.
             </Shared.Message>
           </MessageDialog.Content>
           <MessageDialog.Footer>

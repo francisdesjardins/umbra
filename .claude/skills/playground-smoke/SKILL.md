@@ -1,6 +1,6 @@
 ---
 name: playground-smoke
-description: Smoke-test the playground in a real browser — walk every route asserting no console errors, then drive interaction flows (modal open/dismiss, code viewer, the framework-agnostic service, typed close payloads, Escape without focus, sticky jump bars). Use after refactors that touch playground pages, shell layout, entry points or import specifiers, and before committing such a change. Complements `yarn test`, which never renders the playground.
+description: Smoke-test the playground in a real browser — walk every route asserting no console errors, then drive interaction flows (dialog open/dismiss, code viewer, the framework-agnostic service, typed close payloads, Escape without focus, sticky jump bars). Use after refactors that touch playground pages, shell layout, entry points or import specifiers, and before committing such a change. Complements `yarn test`, which never renders the playground.
 ---
 
 # Playground Smoke
@@ -77,11 +77,11 @@ Playwright timeout, and one throwing flow no longer aborts the rest of the run.
 
 | Flow         | Asserts                                                              |
 | ------------ | -------------------------------------------------------------------- |
-| `modal`      | a card button opens a `<dialog open>`, Escape dismisses it           |
+| `dialog`     | a card button opens a `<dialog open>`, Escape dismisses it           |
 | `codeviewer` | the source viewer resolves and displays a registered sample          |
 | `service`    | the React-free service drives confirm → API call → reported outcome  |
 | `forms`      | a typed close payload survives action → store → `onClose` → the page |
-| `esc`        | one Escape closes a modal whose content holds nothing focusable      |
+| `esc`        | one Escape closes a dialog whose content holds nothing focusable     |
 | `asyncopen`  | a warm (cached) open shows no loading flash; a cold one does         |
 | `sticky`     | the section jump bar pins at `y=64` after scrolling                  |
 

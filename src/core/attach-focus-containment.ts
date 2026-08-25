@@ -7,7 +7,7 @@ import type { FocusContainmentOptions, DialogDomContext } from './attach-types.j
  * `showModal()` makes the rest of the document inert, so a modal dialog is contained for free.
  * `show()` does not: a non-modal dialog is an ordinary part of the page, and a few tab presses walk
  * out of it into whatever is behind. That is right for a toast or a popover and wrong for a panel
- * that behaves like a modal in everything but its stacking — which is why this is off by default
+ * that behaves like a dialog in everything but its stacking — which is why this is off by default
  * and asked for with `containFocus`.
  *
  * **Two behaviours, and only one of them is optional.** The *wrap* is what `containFocus` asks

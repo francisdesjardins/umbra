@@ -87,7 +87,7 @@ export type DialogSnapshot = {
 
 /**
  * What {@link bindDialog} hands back. `open`, `openAndWait` and `handle` are the hook bindings',
- * belonging to the modal rather than the renderer; what differs assumed a render pass —
+ * belonging to the dialog rather than the renderer; what differs assumed a render pass —
  * `bindAction`, and `subscribe`/`getSnapshot` for content that reacts to state.
  */
 export type DialogController<TData = void, TReason extends string = string> = {
@@ -165,7 +165,7 @@ export type RegisteredBindOptions<TId> = Omit<
 > &
   DialogVariant &
   BindDialogOwnOptions & {
-    /** Unique modal identifier — read once, when the dialog is bound. */
+    /** Unique dialog identifier — read once, when the dialog is bound. */
     readonly id: TId;
     /** Called when the dialog closes, with the payload that reason declared. */
     readonly onClose?: ((result: CloseOf<TId>) => void | Promise<void>) | undefined;
