@@ -559,9 +559,9 @@ export type DialogManager = {
    *
    * **A policy orders each family, never across them** — modality is settled before it is asked,
    * so a big number on a panel moves it no nearer the user. Opt-in, dormant until called, and
-   * replaced rather than stacked by a second call. Installing it over dialogs already open is the
-   * one reorder that is not minimal: the top layer is untracked until then, so the first plan
-   * re-shows every open modal. Both facts are in the compatibility matrix.
+   * replaced rather than stacked by a second call. Installing it over dialogs already
+   * open is minimal too: the tracking is seeded from the stack as it stands, so the first plan
+   * lifts what the order needs rather than everything. Both facts are in the compatibility matrix.
    *
    * @returns A disposer restoring the no-policy order within each family, reordering what is on
    *   screen to match. It does nothing if a later `prioritize` already replaced the policy.
@@ -923,7 +923,47 @@ export function createDialogManager(): DialogManager {
     topLayerOrder = desired;
   }
 
+  /**
+   * Seed the top-layer tracking from the stack as it already stands, so the first plan is a plan
+   * rather than a rebuild.
+   *
+   * **Sound only before the first policy, which is exactly when it runs.** `syncStackOrder` is
+   * dormant until one exists, so nothing has raised anything, so the top layer is the open order of
+   * the modal dialogs currently open — and that is what the snapshot carries right now, ranked by
+   * `openSequence` because no policy has ranked it yet. Reading the DOM instead would be a second
+   * source for a fact the manager already holds.
+   *
+   * Without it the first plan compares against an empty `current`, which by `planRaises`' own
+   * arithmetic returns **every** open modal dialog. Measured on three dialogs in an order a policy
+   * actually changes: three round-trips without this, two with — and the earlier reading of zero
+   * either way was a synchronous read of a queued event, since `close()` fires its `close` on a
+   * later turn. The saving is one whole close-and-re-show, and it is the stack the user is looking
+   * at.
+   */
+  function seedTopLayerOrder(): void {
+    if (topLayerOrder.length > 0 || typeof document === 'undefined') {
+      return;
+    }
+
+    topLayerOrder = snapshotStore
+      .getSnapshot()
+      .openDialogs.filter((info) => {
+        if (info.nonModal) {
+          return false;
+        }
+        // The same test `syncStackOrder` makes: a dialog at phase `'opening'` is not in the top
+        // layer yet, and seeding it would claim a position the platform has not given it.
+        const element = registry.get(info.id)?.getDialog?.();
+        return element instanceof HTMLDialogElement && element.open;
+      })
+      .map((info) => {
+        return info.id;
+      });
+  }
+
   function prioritize(next: StackPriority): () => void {
+    // Before `priority` is set, while the snapshot still reads in plain open order.
+    seedTopLayerOrder();
     priority = next;
     log('Stack policy installed');
     notifyChange();

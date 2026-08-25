@@ -11,6 +11,45 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-24
 
+### Fixed — a late policy install lifts what the order needs, not everything
+
+`prioritize` over dialogs already on screen re-showed **every** open modal dialog. The top layer is
+untracked until a policy exists — `syncStackOrder` is dormant before then — so the first plan
+compared the wanted order against an empty `current`, and `planRaises` returns everything when it
+has nothing to keep. Each entry is a real `close()` + `showModal()`.
+
+**This was tried once before and abandoned, because the measurement said it changed nothing.** That
+reading was wrong, and the way it was wrong is worth keeping: **`close()` queues its event**. The
+harness counted native `close` events with a synchronous read straight after the install, which
+returns an empty array about half the time — the raises had happened and the events had not been
+delivered yet. Reading zero, twice, looked like evidence that nothing was reachable here.
+
+Re-measured on the arrangement the old note said had never been tried — three dialogs, opened high,
+mid, low, against a policy wanting the reverse — and polling for the queued events instead of
+reading once:
+
+|                       | round-trips at install                |
+| --------------------- | ------------------------------------- |
+| empty `current`       | **3** — `mr-low`, `mr-mid`, `mr-high` |
+| seeded from the stack | **2** — `mr-mid`, `mr-high`           |
+
+The saved one is `mr-low`: it is at the top and belongs at the bottom, and re-showing the two above
+it puts it there without touching it. That is `planRaises`' rule — keep the longest prefix of the
+wanted order that is already a subsequence of the real one — finally given a real `current` to work
+against.
+
+**The seed is only sound before the first policy, which is the only place it runs.** Nothing has
+raised anything yet, so the top layer _is_ the open order, and that is what the snapshot already
+carries, ranked by `openSequence` because no policy has ranked it. Reading the DOM would be a second
+source for a fact the manager holds. A dialog at phase `'opening'` is excluded by the same test
+`syncStackOrder` makes: it is not in the top layer, and seeding it would claim a position the
+platform has not given it.
+
+`a late install lifts only what the order needs` pins both numbers and the resulting paint order.
+Checked the other way: with the seed removed it reports three and fails.
+
+The matrix cell goes `~` → `✓`, and `yarn todo` from 3 open to 2.
+
 ### Fixed — a raise puts the caret back on every engine, not on the engine's guess
 
 A raise is `close()` + `showModal()`, the only mechanism the top layer offers. The dialog that

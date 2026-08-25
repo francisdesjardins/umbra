@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import { focusedDialogId, frontDialogId, paintedStackOrder } from '../../__tests__/stack-probe.js';
 import {
@@ -166,6 +167,70 @@ test.describe('three dialogs, and a policy that arrives late', () => {
   });
 });
 
+test.describe('what a late install costs', () => {
+  /**
+   * Every raise, in order, as the elements themselves report it.
+   *
+   * **`close()` queues its event**, so the count is read by polling rather than once: a synchronous
+   * read after the install returns an empty array about half the time, which is how this was first
+   * measured as costing nothing at all. The raises had happened — the paint order proves it — and
+   * the events had not been delivered yet.
+   */
+  const watchRaises = async (page: Page): Promise<void> => {
+    await page.evaluate(() => {
+      const raised: string[] = [];
+      (globalThis as unknown as { raised: string[] }).raised = raised;
+      for (const dialog of document.querySelectorAll('dialog[data-modal-id]')) {
+        dialog.addEventListener('close', () => {
+          raised.push(dialog.getAttribute('data-modal-id') ?? '?');
+        });
+      }
+    });
+  };
+
+  const raisesSoFar = (page: Page): Promise<string[]> => {
+    return page.evaluate(() => {
+      return (globalThis as unknown as { raised: string[] }).raised;
+    });
+  };
+
+  test('a late install lifts only what the order needs', async ({ mount, page }) => {
+    const component = await mount(<MultiRaiseHarness />);
+
+    // Opened with no policy at all — high, then mid, then low — so the top layer is open order and
+    // the policy wants the exact reverse: an arrangement it genuinely has to change.
+    await component.getByTestId('mr-open-all').click();
+    await expect(page.locator('dialog[data-modal-id="mr-low"]')).toBeVisible();
+    await expect
+      .poll(() => {
+        return paintedStackOrder(page);
+      })
+      .toEqual(['mr-high', 'mr-mid', 'mr-low']);
+
+    await watchRaises(page);
+    await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
+    await expect(component.getByTestId('mr-policy')).toHaveText('on');
+
+    // **`mr-low` is the saving, and it is the whole point.** Re-showing always puts a dialog in
+    // front, so the cheapest plan keeps the longest prefix of the wanted order that is already a
+    // subsequence of the real one — `low` is at the top and belongs at the bottom, and lifting the
+    // two above it gets it there without touching it. Seeded from the stack as it stands this is
+    // two; against an empty `current` it was three, since `planRaises` then returns everything.
+    await expect
+      .poll(() => {
+        return raisesSoFar(page);
+      })
+      .toEqual(['mr-mid', 'mr-high']);
+
+    // And the order it was all for.
+    await expect
+      .poll(() => {
+        return paintedStackOrder(page);
+      })
+      .toEqual(['mr-low', 'mr-mid', 'mr-high']);
+  });
+});
+
 test.describe('a policy installed under an open dialog', () => {
   test('does not move the caret out of the field it was in', async ({ mount, page }) => {
     const component = await mount(<LatePolicyFocusHarness />);
@@ -176,7 +241,8 @@ test.describe('a policy installed under an open dialog', () => {
     await page.getByTestId('lp-input').fill('mid-sentence');
     await expect(page.getByTestId('lp-input')).toBeFocused();
 
-    // Until `prioritize` is called the top layer is untracked, so the first plan lifts everything.
+    // A late install seeds its tracking from the stack as it stands, so the plan lifts only what
+    // the order needs — "a late install lifts only what the order needs" below counts it.
     await component.getByTestId('lp-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('lp-policy')).toHaveText('on');
 

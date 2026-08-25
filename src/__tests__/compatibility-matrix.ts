@@ -1408,9 +1408,14 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'installing a policy over dialogs already open is minimal',
-    state: 'partial',
-    since: '2026-08-13',
-    why: 'The top layer is not tracked until a policy exists, so the first plan compares `planRaises` against an empty `current` — which by its own arithmetic returns every open modal dialog, bottom-first. **Seeding the tracking at install time was tried and is not in the code**, because nothing observable changed: with two modal dialogs open in the order the policy already wants, the harness that counts native `close` events reports **zero either way**, so whatever costs a round-trip here is not reached by the obvious arrangement, and a fix nobody can show working is not one. What is still true is the arithmetic, so the cost is real somewhere the measurement has not gone — a third dialog, an order the policy actually changes, or a phase the snapshot holds and the elements do not. Installing at start-up costs nothing and remains the advice.',
+    state: 'works',
+    why: 'Seeded at install from the stack as it already stands, so the first plan is a plan rather than a rebuild. Sound only there, and that is the only place it runs: `syncStackOrder` is dormant until a policy exists, so nothing has raised anything and the top layer **is** the open order the snapshot already carries. Against an empty `current`, `planRaises` returns every open modal dialog by its own arithmetic. **Measured on three dialogs in an order the policy actually changes** \u2014 opened high, mid, low against a policy wanting the reverse: three round-trips before, two after, and the one saved is the dialog that is already where re-showing the two above it will leave it. **The earlier reading of zero either way was the measurement, not the code**: `close()` queues its event, so a synchronous read after the install returns an empty array about half the time while the raises have already happened. The test polls for it. Installing at start-up still costs nothing and remains the advice.',
+    references: [
+      {
+        file: 'src/manager/__tests__/stack-priority.ct.tsx',
+        title: 'a late install lifts only what the order needs',
+      },
+    ],
   },
   {
     fact: 'the adopted stylesheet reaches a dialog inside a shadow root',
