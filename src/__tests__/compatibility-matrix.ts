@@ -1282,7 +1282,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     state: 'blocked',
     recheck: {
       what: 'WebKit swallowing forward Tab from the dialog element — and Shift+Tab, which reaches nothing on any of the three',
-      measured: '2026-08-13',
+      measured: '2026-08-25',
     },
     why: 'Clicking a dialog’s empty space focuses the `<dialog>` element — it is click-focusable while open, though it takes no `tabindex` and refuses `focus()` from script. What Tab does from there is the engines’ own answer and they do not agree: **forward Tab reaches the content on Chromium and Firefox and is swallowed by WebKit**, and **Shift+Tab reaches nothing on any of the three**. Measured both ways on all three. `attachFocusContainment` answers it unconditionally now — the recovery used to sit behind `containFocus`, which made an ordinary click cost the keyboard in any dialog that had not opted into an option about something else. Left open only to be re-measured: if WebKit descends one day, the forward half becomes redundant.',
     references: [
@@ -1510,7 +1510,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     state: 'blocked',
     recheck: {
       what: 'typedoc’s `typescript` peer range — `typedoc@0.28.20` still declares `5.0.x || … || 6.0.x`, so the pin is the range rather than a stale entry. There is nothing else to try until it moves.',
-      measured: '2026-08-14',
+      measured: '2026-08-25',
     },
     why: 'The linter runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, whose two remaining jobs are `docs:check` and the JSON model behind the playground’s `/api` page — the HTML half is gone. TS 7 ships an API (`typescript/unstable/sync`) and it is **most of the way there**: exports, doc comments, `@example` tags, `typeToString` and `emitter.printNode` all work, and a lazy declaration node inflates through `resolve()`. Three measured blockers remain, and the middle one is the surprise: the resolved node exposes **no child traversal** (`children` is `undefined`, and no `forEachChild` is exported), so a syntax-level check like `notExported` cannot be written; walking the resolved _type graph_ instead is semantically the wrong question — it reports **0** findings against typedoc’s 10 allowances, because an alias resolves away; and the server **panics** rather than throwing on an unsupported checker call, so preconditions must be guarded rather than probed. So the `/api` model is the nearer half of this, not the validator. **Re-measured 2026-08-14: unchanged.** `typedoc@0.28.20` still declares `typescript: "5.0.x || … || 6.0.x"`, so the pin is not a stale one to drop — it is the peer range, and the cell is blocked on typedoc rather than on this repo. Check that range first; there is nothing else to try until it moves.',
   },

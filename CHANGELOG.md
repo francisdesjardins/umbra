@@ -11,6 +11,21 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-25
 
+### Changed — both watch-list cells re-measured, both unchanged
+
+The two `⏸ blocked` cells carry the date someone last looked, which is the only thing this repo owns
+about an answer that is somebody else’s to ship. Both re-read today.
+
+**WebKit still swallows a forward Tab from the dialog element.** Measured the way the cell means it —
+`attachFocusContainment` neutered so the engine answers alone, then the dead-space-click test run on
+all three: Chromium and Firefox reach the content natively, WebKit leaves focus on the `<dialog>`.
+The unconditional recovery is still earning its place.
+
+**typedoc is still `0.28.20` and still peers on `5.0.x || … || 6.0.x`.** The `typescript@6.0.3` pin is
+that range, not a stale entry, so there is nothing to try until it moves.
+
+No cell changed state; only `recheck.measured`, from 2026-08-13 and 2026-08-14 to 2026-08-25.
+
 ### Changed — the reconcileOpen note had the wrong pair written on it
 
 The last open cell said the `phase`-versus-`isVisible` half of `reconcileOpen` was proven on React
