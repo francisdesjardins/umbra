@@ -724,14 +724,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'phase, exposed to the caller',
     react: {
       state: 'works',
-      note: 'On the render args and the hook return. `isVisible` and `isPreparing` are not the two answers a caller needs after all: `isVisible` is true for both `open` and `closing`, so nothing but `phase` separates a panel that is leaving from one that is up — and the render callback, which decides what is on screen, carried neither. Transient state is what forces it: an action stops running before the exit animation ends, so a label read from `hasRunningAction` reverts with the panel still painted.',
-      since: '2026-08-21',
-      caveat: {
-        question:
-          'The `closing` window itself is not assertable in a component test: transitions are off in a harness, so `runCloseSequence` finalizes with no exit to observe. It is measured in a real browser instead — 18 painted frames of a playground modal holding its running label through the exit.',
-        nextStep:
-          'Decide whether a transitions-on assertion is reachable at all: `playwright.config.ts` has only `unit` and `component` projects, so it means a new one against the playground. Cheap — reuse the server `scripts/smoke-playground.mjs` starts — write it. Not cheap for one cell — demote this to a note, since 18 painted frames in a real browser is already a measured answer rather than an open question.',
-      },
+      note: 'On the render args and the hook return. `isVisible` and `isPreparing` are not the two answers a caller needs after all: `isVisible` is true for both `open` and `closing`, so nothing but `phase` separates a panel that is leaving from one that is up — and the render callback, which decides what is on screen, carried neither. Transient state is what forces it: an action stops running before the exit animation ends, so a label read from `hasRunningAction` reverts with the panel still painted. The `closing` window is asserted rather than inferred: a harness asking for `{ duration: 0, exitDuration: 900 }` holds it for 900ms, which is a real exit and not a harness artefact — it used to finalize instantly because the transition check read the *entrance* duration at open and applied that verdict to the close.',
       references: [
         {
           file: 'src/react/__tests__/use-modal.ct.tsx',
@@ -1602,7 +1595,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'Animation from Interactions',
     level: 'AAA',
     state: 'no-by-design',
-    why: 'Animations are defaults the caller replaces, and the off-switch is one CSS rule — `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — which the close path *measures* and short-circuits on (`checkTransitionsDisabled`), so a reduced-motion dialog closes immediately instead of waiting for a `transitionend` that never comes. The playground ships that rule; a consumer writes it once. AAA rather than AA, listed because honouring it costs one declaration.',
+    why: 'Animations are defaults the caller replaces, and the off-switch is one CSS rule — `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — which the close path *measures* and short-circuits on (`checkTransitionsDisabled`, re-read on the `closing` pass so the verdict is the **exit**’s and not the entrance’s), so a reduced-motion dialog closes immediately instead of waiting for a `transitionend` that never comes. The playground ships that rule; a consumer writes it once. AAA rather than AA, listed because honouring it costs one declaration.',
   },
   {
     criterion: '2.4.3',

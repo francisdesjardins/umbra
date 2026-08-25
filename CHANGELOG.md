@@ -9,7 +9,32 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
-## 2026-08-24
+## 2026-08-25
+
+### Fixed — an exit animation the caller asked for is no longer skipped
+
+`{ duration: 0, exitDuration: 900 }` — instant in, animated out — lost its exit entirely. The close
+path short-circuits when transitions are disabled, so it does not wait for a `transitionend` that a
+`prefers-reduced-motion` rule will never fire. That check was measured **once per open**, reading
+`getComputedStyle(dialog).transitionDuration` while the element still carried the _entrance_ style.
+An entrance of `0` computes to `0s`, which is indistinguishable from `transition: none !important` —
+so the dialog was filed as having no transitions at all, and the exit was dropped along with any
+observable `'closing'` window.
+
+**The exit's own duration is the only one that answers the exit's question**, and it is on the
+element by the time the phase is `'closing'`: the binding writes the phase's style during render, so
+the effect runs after it. `syncCloseSequence` re-measures there. The open pass stays — it costs
+nothing and keeps the answer this open's rather than the first open's — and both readings still
+catch what the check is chiefly for, since a reduced-motion rule computes to `0s` at either moment.
+
+**This surfaced from the other end.** The matrix carried a caveat saying the `'closing'` window was
+not assertable in a component test, "transitions being off in a harness". They were not off: the
+harness asked for a zero-length entrance, and the library concluded from that that it had none. The
+premise was the bug. The assertion is now in `phase reaches the render callback, and agrees with the
+hook return` and passes on Chromium, Firefox and WebKit; with the re-measure removed it reads
+`closed` where it expects `closing` and fails.
+
+The caveat is gone rather than reworded, and `yarn todo` goes from 2 open to 1.
 
 ### Fixed — a late policy install lifts what the order needs, not everything
 
