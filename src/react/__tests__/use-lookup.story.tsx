@@ -135,7 +135,7 @@ export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');
 
-  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
+  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'fg-lookup-a',
     render: ({ handle }) => {
       return (
@@ -160,7 +160,7 @@ export function UseLookupForegroundHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useDialog<void, 'done'>({
+  const { Modal: Dialog2 } = useDialog<void, 'done'>({
     id: 'fg-lookup-b',
     render: ({ handle }) => {
       return (
@@ -191,8 +191,8 @@ export function UseLookupForegroundHarness() {
       <span data-testid="a-fg">{String(infoA.isForeground)}</span>
       <span data-testid="b-open">{String(infoB.isVisible)}</span>
       <span data-testid="b-fg">{String(infoB.isForeground)}</span>
-      {Modal1}
-      {Modal2}
+      {Dialog1}
+      {Dialog2}
     </div>
   );
 }

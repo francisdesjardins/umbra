@@ -34,7 +34,7 @@ export function ScrollLockHarness() {
   });
 
   // Stacked on the first: both lock, but the compensation must be applied exactly once.
-  const { Modal: Modal2 } = useDialog<void, 'done'>({
+  const { Modal: Dialog2 } = useDialog<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
       return (
@@ -109,7 +109,7 @@ export function ScrollLockHarness() {
         </div>
       </div>
       {Modal}
-      {Modal2}
+      {Dialog2}
       {NonModal}
     </div>
   );

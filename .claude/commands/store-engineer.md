@@ -25,7 +25,7 @@ You are a store engineer for this project (`src/store/` — a hand-rolled reacti
    - A read that derives a fresh object needs its own equality, or it notifies on every commit
    - Inject dependencies through `TContext`, never through imports in the builder
    - No reserved keys: the contract (`subscribe`/`getSnapshot`) wins on a collision
-   - Do not pass explicit type arguments to `createStore` — annotate the initial snapshot and the builder's return instead, the way `createModalStore` and the action engine do, and let inference carry `TContext`
+   - Do not pass explicit type arguments to `createStore` — annotate the initial snapshot and the builder's return instead, the way `createDialogStore` and the action engine do, and let inference carry `TContext`
 
 4. **Generate the complete store** with annotated types, concurrency handling where needed, and a plain `subscribe` for side effects outside React.
 

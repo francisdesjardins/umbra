@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { noop } from '../../__tests__/noop.js';
-import { DEFAULT_FADE_ANIMATION, buildModalOptions } from '../shared.js';
+import { DEFAULT_FADE_ANIMATION, buildDialogOptions } from '../shared.js';
 import type { DialogStyle } from '../../core/style.js';
 
 // The option mapping every template hook runs through — four of them, across two bindings. Both
@@ -13,10 +13,10 @@ const renderNothing = () => {
 
 const base = { id: 'template', render: renderNothing } as const;
 
-test.describe('buildModalOptions', () => {
+test.describe('buildDialogOptions', () => {
   test('the caller’s structural style is merged over the template’s, not instead of it', () => {
     // The template's placement makes it that template; a replace would unposition a 380px drawer.
-    const built = buildModalOptions<void, unknown, string, DialogStyle, null>(
+    const built = buildDialogOptions<void, unknown, string, DialogStyle, null>(
       { ...base, style: { width: '380px' } },
       { animation: DEFAULT_FADE_ANIMATION, style: { position: 'fixed', width: '100%' } }
     );
@@ -25,19 +25,19 @@ test.describe('buildModalOptions', () => {
   });
 
   test('either side alone survives, and neither becomes an empty object', () => {
-    const templateOnly = buildModalOptions<void, unknown, string, DialogStyle, null>(base, {
+    const templateOnly = buildDialogOptions<void, unknown, string, DialogStyle, null>(base, {
       animation: DEFAULT_FADE_ANIMATION,
       style: { position: 'fixed' },
     });
     expect(templateOnly.style).toEqual({ position: 'fixed' });
 
-    const callerOnly = buildModalOptions<void, unknown, string, DialogStyle, null>(
+    const callerOnly = buildDialogOptions<void, unknown, string, DialogStyle, null>(
       { ...base, style: { width: '10px' } },
       { animation: DEFAULT_FADE_ANIMATION }
     );
     expect(callerOnly.style).toEqual({ width: '10px' });
 
-    const neither = buildModalOptions<void, unknown, string, DialogStyle, null>(base, {
+    const neither = buildDialogOptions<void, unknown, string, DialogStyle, null>(base, {
       animation: DEFAULT_FADE_ANIMATION,
     });
     expect(neither.style).toBeUndefined();
@@ -46,14 +46,14 @@ test.describe('buildModalOptions', () => {
   test('the caller’s animation replaces the template’s outright', () => {
     // An animation is a whole: half of one and half of another enters and leaves by two rules.
     const custom = { entrance: { opacity: 1 }, exit: { opacity: 0 }, duration: 5 };
-    const built = buildModalOptions<void, unknown, string, DialogStyle, null>(
+    const built = buildDialogOptions<void, unknown, string, DialogStyle, null>(
       { ...base, animation: custom },
       { animation: DEFAULT_FADE_ANIMATION }
     );
 
     expect(built.animation).toBe(custom);
     expect(
-      buildModalOptions<void, unknown, string, DialogStyle, null>(base, {
+      buildDialogOptions<void, unknown, string, DialogStyle, null>(base, {
         animation: DEFAULT_FADE_ANIMATION,
       }).animation
     ).toBe(DEFAULT_FADE_ANIMATION);
@@ -62,13 +62,13 @@ test.describe('buildModalOptions', () => {
   test('the template names itself, and the caller has no way to rename it', () => {
     // `template` tells a cross-cutting listener one kind of dialog from another, so it is the
     // template's to state — `TemplateCommonOptions` omits it, making the override a compile error.
-    const built = buildModalOptions<void, unknown, string, DialogStyle, null>(base, {
+    const built = buildDialogOptions<void, unknown, string, DialogStyle, null>(base, {
       animation: DEFAULT_FADE_ANIMATION,
       template: 'slide',
     });
     expect(built.template).toBe('slide');
 
-    void buildModalOptions<void, unknown, string, DialogStyle, null>(
+    void buildDialogOptions<void, unknown, string, DialogStyle, null>(
       // @ts-expect-error a template's options deliberately have no `template` to pass
       { ...base, template: 'something-else' },
       { animation: DEFAULT_FADE_ANIMATION, template: 'slide' }
@@ -77,7 +77,7 @@ test.describe('buildModalOptions', () => {
 
   test('everything else is passed through untouched', () => {
     const onClose = noop;
-    const built = buildModalOptions<void, unknown, 'ok', DialogStyle, null>(
+    const built = buildDialogOptions<void, unknown, 'ok', DialogStyle, null>(
       { ...base, id: 'kept', ariaLabel: 'Kept', dismissKey: false, onClose },
       { animation: DEFAULT_FADE_ANIMATION }
     );

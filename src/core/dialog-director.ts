@@ -18,8 +18,8 @@ import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 import type { FocusCoordinator } from './attach-focus.js';
-import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
-import type { ModalStore } from './modal-store.js';
+import type { DialogKeydownOptions, DialogDomContext } from './attach-types.js';
+import type { DialogStore } from './dialog-store.js';
 import type { StepInputs, StepTeardown } from './step-runner.js';
 import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 
@@ -47,7 +47,7 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
  *
  * The pass effect **must not return a cleanup**: a cleanup would tear the whole sequence down
  * before every re-run and the diffing below would be pointless. All teardown belongs to
- * {@link ModalDirector.destroy}.
+ * {@link DialogDirector.destroy}.
  *
  * ## One key per step, not one key for the sequence
  *
@@ -56,7 +56,7 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
  * changes on every render, including the render an action start causes. `focus.sync` would then
  * be rebuilt mid-action with `wasRunning` back to `false`, the settle unrecognised and focus never
  * given back. So each step declares its own inputs; `focus.sync` reads the phase alone, which
- * `modal-director.test.ts` asserts directly. Only `syncOpenSequence` runs unkeyed.
+ * `dialog-director.test.ts` asserts directly. Only `syncOpenSequence` runs unkeyed.
  *
  * ## What is not here
  *
@@ -80,8 +80,8 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
  * included: the store, engine and focus coordinator take the id once at build and never look
  * again. React's registration effect does list it, which is what re-registers a changed `id`.
  */
-export type ModalDirectorContext = {
-  readonly store: ModalStore;
+export type DialogDirectorContext = {
+  readonly store: DialogStore;
   readonly getDialog: GetDialog;
   readonly dialogId: DialogId;
   readonly manager: DialogManager;
@@ -94,7 +94,7 @@ export type ModalDirectorContext = {
  * Flat rather than nested by step, because a binding assembles it once and the director is what
  * knows which fields belong to which step — that split is the whole point of the file.
  */
-export type ModalLifecyclePass = {
+export type DialogLifecyclePass = {
   readonly phase: DialogPhase;
   readonly isPreparing: boolean;
   readonly prepare: ((signal: AbortSignal) => void | Promise<void>) | undefined;
@@ -125,8 +125,8 @@ type StepParts = {
  * director ever assembles it — a step declaring `parts` it does not touch costs nothing, and the
  * table below stays a table.
  */
-type ModalLifecycleStepArgs = {
-  readonly pass: ModalLifecyclePass;
+type DialogLifecycleStepArgs = {
+  readonly pass: DialogLifecyclePass;
   readonly parts: StepParts;
 };
 
@@ -138,10 +138,10 @@ type ModalLifecycleStepArgs = {
  * behind. Its own phase guard and `dialog.open` check are what stop the work happening twice; see
  * `attach-lifecycle.ts`.
  */
-type ModalLifecycleStepSpec = {
+type DialogLifecycleStepSpec = {
   readonly step: string;
-  readonly inputs: ((pass: ModalLifecyclePass) => StepInputs) | null;
-  readonly run: (dom: ModalDomContext, args: ModalLifecycleStepArgs) => StepTeardown;
+  readonly inputs: ((pass: DialogLifecyclePass) => StepInputs) | null;
+  readonly run: (dom: DialogDomContext, args: DialogLifecycleStepArgs) => StepTeardown;
 };
 
 // ── The sequence ─────────────────────────────────────────────────────────────
@@ -155,7 +155,7 @@ type ModalLifecycleStepSpec = {
  * @internal
  */
 export const keydownOptions = (
-  pass: ModalLifecyclePass,
+  pass: DialogLifecyclePass,
   engine: ActionGate
 ): DialogKeydownOptions => {
   return {
@@ -170,7 +170,7 @@ export const keydownOptions = (
 };
 
 /** …and, having the same options, the same inputs. */
-const keydownInputs = (pass: ModalLifecyclePass): StepInputs => {
+const keydownInputs = (pass: DialogLifecyclePass): StepInputs => {
   return [
     pass.phase,
     pass.isPreparing,
@@ -301,17 +301,17 @@ export const MODAL_LIFECYCLE_STEPS = [
       });
     },
   },
-] as const satisfies readonly ModalLifecycleStepSpec[];
+] as const satisfies readonly DialogLifecycleStepSpec[];
 
 /** One step of the shared lifecycle, by name. */
-export type ModalLifecycleStep = (typeof MODAL_LIFECYCLE_STEPS)[number]['step'];
+export type DialogLifecycleStep = (typeof MODAL_LIFECYCLE_STEPS)[number]['step'];
 
 /**
  * The order the shared lifecycle runs in, as data — for the gates that check a binding against it.
  *
  * Derived rather than written, so it cannot disagree with what actually runs.
  */
-export const MODAL_LIFECYCLE_SEQUENCE: readonly ModalLifecycleStep[] = MODAL_LIFECYCLE_STEPS.map(
+export const MODAL_LIFECYCLE_SEQUENCE: readonly DialogLifecycleStep[] = MODAL_LIFECYCLE_STEPS.map(
   (spec) => {
     return spec.step;
   }
@@ -328,7 +328,7 @@ export const MODAL_LIFECYCLE_SEQUENCE: readonly ModalLifecycleStep[] = MODAL_LIF
  * keys") out of the unit project's reach until they moved there. What stays here is the part
  * that is about modals — which steps exist, what each reads, and the context they share.
  */
-export function createModalDirector(ctx: ModalDirectorContext) {
+export function createDialogDirector(ctx: DialogDirectorContext) {
   const { store, getDialog, dialogId, manager, engine } = ctx;
 
   const parts: StepParts = {
@@ -336,7 +336,7 @@ export function createModalDirector(ctx: ModalDirectorContext) {
     focus: createFocusCoordinator({ getDialog, dialogId, manager }, { engine }),
   };
 
-  const runner = createStepRunner<ModalLifecyclePass, ModalDomContext>(
+  const runner = createStepRunner<DialogLifecyclePass, DialogDomContext>(
     MODAL_LIFECYCLE_STEPS.map((spec) => {
       return {
         inputs: spec.inputs,
@@ -358,7 +358,7 @@ export function createModalDirector(ctx: ModalDirectorContext) {
      * Safe to call as often as a binding renders, and meant to be: the pass carries no dependency
      * list of its own, so `prepare` and `onKeyDown` are never a render behind.
      */
-    sync(pass: ModalLifecyclePass): void {
+    sync(pass: DialogLifecyclePass): void {
       runner.sync(pass);
     },
 
@@ -370,4 +370,4 @@ export function createModalDirector(ctx: ModalDirectorContext) {
 }
 
 /** The director as its bindings see it. */
-export type ModalDirector = ReturnType<typeof createModalDirector>;
+export type DialogDirector = ReturnType<typeof createDialogDirector>;

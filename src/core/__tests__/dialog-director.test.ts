@@ -4,16 +4,16 @@ import {
   MODAL_LIFECYCLE_SEQUENCE,
   MODAL_LIFECYCLE_STEPS,
   keydownOptions,
-  type ModalLifecyclePass,
-  type ModalLifecycleStep,
-} from '../modal-director.js';
+  type DialogLifecyclePass,
+  type DialogLifecycleStep,
+} from '../dialog-director.js';
 import { sameInputs } from '../step-runner.js';
 import { createActionEngine } from '../../actions/action-engine.js';
 
 // The director's framework-free half: which step reads what, and what counts as unchanged. The
 // executor is `step-runner.ts`'s and tested there; what a step reads is where the hazard lives.
 
-const BASE: ModalLifecyclePass = {
+const BASE: DialogLifecyclePass = {
   phase: 'open',
   isPreparing: false,
   prepare: undefined,
@@ -29,7 +29,7 @@ const BASE: ModalLifecyclePass = {
   dismissOnClickOutside: false,
 };
 
-function inputsOf(step: ModalLifecycleStep, pass: ModalLifecyclePass): readonly unknown[] | null {
+function inputsOf(step: DialogLifecycleStep, pass: DialogLifecyclePass): readonly unknown[] | null {
   const spec = MODAL_LIFECYCLE_STEPS.find((candidate) => {
     return candidate.step === step;
   });
@@ -39,7 +39,7 @@ function inputsOf(step: ModalLifecycleStep, pass: ModalLifecyclePass): readonly 
   return spec.inputs === null ? null : spec.inputs(pass);
 }
 
-function rebuilds(step: ModalLifecycleStep, next: Partial<ModalLifecyclePass>): boolean {
+function rebuilds(step: DialogLifecycleStep, next: Partial<DialogLifecyclePass>): boolean {
   const before = inputsOf(step, BASE);
   if (before === null) {
     // A step with no inputs runs every pass and is never torn down, so it is never asked below.
@@ -74,7 +74,7 @@ test.describe('what each step reads', () => {
       { nonModal: true },
       { exitDuration: 999 },
       { primaryProperty: 'transform' },
-    ] satisfies Partial<ModalLifecyclePass>[]) {
+    ] satisfies Partial<DialogLifecyclePass>[]) {
       expect(
         rebuilds('focus.sync', changed),
         `focus.sync must survive ${Object.keys(changed)[0]} changing`
@@ -115,7 +115,7 @@ test.describe('what each step reads', () => {
     const onDismissRequest = () => {
       return false;
     };
-    const pass: ModalLifecyclePass = {
+    const pass: DialogLifecyclePass = {
       ...BASE,
       isPreparing: true,
       onKeyDown,
@@ -146,7 +146,7 @@ test.describe('what each step reads', () => {
       'attachDialogKeydown',
       'focus.sync',
       'attachClickOutside',
-    ] satisfies ModalLifecycleStep[]) {
+    ] satisfies DialogLifecycleStep[]) {
       expect(rebuilds(step, { containFocus: true }), `${step} should not care`).toBe(false);
     }
   });
@@ -164,7 +164,7 @@ test.describe('what each step reads', () => {
   test('no step reads a value the pass does not carry', () => {
     // A step reading off a closure instead of the pass is a dependency the director cannot diff,
     // so it would silently never re-attach — checked by giving every field a distinct value.
-    const distinct: ModalLifecyclePass = {
+    const distinct: DialogLifecyclePass = {
       phase: 'opening',
       isPreparing: true,
       onError: undefined,

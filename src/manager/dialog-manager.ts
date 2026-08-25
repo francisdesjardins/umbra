@@ -25,7 +25,7 @@ import type {
 
 /**
  * The manager's port onto a modal store — declared as the requirement, not derived from
- * `ModalStore` (contrast `finalize-close.ts`, which narrows the real store). The snapshot stays
+ * `DialogStore` (contrast `finalize-close.ts`, which narrows the real store). The snapshot stays
  * the shared `DialogStoreSnapshot` so the manager can read `closeResult.reason` off it.
  */
 type RegisteredStore = {
@@ -38,7 +38,7 @@ type RegisteredStore = {
   /**
    * One-shot resolver for the next close, so `requestOpenAndWait` can hand back the close of a
    * dialog it does not own. Erased at `unknown`: a parameter-position callback is checked
-   * contravariantly, so a `TData` resolver would make `ModalStore<TData>` unassignable. The
+   * contravariantly, so a `TData` resolver would make `DialogStore<TData>` unassignable. The
    * narrowing happens at the door instead, off the id — this port is what the registry holds, and
    * it holds every dialog under one type.
    */
@@ -300,7 +300,7 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
  * @example
  * // `event.detail` is typed: the library augments `DocumentEventMap`, so no cast.
  * document.addEventListener(DIALOG_OPEN_EVENT, (event) => {
- *   analytics.track('modal_shown', { id: event.detail.id, template: event.detail.template });
+ *   analytics.track('dialog_shown', { id: event.detail.id, template: event.detail.template });
  * });
  */
 export const DIALOG_OPEN_EVENT = 'dialog:open' as const;
@@ -311,7 +311,7 @@ export const DIALOG_OPEN_EVENT = 'dialog:open' as const;
  * @example
  * document.addEventListener(DIALOG_CLOSE_EVENT, (event) => {
  *   const { id, reason, openedAt } = event.detail;
- *   analytics.track('modal_closed', { id, reason, ms: Date.now() - openedAt });
+ *   analytics.track('dialog_closed', { id, reason, ms: Date.now() - openedAt });
  * });
  */
 export const DIALOG_CLOSE_EVENT = 'dialog:close' as const;
@@ -804,10 +804,10 @@ export function createDialogManager(): DialogManager {
     ensureDialogStyles(document);
 
     // Non-modal dialogs never lock scrolling — only modal ones do.
-    const hasModalOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {
+    const hasDialogOpen = snapshotStore.getSnapshot().openDialogs.some((d) => {
       return !d.nonModal;
     });
-    if (hasModalOpen) {
+    if (hasDialogOpen) {
       lockBodyScroll(lockOwner);
     } else {
       unlockBodyScroll(lockOwner);

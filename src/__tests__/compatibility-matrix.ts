@@ -369,7 +369,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'reports an `ariaLabelledBy` that points at no element',
       },
       {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        file: 'src/solid/__tests__/solid-dialog.ct.tsx',
         title: 'says nothing about a name its prepare had not rendered yet',
       },
       {
@@ -434,7 +434,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'a portal host of the caller’s own is where the dialog lands',
       },
       {
-        file: 'src/core/__tests__/modal-runtime.test.ts',
+        file: 'src/core/__tests__/dialog-runtime.test.ts',
         title: 'a getter answering null falls back rather than un-portaling',
       },
     ],
@@ -496,7 +496,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'an action closes with its own reason',
         },
       ],
@@ -527,7 +527,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Live values are getters, so the render args must not be destructured.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'the template’s context stays live, because it is merged and not spread',
         },
       ],
@@ -545,7 +545,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'The binding mounts the element itself, so `Modal` is `null`.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'portal: true mounts the dialog itself and leaves Modal null',
         },
       ],
@@ -576,7 +576,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'an outlet renders the dialog and Modal becomes null',
         },
       ],
@@ -591,7 +591,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Re-wrapped to attach `undeclare`, because Solid never re-runs the parent and a button removed by its own `<Show>` has to retire itself.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'a removed action stops counting — backdrop dismissal comes back',
         },
       ],
@@ -609,7 +609,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Same name, and it stays live through the wrapper — which is what the test pins.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'action.isRunning names which one, and survives the binding’s own wrapper',
         },
       ],
@@ -633,7 +633,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Returns an accessor: a discriminated union cannot survive being spread into getters without losing the narrowing.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'the manager hooks are live from outside the panel',
         },
       ],
@@ -706,7 +706,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
           title: 'refuses while the dialog is still leaving, instead of answering with its close',
         },
         {
-          file: 'src/core/__tests__/modal-store.test.ts',
+          file: 'src/core/__tests__/dialog-store.test.ts',
           title: 'a resolver registered during the exit is refused rather than answered',
         },
       ],
@@ -756,7 +756,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'the policy is inherited by this binding too',
         },
       ],
@@ -787,7 +787,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'focusOnOpen claims the opening focus',
         },
       ],
@@ -819,7 +819,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Restored by **finding the button, not remembering it**. Solid replaces the element when the action state changes, so all three of the coordinator’s reads name a node that answers `isConnected === false`, and a remembered element drops the restore through `preferredRestoreTarget`’s `openingFocus` floor onto the `<dialog>`. The reason outlives the node: the coordinator reads which action is running off the engine and re-queries `[data-action-reason]` (`findActionButton`, scoped with `queryOwn`) whenever the captured element is stale. `ActionButtonProps` carries that attribute for every action, which makes it the third prop a custom button wrapper must forward.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'lands on the button that ran it, which Solid had already replaced',
         },
       ],
@@ -852,7 +852,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: '`options.onError` passed straight through — there is no stale capture to guard against, because nothing re-runs.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'a prepare that throws is reported, and the modal still settles',
         },
       ],
@@ -885,7 +885,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       // that never ran on this binding would satisfy identically.
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'reports a reference that points at no element',
         },
       ],
@@ -917,7 +917,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'The one live entry of the attribute table, and the reason `setDialogAttributes` runs in an effect there at all.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'the dialog carries its accessible name and its busy state',
         },
       ],
@@ -957,7 +957,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'an action hotkey runs the same path its button does',
         },
       ],
@@ -980,7 +980,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'onOpenRequest can refuse, and the refusal carries its reason',
         },
       ],
@@ -1030,7 +1030,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'containFocus wraps Tab inside a non-modal panel',
         },
       ],
@@ -1052,7 +1052,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'dismissOnClickOutside closes it on a click in the page',
         },
       ],
@@ -1075,7 +1075,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Reached through the `undeclare` test, which asserts dismissal coming back.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'a removed action stops counting — backdrop dismissal comes back',
         },
       ],
@@ -1105,7 +1105,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'a custom dismissKey closes it, and Escape does not',
         },
       ],
@@ -1127,7 +1127,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'a close aborts the prepare it was waiting on',
         },
       ],
@@ -1157,7 +1157,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'the signal drives the dialog, and stays authoritative over an imperative open',
         },
       ],
@@ -1230,7 +1230,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'The whole Solid app rendered into the root, which is how a widget keeps the host page’s CSS out.',
       references: [
         {
-          file: 'src/solid/__tests__/solid-modal.ct.tsx',
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
           title: 'gets the library backdrop and its opening focus',
         },
       ],
@@ -1348,7 +1348,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
         title: 'and it is the first control, not the last, inside a shadow root',
       },
       {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        file: 'src/solid/__tests__/solid-dialog.ct.tsx',
         title: 'gets the keyboard back when a panel opens underneath',
       },
       {
@@ -1549,7 +1549,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     why: 'Everything the library itself does is reachable by key: a hotkey dispatches by clicking the declaring button, so the key path and the click path are one path — running state, veto and typed close included — and the dismiss key unwinds the stack one dialog per press. The controls themselves are the caller’s markup, which is where the rest of this criterion lives.',
     references: [
       {
-        file: 'src/solid/__tests__/solid-modal.ct.tsx',
+        file: 'src/solid/__tests__/solid-dialog.ct.tsx',
         title: 'an action hotkey runs the same path its button does',
       },
       {

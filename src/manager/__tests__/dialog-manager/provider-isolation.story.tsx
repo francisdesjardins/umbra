@@ -5,7 +5,7 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** A modal registering with the nearest manager, exposing state via `label`-scoped testids. */
-function ScopedModal({ id, label }: { readonly id: string; readonly label: string }) {
+function ScopedDialog({ id, label }: { readonly id: string; readonly label: string }) {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
@@ -55,10 +55,10 @@ export function ProviderIsolationHarness() {
   return (
     <div>
       <DialogManagerProvider>
-        <ScopedModal id="isolated-a" label="A" />
+        <ScopedDialog id="isolated-a" label="A" />
       </DialogManagerProvider>
       <DialogManagerProvider>
-        <ScopedModal id="isolated-b" label="B" />
+        <ScopedDialog id="isolated-b" label="B" />
       </DialogManagerProvider>
     </div>
   );

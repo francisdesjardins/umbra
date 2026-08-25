@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: basic outlet renders modal without {Modal} in JSX ─────────────
 
-function InnerModal({ onCloseReason }: { readonly onCloseReason: (r: string) => void }) {
+function InnerDialog({ onCloseReason }: { readonly onCloseReason: (r: string) => void }) {
   const { open, isVisible, isPreparing } = useDialog<void, 'confirm'>({
     id: 'outlet-basic',
     render: ({ handle }) => {
@@ -50,7 +50,7 @@ export function OutletBasicHarness() {
 
   return (
     <DialogOutlet>
-      <InnerModal onCloseReason={setLastReason} />
+      <InnerDialog onCloseReason={setLastReason} />
       <span data-testid="last-reason">{lastReason}</span>
     </DialogOutlet>
   );

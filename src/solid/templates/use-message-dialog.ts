@@ -4,7 +4,7 @@ import type { RegisteredReturn } from '../../core/registered-types.js';
 import type { DialogStyle } from '../../core/style.js';
 import {
   DEFAULT_FADE_ANIMATION,
-  buildModalOptions,
+  buildDialogOptions,
   type BaseRenderContext,
   type RegisteredBaseRenderContext,
   type RegisteredTemplateOptions,
@@ -63,7 +63,7 @@ export function useMessageDialog<TData = void, TReason extends string = string>(
 ): UseMessageDialogReturn<TData, TReason> {
   return useDialog<TData, TReason>({
     // Spelled out because inference cannot reach through the `Omit` in `TemplateBaseOptions`.
-    ...buildModalOptions<
+    ...buildDialogOptions<
       TData,
       MessageDialogRenderContext<TData, TReason>,
       TReason,

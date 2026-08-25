@@ -4,14 +4,14 @@ import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
 import { isBackdropClick, type BackdropClickEvent, type BackdropDialog } from './dialog-props.js';
 import { DISMISS_REASON } from './dismiss-reason.js';
-import { finalizeModalClose } from './finalize-close.js';
-import { createModalStore } from './modal-store.js';
+import { finalizeDialogClose } from './finalize-close.js';
+import { createDialogStore } from './dialog-store.js';
 import { dialogPlacement, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
-import type { ModalStore } from './modal-store.js';
+import type { DialogStore } from './dialog-store.js';
 import type {
   AwaitedClose,
   DialogFailure,
@@ -38,7 +38,7 @@ const log = createLogger('modal');
  * rather than `UseDialogOptions<…>`: it takes four type parameters, and none of them affects a
  * single answer computed here.
  */
-export type UnresolvedModalOptions = DialogVariant & {
+export type UnresolvedDialogOptions = DialogVariant & {
   readonly portal?: PortalTarget | undefined;
   readonly clipContainer?: boolean | undefined;
   readonly dismissWhilePreparing?: boolean | undefined;
@@ -48,7 +48,7 @@ export type UnresolvedModalOptions = DialogVariant & {
 };
 
 /** Every option a binding needs resolved before it can render or wire anything. */
-export type ResolvedModalOptions = {
+export type ResolvedDialogOptions = {
   readonly isNonModal: boolean;
   readonly isPortaled: boolean;
   /** Modal variant only; `undefined` means "decide from whether any action was drawn". */
@@ -74,7 +74,7 @@ export type ResolvedModalOptions = {
  * generic over the binding's style type could not return it — so each binding keeps the one
  * annotated line, which is also where the comment explaining the annotation belongs.
  */
-export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedModalOptions {
+export function resolveDialogOptions(options: UnresolvedDialogOptions): ResolvedDialogOptions {
   const isNonModal = options.nonModal ?? false;
   // A host getter is a portal too — `?? false` would leave the function itself standing in for a
   // boolean, and every reader of `isPortaled` asks it as one.
@@ -118,10 +118,10 @@ export function resolveModalOptions(options: UnresolvedModalOptions): ResolvedMo
  * them be used as effect dependencies (the compiler cannot memoize them: it treats the store as
  * opaque).
  */
-export function createModalRuntime<TData = void, TReason extends string = string>(
+export function createDialogRuntime<TData = void, TReason extends string = string>(
   dialogId: DialogId
 ) {
-  const store = createModalStore<TData, TReason>(dialogId);
+  const store = createDialogStore<TData, TReason>(dialogId);
   const engine = createActionEngine<TData, TReason>(dialogId);
   engine.bindClose((reason, data) => {
     store.close(reason, data);
@@ -141,7 +141,7 @@ export function createModalRuntime<TData = void, TReason extends string = string
    * *next* close by design, so one registered afterwards waits for a close that will never come;
    * `prepare` is what makes that window wide enough to fall into, since `finalize` flushes the
    * open resolvers defensively and an `open()` would return as if nothing had happened. Pinned by
-   * `modal-store.test.ts` and by `open-and-wait.story.tsx`.
+   * `dialog-store.test.ts` and by `open-and-wait.story.tsx`.
    */
   const openAndWait = (): Promise<AwaitedClose<TData, TReason>> => {
     const closed = new Promise<AwaitedClose<TData, TReason>>((resolve) => {
@@ -160,9 +160,9 @@ export function createModalRuntime<TData = void, TReason extends string = string
   return { store, engine, open, openAndWait, handle };
 }
 
-/** What {@link createModalRuntime} produces. */
-export type ModalRuntime<TData = void, TReason extends string = string> = ReturnType<
-  typeof createModalRuntime<TData, TReason>
+/** What {@link createDialogRuntime} produces. */
+export type DialogRuntime<TData = void, TReason extends string = string> = ReturnType<
+  typeof createDialogRuntime<TData, TReason>
 >;
 
 /**
@@ -202,7 +202,7 @@ export function resolvePortalHost(
 export type BackdropDismissOptions = {
   /** The box the pointer is measured against — the last question, and the only geometric one. */
   readonly dialog: BackdropDialog;
-  readonly store: ModalStore;
+  readonly store: DialogStore;
   readonly engine: ActionGate;
   readonly isNonModal: boolean;
   readonly dismissOnBackdropClick: boolean | undefined;
@@ -266,7 +266,7 @@ export type TeardownOptions = {
   readonly onError: ((failure: DialogFailure) => void) | undefined;
 };
 
-export function teardownModal(store: ModalStore, options: TeardownOptions): void {
+export function teardownDialog(store: DialogStore, options: TeardownOptions): void {
   const { manager, dialogId, dialog, onError } = options;
   const wasOpen = store.getSnapshot().phase !== 'closed';
 
@@ -280,7 +280,7 @@ export function teardownModal(store: ModalStore, options: TeardownOptions): void
     // If already closing, it is a no-op and `closeResult` keeps the original reason.
     store.close(DISMISS_REASON);
 
-    finalizeModalClose(store, {
+    finalizeDialogClose(store, {
       dialog,
       onCloseError: (error) => {
         log.error('onClose callback failed during cleanup', { id: dialogId, error: error.message });

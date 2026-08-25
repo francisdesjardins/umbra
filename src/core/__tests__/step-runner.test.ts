@@ -3,7 +3,7 @@ import { noop } from '../../__tests__/noop.js';
 import { createStepRunner, sameInputs, type SyncStep } from '../step-runner.js';
 
 // The lifecycle executor, against a table that records instead of touching the DOM — which is what
-// these assertions needed: inside `createModalDirector` the only table is real `<dialog>`s, so a
+// these assertions needed: inside `createDialogDirector` the only table is real `<dialog>`s, so a
 // listener order that quietly changes and a modal inert after a remount were prose, not tests.
 
 type Log = string[];
@@ -50,7 +50,7 @@ test.describe('sameInputs', () => {
 
   test('two functions that do the same thing are two inputs', () => {
     // The hazard the per-step design exists for: an inline arrow is a fresh identity every render,
-    // so any step listing one is rebuilt every render — see `modal-director.ts`.
+    // so any step listing one is rebuilt every render — see `dialog-director.ts`.
     const fn = () => {
       return undefined;
     };

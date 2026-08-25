@@ -66,7 +66,7 @@ like any other. What waits on it is `open()`'s promise, `isPreparing` and theref
 `dismissWhilePreparing`, and the labelling diagnostic.
 
 **`dialog` is the element, `modal` is the unit of state.** `dialogPlacement`, `dialogAttributes`,
-`DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `modal-store.ts`, `DialogPhase`,
+`DialogStyle` and `dialog-lifecycle.ts` act on a `<dialog>`; `dialog-store.ts`, `DialogPhase`,
 `DialogRenderArgs` and `dialogId` are the library's record of one. `DialogManagerSnapshot.openDialogs`
 reads against the rule and stays, because applying it would rename `DialogManager` itself, the
 package's front door. Add no new exceptions.
@@ -104,7 +104,7 @@ hooks are built _on_ `useDialog`, not peers of it, and their framework-free half
 `src/templates/`. For the same reason React's effects are **not** split into per-concern hook files:
 a `react/hooks/` folder holding `use-click-outside.ts` reads as a feature list Solid is missing.
 Both hook bindings run the whole lifecycle through **one** deps-free call into
-[core/modal-director.ts](core/modal-director.ts), so the order is not theirs to write and the diff
+[core/dialog-director.ts](core/dialog-director.ts), so the order is not theirs to write and the diff
 between them is scheduling.
 
 **A test lives next to what it tests, whatever framework its harness uses.** `apply-style.ct.tsx`
@@ -113,11 +113,11 @@ surface belongs in `react/__tests__/`; shared harness helpers live in `src/__tes
 
 ### What is shared
 
-[core/modal-runtime.ts](core/modal-runtime.ts) holds the parts that were written twice and were
-identical both times: `resolveModalOptions` (the defaults _and_ the variant narrowing — reading
+[core/dialog-runtime.ts](core/dialog-runtime.ts) holds the parts that were written twice and were
+identical both times: `resolveDialogOptions` (the defaults _and_ the variant narrowing — reading
 `dismissOnBackdropClick` without checking `nonModal` first is a type error here and a
-silently-ignored option in a binding that got it wrong), `createModalRuntime` (store, engine,
-`open`, `openAndWait`, `handle`), `shouldDismissOnBackdropClick`, and `teardownModal`. `animation`
+silently-ignored option in a binding that got it wrong), `createDialogRuntime` (store, engine,
+`open`, `openAndWait`, `handle`), `shouldDismissOnBackdropClick`, and `teardownDialog`. `animation`
 is deliberately _not_ resolved there: its fallback is a concrete literal that a function generic
 over the binding's style type could not return, so each binding keeps the one annotated line.
 
@@ -126,7 +126,7 @@ over the binding's style type could not return, so each binding keeps the one an
 The short list, and the measure of whether the core is doing its job. A binding:
 
 1. builds a `<dialog>` element and puts the shared attributes on it (`core/dialog-props.ts`),
-2. subscribes to `createModalStore` and `createActionEngine` the way its framework subscribes,
+2. subscribes to `createDialogStore` and `createActionEngine` the way its framework subscribes,
 3. calls `director.sync(pass)` from whatever it calls an effect and `director.destroy()` from
    whatever it calls a cleanup — the `attach*` functions and their order are the director's,
 4. writes the computed style (`getDialogAnimationStyles`) onto the element,
@@ -188,8 +188,8 @@ restating any of it here is how the two drift.
 | Concern                | File                                                                                                                                                                                     |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `useDialog`            | [react/use-dialog.tsx](react/use-dialog.tsx), [solid/use-dialog.ts](solid/use-dialog.ts)                                                                                                 |
-| The state machine      | [core/modal-store.ts](core/modal-store.ts) — one method per transition                                                                                                                   |
-| The lifecycle sequence | [core/modal-director.ts](core/modal-director.ts) — who asks the `attach*` functions, in what order                                                                                       |
+| The state machine      | [core/dialog-store.ts](core/dialog-store.ts) — one method per transition                                                                                                                 |
+| The lifecycle sequence | [core/dialog-director.ts](core/dialog-director.ts) — who asks the `attach*` functions, in what order                                                                                     |
 | The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, the doors, the asking door                                                                                            |
 | The stack order        | [manager/stack-order.ts](manager/stack-order.ts) + `raiseDialog` in [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)                                                                 |
 | Body scroll lock       | [manager/scroll-lock.ts](manager/scroll-lock.ts), modal only, over [manager/lock-ledger.ts](manager/lock-ledger.ts) — claim-per-owner, which is what makes two managers on one page safe |
@@ -200,9 +200,9 @@ Two rules that belong to no single file: **use the `dialogManager` a hook return
 singleton**, for cross-modal calls, since only the first is context-aware; and the `<dialog>` is
 `display: flex; flex-direction: column`, with **sizing user-land** through `style`.
 
-**The DOM wiring is `attach*` functions, not hooks** — `(ctx: ModalDomContext, options)`, returning a
+**The DOM wiring is `attach*` functions, not hooks** — `(ctx: DialogDomContext, options)`, returning a
 teardown (or `undefined` when nothing was attached). **Who calls them, in what order, and on which
-pass is [core/modal-director.ts](core/modal-director.ts)'s**, whose JSDoc holds that reasoning,
+pass is [core/dialog-director.ts](core/dialog-director.ts)'s**, whose JSDoc holds that reasoning,
 including why each step declares its own inputs rather than sharing one key:
 
 - `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts))
@@ -282,7 +282,7 @@ optimisations. See [core/dialog-props.ts](core/dialog-props.ts).
 
 Each wraps `useDialog` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideDialog`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
 
-`buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
+`buildDialogOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
 - `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `DialogRenderArgs` unchanged; reports `template: 'message'`
 - `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `DialogRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
@@ -427,7 +427,7 @@ one any of its doors accepts:
 useDialog<TData, TReason>
 ├── DialogHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
 ├── ActionFactory<TData, TReason>      ← the `action` in the render args
-├── createModalStore<TData, TReason>   → DialogStoreSnapshot.closeResult: CloseResult<TData, TReason>
+├── createDialogStore<TData, TReason>   → DialogStoreSnapshot.closeResult: CloseResult<TData, TReason>
 └── onClose(result: CloseResult<TData, TReason>)  ·  openAndWait(): [Error, null] | [null, CloseResult]
 ```
 

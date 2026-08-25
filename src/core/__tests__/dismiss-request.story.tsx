@@ -5,7 +5,7 @@ import type { DismissCause } from '../../react.js';
 // A modal dialog whose dismissals are *requests*: the dialog reports and the state above it
 // decides, as in any controlled wrapper. A dialog that closed itself would leave that boolean
 // saying `true`, and the next render would put it straight back.
-export function ControlledModalHarness() {
+export function ControlledDialogHarness() {
   const [requests, setRequests] = useState(0);
   const [cause, setCause] = useState<DismissCause | ''>('');
   const [allow, setAllow] = useState(false);

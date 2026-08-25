@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
-import { createModalStore } from '../../core/modal-store.js';
+import { createDialogStore } from '../../core/dialog-store.js';
 import type { AwaitedClose, DialogPhase } from '../../core/types.js';
 import { createDialogManager } from '../dialog-manager.js';
 
@@ -94,7 +94,7 @@ test.describe('openAndWait', () => {
     const frames: FrameControl = installFakeFrames();
     try {
       const dm = createDialogManager();
-      const store = createModalStore<void, 'cancel'>('leaving');
+      const store = createDialogStore<void, 'cancel'>('leaving');
       dm.register('leaving', { store });
 
       store.beginOpen();

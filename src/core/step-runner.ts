@@ -4,7 +4,7 @@
  * The rule it implements is one sentence: **only the steps whose own inputs moved are rebuilt**,
  * and everything stale is detached before anything is attached. Why the granularity has to be per
  * step rather than one key for the sequence belongs to the caller that chose it, and is on
- * `modal-director.ts`.
+ * `dialog-director.ts`.
  *
  * **It is here rather than inside the director because it is a decision, and every other decision
  * in this library is a named function with a test.** The director's own table is DOM to the last

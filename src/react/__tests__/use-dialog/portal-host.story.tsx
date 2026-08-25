@@ -15,7 +15,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * rendered as the modal's own sibling is not one — the getter would answer `null` on the render
  * that places the dialog, and the fallback to the body is what a caller would see.
  */
-function PortaledModal({ host }: { readonly host: Element }) {
+function PortaledDialog({ host }: { readonly host: Element }) {
   const [inheritedInk, setInheritedInk] = useState('');
 
   const { open, Modal } = useDialog({
@@ -82,7 +82,7 @@ export function PortalHostHarness() {
         ref={hostRef}
         style={{ '--story-ink': 'rebeccapurple' } as React.CSSProperties}
       />
-      {host ? <PortaledModal host={host} /> : null}
+      {host ? <PortaledDialog host={host} /> : null}
     </div>
   );
 }

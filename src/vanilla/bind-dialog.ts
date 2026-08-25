@@ -15,11 +15,11 @@ import {
 } from '../core/attach-lifecycle.js';
 import { dialogAttributes, setDialogAttributes } from '../core/dialog-props.js';
 import {
-  createModalRuntime,
-  resolveModalOptions,
+  createDialogRuntime,
+  resolveDialogOptions,
   shouldDismissOnBackdropClick,
-  teardownModal,
-} from '../core/modal-runtime.js';
+  teardownDialog,
+} from '../core/dialog-runtime.js';
 import { applyStyle } from '../core/style.js';
 import { dialogManager as singleton } from '../manager/dialog-manager.js';
 import {
@@ -29,7 +29,7 @@ import {
 } from '../utils/animation-utils.js';
 import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
-import type { ModalDomContext } from '../core/attach-types.js';
+import type { DialogDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, DialogAnimation } from '../core/types.js';
 import type {
@@ -87,12 +87,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const { dialog } = options;
   const manager = options.manager ?? singleton;
 
-  const resolved = resolveModalOptions(options);
+  const resolved = resolveDialogOptions(options);
   // Annotated for the reason React's binding gives.
   const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(dialogId);
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+    dialogId
+  );
   const getDialog: GetDialog = () => {
     return dialog;
   };
@@ -171,7 +173,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
   let detachments: (() => void)[] = [];
   let attachedFor = '';
 
-  const domContext = (phase: DialogSnapshot['phase']): ModalDomContext => {
+  const domContext = (phase: DialogSnapshot['phase']): DialogDomContext => {
     return { store, getDialog, dialogId, phase, manager };
   };
 
@@ -350,7 +352,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
-    teardownModal(store, { manager, dialogId, dialog, onError: options.onError });
+    teardownDialog(store, { manager, dialogId, dialog, onError: options.onError });
     // Destroyed mid-`prepare`, nothing else would ever clear `aria-busy` off the caller's element.
     writeAttributes();
   };

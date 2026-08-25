@@ -1489,18 +1489,18 @@ export function VanillaClaimlessReclaimHarness() {
   } | null>(null);
 
   useEffect(() => {
-    const modalEl = modalRef.current;
+    const dialogEl = modalRef.current;
     const panelEl = panelRef.current;
     const cancel = cancelRef.current;
     const confirm = confirmRef.current;
-    if (!modalEl || !panelEl || !cancel || !confirm) {
+    if (!dialogEl || !panelEl || !cancel || !confirm) {
       return;
     }
 
     const instance = createDialogManager();
     const modal = bindDialog<void, 'confirm' | 'cancel'>({
       id: 'vanilla-claimless',
-      dialog: modalEl,
+      dialog: dialogEl,
       ariaLabel: 'Vanilla modal claiming no opening focus',
       manager: instance,
       style: { width: '260px', height: '200px' },

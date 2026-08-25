@@ -5,7 +5,7 @@ import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { HotkeyDef } from '../actions/types.js';
-import type { DialogKeydownOptions, ModalDomContext } from './attach-types.js';
+import type { DialogKeydownOptions, DialogDomContext } from './attach-types.js';
 
 const log = createLogger('modal:keydown');
 
@@ -125,7 +125,7 @@ const dispatchActionHotkey = (
  * `dismissKey`, so the browser can never close a dialog behind its store.
  */
 export function attachDialogKeydown(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, dialogId, phase } = ctx;
@@ -209,7 +209,7 @@ export function attachDialogKeydown(
  * the usual gate. Non-modal dialogs never fire it.
  */
 export function attachDialogCancel(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, dialogId, phase } = ctx;
@@ -263,7 +263,7 @@ export function attachDialogCancel(
  * key to do nothing with it is not a trade that page agreed to.
  */
 export function attachWindowDismissKey(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: DialogKeydownOptions
 ): (() => void) | undefined {
   const { store, getDialog, dialogId, phase, manager } = ctx;

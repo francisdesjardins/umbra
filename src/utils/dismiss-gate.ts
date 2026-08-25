@@ -43,7 +43,7 @@ export function canDismiss({
 
 /**
  * What {@link answerDismiss} needs of a store — the one call it makes, declared as the requirement
- * rather than derived from `ModalStore`, so this module keeps its DOM-free, store-free reach.
+ * rather than derived from `DialogStore`, so this module keeps its DOM-free, store-free reach.
  *
  * A method rather than a property: parameters are checked bivariantly on a method, so a modal that
  * narrowed its reasons still satisfies the port. The manager's `RegisteredStore` is written this

@@ -9,7 +9,7 @@ import {
   settleOpeningFocus,
 } from './focus-policy.js';
 import { chooseActionRunner, preferredRestoreTarget } from '../utils/focus-restore-policy.js';
-import type { FocusCoordinatorOptions, ModalDomContext } from './attach-types.js';
+import type { FocusCoordinatorOptions, DialogDomContext } from './attach-types.js';
 import type { DialogPhase } from './types.js';
 
 /**
@@ -20,7 +20,7 @@ import type { DialogPhase } from './types.js';
  * @internal Not part of the public API.
  */
 export function createFocusCoordinator(
-  ctx: Pick<ModalDomContext, 'getDialog' | 'dialogId' | 'manager'>,
+  ctx: Pick<DialogDomContext, 'getDialog' | 'dialogId' | 'manager'>,
   options: FocusCoordinatorOptions
 ) {
   const { getDialog, dialogId, manager } = ctx;

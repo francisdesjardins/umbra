@@ -204,7 +204,7 @@ const templateOptions: TemplateCommonOptions = {};
 templateOptions.animation = undefined;
 
 // A dismissal option that does not apply to a variant is a type error, not a silent no-op.
-const modalVariant: DialogVariant = { dismissOnBackdropClick: true };
+const dialogVariant: DialogVariant = { dismissOnBackdropClick: true };
 const nonModalVariant: DialogVariant = { nonModal: true, dismissOnClickOutside: true };
 
 // @ts-expect-error a non-modal dialog has no backdrop to click
@@ -223,7 +223,7 @@ const bogusAlert: DialogVariant = { nonModal: true, role: 'alertdialog' };
 test.describe('type model', () => {
   test('the documented variant combinations are the ones that compile', () => {
     // The assertions are the `@ts-expect-error` directives above: an unused one fails the build.
-    expect(modalVariant.dismissOnBackdropClick).toBe(true);
+    expect(dialogVariant.dismissOnBackdropClick).toBe(true);
     expect(nonModalVariant.nonModal).toBe(true);
     expect(modalAlert.role).toBe('alertdialog');
     expect(nonModalPlain.role).toBe('dialog');

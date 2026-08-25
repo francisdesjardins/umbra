@@ -1,6 +1,6 @@
 import { answerDismiss, canDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
-import type { ClickOutsideOptions, ModalDomContext } from './attach-types.js';
+import type { ClickOutsideOptions, DialogDomContext } from './attach-types.js';
 
 const log = createLogger('modal:click-outside');
 
@@ -22,7 +22,7 @@ const log = createLogger('modal:click-outside');
  * @returns A teardown that removes the listener, or `undefined` when nothing was attached.
  */
 export function attachClickOutside(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: ClickOutsideOptions
 ): (() => void) | undefined {
   const { store, getDialog, dialogId, phase, manager } = ctx;

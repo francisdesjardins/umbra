@@ -12,7 +12,7 @@ import {
 } from 'umbra/core/__tests__/dismiss-key-ownership.story';
 import {
   ControlledClickOutsideHarness,
-  ControlledModalHarness,
+  ControlledDialogHarness,
   ControlledPanelHarness,
 } from 'umbra/core/__tests__/dismiss-request.story';
 import {
@@ -77,7 +77,7 @@ import {
   SolidShadowRootHarness,
   SolidSlideHarness,
   SolidStackPriorityHarness,
-} from 'umbra/solid/__tests__/solid-modal.story';
+} from 'umbra/solid/__tests__/solid-dialog.story';
 import {
   VanillaBasicHarness,
   VanillaBusyHarness,
@@ -112,11 +112,11 @@ import {
   ErrorActionsHarness,
   FocusRestorationHarness,
   HotkeyActionsHarness,
-  ModalActionBasicHarness,
-  ModalActionCustomHandlerHarness,
-  ModalActionHotkeyHarness,
+  DialogActionBasicHarness,
+  DialogActionCustomHandlerHarness,
+  DialogActionHotkeyHarness,
   HotkeyWhilePreparingHarness,
-  ModalActionMultipleHarness,
+  DialogActionMultipleHarness,
   ReasonSourceHarness,
   VanillaAriaKeyshortcutsHarness,
   FocusOnOpenHarness,
@@ -132,7 +132,7 @@ import {
   OutletNestedHarness,
   OutletPaintTimingHarness,
   OutletTeardownHarness,
-  OutletNullModalHarness,
+  OutletNullDialogHarness,
 } from 'umbra/react/__tests__/dialog-outlet.story';
 import {
   BasicHarness,
@@ -158,9 +158,9 @@ import {
   StructuralToggleHarness,
   TransitionToggleHarness,
   OpenAndWaitHarness,
-  StackedModalsHarness,
+  StackedDialogsHarness,
   NestedHotkeyScopeHarness,
-  FocusUnderAnotherModalHarness,
+  FocusUnderAnotherDialogHarness,
   EscWithoutFocusHarness,
   AccessibleNameHarness,
   BusyWhilePreparingHarness,
@@ -175,9 +175,9 @@ import {
   LookupFindHarness,
   LookupForegroundHarness,
   LookupUnregisteredHarness,
-  MultiModalHarness,
-  ModalVariantHarness,
-  ModalVariantLookupHarness,
+  MultiDialogHarness,
+  DialogVariantHarness,
+  DialogVariantLookupHarness,
   NoProviderHarness,
   ProviderIsolationHarness,
   ScrollLockBothOpenHarness,
@@ -235,7 +235,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'One Escape, one modal',
         description:
           'A non-modal panel holding a modal holding a message modal, each rendered inside the one below it. All three declare Enter. Press Enter: only the modal in front acts. Press Escape three times: the stack unwinds one modal per press, front to back, and the log records the order.',
-        component: StackedModalsHarness,
+        component: StackedDialogsHarness,
         codeKey: 'story-stacked-modals',
       },
       {
@@ -249,7 +249,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Focus is not stolen by the modal underneath',
         description:
           'A slow save runs in one modal while a second opens over it. When the save settles, the modal underneath restores focus — but the user is in the modal in front, and the browser refuses to focus outside the topmost dialog.',
-        component: FocusUnderAnotherModalHarness,
+        component: FocusUnderAnotherDialogHarness,
         codeKey: 'story-focus-under-another-modal',
       },
       {
@@ -480,7 +480,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'A modal whose Escape is a request, not a close',
         description:
           'The dialog reports and the state above it decides, as in any controlled wrapper. One that closed itself would leave the boolean upstream still saying true, and the next render would put it straight back on screen.',
-        component: ControlledModalHarness,
+        component: ControlledDialogHarness,
         codeKey: 'story-dismiss-request',
       },
       {
@@ -857,28 +857,28 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Callable Action — No Handler',
         description:
           'Spread {...controller.confirm()} with no handler auto-closes with the action reason.',
-        component: ModalActionBasicHarness,
+        component: DialogActionBasicHarness,
         codeKey: 'story-action-action-basic',
       },
       {
         title: 'Callable Action — Custom Async Handler',
         description:
           'Custom handler with a 200 ms delay. Verifies loading/disabled states propagate through the spread props.',
-        component: ModalActionCustomHandlerHarness,
+        component: DialogActionCustomHandlerHarness,
         codeKey: 'story-action-action-custom-handler',
       },
       {
         title: 'Callable Action — Hotkeys',
         description:
           'Enter triggers confirm, Escape triggers cancel. aria-keyshortcuts is forwarded through the spread props.',
-        component: ModalActionHotkeyHarness,
+        component: DialogActionHotkeyHarness,
         codeKey: 'story-action-action-hotkey',
       },
       {
         title: 'Callable Action — Multiple Actions',
         description:
           'Confirm runs a 500 ms async action. While running, cancel receives disabled: true and isRunning is true.',
-        component: ModalActionMultipleHarness,
+        component: DialogActionMultipleHarness,
         codeKey: 'story-action-action-multiple',
       },
       {
@@ -909,7 +909,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Modal is Null',
         description: 'Verifies modal.Modal is null when inside an outlet.',
-        component: OutletNullModalHarness,
+        component: OutletNullDialogHarness,
         codeKey: 'story-outlet-null-modal',
       },
       {
@@ -1293,14 +1293,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Modal vs Non-Modal',
         description:
           'Modal and non-modal dialogs side by side — only modal ones lock body scroll, and getOpen() can be filtered to either.',
-        component: ModalVariantHarness,
+        component: DialogVariantHarness,
         codeKey: 'story-dm-modal-variant',
       },
       {
         title: 'Variant Lookup Queries',
         description:
           "lookup().getOpen('modal') / ('non-modal') read live state at call time, split by how the dialog was shown.",
-        component: ModalVariantLookupHarness,
+        component: DialogVariantLookupHarness,
         codeKey: 'story-dm-modal-variant-lookup',
       },
       {
@@ -1328,7 +1328,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Multi-Modal Stack',
         description:
           'Two nested modals opened from within each other. Tracks foreground and the stack-ordered openDialogs via useDialogManager.',
-        component: MultiModalHarness,
+        component: MultiDialogHarness,
         codeKey: 'story-dm-multi-modal',
       },
       {

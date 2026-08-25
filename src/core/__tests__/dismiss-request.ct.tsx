@@ -1,7 +1,7 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import {
   ControlledClickOutsideHarness,
-  ControlledModalHarness,
+  ControlledDialogHarness,
   ControlledPanelHarness,
 } from './dismiss-request.story.js';
 
@@ -22,7 +22,7 @@ const SETTLED_MS = 600;
 
 test.describe('a modal dialog whose Escape is a request', () => {
   test('reports the press and stays open', async ({ mount, page }) => {
-    const component = await mount(<ControlledModalHarness />);
+    const component = await mount(<ControlledDialogHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -34,7 +34,7 @@ test.describe('a modal dialog whose Escape is a request', () => {
   });
 
   test('closes on the press the owner acts on, and not before', async ({ mount, page }) => {
-    const component = await mount(<ControlledModalHarness />);
+    const component = await mount(<ControlledDialogHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -89,7 +89,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
   test('reports the click and stays open', async ({ mount, page }) => {
     // The harness draws no actions, so `dismissOnBackdropClick` defaults to `true` — this dialog
     // would close itself here, and a controlled owner would put it straight back.
-    const component = await mount(<ControlledModalHarness />);
+    const component = await mount(<ControlledDialogHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -106,7 +106,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
     page,
   }) => {
     // One handler, three doors: worth nothing if they all arrive under one word.
-    const component = await mount(<ControlledModalHarness />);
+    const component = await mount(<ControlledDialogHarness />);
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -119,7 +119,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
   });
 
   test('closes on the backdrop click the owner acts on', async ({ mount, page }) => {
-    const component = await mount(<ControlledModalHarness />);
+    const component = await mount(<ControlledDialogHarness />);
     await component.getByTestId('open').click();
     await component.getByTestId('allow').click();
 

@@ -4,12 +4,12 @@ import { createActionEngine } from '../../actions/action-engine.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import {
-  createModalRuntime,
-  resolveModalOptions,
+  createDialogRuntime,
+  resolveDialogOptions,
   resolvePortalHost,
   shouldDismissOnBackdropClick,
-  teardownModal,
-} from '../modal-runtime.js';
+  teardownDialog,
+} from '../dialog-runtime.js';
 
 // The parts of a modal both bindings share, tested where they live rather than twice through two
 // renderers — before the second binding, every answer here was only exercised through React.
@@ -23,9 +23,9 @@ test.afterEach(() => {
   frames.restore();
 });
 
-test.describe('resolveModalOptions', () => {
+test.describe('resolveDialogOptions', () => {
   test('applies the defaults a bare modal relies on', () => {
-    expect(resolveModalOptions({})).toMatchObject({
+    expect(resolveDialogOptions({})).toMatchObject({
       isNonModal: false,
       isPortaled: false,
       dismissWhilePreparing: true,
@@ -41,7 +41,7 @@ test.describe('resolveModalOptions', () => {
     // A resolver returning the table verbatim passed the defaults test; these four sit behind a
     // `??`, where an option is dropped silently — `containFocus: true` doing nothing, not an error.
     expect(
-      resolveModalOptions({
+      resolveDialogOptions({
         dismissWhilePreparing: false,
         dismissKey: 'Enter',
         containFocus: true,
@@ -56,52 +56,56 @@ test.describe('resolveModalOptions', () => {
   });
 
   test('reads dismissOnBackdropClick only on the modal branch', () => {
-    expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(true);
+    expect(resolveDialogOptions({ dismissOnBackdropClick: true }).dismissOnBackdropClick).toBe(
+      true
+    );
 
     // No backdrop to click. The option is `never` here, and one from an untyped caller is ignored.
     expect(
-      resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnBackdropClick
+      resolveDialogOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnBackdropClick
     ).toBeUndefined();
   });
 
   test('reads dismissOnClickOutside only on the non-modal branch', () => {
     expect(
-      resolveModalOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnClickOutside
+      resolveDialogOptions({ nonModal: true, dismissOnClickOutside: true }).dismissOnClickOutside
     ).toBe(true);
     // Opt-in even on its own branch, because the panel sits over a live page.
-    expect(resolveModalOptions({ nonModal: true }).dismissOnClickOutside).toBe(false);
-    expect(resolveModalOptions({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(false);
+    expect(resolveDialogOptions({ nonModal: true }).dismissOnClickOutside).toBe(false);
+    expect(resolveDialogOptions({ dismissOnBackdropClick: true }).dismissOnClickOutside).toBe(
+      false
+    );
   });
 
   test('an explicit nonModal: false reads the same as leaving it out', () => {
     // `nonModal` is optional *and* has a `false` branch, so both spellings must resolve alike.
     expect(
-      resolveModalOptions({ nonModal: false, dismissOnBackdropClick: true }).dismissOnBackdropClick
+      resolveDialogOptions({ nonModal: false, dismissOnBackdropClick: true }).dismissOnBackdropClick
     ).toBe(true);
-    expect(resolveModalOptions({ nonModal: false }).isNonModal).toBe(false);
-    expect(resolveModalOptions({ nonModal: false }).dismissOnClickOutside).toBe(false);
+    expect(resolveDialogOptions({ nonModal: false }).isNonModal).toBe(false);
+    expect(resolveDialogOptions({ nonModal: false }).dismissOnClickOutside).toBe(false);
   });
 
   test('dismissKey: false survives, because it is not "unset"', () => {
     // `??`, not `||` — `false` disables key dismissal and truthiness would turn it back on.
-    expect(resolveModalOptions({ dismissKey: false }).dismissKey).toBe(false);
-    expect(resolveModalOptions({ dismissKey: 'Ctrl+k' }).dismissKey).toBe('Ctrl+k');
+    expect(resolveDialogOptions({ dismissKey: false }).dismissKey).toBe(false);
+    expect(resolveDialogOptions({ dismissKey: 'Ctrl+k' }).dismissKey).toBe('Ctrl+k');
   });
 
   test('threads the variant into the placement table', () => {
-    expect(resolveModalOptions({}).placement).toEqual({ host: null, dialog: {}, backdrop: null });
-    expect(resolveModalOptions({ nonModal: true, portal: true }).placement.host).toBeNull();
+    expect(resolveDialogOptions({}).placement).toEqual({ host: null, dialog: {}, backdrop: null });
+    expect(resolveDialogOptions({ nonModal: true, portal: true }).placement.host).toBeNull();
     // Contained: the dialog needs a host to be positioned against.
-    expect(resolveModalOptions({ nonModal: true }).placement.host).not.toBeNull();
+    expect(resolveDialogOptions({ nonModal: true }).placement.host).not.toBeNull();
     expect(
-      resolveModalOptions({ nonModal: true, clipContainer: true }).placement.host
+      resolveDialogOptions({ nonModal: true, clipContainer: true }).placement.host
     ).toMatchObject({ overflow: 'clip' });
   });
 });
 
-test.describe('createModalRuntime', () => {
+test.describe('createDialogRuntime', () => {
   test('open() settles when prepare does, not when the dialog is shown', async () => {
-    const { store, open } = createModalRuntime('runtime-open');
+    const { store, open } = createDialogRuntime('runtime-open');
 
     let settled = false;
     const opening = open().then(() => {
@@ -117,7 +121,7 @@ test.describe('createModalRuntime', () => {
   });
 
   test('openAndWait() registers its resolver before requesting the open', async () => {
-    const { store, openAndWait } = createModalRuntime<string, 'save'>('runtime-wait');
+    const { store, openAndWait } = createDialogRuntime<string, 'save'>('runtime-wait');
 
     // The close lands *inside* the open — the window a resolver added on the next line would miss.
     const closed = openAndWait();
@@ -130,7 +134,7 @@ test.describe('createModalRuntime', () => {
   });
 
   test('the handle closes with the reason and payload it is given', () => {
-    const { store, handle } = createModalRuntime<number, 'ok'>('runtime-handle');
+    const { store, handle } = createDialogRuntime<number, 'ok'>('runtime-handle');
     store.beginOpen();
 
     handle.close('ok', 7);
@@ -139,7 +143,7 @@ test.describe('createModalRuntime', () => {
   });
 
   test('the handle defaults to dismiss, which is the library’s own reason', () => {
-    const { store, handle } = createModalRuntime('runtime-default');
+    const { store, handle } = createDialogRuntime('runtime-default');
     store.beginOpen();
 
     handle.close();
@@ -148,7 +152,7 @@ test.describe('createModalRuntime', () => {
   });
 
   test('an action closes through the engine, with the action’s own reason', async () => {
-    const { store, engine } = createModalRuntime<string, 'confirm'>('runtime-engine');
+    const { store, engine } = createDialogRuntime<string, 'confirm'>('runtime-engine');
     store.beginOpen();
 
     // `bindClose` is wired inside the runtime, which is why nothing has to be handed in.
@@ -160,10 +164,10 @@ test.describe('createModalRuntime', () => {
   });
 });
 
-test.describe('teardownModal', () => {
+test.describe('teardownDialog', () => {
   test('closes an open modal and reports it through onClose', () => {
     const dm = createDialogManager();
-    const { store } = createModalRuntime('teardown-open');
+    const { store } = createDialogRuntime('teardown-open');
     dm.register('teardown-open', { store, template: 'modal', nonModal: false });
     store.beginOpen();
 
@@ -172,7 +176,7 @@ test.describe('teardownModal', () => {
       reasons.push(result.reason);
     });
 
-    teardownModal(store, {
+    teardownDialog(store, {
       manager: dm,
       dialogId: 'teardown-open',
       dialog: null,
@@ -186,13 +190,13 @@ test.describe('teardownModal', () => {
 
   test('a modal torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
-    const { store, openAndWait } = createModalRuntime('teardown-waiting');
+    const { store, openAndWait } = createDialogRuntime('teardown-waiting');
     dm.register('teardown-waiting', { store, template: 'modal', nonModal: false });
 
     const closed = openAndWait();
     store.finishPreparing();
 
-    teardownModal(store, {
+    teardownDialog(store, {
       manager: dm,
       dialogId: 'teardown-waiting',
       dialog: null,
@@ -209,7 +213,7 @@ test.describe('teardownModal', () => {
     // Why `abandon()` is unconditional: a resolver answers the *next* close, so one queued on a
     // modal that never reopens stays pending for the life of the process.
     const dm = createDialogManager();
-    const { store } = createModalRuntime('teardown-closed');
+    const { store } = createDialogRuntime('teardown-closed');
     dm.register('teardown-closed', { store, template: 'modal', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
@@ -217,7 +221,7 @@ test.describe('teardownModal', () => {
     });
 
     expect(store.getSnapshot().phase).toBe('closed');
-    teardownModal(store, {
+    teardownDialog(store, {
       manager: dm,
       dialogId: 'teardown-closed',
       dialog: null,
@@ -259,7 +263,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   };
 
   test('a non-modal dialog has no backdrop to click', () => {
-    const { store } = createModalRuntime('backdrop-non-modal');
+    const { store } = createDialogRuntime('backdrop-non-modal');
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
         dialog: boxed,
@@ -276,7 +280,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // Drawing an action flips the default — both halves, because the default is the subtlety.
     const frames = installFakeFrames();
     try {
-      const { store } = createModalRuntime('backdrop-default');
+      const { store } = createDialogRuntime('backdrop-default');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -312,7 +316,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('an explicit `true` opts a modal with actions back in', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createModalRuntime('backdrop-explicit');
+      const { store } = createDialogRuntime('backdrop-explicit');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -337,7 +341,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // The shared gate the dismiss key and click-outside also ask, reached after the first two.
     const frames = installFakeFrames();
     try {
-      const { store } = createModalRuntime('backdrop-running');
+      const { store } = createDialogRuntime('backdrop-running');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -359,7 +363,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 
   test('a closed modal never dismisses, whatever the pointer did', () => {
-    const { store } = createModalRuntime('backdrop-closed');
+    const { store } = createDialogRuntime('backdrop-closed');
     expect(store.getSnapshot().phase).toBe('closed');
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
@@ -376,7 +380,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('and the geometry still decides, last', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createModalRuntime('backdrop-geometry');
+      const { store } = createDialogRuntime('backdrop-geometry');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -411,11 +415,11 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 });
 
-test.describe('teardownModal reports a failing onClose', () => {
+test.describe('teardownDialog reports a failing onClose', () => {
   test('logs instead of losing an error thrown during cleanup', async () => {
     // Teardown has nobody left to catch a throwing `onClose`; `fireAndForget` logs it instead.
     const dm = createDialogManager();
-    const { store } = createModalRuntime<void, 'save'>('teardown-throws');
+    const { store } = createDialogRuntime<void, 'save'>('teardown-throws');
     dm.register('teardown-throws', { store, template: 'modal', nonModal: false });
 
     store.setOnClose(() => {
@@ -436,7 +440,7 @@ test.describe('teardownModal reports a failing onClose', () => {
     setLogLevel('modal');
 
     try {
-      teardownModal(store, {
+      teardownDialog(store, {
         manager: dm,
         dialogId: 'teardown-throws',
         dialog: null,
@@ -454,11 +458,11 @@ test.describe('teardownModal reports a failing onClose', () => {
   });
 });
 
-test.describe('teardownModal reports through onError', () => {
+test.describe('teardownDialog reports through onError', () => {
   test('an onClose that throws on unmount reaches onError, like one that throws on close', async () => {
     // The gap: `onClose` failures reached `onError` on the close path but not on unmount.
     const dm = createDialogManager();
-    const { store } = createModalRuntime('teardown-on-error');
+    const { store } = createDialogRuntime('teardown-on-error');
     dm.register('teardown-on-error', { store, template: 'modal', nonModal: false });
     store.beginOpen();
     store.setOnClose(() => {
@@ -466,7 +470,7 @@ test.describe('teardownModal reports through onError', () => {
     });
 
     const failures: { readonly error: Error; readonly source: string }[] = [];
-    teardownModal(store, {
+    teardownDialog(store, {
       manager: dm,
       dialogId: 'teardown-on-error',
       dialog: null,
@@ -484,12 +488,12 @@ test.describe('teardownModal reports through onError', () => {
   test('a clean unmount reports nothing', async () => {
     // Failures only — a consumer wiring a reporter must not get an event per normal unmount.
     const dm = createDialogManager();
-    const { store } = createModalRuntime('teardown-quiet');
+    const { store } = createDialogRuntime('teardown-quiet');
     dm.register('teardown-quiet', { store, template: 'modal', nonModal: false });
     store.beginOpen();
 
     const failures: unknown[] = [];
-    teardownModal(store, {
+    teardownDialog(store, {
       manager: dm,
       dialogId: 'teardown-quiet',
       dialog: null,

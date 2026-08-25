@@ -3,11 +3,11 @@ import { createLogger } from '../utils/logger.js';
 import { findLabellingProblems } from './dialog-labelling.js';
 import { refreshTransitionsDisabled, runCloseSequence, showDialog } from './dialog-lifecycle.js';
 import { styleRootOf } from './dialog-styles.js';
-import { finalizeModalClose } from './finalize-close.js';
+import { finalizeDialogClose } from './finalize-close.js';
 import type {
   CloseSequenceOptions,
   LabellingDiagnosticsOptions,
-  ModalDomContext,
+  DialogDomContext,
   OpenSequenceOptions,
 } from './attach-types.js';
 
@@ -32,7 +32,7 @@ const log = createLogger('modal:lifecycle');
  * makes it safe to call on every render of the opening phase — the guard, not a dependency list,
  * is what stops the work happening twice.
  */
-export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOptions): void {
+export function syncOpenSequence(ctx: DialogDomContext, options: OpenSequenceOptions): void {
   const { store, getDialog, dialogId, phase, manager } = ctx;
   const { prepare, nonModal, onError } = options;
 
@@ -104,7 +104,7 @@ export function syncOpenSequence(ctx: ModalDomContext, options: OpenSequenceOpti
  * @returns The teardown for the exit listeners, or `undefined` when nothing was attached.
  */
 export function syncCloseSequence(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: CloseSequenceOptions
 ): (() => void) | undefined {
   const { store, getDialog, dialogId, phase } = ctx;
@@ -132,7 +132,7 @@ export function syncCloseSequence(
     primaryProperty: primaryProperty,
     exitDuration,
     finalize: () => {
-      finalizeModalClose(store, {
+      finalizeDialogClose(store, {
         dialog,
         onCloseError: (error) => {
           log.error('onClose callback failed', { id: dialogId, error: error.message });
@@ -176,7 +176,7 @@ const reported = new WeakSet<Element>();
  * that was tried, measured against all three cases, and changed nothing; it is not here.
  */
 export function syncLabellingDiagnostics(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: LabellingDiagnosticsOptions
 ): void {
   const { getDialog, dialogId, phase } = ctx;

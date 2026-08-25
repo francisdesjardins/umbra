@@ -5,7 +5,7 @@ import type { UseDialogReturn } from '../types.js';
 import { useDialog } from '../use-dialog.js';
 import { slideAnimation, slideDialogStyle } from '../../templates/slide-geometry.js';
 import {
-  buildModalOptions,
+  buildDialogOptions,
   type BaseRenderContext,
   type RegisteredBaseRenderContext,
   type RegisteredTemplateOptions,
@@ -103,7 +103,7 @@ export function useSlideDialog<TData = void, TReason extends string = string>(
 
   return useDialog<TData, TReason>({
     // Spelled out for the reason `useMessageDialog` gives.
-    ...buildModalOptions<
+    ...buildDialogOptions<
       TData,
       SlideDialogRenderContext<TData, TReason>,
       TReason,

@@ -40,7 +40,7 @@ export function useDialogManagerContext(): DialogManager {
  * function MyHarness() {
  *   return (
  *     <DialogManagerProvider>
- *       <ModalUnderTest />
+ *       <DialogUnderTest />
  *     </DialogManagerProvider>
  *   );
  * }

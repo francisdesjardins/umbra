@@ -43,7 +43,7 @@ import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
 import storyVanillaBindSrc from 'umbra/vanilla/__tests__/bind-dialog.story.tsx?raw';
 import storySolidAppSrc from 'umbra/solid/__tests__/solid-app.ts?raw';
-import storySolidModalSrc from 'umbra/solid/__tests__/solid-modal.story.tsx?raw';
+import storySolidModalSrc from 'umbra/solid/__tests__/solid-dialog.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-dialog/accessible-name.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-dialog/busy-while-preparing.story.tsx?raw';
 import storyRenderPhaseSrc from 'umbra/react/__tests__/use-dialog/render-phase.story.tsx?raw';

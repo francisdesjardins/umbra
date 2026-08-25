@@ -3,7 +3,7 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** The nested manager's own modal, opened from inside the outer one. */
-function InnerModal() {
+function InnerDialog() {
   const { open, Modal, isVisible } = useDialog<void, 'done'>({
     id: 'both-open-inner',
     render: ({ handle }) => {
@@ -53,7 +53,7 @@ export function ScrollLockBothOpenHarness() {
         <div style={dialogStyle}>
           <p>Modal dialog (manager A)</p>
           <DialogManagerProvider>
-            <InnerModal />
+            <InnerDialog />
           </DialogManagerProvider>
           <button
             data-testid="close-outer"

@@ -1,5 +1,5 @@
 import { FOCUS_GUARD_ATTRIBUTE, focusFirstAvailable } from './focus-policy.js';
-import type { FocusContainmentOptions, ModalDomContext } from './attach-types.js';
+import type { FocusContainmentOptions, DialogDomContext } from './attach-types.js';
 
 /**
  * Keep Tab inside a dialog the browser is not keeping it inside.
@@ -72,7 +72,7 @@ function createGuard(dialog: HTMLElement, position: 'start' | 'end'): HTMLElemen
  * Returns its teardown, or `undefined` when there is nothing to attach.
  */
 export function attachFocusContainment(
-  ctx: ModalDomContext,
+  ctx: DialogDomContext,
   options: FocusContainmentOptions
 ): (() => void) | undefined {
   const { getDialog, phase } = ctx;

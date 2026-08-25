@@ -12,10 +12,10 @@ import {
   ErrorActionsHarness,
   FocusRestorationHarness,
   HotkeyActionsHarness,
-  ModalActionBasicHarness,
-  ModalActionCustomHandlerHarness,
-  ModalActionHotkeyHarness,
-  ModalActionMultipleHarness,
+  DialogActionBasicHarness,
+  DialogActionCustomHandlerHarness,
+  DialogActionHotkeyHarness,
+  DialogActionMultipleHarness,
   VanillaAriaKeyshortcutsHarness,
   BrokenAriaKeyshortcutsHarness,
   FocusOnOpenHarness,
@@ -190,7 +190,7 @@ test.describe('actions declared by use', () => {
 
 test.describe('callable actions', () => {
   test('no-handler callable closes modal with action reason', async ({ mount, page }) => {
-    await mount(<ModalActionBasicHarness />);
+    await mount(<DialogActionBasicHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-action-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -199,7 +199,7 @@ test.describe('callable actions', () => {
   });
 
   test('cancel action closes with reason "cancel"', async ({ mount, page }) => {
-    await mount(<ModalActionBasicHarness />);
+    await mount(<DialogActionBasicHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -210,7 +210,7 @@ test.describe('callable actions', () => {
     mount,
     page,
   }) => {
-    await mount(<ModalActionCustomHandlerHarness />);
+    await mount(<DialogActionCustomHandlerHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('confirm-btn')).toHaveAttribute('data-loading', 'true');
@@ -220,7 +220,7 @@ test.describe('callable actions', () => {
   });
 
   test('sibling action is disabled while another runs', async ({ mount, page }) => {
-    await mount(<ModalActionMultipleHarness />);
+    await mount(<DialogActionMultipleHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('is-running')).toHaveText('true');
@@ -228,7 +228,7 @@ test.describe('callable actions', () => {
   });
 
   test('aria-keyshortcuts forwarded through render prop', async ({ mount, page }) => {
-    await mount(<ModalActionHotkeyHarness />);
+    await mount(<DialogActionHotkeyHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-action-hotkey')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
@@ -242,7 +242,7 @@ test.describe('callable actions', () => {
   });
 
   test('hotkey triggers action via callable', async ({ mount, page }) => {
-    await mount(<ModalActionHotkeyHarness />);
+    await mount(<DialogActionHotkeyHarness />);
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');

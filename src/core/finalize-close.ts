@@ -1,8 +1,8 @@
 import { fireAndForget } from '../utils/fire-and-forget.js';
-import type { ModalStore } from './modal-store.js';
+import type { DialogStore } from './dialog-store.js';
 
 /** Minimal store surface needed to finalize a close. */
-type FinalizableStore = Pick<ModalStore, 'getSnapshot' | 'runOnClose' | 'finalize'>;
+type FinalizableStore = Pick<DialogStore, 'getSnapshot' | 'runOnClose' | 'finalize'>;
 
 /**
  * The two members of the element this actually touches — narrowed for the reason the store is,
@@ -24,11 +24,11 @@ export type FinalizeCloseOptions = {
  * store (settle the close resolvers, transition to `'closed'`).
  *
  * Used by both the closing-animation path (`syncCloseSequence`) and the
- * teardown path (`teardownModal`) so the two cannot drift.
+ * teardown path (`teardownDialog`) so the two cannot drift.
  *
  * @internal
  */
-export function finalizeModalClose(store: FinalizableStore, options: FinalizeCloseOptions): void {
+export function finalizeDialogClose(store: FinalizableStore, options: FinalizeCloseOptions): void {
   const { dialog, onCloseError } = options;
 
   if (dialog?.open) {

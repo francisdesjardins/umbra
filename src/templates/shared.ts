@@ -137,7 +137,7 @@ function mergeStyle<TStyle extends DialogStyle>(
  *
  * @internal Not exported from index.ts.
  */
-export function buildModalOptions<
+export function buildDialogOptions<
   TData = void,
   TRenderContext = unknown,
   TReason extends string = string,

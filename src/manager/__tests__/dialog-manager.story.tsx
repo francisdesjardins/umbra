@@ -1,6 +1,6 @@
 export {
-  ModalVariantHarness,
-  ModalVariantLookupHarness,
+  DialogVariantHarness,
+  DialogVariantLookupHarness,
 } from './dialog-manager/modal-variant.story';
 export { DomEventHarness } from './dialog-manager/dom-events.story';
 export { EventSubscribeHarness } from './dialog-manager/event-subscribe.story';
@@ -11,7 +11,7 @@ export {
   LookupForegroundHarness,
   LookupUnregisteredHarness,
 } from './dialog-manager/lookup.story';
-export { MultiModalHarness } from './dialog-manager/multi-modal.story';
+export { MultiDialogHarness } from './dialog-manager/multi-modal.story';
 export {
   NoProviderHarness,
   ProviderIsolationHarness,

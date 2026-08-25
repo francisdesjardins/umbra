@@ -81,7 +81,7 @@ These are hard constraints — never violate them when generating code:
 - **Never use** `useMemo`, `useCallback`, or `React.memo` — compiler handles memoization
 - **No ref writes during render** — use `useEffect` for ref updates; use `GetDialog` getter pattern instead of passing refs directly
 - **Store creation**: `const [init] = useState(() => createStore())` — not `useRef` (avoids ref-tainting)
-- **`createModalStore` lives in its own module** ([src/core/modal-store.ts](../src/core/modal-store.ts)) — verified compiler-neutral: `useDialog` compiles to the same memo slots imported or colocated
+- **`createDialogStore` lives in its own module** ([src/core/dialog-store.ts](../src/core/dialog-store.ts)) — verified compiler-neutral: `useDialog` compiles to the same memo slots imported or colocated
 - **`Map` writes are safe** — handler registries use `Map<string, handler>` (not treated as ref writes)
 - **Stable identities**: `open()`, `openAndWait()` and `handle` keep the same reference for the life of the hook — use them directly in dependency arrays, no ref indirection
 

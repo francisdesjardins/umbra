@@ -24,7 +24,7 @@ import {
   SolidOutletHarness,
   SolidSlideHarness,
   SolidStackPriorityHarness,
-} from './solid-modal.story';
+} from './solid-dialog.story';
 
 /**
  * `umbra/solid`, against a real browser and a real `<dialog>` — deliberately the same assertions

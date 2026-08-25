@@ -11,7 +11,7 @@ const delay = (ms: number) => {
  * Tests multiple callable actions — when one action runs,
  * the sibling receives disabled: true.
  */
-export function ModalActionMultipleHarness() {
+export function DialogActionMultipleHarness() {
   const { open, Modal } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'action-multi',
     render: ({ action, hasRunningAction }) => {

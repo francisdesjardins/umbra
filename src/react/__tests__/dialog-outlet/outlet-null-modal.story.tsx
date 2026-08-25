@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: modal.Modal is null when outlet is present ────────────────────
 
-function ModalNullChecker() {
+function DialogNullChecker() {
   const { open, Modal } = useDialog<void, 'done'>({
     id: 'outlet-null-check',
     render: ({ handle }) => {
@@ -39,10 +39,10 @@ function ModalNullChecker() {
 /**
  * Verifies modal.Modal is null when inside an outlet.
  */
-export function OutletNullModalHarness() {
+export function OutletNullDialogHarness() {
   return (
     <DialogOutlet>
-      <ModalNullChecker />
+      <DialogNullChecker />
     </DialogOutlet>
   );
 }

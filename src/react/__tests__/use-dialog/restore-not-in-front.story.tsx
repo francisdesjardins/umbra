@@ -3,7 +3,7 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * An action settling in a panel that is not in front — `FocusUnderAnotherModalHarness`'s claim, in
+ * An action settling in a panel that is not in front — `FocusUnderAnotherDialogHarness`'s claim, in
  * the arrangement Chromium can answer. Behind a modal dialog everything is inert, so the restore's
  * `focus()` is a silent no-op and the rule seems to hold either way; WebKit does not make it one,
  * which is how CI found the missing guard. Two non-modal panels take the platform out of it.

@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 /**
  * Tests a callable action with no handler — auto-closes with the action's reason.
  */
-export function ModalActionBasicHarness() {
+export function DialogActionBasicHarness() {
   const [lastReason, setLastReason] = useState('');
 
   const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({

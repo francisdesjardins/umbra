@@ -10,13 +10,13 @@ export type { DialogManagerSnapshot };
  * the singleton when there is none.
  *
  * @example
- * function ModalCounter() {
+ * function DialogCounter() {
  *   const { openDialogs } = useDialogManager();
  *   return <span>{openDialogs.length} modals open</span>;
  * }
  *
  * @example
- * function TopModalIndicator() {
+ * function TopDialogIndicator() {
  *   const { foreground } = useDialogManager();
  *   if (!foreground) return null;
  *   return <span>Top modal: {foreground.id}</span>;

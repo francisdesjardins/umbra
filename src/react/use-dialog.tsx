@@ -12,14 +12,14 @@ import { createActionFactory } from '../core/action-factory.js';
 import type { RegisteredDialogId } from '../core/registry.js';
 import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
 import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
-import { createModalDirector } from '../core/modal-director.js';
+import { createDialogDirector } from '../core/dialog-director.js';
 import {
-  createModalRuntime,
-  resolveModalOptions,
+  createDialogRuntime,
+  resolveDialogOptions,
   resolvePortalHost,
   shouldDismissOnBackdropClick,
-  teardownModal,
-} from '../core/modal-runtime.js';
+  teardownDialog,
+} from '../core/dialog-runtime.js';
 import {
   DEFAULT_MODAL_ANIMATION,
   getDialogAnimationStyles,
@@ -37,7 +37,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  * close results. Actions are declared by being rendered: the `action` given to `render` names a
  * reason, binds a handler and returns its button's props, in one expression. **What is React's
  * here is the scheduling and nothing else** — every decision, and the order they are asked in, is
- * `core/`'s, `core/modal-director.ts`'s in particular.
+ * `core/`'s, `core/dialog-director.ts`'s in particular.
  *
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
  * @typeParam TReason - The reasons this modal closes with; declare a union
@@ -95,7 +95,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     containFocus,
     template,
     placement,
-  } = resolveModalOptions(options);
+  } = resolveDialogOptions(options);
 
   const manager = useDialogManagerContext();
 
@@ -104,7 +104,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // Built once: fresh doors each render would force consumers through refs and defeat memoization
   // inside `render`, and React Compiler cannot hoist them — they capture a value it treats opaque.
   const [init] = useState(() => {
-    const runtime = createModalRuntime<TData, TReason>(dialogId);
+    const runtime = createDialogRuntime<TData, TReason>(dialogId);
 
     // Safe to pass around: the closure captures the ref but never reads `.current` during render.
     const getDialog: GetDialog = () => {
@@ -117,7 +117,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   // Kept likewise: the director remembers each step's attachment and where opening focus landed.
   const [director] = useState(() => {
-    return createModalDirector({ store, getDialog, dialogId, manager, engine });
+    return createDialogDirector({ store, getDialog, dialogId, manager, engine });
   });
 
   // The same reader serves the server: both stores are in-memory and DOM-free, so a server pass and
@@ -206,7 +206,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     });
 
     return () => {
-      teardownModal(store, {
+      teardownDialog(store, {
         manager,
         dialogId,
         dialog: getDialog(),
@@ -218,7 +218,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     // `isPortaled` is a dep the body never reads: like `nonModal`, it changes the structure.
   }, [acceptsOpenRequests, manager, getDialog, isNonModal, dialogId, template, isPortaled, store]);
 
-  // Inline to satisfy React Compiler. The decision is `modal-runtime.ts`'s and the answer is
+  // Inline to satisfy React Compiler. The decision is `dialog-runtime.ts`'s and the answer is
   // `answerDismiss`'s — a controlled surface hears this door the way it hears the dismiss key. It
   // takes only a structural slice of the event, so React's synthetic one satisfies it unchanged.
   const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {

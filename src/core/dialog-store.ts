@@ -20,7 +20,7 @@ const log = createLogger('modal');
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
  * `openAndWait()` — agree on one payload type without a single assertion.
  */
-export function createModalStore<TData = unknown, TReason extends string = string>(id: string) {
+export function createDialogStore<TData = unknown, TReason extends string = string>(id: string) {
   const initial: DialogStoreSnapshot<TData, TReason> = {
     phase: 'closed',
     isPreparing: false,
@@ -66,8 +66,8 @@ export function createModalStore<TData = unknown, TReason extends string = strin
          * The store *runs* the callback rather than handing it out. Returning it would put a
          * `(result: CloseResult<TData>) => …` in the store's own return type, and a function
          * type in an output position is checked contravariantly — which would make
-         * `ModalStore<TData>` unassignable to the `ModalStore` a non-generic consumer (the hook
-         * context, `finalizeModalClose`) declares. Keeping the callback inside is what lets
+         * `DialogStore<TData>` unassignable to the `DialogStore` a non-generic consumer (the hook
+         * context, `finalizeDialogClose`) declares. Keeping the callback inside is what lets
          * `TData` be a real type parameter instead of an erased one.
          */
         runOnClose(result: CloseResult<TData, TReason>): void | Promise<void> {
@@ -249,13 +249,13 @@ export function createModalStore<TData = unknown, TReason extends string = strin
 }
 
 /**
- * The concrete store `createModalStore` produces.
+ * The concrete store `createDialogStore` produces.
  *
  * `TData` defaults to `unknown` so consumers that are generic over *any* modal — the internal
- * hook context, `finalizeModalClose` — can name the type without becoming generic themselves.
+ * hook context, `finalizeDialogClose` — can name the type without becoming generic themselves.
  * Every member is either a method (bivariant) or covariant in `TData`, which is what makes a
- * `ModalStore<Specific>` assignable to a plain `ModalStore` at those boundaries.
+ * `DialogStore<Specific>` assignable to a plain `DialogStore` at those boundaries.
  */
-export type ModalStore<TData = unknown, TReason extends string = string> = ReturnType<
-  typeof createModalStore<TData, TReason>
+export type DialogStore<TData = unknown, TReason extends string = string> = ReturnType<
+  typeof createDialogStore<TData, TReason>
 >;

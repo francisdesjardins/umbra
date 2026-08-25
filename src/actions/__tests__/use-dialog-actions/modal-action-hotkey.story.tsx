@@ -6,7 +6,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 /**
  * Tests callable actions with hotkeys — verifies aria-keyshortcuts is forwarded.
  */
-export function ModalActionHotkeyHarness() {
+export function DialogActionHotkeyHarness() {
   const [lastReason, setLastReason] = useState('');
 
   const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({

@@ -35,10 +35,10 @@ import {
   AccessibleNameHarness,
   StylingSurfaceHarness,
   StructuralToggleHarness,
-  StackedModalsHarness,
+  StackedDialogsHarness,
   NestedHotkeyScopeHarness,
   ContainedOverlayHarness,
-  FocusUnderAnotherModalHarness,
+  FocusUnderAnotherDialogHarness,
   DanglingLabelHarness,
   LateTitleHarness,
   OutletLabelHarness,
@@ -747,7 +747,7 @@ test.describe('focus survives a failed action', () => {
     mount,
     page,
   }) => {
-    // **The gate on the director's granularity** (`core/modal-director.ts`): the focus step's
+    // **The gate on the director's granularity** (`core/dialog-director.ts`): the focus step's
     // attachment remembers a running action, and a director keyed on every step's inputs would
     // rebuild it here — `onKeyDown` being an inline arrow and an action starting a render.
     await mount(<VolatileKeyDownHarness />);
@@ -942,7 +942,7 @@ test.describe('modals working together', () => {
     mount,
     page,
   }) => {
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await openAllThree(page);
 
     await page.keyboard.press('Escape');
@@ -961,7 +961,7 @@ test.describe('modals working together', () => {
 
   test('a hotkey fires on the modal in front, and only there', async ({ mount, page }) => {
     // All three declare Enter; only the front one may run it.
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await openAllThree(page);
 
     await page.keyboard.press('Enter');
@@ -974,7 +974,7 @@ test.describe('modals working together', () => {
     mount,
     page,
   }) => {
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await openAllThree(page);
 
     await page.keyboard.press('Enter'); // acknowledges the message modal
@@ -1010,7 +1010,7 @@ test.describe('the mouse across a stack', () => {
     mount,
     page,
   }) => {
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await expect(page.getByTestId('stack-visible')).toHaveText('panel,middle');
@@ -1033,7 +1033,7 @@ test.describe('the mouse across a stack', () => {
     mount,
     page,
   }) => {
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await page.getByTestId('mid-open-message').click();
@@ -1052,7 +1052,7 @@ test.describe('the stack and the no-focus Escape path', () => {
     page,
   }) => {
     // With focus outside, only the native `cancel` hears the press — the one unsuppressed path.
-    await mount(<StackedModalsHarness />);
+    await mount(<StackedDialogsHarness />);
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await page.getByTestId('panel-open-middle').click();
     await page.getByTestId('mid-open-message').click();
@@ -1073,7 +1073,7 @@ test.describe('focus while another modal is in front', () => {
     mount,
     page,
   }) => {
-    await mount(<FocusUnderAnotherModalHarness />);
+    await mount(<FocusUnderAnotherDialogHarness />);
     await page.getByRole('button', { name: 'Open Underneath' }).click();
 
     await page.getByTestId('under-save').click();

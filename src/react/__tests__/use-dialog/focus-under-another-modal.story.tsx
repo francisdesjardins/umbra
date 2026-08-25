@@ -10,7 +10,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * this is the shape where the question is even askable. When the save settles, the modal
  * underneath restores focus — and the modal in front is the one the user is actually in.
  */
-export function FocusUnderAnotherModalHarness() {
+export function FocusUnderAnotherDialogHarness() {
   const [done, setDone] = useState(0);
 
   const child = useDialog<void, 'close'>({

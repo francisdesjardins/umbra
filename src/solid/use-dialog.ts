@@ -10,14 +10,14 @@ import {
   dialogAttributes,
   setDialogAttributes,
 } from '../core/dialog-props.js';
-import { createModalDirector } from '../core/modal-director.js';
+import { createDialogDirector } from '../core/dialog-director.js';
 import {
-  createModalRuntime,
-  resolveModalOptions,
+  createDialogRuntime,
+  resolveDialogOptions,
   resolvePortalHost,
   shouldDismissOnBackdropClick,
-  teardownModal,
-} from '../core/modal-runtime.js';
+  teardownDialog,
+} from '../core/dialog-runtime.js';
 import { applyStyle } from '../core/style.js';
 import {
   DEFAULT_MODAL_ANIMATION,
@@ -76,14 +76,16 @@ export function useDialog<TData = void, TReason extends string = string>(
     containFocus,
     template,
     placement,
-  } = resolveModalOptions(options);
+  } = resolveDialogOptions(options);
 
   // Annotated for the reason React's binding gives.
   const animation: DialogAnimation = options.animation ?? DEFAULT_MODAL_ANIMATION;
 
   const manager = useDialogManagerContext();
 
-  const { store, engine, open, openAndWait, handle } = createModalRuntime<TData, TReason>(dialogId);
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+    dialogId
+  );
 
   const snapshot = fromStore(store);
   const actionState = fromStore(engine);
@@ -200,7 +202,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     });
   });
 
-  // The decision is `modal-runtime.ts`'s — the same call React's binding makes from its `onClick`.
+  // The decision is `dialog-runtime.ts`'s — the same call React's binding makes from its `onClick`.
   dialog.addEventListener('click', (event: MouseEvent) => {
     if (
       shouldDismissOnBackdropClick(event, {
@@ -223,7 +225,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // everything comes off in `destroy()` instead. It tracks what the body reads, the snapshot and
   // the option getters, which is Solid's half of "never a pass behind".
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
-  const director = createModalDirector({ store, getDialog, dialogId, manager, engine });
+  const director = createDialogDirector({ store, getDialog, dialogId, manager, engine });
 
   createEffect(() => {
     const snap = snapshot();
@@ -271,7 +273,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     // One cleanup rather than two: Solid runs an owner's cleanups in reverse registration order,
     // so a pair would read as the opposite of what it does. Detachments first, as in React.
     director.destroy();
-    teardownModal(store, { manager, dialogId, dialog: getDialog(), onError: options.onError });
+    teardownDialog(store, { manager, dialogId, dialog: getDialog(), onError: options.onError });
   });
 
   const outlet = useDialogOutletContext();

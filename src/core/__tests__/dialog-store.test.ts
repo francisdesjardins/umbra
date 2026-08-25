@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
-import { createModalStore } from '../modal-store.js';
+import { createDialogStore } from '../dialog-store.js';
 import type { AwaitedClose } from '../types.js';
 
 // The modal state machine — `useDialog`'s logic with React removed, so every transition is
@@ -18,21 +18,21 @@ test.afterEach(() => {
   frames.restore();
 });
 
-test.describe('createModalStore — opening', () => {
+test.describe('createDialogStore — opening', () => {
   test('starts closed and idle', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     expect(store.getSnapshot()).toEqual({ phase: 'closed', isPreparing: false, closeResult: null });
   });
 
   test('beginOpen from closed enters the opening phase', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     expect(store.getSnapshot().phase).toBe('opening');
     expect(store.getSnapshot().isPreparing).toBe(true);
   });
 
   test('beginOpen clears the previous closeResult', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.close('confirm');
     store.finalize();
@@ -43,7 +43,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('a second beginOpen joins the in-flight open rather than restarting it', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     let settled = 0;
 
     store.beginOpen(() => {
@@ -60,7 +60,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('beginOpen on an already-open modal settles immediately', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
     store.finishPreparing();
@@ -76,7 +76,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('requestOpen while closing settles immediately and queues no reopen', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.finishPreparing();
     store.close('dismiss');
@@ -90,7 +90,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('scheduleOpenTransition reaches open only on the next frame', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
 
@@ -101,7 +101,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('scheduleOpenTransition twice leaves only one pending frame', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
     store.scheduleOpenTransition();
@@ -109,7 +109,7 @@ test.describe('createModalStore — opening', () => {
   });
 
   test('finishPreparing clears isPreparing without touching the phase', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.finishPreparing();
     expect(store.getSnapshot().isPreparing).toBe(false);
@@ -117,9 +117,9 @@ test.describe('createModalStore — opening', () => {
   });
 });
 
-test.describe('createModalStore — closing', () => {
+test.describe('createDialogStore — closing', () => {
   test('close records the reason and enters the closing phase', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     expect(store.close('confirm')).toBe(true);
     expect(store.getSnapshot().phase).toBe('closing');
@@ -127,12 +127,12 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('close carries a data payload only when one is given', () => {
-    const withData = createModalStore('a');
+    const withData = createDialogStore('a');
     withData.beginOpen();
     withData.close('confirm', { id: 7 });
     expect(withData.getSnapshot().closeResult).toEqual({ reason: 'confirm', data: { id: 7 } });
 
-    const withoutData = createModalStore('b');
+    const withoutData = createDialogStore('b');
     withoutData.beginOpen();
     withoutData.close('confirm');
     // No `data` key at all, rather than `data: undefined` — consumers destructure this.
@@ -140,7 +140,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('close is a no-op while already closing or closed', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.close('confirm');
 
@@ -153,7 +153,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('close cancels a pending open frame', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.scheduleOpenTransition();
     expect(frames.pending()).toBe(1);
@@ -167,7 +167,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('finalize settles the close resolvers with the close result', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
@@ -182,7 +182,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('closeResult survives into the closed phase', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.close('confirm');
     store.finalize();
@@ -192,7 +192,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('abandon settles a close that will never happen', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
@@ -209,7 +209,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('abandon does not hand back a stale result from an earlier close', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     store.beginOpen();
     store.close('confirm');
     store.finalize();
@@ -226,7 +226,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('abandon is harmless after a normal close settled the waiters', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     const settled: AwaitedClose<unknown>[] = [];
     store.addCloseResolver((result) => {
       settled.push(result);
@@ -242,7 +242,7 @@ test.describe('createModalStore — closing', () => {
   });
 
   test('finalize releases open() callers that never got their frame', () => {
-    const store = createModalStore('t');
+    const store = createDialogStore('t');
     let settled = false;
     store.beginOpen(() => {
       settled = true;
@@ -257,7 +257,7 @@ test.describe('createModalStore — closing', () => {
 
 test.describe('prepareSignal', () => {
   test('the close is the abort, and it fires as the exit begins', () => {
-    const store = createModalStore('signal');
+    const store = createDialogStore('signal');
     store.beginOpen();
     const signal = store.prepareSignal();
     expect(signal.aborted).toBe(false);
@@ -269,7 +269,7 @@ test.describe('prepareSignal', () => {
   });
 
   test('a reopen gets a fresh signal rather than the previous aborted one', () => {
-    const store = createModalStore('signal-reopen');
+    const store = createDialogStore('signal-reopen');
     store.beginOpen();
     const first = store.prepareSignal();
     store.close('dismiss');
@@ -285,7 +285,7 @@ test.describe('prepareSignal', () => {
   });
 
   test('a teardown while open aborts too — a close nobody reported is still a close', () => {
-    const store = createModalStore('signal-abandon');
+    const store = createDialogStore('signal-abandon');
     store.beginOpen();
     const signal = store.prepareSignal();
 
@@ -295,7 +295,7 @@ test.describe('prepareSignal', () => {
   });
 
   test('reading it before the first open gives a live signal, not null', () => {
-    const store = createModalStore('signal-early');
+    const store = createDialogStore('signal-early');
     expect(store.prepareSignal().aborted).toBe(false);
   });
 });
@@ -304,7 +304,7 @@ test.describe('prepareSignal', () => {
 // one has landed waits forever with no error, no timeout, nothing. `openAndWait` registers first.
 test.describe('close resolvers and the order they must be registered in', () => {
   test('a resolver registered after the close never settles', async () => {
-    const store = createModalStore<void, 'ok'>('resolver-late');
+    const store = createDialogStore<void, 'ok'>('resolver-late');
 
     store.beginOpen();
     frames.flush();
@@ -321,7 +321,7 @@ test.describe('close resolvers and the order they must be registered in', () => 
   });
 
   test('a resolver registered before it does', async () => {
-    const store = createModalStore<void, 'ok'>('resolver-early');
+    const store = createDialogStore<void, 'ok'>('resolver-early');
 
     const seen: AwaitedClose<void, 'ok'>[] = [];
     store.addCloseResolver((result) => {
@@ -341,7 +341,7 @@ test.describe('close resolvers and the order they must be registered in', () => 
   // `beginOpen` queues no reopen, so a caller arriving mid-exit was handed the close it walked in
   // on — a reason somebody else's interaction produced, for a dialog it never saw.
   test('a resolver registered during the exit is refused rather than answered', async () => {
-    const store = createModalStore<void, 'cancel'>('resolver-mid-exit');
+    const store = createDialogStore<void, 'cancel'>('resolver-mid-exit');
 
     store.beginOpen();
     frames.flush();

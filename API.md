@@ -1631,7 +1631,7 @@ import type { DialogOpenEventDetail, DialogCloseEventDetail } from 'umbra';
 
 document.addEventListener(DIALOG_OPEN_EVENT, (e: Event) => {
   const { id, template, openedAt } = e.detail;
-  analytics.track('modal_shown', { id, template, openedAt });
+  analytics.track('dialog_shown', { id, template, openedAt });
 });
 
 document.addEventListener(DIALOG_CLOSE_EVENT, (e: Event) => {
@@ -1733,7 +1733,7 @@ Reactive hook for querying a single modal's state. Returns `DialogInfo` that upd
 ```typescript
 import { useLookup } from 'umbra/react';
 
-function ModalStatus({ id }: { id: string }) {
+function DialogStatus({ id }: { id: string }) {
   const info = useLookup(id);
 
   if (!info.exists) return <span>Not registered</span>;

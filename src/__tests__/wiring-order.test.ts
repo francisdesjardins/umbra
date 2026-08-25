@@ -2,13 +2,13 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { MODAL_LIFECYCLE_SEQUENCE } from '../core/modal-director.js';
+import { MODAL_LIFECYCLE_SEQUENCE } from '../core/dialog-director.js';
 
 /**
  * The order the shared lifecycle is wired in, and who is allowed to write it down.
  *
  * The *sequence* the framework-free decisions are asked in is a decision, and an unnamed one is
- * one no test can reach. `core/modal-director.ts` wires the steps once and derives
+ * one no test can reach. `core/dialog-director.ts` wires the steps once and derives
  * `MODAL_LIFECYCLE_SEQUENCE` from that table; what is left is what a type cannot hold — the
  * order is recorded here, no hook binding wires a step behind the director's back, and
  * `umbra/vanilla`, which does not use the director, still wires all nine in its own order. Only
@@ -94,7 +94,7 @@ test.describe('wiring order', () => {
   test('the director runs the lifecycle in the order this file records', () => {
     expect(
       [...MODAL_LIFECYCLE_SEQUENCE],
-      'core/modal-director.ts changed the order it runs the shared lifecycle in. That is a decision about when showModal() runs relative to the listeners and the focus policy — update RECORDED_SEQUENCE and say why in the commit.'
+      'core/dialog-director.ts changed the order it runs the shared lifecycle in. That is a decision about when showModal() runs relative to the listeners and the focus policy — update RECORDED_SEQUENCE and say why in the commit.'
     ).toEqual(RECORDED_SEQUENCE);
   });
 
@@ -108,7 +108,7 @@ test.describe('wiring order', () => {
       });
       expect(
         wired,
-        `${binding} calls a lifecycle step directly. The order is core/modal-director.ts's to decide — add the step there, or say in the commit why this binding has to be the exception.`
+        `${binding} calls a lifecycle step directly. The order is core/dialog-director.ts's to decide — add the step there, or say in the commit why this binding has to be the exception.`
       ).toEqual([]);
     }
   });

@@ -4,10 +4,10 @@ export { HotkeyActionsHarness } from './use-dialog-actions/hotkey-controller.sto
 export { FocusRestorationHarness } from './use-dialog-actions/focus-restoration.story';
 export { DefinitionActionsHarness } from './use-dialog-actions/definition-controller.story';
 export { DismissKeyActionCollisionHarness } from './use-dialog-actions/dismiss-key-collision.story';
-export { ModalActionBasicHarness } from './use-dialog-actions/modal-action-basic.story';
-export { ModalActionCustomHandlerHarness } from './use-dialog-actions/modal-action-custom-handler.story';
-export { ModalActionHotkeyHarness } from './use-dialog-actions/modal-action-hotkey.story';
-export { ModalActionMultipleHarness } from './use-dialog-actions/modal-action-multiple.story';
+export { DialogActionBasicHarness } from './use-dialog-actions/modal-action-basic.story';
+export { DialogActionCustomHandlerHarness } from './use-dialog-actions/modal-action-custom-handler.story';
+export { DialogActionHotkeyHarness } from './use-dialog-actions/modal-action-hotkey.story';
+export { DialogActionMultipleHarness } from './use-dialog-actions/modal-action-multiple.story';
 export {
   VanillaAriaKeyshortcutsHarness,
   BrokenAriaKeyshortcutsHarness,

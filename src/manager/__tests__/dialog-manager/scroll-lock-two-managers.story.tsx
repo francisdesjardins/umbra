@@ -3,7 +3,7 @@ import { DialogManagerProvider } from '../../../react/dialog-manager-context.js'
 import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-function BystanderModal() {
+function BystanderDialog() {
   const { Modal } = useDialog({
     id: 'two-managers-bystander',
     render: () => {
@@ -56,7 +56,7 @@ export function ScrollLockTwoManagersHarness() {
       >
         Open Modal
       </button>
-      <DialogManagerProvider>{bystanderMounted ? <BystanderModal /> : null}</DialogManagerProvider>
+      <DialogManagerProvider>{bystanderMounted ? <BystanderDialog /> : null}</DialogManagerProvider>
       {Modal}
     </div>
   );

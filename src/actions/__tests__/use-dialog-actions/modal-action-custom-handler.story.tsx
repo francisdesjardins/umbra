@@ -11,7 +11,7 @@ const delay = (ms: number) => {
 /**
  * Tests a callable action with a custom async handler — verifies loading/disabled states.
  */
-export function ModalActionCustomHandlerHarness() {
+export function DialogActionCustomHandlerHarness() {
   const [lastReason, setLastReason] = useState('');
 
   const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({

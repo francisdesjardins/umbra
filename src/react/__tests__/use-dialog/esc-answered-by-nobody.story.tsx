@@ -36,7 +36,7 @@ export function EscAnsweredByNobodyHarness() {
     };
   }, []);
   const [panelReason, setPanelReason] = useState('');
-  const [modalReason, setModalReason] = useState('');
+  const [dialogReason, setDialogReason] = useState('');
 
   const front = useDialog<void, 'confirm'>({
     id: 'esc-gap-modal',
@@ -55,7 +55,7 @@ export function EscAnsweredByNobodyHarness() {
       );
     },
     onClose: (result) => {
-      setModalReason(result.reason);
+      setDialogReason(result.reason);
     },
   });
 
@@ -104,7 +104,7 @@ export function EscAnsweredByNobodyHarness() {
       <span data-testid="panel-visible">{panel.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="dialog-visible">{front.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="panel-reason">{panelReason}</span>
-      <span data-testid="dialog-reason">{modalReason}</span>
+      <span data-testid="dialog-reason">{dialogReason}</span>
       <span data-testid="presses-seen">{pressesSeenByPage}</span>
       {panel.Modal}
       {front.Modal}

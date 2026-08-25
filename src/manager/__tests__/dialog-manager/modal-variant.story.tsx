@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * Registers one modal dialog (`showModal()`) and one non-modal (`show()`), opens them
  * independently and together, and verifies the snapshot tells the two apart.
  */
-export function ModalVariantHarness() {
+export function DialogVariantHarness() {
   const { openDialogs } = useDialogManager();
   const modal = openDialogs.filter((d) => {
     return !d.nonModal;
@@ -17,7 +17,7 @@ export function ModalVariantHarness() {
     return d.nonModal;
   });
 
-  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
+  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'variant-modal',
     render: ({ handle }) => {
       return (
@@ -35,7 +35,7 @@ export function ModalVariantHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useDialog<void, 'done'>({
+  const { Modal: Dialog2 } = useDialog<void, 'done'>({
     id: 'variant-non-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -76,8 +76,8 @@ export function ModalVariantHarness() {
       <span data-testid="dialog-count">{modal.length}</span>
       <span data-testid="has-non-modal">{nonModal.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="non-modal-count">{nonModal.length}</span>
-      {Modal1}
-      {Modal2}
+      {Dialog1}
+      {Dialog2}
     </div>
   );
 }
@@ -85,8 +85,8 @@ export function ModalVariantHarness() {
 /**
  * Tests the getOpen() filter argument on the DialogLookup API.
  */
-export function ModalVariantLookupHarness() {
-  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
+export function DialogVariantLookupHarness() {
+  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'lookup-modal',
     render: ({ handle }) => {
       return (
@@ -95,14 +95,14 @@ export function ModalVariantLookupHarness() {
           <button
             onClick={() => {
               const q = dialogManager.lookup();
-              const modalOpen = q.getOpen('modal');
+              const dialogOpen = q.getOpen('modal');
               const nonModalOpen = q.getOpen('non-modal');
               const el = document.getElementById('lookup-result');
               if (el) {
                 el.textContent = [
-                  `modal:${String(modalOpen.length > 0)}`,
-                  `modalCount:${String(modalOpen.length)}`,
-                  `dialogIds:${modalOpen
+                  `modal:${String(dialogOpen.length > 0)}`,
+                  `dialogCount:${String(dialogOpen.length)}`,
+                  `dialogIds:${dialogOpen
                     .map((m) => {
                       return m.id;
                     })
@@ -132,7 +132,7 @@ export function ModalVariantLookupHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useDialog<void, 'done'>({
+  const { Modal: Dialog2 } = useDialog<void, 'done'>({
     id: 'lookup-non-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -168,8 +168,8 @@ export function ModalVariantLookupHarness() {
         Open Non-Modal
       </button>
       <span data-testid="lookup-result" id="lookup-result" />
-      {Modal1}
-      {Modal2}
+      {Dialog1}
+      {Dialog2}
     </div>
   );
 }

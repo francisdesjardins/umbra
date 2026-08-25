@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: a modal unmounting out from under its outlet ──────────────────
 
-function TeardownModal({ onRemove }: { readonly onRemove: () => void }) {
+function TeardownDialog({ onRemove }: { readonly onRemove: () => void }) {
   const { open, isVisible } = useDialog<void, 'close'>({
     id: 'outlet-teardown',
     render: ({ handle }) => {
@@ -66,7 +66,7 @@ export function OutletTeardownHarness() {
     <DialogOutlet>
       <span data-testid="mounted">{mounted ? 'yes' : 'no'}</span>
       {mounted ? (
-        <TeardownModal
+        <TeardownDialog
           onRemove={() => {
             setMounted(false);
           }}

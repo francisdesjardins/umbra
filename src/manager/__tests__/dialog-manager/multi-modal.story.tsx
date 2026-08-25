@@ -11,10 +11,10 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * This ensures all interactions happen with the topmost dialog, which is the
  * only one that can receive clicks in the native top layer.
  */
-export function MultiModalHarness() {
+export function MultiDialogHarness() {
   const { openDialogs, foreground } = useDialogManager();
 
-  const { Modal: Modal1, dialogManager } = useDialog<void, 'close'>({
+  const { Modal: Dialog1, dialogManager } = useDialog<void, 'close'>({
     id: 'dm-first',
     render: ({ handle }) => {
       return (
@@ -39,7 +39,7 @@ export function MultiModalHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useDialog<void, 'close'>({
+  const { Modal: Dialog2 } = useDialog<void, 'close'>({
     id: 'dm-second',
     render: ({ handle }) => {
       return (
@@ -75,8 +75,8 @@ export function MultiModalHarness() {
       <span data-testid="dialog-count">{openDialogs.length}</span>
       <span data-testid="top-dialog">{foreground?.id ?? ''}</span>
       <span data-testid="stack-order">{stackIds}</span>
-      {Modal1}
-      {Modal2}
+      {Dialog1}
+      {Dialog2}
     </div>
   );
 }

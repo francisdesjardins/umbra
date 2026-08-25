@@ -11,7 +11,7 @@ import type { DialogInfo } from '../manager/types.js';
  * `DialogManagerProvider`, or the singleton when there is none.
  *
  * @example
- * function ModalStatus({ id }: { id: string }) {
+ * function DialogStatus({ id }: { id: string }) {
  *   const info = useLookup(id);
  *   if (!info.exists) return <span>Not registered</span>;
  *   return <span>{info.isVisible ? 'Open' : 'Closed'}</span>;

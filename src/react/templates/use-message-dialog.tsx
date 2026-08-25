@@ -5,7 +5,7 @@ import { useDialog } from '../use-dialog.js';
 import type { UseDialogReturn } from '../types.js';
 import {
   DEFAULT_FADE_ANIMATION,
-  buildModalOptions,
+  buildDialogOptions,
   type BaseRenderContext,
   type RegisteredBaseRenderContext,
   type RegisteredTemplateOptions,
@@ -88,7 +88,7 @@ export function useMessageDialog<TData = void, TReason extends string = string>(
   return useDialog<TData, TReason>({
     // Spelled out because `TemplateBaseOptions` is an `Omit` and inference cannot reach through a
     // mapped type: left alone, style and node fall back to their framework-free defaults.
-    ...buildModalOptions<
+    ...buildDialogOptions<
       TData,
       MessageDialogRenderContext<TData, TReason>,
       TReason,

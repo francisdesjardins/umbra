@@ -5,7 +5,7 @@ import {
   OutletPaintTimingHarness,
   OutletMultiHarness,
   OutletNestedHarness,
-  OutletNullModalHarness,
+  OutletNullDialogHarness,
   OutletTeardownHarness,
 } from './dialog-outlet.story';
 
@@ -31,12 +31,12 @@ test.describe('DialogOutlet', () => {
   });
 
   test('modal.Modal is null when outlet is present', async ({ mount, page }) => {
-    await mount(<OutletNullModalHarness />);
+    await mount(<OutletNullDialogHarness />);
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
   });
 
   test('modal.Modal is still null after opening inside outlet', async ({ mount, page }) => {
-    await mount(<OutletNullModalHarness />);
+    await mount(<OutletNullDialogHarness />);
     await page.getByRole('button', { name: 'Open Modal' }).click();
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
     await expect(page.getByTestId('dialog-outlet-null-check')).toBeVisible();

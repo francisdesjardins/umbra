@@ -1,7 +1,7 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import {
-  ModalVariantHarness,
-  ModalVariantLookupHarness,
+  DialogVariantHarness,
+  DialogVariantLookupHarness,
   DomEventHarness,
   EventSubscribeHarness,
   ImperativeHarness,
@@ -9,7 +9,7 @@ import {
   LookupFindHarness,
   LookupForegroundHarness,
   LookupUnregisteredHarness,
-  MultiModalHarness,
+  MultiDialogHarness,
   NoProviderHarness,
   ProviderIsolationHarness,
   ScrollLockHarness,
@@ -81,7 +81,7 @@ test.describe('dialogManager', () => {
   });
 
   test('openCount and foreground update as modals open and close', async ({ mount, page }) => {
-    await mount(<MultiModalHarness />);
+    await mount(<MultiDialogHarness />);
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
     await expect(page.getByTestId('top-dialog')).toHaveText('');
 
@@ -104,7 +104,7 @@ test.describe('dialogManager', () => {
   });
 
   test('stackOrder reflects open order', async ({ mount, page }) => {
-    await mount(<MultiModalHarness />);
+    await mount(<MultiDialogHarness />);
 
     await page.getByRole('button', { name: 'Open First' }).click();
     await expect(page.getByTestId('stack-order')).toHaveText('dm-first');
@@ -300,7 +300,7 @@ test.describe('lookup', () => {
 
 test.describe('modal / non-modal', () => {
   test('the modal fields update when a modal dialog opens and closes', async ({ mount, page }) => {
-    await mount(<ModalVariantHarness />);
+    await mount(<DialogVariantHarness />);
     await expect(page.getByTestId('has-modal')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
 
@@ -319,7 +319,7 @@ test.describe('modal / non-modal', () => {
     mount,
     page,
   }) => {
-    await mount(<ModalVariantHarness />);
+    await mount(<DialogVariantHarness />);
     await expect(page.getByTestId('has-non-modal')).toHaveText('no');
 
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
@@ -336,7 +336,7 @@ test.describe('modal / non-modal', () => {
   });
 
   test('a modal and a non-modal dialog track independently', async ({ mount, page }) => {
-    await mount(<ModalVariantHarness />);
+    await mount(<DialogVariantHarness />);
 
     // Open the non-modal first — it is clickable behind the modal one
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
@@ -362,7 +362,7 @@ test.describe('modal / non-modal', () => {
   });
 
   test('getOpen() filters by variant', async ({ mount, page }) => {
-    await mount(<ModalVariantLookupHarness />);
+    await mount(<DialogVariantLookupHarness />);
 
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await page.getByRole('button', { name: 'Open Modal' }).click();
@@ -370,7 +370,7 @@ test.describe('modal / non-modal', () => {
     // Query from outside — a non-modal dialog does not block clicks
     await page.getByRole('button', { name: 'Query' }).click();
     await expect(page.getByTestId('lookup-result')).toContainText('modal:true');
-    await expect(page.getByTestId('lookup-result')).toContainText('modalCount:1');
+    await expect(page.getByTestId('lookup-result')).toContainText('dialogCount:1');
     await expect(page.getByTestId('lookup-result')).toContainText('dialogIds:lookup-modal');
     await expect(page.getByTestId('lookup-result')).toContainText('nonModal:true');
     await expect(page.getByTestId('lookup-result')).toContainText('nonModalCount:1');

@@ -12,7 +12,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * the outer. All three declare `Enter`, the overlap under test: only the level in front hears it.
  * The log records what closed, in order, so a dismiss key can be shown to unwind one per press.
  */
-export function StackedModalsHarness() {
+export function StackedDialogsHarness() {
   const [log, setLog] = useState<string[]>([]);
   const [acks, setAcks] = useState(0);
   const [saves, setSaves] = useState(0);

@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { noop } from '../../__tests__/noop.js';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
-import { finalizeModalClose } from '../finalize-close.js';
-import { createModalStore } from '../modal-store.js';
+import { finalizeDialogClose } from '../finalize-close.js';
+import { createDialogStore } from '../dialog-store.js';
 
 // The shared tail of every close path, called by both the animated path (`syncCloseSequence`) and
 // teardown, so its order is what stops those two drifting: close the element if still open, run
@@ -35,12 +35,12 @@ test.afterEach(() => {
   frames.restore();
 });
 
-test.describe('finalizeModalClose', () => {
+test.describe('finalizeDialogClose', () => {
   test('closes the element when it is still open', () => {
-    const store = createModalStore('finalize-open');
+    const store = createDialogStore('finalize-open');
     const dialog = fakeDialog(true);
 
-    finalizeModalClose(store, { dialog, onCloseError: noop });
+    finalizeDialogClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(1);
     expect(dialog.open).toBe(false);
@@ -48,27 +48,27 @@ test.describe('finalizeModalClose', () => {
 
   test('leaves an already-closed element alone', () => {
     // The ESC race: the browser's cancel can close first, and `close()` again fires a second event.
-    const store = createModalStore('finalize-closed');
+    const store = createDialogStore('finalize-closed');
     const dialog = fakeDialog(false);
 
-    finalizeModalClose(store, { dialog, onCloseError: noop });
+    finalizeDialogClose(store, { dialog, onCloseError: noop });
 
     expect(dialog.closedCount).toBe(0);
   });
 
   test('tolerates having no element at all', () => {
     // Teardown passes `null` on an unmount before the first commit; the close still has to settle.
-    const store = createModalStore('finalize-null');
+    const store = createDialogStore('finalize-null');
     store.beginOpen();
     store.close('cancel');
 
-    finalizeModalClose(store, { dialog: null, onCloseError: noop });
+    finalizeDialogClose(store, { dialog: null, onCloseError: noop });
 
     expect(store.getSnapshot().phase).toBe('closed');
   });
 
   test('runs onClose with the result, then finalizes', async () => {
-    const store = createModalStore<{ id: number }, 'save'>('finalize-order');
+    const store = createDialogStore<{ id: number }, 'save'>('finalize-order');
     const seen: string[] = [];
     store.setOnClose((result) => {
       seen.push(`onClose:${result.reason}:${String(result.data?.id)}`);
@@ -76,7 +76,7 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save', { id: 7 });
-    finalizeModalClose(store, { dialog: fakeDialog(true), onCloseError: noop });
+    finalizeDialogClose(store, { dialog: fakeDialog(true), onCloseError: noop });
 
     // `runOnClose` is detached, so it lands on the next microtask — the point of `fireAndForget`.
     await Promise.resolve();
@@ -87,20 +87,20 @@ test.describe('finalizeModalClose', () => {
 
   test('finalizes even when there is no close result to report', () => {
     // Nothing to hand `onClose`; the finalize is unconditional, so the phase settles regardless.
-    const store = createModalStore('finalize-no-result');
+    const store = createDialogStore('finalize-no-result');
     let ran = false;
     store.setOnClose(() => {
       ran = true;
     });
 
-    finalizeModalClose(store, { dialog: null, onCloseError: noop });
+    finalizeDialogClose(store, { dialog: null, onCloseError: noop });
 
     expect(ran).toBe(false);
     expect(store.getSnapshot().phase).toBe('closed');
   });
 
   test('reports a throwing onClose instead of losing it', async () => {
-    const store = createModalStore<void, 'save'>('finalize-throws');
+    const store = createDialogStore<void, 'save'>('finalize-throws');
     const errors: string[] = [];
     store.setOnClose(() => {
       throw new Error('onClose exploded');
@@ -108,7 +108,7 @@ test.describe('finalizeModalClose', () => {
 
     store.beginOpen();
     store.close('save');
-    finalizeModalClose(store, {
+    finalizeDialogClose(store, {
       dialog: null,
       onCloseError: (error) => {
         errors.push(error.message);
@@ -127,7 +127,7 @@ test.describe('the onError channel', () => {
   test('a throwing onClose is normalized and reported as its own source', async () => {
     // `onClose` runs detached with no render pass and no promise — without this, only a quiet log.
     const failures: { readonly error: Error; readonly source: string }[] = [];
-    const store = createModalStore('on-error-close');
+    const store = createDialogStore('on-error-close');
 
     store.setOnClose(() => {
       // A non-Error throw, the case `normalizeError` exists for: `onError` always gets an `Error`.
@@ -137,7 +137,7 @@ test.describe('the onError channel', () => {
 
     store.beginOpen();
     store.close('save');
-    finalizeModalClose(store, {
+    finalizeDialogClose(store, {
       dialog: null,
       onCloseError: (error) => {
         failures.push({ error, source: 'onClose' });
@@ -155,7 +155,7 @@ test.describe('the onError channel', () => {
   test('a close with nothing thrown reports nothing', () => {
     // Failures only: a well-behaved `onClose` must not stream non-events to a reporter.
     const failures: Error[] = [];
-    const store = createModalStore('on-error-quiet');
+    const store = createDialogStore('on-error-quiet');
 
     store.setOnClose(() => {
       // succeeds
@@ -163,7 +163,7 @@ test.describe('the onError channel', () => {
 
     store.beginOpen();
     store.close('save');
-    finalizeModalClose(store, {
+    finalizeDialogClose(store, {
       dialog: null,
       onCloseError: (error) => {
         failures.push(error);

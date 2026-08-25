@@ -3,7 +3,7 @@ import type { DismissCause } from './dismiss-reason.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
-import type { ModalStore } from './modal-store.js';
+import type { DialogStore } from './dialog-store.js';
 import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 
 /**
@@ -18,8 +18,8 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
  *
  * @internal Not part of the public API.
  */
-export type ModalDomContext = {
-  readonly store: ModalStore;
+export type DialogDomContext = {
+  readonly store: DialogStore;
   readonly getDialog: GetDialog;
   readonly dialogId: DialogId;
   readonly phase: DialogPhase;
@@ -53,7 +53,7 @@ export type DialogKeydownOptions = {
   readonly engine: ActionGate;
   readonly nonModal: boolean;
   readonly dismissWhilePreparing: boolean;
-  /** Controlled surfaces only: report the press instead of closing. See `ModalOptions`. */
+  /** Controlled surfaces only: report the press instead of closing. See `DialogOptions`. */
   readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
 };
 
@@ -67,7 +67,7 @@ export type ClickOutsideOptions = {
   readonly dismissOnClickOutside: boolean;
   readonly dismissWhilePreparing: boolean;
   readonly engine: ActionGate;
-  /** Controlled surfaces only: report the click instead of closing. See `ModalOptions`. */
+  /** Controlled surfaces only: report the click instead of closing. See `DialogOptions`. */
   readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
 };
 

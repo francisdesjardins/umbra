@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: multiple modals in one outlet ─────────────────────────────────
 
-function ModalA() {
+function DialogA() {
   const { open, isVisible, dialogManager } = useDialog<void, 'done-a'>({
     id: 'outlet-multi-a',
     render: ({ handle }) => {
@@ -44,7 +44,7 @@ function ModalA() {
   );
 }
 
-function ModalB() {
+function DialogB() {
   const { open, isVisible, dialogManager } = useDialog<void, 'done-b'>({
     id: 'outlet-multi-b',
     render: ({ handle }) => {
@@ -90,8 +90,8 @@ function ModalB() {
 export function OutletMultiHarness() {
   return (
     <DialogOutlet>
-      <ModalA />
-      <ModalB />
+      <DialogA />
+      <DialogB />
     </DialogOutlet>
   );
 }

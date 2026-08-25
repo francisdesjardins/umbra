@@ -10,7 +10,7 @@ import {
   type SlideDirection,
 } from '../../templates/slide-geometry.js';
 import {
-  buildModalOptions,
+  buildDialogOptions,
   type BaseRenderContext,
   type RegisteredBaseRenderContext,
   type RegisteredTemplateOptions,
@@ -88,7 +88,7 @@ export function useSlideDialog<TData = void, TReason extends string = string>(
   const align = options.align ?? 'stretch';
 
   return useDialog<TData, TReason>({
-    ...buildModalOptions<
+    ...buildDialogOptions<
       TData,
       SlideDialogRenderContext<TData, TReason>,
       TReason,
