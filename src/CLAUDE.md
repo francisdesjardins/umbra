@@ -240,8 +240,9 @@ built:
   template hooks pull; a template's structural styles merge _under_ a caller's.
 - **`data-loading`** on an action's button props — the running state, and the only form the library
   ships it in. A core agnostic of the UI cannot name the busy flag for one component library (MUI
-  says `loading`, another `busy`), so a wrapper maps it: the playground's `MuiButton` and
-  `VanillaButton` are that seam.
+  says `loading`, another `busy`), so the caller maps it — one destructure at the
+  call site, which is what `playground/src/pages/ui-integrations/examples/mui-form.tsx` shows, and
+  the reason that example is written against MUI rather than through a wrapper.
 
 **Three platform traps live on the `style` option's doc in [core/types.ts](core/types.ts)**, where a
 caller meets them: each reaches the consumer's own box rather than the library's, and a **non-modal**

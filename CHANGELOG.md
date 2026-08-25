@@ -11,6 +11,47 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-25
 
+### Changed — the two form examples show the markup, and the MUI template layer is gone
+
+`/ui-integrations` exists to put one form beside itself in two flavours, so the diff between the two
+files is the whole lesson. Both were spending it on this repo's own components: a reader met
+`FormModal.DefaultLayout` and `Shared.Button` before meeting anything the library does.
+
+Both are written out now. The MUI card is `Box` / `Stack` / `Typography` / `Alert` / `Button`, and
+the seam it existed to show is one line instead of a wrapper:
+
+```tsx
+const { 'data-loading': isSubmitting, ...submitProps } = action('submit', …);
+<Button loading={isSubmitting} {...submitProps}>;
+```
+
+That is all `MuiButton` was doing. MUI 9 takes `loading` natively and disables the button itself, so
+the wrapper's second `disabled` was belt-and-braces. The comment beside it records what the
+destructure costs elsewhere: `action()` re-runs on every React render, so the rest spread captures
+this pass — under Solid the same line would freeze getters that are getters precisely for a
+fine-grained renderer.
+
+**Two of the eight vanilla components turned out not to be wrappers**, which is the part worth
+keeping. `Content` calls `useScrollRegion`: a scroller with no focusable child is
+keyboard-unreachable, Chromium and Firefox add the Tab stop and WebKit does not, so it is declared —
+and only while the content actually overflows, which takes a measurement. `Footer` wraps
+`ButtonRow`, which carries its own stylesheet and owns the gap for every vanilla family, after one
+rule copied three ways became three different gaps. Both stay imports; inlining either would have
+meant dropping an accessibility guarantee or hand-rolling an overflow observer inside an example
+about dialogs.
+
+**`entities/modal-template/ui/mui/` is deleted** — thirteen files serving one example — along with
+its ten `?raw` entries in the code viewer and the Material UI tab on `/ui-templates`. The vanilla
+templates stay: three other examples use them, and the catalogue still shows them.
+
+**What that costs is a sentence that was true and is not**, in four places, and it is the reason
+this is one change rather than two: `playground/CLAUDE.md`, the vanilla blurb and the page
+description on `/ui-templates` all claimed the two flavours spell the same component names "so that
+example ports by changing one import". There is no second flavour to port to. `src/CLAUDE.md` named
+`MuiButton` as the `data-loading` seam and now points at the example, where the seam is more visible
+than the wrapper ever made it. The catalogue is described as what it is: markup to lift into a
+project, while the examples write theirs out by hand.
+
 ### Changed — both watch-list cells re-measured, both unchanged
 
 The two `⏸ blocked` cells carry the date someone last looked, which is the only thing this repo owns

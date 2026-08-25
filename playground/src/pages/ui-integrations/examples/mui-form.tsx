@@ -62,12 +62,18 @@ export function MuiFormExample() {
       // **The seam, and the reason this example is not templated.** The library ships the running
       // state as the DOM attribute `data-loading`, because a core agnostic of the UI cannot know
       // your kit's word for it — MUI says `loading`, another says `busy`, a third has nothing. So
-      // the mapping is one destructure, here, in the only place that knows the answer.
+      // the mapping is one line, here, in the only place that knows the answer.
       //
-      // Safe to destructure *in React*: `action()` runs again on every render, so the rest spread
-      // captures this pass's values. The props' live fields are getters for the benefit of a
-      // fine-grained renderer — under Solid, this same line would freeze them.
-      const { 'data-loading': isSubmitting, ...submitProps } = action('submit', async (close) => {
+      // **Read, not removed.** The props are spread whole and `loading` is derived beside them, so
+      // the attribute still reaches the DOM: it is the documented styling contract
+      // (`button[data-loading='true'] { … }`) and the only form the library ships the state in.
+      // Destructuring it out maps the flag and silently drops the hook — measured, by taking it
+      // away and finding no attribute on the rendered button.
+      //
+      // Reading it here is safe *in React*, where `action()` runs again on every render. Its live
+      // fields are getters for the benefit of a fine-grained renderer; under Solid, pulling one out
+      // into a `const` would freeze it.
+      const submit = action('submit', async (close) => {
         // `submit` calls back only if nothing is wrong, and no `close` keeps the modal open.
         await form.submit(async (values) => {
           // Deterministic, so the two-UI comparison is not a coin toss.
@@ -152,7 +158,7 @@ export function MuiFormExample() {
                 Cancel
               </Button>
               {/* `loading` disables the button itself, so no second `disabled` is needed. */}
-              <Button variant="contained" loading={isSubmitting} {...submitProps}>
+              <Button variant="contained" {...submit} loading={submit['data-loading']}>
                 Create User
               </Button>
             </Box>

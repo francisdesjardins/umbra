@@ -2,9 +2,10 @@
 
 Interactive demo app, vanilla-first: the learning routes render their dialog interiors with the
 vanilla HTML/CSS templates, because the library is headless and the demos should not suggest it goes
-with a component library. MUI is the demonstrated _exception_ — one pair of it, the form modal, on
-`/ui-integrations` and in `/ui-templates`. One worked pair carries that claim; four charged four
-times the upkeep for it.
+with a component library. MUI is the demonstrated _exception_ — **one card**, the form modal on
+`/ui-integrations`, written against MUI directly. One worked pair carries that claim; four charged
+four times the upkeep for it, and a template layer over the pair charged upkeep to hide the one line
+worth reading.
 
 `umbra-playground` — a private Yarn workspace, never published. **Its UI dependencies live here,
 not in the root manifest**, which is the published package's dependency list. Run `yarn install`
@@ -57,7 +58,7 @@ playground/src/
 ├── app/         # main.tsx, router.tsx, providers (ThemeProvider, CodePaneProvider)
 ├── pages/       # one slice per route, each with ui/ + (optional) examples/ + index.ts
 ├── widgets/     # root-layout, top-bar, sidebar, code-viewer
-├── entities/    # example (Card/Grid/Layout/Section/StoryCard), modal-template (mui + vanilla)
+├── entities/    # example (Card/Grid/Layout/Section/StoryCard), modal-template (vanilla)
 ├── shared/
 │   ├── ui/      # PageLayout, SectionNav, CodeBlock, LoadingButton, ResultDisplay, ViewCodeButton
 │   └── lib/     # simulate-api-call, use-overflow, createResultStore, section-slug,
@@ -79,8 +80,8 @@ Two exemptions, each a decision rather than a leak:
   text_; they call and render nothing. The alternative is a generated registry.
 - **`entities/modal-template` has no public entry on purpose** — its barrel re-exports nothing. The
   templates are a directory tree because that is the shape they are copied out in, and
-  `import * as MessageModal from '…/mui/message-modal'` names the flavour. A barrel would flatten
-  the distinction the slice exists to make.
+  `import * as MessageModal from '…/vanilla/message-modal'` names the family. A barrel would
+  flatten the distinction the slice exists to make.
 
 **Reach into the library through `umbra/…`, never through `../../../../../src/…`.** The `/stories`
 page renders the library's own CT harnesses and the code viewer shows their source, so two files
@@ -144,8 +145,8 @@ decides where a new example goes:
 | `/interop`         | Foreign observers, and a render with no document          |
 | `/showcases`       | Whole flows, assembled                                    |
 | `/microfrontends`  | Four bindings, one manager, no build step                 |
-| `/ui-integrations` | The vanilla set, and one MUI pair that is the whole claim |
-| `/ui-templates`    | Copy-paste index: Material UI / Vanilla / Shared          |
+| `/ui-integrations` | One form, twice: plain elements and MUI, sharing a hook   |
+| `/ui-templates`    | Copy-paste index: Vanilla / Shared                        |
 | `/design-system`   | Penumbra, read live from the token sheet — never restated |
 | `/api`             | Generated reference — a map, then a page per category     |
 | `/stories`         | Live `*.story.tsx` harnesses from the CT suite            |
@@ -271,10 +272,17 @@ the outline at equal specificity and is injected later. Do not add per-component
 
 ## Templates (`src/entities/modal-template/ui/`)
 
-Reference UI — not exported from the library; users copy them into their projects. **Vanilla**
-(`vanilla/`) covers every family in pure HTML/CSS with CSS modules and dark mode; **MUI** (`mui/`) is
-`form-modal/` plus the `shared/` atoms it uses. Both spell the same component names, so that example
-ports by changing one import. All layouts use children-based composition:
+Reference UI — not exported from the library; users copy them into their projects. `vanilla/`
+covers every family in pure HTML/CSS with CSS modules and dark mode, and it is the only flavour: the
+MUI set was one `form-modal/` serving one example, and that example reads better written against MUI
+directly.
+
+**The catalogue and the examples now teach different things, deliberately.** `/ui-templates` is
+markup to lift into a project; the two `/ui-integrations` cards write theirs out by hand, so what
+they teach is the library's contract rather than this repo's factoring. An example may still import a
+template — three do — but it is no longer the default.
+
+All layouts use children-based composition:
 
 ```tsx
 <MessageModal.DefaultLayout>
@@ -289,7 +297,8 @@ ports by changing one import. All layouts use children-based composition:
 Single file per example — component + "View Code" source.
 
 1. **Create** `src/pages/<route>/examples/<name>.tsx` — hooks from `umbra/react`, templates from
-   `@/entities/modal-template/ui/{mui,vanilla}/…`, wrapped in `ExampleLayout`. Unique modal ids.
+   `@/entities/modal-template/ui/vanilla/…` when one fits, wrapped in `ExampleLayout`. Unique modal
+   ids.
 2. **Register** the `?raw` import in
    [code-samples/examples.ts](src/widgets/code-viewer/model/code-samples/examples.ts) — a route's
    own example always goes there. Which of the three modules takes a sample is on
@@ -350,13 +359,12 @@ in the source and leaves the dialog anonymous.
 Keep the **UI Templates** page (`src/pages/ui-templates/ui/UITemplatesPage.tsx`) in sync:
 
 1. Add the `?raw` import in `code-samples/templates.ts` — that module is this page's group. Keys are
-   `template-<group>-<name>` for MUI, `vanilla-<group>-<name>` for vanilla, `shared-component-<name>`
-   for playground UI. **The key is a label, not the routing**: `vanilla-form` is a `/ui-integrations`
+   `vanilla-<group>-<name>` for a template, `shared-component-<name>` for playground UI. **The key is a label, not the routing**: `vanilla-form` is a `/ui-integrations`
    example and belongs in `examples.ts`, because the module is decided by the path the source is
    read from.
-2. Add the entry to `MUI_GROUPS`, `VANILLA_GROUPS`, or — if it renders nothing and therefore works
-   under either flavour — `PATTERNS_GROUP`, which the **Shared** tab shows alongside
-   `PLAYGROUND_GROUP`. That third tab is the honest home for everything that is not a flavour.
+2. Add the entry to `VANILLA_GROUPS`, or — if it renders nothing and therefore works under any
+   flavour — `PATTERNS_GROUP`, which the **Shared** tab shows alongside `PLAYGROUND_GROUP`. That
+   second tab is the honest home for everything that is not markup.
 3. On removal/rename: update the import, the `codeSamples` entry, and the group entry together.
 
 CSS-module samples use the `-styles` key suffix — the viewer keys its syntax highlighting off it, so
