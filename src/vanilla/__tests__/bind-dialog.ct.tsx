@@ -768,13 +768,18 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     // The flag lowered and the dialog gone, with nothing asked twice.
     await expect(page.getByTestId('asked')).toHaveText('open');
 
-    // **What this does not prove, pinned so the gap is visible rather than assumed.** Deciding on
-    // `isVisible` rather than `phase` differs on exactly one input pair — `'closing'` with the flag
-    // down — and the controller never publishes that phase here: the accumulator cannot drop a
-    // notification, so this is the store's own sequence and not a batch swallowing one. Until an
-    // exit that reaches `'closing'` is observable through this surface, the assertion above holds
-    // for both forms of the decision. See the `reconcileOpen` caveat in the compatibility matrix.
-    await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closed');
+    // **The exit is a real one, and the sequence says so.** It used to read `opening,open,closed`:
+    // this harness asks for `{ duration: 0, exitDuration: 120 }`, and the transition check read the
+    // *entrance* duration at open, so the exit was skipped and `'closing'` never published. It is
+    // published now.
+    //
+    // **What this still does not prove, and it is not the pair the note used to name.** Deciding on
+    // `isVisible` rather than `phase` disagrees on `['closing', true]` **only** — the flag going back
+    // *up* mid-exit — since a closing dialog is not open and `open: false` answers `'none'` either
+    // way. That case is exhaustive at the unit level in `core/__tests__/reconcile-open.test.ts`, and
+    // it is not reachable from here: raising the flag is not a store event, so no notification lands
+    // while the phase is `'closing'` and the flag is up.
+    await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closing,closed');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });
 });

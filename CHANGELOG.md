@@ -11,6 +11,33 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-25
 
+### Changed — the reconcileOpen note had the wrong pair written on it
+
+The last open cell said the `phase`-versus-`isVisible` half of `reconcileOpen` was proven on React
+only, that "the controller never publishes that phase here", and that the two forms of the decision
+differ on `['closing', false]`. Two of those three are now false, and one was never true.
+
+**The controller publishes `'closing'` now** — the exit-measurement fix above is why. The vanilla
+reconcile harness asks for `{ duration: 0, exitDuration: 120 }`, which is the same shape that lost
+its exit everywhere else, so the sequence read `opening,open,closed` and the window the decision
+turns on did not exist. It reads `opening,open,closing,closed`, and the CT test pins that.
+
+**The differing pair is `['closing', true]`, not `['closing', false]`.** The flag going back _up_
+mid-exit is the case the guard exists for — `reconcile-open.ts` says so in its own comment, "how a
+call site that raised the prop mid-exit gets its dialog back", and `reconcile-open.test.ts` spells
+it out over all eight inputs: with the guard dropped, `open: false` still answers `'none'`, because a
+closing dialog is not open and the prop agrees. The two forms never disagreed on the pair the note
+named. Measured, not re-read: removing the guard leaves every assertion in that harness green.
+
+**And `['closing', true]` is not reachable end-to-end from a snapshot surface**, which is a fact
+about the surface rather than a gap in it. Raising the flag is not a store event, so no notification
+lands while the phase is `'closing'` and the flag is up — a subscriber-side recorder was written to
+try, and records nothing because there is nothing to record. The case is exhaustive at the unit
+level, where it belongs.
+
+So the entry is a note, not an open question: there is no next step, which under the new `caveat`
+shape is precisely the test for one. `yarn todo` prints **0 open** and 2 on the watch list.
+
 ### Fixed — an exit animation the caller asked for is no longer skipped
 
 `{ duration: 0, exitDuration: 900 }` — instant in, animated out — lost its exit entirely. The close

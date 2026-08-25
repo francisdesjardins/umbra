@@ -1164,14 +1164,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     vanilla: {
       state: 'works',
-      note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others.',
-      since: '2026-08-13',
-      caveat: {
-        question:
-          'The `phase`-versus-`isVisible` half is proven on React only, and the reason has narrowed twice. The two forms differ on exactly one input pair — `phase === "closing"` with `open === false`; every other pair is identical, since `isVisible` is `phase !== "closed"`. **The controller never publishes that phase here.** The harness now accumulates every phase it is notified of with a functional updater, which cannot drop one to a React batch, and it reads `opening,open,closed` — so this is the store’s own sequence rather than an observation problem, which is what the first reading of this assumed. React’s harness, on the same animation config, does reach `"closing"`. Closing this means an exit that stays observable through the controller’s snapshot long enough to be reconciled against — not a change to `reconcileOpen`, whose decision is already the right one.',
-        nextStep:
-          'Instrument the controller’s publish path first — the store is shared and React reaches `"closing"` on the same animation config, so the question is why this binding’s snapshot goes `opening,open,closed`. If the exit can be held observable, assert the one input pair that separates the two forms (`phase === "closing"` with `open === false`) in `bind-dialog.ct.tsx`. If it cannot without moving the close sequence’s timing, that is the answer: record it and demote this to a note.',
-      },
+      note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others. **The exit reaches `closing` here now**, which it did not while the transition check read the entrance duration at open and skipped the exit altogether. What the cell used to carry as an open question also named the wrong pair: deciding on `isVisible` rather than `phase` disagrees on `["closing", true]` alone — the flag going back *up* mid-exit — since a closing dialog is not open and `open: false` answers `"none"` either way. That case is exhaustive at the unit level in `core/__tests__/reconcile-open.test.ts`, and it is not reachable end-to-end from a snapshot surface: raising the flag is not a store event, so no notification lands while the phase is `closing` and the flag is up. A statement about what this surface can be asked, not a gap in it.',
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
