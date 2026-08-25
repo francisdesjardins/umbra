@@ -38,7 +38,7 @@ export type OpenReconciliation = 'open' | 'close' | 'none';
  *     }
  *   }, [phase, open, modal]);
  *
- *   return modal.Modal;
+ *   return modal.Dialog;
  * }
  * ```
  */

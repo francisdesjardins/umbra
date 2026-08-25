@@ -12,7 +12,7 @@ export function PortalNonModalDefaultHarness() {
   const [dialogParent, setDialogParent] = useState('');
   const [openCount, setOpenCount] = useState(0);
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'portal-non-modal-default',
     nonModal: true,
     animation: {
@@ -68,7 +68,7 @@ export function PortalNonModalDefaultHarness() {
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="dialog-parent">{dialogParent}</span>
       <span data-testid="open-count">{openCount}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

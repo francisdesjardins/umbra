@@ -359,7 +359,7 @@ report(!solidSource.includes('compiler-runtime'), {
           render: () => {
             return null;
           },
-        }).Modal;
+        }).Dialog;
       })
     );
   } catch (error) {

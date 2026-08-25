@@ -114,7 +114,7 @@ export function StackedModalsExample() {
             </Shared.Button>
           </MessageDialog.Footer>
           {/* Rendered here, inside level 2 — which is what makes the nesting real. */}
-          {inner.Modal}
+          {inner.Dialog}
         </MessageDialog.DefaultLayout>
       );
     },
@@ -162,7 +162,7 @@ export function StackedModalsExample() {
               Close panel
             </Shared.Button>
           </SlideDialog.Footer>
-          {middle.Modal}
+          {middle.Dialog}
         </SlideDialog.DefaultLayout>
       );
     },
@@ -172,7 +172,7 @@ export function StackedModalsExample() {
   });
 
   return (
-    <ExampleLayout result={log.at(-1) ?? null} modals={panel.Modal}>
+    <ExampleLayout result={log.at(-1) ?? null} modals={panel.Dialog}>
       <div
         style={{
           display: 'flex',

@@ -23,7 +23,7 @@ export const sizes = {
 };
 
 export const colors = {
-  // Modal surface background (kept in sync with vanilla CSS :root values)
+  // Dialog surface background (kept in sync with vanilla CSS :root values)
   modalBgLight: '#ffffff',
   modalBgDark: '#121212',
 };

@@ -74,8 +74,8 @@ export function RestoreNotInFrontHarness() {
         Open the panel in front
       </button>
       <span data-testid="settled">{settled}</span>
-      {behind.Modal}
-      {front.Modal}
+      {behind.Dialog}
+      {front.Dialog}
     </div>
   );
 }

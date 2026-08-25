@@ -19,7 +19,7 @@ export function StableIdentityHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal content</p>
+          <p>Dialog content</p>
           <button
             onClick={() => {
               handle.close('confirm');
@@ -62,12 +62,12 @@ export function StableIdentityHarness() {
           await modal.open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="tick">{tick}</span>
       <span data-testid="is-visible">{modal.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="identity">{stable ? 'stable' : 'changed'}</span>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

@@ -78,7 +78,7 @@ export function PrepareFailureExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <div
         style={{
           display: 'flex',

@@ -18,7 +18,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 function PortaledDialog({ host }: { readonly host: Element }) {
   const [inheritedInk, setInheritedInk] = useState('');
 
-  const { open, Modal } = useDialog({
+  const { open, Dialog } = useDialog({
     id: 'portal-host',
     ariaLabel: 'Portaled into a themed host',
     // A getter rather than the element, because the option is read where the dialog is placed
@@ -59,7 +59,7 @@ function PortaledDialog({ host }: { readonly host: Element }) {
         Open
       </button>
       <span data-testid="inherited-ink">{inheritedInk}</span>
-      {Modal}
+      {Dialog}
     </>
   );
 }

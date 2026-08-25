@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function OpenAndWaitHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { openAndWait, Modal } = useDialog<void, 'done'>({
+  const { openAndWait, Dialog } = useDialog<void, 'done'>({
     id: 'wait-modal',
     render: ({ handle }) => {
       return (
@@ -41,7 +41,7 @@ export function OpenAndWaitHarness() {
         Open and Wait
       </button>
       <span data-testid="status">{status}</span>
-      {Modal}
+      {Dialog}
     </>
   );
 }

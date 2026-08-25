@@ -276,7 +276,7 @@ export const HomePage = () => {
         })}
       </div>
 
-      {hello.Modal}
+      {hello.Dialog}
     </div>
   );
 };

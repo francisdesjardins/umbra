@@ -10,7 +10,7 @@ export function NonModalHarness() {
   const [lastReason, setLastReason] = useState('');
   const [openCount, setOpenCount] = useState(0);
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'non-modal-dialog',
     nonModal: true,
     animation: {
@@ -64,7 +64,7 @@ export function NonModalHarness() {
       <span data-testid="body-overflow">
         {document.body.hasAttribute('data-dialog-open') ? 'locked' : 'free'}
       </span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

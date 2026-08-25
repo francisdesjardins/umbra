@@ -31,7 +31,7 @@ const ENTRY_BLURB: Record<string, string> = {
   'umbra/solid':
     'The same surface for Solid, plus `fromStore`. Live values are getters over signals, so do not destructure the render args.',
   'umbra/vanilla':
-    'A controller for a <dialog> you wrote yourself: no render, no Modal, no outlet — and no framework, optional or otherwise.',
+    'A controller for a <dialog> you wrote yourself: no render, no Dialog, no outlet — and no framework, optional or otherwise.',
 };
 
 const ENTRY_TITLE: Record<string, string> = {

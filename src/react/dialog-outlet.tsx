@@ -20,7 +20,7 @@ const DialogOutletContext = createContext<DialogOutletContextValue | null>(null)
 
 /**
  * The nearest outlet context, or `null` when none wraps the caller — then `useDialog` returns the
- * dialog via `Modal` as usual.
+ * dialog via `Dialog` as usual.
  *
  * @internal Not part of the public API.
  */
@@ -30,11 +30,11 @@ export function useDialogOutletContext(): DialogOutletContextValue | null {
 
 // The outlet holds rendered *nodes* rather than a DOM anchor to portal into, because a React
 // element only renders while some component returns it and the consumer must never write
-// `{Modal}`. Two inherent costs: registration is an effect (mutating an external store during
+// `{Dialog}`. Two inherent costs: registration is an effect (mutating an external store during
 // render breaks concurrent rendering), so content lands one commit behind its owner — not a visible
 // frame, see the paint-timing note in `use-dialog.tsx` — and every descendant render republishes,
 // re-rendering the outlet cheaply (`children` is unchanged, so React bails out). Two redesigns
-// rejected: a portal-anchor outlet removes both but reintroduces `{Modal}`; a per-modal host
+// rejected: a portal-anchor outlet removes both but reintroduces `{Dialog}`; a per-modal host
 // component would confine the second, for no measurable win.
 
 type OutletSnapshot = {
@@ -77,7 +77,7 @@ type OutletStoreMethods = {
 
 /**
  * Scoped outlet that renders the dialogs of every descendant `useDialog` call, so nothing has to
- * place `{modal.Modal}` in JSX. Inside one a modal registers here instead and its `Modal` becomes
+ * place `{modal.Dialog}` in JSX. Inside one a modal registers here instead and its `Dialog` becomes
  * `null` — destructuring still works, it renders nothing. Outlets nest: the nearest wins.
  * @example
  * ```tsx
@@ -92,7 +92,7 @@ type OutletStoreMethods = {
  *
  * function Dashboard() {
  *   const { open } = useDialog({ id: 'info', render: () => <div>Hello</div> });
- *   // No need to render `Modal` — the outlet handles it.
+ *   // No need to render `Dialog` — the outlet handles it.
  *   return (
  *     <button
  *       onClick={() => {

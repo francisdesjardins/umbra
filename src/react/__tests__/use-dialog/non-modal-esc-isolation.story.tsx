@@ -25,7 +25,7 @@ export function NonModalEscIsolationHarness() {
     };
   }, []);
 
-  const { open, isVisible, Modal } = useDialog<void, 'close'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'close'>({
     id: 'esc-isolation-panel',
     nonModal: true,
     animation: {
@@ -67,7 +67,7 @@ export function NonModalEscIsolationHarness() {
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="leak-count">{leakCount}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

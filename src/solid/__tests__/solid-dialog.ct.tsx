@@ -174,7 +174,7 @@ test.describe('useDialog (Solid)', () => {
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
   });
 
-  test('an outlet renders the dialog and Modal becomes null', async ({ mount, page }) => {
+  test('an outlet renders the dialog and Dialog becomes null', async ({ mount, page }) => {
     await mount(<SolidOutletHarness />);
     await expect(page.getByTestId('dialog-slot')).toHaveText('null');
 
@@ -298,7 +298,7 @@ test.describe('umbra/solid — a dismissal this binding must report', () => {
 });
 
 test.describe('placement (Solid)', () => {
-  test('portal: true mounts the dialog itself and leaves Modal null', async ({ mount, page }) => {
+  test('portal: true mounts the dialog itself and leaves Dialog null', async ({ mount, page }) => {
     // The one place the hook surfaces differ: Solid owns the element, mounts it, returns `null`.
     await mount(<SolidPortalHarness />);
     await expect(page.getByTestId('dialog-slot')).toHaveText('null');

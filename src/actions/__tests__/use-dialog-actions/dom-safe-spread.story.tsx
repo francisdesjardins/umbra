@@ -11,7 +11,7 @@ import { Key } from '../../../utils/keys.js';
  * what a caller spreads is not what React emits.
  */
 export function DomSafeSpreadHarness() {
-  const { open, Modal } = useDialog<void, 'plain'>({
+  const { open, Dialog } = useDialog<void, 'plain'>({
     id: 'dom-safe-spread',
     render: ({ action }) => {
       return (
@@ -36,7 +36,7 @@ export function DomSafeSpreadHarness() {
       >
         Open Dom Spread
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

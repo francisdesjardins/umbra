@@ -14,7 +14,7 @@ const slidePanelStyle: CSSProperties = {
  * Tests that the direction string is exposed in the render context.
  */
 export function DirectionSlideHarness() {
-  const { open, Modal } = useSlideDialog<void, 'close'>({
+  const { open, Dialog } = useSlideDialog<void, 'close'>({
     id: 'slide-direction',
     direction: 'right',
     render: ({ handle, direction }) => {
@@ -42,7 +42,7 @@ export function DirectionSlideHarness() {
       >
         Open Panel
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

@@ -80,7 +80,7 @@ export function DeclaredPayloadExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <AppButton
         onClick={() => {
           setCopies((n) => {

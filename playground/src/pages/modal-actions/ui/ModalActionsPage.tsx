@@ -11,7 +11,7 @@ import { InfoIcon } from '@/shared/ui/icons';
 export const ModalActionsPage = () => {
   return (
     <PageLayout
-      title="Modal Actions"
+      title="Dialog Actions"
       description="An action is declared by being rendered: action('save', handler) inside render names the reason, binds the handler, and returns the button props — loading, disabled, aria-keyshortcuts — in one expression."
     >
       <div className={styles['banner']}>
@@ -41,7 +41,7 @@ export const ModalActionsPage = () => {
             example={<FocusOnOpenExample />}
           />
           <ExampleCard
-            title="Delete Item Modal"
+            title="Delete Item Dialog"
             description="A delete confirmation that reports which item it closed with — the typed close payload, declared once on the hook."
             codeKey="delete-item-modal"
             example={<DeleteItemModalExample />}

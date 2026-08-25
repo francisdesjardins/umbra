@@ -12,7 +12,7 @@ export const MODAL_ID = 'outlet-demo';
 
 const resultStore = createResultStore();
 
-// ── Inner component — no {Modal} in JSX ────────────────────────────────────
+// ── Inner component — no {Dialog} in JSX ────────────────────────────────────
 
 function ConfirmDialog() {
   const confirmModal = useMessageDialog({
@@ -23,12 +23,12 @@ function ConfirmDialog() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="info" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageDialog.Title>
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Outlet Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>
               This modal renders via <code>{'<DialogOutlet>'}</code> — there is no{' '}
-              <code>{'{modal.Modal}'}</code> in the component JSX.
+              <code>{'{modal.Dialog}'}</code> in the component JSX.
             </Shared.Message>
           </MessageDialog.Content>
           <MessageDialog.Footer>

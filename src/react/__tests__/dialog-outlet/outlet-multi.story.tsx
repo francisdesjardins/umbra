@@ -10,7 +10,7 @@ function DialogA() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal A</p>
+          <p>Dialog A</p>
           <button
             onClick={() => {
               dialogManager.open('outlet-multi-b');
@@ -50,7 +50,7 @@ function DialogB() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal B</p>
+          <p>Dialog B</p>
           <button
             onClick={() => {
               dialogManager.open('outlet-multi-a');
@@ -85,7 +85,7 @@ function DialogB() {
 }
 
 /**
- * Two modals inside one outlet — both render without {Modal} in JSX.
+ * Two modals inside one outlet — both render without {Dialog} in JSX.
  */
 export function OutletMultiHarness() {
   return (

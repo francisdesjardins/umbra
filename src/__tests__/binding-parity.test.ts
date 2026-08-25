@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
  * The bindings that promise the same surface expose the same surface. `./react` and `./solid` are
  * *hook* bindings: they render, so they share a surface down to the file names, and any divergence
  * is a bug that decays one export at a time — added to one, forgotten on the other, breaking
- * nothing until someone reaches for it. `./vanilla` is a *controller* with no `render`, `Modal` or
+ * nothing until someone reaches for it. `./vanilla` is a *controller* with no `render`, `Dialog` or
  * outlet, so its own test below records what it must and must not have instead. Only *names* are
  * compared; whether they mean the same thing is the shared type model's job, pinned by
  * `core/__tests__/type-model.test.ts`. Parsed rather than imported, because the unit project runs

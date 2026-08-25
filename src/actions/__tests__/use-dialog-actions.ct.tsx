@@ -572,7 +572,7 @@ test.describe('focusOnOpen', () => {
   }) => {
     // The input is first in the DOM and what showModal() picks unaided, so Cancel is not luck.
     await mount(<FocusOnOpenHarness />);
-    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
 
     await expect
@@ -588,7 +588,7 @@ test.describe('focusOnOpen', () => {
     // focus is dropped before it is taken: refocusing an already-focused element is a no-op on all
     // three engines, flags included.
     await mount(<FocusOnOpenHarness />);
-    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
 
     await expect
@@ -604,7 +604,7 @@ test.describe('focusOnOpen', () => {
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
     // The claimed button decides where the modal opens; after a failure, whoever ran the action.
     await mount(<FocusOnOpenHarness />);
-    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect
       .poll(() => {
         return activeTestId(page);
@@ -630,7 +630,7 @@ test.describe('focus after a failed action follows the button that ran it', () =
   }) => {
     // Focus starts on Cancel; failing from Confirm must leave focus there, not argue it back.
     await mount(<FocusOnOpenHarness />);
-    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect
       .poll(() => {
         return page.evaluate(() => {
@@ -662,7 +662,7 @@ test.describe('the restore after a failed action announces itself', () => {
     // `<body>` when it settles and the library puts it back from nowhere. A keyboard failure would
     // carry the ring through input modality and pass whatever the library does.
     await mount(<FocusOnOpenHarness />);
-    await page.getByRole('button', { name: 'Open Focus Modal' }).click();
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
 
     await page.getByTestId('foo-confirm').click();
     await expect(page.getByTestId('foo-error')).toHaveText('Deletion failed');

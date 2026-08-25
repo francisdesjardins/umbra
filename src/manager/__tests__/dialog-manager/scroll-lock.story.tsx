@@ -7,7 +7,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * opts into `--dialog-scrollbar-width`: user-land can use it, the library never touches it.
  */
 export function ScrollLockHarness() {
-  const { Modal, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog, dialogManager } = useDialog<void, 'done'>({
     id: 'scroll-lock-modal',
     render: ({ handle }) => {
       return (
@@ -19,14 +19,14 @@ export function ScrollLockHarness() {
               dialogManager.open('scroll-lock-modal-2');
             }}
           >
-            Stack Second Modal
+            Stack Second Dialog
           </button>
           <button
             onClick={() => {
               handle.close('done');
             }}
           >
-            Close Modal
+            Close Dialog
           </button>
         </div>
       );
@@ -34,7 +34,7 @@ export function ScrollLockHarness() {
   });
 
   // Stacked on the first: both lock, but the compensation must be applied exactly once.
-  const { Modal: Dialog2 } = useDialog<void, 'done'>({
+  const { Dialog: Dialog2 } = useDialog<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
       return (
@@ -52,7 +52,7 @@ export function ScrollLockHarness() {
     },
   });
 
-  const { Modal: NonModal } = useDialog<void, 'done'>({
+  const { Dialog: NonModal } = useDialog<void, 'done'>({
     id: 'scroll-lock-non-modal',
     nonModal: true,
     // Viewport-anchored: this harness tests scroll locking, not contained positioning.
@@ -81,7 +81,7 @@ export function ScrollLockHarness() {
             dialogManager.open('scroll-lock-modal');
           }}
         >
-          Open Modal
+          Open Dialog
         </button>
         <button
           onClick={() => {
@@ -108,7 +108,7 @@ export function ScrollLockHarness() {
           <span data-testid="fixed-marker">fixed</span>
         </div>
       </div>
-      {Modal}
+      {Dialog}
       {Dialog2}
       {NonModal}
     </div>

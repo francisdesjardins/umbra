@@ -211,7 +211,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
             return;
           }
 
-          const error = new Error(`Modal "${id}" was destroyed before it closed`);
+          const error = new Error(`Dialog "${id}" was destroyed before it closed`);
           for (const resolve of pending) {
             resolve([error, null]);
           }
@@ -238,7 +238,7 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
          */
         addCloseResolver(resolver: CloseResolver<TData, TReason>): void {
           if (get().phase === 'closing') {
-            resolver([new Error(`Modal "${id}" is closing; no reopen is queued`), null]);
+            resolver([new Error(`Dialog "${id}" is closing; no reopen is queued`), null]);
             return;
           }
           closeResolvers.push(resolver);

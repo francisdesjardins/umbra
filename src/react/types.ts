@@ -51,7 +51,7 @@ export type UseDialogOptions<TData = void, TReason extends string = string> = Us
  * @typeParam TData - Type of the close data payload.
  * @example
  * function DeleteButton() {
- *   const { openAndWait, Modal } = useDialog<boolean>({
+ *   const { openAndWait, Dialog } = useDialog<boolean>({
  *     id: 'confirm-delete',
  *     render: ({ handle, action }) => {
  *       return <button onClick={() => handle.close('confirm', true)}>Yes, delete</button>;
@@ -66,7 +66,7 @@ export type UseDialogOptions<TData = void, TReason extends string = string> = Us
  *   return (
  *     <>
  *       <button onClick={() => void ask()}>Delete</button>
- *       {Modal}
+ *       {Dialog}
  *     </>
  *   );
  * }

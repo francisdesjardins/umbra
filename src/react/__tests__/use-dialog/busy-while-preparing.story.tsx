@@ -63,8 +63,8 @@ export function BusyWhilePreparingHarness() {
       >
         Open Instant
       </button>
-      {slow.Modal}
-      {instant.Modal}
+      {slow.Dialog}
+      {instant.Dialog}
     </div>
   );
 }

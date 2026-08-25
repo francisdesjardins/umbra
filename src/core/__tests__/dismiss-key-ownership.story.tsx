@@ -60,7 +60,7 @@ export function DismissKeyOwnershipHarness() {
       >
         Open the panel
       </button>
-      {modal.Modal}
+      {modal.Dialog}
 
       {/* Portaled out of the dialog, the way a picker mounts its popup — and holding focus. */}
       {pickerOpen &&

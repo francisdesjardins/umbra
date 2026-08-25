@@ -10,11 +10,11 @@ import {
 } from './dialog-outlet.story';
 
 test.describe('DialogOutlet', () => {
-  test('renders modal via outlet without {Modal} in JSX', async ({ mount, page }) => {
+  test('renders modal via outlet without {Dialog} in JSX', async ({ mount, page }) => {
     await mount(<OutletBasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
     await expect(page.getByTestId('dialog-outlet-basic')).toContainText('Outlet content');
@@ -22,7 +22,7 @@ test.describe('DialogOutlet', () => {
 
   test('close works through outlet', async ({ mount, page }) => {
     await mount(<OutletBasicHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
 
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -30,21 +30,21 @@ test.describe('DialogOutlet', () => {
     await expect(page.getByTestId('last-reason')).toHaveText('confirm');
   });
 
-  test('modal.Modal is null when outlet is present', async ({ mount, page }) => {
+  test('modal.Dialog is null when outlet is present', async ({ mount, page }) => {
     await mount(<OutletNullDialogHarness />);
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
   });
 
-  test('modal.Modal is still null after opening inside outlet', async ({ mount, page }) => {
+  test('modal.Dialog is still null after opening inside outlet', async ({ mount, page }) => {
     await mount(<OutletNullDialogHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
     await expect(page.getByTestId('dialog-outlet-null-check')).toBeVisible();
   });
 
-  test('without outlet — standard {Modal} behaviour', async ({ mount, page }) => {
+  test('without outlet — standard {Dialog} behaviour', async ({ mount, page }) => {
     await mount(<NoOutletHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-no-outlet')).toBeVisible();
 
@@ -94,7 +94,7 @@ test.describe('DialogOutlet', () => {
 
   test('escape closes modal rendered via outlet', async ({ mount, page }) => {
     await mount(<OutletBasicHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
     await expect(page.getByTestId('is-opening')).toHaveText('false');
 
@@ -106,12 +106,12 @@ test.describe('DialogOutlet', () => {
   test('can open and close multiple times via outlet', async ({ mount, page }) => {
     await mount(<OutletBasicHarness />);
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -125,7 +125,7 @@ test.describe('DialogOutlet — paint timing', () => {
     page,
   }) => {
     await mount(<OutletPaintTimingHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
     await page.getByRole('button', { name: 'Increment' }).click();

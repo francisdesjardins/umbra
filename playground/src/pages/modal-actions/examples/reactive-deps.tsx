@@ -232,7 +232,7 @@ export function ReactiveDepsExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={reactiveModal.Modal}>
+    <ExampleLayout result={result} modals={reactiveModal.Dialog}>
       <AppButton
         variant="contained"
         size="small"
@@ -241,7 +241,7 @@ export function ReactiveDepsExample() {
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
-        Open Modal & Test Reactivity
+        Open Dialog & Test Reactivity
       </AppButton>
     </ExampleLayout>
   );

@@ -69,7 +69,7 @@ export type BindDialogOwnOptions = {
 };
 
 /**
- * The live state of a bound dialog, read through {@link DialogController.getSnapshot}. `Modal`, not
+ * The live state of a bound dialog, read through {@link DialogController.getSnapshot}. `Dialog`, not
  * `Dialog`: it holds no element — it is what `DialogStoreSnapshot` describes for the hook bindings.
  */
 export type DialogSnapshot = {

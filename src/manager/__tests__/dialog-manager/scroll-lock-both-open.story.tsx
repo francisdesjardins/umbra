@@ -4,7 +4,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** The nested manager's own modal, opened from inside the outer one. */
 function InnerDialog() {
-  const { open, Modal, isVisible } = useDialog<void, 'done'>({
+  const { open, Dialog, isVisible } = useDialog<void, 'done'>({
     id: 'both-open-inner',
     render: ({ handle }) => {
       return (
@@ -36,7 +36,7 @@ function InnerDialog() {
       >
         Open Inner
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -46,7 +46,7 @@ function InnerDialog() {
  * boolean would let the first to let go release the other's lock. Claims are idempotent per owner.
  */
 export function ScrollLockBothOpenHarness() {
-  const { open, Modal } = useDialog<void, 'done'>({
+  const { open, Dialog } = useDialog<void, 'done'>({
     id: 'both-open-outer',
     render: ({ handle }) => {
       return (
@@ -78,7 +78,7 @@ export function ScrollLockBothOpenHarness() {
       >
         Open Outer
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

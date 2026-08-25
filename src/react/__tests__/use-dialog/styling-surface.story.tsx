@@ -43,8 +43,8 @@ export function StylingSurfaceHarness() {
       >
         Open Drawer
       </button>
-      {sized.Modal}
-      {drawer.Modal}
+      {sized.Dialog}
+      {drawer.Dialog}
     </div>
   );
 }

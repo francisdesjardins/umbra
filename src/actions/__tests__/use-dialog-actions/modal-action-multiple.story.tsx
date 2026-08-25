@@ -12,7 +12,7 @@ const delay = (ms: number) => {
  * the sibling receives disabled: true.
  */
 export function DialogActionMultipleHarness() {
-  const { open, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'action-multi',
     render: ({ action, hasRunningAction }) => {
       return (
@@ -44,7 +44,7 @@ export function DialogActionMultipleHarness() {
       >
         Open
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

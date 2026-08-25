@@ -127,7 +127,7 @@ export function PerActionStateExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <AppButton
         variant="contained"
         size="small"

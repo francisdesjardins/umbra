@@ -29,7 +29,7 @@ export function KeyPassthroughHarness() {
     };
   }, []);
 
-  const { open, Modal } = useDialog({
+  const { open, Dialog } = useDialog({
     id: 'key-passthrough',
     nonModal: true,
     portal: true,
@@ -68,7 +68,7 @@ export function KeyPassthroughHarness() {
         Open Panel
       </button>
       <span data-testid="app-escapes">{appEscapes}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

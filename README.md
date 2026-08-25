@@ -34,7 +34,7 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 | `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`) and `setLogLevel`. **No framework.** |
 | `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `DialogOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                |
 | `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                                                                |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — whose `bindAction` is a **member of the controller it returns**, not a second export. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — whose `bindAction` is a **member of the controller it returns**, not a second export. No `render`, no `Dialog`, no outlet, and no framework. Same wholesale re-export.                                                                                               |
 
 The root resolves and runs with no framework installed at all, which is what lets a plain `.ts`
 service, a router guard, a worker or an SSR path raise a dialog without a component. Each binding
@@ -46,7 +46,7 @@ the built package — not by convention.
 renderer's: Solid's live values (`isVisible`, `isPreparing`, `hasRunningAction`, `error`) are
 getters over signals, so read them through the object rather than destructuring it; `useLookup`
 returns an accessor rather than an object, because a discriminated union cannot survive being
-spread into getters; and `portal: true` mounts the dialog for you, leaving `Modal` as `null`.
+spread into getters; and `portal: true` mounts the dialog for you, leaving `Dialog` as `null`.
 
 **`umbra/vanilla` is a different kind on purpose.** It renders nothing — a binding that did would
 mean shipping a renderer, which this library refuses to do — so the element and its contents stay
@@ -192,7 +192,7 @@ function ConfirmDelete() {
   return (
     <>
       <button onClick={() => modal.open()}>Delete</button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -345,7 +345,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `useMessageDialog` / `useSlideDialog` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
 - `dialogPlacement` / `DialogAnimation` — where a non-modal dialog sits, and how any of them animates
-- `DialogOutlet` — render registered modals from one place instead of placing `{modal.Modal}`
+- `DialogOutlet` — render registered modals from one place instead of placing `{modal.Dialog}`
 - `umbra/solid` — the three differences from the React chapter, all of them the renderer's, plus `fromStore`
 - `umbra/vanilla` — `bindDialog`, `DialogController`, `bindAction`, reading state without a renderer, and what happens to a `<dialog>` the server sent already open
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes

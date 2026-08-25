@@ -437,11 +437,11 @@ export function CosmicOverrideExample() {
             </button>
           </div>
         )}
-        {gate.Modal}
+        {gate.Dialog}
       </div>
 
       <ResultDisplay result={result} />
-      {warp.Modal}
+      {warp.Dialog}
     </div>
   );
 }

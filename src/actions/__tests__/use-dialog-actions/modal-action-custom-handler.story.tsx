@@ -14,7 +14,7 @@ const delay = (ms: number) => {
 export function DialogActionCustomHandlerHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'action-custom',
     render: ({ action }) => {
       const confirmProps = action('confirm', async (close) => {
@@ -57,7 +57,7 @@ export function DialogActionCustomHandlerHarness() {
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

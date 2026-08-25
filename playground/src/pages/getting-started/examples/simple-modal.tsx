@@ -23,7 +23,7 @@ export function SimpleModalExample() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="success" />
-            <MessageDialog.Title id={`${MODAL_ID}-title`}>Simple Modal</MessageDialog.Title>
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Simple Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.OverflowContainer style={{ maxHeight: '20vh' }}>
@@ -64,7 +64,7 @@ export function SimpleModalExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={simpleModal.Modal}>
+    <ExampleLayout result={result} modals={simpleModal.Dialog}>
       <AppButton
         variant="contained"
         size="small"

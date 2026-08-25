@@ -11,7 +11,7 @@
  *   anywhere in Solid; read through the context, `render: (ctx) => <Show when={ctx.isPreparing}>…`.
  * - {@link useLookup} returns an accessor, because `DialogInfo` is a discriminated union and an
  *   object of getters cannot be one without losing the narrowing.
- * - `portal: true` leaves `Modal` as `null`: a Solid modal owns its element, so the binding mounts
+ * - `portal: true` leaves `Dialog` as `null`: a Solid modal owns its element, so the binding mounts
  *   it into `document.body` and there is nothing left for the caller to place.
  *
  * Solid is an **optional** peer dependency — this entry point is the only thing that touches it —

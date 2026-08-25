@@ -10,7 +10,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function ReopenSettlesHarness() {
   const [settleCount, setSettleCount] = useState(0);
 
-  const { open, Modal } = useDialog<void, 'done'>({
+  const { open, Dialog } = useDialog<void, 'done'>({
     id: 'reopen-modal',
     render: ({ handle }) => {
       return (
@@ -48,10 +48,10 @@ export function ReopenSettlesHarness() {
           });
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="settle-count">{settleCount}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

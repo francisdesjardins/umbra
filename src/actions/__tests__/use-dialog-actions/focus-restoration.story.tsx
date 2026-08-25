@@ -7,7 +7,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * should be restored to the first focused element (Ok button, autofocused).
  */
 export function FocusRestorationHarness() {
-  const { open, Modal } = useDialog<void, 'bad' | 'ok'>({
+  const { open, Dialog } = useDialog<void, 'bad' | 'ok'>({
     id: 'ctrl-focus',
     render: ({ action }) => {
       return (
@@ -42,7 +42,7 @@ export function FocusRestorationHarness() {
       >
         Open
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

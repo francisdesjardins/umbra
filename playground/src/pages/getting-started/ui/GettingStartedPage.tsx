@@ -17,7 +17,7 @@ export const GettingStartedPage = () => {
       >
         <ExampleGrid>
           <ExampleCard
-            title="Simple Modal"
+            title="Simple Dialog"
             description="Basic modal with open, close, and openAndWait."
             codeKey="simple-modal"
             example={<SimpleModalExample />}
@@ -43,7 +43,7 @@ export const GettingStartedPage = () => {
       >
         <ExampleGrid>
           <ExampleCard
-            title="Message Modal — No Transition"
+            title="Message Dialog — No Transition"
             description="Instant open/close with animation duration set to 0 — for when speed matters more than polish."
             codeKey="no-transition-message"
             example={<NoTransitionMessageExample />}

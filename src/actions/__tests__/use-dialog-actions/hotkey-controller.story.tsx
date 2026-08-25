@@ -15,7 +15,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function HotkeyActionsHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm' | 'save'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm' | 'save'>({
     id: 'ctrl-hotkey',
     render: ({ action }) => {
       return (
@@ -70,7 +70,7 @@ export function HotkeyActionsHarness() {
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export function ContainedPositioningSlideHarness({
 }) {
   const [behindClicks, setBehindClicks] = useState(0);
 
-  const { open, isVisible, Modal } = useSlideDialog({
+  const { open, isVisible, Dialog } = useSlideDialog({
     id: 'contained-positioning-slide',
     direction,
     nonModal: true,
@@ -70,7 +70,7 @@ export function ContainedPositioningSlideHarness({
         >
           Behind the panel
         </button>
-        {Modal}
+        {Dialog}
       </div>
     </div>
   );

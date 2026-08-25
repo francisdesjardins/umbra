@@ -287,7 +287,7 @@ Each wraps `useDialog` with a template-specific render context. Shared internals
 - `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `DialogRenderArgs` unchanged; reports `template: 'message'`
 - `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `DialogRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
-### Modal Actions
+### Dialog Actions
 
 Actions are **declared by being rendered**. `render` is handed an `action` factory; calling it names
 the reason, binds the handler and returns the props to spread. There is no config object, no second
@@ -383,7 +383,7 @@ the concept, not editing three that describe it. The chain, rooted in [core/type
 ```
 DialogRenderArgs<TData>                ← the render-time slice:
 │                                       { isPreparing, phase, handle, action, hasRunningAction, error }
-├── UseDialogReturn<TData>   = DialogRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
+├── UseDialogReturn<TData>   = DialogRenderArgs<TData> & { open, openAndWait, isVisible, Dialog,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= DialogRenderArgs<TData>               (templates/shared.ts)
     ├── MessageDialogRenderContext<TData> = BaseRenderContext<TData>
@@ -529,7 +529,7 @@ Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](.
 **Cross-modal in stories** — use `dialogManager` from `useDialog` return, not the static singleton:
 
 ```tsx
-const { Modal, dialogManager } = useDialog({ id: 'my-modal', ... });
+const { Dialog, dialogManager } = useDialog({ id: 'my-modal', ... });
 dialogManager.open('other-modal'); // ✅ context-aware
 ```
 

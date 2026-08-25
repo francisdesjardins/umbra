@@ -14,7 +14,7 @@ export function VolatileKeyDownHarness() {
   const [keys, setKeys] = useState(0);
   const [settled, setSettled] = useState(0);
 
-  const { open, isVisible, Modal } = useDialog<void, 'save'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'save'>({
     id: 'volatile-keydown',
     // A fresh closure every render over state it reads, so React cannot hoist it.
     onKeyDown: (event: KeyboardEvent) => {
@@ -64,7 +64,7 @@ export function VolatileKeyDownHarness() {
         Open Volatile
       </button>
       <span data-testid="volatile-is-visible">{isVisible ? 'open' : 'closed'}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

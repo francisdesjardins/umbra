@@ -29,7 +29,7 @@ export function TransitionToggleHarness() {
     return dropLogging;
   }, []);
 
-  const { open, isVisible, Modal } = useDialog<void, 'done'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'done'>({
     id: 'transition-toggle',
     onClose: dropLogging,
     render: ({ handle }) => {
@@ -67,7 +67,7 @@ export function TransitionToggleHarness() {
         Disable Transitions
       </button>
       <span data-testid="toggle-is-visible">{isVisible ? 'open' : 'closed'}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

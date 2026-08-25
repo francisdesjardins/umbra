@@ -33,7 +33,7 @@ export function DefinitionActionsHarness() {
     return countStore.getSnapshot().count;
   });
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'ctrl-definition',
     render: ({ action }) => {
       return (
@@ -79,7 +79,7 @@ export function DefinitionActionsHarness() {
       </button>
       <span data-testid="def-is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="def-last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

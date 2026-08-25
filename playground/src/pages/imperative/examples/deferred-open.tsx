@@ -139,5 +139,5 @@ function DeferredTarget() {
     },
   });
 
-  return modal.Modal;
+  return modal.Dialog;
 }

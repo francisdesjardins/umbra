@@ -8,12 +8,12 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function BasicHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'basic-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal content</p>
+          <p>Dialog content</p>
           <button
             onClick={() => {
               handle.close('confirm');
@@ -43,11 +43,11 @@ export function BasicHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function DomEventHarness() {
   const [log, setLog] = useState<string[]>([]);
 
-  const { Modal: DialogA, dialogManager } = useDialog<void, 'ok'>({
+  const { Dialog: DialogA, dialogManager } = useDialog<void, 'ok'>({
     id: 'dom-ev-modal',
     render: ({ handle }) => {
       return (
@@ -21,14 +21,14 @@ export function DomEventHarness() {
               handle.close('ok');
             }}
           >
-            Close Modal
+            Close Dialog
           </button>
         </div>
       );
     },
   });
 
-  const { Modal: DialogB } = useSlideDialog<void, 'ok'>({
+  const { Dialog: DialogB } = useSlideDialog<void, 'ok'>({
     id: 'dom-ev-slide',
     direction: 'right',
     render: ({ handle }) => {
@@ -46,7 +46,7 @@ export function DomEventHarness() {
     },
   });
 
-  const { Modal: DialogC, open: openMessage } = useMessageDialog<void, 'ok'>({
+  const { Dialog: DialogC, open: openMessage } = useMessageDialog<void, 'ok'>({
     id: 'dom-ev-message',
     render: ({ handle }) => {
       return (
@@ -93,7 +93,7 @@ export function DomEventHarness() {
           dialogManager.open('dom-ev-modal');
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <button
         onClick={() => {

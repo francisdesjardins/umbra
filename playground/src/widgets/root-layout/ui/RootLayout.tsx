@@ -31,7 +31,7 @@ const MainContent = () => {
       <div className={styles['content']}>
         <Outlet />
       </div>
-      {codeModal.Modal}
+      {codeModal.Dialog}
     </main>
   );
 };

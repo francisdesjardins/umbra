@@ -55,7 +55,7 @@ export function OpenEventInDocumentHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -95,7 +95,7 @@ export function OpenEventInShadowHarness() {
         Open
       </button>
       <div ref={hostRef} />
-      {shadow !== null && createPortal(modal.Modal, shadow)}
+      {shadow !== null && createPortal(modal.Dialog, shadow)}
     </>
   );
 }

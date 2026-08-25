@@ -512,7 +512,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
-    capability: 'the render callback and the Modal it returns',
+    capability: 'the render callback and the Dialog it returns',
     react: {
       state: 'works',
       references: [
@@ -542,11 +542,11 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: { state: 'works', note: '`createPortal` returns a node the caller still places.' },
     solid: {
       state: 'works',
-      note: 'The binding mounts the element itself, so `Modal` is `null`.',
+      note: 'The binding mounts the element itself, so `Dialog` is `null`.',
       references: [
         {
           file: 'src/solid/__tests__/solid-dialog.ct.tsx',
-          title: 'portal: true mounts the dialog itself and leaves Modal null',
+          title: 'portal: true mounts the dialog itself and leaves Dialog null',
         },
       ],
     },
@@ -568,7 +568,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/react/__tests__/dialog-outlet.ct.tsx',
-          title: 'renders modal via outlet without {Modal} in JSX',
+          title: 'renders modal via outlet without {Dialog} in JSX',
         },
       ],
     },
@@ -577,7 +577,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       references: [
         {
           file: 'src/solid/__tests__/solid-dialog.ct.tsx',
-          title: 'an outlet renders the dialog and Modal becomes null',
+          title: 'an outlet renders the dialog and Dialog becomes null',
         },
       ],
     },

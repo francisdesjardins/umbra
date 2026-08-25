@@ -64,7 +64,7 @@ export function StrandedFocusHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

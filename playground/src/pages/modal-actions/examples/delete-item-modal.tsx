@@ -108,7 +108,7 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
 
   return {
     openForItem,
-    Modal: modal.Modal,
+    Dialog: modal.Dialog,
   };
 }
 
@@ -122,7 +122,7 @@ export function DeleteItemModalExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={deleteModal.Modal}>
+    <ExampleLayout result={result} modals={deleteModal.Dialog}>
       <AppButton
         variant="contained"
         color="error"

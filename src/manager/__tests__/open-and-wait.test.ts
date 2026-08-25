@@ -104,7 +104,7 @@ test.describe('openAndWait', () => {
 
       const [error, result] = await dm.openAndWait('leaving');
 
-      expect(error?.message).toBe('Modal "leaving" is closing; no reopen is queued');
+      expect(error?.message).toBe('Dialog "leaving" is closing; no reopen is queued');
       expect(result, 'the previous interaction’s reason is not this caller’s').toBeNull();
     } finally {
       frames.restore();

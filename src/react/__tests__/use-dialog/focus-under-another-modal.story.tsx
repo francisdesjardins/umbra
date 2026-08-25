@@ -58,7 +58,7 @@ export function FocusUnderAnotherDialogHarness() {
           >
             Open the one on top
           </button>
-          {child.Modal}
+          {child.Dialog}
         </div>
       );
     },
@@ -74,7 +74,7 @@ export function FocusUnderAnotherDialogHarness() {
         Open Underneath
       </button>
       <span data-testid="under-done">{done}</span>
-      {owner.Modal}
+      {owner.Dialog}
     </div>
   );
 }

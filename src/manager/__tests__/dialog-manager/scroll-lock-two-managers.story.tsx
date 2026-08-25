@@ -4,14 +4,14 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 function BystanderDialog() {
-  const { Modal } = useDialog({
+  const { Dialog } = useDialog({
     id: 'two-managers-bystander',
     render: () => {
       return null;
     },
   });
 
-  return <div>{Modal}</div>;
+  return <div>{Dialog}</div>;
 }
 
 /**
@@ -22,7 +22,7 @@ function BystanderDialog() {
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);
 
-  const { open, Modal } = useDialog<void, 'done'>({
+  const { open, Dialog } = useDialog<void, 'done'>({
     id: 'two-managers-modal',
     render: ({ handle }) => {
       return (
@@ -40,7 +40,7 @@ export function ScrollLockTwoManagersHarness() {
               handle.close('done');
             }}
           >
-            Close Modal
+            Close Dialog
           </button>
         </div>
       );
@@ -54,10 +54,10 @@ export function ScrollLockTwoManagersHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <DialogManagerProvider>{bystanderMounted ? <BystanderDialog /> : null}</DialogManagerProvider>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

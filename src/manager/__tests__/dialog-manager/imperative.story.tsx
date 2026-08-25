@@ -12,7 +12,7 @@ export function ImperativeHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { Modal, dialogManager } = useDialog<void, 'close' | 'dm-imperative'>({
+  const { Dialog, dialogManager } = useDialog<void, 'close' | 'dm-imperative'>({
     id: 'dm-imperative',
     render: ({ handle }) => {
       return (
@@ -51,7 +51,7 @@ export function ImperativeHarness() {
       </button>
       <span data-testid="has-open">{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

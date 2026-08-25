@@ -13,7 +13,7 @@ export function ReasonSourceHarness() {
   const [lastReason, setLastReason] = useState('');
   const [lastId, setLastId] = useState('');
 
-  const { open, Modal } = useDialog<SaveResult, 'save' | 'close'>({
+  const { open, Dialog } = useDialog<SaveResult, 'save' | 'close'>({
     id: 'ctrl-reason-source',
     render: ({ action }) => {
       return (
@@ -48,7 +48,7 @@ export function ReasonSourceHarness() {
       </button>
       <span data-testid="reason-source-last">{lastReason}</span>
       <span data-testid="reason-source-id">{lastId}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

@@ -43,7 +43,7 @@ const column = {
 
 /**
  * A modal declared the ordinary way, and that is the whole claim: nothing here is written for the
- * server. `useDialog` closes over its own store, `Modal` is a `<dialog>` React can describe without a
+ * server. `useDialog` closes over its own store, `Dialog` is a `<dialog>` React can describe without a
  * document, and what comes back is a **closed** dialog — the only honest answer, since the top layer
  * is enterable from `showModal()` alone and no served HTML can hand one back open.
  */
@@ -85,6 +85,6 @@ export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
       },
       'Open the hydrated dialog'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }

@@ -11,7 +11,7 @@ export function DismissWhilePreparingDisabledHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'dismiss-while-preparing-modal',
     dismissWhilePreparing: false,
     prepare: () => {
@@ -53,11 +53,11 @@ export function DismissWhilePreparingDisabledHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function DismissWhilePreparingDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'dismiss-while-preparing-default',
     prepare: () => {
       return new Promise<void>((resolve) => {
@@ -103,11 +103,11 @@ export function DismissWhilePreparingDefaultHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

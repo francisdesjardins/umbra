@@ -12,7 +12,7 @@ import {
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
 
-/** Modal state and the close handle, passed to the MessageDialog render function. */
+/** Dialog state and the close handle, passed to the MessageDialog render function. */
 export type MessageDialogRenderContext<
   TData = void,
   TReason extends string = string,

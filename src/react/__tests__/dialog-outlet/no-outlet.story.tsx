@@ -3,12 +3,12 @@ import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * No outlet — standard behaviour. Modal must be placed in JSX.
+ * No outlet — standard behaviour. Dialog must be placed in JSX.
  */
 export function NoOutletHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'no-outlet',
     render: ({ handle }) => {
       return (
@@ -36,11 +36,11 @@ export function NoOutletHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

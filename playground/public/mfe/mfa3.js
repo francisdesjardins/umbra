@@ -193,9 +193,9 @@ function Support() {
         )
       )
     ),
-    // The dialog itself. `Modal` is a real DOM node here rather than a description of one —
+    // The dialog itself. `Dialog` is a real DOM node here rather than a description of one —
     // Solid owns its elements — so placing it is the same one word it is in React.
-    ticket.Modal
+    ticket.Dialog
   );
 }
 

@@ -130,7 +130,7 @@ function BasicApp(): Built {
       },
       'Open and wait'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -186,11 +186,11 @@ function DeclarationApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
-/** An outlet takes the dialog, and `Modal` becomes `null` — the same contract React's has. */
+/** An outlet takes the dialog, and `Dialog` becomes `null` — the same contract React's has. */
 function OutletInner(): Built {
   const modal = useDialog<void, 'confirm'>({
     id: 'solid-outlet',
@@ -204,7 +204,7 @@ function OutletInner(): Built {
     'div',
     null,
     text(() => {
-      return modal.Modal === null ? 'null' : 'node';
+      return modal.Dialog === null ? 'null' : 'node';
     }, 'dialog-slot'),
     h(
       'button',
@@ -279,7 +279,7 @@ function SlideApp(): Built {
       },
       'Open'
     ),
-    panel.Modal
+    panel.Dialog
   );
 }
 
@@ -320,7 +320,7 @@ function MessageApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -368,7 +368,7 @@ function DisposalInner(props: { readonly dispose: () => void }): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -477,7 +477,7 @@ function OutletDisposalApp(): Built {
   );
 }
 
-/** `portal: true` — the binding mounts the element itself, and `Modal` stays null. */
+/** `portal: true` — the binding mounts the element itself, and `Dialog` stays null. */
 function PortalApp(): Built {
   const modal = useDialog<void, 'ok'>({
     id: 'solid-portal',
@@ -492,7 +492,7 @@ function PortalApp(): Built {
     'div',
     { 'data-testid': 'portal-host' },
     text(() => {
-      return modal.Modal === null ? 'null' : 'node';
+      return modal.Dialog === null ? 'null' : 'node';
     }, 'dialog-slot'),
     h(
       'button',
@@ -504,7 +504,7 @@ function PortalApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -547,7 +547,7 @@ function PortalHostApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -588,7 +588,7 @@ function DismissRequestApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -616,7 +616,7 @@ function ContainedApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -683,7 +683,7 @@ function LiveStateApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -742,7 +742,7 @@ function BusyApp(): Built {
       },
       'Open'
     ),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -842,8 +842,8 @@ function LabellingApp(): Built {
       },
       'Open late'
     ),
-    dangling.Modal,
-    late.Modal
+    dangling.Dialog,
+    late.Dialog
   );
 }
 
@@ -963,8 +963,8 @@ function stackPriorityApp(withPolicy: boolean): () => Built {
         },
         'Open the warning'
       ),
-      warning.Modal,
-      panel.Modal
+      warning.Dialog,
+      panel.Dialog
     );
   };
 }
@@ -1102,7 +1102,7 @@ function NonModalOptionsApp(): Built {
     text(lastReason, 'last-reason'),
     text(prepareOutcome, 'prepare-outcome'),
     text(requestOutcome, 'request-outcome'),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -1224,7 +1224,7 @@ function ReconcileApp(): Built {
     text(() => {
       return asked().join(',');
     }, 'asked'),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -1301,7 +1301,7 @@ function FailedActionApp(): Built {
     text(() => {
       return modal.error?.message ?? 'none';
     }, 'error'),
-    modal.Modal
+    modal.Dialog
   );
 }
 
@@ -1362,9 +1362,9 @@ function ClaimlessReclaimApp(): Built {
       },
       'Open the modal, then the panel underneath'
     ),
-    modal.Modal,
+    modal.Dialog,
     // `null` under `portal: true`; kept for symmetry with React's harness, where it places the panel.
-    panel.Modal
+    panel.Dialog
   );
 }
 
@@ -1428,7 +1428,7 @@ function PrepareFailureApp(): Built {
       return sources().join(',') || 'none';
     }, 'solid-pf-sources'),
     text(message, 'solid-pf-message'),
-    modal.Modal
+    modal.Dialog
   );
 }
 

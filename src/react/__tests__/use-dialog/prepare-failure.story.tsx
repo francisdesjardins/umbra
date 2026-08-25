@@ -51,7 +51,7 @@ export function PrepareFailureHarness() {
       <span data-testid="pf-visible">{modal.isVisible ? 'open' : 'closed'}</span>
       <span data-testid="pf-sources">{failures.join(',') || 'none'}</span>
       <span data-testid="pf-message">{message}</span>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

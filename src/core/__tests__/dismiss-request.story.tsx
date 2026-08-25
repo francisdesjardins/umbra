@@ -59,7 +59,7 @@ export function ControlledDialogHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -129,7 +129,7 @@ export function ControlledPanelHarness() {
       <button data-testid="outside" type="button">
         Outside the panel
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }
@@ -172,7 +172,7 @@ export function ControlledClickOutsideHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }

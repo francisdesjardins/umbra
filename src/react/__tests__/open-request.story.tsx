@@ -57,7 +57,7 @@ export function OpenRequestHarness() {
       >
         L’avertissement ouvre le sien
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }
@@ -135,7 +135,7 @@ export function RefusesEverythingHarness() {
       >
         Instruct
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

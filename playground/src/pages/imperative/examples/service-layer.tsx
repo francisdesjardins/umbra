@@ -136,8 +136,8 @@ export function ServiceLayerExample() {
         result={null}
         modals={
           <>
-            {confirmModal.Modal}
-            {failureModal.Modal}
+            {confirmModal.Dialog}
+            {failureModal.Dialog}
           </>
         }
       >

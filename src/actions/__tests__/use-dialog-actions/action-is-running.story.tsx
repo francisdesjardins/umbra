@@ -19,7 +19,7 @@ const gate = () => {
  * was, through the aggregate.
  */
 export function ActionIsRunningHarness() {
-  const { open, Modal } = useDialog<void, 'save' | 'cancel'>({
+  const { open, Dialog } = useDialog<void, 'save' | 'cancel'>({
     id: 'action-is-running',
     render: ({ action, hasRunningAction }) => {
       return (
@@ -66,7 +66,7 @@ export function ActionIsRunningHarness() {
       >
         Open
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

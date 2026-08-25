@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function DataMessageHarness() {
   const [lastData, setLastData] = useState('');
 
-  const { open, Modal } = useMessageDialog<{ name: string }, 'submit'>({
+  const { open, Dialog } = useMessageDialog<{ name: string }, 'submit'>({
     id: 'msg-data',
     render: ({ handle }) => {
       return (
@@ -35,10 +35,10 @@ export function DataMessageHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="last-data">{lastData}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

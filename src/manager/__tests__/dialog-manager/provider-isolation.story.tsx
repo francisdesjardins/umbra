@@ -9,7 +9,7 @@ function ScopedDialog({ id, label }: { readonly id: string; readonly label: stri
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useDialog<void, 'confirm'>({
+  const { open, Dialog } = useDialog<void, 'confirm'>({
     id,
     render: ({ handle }) => {
       return (
@@ -42,7 +42,7 @@ function ScopedDialog({ id, label }: { readonly id: string; readonly label: stri
       <span data-testid={`count-${label}`}>{openDialogs.length}</span>
       <span data-testid={`has-open-${label}`}>{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid={`last-reason-${label}`}>{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -69,7 +69,7 @@ export function NoProviderHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useDialog<void, 'done'>({
+  const { open, Dialog } = useDialog<void, 'done'>({
     id: 'no-provider-modal',
     render: ({ handle }) => {
       return (
@@ -97,11 +97,11 @@ export function NoProviderHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="has-open">{openDialogs.length > 0 ? 'yes' : 'no'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

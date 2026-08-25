@@ -242,7 +242,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     label: 'useDialog',
     specifier: SOLID,
     blurb:
-      'The same hook, the same words. Two differences and both are the renderer’s: the live values are getters over signals, so do not destructure the render args — and `portal: true` mounts the dialog itself, leaving `Modal` as null.',
+      'The same hook, the same words. Two differences and both are the renderer’s: the live values are getters over signals, so do not destructure the render args — and `portal: true` mounts the dialog itself, leaving `Dialog` as null.',
     symbols: [
       'useDialog',
       'UseDialogOptions',
@@ -312,7 +312,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     label: 'bindDialog',
     specifier: VANILLA,
     blurb:
-      'A controller, not a renderer: the <dialog> and everything in it is markup you already wrote, and this drives its lifecycle over the top. No render, no Modal, no outlet — and bindAction, which is the half a renderer does elsewhere.',
+      'A controller, not a renderer: the <dialog> and everything in it is markup you already wrote, and this drives its lifecycle over the top. No render, no Dialog, no outlet — and bindAction, which is the half a renderer does elsewhere.',
     symbols: [
       'bindDialog',
       'BindDialogOptions',

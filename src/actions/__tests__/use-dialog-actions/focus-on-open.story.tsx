@@ -12,7 +12,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function FocusOnOpenHarness() {
   const [attempts, setAttempts] = useState(0);
 
-  const { open, isVisible, Modal } = useDialog<void, 'confirm' | 'cancel'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'confirm' | 'cancel'>({
     id: 'focus-on-open',
     ariaLabel: 'Delete everything',
     render: ({ action, error }) => {
@@ -52,10 +52,10 @@ export function FocusOnOpenHarness() {
           await open();
         }}
       >
-        Open Focus Modal
+        Open Focus Dialog
       </button>
       <span data-testid="foo-is-visible">{isVisible ? 'open' : 'closed'}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

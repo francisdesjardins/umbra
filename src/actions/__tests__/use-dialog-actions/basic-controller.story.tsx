@@ -34,7 +34,7 @@ export function BasicActionsHarness() {
     return countStore.getSnapshot().count;
   });
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'ctrl-basic',
     render: ({ action }) => {
       return (
@@ -82,7 +82,7 @@ export function BasicActionsHarness() {
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="last-count">{lastCount}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

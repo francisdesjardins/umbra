@@ -32,7 +32,7 @@ const VISUALLY_HIDDEN: CSSProperties = {
  *   <>
  *     <button onClick={() => { announce('Changes saved'); void toast.open(); }}>Save</button>
  *     {region}
- *     {toast.Modal}
+ *     {toast.Dialog}
  *   </>
  * );
  */

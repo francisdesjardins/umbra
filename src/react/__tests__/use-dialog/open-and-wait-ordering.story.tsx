@@ -12,7 +12,7 @@ export function OpenAndWaitOrderingHarness() {
   const [outcome, setOutcome] = useState('');
   const resolveRef = useRef<(() => void) | null>(null);
 
-  const { openAndWait, isVisible, Modal } = useDialog<void, 'confirm'>({
+  const { openAndWait, isVisible, Dialog } = useDialog<void, 'confirm'>({
     id: 'open-and-wait',
     prepare: () => {
       return new Promise<void>((resolve) => {
@@ -60,7 +60,7 @@ export function OpenAndWaitOrderingHarness() {
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="outcome">{outcome}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

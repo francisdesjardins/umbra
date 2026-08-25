@@ -173,7 +173,7 @@ function Checkout() {
         )
       )
     ),
-    receipt.Modal
+    receipt.Dialog
   );
 }
 

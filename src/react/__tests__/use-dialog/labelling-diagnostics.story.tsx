@@ -34,7 +34,7 @@ function useDebugLogging() {
 export function DanglingLabelHarness() {
   useDebugLogging();
 
-  const { open, Modal } = useDialog({
+  const { open, Dialog } = useDialog({
     id: 'labelling-dangling',
     onClose: dropLogging,
     ariaLabelledBy: 'labelling-dangling-title',
@@ -53,7 +53,7 @@ export function DanglingLabelHarness() {
       >
         Open Dangling
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -62,7 +62,7 @@ export function LateTitleHarness() {
   useDebugLogging();
   const [release, setRelease] = useState<(() => void) | null>(null);
 
-  const { open, Modal } = useDialog({
+  const { open, Dialog } = useDialog({
     id: 'labelling-late',
     onClose: dropLogging,
     ariaLabelledBy: 'labelling-late-title',
@@ -104,7 +104,7 @@ export function LateTitleHarness() {
       >
         Open Late
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

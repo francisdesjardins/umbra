@@ -648,7 +648,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Custom dismissKey',
         description:
-          'Modal with dismissKey: Delete — Delete closes with "dismiss", Escape does not.',
+          'Dialog with dismissKey: Delete — Delete closes with "dismiss", Escape does not.',
         component: CustomDismissKeyHarness,
         codeKey: 'story-use-dialog-custom-dismiss-key',
       },
@@ -702,14 +702,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'dismissWhilePreparing: false',
         description:
-          'Modal with dismissWhilePreparing: false. ESC is blocked while prepare is running. Click "Resolve" to finish loading, then ESC closes.',
+          'Dialog with dismissWhilePreparing: false. ESC is blocked while prepare is running. Click "Resolve" to finish loading, then ESC closes.',
         component: DismissWhilePreparingDisabledHarness,
         codeKey: 'story-use-dialog-dismiss-while-preparing-disabled',
       },
       {
         title: 'dismissWhilePreparing — Default (true)',
         description:
-          'Modal with default dismissWhilePreparing (true). ESC closes even while prepare is still running.',
+          'Dialog with default dismissWhilePreparing (true). ESC closes even while prepare is still running.',
         component: DismissWhilePreparingDefaultHarness,
         codeKey: 'story-use-dialog-dismiss-while-preparing-default',
       },
@@ -849,7 +849,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'dismissKey ↔ Action Collision',
         description:
-          'Modal with dismissKey: Delete and an action declaring Delete too — the action wins.',
+          'Dialog with dismissKey: Delete and an action declaring Delete too — the action wins.',
         component: DismissKeyActionCollisionHarness,
         codeKey: 'story-action-dismiss-collision',
       },
@@ -898,29 +898,29 @@ const STORY_GROUPS: readonly StoryGroup[] = [
     ],
   },
   {
-    label: 'Rendering without {Modal}',
+    label: 'Rendering without {Dialog}',
     stories: [
       {
         title: 'Basic Outlet',
-        description: 'Modal renders via DialogOutlet — no {Modal} placed in JSX.',
+        description: 'Dialog renders via DialogOutlet — no {Dialog} placed in JSX.',
         component: OutletBasicHarness,
         codeKey: 'story-outlet-basic',
       },
       {
-        title: 'Modal is Null',
-        description: 'Verifies modal.Modal is null when inside an outlet.',
+        title: 'Dialog is Null',
+        description: 'Verifies modal.Dialog is null when inside an outlet.',
         component: OutletNullDialogHarness,
         codeKey: 'story-outlet-null-modal',
       },
       {
         title: 'No Outlet (Standard)',
-        description: 'Without an outlet — standard {Modal} behaviour as a baseline.',
+        description: 'Without an outlet — standard {Dialog} behaviour as a baseline.',
         component: NoOutletHarness,
         codeKey: 'story-outlet-no-outlet',
       },
       {
         title: 'Multiple Modals',
-        description: 'Two modals inside one outlet — both render without {Modal} in JSX.',
+        description: 'Two modals inside one outlet — both render without {Dialog} in JSX.',
         component: OutletMultiHarness,
         codeKey: 'story-outlet-multi',
       },
@@ -1138,7 +1138,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-solid-declaration',
       },
       {
-        title: 'An outlet takes the dialog, and Modal becomes null',
+        title: 'An outlet takes the dialog, and Dialog becomes null',
         description:
           'The same contract React’s has, which is the point of showing it here: the outlet is core, so the only thing that would notice a binding no longer reaching it is a test on that binding.',
         component: SolidOutletHarness,
@@ -1175,7 +1175,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'portal: true, where the binding mounts the element itself',
         description:
-          'The one place the two hook bindings’ surfaces differ in what they hand back rather than in how it updates: Modal stays null, because there is nothing left for the caller to place.',
+          'The one place the two hook bindings’ surfaces differ in what they hand back rather than in how it updates: Dialog stays null, because there is nothing left for the caller to place.',
         component: SolidPortalHarness,
         codeKey: 'story-solid-portal',
       },
@@ -1231,7 +1231,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Focus restored after an action that rejects',
         description:
-          'Modal, and two focusables: the target is whoever held focus when the action started, so with one element a restore and focus never moving are the same observation, and non-modal would let focus sit outside. The opening focus is deliberately the other button — it is the floor the restore falls to, so a test can tell landing on the right one from landing anywhere.',
+          'Dialog, and two focusables: the target is whoever held focus when the action started, so with one element a restore and focus never moving are the same observation, and non-modal would let focus sit outside. The opening focus is deliberately the other button — it is the floor the restore falls to, so a test can tell landing on the right one from landing anywhere.',
         component: SolidFailedActionHarness,
         codeKey: 'story-solid-failed-action',
       },
@@ -1384,14 +1384,14 @@ const STORY_GROUPS: readonly StoryGroup[] = [
     label: 'Observing modal state',
     stories: [
       {
-        title: 'Reactive Modal State',
+        title: 'Reactive Dialog State',
         description:
           'useLookup(id) reactively reflects open/close state. Values update without manual query buttons.',
         component: UseLookupHarness,
         codeKey: 'story-use-lookup-basic',
       },
       {
-        title: 'Unregistered Modal',
+        title: 'Unregistered Dialog',
         description:
           'useLookup(id) returns null-object default reactively for unregistered modal ids.',
         component: UseLookupUnregisteredHarness,

@@ -17,25 +17,25 @@ export function DialogVariantHarness() {
     return d.nonModal;
   });
 
-  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'variant-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal</p>
+          <p>Dialog</p>
           <button
             onClick={() => {
               handle.close('done');
             }}
           >
-            Close Modal
+            Close Dialog
           </button>
         </div>
       );
     },
   });
 
-  const { Modal: Dialog2 } = useDialog<void, 'done'>({
+  const { Dialog: Dialog2 } = useDialog<void, 'done'>({
     id: 'variant-non-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -61,7 +61,7 @@ export function DialogVariantHarness() {
           dialogManager.open('variant-modal');
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <button
         onClick={() => {
@@ -86,12 +86,12 @@ export function DialogVariantHarness() {
  * Tests the getOpen() filter argument on the DialogLookup API.
  */
 export function DialogVariantLookupHarness() {
-  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'lookup-modal',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal</p>
+          <p>Dialog</p>
           <button
             onClick={() => {
               const q = dialogManager.lookup();
@@ -125,14 +125,14 @@ export function DialogVariantLookupHarness() {
               handle.close('done');
             }}
           >
-            Close Modal
+            Close Dialog
           </button>
         </div>
       );
     },
   });
 
-  const { Modal: Dialog2 } = useDialog<void, 'done'>({
+  const { Dialog: Dialog2 } = useDialog<void, 'done'>({
     id: 'lookup-non-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -158,7 +158,7 @@ export function DialogVariantLookupHarness() {
           dialogManager.open('lookup-modal');
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <button
         onClick={() => {

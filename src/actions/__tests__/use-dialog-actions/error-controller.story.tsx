@@ -5,7 +5,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * Tests that an action handler throwing populates actions.error.
  */
 export function ErrorActionsHarness() {
-  const { open, Modal } = useDialog<void, 'bad' | 'ok'>({
+  const { open, Dialog } = useDialog<void, 'bad' | 'ok'>({
     id: 'ctrl-error',
     render: ({ action, error }) => {
       return (
@@ -39,7 +39,7 @@ export function ErrorActionsHarness() {
       >
         Open
       </button>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

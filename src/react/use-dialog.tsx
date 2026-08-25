@@ -45,7 +45,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  * always among them — Escape, backdrop click, teardown — and is the one reason **no action may be
  * named**. See `DismissReason`.
  * @example
- * const { openAndWait, Modal } = useDialog<void, 'ok'>({
+ * const { openAndWait, Dialog } = useDialog<void, 'ok'>({
  *   id: 'my-modal',
  *   render: ({ action }) => <button {...action('ok')}>OK</button>,
  *   onClose: (result) => console.log(result.reason),
@@ -342,14 +342,14 @@ export function useDialog<TData = void, TReason extends string = string>(
     };
   }, [dialogId, outlet]);
 
-  const Modal: ReactNode = outlet ? null : dialogNode;
+  const Dialog: ReactNode = outlet ? null : dialogNode;
 
   return {
     open,
     isVisible: snap.phase !== 'closed',
     phase: snap.phase,
     isPreparing: snap.isPreparing,
-    Modal,
+    Dialog,
     openAndWait,
     handle,
     action,

@@ -48,7 +48,7 @@ export function NonModalCloseRestoreHarness({
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }

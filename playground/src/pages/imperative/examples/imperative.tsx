@@ -41,7 +41,7 @@ export function ImperativeExample() {
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
             <MessageDialog.Icon variant="success" />
-            <MessageDialog.Title id="imperative-demo-title">Imperative Modal</MessageDialog.Title>
+            <MessageDialog.Title id="imperative-demo-title">Imperative Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -91,7 +91,7 @@ export function ImperativeExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <AppButton
         variant="contained"
         size="small"

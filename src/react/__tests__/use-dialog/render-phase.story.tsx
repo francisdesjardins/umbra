@@ -69,7 +69,7 @@ export function RenderPhaseHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

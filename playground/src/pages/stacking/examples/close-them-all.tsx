@@ -53,9 +53,9 @@ export function CloseThemAllExample() {
       result={result}
       modals={
         <>
-          {panels[0].Modal}
-          {panels[1].Modal}
-          {panels[2].Modal}
+          {panels[0].Dialog}
+          {panels[1].Dialog}
+          {panels[2].Dialog}
         </>
       }
     >

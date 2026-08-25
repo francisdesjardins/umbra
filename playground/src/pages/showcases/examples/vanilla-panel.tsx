@@ -547,7 +547,7 @@ export function VanillaPanelExample() {
   };
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <Shared.Button variant="primary" onClick={handleOpen}>
         Open Vanilla Panel
       </Shared.Button>

@@ -12,7 +12,7 @@ export function OnOpenAbortHarness() {
   const [outcome, setOutcome] = useState('idle');
   const [aborts, setAborts] = useState(0);
 
-  const { open, Modal, handle } = useDialog<void, 'done'>({
+  const { open, Dialog, handle } = useDialog<void, 'done'>({
     id: 'on-open-abort',
     prepare: (signal) => {
       setOutcome('loading');
@@ -53,7 +53,7 @@ export function OnOpenAbortHarness() {
       </button>
       <span data-testid="outcome">{outcome}</span>
       <span data-testid="aborts">{aborts}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

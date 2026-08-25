@@ -328,9 +328,9 @@ export function SlidePresetsExample() {
       result={result}
       modals={
         <>
-          {drawer.Modal}
-          {sheet.Modal}
-          {palette.Modal}
+          {drawer.Dialog}
+          {sheet.Dialog}
+          {palette.Dialog}
         </>
       }
     >
@@ -450,7 +450,7 @@ export function SlidePresetsExample() {
                 );
               })}
             </div>
-            {inspector.Modal}
+            {inspector.Dialog}
           </div>
         </div>
         {/* Outside the dialog on purpose — see useAnnouncer for why a region inside `render`

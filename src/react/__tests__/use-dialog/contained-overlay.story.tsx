@@ -7,7 +7,7 @@ import { useDialog } from '../../use-dialog.js';
  * fixed-height box. The row below is laid out in flow, the way a caller writes it first.
  */
 export function ContainedOverlayHarness() {
-  const { open, isVisible, Modal } = useDialog<void, 'close'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'close'>({
     id: 'contained-overlay',
     nonModal: true,
     portal: false,
@@ -46,7 +46,7 @@ export function ContainedOverlayHarness() {
         <div data-testid="overlay-row" style={{ height: '100%' }}>
           A row the panel is supposed to cover
         </div>
-        {Modal}
+        {Dialog}
       </div>
     </div>
   );

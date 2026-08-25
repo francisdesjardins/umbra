@@ -59,9 +59,9 @@ export function AccessibleNameHarness() {
       >
         Open Anonymous
       </button>
-      {labelled.Modal}
-      {described.Modal}
-      {anonymous.Modal}
+      {labelled.Dialog}
+      {described.Dialog}
+      {anonymous.Dialog}
     </div>
   );
 }

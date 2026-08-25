@@ -18,7 +18,7 @@ Each example is a **single file** that serves as both runnable component and "Vi
 2. **Register** in [codeSamples.ts](../src/widgets/code-viewer/model/codeSamples.ts) via `?raw` import
 3. **Add** to route page via `ExampleCard` with matching `codeKey`
 
-Use unique modal `id` values per example. For multiple modals: `modals={<>{a.Modal}{b.Modal}</>}`.
+Use unique modal `id` values per example. For multiple modals: `modals={<>{a.Dialog}{b.Dialog}</>}`.
 
 ## Templates
 

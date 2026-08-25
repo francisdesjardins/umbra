@@ -3,7 +3,7 @@ import { DialogOutlet } from '../../dialog-outlet.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
-// ── Harness: basic outlet renders modal without {Modal} in JSX ─────────────
+// ── Harness: basic outlet renders modal without {Dialog} in JSX ─────────────
 
 function InnerDialog({ onCloseReason }: { readonly onCloseReason: (r: string) => void }) {
   const { open, isVisible, isPreparing } = useDialog<void, 'confirm'>({
@@ -34,7 +34,7 @@ function InnerDialog({ onCloseReason }: { readonly onCloseReason: (r: string) =>
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="is-opening">{String(isPreparing)}</span>
@@ -43,7 +43,7 @@ function InnerDialog({ onCloseReason }: { readonly onCloseReason: (r: string) =>
 }
 
 /**
- * Modal renders via DialogOutlet — no {Modal} placed in JSX.
+ * Dialog renders via DialogOutlet — no {Dialog} placed in JSX.
  */
 export function OutletBasicHarness() {
   const [lastReason, setLastReason] = useState('');

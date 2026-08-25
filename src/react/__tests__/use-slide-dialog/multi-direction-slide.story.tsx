@@ -143,10 +143,10 @@ export function MultiDirectionSlideHarness() {
         Open Bottom
       </button>
       <span data-testid="last-direction">{lastDirection}</span>
-      {left.Modal}
-      {right.Modal}
-      {top.Modal}
-      {bottom.Modal}
+      {left.Dialog}
+      {right.Dialog}
+      {top.Dialog}
+      {bottom.Dialog}
     </div>
   );
 }

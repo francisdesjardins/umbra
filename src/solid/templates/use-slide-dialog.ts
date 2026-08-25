@@ -21,7 +21,7 @@ import type { UseDialogReturn } from '../types.js';
 
 export type { SlideAlign, SlideDirection };
 
-/** Modal state, the close handle and the slide direction, passed to the render function. */
+/** Dialog state, the close handle and the slide direction, passed to the render function. */
 export type SlideDialogRenderContext<
   TData = void,
   TReason extends string = string,

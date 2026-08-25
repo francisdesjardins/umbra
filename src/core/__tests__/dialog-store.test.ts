@@ -359,7 +359,7 @@ test.describe('close resolvers and the order they must be registered in', () => 
 
     expect(seen).toHaveLength(1);
     const [error, result] = seen[0] ?? [null, null];
-    expect(error?.message).toBe('Modal "resolver-mid-exit" is closing; no reopen is queued');
+    expect(error?.message).toBe('Dialog "resolver-mid-exit" is closing; no reopen is queued');
     expect(result, 'the in-flight close belongs to the caller that asked for it').toBeNull();
   });
 });

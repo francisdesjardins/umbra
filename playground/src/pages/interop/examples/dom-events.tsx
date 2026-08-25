@@ -41,7 +41,7 @@ export function DomEventsExample() {
       return (
         <MessageDialog.DefaultLayout>
           <MessageDialog.Header>
-            <MessageDialog.Title id={`${ALERT_ID}-title`}>Message Modal</MessageDialog.Title>
+            <MessageDialog.Title id={`${ALERT_ID}-title`}>Message Dialog</MessageDialog.Title>
           </MessageDialog.Header>
           <MessageDialog.Content>
             <Shared.Message>A regular modal — type will be &quot;modal&quot;.</Shared.Message>
@@ -150,8 +150,8 @@ export function DomEventsExample() {
       <ExampleLayout
         modals={
           <>
-            {alert.Modal}
-            {panel.Modal}
+            {alert.Dialog}
+            {panel.Dialog}
           </>
         }
         result={null}
@@ -163,7 +163,7 @@ export function DomEventsExample() {
             return void alert.open();
           }}
         >
-          Open Modal
+          Open Dialog
         </AppButton>
         <AppButton
           variant="contained"

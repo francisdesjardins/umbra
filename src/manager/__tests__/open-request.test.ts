@@ -224,7 +224,7 @@ test.describe('requestOpenAndWait', () => {
         return;
       }
       const [error, result] = await outcome.closed;
-      expect(error?.message).toBe('Modal "leaving" is closing; no reopen is queued');
+      expect(error?.message).toBe('Dialog "leaving" is closing; no reopen is queued');
       expect(result).toBeNull();
     } finally {
       frames.restore();

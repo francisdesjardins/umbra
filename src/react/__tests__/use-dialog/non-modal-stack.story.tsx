@@ -76,8 +76,8 @@ export function NonModalStackHarness() {
       <span data-testid="body-overflow">
         {document.body.hasAttribute('data-dialog-open') ? 'locked' : 'free'}
       </span>
-      {first.Modal}
-      {second.Modal}
+      {first.Dialog}
+      {second.Dialog}
     </div>
   );
 }

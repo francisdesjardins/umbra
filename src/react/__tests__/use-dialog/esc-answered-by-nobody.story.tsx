@@ -106,8 +106,8 @@ export function EscAnsweredByNobodyHarness() {
       <span data-testid="panel-reason">{panelReason}</span>
       <span data-testid="dialog-reason">{dialogReason}</span>
       <span data-testid="presses-seen">{pressesSeenByPage}</span>
-      {panel.Modal}
-      {front.Modal}
+      {panel.Dialog}
+      {front.Dialog}
     </div>
   );
 }

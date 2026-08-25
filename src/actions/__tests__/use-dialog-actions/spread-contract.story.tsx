@@ -18,7 +18,7 @@ export function SpreadContractHarness() {
   const [clicks, setClicks] = useState(0);
   const [vetoedRuns, setVetoedRuns] = useState(0);
 
-  const { open, Modal } = useDialog<void, 'guarded' | 'slow' | 'veto'>({
+  const { open, Dialog } = useDialog<void, 'guarded' | 'slow' | 'veto'>({
     id: 'spread-contract',
     render: ({ action }) => {
       return (
@@ -104,7 +104,7 @@ export function SpreadContractHarness() {
       <span data-testid="submits">{submits}</span>
       <span data-testid="clicks">{clicks}</span>
       <span data-testid="vetoed-runs">{vetoedRuns}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

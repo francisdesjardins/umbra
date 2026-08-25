@@ -74,7 +74,7 @@
   --color-info: #29b6f6;
 }
 
-/* ========== Modal Layout ========== */
+/* ========== Dialog Layout ========== */
 .modalLayout {
   background: var(--modal-bg);
   color: var(--modal-text);

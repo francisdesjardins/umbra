@@ -15,7 +15,7 @@ test.describe('useMessageDialog', () => {
 
   test('opens and renders content', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-msg-basic')).toBeVisible();
     await expect(page.getByTestId('dialog-msg-basic')).toContainText('Message content');
@@ -23,7 +23,7 @@ test.describe('useMessageDialog', () => {
 
   test('closes with reason via handle.close()', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-msg-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -32,7 +32,7 @@ test.describe('useMessageDialog', () => {
 
   test('closes with reason "cancel" via handle.close()', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('last-reason')).toHaveText('cancel');
@@ -40,7 +40,7 @@ test.describe('useMessageDialog', () => {
 
   test('closes with reason "dismiss" on Escape key', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-msg-basic')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -49,7 +49,7 @@ test.describe('useMessageDialog', () => {
 
   test('passes isPreparing to render during async prepare', async ({ mount, page }) => {
     await mount(<AsyncOpenMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-opening')).toHaveText('true');
     await expect(page.getByTestId('is-opening')).toHaveText('false', { timeout: 2000 });
   });
@@ -64,7 +64,7 @@ test.describe('useMessageDialog', () => {
 
   test('supports typed data on close', async ({ mount, page }) => {
     await mount(<DataMessageHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByTestId('last-data')).toHaveText('test-user');
   });
@@ -72,12 +72,12 @@ test.describe('useMessageDialog', () => {
   test('can be opened and closed multiple times', async ({ mount, page }) => {
     await mount(<BasicMessageHarness />);
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-msg-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-msg-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');

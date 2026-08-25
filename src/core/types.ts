@@ -69,7 +69,7 @@ export type DialogAnimation<TStyle extends DialogStyle = DialogStyle> = {
     'opacity' | 'transform' | 'opacity, transform' | 'all' | 'none' | (string & {}) | undefined;
 };
 
-// ── Modal Handle ───────────────────────────────────────────────────────────────
+// ── Dialog Handle ───────────────────────────────────────────────────────────────
 
 /**
  * Imperative handle for closing a modal, returned from `useDialog` and passed to
@@ -144,7 +144,7 @@ export type DialogRenderArgs<TData = void, TReason extends string = string> = {
 
 // ── useDialog Options & Return ────────────────────────────────────────────────
 
-// ── Modal Variant ────────────────────────────────────────────────────────────
+// ── Dialog Variant ────────────────────────────────────────────────────────────
 
 /**
  * Modal vs non-modal, as a discriminated union — and the single home for the distinction the
@@ -403,7 +403,7 @@ export type UseDialogBaseOptions<
    * something anyone verified.
    *
    * @example
-   * const { open, Modal } = useDialog<void, 'confirm'>({
+   * const { open, Dialog } = useDialog<void, 'confirm'>({
    *   id: 'patient:merge',
    *   onOpenRequest: (payload, request) => {
    *     const parsed = mergeRequestSchema.safeParse(payload);
@@ -604,7 +604,7 @@ export type UseDialogOptions<
  * Return type of `useDialog`.
  *
  * @typeParam TData - Type of the close data payload.
- * @typeParam TNode - What this binding renders. `Modal` is one of these.
+ * @typeParam TNode - What this binding renders. `Dialog` is one of these.
  */
 export type UseDialogReturn<
   TData = void,
@@ -631,7 +631,7 @@ export type UseDialogReturn<
    * The node to render — place it in your markup. `null` when a `DialogOutlet` above this modal
    * has taken it, since the outlet renders it instead.
    */
-  readonly Modal: TNode;
+  readonly Dialog: TNode;
   /**
    * Open the modal and resolve with how it closed — the two halves in one call, in the only
    * order that is safe.
@@ -664,7 +664,7 @@ export type UseDialogReturn<
   readonly dialogManager: DialogManager;
 };
 
-// ── Modal Store Types ────────────────────────────────────────────────────────
+// ── Dialog Store Types ────────────────────────────────────────────────────────
 
 /**
  * Lifecycle phase of a modal instance.

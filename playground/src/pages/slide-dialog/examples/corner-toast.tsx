@@ -246,7 +246,7 @@ export function SlideCornerToastExample() {
   }, [isVisible, remaining, handle]);
 
   return (
-    <ExampleLayout result={result} modals={toast.Modal}>
+    <ExampleLayout result={result} modals={toast.Dialog}>
       <AppButton
         variant="contained"
         size="small"

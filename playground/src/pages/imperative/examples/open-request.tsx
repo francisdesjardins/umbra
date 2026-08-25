@@ -148,7 +148,7 @@ export function OpenRequestExample() {
   };
 
   return (
-    <ExampleLayout modals={modal.Modal} result={log}>
+    <ExampleLayout modals={modal.Dialog} result={log}>
       <div
         style={{
           display: 'flex',

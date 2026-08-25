@@ -95,7 +95,7 @@ export function SsrWorkerExample() {
 
   return (
     <ExampleLayout
-      // The dialog belongs to the hydrated component, which renders its own `Modal` inside the host
+      // The dialog belongs to the hydrated component, which renders its own `Dialog` inside the host
       // below — this example places none of its own.
       modals={null}
       result={

@@ -148,7 +148,7 @@ export function VanillaFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formDialog.Modal}>
+    <ExampleLayout result={result} modals={formDialog.Dialog}>
       <AppButton
         variant="contained"
         size="small"

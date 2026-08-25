@@ -135,7 +135,7 @@ export function GroceryListExample() {
             >
               Send…
             </Shared.Button>
-            {confirm.Modal}
+            {confirm.Dialog}
           </SlideDialog.Footer>
         </SlideDialog.DefaultLayout>
       );
@@ -150,7 +150,7 @@ export function GroceryListExample() {
   });
 
   return (
-    <ExampleLayout result={outcome} modals={list.Modal}>
+    <ExampleLayout result={outcome} modals={list.Dialog}>
       <AppButton
         variant="contained"
         size="small"

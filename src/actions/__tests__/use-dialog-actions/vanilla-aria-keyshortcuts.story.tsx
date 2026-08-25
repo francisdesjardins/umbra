@@ -43,7 +43,7 @@ function CustomButton({
 export function VanillaAriaKeyshortcutsHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'vanilla-aria',
     render: ({ action }) => {
       return (
@@ -87,7 +87,7 @@ export function VanillaAriaKeyshortcutsHarness() {
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -114,7 +114,7 @@ function BrokenButton({ children, onClick, disabled = false, loading = false }: 
 export function BrokenAriaKeyshortcutsHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'cancel' | 'confirm'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'cancel' | 'confirm'>({
     id: 'broken-aria',
     render: ({ action }) => {
       return (
@@ -158,7 +158,7 @@ export function BrokenAriaKeyshortcutsHarness() {
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

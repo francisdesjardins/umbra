@@ -15,7 +15,7 @@ import {
 export type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
 import type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
 
-/** Modal state, the close handle and the slide direction, passed to the render function. */
+/** Dialog state, the close handle and the slide direction, passed to the render function. */
 export type SlideDialogRenderContext<
   TData = void,
   TReason extends string = string,

@@ -13,7 +13,7 @@ import {
 import { useDialog } from '../use-dialog.js';
 import type { UseDialogReturn } from '../types.js';
 
-/** Modal state and the close handle, passed to the MessageDialog render function. */
+/** Dialog state and the close handle, passed to the MessageDialog render function. */
 export type MessageDialogRenderContext<
   TData = void,
   TReason extends string = string,

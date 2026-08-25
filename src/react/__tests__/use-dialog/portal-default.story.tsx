@@ -10,7 +10,7 @@ export function PortalDefaultHarness() {
   const [lastReason, setLastReason] = useState('');
   const [dialogParent, setDialogParent] = useState('');
 
-  const { open, isVisible, Modal } = useDialog<void, 'done'>({
+  const { open, isVisible, Dialog } = useDialog<void, 'done'>({
     id: 'portal-default',
     animation: {
       entrance: { opacity: 1 },
@@ -22,7 +22,7 @@ export function PortalDefaultHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal content</p>
+          <p>Dialog content</p>
           <button
             onClick={() => {
               handle.close('done');
@@ -49,12 +49,12 @@ export function PortalDefaultHarness() {
           await open();
         }}
       >
-        Open Modal
+        Open Dialog
       </button>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       <span data-testid="dialog-parent">{dialogParent}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

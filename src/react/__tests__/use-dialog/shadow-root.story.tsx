@@ -52,7 +52,7 @@ export function ShadowRootHarness() {
       <div data-testid="shadow-host" ref={hostRef} />
       {/* The dialog's node goes into the shadow root; the component stays in this tree, so the
           hook, its state and its actions are untouched by the move. */}
-      {shadow !== null && createPortal(modal.Modal, shadow)}
+      {shadow !== null && createPortal(modal.Dialog, shadow)}
     </div>
   );
 }

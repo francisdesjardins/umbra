@@ -278,7 +278,7 @@ export function createFocusCoordinator(
           }
           const info = manager.lookup(dialogId);
           if (!info.isForeground || (info.exists && info.nonModal)) {
-            // Modal only, as a rule: a non-modal panel never owned the page's focus, and its
+            // Dialog only, as a rule: a non-modal panel never owned the page's focus, and its
             // dismiss key comes from `attachWindowDismissKey`, which answers wherever focus is. A
             // modal has no such listener — its keydown is scoped to itself — so focus is its
             // keyboard.

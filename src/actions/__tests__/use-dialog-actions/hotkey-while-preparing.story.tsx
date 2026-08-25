@@ -14,7 +14,7 @@ export function HotkeyWhilePreparingHarness() {
   const [lastReason, setLastReason] = useState('');
   const [release, setRelease] = useState<(() => void) | null>(null);
 
-  const { open, Modal } = useDialog<void, 'confirm'>({
+  const { open, Dialog } = useDialog<void, 'confirm'>({
     id: 'hotkey-while-preparing',
     prepare: () => {
       return new Promise<void>((resolve) => {
@@ -55,7 +55,7 @@ export function HotkeyWhilePreparingHarness() {
         Open
       </button>
       <span data-testid="hwo-last-reason">{lastReason}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }

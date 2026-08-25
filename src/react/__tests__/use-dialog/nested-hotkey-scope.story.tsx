@@ -51,7 +51,7 @@ export function NestedHotkeyScopeHarness() {
       return (
         <div style={dialogStyle}>
           {/* First in document order — the trap an unscoped lookup falls into. */}
-          {inner.Modal}
+          {inner.Dialog}
           <button
             {...action('outer', {
               hotkey: Key.Enter,
@@ -86,7 +86,7 @@ export function NestedHotkeyScopeHarness() {
         Open Outer
       </button>
       <span data-testid="nested-fired">{fired.join(',')}</span>
-      {outer.Modal}
+      {outer.Dialog}
     </div>
   );
 }

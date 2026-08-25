@@ -36,7 +36,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
     label: 'Learn',
     items: [
       { path: '/getting-started', label: 'Getting Started', icon: PlayArrowIcon },
-      { path: '/modal-actions', label: 'Modal Actions', icon: SettingsIcon },
+      { path: '/modal-actions', label: 'Dialog Actions', icon: SettingsIcon },
     ],
   },
   {

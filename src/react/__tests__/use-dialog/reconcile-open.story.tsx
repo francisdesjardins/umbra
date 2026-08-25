@@ -115,7 +115,7 @@ export function ReconcileOpenHarness() {
       <span data-testid="phase">{phase}</span>
       <span data-testid="open-count">{openCount}</span>
       <span data-testid="reconciliations">{reconciliations.join(',')}</span>
-      {modal.Modal}
+      {modal.Dialog}
     </div>
   );
 }

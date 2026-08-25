@@ -278,11 +278,11 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   const outlet = useDialogOutletContext();
 
-  let Modal: JSX.Element = placed;
+  let Dialog: JSX.Element = placed;
 
   if (isPortaled) {
     // The one place the surface differs from React's: a Solid modal owns its element, so the
-    // binding mounts it and `Modal` is `null` — hence no outlet registration on this branch.
+    // binding mounts it and `Dialog` is `null` — hence no outlet registration on this branch.
     // Resolved once, unlike React's per-render read: this branch mounts the node itself and runs
     // exactly once, so the host a moving getter would name later has nothing left to move.
     const host = resolvePortalHost(options.portal, document.body) ?? document.body;
@@ -290,13 +290,13 @@ export function useDialog<TData = void, TReason extends string = string>(
     onCleanup(() => {
       placed.remove();
     });
-    Modal = null;
+    Dialog = null;
   } else if (outlet) {
     outlet.register(dialogId, placed);
     onCleanup(() => {
       outlet.unregister(dialogId);
     });
-    Modal = null;
+    Dialog = null;
   }
 
   return {
@@ -304,7 +304,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     openAndWait,
     handle,
     action,
-    Modal,
+    Dialog,
     dialogManager: manager,
     get isVisible() {
       return isVisible();

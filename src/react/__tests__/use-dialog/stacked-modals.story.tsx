@@ -80,7 +80,7 @@ export function StackedDialogsHarness() {
           >
             Open message
           </button>
-          {message.Modal}
+          {message.Dialog}
         </div>
       );
     },
@@ -112,7 +112,7 @@ export function StackedDialogsHarness() {
           >
             Open middle
           </button>
-          {middle.Modal}
+          {middle.Dialog}
         </div>
       );
     },
@@ -138,7 +138,7 @@ export function StackedDialogsHarness() {
       </span>
       <span data-testid="stack-acks">{acks}</span>
       <span data-testid="stack-saves">{saves}</span>
-      {panel.Modal}
+      {panel.Dialog}
     </div>
   );
 }

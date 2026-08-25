@@ -11,7 +11,7 @@ import { dialogStyle } from '../../__tests__/story-styles.js';
  * button sits inside the warning's `render` because the top layer swallows outside clicks.
  */
 export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
-  const { Modal: Panel } = useDialog<void, 'close'>({
+  const { Dialog: Panel } = useDialog<void, 'close'>({
     id: 'sp-panel',
     template: 'slide',
     style: { width: 300, height: 300 },
@@ -33,7 +33,7 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
   });
 
   const {
-    Modal: Warning,
+    Dialog: Warning,
     dialogManager,
     open: openWarning,
   } = useDialog<void, 'close'>({
@@ -169,9 +169,9 @@ export function MultiRaiseHarness() {
         Toggle the policy
       </button>
       <span data-testid="mr-policy">{policyOn ? 'on' : 'off'}</span>
-      {low.Modal}
-      {mid.Modal}
-      {high.Modal}
+      {low.Dialog}
+      {mid.Dialog}
+      {high.Dialog}
     </div>
   );
 }
@@ -234,7 +234,7 @@ export function LatePolicyFocusHarness() {
         Install the policy
       </button>
       <span data-testid="lp-policy">{policyOn ? 'on' : 'off'}</span>
-      {only.Modal}
+      {only.Dialog}
     </div>
   );
 }

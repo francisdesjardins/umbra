@@ -16,7 +16,7 @@ const slidePanelStyle: CSSProperties = {
 export function OpenAndWaitSlideHarness() {
   const [status, setStatus] = useState('idle');
 
-  const { openAndWait, Modal } = useSlideDialog<void, 'close'>({
+  const { openAndWait, Dialog } = useSlideDialog<void, 'close'>({
     id: 'slide-wait',
     direction: 'left',
     render: ({ handle }) => {
@@ -50,7 +50,7 @@ export function OpenAndWaitSlideHarness() {
         Open and Wait
       </button>
       <span data-testid="status">{status}</span>
-      {Modal}
+      {Dialog}
     </>
   );
 }

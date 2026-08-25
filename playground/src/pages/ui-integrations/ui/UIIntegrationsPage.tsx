@@ -16,7 +16,7 @@ export const UIIntegrationsPage = () => {
       >
         <ExampleGrid>
           <ExampleCard
-            title="Vanilla Form Modal"
+            title="Vanilla Form Dialog"
             description="Plain HTML and CSS modules, validation feedback included."
             codeKey="vanilla-form"
             example={<VanillaFormExample />}
@@ -25,7 +25,7 @@ export const UIIntegrationsPage = () => {
               would theme the vanilla card too, and it answers to its own CSS. */}
           <MuiIsland>
             <ExampleCard
-              title="MUI Form Modal"
+              title="MUI Form Dialog"
               description="The same modal in MUI fields, inside its own ThemeProvider — the only place the vendor chunk is asked for."
               codeKey="mui-form"
               example={<MuiFormExample />}

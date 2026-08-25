@@ -52,7 +52,7 @@ export function FocusContainmentHarness({
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -117,7 +117,7 @@ export function RovingToolbarHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -162,7 +162,7 @@ export function FramedContentHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -220,7 +220,7 @@ export function HiddenStopHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -268,7 +268,7 @@ export function EditableContentHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -313,7 +313,7 @@ export function EditableOnlyHarness() {
       >
         Open
       </button>
-      {modal.Modal}
+      {modal.Dialog}
     </>
   );
 }
@@ -366,7 +366,7 @@ export function NestedPanelScanHarness() {
           <p data-testid="outer-dead-space" style={{ height: 260 }}>
             Nothing to focus here.
           </p>
-          {panel.Modal}
+          {panel.Dialog}
         </>
       );
     },
@@ -383,7 +383,7 @@ export function NestedPanelScanHarness() {
       >
         Open
       </button>
-      {outer.Modal}
+      {outer.Dialog}
     </>
   );
 }

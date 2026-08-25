@@ -7,7 +7,7 @@ import { useLookup } from '../use-lookup.js';
 export function UseLookupHarness() {
   const info = useLookup('reactive-modal');
 
-  const { Modal, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog, dialogManager } = useDialog<void, 'done'>({
     id: 'reactive-modal',
     render: ({ handle }) => {
       return (
@@ -38,7 +38,7 @@ export function UseLookupHarness() {
       <span data-testid="is-visible">{String(info.isVisible)}</span>
       <span data-testid="phase">{info.phase}</span>
       <span data-testid="is-foreground">{String(info.isForeground)}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -85,7 +85,7 @@ export function UseLookupPreparingHarness() {
     };
   });
 
-  const { Modal, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog, dialogManager } = useDialog<void, 'done'>({
     id: 'preparing-modal',
     prepare: () => {
       return gate.arm();
@@ -125,7 +125,7 @@ export function UseLookupPreparingHarness() {
       <span data-testid="is-visible">{String(info.isVisible)}</span>
       <span data-testid="is-preparing">{String(info.isPreparing)}</span>
       <span data-testid="phase">{info.phase}</span>
-      {Modal}
+      {Dialog}
     </div>
   );
 }
@@ -135,12 +135,12 @@ export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');
 
-  const { Modal: Dialog1, dialogManager } = useDialog<void, 'done'>({
+  const { Dialog: Dialog1, dialogManager } = useDialog<void, 'done'>({
     id: 'fg-lookup-a',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal A</p>
+          <p>Dialog A</p>
           <button
             onClick={() => {
               dialogManager.open('fg-lookup-b');
@@ -160,12 +160,12 @@ export function UseLookupForegroundHarness() {
     },
   });
 
-  const { Modal: Dialog2 } = useDialog<void, 'done'>({
+  const { Dialog: Dialog2 } = useDialog<void, 'done'>({
     id: 'fg-lookup-b',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Modal B</p>
+          <p>Dialog B</p>
           <button
             onClick={() => {
               handle.close('done');

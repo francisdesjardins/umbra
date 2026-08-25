@@ -223,8 +223,8 @@ export function StackPriorityExample() {
       }
       modals={
         <>
-          {warning.Modal}
-          {panel.Modal}
+          {warning.Dialog}
+          {panel.Dialog}
         </>
       }
     >

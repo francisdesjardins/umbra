@@ -124,7 +124,7 @@ test.describe('dialogManager', () => {
     page,
   }) => {
     await mount(<DomEventHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-modal:modal');
   });
 
@@ -133,8 +133,8 @@ test.describe('dialogManager', () => {
     page,
   }) => {
     await mount(<DomEventHarness />);
-    await page.getByRole('button', { name: 'Open Modal' }).click();
-    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
+    await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-modal:modal:ok');
   });
 
@@ -201,7 +201,7 @@ test.describe('DialogManagerProvider', () => {
     await mount(<NoProviderHarness />);
     await expect(page.getByTestId('has-open')).toHaveText('no');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('has-open')).toHaveText('yes');
     await expect(page.getByTestId('dialog-no-provider-modal')).toBeVisible();
 
@@ -304,13 +304,13 @@ test.describe('modal / non-modal', () => {
     await expect(page.getByTestId('has-modal')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('has-modal')).toHaveText('yes');
     await expect(page.getByTestId('dialog-count')).toHaveText('1');
     await expect(page.getByTestId('has-non-modal')).toHaveText('no');
     await expect(page.getByTestId('non-modal-count')).toHaveText('0');
 
-    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.getByTestId('has-modal')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
   });
@@ -344,14 +344,14 @@ test.describe('modal / non-modal', () => {
     await expect(page.getByTestId('has-modal')).toHaveText('no');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('2');
     await expect(page.getByTestId('has-modal')).toHaveText('yes');
     await expect(page.getByTestId('dialog-count')).toHaveText('1');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
     await expect(page.getByTestId('non-modal-count')).toHaveText('1');
 
-    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.getByTestId('open-count')).toHaveText('1');
     await expect(page.getByTestId('has-modal')).toHaveText('no');
     await expect(page.getByTestId('has-non-modal')).toHaveText('yes');
@@ -365,7 +365,7 @@ test.describe('modal / non-modal', () => {
     await mount(<DialogVariantLookupHarness />);
 
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
 
     // Query from outside — a non-modal dialog does not block clicks
     await page.getByRole('button', { name: 'Query' }).click();
@@ -388,7 +388,7 @@ test.describe('dialogManager — scroll lock', () => {
     const before = await marker.boundingBox();
     expect(before).not.toBeNull();
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
 
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
@@ -417,7 +417,7 @@ test.describe('dialogManager — scroll lock', () => {
       expect(measured.bodyPaddingRight).toBeGreaterThanOrEqual(measured.published);
     }
 
-    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.locator('body')).not.toHaveAttribute('data-dialog-open', 'true');
     const after = await page.evaluate(() => {
       return {
@@ -442,7 +442,7 @@ test.describe('dialogManager — scroll lock', () => {
     const fixedMarker = page.getByTestId('fixed-marker');
     const before = await fixedMarker.boundingBox();
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
 
     // The bar pads itself from the published variable; the library never touched the element.
@@ -471,14 +471,14 @@ test.describe('dialogManager — scroll lock', () => {
   }) => {
     await mount(<ScrollLockHarness />);
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-scroll-lock-modal')).toBeVisible();
     const single = await page.evaluate(() => {
       return document.body.style.paddingRight;
     });
 
     // A second modal must not pad again. Opened from inside the first: the backdrop blocks outside.
-    await page.getByRole('button', { name: 'Stack Second Modal' }).click();
+    await page.getByRole('button', { name: 'Stack Second Dialog' }).click();
     await expect(page.getByTestId('dialog-scroll-lock-modal-2')).toBeVisible();
     expect(
       await page.evaluate(() => {
@@ -491,14 +491,14 @@ test.describe('dialogManager — scroll lock', () => {
     await expect(page.getByTestId('dialog-scroll-lock-modal-2')).not.toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 
-    await page.getByRole('button', { name: 'Close Modal' }).click();
+    await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.locator('body')).not.toHaveAttribute('data-dialog-open', 'true');
   });
 
   test('a second manager does not release a lock it never took', async ({ mount, page }) => {
     await mount(<ScrollLockTwoManagersHarness />);
 
-    await page.getByRole('button', { name: 'Open Modal' }).click();
+    await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-two-managers-modal')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-dialog-open', 'true');
 

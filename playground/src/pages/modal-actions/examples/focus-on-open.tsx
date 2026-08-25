@@ -133,7 +133,7 @@ export function FocusOnOpenExample() {
   });
 
   return (
-    <ExampleLayout result={outcome} modals={modal.Modal}>
+    <ExampleLayout result={outcome} modals={modal.Dialog}>
       <div
         style={{
           display: 'flex',

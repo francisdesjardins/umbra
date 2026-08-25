@@ -112,7 +112,7 @@ export function AsyncOpenExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={asyncModal.Modal}>
+    <ExampleLayout result={result} modals={asyncModal.Dialog}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--app-space-2)' }}>
         <AppButton
           variant="contained"

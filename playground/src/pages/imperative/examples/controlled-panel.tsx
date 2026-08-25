@@ -98,7 +98,7 @@ export function ControlledPanelExample() {
   }, [phase, open, modal]);
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <label
         style={{
           display: 'flex',

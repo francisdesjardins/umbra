@@ -70,8 +70,8 @@ export function OpeningFocusForegroundHarness() {
       >
         Open the panel alone
       </button>
-      {interruption.Modal}
-      {panel.Modal}
+      {interruption.Dialog}
+      {panel.Dialog}
     </div>
   );
 }
@@ -163,8 +163,8 @@ export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean 
       >
         Open the front one
       </button>
-      {front.Modal}
-      {behind.Modal}
+      {front.Dialog}
+      {behind.Dialog}
     </div>
   );
 }
@@ -219,8 +219,8 @@ export function ReclaimWithoutClaimHarness() {
       >
         Open the modal, then the panel underneath
       </button>
-      {modal.Modal}
-      {panel.Modal}
+      {modal.Dialog}
+      {panel.Dialog}
     </>
   );
 }
@@ -289,8 +289,8 @@ export function ShadowReclaimWithoutClaimHarness() {
       {/* Both dialogs share one root, which is the shape a widget mounted into a shadow root
           takes: the panel's `show()` steals the keyboard from inside the same tree the modal's
           reclaim has to search. */}
-      {shadow !== null && createPortal(modal.Modal, shadow)}
-      {shadow !== null && createPortal(panel.Modal, shadow)}
+      {shadow !== null && createPortal(modal.Dialog, shadow)}
+      {shadow !== null && createPortal(panel.Dialog, shadow)}
     </div>
   );
 }

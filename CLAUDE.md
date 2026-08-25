@@ -11,25 +11,25 @@ than shave prose to fit** — see [doc-budget.test.ts](src/__tests__/doc-budget.
 The package root is plain TypeScript and **must resolve with no framework installed**; bindings are
 the optional layer.
 
-| Specifier       | Contents                                                                                                                                                                                                                        |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `umbra`         | The manager, `DialogRegistry`, placement and style, the store engine, the hotkey utilities, `normalizeError`, `setLogLevel`. No framework; `src/index.ts` is the list.                                                          |
-| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `DialogOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.           |
-| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                     |
-| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export. |
+| Specifier       | Contents                                                                                                                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `umbra`         | The manager, `DialogRegistry`, placement and style, the store engine, the hotkey utilities, `normalizeError`, `setLogLevel`. No framework; `src/index.ts` is the list.                                                           |
+| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `DialogOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.            |
+| `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                      |
+| `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Dialog`, no outlet, no framework. Same wholesale re-export. |
 
 **There are two kinds of binding, and the distinction is load-bearing.**
 
 _Hook_ bindings — `./react` and `./solid` — **render**: a `render` callback returns the content and
-the binding returns a `Modal` to place. They share a surface down to the file names, so a team
+the binding returns a `Dialog` to place. They share a surface down to the file names, so a team
 running both writes the same modal twice with the same words. Three differences, all the renderer's:
 Solid's live values are getters over signals — so **do not destructure the render args** —
-`useLookup` returns an accessor, and `portal: true` mounts the dialog itself, leaving `Modal` as
+`useLookup` returns an accessor, and `portal: true` mounts the dialog itself, leaving `Dialog` as
 `null`.
 
 The _controller_ binding — `./vanilla` — **does not render**, and could not without the library
 shipping a renderer, the one thing it refuses to do. The `<dialog>` and its contents are markup the
-caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`, no `Modal`
+caller already wrote; `bindDialog` drives the lifecycle over it. So it has no `render`, no `Dialog`
 and no outlet, and it gains `bindAction(button, { reason })`, which does the half a renderer does
 elsewhere. `binding-parity.test.ts` knows the difference and asserts each kind's own shape.
 

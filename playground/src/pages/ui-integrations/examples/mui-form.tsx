@@ -176,7 +176,7 @@ export function MuiFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formDialog.Modal}>
+    <ExampleLayout result={result} modals={formDialog.Dialog}>
       {/* The shell's button, not MUI's: the trigger is the playground's chrome, and the two cards
           on this page must differ in the modal alone for the comparison to say anything. That MUI's
           button takes `action()`'s props is proven in the footer, where it matters. */}

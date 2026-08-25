@@ -79,7 +79,7 @@ export function ConfirmWithHotkeysExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={modal.Modal}>
+    <ExampleLayout result={result} modals={modal.Dialog}>
       <AppButton
         variant="contained"
         size="small"
@@ -89,7 +89,7 @@ export function ConfirmWithHotkeysExample() {
           resultStore.setResult(`Closed: ${closeResult?.reason ?? 'unknown'}`);
         }}
       >
-        Open Confirm Modal
+        Open Confirm Dialog
       </AppButton>
     </ExampleLayout>
   );
