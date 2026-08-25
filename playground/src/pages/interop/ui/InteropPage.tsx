@@ -16,7 +16,7 @@ export const InteropPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Watching from outside the bundle"
-            description="modal:open and modal:close fire on document for every dialog on the page — including ones raised by another copy of this library, in another bundle. That reach is the point: dialogManager.subscribe is better inside one app, but it binds to one manager. A tag manager can listen having imported nothing."
+            description="dialog:open and dialog:close fire on document for every dialog on the page — including ones raised by another copy of this library, in another bundle. That reach is the point: dialogManager.subscribe is better inside one app, but it binds to one manager. A tag manager can listen having imported nothing."
             codeKey="dom-events"
             example={<DomEventsExample />}
           />

@@ -3,7 +3,12 @@ import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dia
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { AppButton } from '@/shared/ui/AppButton';
-import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageDialog, useSlideDialog } from 'umbra/react';
+import {
+  DIALOG_CLOSE_EVENT,
+  DIALOG_OPEN_EVENT,
+  useMessageDialog,
+  useSlideDialog,
+} from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { useEffect } from 'react';
@@ -80,16 +85,16 @@ export function DomEventsExample() {
     const OWN = new Set([ALERT_ID, PANEL_ID]);
 
     // No cast: the library augments `DocumentEventMap`, so `e.detail` is already typed.
-    const onOpen = (e: DocumentEventMap['modal:open']) => {
+    const onOpen = (e: DocumentEventMap['dialog:open']) => {
       const { id, template, openedAt } = e.detail;
       if (!OWN.has(id)) {
         return;
       }
       const ts = new Date(openedAt).toLocaleTimeString();
-      store.addEvent(`[${ts}] modal:open  id=${id}  template=${template}`);
+      store.addEvent(`[${ts}] dialog:open  id=${id}  template=${template}`);
     };
 
-    const onClose = (e: DocumentEventMap['modal:close']) => {
+    const onClose = (e: DocumentEventMap['dialog:close']) => {
       const { id, template, reason, openedAt } = e.detail;
       if (!OWN.has(id)) {
         return;
@@ -97,15 +102,15 @@ export function DomEventsExample() {
       const duration = Date.now() - openedAt;
       const ts = new Date().toLocaleTimeString();
       store.addEvent(
-        `[${ts}] modal:close id=${id}  template=${template}  reason=${reason ?? '—'}  open=${String(duration)}ms`
+        `[${ts}] dialog:close id=${id}  template=${template}  reason=${reason ?? '—'}  open=${String(duration)}ms`
       );
     };
 
-    document.addEventListener(MODAL_OPEN_EVENT, onOpen);
-    document.addEventListener(MODAL_CLOSE_EVENT, onClose);
+    document.addEventListener(DIALOG_OPEN_EVENT, onOpen);
+    document.addEventListener(DIALOG_CLOSE_EVENT, onClose);
     return () => {
-      document.removeEventListener(MODAL_OPEN_EVENT, onOpen);
-      document.removeEventListener(MODAL_CLOSE_EVENT, onClose);
+      document.removeEventListener(DIALOG_OPEN_EVENT, onOpen);
+      document.removeEventListener(DIALOG_CLOSE_EVENT, onClose);
     };
   }, []);
 
@@ -132,7 +137,7 @@ export function DomEventsExample() {
               color: 'var(--app-text-secondary)',
             }}
           >
-            No events yet — open a modal to see <code>modal:open</code> / <code>modal:close</code>{' '}
+            No events yet — open a modal to see <code>dialog:open</code> / <code>dialog:close</code>{' '}
             fire on <code>document</code>
           </p>
         ) : (

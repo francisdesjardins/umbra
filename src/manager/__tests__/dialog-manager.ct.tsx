@@ -119,7 +119,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('stack-order')).toHaveText('');
   });
 
-  test('modal:open fires at start of opening sequence with correct template', async ({
+  test('dialog:open fires at start of opening sequence with correct template', async ({
     mount,
     page,
   }) => {
@@ -128,7 +128,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-modal:modal');
   });
 
-  test('modal:close fires after closing sequence with correct template and reason', async ({
+  test('dialog:close fires after closing sequence with correct template and reason', async ({
     mount,
     page,
   }) => {
@@ -138,7 +138,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-modal:modal:ok');
   });
 
-  test('slide modal dispatches modal:open and modal:close with template slide', async ({
+  test('slide modal dispatches dialog:open and dialog:close with template slide', async ({
     mount,
     page,
   }) => {
@@ -149,7 +149,7 @@ test.describe('dialogManager', () => {
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev-slide:slide:ok');
   });
 
-  test('message modal dispatches modal:open and modal:close with template message', async ({
+  test('message modal dispatches dialog:open and dialog:close with template message', async ({
     mount,
     page,
   }) => {

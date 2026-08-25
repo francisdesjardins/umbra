@@ -74,7 +74,7 @@ yours and outlives the controller.
 - **Scoped hotkeys** — `action('save', { hotkey: Key.Enter, onAction })`; the modal dispatches it by clicking the button, so the key path and the click path are the same path, running state and veto included. Scoped to the dialog that declared it: a modal opened from inside another never answers to the one in front of it
 - **Opening focus you choose** — `action('cancel', { focusOnOpen: true })` starts the modal on the button that matters instead of on its first input
 - **Shadow DOM** — a `<dialog>` inside a web component gets the library's backdrop (the sheet is adopted per root, since `adoptedStyleSheets` does not cross the boundary) and its focus policy asks that root rather than the document
-- **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `modal:open` / `modal:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
+- **Across bundles** — `requestOpen` / `requestOpenAndWait` ask a dialog another microfrontend owns, and the `dialog:open` / `dialog:close` DOM events report every dialog on the page, including ones raised by a different copy of the library
 - **Server-rendered markup** — `umbra/vanilla` binds to a `<dialog>` that is already in the document, and **adopts one that already carries `open`** rather than closing it out from under a page that has been showing it since first paint. A server cannot render a _modal_ dialog and no library can change that — the top layer is enterable only from script — so an `open` attribute in HTML is a non-modal open, and a modal one is closed on binding with a warning rather than pretending to a backdrop it does not have
 - **Zero runtime dependencies** — `react` / `react-dom` and `solid-js` are _optional_ peers, each needed only by its own binding; `./vanilla` and the root need neither
 - **React Compiler ready** — No `useMemo`/`useCallback`/`React.memo`
@@ -353,7 +353,7 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `prioritize` — who is in front, as one project-wide rule, and the three costs of reordering a modal dialog
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed — on a hook, and on `dialogManager` for code with no component
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
-- `modal:open` / `modal:close` — DOM lifecycle events, heard across bundles
+- `dialog:open` / `dialog:close` — DOM lifecycle events, heard across bundles
 - `subscribe` — the same two moments plus `register` / `unregister`, so an imperative open can wait for a dialog behind a code-split route
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)

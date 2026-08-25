@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import type { DialogPhase, AwaitedClose } from '../../core/types.js';
 import {
-  type MODAL_CLOSE_EVENT,
-  type MODAL_OPEN_EVENT,
+  type DIALOG_CLOSE_EVENT,
+  type DIALOG_OPEN_EVENT,
   createDialogManager,
   type DialogManagerEvent,
   type DialogCloseEventDetail,
@@ -11,17 +11,17 @@ import {
 
 /**
  * `DocumentEventMap` is augmented with string literals — an interface key cannot be a computed
- * `typeof MODAL_OPEN_EVENT`. Indexing the map *through* the constants ties the two together: a
+ * `typeof DIALOG_OPEN_EVENT`. Indexing the map *through* the constants ties the two together: a
  * renamed event stops resolving, a type error rather than a listener falling back to bare `Event`.
  */
 type Equals<A extends B, B extends C, C = A> = A;
 
 export type _OpenEventIsMapped = Equals<
-  DocumentEventMap[typeof MODAL_OPEN_EVENT],
+  DocumentEventMap[typeof DIALOG_OPEN_EVENT],
   CustomEvent<DialogOpenEventDetail>
 >;
 export type _CloseEventIsMapped = Equals<
-  DocumentEventMap[typeof MODAL_CLOSE_EVENT],
+  DocumentEventMap[typeof DIALOG_CLOSE_EVENT],
   CustomEvent<DialogCloseEventDetail>
 >;
 
@@ -197,7 +197,7 @@ test.describe('createDialogManager', () => {
       // The dialog leaves the screen before it leaves the registry, and both are worth hearing.
       { type: 'unregister', id: 'm' },
     ]);
-    // The `modal:close` event shares this branch; no DOM here, so see `complib-bridge.ct.tsx`.
+    // The `dialog:close` event shares this branch; no DOM here, so see `complib-bridge.ct.tsx`.
   });
 
   test('unregistering a closed dialog reports no second close', () => {

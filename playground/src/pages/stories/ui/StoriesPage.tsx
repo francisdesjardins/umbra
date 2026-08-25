@@ -498,7 +498,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-dismiss-request',
       },
       {
-        title: 'modal:open carries the element, not just the id',
+        title: 'dialog:open carries the element, not just the id',
         description:
           'The event a tag manager or a plain script can listen for having imported nothing. It carries the very node the dialog rendered to, which is what makes it useful beyond logging.',
         component: OpenEventInDocumentHarness,
@@ -1348,7 +1348,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'DOM Events',
         description:
-          'Listens to modal:open and modal:close on document. Verifies id, template, and reason in the CustomEvent detail for both modal and slide types.',
+          'Listens to dialog:open and dialog:close on document. Verifies id, template, and reason in the CustomEvent detail for both modal and slide types.',
         component: DomEventHarness,
         codeKey: 'story-dm-dom-events',
       },

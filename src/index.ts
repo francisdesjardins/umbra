@@ -11,8 +11,8 @@
  */
 
 export {
-  MODAL_CLOSE_EVENT,
-  MODAL_OPEN_EVENT,
+  DIALOG_CLOSE_EVENT,
+  DIALOG_OPEN_EVENT,
   createDialogManager,
   createOpenRequest,
   dialogManager,

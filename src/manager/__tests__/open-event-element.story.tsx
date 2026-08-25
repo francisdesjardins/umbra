@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MODAL_OPEN_EVENT, useDialog } from '../../react.js';
+import { DIALOG_OPEN_EVENT, useDialog } from '../../react.js';
 
-/** What the last `modal:open` carried, flattened to something a test can read off the page. */
+/** What the last `dialog:open` carried, flattened to something a test can read off the page. */
 type Seen = {
   readonly id: string;
   /** Whether the event's element is the very node the dialog rendered to. */
@@ -15,7 +15,7 @@ function useOpenEventProbe(dialogId: string): Seen | null {
   const [seen, setSeen] = useState<Seen | null>(null);
 
   useEffect(() => {
-    const onOpen = (event: DocumentEventMap[typeof MODAL_OPEN_EVENT]) => {
+    const onOpen = (event: DocumentEventMap[typeof DIALOG_OPEN_EVENT]) => {
       const { id, element } = event.detail;
       setSeen({
         id,
@@ -23,9 +23,9 @@ function useOpenEventProbe(dialogId: string): Seen | null {
         findableFromDocument: document.querySelector(`dialog[data-dialog-id="${id}"]`) !== null,
       });
     };
-    document.addEventListener(MODAL_OPEN_EVENT, onOpen);
+    document.addEventListener(DIALOG_OPEN_EVENT, onOpen);
     return () => {
-      document.removeEventListener(MODAL_OPEN_EVENT, onOpen);
+      document.removeEventListener(DIALOG_OPEN_EVENT, onOpen);
     };
   }, [dialogId]);
 

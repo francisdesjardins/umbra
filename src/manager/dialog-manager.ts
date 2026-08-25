@@ -299,24 +299,24 @@ export type DialogManagerSubscriber = (event: DialogManagerEvent) => void;
  *
  * @example
  * // `event.detail` is typed: the library augments `DocumentEventMap`, so no cast.
- * document.addEventListener(MODAL_OPEN_EVENT, (event) => {
+ * document.addEventListener(DIALOG_OPEN_EVENT, (event) => {
  *   analytics.track('modal_shown', { id: event.detail.id, template: event.detail.template });
  * });
  */
-export const MODAL_OPEN_EVENT = 'modal:open' as const;
+export const DIALOG_OPEN_EVENT = 'dialog:open' as const;
 
 /**
  * DOM event name dispatched on document after the closing sequence completes.
  *
  * @example
- * document.addEventListener(MODAL_CLOSE_EVENT, (event) => {
+ * document.addEventListener(DIALOG_CLOSE_EVENT, (event) => {
  *   const { id, reason, openedAt } = event.detail;
  *   analytics.track('modal_closed', { id, reason, ms: Date.now() - openedAt });
  * });
  */
-export const MODAL_CLOSE_EVENT = 'modal:close' as const;
+export const DIALOG_CLOSE_EVENT = 'dialog:close' as const;
 
-/** Payload for the `modal:open` CustomEvent detail. */
+/** Payload for the `dialog:open` CustomEvent detail. */
 export type DialogOpenEventDetail = {
   /** The modal's id. */
   readonly id: string;
@@ -335,7 +335,7 @@ export type DialogOpenEventDetail = {
   readonly element: HTMLElement | null;
 };
 
-/** Payload for the `modal:close` CustomEvent detail. */
+/** Payload for the `dialog:close` CustomEvent detail. */
 export type DialogCloseEventDetail = {
   /** The modal's id. */
   readonly id: string;
@@ -355,13 +355,13 @@ export type DialogCloseEventDetail = {
  * Without it, every consumer writes `(e as CustomEvent<DialogOpenEventDetail>).detail` — a cast
  * the library is responsible for, since it owns both the event names and the detail shapes.
  * The names are repeated as literals here because an interface key cannot be a computed
- * `typeof MODAL_OPEN_EVENT`; `dialog-manager.test.ts` asserts the map entries resolve through
+ * `typeof DIALOG_OPEN_EVENT`; `dialog-manager.test.ts` asserts the map entries resolve through
  * the constants, so a renamed event cannot leave a stale key behind.
  */
 declare global {
   interface DocumentEventMap {
-    'modal:open': CustomEvent<DialogOpenEventDetail>;
-    'modal:close': CustomEvent<DialogCloseEventDetail>;
+    'dialog:open': CustomEvent<DialogOpenEventDetail>;
+    'dialog:close': CustomEvent<DialogCloseEventDetail>;
   }
 }
 
@@ -773,8 +773,8 @@ export function createDialogManager(): DialogManager {
     }
   }
 
-  function dispatchModalEvent(
-    name: typeof MODAL_OPEN_EVENT | typeof MODAL_CLOSE_EVENT,
+  function dispatchDialogEvent(
+    name: typeof DIALOG_OPEN_EVENT | typeof DIALOG_CLOSE_EVENT,
     detail: DialogOpenEventDetail | DialogCloseEventDetail
   ): void {
     if (typeof document === 'undefined') {
@@ -1012,7 +1012,7 @@ export function createDialogManager(): DialogManager {
           openSequence += 1;
           registry.set(id, { ...entry, openedAt, openSequence });
         }
-        dispatchModalEvent(MODAL_OPEN_EVENT, {
+        dispatchDialogEvent(DIALOG_OPEN_EVENT, {
           id,
           template,
           openedAt,
@@ -1035,7 +1035,7 @@ export function createDialogManager(): DialogManager {
         const reason = entry?.store.getSnapshot().closeResult?.reason;
         log('Closed', { id, reason, openCount: getOpenEntries().length });
         emit({ type: 'close', id, reason });
-        dispatchModalEvent(MODAL_CLOSE_EVENT, {
+        dispatchDialogEvent(DIALOG_CLOSE_EVENT, {
           id,
           template,
           reason,
@@ -1117,7 +1117,7 @@ export function createDialogManager(): DialogManager {
 
     if (wasOpen) {
       emit({ type: 'close', id, reason: DISMISS_REASON });
-      dispatchModalEvent(MODAL_CLOSE_EVENT, {
+      dispatchDialogEvent(DIALOG_CLOSE_EVENT, {
         id,
         template: entry.template,
         reason: DISMISS_REASON,
@@ -1126,7 +1126,7 @@ export function createDialogManager(): DialogManager {
     }
 
     // After the close, which is the order the two facts happen in: the dialog left the screen and
-    // then left the registry. There is no DOM twin of this pair — `modal:open` / `modal:close`
+    // then left the registry. There is no DOM twin of this pair — `dialog:open` / `dialog:close`
     // exist so a *different bundle* can hear a dialog on screen, and a registry is one manager's.
     emit({ type: 'unregister', id });
 

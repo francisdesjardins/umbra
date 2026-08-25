@@ -5,7 +5,7 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests that modal:open and modal:close CustomEvents are dispatched on document
+ * Tests that dialog:open and dialog:close CustomEvents are dispatched on document
  * with the correct detail payload. Records events as a JSON string for assertion.
  */
 export function DomEventHarness() {
@@ -78,11 +78,11 @@ export function DomEventHarness() {
         return [...prev, `close:${id}:${template}:${reason}`];
       });
     };
-    document.addEventListener('modal:open', onOpen);
-    document.addEventListener('modal:close', onClose);
+    document.addEventListener('dialog:open', onOpen);
+    document.addEventListener('dialog:close', onClose);
     return () => {
-      document.removeEventListener('modal:open', onOpen);
-      document.removeEventListener('modal:close', onClose);
+      document.removeEventListener('dialog:open', onOpen);
+      document.removeEventListener('dialog:close', onClose);
     };
   }, []);
 

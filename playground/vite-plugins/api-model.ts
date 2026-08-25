@@ -121,8 +121,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
     specifier: CORE,
     blurb: 'What the manager emits as dialogs open and close — DOM events and subscriptions.',
     symbols: [
-      'MODAL_OPEN_EVENT',
-      'MODAL_CLOSE_EVENT',
+      'DIALOG_OPEN_EVENT',
+      'DIALOG_CLOSE_EVENT',
       'DialogOpenEventDetail',
       'DialogCloseEventDetail',
       'DialogManagerEvent',

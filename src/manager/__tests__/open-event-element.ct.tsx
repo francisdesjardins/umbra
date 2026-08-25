@@ -5,7 +5,7 @@ import {
 } from './open-event-element.story.js';
 
 /**
- * `modal:open` carries the `<dialog>` it is announcing.
+ * `dialog:open` carries the `<dialog>` it is announcing.
  *
  * The interesting half is the shadow root: without the field, an integration handed only an id has
  * a lookup that works everywhere except there, and fails silently when it does not.

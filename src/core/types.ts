@@ -446,7 +446,7 @@ export type UseDialogBaseOptions<
    *
    * **A gate, not a notification**, which is why it is not called `onOpen`: it holds the modal's
    * `isPreparing` and the promise `open()` returns. To be *told* a dialog opened — without
-   * gating anything — use `dialogManager.subscribe` or the `modal:open` DOM event, which fires
+   * gating anything — use `dialogManager.subscribe` or the `dialog:open` DOM event, which fires
    * at the start of the sequence and is the one that genuinely means "on open".
    *
    * Handed an `AbortSignal` that fires when the modal closes, so work started here can be

@@ -1408,7 +1408,7 @@ mechanism, so a reorder has three visible consequences:
 
 - The element's **native `close` event fires**. It is queued, so it arrives with `dialog.open`
   already back to `true` — which is the guard for a listener that has to tell a raise from a real
-  close. The library's own `onClose`, `modal:close` and `subscribe` reporting is store-driven and
+  close. The library's own `onClose`, `dialog:close` and `subscribe` reporting is store-driven and
   is not involved. This matters most in `umbra/vanilla`, where the `<dialog>` and its listeners are
   yours.
 - **CSS keyed on the element being shown re-runs** — `@starting-style`, a
@@ -1454,7 +1454,7 @@ worth knowing, because neither is a policy you asked for:
 
 It orders the dialogs of **one manager**. Two copies of this library in one page — two
 microfrontends bundling their own — have two registries and two independent stacks; the
-`modal:open` / `modal:close` document events are the only channel that crosses that line. In one
+`dialog:open` / `dialog:close` document events are the only channel that crosses that line. In one
 app, where features are uncoordinated but the manager is shared, it is the whole answer.
 
 `stopPrioritizing()` puts the order back to what it would be with no policy — within each family,
@@ -1614,7 +1614,7 @@ The success criteria a dialog _engine_ touches, in the same vocabulary as everyt
 
 ## DOM Lifecycle Events
 
-`modal:open` and `modal:close` `CustomEvent`s are dispatched on `document` at key points in the
+`dialog:open` and `dialog:close` `CustomEvent`s are dispatched on `document` at key points in the
 modal lifecycle.
 
 **They are not a second `subscribe`.** `dialogManager.subscribe` reports the same two moments and
@@ -1626,15 +1626,15 @@ ask a dialog it does not own to open, and watch what came of it, without either 
 module instance. A tag manager or a plain `<script>` can listen too, having imported nothing.
 
 ```typescript
-import { MODAL_OPEN_EVENT, MODAL_CLOSE_EVENT } from 'umbra';
+import { DIALOG_OPEN_EVENT, DIALOG_CLOSE_EVENT } from 'umbra';
 import type { DialogOpenEventDetail, DialogCloseEventDetail } from 'umbra';
 
-document.addEventListener(MODAL_OPEN_EVENT, (e: Event) => {
+document.addEventListener(DIALOG_OPEN_EVENT, (e: Event) => {
   const { id, template, openedAt } = e.detail;
   analytics.track('modal_shown', { id, template, openedAt });
 });
 
-document.addEventListener(MODAL_CLOSE_EVENT, (e: Event) => {
+document.addEventListener(DIALOG_CLOSE_EVENT, (e: Event) => {
   const { id, template, reason, openedAt } = e.detail;
   analytics.track('modal_hidden', {
     id,
@@ -1647,10 +1647,10 @@ document.addEventListener(MODAL_CLOSE_EVENT, (e: Event) => {
 
 ### Event timing
 
-| Event         | Fires when                                               |
-| ------------- | -------------------------------------------------------- |
-| `modal:open`  | Modal transitions `closed → opening` (start of sequence) |
-| `modal:close` | Modal transitions `* → closed` (after closing animation) |
+| Event          | Fires when                                               |
+| -------------- | -------------------------------------------------------- |
+| `dialog:open`  | Modal transitions `closed → opening` (start of sequence) |
+| `dialog:close` | Modal transitions `* → closed` (after closing animation) |
 
 ### Detail payloads
 
