@@ -39,7 +39,7 @@ export type RegisteredModalInfo = ModalInfoBase & {
    * Which template built it, as its creator named it at registration — any string, never
    * interpreted by the library. It lets a cross-cutting listener (analytics, a handler that only
    * cares about drawers) tell one kind of dialog from another without its own id-to-kind table, and
-   * lets a `prioritize` policy order by kind. `useDialog` defaults to `'modal'`, `useSlideModal`
+   * lets a `prioritize` policy order by kind. `useDialog` defaults to `'modal'`, `useSlideDialog`
    * reports `'slide'`, and a template you write should name itself too. Distinct from `nonModal`
    * below, which reaches the DOM as `data-modal-type`: one word for both would contradict itself,
    * a `nonModal` dialog naming no template defaulting to `'modal'`.

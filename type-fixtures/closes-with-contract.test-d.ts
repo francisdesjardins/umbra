@@ -9,7 +9,7 @@
 
 import { dialogManager } from '../src/manager/dialog-manager.js';
 import { useDialog } from '../src/react/use-dialog.js';
-import { useMessageModal } from '../src/react/templates/use-message-modal.js';
+import { useMessageDialog } from '../src/react/templates/use-message-dialog.js';
 import type { CloseOf, DataOf, ReasonOf } from '../src/core/registry.js';
 
 declare module '../src/core/registry.js' {
@@ -144,7 +144,7 @@ export function Hook() {
 
 /** The template hooks inherit it — the registered door is the same shape one layer up. */
 export function Template() {
-  return useMessageModal({
+  return useMessageDialog({
     id: 'archive-room',
     ariaLabel: 'Archive room',
     render: ({ handle }) => {

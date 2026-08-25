@@ -22,7 +22,7 @@ type TemplateGroup = {
 
 const VANILLA_GROUPS: readonly TemplateGroup[] = [
   {
-    title: 'MessageModal',
+    title: 'MessageDialog',
     description: 'Alert and confirm dialogs built from plain elements and a CSS module.',
     items: [
       { name: 'DefaultLayout', codeKey: 'vanilla-msg-default-layout' },
@@ -36,7 +36,7 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
     ],
   },
   {
-    title: 'SlideModal',
+    title: 'SlideDialog',
     description: 'Drawer-style panels with the slide transition expressed in CSS.',
     items: [
       { name: 'DefaultLayout', codeKey: 'vanilla-slide-default-layout' },
@@ -51,7 +51,7 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
     ],
   },
   {
-    title: 'FormModal',
+    title: 'FormDialog',
     description: 'Native form controls with per-field error rendering.',
     items: [
       { name: 'FormLayout', codeKey: 'vanilla-form-layout' },
@@ -67,7 +67,7 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
     ],
   },
   {
-    title: 'PanelModal',
+    title: 'PanelDialog',
     description:
       'Components for large, complex full-panel modals — with its own Divider, since there is no component library to borrow one from.',
     items: [

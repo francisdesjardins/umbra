@@ -261,7 +261,7 @@ export type UseDialogBaseOptions<
    *
    * The library places a dialog but never sizes it — a `<dialog>` keeps the UA's `fit-content`,
    * so a panel that should fill its region says so here (`{ width: '100%', height: '100%' }`).
-   * This is the same lever the template hooks pull; `useSlideModal` is a `style` and an
+   * This is the same lever the template hooks pull; `useSlideDialog` is a `style` and an
    * animation over `useDialog` and nothing else.
    *
    * Styles for what is *inside* the dialog belong in `render`, where they can respond to the
@@ -328,7 +328,7 @@ export type UseDialogBaseOptions<
    * click is simply a dialog left open. Anything else, `undefined` included, means the request was
    * taken.
    *
-   * **It reaches `useMessageModal` and `useSlideModal` unchanged**, on all three bindings — which
+   * **It reaches `useMessageDialog` and `useSlideDialog` unchanged**, on all three bindings — which
    * matters because a controlled surface is usually a panel, so a template hook is where this is
    * most often passed.
    *
@@ -537,7 +537,7 @@ export type UseDialogBaseOptions<
    * {@link DialogManager.prioritize} policy, which is the point — "every drawer under every
    * alert" is a rule about kinds of dialog, and `template` is the only thing that names a kind.
    *
-   * The shipped templates name themselves (`useMessageModal` reports `'message'`, `useSlideModal`
+   * The shipped templates name themselves (`useMessageDialog` reports `'message'`, `useSlideDialog`
    * `'slide'`) and one you write should too, rather than inheriting the default. It exists so a
    * cross-cutting listener — analytics, a handler that only cares about drawers — can tell one
    * kind of dialog from another without keeping its own id-to-kind table.
@@ -552,7 +552,7 @@ export type UseDialogBaseOptions<
   /**
    * Clip the contained wrapper (`overflow: clip`) so an off-screen (translated) dialog
    * neither shows nor expands the document's scrollable overflow. Set by template hooks
-   * whose entrance/exit slides the dialog past its container edge (e.g. `useSlideModal`);
+   * whose entrance/exit slides the dialog past its container edge (e.g. `useSlideDialog`);
    * without it, a positive translate (right/bottom) shifts the layout and cancels the slide.
    * Only affects the contained render path (`nonModal` + no `portal`).
    * @internal

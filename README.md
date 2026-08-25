@@ -32,7 +32,7 @@ A **headless**, fully typed dialog/modal manager. The core is plain TypeScript w
 | Specifier       | Contents                                                                                                                                                                                                                                                                                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `umbra`         | The manager (`dialogManager`, `createDialogManager`), the placement and style tables (`dialogPlacement`, `applyStyle`), the store engine (`createStore`, `StoreContract`), `normalizeError`, the key utilities (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel`, `formatAriaKeyshortcuts`) and `setLogLevel`. **No framework.** |
-| `umbra/react`   | `useDialog`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                   |
+| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus everything above**, so a React app imports one path.                                                                                                                                                 |
 | `umbra/solid`   | The same names for Solid, plus `fromStore`, and the same wholesale re-export of the root.                                                                                                                                                                                                                                                |
 | `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself — whose `bindAction` is a **member of the controller it returns**, not a second export. No `render`, no `Modal`, no outlet, and no framework. Same wholesale re-export.                                                                                                |
 
@@ -61,7 +61,7 @@ yours and outlives the controller.
 
 - **Headless** — No UI opinions; use any component library or plain HTML/CSS
 - **Framework-agnostic core** — React is a binding, not the library; a second binding is a sibling file
-- **Primitive + template layers** — Core `useDialog` powers `useMessageModal`, `useSlideModal`
+- **Primitive + template layers** — Core `useDialog` powers `useMessageDialog`, `useSlideDialog`
 - **Actions declared by use** — `action('save', handler)` inside `render` names the reason, binds the handler and returns `{ type, onClick, disabled, 'data-loading', 'aria-busy', 'data-action-reason', 'aria-keyshortcuts'?, 'data-focus-on-open'? }` to spread. Every field is a DOM prop, so the same set fits a bare `<button>`, MUI's, or your own — the core never guesses what your buttons are called
 - **Which action is running, not just that one is** — `action.isRunning('publish')` is the per-action state anywhere the button's own `data-loading` cannot reach: a header, a locked field, a status line. `hasRunningAction` stays the aggregate
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
@@ -166,10 +166,10 @@ the handler and returns the props to spread — one expression, at the one place
 There is no action config and nothing to pass in.
 
 ```tsx
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 
 function ConfirmDelete() {
-  const modal = useMessageModal<void, 'confirm' | 'cancel'>({
+  const modal = useMessageDialog<void, 'confirm' | 'cancel'>({
     id: 'confirm-delete',
     ariaLabelledBy: 'confirm-delete-title',
     render: ({ action }) => (
@@ -342,7 +342,7 @@ not.
 See **[API.md](API.md)** for the complete API documentation covering:
 
 - `useDialog` — Base primitive
-- `useMessageModal` / `useSlideModal` — Template hooks
+- `useMessageDialog` / `useSlideDialog` — Template hooks
 - `action(reason, handler?)` — actions, declared where they are rendered
 - `dialogPlacement` / `ModalAnimation` — where a non-modal dialog sits, and how any of them animates
 - `ModalOutlet` — render registered modals from one place instead of placing `{modal.Modal}`

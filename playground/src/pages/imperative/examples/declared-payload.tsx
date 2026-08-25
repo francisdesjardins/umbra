@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
-import { createOpenRequest, dialogManager, useMessageModal } from 'umbra/react';
+import { createOpenRequest, dialogManager, useMessageDialog } from 'umbra/react';
 import type { PayloadOf } from 'umbra/react';
 
 const MODAL_ID = 'print-job';
@@ -41,7 +41,7 @@ export function DeclaredPayloadExample() {
   const [result, setResult] = useState<string | null>(null);
   const [asked, setAsked] = useState<PayloadOf<'print-job'> | null>(null);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     onOpenRequest: (payload) => {
@@ -54,25 +54,27 @@ export function DeclaredPayloadExample() {
     },
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="info" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>Confirm the print job</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="info" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>
+              Confirm the print job
+            </MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               {asked === null
                 ? 'Nothing parsed from the request.'
                 : `${String(asked.copies)} ${asked.copies === 1 ? 'copy' : 'copies'}, ${asked.colour ? 'colour' : 'greyscale'}.`}
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button {...action('print')} variant="primary">
               Print
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

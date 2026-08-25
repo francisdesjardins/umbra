@@ -1,7 +1,7 @@
 import type { ModalAnimation } from '../core/types.js';
 
 /**
- * The geometry of a slide panel, as data — no framework, no hook. `useSlideModal` is a style and an
+ * The geometry of a slide panel, as data — no framework, no hook. `useSlideDialog` is a style and an
  * animation over `useDialog`, and neither half is renderer work, so both bindings must answer these
  * identically or the two templates are two templates wearing one name.
  */

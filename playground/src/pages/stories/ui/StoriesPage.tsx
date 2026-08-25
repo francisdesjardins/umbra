@@ -197,14 +197,14 @@ import {
   BasicMessageHarness,
   DataMessageHarness,
   OpenAndWaitMessageHarness,
-} from 'umbra/react/__tests__/use-message-modal.story';
+} from 'umbra/react/__tests__/use-message-dialog.story';
 import {
   BasicSlideHarness,
   DirectionSlideHarness,
   MultiDirectionSlideHarness,
   NonModalEscHotkeySlideHarness,
   OpenAndWaitSlideHarness,
-} from 'umbra/react/__tests__/use-slide-modal.story';
+} from 'umbra/react/__tests__/use-slide-dialog.story';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -1147,7 +1147,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The slide template, and the one thing only Solid can get wrong',
         description:
-          'useSlideModal composes the render args with direction through mergeProps, not a spread. A spread freezes every getter — direction would still be right and isPreparing would never come back, so the second is the assertion.',
+          'useSlideDialog composes the render args with direction through mergeProps, not a spread. A spread freezes every getter — direction would still be right and isPreparing would never come back, so the second is the assertion.',
         component: SolidSlideHarness,
         codeKey: 'story-solid-slide',
       },

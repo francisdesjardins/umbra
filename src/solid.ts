@@ -21,8 +21,8 @@
 export { useDialog } from './solid/use-dialog.js';
 export { ModalOutlet } from './solid/modal-outlet.js';
 
-export { useMessageModal } from './solid/templates/use-message-modal.js';
-export { useSlideModal } from './solid/templates/use-slide-modal.js';
+export { useMessageDialog } from './solid/templates/use-message-dialog.js';
+export { useSlideDialog } from './solid/templates/use-slide-dialog.js';
 
 export { DialogManagerProvider, useDialogManagerContext } from './solid/dialog-manager-context.js';
 export { useDialogManager } from './solid/use-dialog-manager.js';
@@ -59,15 +59,15 @@ export type {
 } from './actions/types.js';
 
 export type {
-  MessageModalRenderContext,
-  MessageModalType,
-  UseMessageModalOptions,
-  UseMessageModalReturn,
-} from './solid/templates/use-message-modal.js';
+  MessageDialogRenderContext,
+  MessageDialogType,
+  UseMessageDialogOptions,
+  UseMessageDialogReturn,
+} from './solid/templates/use-message-dialog.js';
 export type {
   SlideAlign,
   SlideDirection,
-  SlideModalRenderContext,
-  UseSlideModalOptions,
-  UseSlideModalReturn,
-} from './solid/templates/use-slide-modal.js';
+  SlideDialogRenderContext,
+  UseSlideDialogOptions,
+  UseSlideDialogReturn,
+} from './solid/templates/use-slide-dialog.js';

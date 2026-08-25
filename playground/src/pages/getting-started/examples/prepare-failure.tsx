@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import type { ModalFailure } from 'umbra/react';
 
 export const MODAL_ID = 'prepare-failure';
@@ -23,7 +23,7 @@ export function PrepareFailureExample() {
   const [shouldFail, setShouldFail] = useState(true);
   const [failure, setFailure] = useState<ModalFailure | null>(null);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabel: 'Profile',
     prepare: async () => {
@@ -41,12 +41,12 @@ export function PrepareFailureExample() {
     },
     render: ({ isPreparing, action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant={failure ? 'error' : 'info'} />
-            <MessageModal.Title>Profile</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant={failure ? 'error' : 'info'} />
+            <MessageDialog.Title>Profile</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-3)' }}>
               {isPreparing ? (
                 <Shared.Detail>Fetching profile…</Shared.Detail>
@@ -63,13 +63,13 @@ export function PrepareFailureExample() {
                   : 'Nothing failed. The same open, with the switch off.'}
               </Shared.Hint>
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button variant="primary" {...action('close')}>
               Close
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (closeResult) => {

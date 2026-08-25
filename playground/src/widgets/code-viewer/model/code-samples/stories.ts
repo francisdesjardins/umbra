@@ -96,15 +96,15 @@ import storyOutletNullModalSrc from 'umbra/react/__tests__/modal-outlet/outlet-n
 import storyOutletNoOutletSrc from 'umbra/react/__tests__/modal-outlet/no-outlet.story.tsx?raw';
 import storyOutletMultiSrc from 'umbra/react/__tests__/modal-outlet/outlet-multi.story.tsx?raw';
 import storyOutletNestedSrc from 'umbra/react/__tests__/modal-outlet/outlet-nested.story.tsx?raw';
-import storyMsgBasicSrc from 'umbra/react/__tests__/use-message-modal/basic-message.story.tsx?raw';
-import storyMsgOpenAndWaitSrc from 'umbra/react/__tests__/use-message-modal/open-and-wait-message.story.tsx?raw';
-import storyMsgAsyncOpenSrc from 'umbra/react/__tests__/use-message-modal/async-open-message.story.tsx?raw';
-import storyMsgDataSrc from 'umbra/react/__tests__/use-message-modal/data-message.story.tsx?raw';
-import storySlideBasicSrc from 'umbra/react/__tests__/use-slide-modal/basic-slide.story.tsx?raw';
-import storySlideDirectionSrc from 'umbra/react/__tests__/use-slide-modal/direction-slide.story.tsx?raw';
-import storySlideOpenAndWaitSrc from 'umbra/react/__tests__/use-slide-modal/open-and-wait-slide.story.tsx?raw';
-import storySlideMultiDirectionSrc from 'umbra/react/__tests__/use-slide-modal/multi-direction-slide.story.tsx?raw';
-import storySlideNonModalEscHotkeySrc from 'umbra/react/__tests__/use-slide-modal/non-modal-esc-hotkey.story.tsx?raw';
+import storyMsgBasicSrc from 'umbra/react/__tests__/use-message-dialog/basic-message.story.tsx?raw';
+import storyMsgOpenAndWaitSrc from 'umbra/react/__tests__/use-message-dialog/open-and-wait-message.story.tsx?raw';
+import storyMsgAsyncOpenSrc from 'umbra/react/__tests__/use-message-dialog/async-open-message.story.tsx?raw';
+import storyMsgDataSrc from 'umbra/react/__tests__/use-message-dialog/data-message.story.tsx?raw';
+import storySlideBasicSrc from 'umbra/react/__tests__/use-slide-dialog/basic-slide.story.tsx?raw';
+import storySlideDirectionSrc from 'umbra/react/__tests__/use-slide-dialog/direction-slide.story.tsx?raw';
+import storySlideOpenAndWaitSrc from 'umbra/react/__tests__/use-slide-dialog/open-and-wait-slide.story.tsx?raw';
+import storySlideMultiDirectionSrc from 'umbra/react/__tests__/use-slide-dialog/multi-direction-slide.story.tsx?raw';
+import storySlideNonModalEscHotkeySrc from 'umbra/react/__tests__/use-slide-dialog/non-modal-esc-hotkey.story.tsx?raw';
 
 /**
  * The `bindDialog` harnesses share one file, so each card is cut from it by name — eighteen cards

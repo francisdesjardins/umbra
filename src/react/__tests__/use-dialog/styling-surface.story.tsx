@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useDialog } from '../../use-dialog.js';
-import { useSlideModal } from '../../templates/use-slide-modal.js';
+import { useSlideDialog } from '../../templates/use-slide-dialog.js';
 
 /**
  * The styling surface: `--dialog-backdrop` (inherited, so overriding is a declaration, not a
@@ -17,7 +17,7 @@ export function StylingSurfaceHarness() {
     },
   });
 
-  const drawer = useSlideModal({
+  const drawer = useSlideDialog({
     id: 'styling-surface-slide',
     direction: 'left',
     style: { width: 240 },

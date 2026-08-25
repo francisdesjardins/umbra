@@ -52,7 +52,7 @@ export function MuiFormExample() {
   const { 'aria-describedby': _emailDescribedBy, ...emailField } = form.field('email');
 
   // Payload and reasons once: `action('submmit')` would not compile, and `onClose` is exhaustive.
-  const formModal = useDialog({
+  const formDialog = useDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {
@@ -176,7 +176,7 @@ export function MuiFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formModal.Modal}>
+    <ExampleLayout result={result} modals={formDialog.Modal}>
       {/* The shell's button, not MUI's: the trigger is the playground's chrome, and the two cards
           on this page must differ in the modal alone for the comparison to say anything. That MUI's
           button takes `action()`'s props is proven in the footer, where it matters. */}
@@ -184,7 +184,7 @@ export function MuiFormExample() {
         variant="contained"
         size="small"
         onClick={() => {
-          void formModal.open();
+          void formDialog.open();
         }}
       >
         Open MUI Form

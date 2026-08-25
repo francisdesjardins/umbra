@@ -202,7 +202,7 @@ export function CosmicOverrideExample() {
   const warp = useDialog({
     id: WARP_ID,
     ariaLabel: 'Warp core',
-    // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
+    // The label a cross-cutting listener sees, the way `useSlideDialog` reports 'slide'.
     template: 'cosmic',
     animation: WARP_ANIMATION,
     dismissKey: Key.Escape,

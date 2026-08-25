@@ -1,13 +1,13 @@
 import { ExampleLayout } from '@/entities/example';
-import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
-import * as PanelModal from '@/entities/modal-template/ui/vanilla/panel-modal';
+import * as FormDialog from '@/entities/modal-template/ui/vanilla/form-dialog';
+import * as PanelDialog from '@/entities/modal-template/ui/vanilla/panel-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { SelectionDropdown } from '@/shared/ui/SelectionDropdown';
 import type { ReactNode } from 'react';
-import { Key, useMessageModal } from 'umbra/react';
+import { Key, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ function Field({
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <FormModal.Label htmlFor={htmlFor}>{label}</FormModal.Label>
+      <FormDialog.Label htmlFor={htmlFor}>{label}</FormDialog.Label>
       {children}
     </div>
   );
@@ -213,7 +213,7 @@ export function VanillaPanelExample() {
   const setup = useStore(setupStore);
 
   // Template hooks infer the payload from `actions`; `submit` is the only one carrying a payload.
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     // A string: the heading is the *step* and changes three times while the dialog stays open.
     ariaLabel: 'Project setup',
@@ -223,9 +223,9 @@ export function VanillaPanelExample() {
       // `100%`, not `92vw`: the UA caps a `<dialog>` at `calc(100% - 6px - 2em)` — 337px on a 375px
       // phone — so a viewport-sized panel asks 345 and overflows by 8px. They agree above ~475px.
       return (
-        <PanelModal.PanelContainer style={{ width: 'min(600px, 100%)' }}>
-          <PanelModal.PanelHeader>
-            <PanelModal.HeaderActionLayout
+        <PanelDialog.PanelContainer style={{ width: 'min(600px, 100%)' }}>
+          <PanelDialog.PanelHeader>
+            <PanelDialog.HeaderActionLayout
               content={
                 <div>
                   <Shared.OverflownTypography>{title}</Shared.OverflownTypography>
@@ -315,11 +315,11 @@ export function VanillaPanelExample() {
                 </>
               }
             />
-          </PanelModal.PanelHeader>
-          <PanelModal.Divider />
+          </PanelDialog.PanelHeader>
+          <PanelDialog.Divider />
           {/* Scroll inside the padded area, not around it: a scrollbar on the outer box runs the
               panel's rounded border; inset by the content padding it clears border and radius. */}
-          <PanelModal.PanelContent>
+          <PanelDialog.PanelContent>
             {/* Pinned so the panel keeps one height across the three steps rather than resizing
                 under the reader — measured against the tallest of them, since a pin below that
                 makes every step scroll. The vh guard is for a phone shorter than the pin. */}
@@ -329,7 +329,7 @@ export function VanillaPanelExample() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   <Shared.Heading>Core settings</Shared.Heading>
                   <Field label="Pipeline name" htmlFor={`${MODAL_ID}-name`}>
-                    <FormModal.Input
+                    <FormDialog.Input
                       id={`${MODAL_ID}-name`}
                       value={setup.name}
                       onChange={(e) => {
@@ -464,9 +464,9 @@ export function VanillaPanelExample() {
                 </div>
               )}
             </Shared.OverflowContainer>
-          </PanelModal.PanelContent>
-          <PanelModal.Divider />
-          <PanelModal.PanelFooter justify={setup.step === 0 ? 'end' : 'space-between'}>
+          </PanelDialog.PanelContent>
+          <PanelDialog.Divider />
+          <PanelDialog.PanelFooter justify={setup.step === 0 ? 'end' : 'space-between'}>
             {setup.step > 0 && (
               <Shared.Button
                 {...action('back', () => {
@@ -507,8 +507,8 @@ export function VanillaPanelExample() {
                 Next
               </Shared.Button>
             )}
-          </PanelModal.PanelFooter>
-        </PanelModal.PanelContainer>
+          </PanelDialog.PanelFooter>
+        </PanelDialog.PanelContainer>
       );
     },
     onClose: (r) => {

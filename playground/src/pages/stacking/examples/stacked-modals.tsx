@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { AppButton } from '@/shared/ui/AppButton';
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
-import { Key, useMessageModal, useSlideModal } from 'umbra/react';
+import { Key, useMessageDialog, useSlideDialog } from 'umbra/react';
 
 export const PANEL_ID = 'stack-panel';
 
@@ -39,22 +39,22 @@ export function StackedModalsExample() {
     });
   };
 
-  const inner = useMessageModal({
+  const inner = useMessageDialog({
     id: 'stack-inner',
     ariaLabel: 'Level 3',
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Title>Level 3 — message modal</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Title>Level 3 — message modal</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               Press <kbd>Enter</kbd>: only this level counts it. Press <kbd>Escape</kbd>: only this
               level closes.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button
               variant="primary"
               {...action('ack', {
@@ -68,8 +68,8 @@ export function StackedModalsExample() {
             >
               Acknowledge
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (result) => {
@@ -77,22 +77,22 @@ export function StackedModalsExample() {
     },
   });
 
-  const middle = useMessageModal({
+  const middle = useMessageDialog({
     id: 'stack-middle',
     ariaLabel: 'Level 2',
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Title>Level 2 — modal</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Title>Level 2 — modal</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               <kbd>Enter</kbd> here means <em>save</em>. While level 3 is open it means something
               else, and this one must not hear it.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button
               onClick={async () => {
                 await inner.open();
@@ -112,10 +112,10 @@ export function StackedModalsExample() {
             >
               Save
             </Shared.Button>
-          </MessageModal.Footer>
+          </MessageDialog.Footer>
           {/* Rendered here, inside level 2 — which is what makes the nesting real. */}
           {inner.Modal}
-        </MessageModal.DefaultLayout>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (result) => {
@@ -123,17 +123,17 @@ export function StackedModalsExample() {
     },
   });
 
-  const panel = useSlideModal({
+  const panel = useSlideDialog({
     id: PANEL_ID,
     direction: 'right',
     ariaLabel: 'Level 1',
     render: ({ direction, action }) => {
       return (
-        <SlideModal.DefaultLayout direction={direction}>
-          <SlideModal.Header>
-            <SlideModal.Title>Level 1 — slide panel</SlideModal.Title>
-          </SlideModal.Header>
-          <SlideModal.Content>
+        <SlideDialog.DefaultLayout direction={direction}>
+          <SlideDialog.Header>
+            <SlideDialog.Title>Level 1 — slide panel</SlideDialog.Title>
+          </SlideDialog.Header>
+          <SlideDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Shared.Message>
                 Open the levels above, then press <kbd>Escape</kbd> three times. One press closes
@@ -148,8 +148,8 @@ export function StackedModalsExample() {
                 Open level 2
               </Shared.Button>
             </div>
-          </SlideModal.Content>
-          <SlideModal.Footer>
+          </SlideDialog.Content>
+          <SlideDialog.Footer>
             <Shared.Button
               {...action('close', {
                 hotkey: Key.Enter,
@@ -161,9 +161,9 @@ export function StackedModalsExample() {
             >
               Close panel
             </Shared.Button>
-          </SlideModal.Footer>
+          </SlideDialog.Footer>
           {middle.Modal}
-        </SlideModal.DefaultLayout>
+        </SlideDialog.DefaultLayout>
       );
     },
     onClose: (result) => {

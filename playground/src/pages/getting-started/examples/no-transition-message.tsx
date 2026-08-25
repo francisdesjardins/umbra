@@ -1,9 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { AppButton } from '@/shared/ui/AppButton';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'no-transition-message';
@@ -21,28 +21,28 @@ const resultStore = createResultStore();
 export function NoTransitionMessageExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     animation: NO_ANIMATION,
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Title id={`${MODAL_ID}-title`}>No Transition</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>No Transition</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               This modal opens and closes instantly — no fade animation. Useful when your PO insists
               transitions feel slow.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button variant="primary" {...action('confirm')}>
               OK
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (closeResult) => {

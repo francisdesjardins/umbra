@@ -6,8 +6,8 @@ import { createOpenRequest } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import { DialogManagerProvider } from '../dialog-manager-context.js';
 import { ModalOutlet } from '../modal-outlet.js';
-import { useMessageModal } from '../templates/use-message-modal.js';
-import { useSlideModal } from '../templates/use-slide-modal.js';
+import { useMessageDialog } from '../templates/use-message-dialog.js';
+import { useSlideDialog } from '../templates/use-slide-dialog.js';
 import { useDialogManager } from '../use-dialog-manager.js';
 import { useLookup } from '../use-lookup.js';
 import { useDialog } from '../use-dialog.js';
@@ -220,12 +220,12 @@ function OutletInner(): Built {
 }
 
 /**
- * The slide template, and the one thing only Solid can get wrong: `useSlideModal` composes `args`
+ * The slide template, and the one thing only Solid can get wrong: `useSlideDialog` composes `args`
  * with `direction` through `mergeProps`, not a spread. A spread freezes every getter — `direction`
  * would still be right and `isPreparing` would never come back, so the second is the assertion.
  */
 function SlideApp(): Built {
-  const panel = useSlideModal<void, 'close'>({
+  const panel = useSlideDialog<void, 'close'>({
     id: 'solid-slide',
     ariaLabel: 'Solid slide',
     direction: 'right',
@@ -287,7 +287,7 @@ function SlideApp(): Built {
 function MessageApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
 
-  const modal = useMessageModal<void, 'confirm'>({
+  const modal = useMessageDialog<void, 'confirm'>({
     id: 'solid-message',
     ariaLabel: 'Solid message',
     render: (ctx) => {

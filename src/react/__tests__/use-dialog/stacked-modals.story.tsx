@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMessageModal } from '../../templates/use-message-modal.js';
-import { useSlideModal } from '../../templates/use-slide-modal.js';
+import { useMessageDialog } from '../../templates/use-message-dialog.js';
+import { useSlideDialog } from '../../templates/use-slide-dialog.js';
 import { Key } from '../../../utils/keys.js';
 import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
@@ -23,7 +23,7 @@ export function StackedModalsHarness() {
     });
   };
 
-  const message = useMessageModal<void, 'ack'>({
+  const message = useMessageDialog<void, 'ack'>({
     id: 'stack-message',
     ariaLabel: 'Message',
     render: ({ action }) => {
@@ -90,7 +90,7 @@ export function StackedModalsHarness() {
   });
 
   // Bottom: a non-modal slide panel, holding the modal in its own subtree.
-  const panel = useSlideModal<void, 'close'>({
+  const panel = useSlideDialog<void, 'close'>({
     id: 'stack-panel',
     ariaLabel: 'Panel',
     direction: 'right',

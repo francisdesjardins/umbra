@@ -11,8 +11,8 @@ import focusOnOpenSrc from '@/pages/modal-actions/examples/focus-on-open.tsx?raw
 import deleteItemModalSrc from '@/pages/modal-actions/examples/delete-item-modal.tsx?raw';
 import reactivDepsSrc from '@/pages/modal-actions/examples/reactive-deps.tsx?raw';
 import perActionStateSrc from '@/pages/modal-actions/examples/per-action-state.tsx?raw';
-import slidePresetsSrc from '@/pages/slide-modal/examples/slide-presets.tsx?raw';
-import slideCornerToastSrc from '@/pages/slide-modal/examples/corner-toast.tsx?raw';
+import slidePresetsSrc from '@/pages/slide-dialog/examples/slide-presets.tsx?raw';
+import slideCornerToastSrc from '@/pages/slide-dialog/examples/corner-toast.tsx?raw';
 import stackedModalsSrc from '@/pages/stacking/examples/stacked-modals.tsx?raw';
 import stackPrioritySrc from '@/pages/stacking/examples/stack-priority.tsx?raw';
 import serviceLayerSrc from '@/pages/imperative/examples/service-layer.tsx?raw';

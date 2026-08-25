@@ -87,9 +87,9 @@ try {
   writeFileSync(
     join(sandbox, 'react-entry.ts'),
     [
-      "import { useDialog, useMessageModal, useSlideModal } from 'umbra/react';",
+      "import { useDialog, useMessageDialog, useSlideDialog } from 'umbra/react';",
       "import { ModalOutlet, dialogManager } from 'umbra/react';",
-      'export const used = [useDialog, useMessageModal, useSlideModal,',
+      'export const used = [useDialog, useMessageDialog, useSlideDialog,',
       '  ModalOutlet, dialogManager];',
     ].join('\n')
   );
@@ -109,9 +109,9 @@ try {
   writeFileSync(
     join(sandbox, 'solid-entry.ts'),
     [
-      "import { useDialog, useMessageModal, useSlideModal } from 'umbra/solid';",
+      "import { useDialog, useMessageDialog, useSlideDialog } from 'umbra/solid';",
       "import { ModalOutlet, fromStore, dialogManager } from 'umbra/solid';",
-      'export const used = [useDialog, useMessageModal, useSlideModal,',
+      'export const used = [useDialog, useMessageDialog, useSlideDialog,',
       '  ModalOutlet, fromStore, dialogManager];',
     ].join('\n')
   );

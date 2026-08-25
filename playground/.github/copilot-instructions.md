@@ -24,14 +24,14 @@ Use unique modal `id` values per example. For multiple modals: `modals={<>{a.Mod
 
 Reference UI in `src/entities/modal-template/ui/` — not exported from the library. All template layouts (MUI and Vanilla) use **children-based composition** — place `Header`, `Content`, and `Footer` as direct children of `DefaultLayout`.
 
-| Framework | Path                                      | Notes                                                                              |
-| --------- | ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| MUI       | `src/entities/modal-template/ui/mui/`     | `message-modal/`, `slide-modal/`, `form-modal/`, `panel-modal/`, `shared/content/` |
-| Vanilla   | `src/entities/modal-template/ui/vanilla/` | Pure HTML/CSS with CSS modules + dark mode                                         |
+| Framework | Path                                      | Notes                                                                                  |
+| --------- | ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| MUI       | `src/entities/modal-template/ui/mui/`     | `message-dialog/`, `slide-dialog/`, `form-dialog/`, `panel-dialog/`, `shared/content/` |
+| Vanilla   | `src/entities/modal-template/ui/vanilla/` | Pure HTML/CSS with CSS modules + dark mode                                             |
 
 ## Routing
 
-TanStack Router — routes: `/` (the landing page), `/getting-started`, `/modal-actions`, `/slide-modal`, `/stacking`, `/imperative`, `/interop`, `/showcases`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Defined in [router.tsx](../src/app/router.tsx).
+TanStack Router — routes: `/` (the landing page), `/getting-started`, `/modal-actions`, `/slide-dialog`, `/stacking`, `/imperative`, `/interop`, `/showcases`, `/ui-integrations`, `/ui-templates`, `/api` (+ `/api/$category`, the generated reference), `/stories`. Defined in [router.tsx](../src/app/router.tsx).
 
 ## Conventions
 

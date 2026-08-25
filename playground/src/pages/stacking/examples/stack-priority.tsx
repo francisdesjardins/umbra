@@ -1,14 +1,14 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useState } from 'react';
 import {
   Key,
   useDialogManager,
-  useMessageModal,
-  useSlideModal,
+  useMessageDialog,
+  useSlideDialog,
   type StackPriority,
 } from 'umbra/react';
 
@@ -99,18 +99,18 @@ export function StackPriorityExample() {
   const [enabled, setEnabled] = useState(false);
   const { openDialogs, foreground } = useDialogManager();
 
-  const panel = useSlideModal({
+  const panel = useSlideDialog({
     id: PANEL_ID,
     direction: 'right',
     ariaLabelledBy: `${PANEL_ID}-title`,
     style: { width: 380 },
     render: ({ direction, action }) => {
       return (
-        <SlideModal.DefaultLayout direction={direction}>
-          <SlideModal.Header>
-            <SlideModal.Title id={`${PANEL_ID}-title`}>Order #4812</SlideModal.Title>
-          </SlideModal.Header>
-          <SlideModal.Content>
+        <SlideDialog.DefaultLayout direction={direction}>
+          <SlideDialog.Header>
+            <SlideDialog.Title id={`${PANEL_ID}-title`}>Order #4812</SlideDialog.Title>
+          </SlideDialog.Header>
+          <SlideDialog.Content>
             <div
               style={{
                 display: 'flex',
@@ -130,11 +130,11 @@ export function StackPriorityExample() {
                 order elements were added and ignores z-index between them entirely.
               </Shared.Hint>
             </div>
-          </SlideModal.Content>
-          <SlideModal.Footer>
+          </SlideDialog.Content>
+          <SlideDialog.Footer>
             <Shared.Button {...action('close', { hotkey: Key.Escape })}>Close panel</Shared.Button>
-          </SlideModal.Footer>
-        </SlideModal.DefaultLayout>
+          </SlideDialog.Footer>
+        </SlideDialog.DefaultLayout>
       );
     },
   });
@@ -142,7 +142,7 @@ export function StackPriorityExample() {
   // The context-aware instance, not the static singleton — every hook here returns the same one.
   const { dialogManager } = panel;
 
-  const warning = useMessageModal({
+  const warning = useMessageDialog({
     id: WARNING_ID,
     ariaLabelledBy: `${WARNING_ID}-title`,
     ariaDescribedBy: `${WARNING_ID}-body`,
@@ -150,14 +150,14 @@ export function StackPriorityExample() {
     role: 'alertdialog',
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="warning" />
-            <MessageModal.Title id={`${WARNING_ID}-title`}>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="warning" />
+            <MessageDialog.Title id={`${WARNING_ID}-title`}>
               Your session expires in 2 minutes
-            </MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+            </MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message id={`${WARNING_ID}-body`}>
               Now let something else raise a panel, the way a deep link would. With the policy off
               it lands on top of this warning and you lose it.
@@ -181,16 +181,16 @@ export function StackPriorityExample() {
               </Shared.Button>
               <DialogPolicySwitch enabled={enabled} onChange={setEnabled} />
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button
               variant="primary"
               {...action('acknowledge', { focusOnOpen: true, hotkey: Key.Enter })}
             >
               Extend my session
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

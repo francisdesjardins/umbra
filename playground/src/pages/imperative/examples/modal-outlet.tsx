@@ -1,9 +1,9 @@
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { AppButton } from '@/shared/ui/AppButton';
-import { ModalOutlet, useMessageModal } from 'umbra/react';
+import { ModalOutlet, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'outlet-demo';
@@ -15,29 +15,29 @@ const resultStore = createResultStore();
 // ── Inner component — no {Modal} in JSX ────────────────────────────────────
 
 function ConfirmDialog() {
-  const confirmModal = useMessageModal({
+  const confirmModal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="info" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="info" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Outlet Modal</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               This modal renders via <code>{'<ModalOutlet>'}</code> — there is no{' '}
               <code>{'{modal.Modal}'}</code> in the component JSX.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button variant="primary" {...action('confirm')}>
               Confirm
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (closeResult) => {

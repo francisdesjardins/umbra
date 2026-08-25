@@ -9,8 +9,8 @@
 export { ModalOutlet } from './react/modal-outlet.js';
 export { useDialog } from './react/use-dialog.js';
 
-export { useMessageModal } from './react/templates/use-message-modal.js';
-export { useSlideModal } from './react/templates/use-slide-modal.js';
+export { useMessageDialog } from './react/templates/use-message-dialog.js';
+export { useSlideDialog } from './react/templates/use-slide-dialog.js';
 
 export { DialogManagerProvider, useDialogManagerContext } from './react/dialog-manager-context.js';
 export { useDialogManager } from './react/use-dialog-manager.js';
@@ -48,15 +48,15 @@ export type {
 } from './actions/types.js';
 
 export type {
-  MessageModalRenderContext,
-  MessageModalType,
-  UseMessageModalOptions,
-  UseMessageModalReturn,
-} from './react/templates/use-message-modal.js';
+  MessageDialogRenderContext,
+  MessageDialogType,
+  UseMessageDialogOptions,
+  UseMessageDialogReturn,
+} from './react/templates/use-message-dialog.js';
 export type {
   SlideAlign,
   SlideDirection,
-  SlideModalRenderContext,
-  UseSlideModalOptions,
-  UseSlideModalReturn,
-} from './react/templates/use-slide-modal.js';
+  SlideDialogRenderContext,
+  UseSlideDialogOptions,
+  UseSlideDialogReturn,
+} from './react/templates/use-slide-dialog.js';

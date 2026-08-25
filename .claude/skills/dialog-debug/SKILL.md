@@ -1,6 +1,6 @@
 ---
 name: dialog-debug
-description: Debug dialog/slide-modal animation, positioning and lifecycle state by driving a real browser against any modal in the playground and measuring what actually renders. Use when a modal visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
+description: Debug dialog/slide-dialog animation, positioning and lifecycle state by driving a real browser against any modal in the playground and measuring what actually renders. Use when a modal visibly misbehaves (jumps/pops instead of sliding, wrong size, stuck open, wrong direction) and unit/component tests pass but the live app looks wrong.
 ---
 
 # Dialog Debug

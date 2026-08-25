@@ -1,4 +1,4 @@
-import styles from '@/entities/modal-template/ui/vanilla/message-modal/styles.module.css';
+import styles from '@/entities/modal-template/ui/vanilla/message-dialog/styles.module.css';
 import type { ComponentProps, ReactNode } from 'react';
 
 type VanillaButtonProps = {

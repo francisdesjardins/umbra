@@ -10,7 +10,7 @@ import type {
 } from '../core/types.js';
 
 /**
- * Options common to all template hooks (useMessageModal, useSlideModal).
+ * Options common to all template hooks (useMessageDialog, useSlideDialog).
  *
  * Stated as the **complement** of what a template owns rather than a list of what it forwards, so a
  * new `UseDialogBaseOptions` option reaches every template by default and only a deliberate edit to
@@ -83,7 +83,7 @@ export type RegisteredBaseRenderContext<TId> = RegisteredRenderArgs<TId>;
 
 /**
  * Base context shared by all template render callbacks; template-specific contexts intersect this
- * with their extra fields (`useSlideModal` adds `direction`). It *is* `ModalRenderArgs`, not a copy,
+ * with their extra fields (`useSlideDialog` adds `direction`). It *is* `ModalRenderArgs`, not a copy,
  * because that is what templates forward — so a new render-time field is added once in the core and
  * no template can drift into a subtly different `isPreparing`.
  *
@@ -98,7 +98,7 @@ export type BaseRenderContext<TData = void, TReason extends string = string> = M
 >;
 
 /**
- * Default fade animation for useMessageModal; useSlideModal uses a direction-based slide instead.
+ * Default fade animation for useMessageDialog; useSlideDialog uses a direction-based slide instead.
  *
  * @internal Not exported from index.ts.
  */

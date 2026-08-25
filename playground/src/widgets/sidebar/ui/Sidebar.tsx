@@ -42,7 +42,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: 'Patterns',
     items: [
-      { path: '/slide-modal', label: 'Slide Modals', icon: ViewSidebarIcon },
+      { path: '/slide-dialog', label: 'Slide Modals', icon: ViewSidebarIcon },
       { path: '/stacking', label: 'Stacking', icon: WidgetsIcon },
       { path: '/imperative', label: 'Imperative Control', icon: TuneIcon },
       { path: '/interop', label: 'Interop', icon: CodeIcon },

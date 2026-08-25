@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as FormDialog from '@/entities/modal-template/ui/vanilla/form-dialog';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
-import { Key, useMessageModal } from 'umbra/react';
+import { Key, useMessageDialog } from 'umbra/react';
 
 export const MODAL_ID = 'focus-on-open';
 
@@ -55,7 +55,7 @@ export function FocusOnOpenExample() {
   const [isVisible, setIsVisible] = useState(false);
   const focused = useFocusedLabel(isVisible);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     // Not `alertdialog`: it announces its description, and this body is focus commentary.
@@ -65,20 +65,22 @@ export function FocusOnOpenExample() {
     },
     render: ({ action, error }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="warning" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>Delete this file?</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="warning" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete this file?</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message>
                 The field below is first in the DOM, so it is what the browser would focus on its
                 own. Focus is on <strong>Keep</strong> instead, because that action asked for it.
               </Shared.Message>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
-                <FormModal.Label htmlFor={`${MODAL_ID}-reason`}>Reason (optional)</FormModal.Label>
-                <FormModal.Input id={`${MODAL_ID}-reason`} />
+                <FormDialog.Label htmlFor={`${MODAL_ID}-reason`}>
+                  Reason (optional)
+                </FormDialog.Label>
+                <FormDialog.Input id={`${MODAL_ID}-reason`} />
               </div>
               <span
                 style={{
@@ -97,8 +99,8 @@ export function FocusOnOpenExample() {
                 </Shared.Alert>
               ) : null}
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('keep', { focusOnOpen: true })}>Keep</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -120,8 +122,8 @@ export function FocusOnOpenExample() {
             >
               Delete
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (result) => {

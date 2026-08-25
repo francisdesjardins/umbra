@@ -4,8 +4,8 @@ import { fuzzyMatch, fuzzyRank } from '../fuzzy-match';
 const SYMBOLS = [
   'useDialog',
   'useDialogActions',
-  'useMessageModal',
-  'useSlideModal',
+  'useMessageDialog',
+  'useSlideDialog',
   'dialogManager',
   'createDialogManager',
   'createStore',

@@ -49,7 +49,7 @@ const opts = {
   slow: has('--slow'),
   // Any modal on any page; the slide presets are the default target.
   id: val('--id', 'slide-preset-drawer'),
-  route: val('--route', '/slide-modal'),
+  route: val('--route', '/slide-dialog'),
   openLabel: val('--open-label', 'Right drawer'),
   closeLabel: val('--close-label', 'Done'),
   axis: val('--axis', null),
@@ -71,9 +71,9 @@ const PRESET_AXIS = {
 };
 
 /**
- * Normalize `--route` to a leading-slash path. Accepts `slide-modal` as well as
- * `/slide-modal`, because Git Bash / MSYS rewrites a leading-slash argument into a Windows
- * path (`/slide-modal` → `C:/Program Files/Git/slide-modal`) — so the slash-less form is the
+ * Normalize `--route` to a leading-slash path. Accepts `slide-dialog` as well as
+ * `/slide-dialog`, because Git Bash / MSYS rewrites a leading-slash argument into a Windows
+ * path (`/slide-dialog` → `C:/Program Files/Git/slide-dialog`) — so the slash-less form is the
  * one that survives that shell. Also tolerates a full URL being passed here.
  */
 function normalizeRoute(route) {

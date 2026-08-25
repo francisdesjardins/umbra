@@ -1,9 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { AppButton } from '@/shared/ui/AppButton';
-import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageModal, useSlideModal } from 'umbra/react';
+import { MODAL_CLOSE_EVENT, MODAL_OPEN_EVENT, useMessageDialog, useSlideDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 import { useEffect } from 'react';
@@ -29,47 +29,47 @@ const PANEL_ID = 'dom-events-panel';
 export function DomEventsExample() {
   const { eventLog } = useStore(store);
 
-  const alert = useMessageModal({
+  const alert = useMessageDialog({
     id: ALERT_ID,
     ariaLabelledBy: `${ALERT_ID}-title`,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Title id={`${ALERT_ID}-title`}>Message Modal</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Title id={`${ALERT_ID}-title`}>Message Modal</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>A regular modal — type will be &quot;modal&quot;.</Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button variant="primary" {...action('ok')}>
               OK
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });
 
-  const panel = useSlideModal({
+  const panel = useSlideDialog({
     id: PANEL_ID,
     direction: 'right',
     ariaLabelledBy: `${PANEL_ID}-title`,
     render: ({ action }) => {
       return (
-        <SlideModal.DefaultLayout direction="right">
-          <SlideModal.Header>
-            <SlideModal.Title id={`${PANEL_ID}-title`}>Slide Panel</SlideModal.Title>
-          </SlideModal.Header>
-          <SlideModal.Content>
+        <SlideDialog.DefaultLayout direction="right">
+          <SlideDialog.Header>
+            <SlideDialog.Title id={`${PANEL_ID}-title`}>Slide Panel</SlideDialog.Title>
+          </SlideDialog.Header>
+          <SlideDialog.Content>
             <Shared.Message>A slide modal — type will be &quot;slide&quot;.</Shared.Message>
-          </SlideModal.Content>
-          <SlideModal.Footer>
+          </SlideDialog.Content>
+          <SlideDialog.Footer>
             <Shared.Button variant="primary" {...action('ok')}>
               Close
             </Shared.Button>
-          </SlideModal.Footer>
-        </SlideModal.DefaultLayout>
+          </SlideDialog.Footer>
+        </SlideDialog.DefaultLayout>
       );
     },
   });

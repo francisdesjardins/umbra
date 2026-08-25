@@ -1,10 +1,10 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { AppButton } from '@/shared/ui/AppButton';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
@@ -39,7 +39,7 @@ const resultStore = createResultStore();
 function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<void> }) {
   const { itemName } = useStore(deleteItemStore);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     ariaDescribedBy: `${MODAL_ID}-body`,
@@ -47,12 +47,12 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
     role: 'alertdialog',
     render: ({ action, hasRunningAction, error, phase }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="error" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>Delete Item</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="error" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete Item</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message id={`${MODAL_ID}-body`}>
                 Are you sure you want to delete <strong>&quot;{itemName}&quot;</strong>?
@@ -74,8 +74,8 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
                 {error && ` | Error: ${error.message}`}
               </span>
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel', { hotkey: 'Escape' })}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -94,8 +94,8 @@ function useDeleteItemModal(options: { onDelete: (itemId: string) => Promise<voi
             >
               Delete
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

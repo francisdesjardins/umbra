@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
-import { dialogManager, useMessageModal } from 'umbra/react';
+import { dialogManager, useMessageDialog } from 'umbra/react';
 
 const MODAL_ID = 'deferred-open-target';
 
@@ -115,26 +115,26 @@ export function DeferredOpenExample() {
 
 /** The dialog behind the code-split route: it exists only while this is mounted. */
 function DeferredTarget() {
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="success" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>It arrived</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="success" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>It arrived</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               The open that found nothing did not queue itself. The <code>register</code> event is
               what let a caller hold one until this component mounted.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('close')}>Close</Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

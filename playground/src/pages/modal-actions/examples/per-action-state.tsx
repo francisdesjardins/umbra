@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Spinner } from '@/shared/ui/Spinner';
 import { ExampleLayout } from '@/entities/example';
-import * as FormModal from '@/entities/modal-template/ui/vanilla/form-modal';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as FormDialog from '@/entities/modal-template/ui/vanilla/form-dialog';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 
 export const MODAL_ID = 'per-action-state';
 
@@ -40,7 +40,7 @@ export function PerActionStateExample() {
   // Which handler started: `phase` says the modal is leaving, not what it was doing.
   const [started, setStarted] = useState<'draft' | 'publish' | null>(null);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     // A string, not the heading: it is a status changing under the user, and a name must not.
     ariaLabel: 'Publish post',
@@ -52,19 +52,19 @@ export function PerActionStateExample() {
       const savingDraft = action.isRunning('draft') || (leaving && started === 'draft');
 
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
             {hasRunningAction || leaving ? <ActionSpinner /> : null}
-            <MessageModal.Title>
+            <MessageDialog.Title>
               {publishing ? 'Publishing…' : savingDraft ? 'Saving draft…' : 'Ready to publish'}
-            </MessageModal.Title>
-          </MessageModal.Header>
+            </MessageDialog.Title>
+          </MessageDialog.Header>
 
-          <MessageModal.Content>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               {/* Not an action's button: it locks for publish only, so a draft still takes edits. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-1)' }}>
-                <FormModal.Label htmlFor={`${MODAL_ID}-note`}>Release note</FormModal.Label>
+                <FormDialog.Label htmlFor={`${MODAL_ID}-note`}>Release note</FormDialog.Label>
                 <textarea
                   id={`${MODAL_ID}-note`}
                   rows={2}
@@ -97,9 +97,9 @@ export function PerActionStateExample() {
                 </Shared.Hint>
               )}
             </div>
-          </MessageModal.Content>
+          </MessageDialog.Content>
 
-          <MessageModal.Footer>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               {...action('draft', async (close) => {
@@ -120,8 +120,8 @@ export function PerActionStateExample() {
             >
               Publish
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

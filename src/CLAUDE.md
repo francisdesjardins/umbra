@@ -74,7 +74,7 @@ package's front door. Add no new exceptions.
 Two near-misses kept on purpose, so the next pass does not re-open them: `ActionGate`/`DismissGate`
 are "gate" in two senses and the alternatives cost more than the ambiguity; `ModalRenderArgs` and
 `BaseRenderContext` are one shape under two words because the alias is the seam
-`SlideModalRenderContext` intersects.
+`SlideDialogRenderContext` intersects.
 
 **`sync*` decides, `run*` does.** A `sync*` function is handed a phase and may decide there is
 nothing to do, so it is safe on every pass; a `run*` function performs what it names, every time.
@@ -98,7 +98,7 @@ export names _and_ their module paths, so a hook added to one and forgotten on t
 so does putting it at a different depth.
 
 **The paths matter as much as the names**, because a surface can be complete while the folders lie: a
-`solid/` folder with no `use-slide-modal` reads as "Solid does not have one", whatever a combined
+`solid/` folder with no `use-slide-dialog` reads as "Solid does not have one", whatever a combined
 `templates.ts` exports. A `templates/` folder on each side says the other true thing — the template
 hooks are built _on_ `useDialog`, not peers of it, and their framework-free half lives in
 `src/templates/`. For the same reason React's effects are **not** split into per-concern hook files:
@@ -280,12 +280,12 @@ optimisations. See [core/dialog-props.ts](core/dialog-props.ts).
 
 ### Layer 2: Template Hooks
 
-Each wraps `useDialog` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
+Each wraps `useDialog` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideDialog`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
 
 `buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
-- `useMessageModal<TData>` ([react/templates/use-message-modal.tsx](react/templates/use-message-modal.tsx)) — `ModalRenderArgs` unchanged; reports `template: 'message'`
-- `useSlideModal` ([react/templates/use-slide-modal.tsx](react/templates/use-slide-modal.tsx)) — direction-based animation, reports `template: 'slide'`, context `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
+- `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `ModalRenderArgs` unchanged; reports `template: 'message'`
+- `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `ModalRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.
 
 ### Modal Actions
 
@@ -386,8 +386,8 @@ ModalRenderArgs<TData>                ← the render-time slice:
 ├── UseDialogReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
-    ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
-    └── SlideModalRenderContext<TData>   = BaseRenderContext<TData> & { direction }
+    ├── MessageDialogRenderContext<TData> = BaseRenderContext<TData>
+    └── SlideDialogRenderContext<TData>   = BaseRenderContext<TData> & { direction }
 
 UseDialogBaseOptions<TData, …, TStyle, TNode>   ← flat, variant-free option surface
 ├── UseDialogOptions<…>      = UseDialogBaseOptions<…> & ModalVariant

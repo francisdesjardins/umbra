@@ -50,7 +50,7 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 
 ## Architecture
 
-Two-layer design: core primitive (`useDialog`) + template hooks (`useMessageModal`, `useSlideModal`).
+Two-layer design: core primitive (`useDialog`) + template hooks (`useMessageDialog`, `useSlideDialog`).
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
@@ -115,7 +115,7 @@ These are hard constraints — never violate them when generating code:
 
 The **UI Templates** page (`playground/src/pages/ui-templates/ui/UITemplatesPage.tsx`) is a living catalogue of all MUI template components and playground shared components. **Keep it in sync** whenever you:
 
-- **Add a new component** to any of `playground/src/entities/modal-template/ui/mui/` (message-modal, slide-modal, form-modal, panel-modal, shared/content, shared/) or `playground/src/shared/ui/`:
+- **Add a new component** to any of `playground/src/entities/modal-template/ui/mui/` (message-dialog, slide-dialog, form-dialog, panel-dialog, shared/content, shared/) or `playground/src/shared/ui/`:
   1. Add a `?raw` import for the new file in `playground/src/widgets/code-viewer/model/codeSamples.ts` following the `// MUI template components` section.
   2. Add a matching entry to the `codeSamples` record using the key convention: `template-<group>-<kebab-name>` for templates (e.g. `template-msg-my-new-component`) or `shared-component-<kebab-name>` for shared components.
   3. Add a `{ name: 'ComponentName', codeKey: '...' }` entry inside the correct `<TemplateSection>` in `UITemplatesPage.tsx`. Create a new `<TemplateSection>` block if it belongs to a new group.

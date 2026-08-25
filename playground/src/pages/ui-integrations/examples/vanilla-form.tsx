@@ -3,7 +3,7 @@ import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import buttonRowStyles from '@/entities/modal-template/ui/vanilla/shared/ButtonRow.module.css';
 import { createResultStore } from '@/shared/lib/createResultStore';
-import styles from '@/entities/modal-template/ui/vanilla/form-modal/styles.module.css';
+import styles from '@/entities/modal-template/ui/vanilla/form-dialog/styles.module.css';
 import { useForm } from '@/shared/lib/use-form';
 import { useDialog } from 'umbra/react';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
@@ -54,7 +54,7 @@ export function VanillaFormExample() {
   const { ref: contentRef, regionProps } = useScrollRegion<HTMLDivElement>('Dialog content');
 
   // Same two type arguments as the MUI version; only the markup below differs.
-  const formModal = useDialog({
+  const formDialog = useDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {
@@ -148,12 +148,12 @@ export function VanillaFormExample() {
   });
 
   return (
-    <ExampleLayout result={result} modals={formModal.Modal}>
+    <ExampleLayout result={result} modals={formDialog.Modal}>
       <AppButton
         variant="contained"
         size="small"
         onClick={() => {
-          void formModal.open();
+          void formDialog.open();
         }}
       >
         Open Vanilla Form

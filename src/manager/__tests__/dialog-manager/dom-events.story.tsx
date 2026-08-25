@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useMessageModal } from '../../../react/templates/use-message-modal.js';
-import { useSlideModal } from '../../../react/templates/use-slide-modal.js';
+import { useMessageDialog } from '../../../react/templates/use-message-dialog.js';
+import { useSlideDialog } from '../../../react/templates/use-slide-dialog.js';
 import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
@@ -28,7 +28,7 @@ export function DomEventHarness() {
     },
   });
 
-  const { Modal: ModalB } = useSlideModal<void, 'ok'>({
+  const { Modal: ModalB } = useSlideDialog<void, 'ok'>({
     id: 'dom-ev-slide',
     direction: 'right',
     render: ({ handle }) => {
@@ -46,7 +46,7 @@ export function DomEventHarness() {
     },
   });
 
-  const { Modal: ModalC, open: openMessage } = useMessageModal<void, 'ok'>({
+  const { Modal: ModalC, open: openMessage } = useMessageDialog<void, 'ok'>({
     id: 'dom-ev-message',
     render: ({ handle }) => {
       return (

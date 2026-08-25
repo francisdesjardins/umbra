@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
-import { dialogManager, useMessageModal } from 'umbra/react';
+import { dialogManager, useMessageDialog } from 'umbra/react';
 
 const PANELS = [
   { id: 'bulk-first', label: 'Unsaved draft' },
@@ -76,23 +76,23 @@ export function CloseThemAllExample() {
 /** Three dialogs differing only in their name, so the loop is the subject rather than the content. */
 function usePanel(panel: (typeof PANELS)[number], setResult: (value: string) => void) {
   const { id, label } = panel;
-  return useMessageModal({
+  return useMessageDialog({
     id,
     ariaLabelledBy: `${id}-title`,
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="info" />
-            <MessageModal.Title id={`${id}-title`}>{label}</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="info" />
+            <MessageDialog.Title id={`${id}-title`}>{label}</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               Three dialogs are up. Closing them one at a time is what a user does; closing them
               together is what a route change does.
             </Shared.Message>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('close')}>Close this one</Shared.Button>
             <Shared.Button
               {...action('close-others', () => {
@@ -111,8 +111,8 @@ function usePanel(panel: (typeof PANELS)[number], setResult: (value: string) => 
             >
               Close them all
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

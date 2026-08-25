@@ -37,7 +37,7 @@ specifier if they prefer a single import path.
 ### Core Concepts
 
 1. **`useDialog`** — Base primitive. Renders a native `<dialog>` inline (or via `createPortal` when `portal: true`).
-2. **Template hooks** — `useMessageModal`, `useSlideModal` provide headless modal logic (animation, positioning). No UI wrapper — users provide their own components in the `render` callback.
+2. **Template hooks** — `useMessageDialog`, `useSlideDialog` provide headless modal logic (animation, positioning). No UI wrapper — users provide their own components in the `render` callback.
 3. **Actions** — declared by being rendered: `action('save', handler)` inside `render` returns DOM props (`{ onClick, disabled, 'data-loading', … }`) to spread. For custom state, use `createStore` alongside.
 4. **`handle.close(reason, data?)`** — Closes the modal with a typed result (`handle` is the render-context close handle).
 5. **`ModalOutlet`** — Optional portal manager. Wrap a subtree to auto-render modals without placing `{modal.Modal}` in JSX.
@@ -54,9 +54,9 @@ the action is used. There is no action config, no second hook, and nothing to pa
 `useDialog`.
 
 ```tsx
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 
-const modal = useMessageModal({
+const modal = useMessageDialog({
   id: 'confirm',
   render: ({ action }) => (
     <>
@@ -301,7 +301,7 @@ the string.
 ### Presets: say it once, in a wrapper
 
 A confirm dialog has the same two reasons every time, and restating
-`useMessageModal<void, 'confirm' | 'cancel'>` at each call site is the kind of repetition that
+`useMessageDialog<void, 'confirm' | 'cancel'>` at each call site is the kind of repetition that
 eventually disagrees with itself. Close them once in your own hook — the library is designed to be
 wrapped, and this is the seam:
 
@@ -309,9 +309,9 @@ wrapped, and this is the seam:
 type ConfirmReason = 'confirm' | 'cancel';
 
 export const useConfirmModal = <TData = void,>(
-  options: UseMessageModalOptions<TData, ConfirmReason>
-): UseMessageModalReturn<TData, ConfirmReason> => {
-  return useMessageModal<TData, ConfirmReason>(options);
+  options: UseMessageDialogOptions<TData, ConfirmReason>
+): UseMessageDialogReturn<TData, ConfirmReason> => {
+  return useMessageDialog<TData, ConfirmReason>(options);
 };
 ```
 
@@ -324,7 +324,7 @@ const user = useConfirmModal<User>({ id: 'create-user', render, onClose }); // t
 
 `action('confrim')` is still rejected through the wrapper, and the `switch` in `onClose` is still
 exhaustive over `'confirm' | 'cancel' | 'dismiss'`. The same shape gives a template its own preset
-— pin `direction` and `align` on a `useDrawer` over `useSlideModal`, for instance.
+— pin `direction` and `align` on a `useDrawer` over `useSlideDialog`, for instance.
 
 ---
 
@@ -388,29 +388,29 @@ Everything above, plus:
 
 ### Options
 
-| Option                    | Type                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                      | `string`                                                         | Unique modal identifier                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `render`                  | `(args: ModalRenderArgs<TData, TReason>) => ReactNode`           | Render function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles, and the `<dialog>` carries `aria-busy` for that window. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `onError?`                | `(failure: ModalFailure) => void`                                | Reports a callback of **yours** that threw, and only the two with nowhere else to go: a `prepare` (the dialog is already shown and `isPreparing` settles either way, so without this the modal announces itself ready) and an `onClose` (detached, with nothing left rendering). An action's throw is already the render args' `error`, `render` reaches the framework's error boundary, and `onKeyDown` / an action's `onClick` escape to the DOM listener that called them — none arrive here, and neither do the library's own failures, which would be unreportable bugs if they did. A report, not a veto: the close still completes. `failure.source` is `'prepare' \| 'onClose'`.                                                       |
-| `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on — it is announced with its description rather than waiting to be read, so pair it with `ariaDescribedBy`. Not _required_ to: the APG says to omit the description when the content has structure (lists, tables, several paragraphs) that would be flattened into one announced string. Default: `'dialog'`.                                                                                                                                                                                                                                                                                                                                             |
-| `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the dialog in front responds, and no non-modal dialog is in front while a modal one is open. Default: `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `onDismissRequest?`       | `(cause: DismissCause) => boolean \| void`                       | Report every user-initiated dismissal instead of acting on it, for a surface whose open state is a prop. Replaces the **last** step only — which key, whether an action claimed it, whether a popup answers it first, where the pointer landed, whether `prepare` or a running action forbids it, and which dialog is in front all stay the library's. The dismiss key, a backdrop click and a click outside a panel all arrive here, each naming itself, so a controlled surface cannot answer one door and reopen itself through another. Return `false` to decline, which only the non-modal window listener acts on: it captures, so a press it takes is one the page never sees. Reaches `useMessageModal` and `useSlideModal` unchanged. |
-| `containFocus?`           | `boolean`                                                        | Wrap Tab from the last focusable back to the first. Default: `false`. For a **non-modal** dialog that behaves like a modal in everything but its stacking — `showModal()` already contains a modal one, and on a toast or a popover keeping Tab inside is the defect rather than the fix. It answers Tab; it does not trap focus, and it cannot bring focus back once it has left by another route. Nothing to set on a modal dialog: the separate recovery for a Tab pressed while the `<dialog>` element itself has focus is unconditional.                                                                                                                                                                                                  |
-| `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `portal?`                 | `boolean \| (() => Element \| null)`                             | Render somewhere other than where it was declared. Default: `false`. `true` is `document.body`; a getter names the host instead, for a dialog that would otherwise leave a themed container or a microfrontend's mount point behind — asked at placement, so a host still being rendered is found, and falling back to the body with a warning if it answers `null`. For non-modal dialogs, portaling also means viewport-anchored (`fixed`) where `false` is contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way.                                                                                                                                                                  |
+| Option                    | Type                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                      | `string`                                                         | Unique modal identifier                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `render`                  | `(args: ModalRenderArgs<TData, TReason>) => ReactNode`           | Render function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `onKeyDown?`              | `(event: KeyboardEvent) => void`                                 | Escape hatch; runs before the action hotkeys the modal dispatches                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `animation?`              | `ModalAnimation`                                                 | CSS transition config                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `style?`                  | `CSSProperties`                                                  | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                 | Called as the modal opens, alongside the entrance animation; `isPreparing` stays true until it settles, and the `<dialog>` carries `aria-busy` for that window. The signal aborts when the modal closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>` | Called on close                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `onError?`                | `(failure: ModalFailure) => void`                                | Reports a callback of **yours** that threw, and only the two with nowhere else to go: a `prepare` (the dialog is already shown and `isPreparing` settles either way, so without this the modal announces itself ready) and an `onClose` (detached, with nothing left rendering). An action's throw is already the render args' `error`, `render` reaches the framework's error boundary, and `onKeyDown` / an action's `onClick` escape to the DOM listener that called them — none arrive here, and neither do the library's own failures, which would be unreportable bugs if they did. A report, not a veto: the close still completes. `failure.source` is `'prepare' \| 'onClose'`.                                                         |
+| `ariaLabel?`              | `string`                                                         | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `ariaLabelledBy?`         | `string`                                                         | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `ariaDescribedBy?`        | `string`                                                         | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `role?`                   | `'dialog' \| 'alertdialog'`                                      | `'alertdialog'` for a dialog that interrupts to report something the user must act on — it is announced with its description rather than waiting to be read, so pair it with `ariaDescribedBy`. Not _required_ to: the APG says to omit the description when the content has structure (lists, tables, several paragraphs) that would be flattened into one announced string. Default: `'dialog'`.                                                                                                                                                                                                                                                                                                                                               |
+| `template?`               | `string`                                                         | The label this modal reports to `lookup()` and the DOM events — see [template](#template). Default: `'modal'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `dismissKey?`             | `HotkeyDef \| false`                                             | Key that dismisses the modal. Default: `Key.Escape`. Pass `false` to disable key dismissal. When an action hotkey matches `dismissKey`, the action takes priority automatically.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `dismissOnBackdropClick?` | `boolean`                                                        | Whether a backdrop click dismisses the modal. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a modal offering buttons wants to be dismissed through one) and `true` when it drew none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `dismissOnClickOutside?`  | `boolean`                                                        | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the dialog in front responds, and no non-modal dialog is in front while a modal one is open. Default: `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `dismissWhilePreparing?`  | `boolean`                                                        | Whether the dismiss key, backdrop click, and click-outside can close the modal while `prepare` is executing. Default: `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `onDismissRequest?`       | `(cause: DismissCause) => boolean \| void`                       | Report every user-initiated dismissal instead of acting on it, for a surface whose open state is a prop. Replaces the **last** step only — which key, whether an action claimed it, whether a popup answers it first, where the pointer landed, whether `prepare` or a running action forbids it, and which dialog is in front all stay the library's. The dismiss key, a backdrop click and a click outside a panel all arrive here, each naming itself, so a controlled surface cannot answer one door and reopen itself through another. Return `false` to decline, which only the non-modal window listener acts on: it captures, so a press it takes is one the page never sees. Reaches `useMessageDialog` and `useSlideDialog` unchanged. |
+| `containFocus?`           | `boolean`                                                        | Wrap Tab from the last focusable back to the first. Default: `false`. For a **non-modal** dialog that behaves like a modal in everything but its stacking — `showModal()` already contains a modal one, and on a toast or a popover keeping Tab inside is the defect rather than the fix. It answers Tab; it does not trap focus, and it cannot bring focus back once it has left by another route. Nothing to set on a modal dialog: the separate recovery for a Tab pressed while the `<dialog>` element itself has focus is unconditional.                                                                                                                                                                                                    |
+| `nonModal?`               | `boolean`                                                        | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `portal?`                 | `boolean \| (() => Element \| null)`                             | Render somewhere other than where it was declared. Default: `false`. `true` is `document.body`; a getter names the host instead, for a dialog that would otherwise leave a themed container or a microfrontend's mount point behind — asked at placement, so a host still being rendered is found, and falling back to the body with a warning if it answers `null`. For non-modal dialogs, portaling also means viewport-anchored (`fixed`) where `false` is contained (anchored to its host — see below). Modal dialogs (top layer) are unaffected by ancestors either way.                                                                                                                                                                    |
 
 `nonModal` / `dismissOnBackdropClick` / `dismissOnClickOutside` form the `ModalVariant` union, not
 three independent flags: a non-modal dialog has no backdrop to click, so passing
@@ -422,7 +422,7 @@ ignored prop, and the reverse holds for `dismissOnClickOutside`.
 Pass `nonModal: true` to open the dialog with `dialog.show()` instead of `dialog.showModal()`. The dialog renders without a backdrop and does not enter the browser's top layer, allowing clicks on elements underneath. Useful for slide panels that display supplementary content while the user continues interacting with the main UI.
 
 ```typescript
-const panel = useSlideModal({
+const panel = useSlideDialog({
   id: 'detail-panel',
   direction: 'right',
   nonModal: true,
@@ -498,11 +498,11 @@ const { host, dialog } = dialogPlacement({ nonModal: true, portal: false });
 // dialog → CSSProperties for the <dialog> itself (here: `position: 'absolute'`)
 ```
 
-| Option      | Type      | Description                                                                                      |
-| ----------- | --------- | ------------------------------------------------------------------------------------------------ |
-| `nonModal?` | `boolean` | `dialog.show()` rather than `showModal()` — no backdrop, no top layer                            |
-| `portal?`   | `boolean` | Selects the placement; a controller never moves the caller's markup, so no host form here        |
-| `clip?`     | `boolean` | Clip the host, for an animation that slides the dialog past its edge (what `useSlideModal` sets) |
+| Option      | Type      | Description                                                                                       |
+| ----------- | --------- | ------------------------------------------------------------------------------------------------- |
+| `nonModal?` | `boolean` | `dialog.show()` rather than `showModal()` — no backdrop, no top layer                             |
+| `portal?`   | `boolean` | Selects the placement; a controller never moves the caller's markup, so no host form here         |
+| `clip?`     | `boolean` | Clip the host, for an animation that slides the dialog past its edge (what `useSlideDialog` sets) |
 
 `host` is `null` when there is nothing to host — a top-layer dialog and a viewport-anchored one
 both answer to the viewport. When it is **not** null the dialog must be rendered inside an element
@@ -512,7 +512,7 @@ carrying those styles, and that element must have a size: the dialog fills it.
 
 ## ModalAnimation
 
-CSS transition configuration passed to the `animation?` option on any hook (`useDialog`, `useMessageModal`, `useSlideModal`).
+CSS transition configuration passed to the `animation?` option on any hook (`useDialog`, `useMessageDialog`, `useSlideDialog`).
 
 ```typescript
 type ModalAnimation = {
@@ -527,8 +527,8 @@ type ModalAnimation = {
 
 **Default animations:**
 
-- `useMessageModal` — fade (`opacity 0 → 1`), 300 ms in / 150 ms out
-- `useSlideModal` — direction-based translate, 300 ms in / 200 ms out
+- `useMessageDialog` — fade (`opacity 0 → 1`), 300 ms in / 150 ms out
+- `useSlideDialog` — direction-based translate, 300 ms in / 200 ms out
 
 ### Disabling animation
 
@@ -545,7 +545,7 @@ const NO_ANIMATION = {
   transitionProperty: 'opacity',
 };
 
-const modal = useMessageModal({ id: 'fast', animation: NO_ANIMATION, render: () => ... });
+const modal = useMessageDialog({ id: 'fast', animation: NO_ANIMATION, render: () => ... });
 ```
 
 **Slide panel** — the `entrance`/`exit` transforms must match the direction you choose:
@@ -560,18 +560,18 @@ const NO_ANIMATION = {
   transitionProperty: 'transform',
 };
 
-const panel = useSlideModal({ id: 'fast-panel', direction: 'left', animation: NO_ANIMATION, render: () => ... });
+const panel = useSlideDialog({ id: 'fast-panel', direction: 'left', animation: NO_ANIMATION, render: () => ... });
 ```
 
 > See the **Getting Started** playground page for live "No Transition" examples for both modal types.
 
 ---
 
-## useMessageModal
+## useMessageDialog
 
 **Headless** message modal hook. Provides modal lifecycle and animation. The hook exports **no UI components** — users provide their own layout, title, footer, etc. in the `render` callback. Sizing constraints (min/max width, height) are user-land concerns — apply them to your content wrapper inside `render`.
 
-> **Reference implementations:** For ready-made MUI components (`MessageModal.DefaultLayout`, `MessageModal.Title`, `MessageModal.Content`, `MessageModal.Header`, `MessageModal.Footer`, `MessageModal.Icon`), see `playground/src/entities/modal-template/ui/mui/message-modal/`. For `Shared.OverflowContainer`, see `playground/src/entities/modal-template/ui/mui/shared/content/OverflowContainer.tsx`. The `OverflowContainer` sets a `--scrollbar-width` CSS custom property and exposes two props:
+> **Reference implementations:** For ready-made MUI components (`MessageDialog.DefaultLayout`, `MessageDialog.Title`, `MessageDialog.Content`, `MessageDialog.Header`, `MessageDialog.Footer`, `MessageDialog.Icon`), see `playground/src/entities/modal-template/ui/mui/message-dialog/`. For `Shared.OverflowContainer`, see `playground/src/entities/modal-template/ui/mui/shared/content/OverflowContainer.tsx`. The `OverflowContainer` sets a `--scrollbar-width` CSS custom property and exposes two props:
 
 - `sx` – base styles forwarded to the underlying `Box` (replaces the previous
   `slotProps` pattern). `maxHeight` defaults to `sizes.maxHeight` but can be
@@ -582,10 +582,10 @@ const panel = useSlideModal({ id: 'fast-panel', direction: 'left', animation: NO
 These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import { Button, Typography, Stack } from '@mui/material';
 
-const modal = useMessageModal<void, 'confirm' | 'cancel'>({
+const modal = useMessageDialog<void, 'confirm' | 'cancel'>({
   id: 'confirm-delete',
   ariaLabelledBy: 'confirm-delete-title',
   render: ({ action }) => (
@@ -613,17 +613,17 @@ if (result?.reason === 'confirm') {
 
 ---
 
-## useSlideModal
+## useSlideDialog
 
 **Headless** slide-in panel hook with direction-based animation and positioning. The hook exports **no UI components** — users provide their own layout in the `render` callback.
 
-> **Reference implementations:** For ready-made MUI components (`SlideModal.DefaultLayout`, `SlideModal.Title`, `SlideModal.Content`), see `playground/src/entities/modal-template/ui/mui/slide-modal/`. These are **not** library exports — copy them into your project or write your own.
+> **Reference implementations:** For ready-made MUI components (`SlideDialog.DefaultLayout`, `SlideDialog.Title`, `SlideDialog.Content`), see `playground/src/entities/modal-template/ui/mui/slide-dialog/`. These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
-import { useSlideModal } from 'umbra/react';
+import { useSlideDialog } from 'umbra/react';
 import { Box, Typography, Button } from '@mui/material';
 
-const panel = useSlideModal<void, 'save'>({
+const panel = useSlideDialog<void, 'save'>({
   id: 'settings',
   direction: 'right',
   ariaLabel: 'Settings',
@@ -662,7 +662,7 @@ The **cross axis** is perpendicular to the slide: vertical for `left`/`right`, h
 
 ```typescript
 // Corner toast: slides in from the right, pinned to the top.
-const toast = useSlideModal({
+const toast = useSlideDialog({
   id: 'toast',
   direction: 'right',
   align: 'start',
@@ -672,7 +672,7 @@ const toast = useSlideModal({
 });
 
 // Command palette: drops from the top, horizontally centered.
-const palette = useSlideModal({
+const palette = useSlideDialog({
   id: 'palette',
   direction: 'top',
   align: 'center',
@@ -1313,10 +1313,10 @@ takes.
 Registration-time facts live only on the `exists: true` branch, so reading one means narrowing
 first — an unregistered modal has none:
 
-| Property (registered only) | Type      | Description                                                                                                              |
-| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `template`                 | `string`  | The label its creator gave it — `'modal'` by default, `'slide'` from `useSlideModal`, anything your own template reports |
-| `nonModal`                 | `boolean` | Whether opened with `dialog.show()`                                                                                      |
+| Property (registered only) | Type      | Description                                                                                                               |
+| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `template`                 | `string`  | The label its creator gave it — `'modal'` by default, `'slide'` from `useSlideDialog`, anything your own template reports |
+| `nonModal`                 | `boolean` | Whether opened with `dialog.show()`                                                                                       |
 
 ```typescript
 const info = dialogManager.lookup('my-modal');
@@ -1677,8 +1677,8 @@ A label the creator attaches, carried into `lookup()` and both DOM events. Any s
 purely informational — nothing in the library reads it. It saves a cross-cutting listener
 (analytics, a handler that only cares about drawers) from keeping its own id-to-kind table.
 
-`useDialog` defaults to `'modal'`; the built-in templates name themselves — `useMessageModal`
-reports `'message'` and `useSlideModal` `'slide'`. A
+`useDialog` defaults to `'modal'`; the built-in templates name themselves — `useMessageDialog`
+reports `'message'` and `useSlideDialog` `'slide'`. A
 template you write should name itself rather than inherit the default — the core deliberately
 does not enumerate the templates built on it.
 

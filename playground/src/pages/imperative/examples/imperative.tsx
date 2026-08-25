@@ -1,8 +1,8 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
-import { dialogManager, useMessageModal } from 'umbra/react';
+import { dialogManager, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 import { createImmerStore } from '@/shared/lib/immer-store';
 
@@ -33,17 +33,17 @@ const openCountStore = createImmerStore(
 export function ImperativeExample() {
   const { openCount, result } = useStore(openCountStore);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: 'imperative-demo',
     ariaLabelledBy: 'imperative-demo-title',
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="success" />
-            <MessageModal.Title id="imperative-demo-title">Imperative Modal</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="success" />
+            <MessageDialog.Title id="imperative-demo-title">Imperative Modal</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Shared.Message>
                 Opened via <code>dialogManager.open()</code> — no React ref or state needed.
@@ -64,8 +64,8 @@ export function ImperativeExample() {
                 Total opens: {openCount}
               </span>
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button
               onClick={() => {
                 dialogManager.close('imperative-demo');
@@ -76,8 +76,8 @@ export function ImperativeExample() {
             <Shared.Button variant="primary" {...action('confirm')}>
               Close
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     prepare: () => {

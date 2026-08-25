@@ -185,7 +185,7 @@ test.describe('useDialog (Solid)', () => {
 });
 
 test.describe('template hooks (Solid)', () => {
-  test('useSlideModal hands the direction to its render context', async ({ mount, page }) => {
+  test('useSlideDialog hands the direction to its render context', async ({ mount, page }) => {
     await mount(<SolidSlideHarness />);
     await page.getByTestId('open').click();
 
@@ -220,7 +220,7 @@ test.describe('template hooks (Solid)', () => {
     await expect(page.getByTestId('lookup-type')).toHaveText('slide');
   });
 
-  test('useMessageModal opens, closes with its action’s reason, and reports its type', async ({
+  test('useMessageDialog opens, closes with its action’s reason, and reports its type', async ({
     mount,
     page,
   }) => {

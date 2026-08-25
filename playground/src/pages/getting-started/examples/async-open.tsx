@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { ContentTransition } from '@/entities/modal-template/ui/vanilla/shared/content/ContentTransition';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { createQuery, useQuery } from '@/shared/lib/use-query';
 import { AppButton } from '@/shared/ui/AppButton';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'async-open';
@@ -31,7 +31,7 @@ export function AsyncOpenExample() {
   // The shape a real `useQuery` gives you — swap the import, keep everything below.
   const { data, isFetching, isSuccess, refetch, invalidate } = useQuery(profileQuery);
 
-  const asyncModal = useMessageModal({
+  const asyncModal = useMessageDialog({
     id: MODAL_ID,
     // A string: the pending branch has no heading to point at, the loaded one is the fetched name.
     ariaLabel: 'Profile',
@@ -57,7 +57,7 @@ export function AsyncOpenExample() {
           fallback={
             // The layout, not the scroll container: `DefaultLayout` is what paints the surface,
             // and a fallback shown before the content exists has nobody else to paint one.
-            <MessageModal.DefaultLayout>
+            <MessageDialog.DefaultLayout>
               <div
                 style={{
                   display: 'flex',
@@ -70,15 +70,15 @@ export function AsyncOpenExample() {
                 <Shared.Message>Fetching profile…</Shared.Message>
                 {axes}
               </div>
-            </MessageModal.DefaultLayout>
+            </MessageDialog.DefaultLayout>
           }
         >
-          <MessageModal.DefaultLayout>
-            <MessageModal.Header>
-              <MessageModal.Icon variant="info" />
-              <MessageModal.Title>{data?.name ?? 'Profile'}</MessageModal.Title>
-            </MessageModal.Header>
-            <MessageModal.Content>
+          <MessageDialog.DefaultLayout>
+            <MessageDialog.Header>
+              <MessageDialog.Icon variant="info" />
+              <MessageDialog.Title>{data?.name ?? 'Profile'}</MessageDialog.Title>
+            </MessageDialog.Header>
+            <MessageDialog.Content>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-3)' }}>
                 <Shared.Message>
                   Plan: <strong>{data?.plan}</strong> — fetched at {data?.fetchedAt}
@@ -96,13 +96,13 @@ export function AsyncOpenExample() {
                   Refetch in background
                 </Shared.Button>
               </div>
-            </MessageModal.Content>
-            <MessageModal.Footer>
+            </MessageDialog.Content>
+            <MessageDialog.Footer>
               <Shared.Button variant="primary" {...action('confirm')}>
                 OK
               </Shared.Button>
-            </MessageModal.Footer>
-          </MessageModal.DefaultLayout>
+            </MessageDialog.Footer>
+          </MessageDialog.DefaultLayout>
         </ContentTransition>
       );
     },

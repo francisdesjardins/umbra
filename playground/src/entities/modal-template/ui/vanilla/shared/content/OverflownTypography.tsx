@@ -10,7 +10,7 @@ type OverflownTypographyProps = {
 /**
  * Text that ellipsis-truncates when horizontal space runs out, exposing the full string as a
  * native `title` only while actually truncated. Needs a width-constrained parent; the `content`
- * slot of `PanelModal.HeaderActionLayout` is one.
+ * slot of `PanelDialog.HeaderActionLayout` is one.
  *
  * The `title` attribute only surfaces on mouse hover — keyboard and touch users never see it.
  * That is the platform's ceiling without a tooltip implementation, which a vanilla template

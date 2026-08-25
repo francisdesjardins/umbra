@@ -1,5 +1,5 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import {
   CONFIRM_MODAL_ID,
@@ -7,7 +7,7 @@ import {
   deploymentService,
 } from '@/pages/imperative/examples/deployment-service';
 import { AppButton } from '@/shared/ui/AppButton';
-import { useMessageModal } from 'umbra/react';
+import { useMessageDialog } from 'umbra/react';
 import { useSyncExternalStore } from 'react';
 
 export const MODAL_ID = CONFIRM_MODAL_ID;
@@ -22,20 +22,20 @@ export function ServiceLayerExample() {
     deploymentService.getLastError
   );
 
-  const confirmModal = useMessageModal({
+  const confirmModal = useMessageDialog({
     id: CONFIRM_MODAL_ID,
     ariaLabelledBy: `${CONFIRM_MODAL_ID}-title`,
     // A dialog, not an alertdialog: the user pressed the button that raised it.
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="warning" />
-            <MessageModal.Title id={`${CONFIRM_MODAL_ID}-title`}>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="warning" />
+            <MessageDialog.Title id={`${CONFIRM_MODAL_ID}-title`}>
               Confirm deployment
-            </MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+            </MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Shared.Message>
                 Deploy the current build to <strong>{target}</strong>?
@@ -44,19 +44,19 @@ export function ServiceLayerExample() {
                 The service is awaiting this dialog&apos;s close reason before it calls the API.
               </Shared.Hint>
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button variant="primary" {...action('confirm')}>
               Deploy
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });
 
-  const failureModal = useMessageModal({
+  const failureModal = useMessageDialog({
     id: FAILURE_MODAL_ID,
     ariaLabelledBy: `${FAILURE_MODAL_ID}-title`,
     ariaDescribedBy: `${FAILURE_MODAL_ID}-body`,
@@ -64,22 +64,22 @@ export function ServiceLayerExample() {
     role: 'alertdialog',
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="error" />
-            <MessageModal.Title id={`${FAILURE_MODAL_ID}-title`}>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="error" />
+            <MessageDialog.Title id={`${FAILURE_MODAL_ID}-title`}>
               Deployment failed
-            </MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+            </MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Shared.Message id={`${FAILURE_MODAL_ID}-body`}>{lastError}</Shared.Message>
               <Shared.Hint>
                 Raised by the service after the API call rejected — no component was involved.
               </Shared.Hint>
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('acknowledge')}>Dismiss</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -89,8 +89,8 @@ export function ServiceLayerExample() {
             >
               Retry
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

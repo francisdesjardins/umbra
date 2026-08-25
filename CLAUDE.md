@@ -14,7 +14,7 @@ the optional layer.
 | Specifier       | Contents                                                                                                                                                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `umbra`         | The manager, `ModalRegistry`, placement and style, the store engine, the hotkey utilities, `normalizeError`, `setLogLevel`. No framework; `src/index.ts` is the list.                                                           |
-| `umbra/react`   | `useDialog`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.              |
+| `umbra/react`   | `useDialog`, `useMessageDialog`, `useSlideDialog`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.            |
 | `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                     |
 | `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export. |
 

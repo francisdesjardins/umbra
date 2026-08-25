@@ -6,7 +6,7 @@ import { MoonPhase, type Phase } from '@/shared/ui/MoonPhase';
 import { UmbraMoon } from '@/shared/ui/PeekingMoon/UmbraMoon';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Key, useMessageModal } from 'umbra/react';
+import { Key, useMessageDialog } from 'umbra/react';
 
 const REPO = 'https://github.com/francisdesjardins/umbra';
 
@@ -63,7 +63,7 @@ export const HomePage = () => {
   // says which door, `data` says what came through it.
   const [remember, setRemember] = useState(false);
 
-  const hello = useMessageModal({
+  const hello = useMessageDialog({
     id: 'home-hello',
     ariaLabelledBy: 'home-hello-title',
     onClose: (result) => {

@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
-import { dialogManager, useMessageModal } from 'umbra/react';
+import { dialogManager, useMessageDialog } from 'umbra/react';
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { AppButton } from '@/shared/ui/AppButton';
 import { InfoIcon } from '@/shared/ui/icons';
@@ -55,7 +55,7 @@ export function OpenRequestExample() {
   const [room, setRoom] = useState<string | null>(null);
   const [log, setLog] = useState<string | null>(null);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: 'open-request-demo',
     ariaLabelledBy: 'open-request-demo-title',
 
@@ -81,19 +81,19 @@ export function OpenRequestExample() {
 
     render: ({ action }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="warning" />
-            <MessageModal.Title id="open-request-demo-title">
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="warning" />
+            <MessageDialog.Title id="open-request-demo-title">
               Archive room {room}?
-            </MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+            </MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Detail>
               Opened by a request from elsewhere, which this dialog validated before accepting.
             </Shared.Detail>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel')}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -104,8 +104,8 @@ export function OpenRequestExample() {
             >
               Archive
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });

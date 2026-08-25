@@ -80,7 +80,7 @@ Two exemptions, each a decision rather than a leak:
   text_; they call and render nothing. The alternative is a generated registry.
 - **`entities/modal-template` has no public entry on purpose** — its barrel re-exports nothing. The
   templates are a directory tree because that is the shape they are copied out in, and
-  `import * as MessageModal from '…/vanilla/message-modal'` names the family. A barrel would
+  `import * as MessageDialog from '…/vanilla/message-dialog'` names the family. A barrel would
   flatten the distinction the slice exists to make.
 
 **Reach into the library through `umbra/…`, never through `../../../../../src/…`.** The `/stories`
@@ -139,7 +139,7 @@ decides where a new example goes:
 | ------------------ | --------------------------------------------------------- |
 | `/getting-started` | The core open → render → close loop                       |
 | `/modal-actions`   | Action state: `hasRunningAction`, `error`, hotkeys        |
-| `/slide-modal`     | The four slide shapes as presets, and the toast           |
+| `/slide-dialog`    | The four slide shapes as presets, and the toast           |
 | `/stacking`        | Who is in front, and who owns the keyboard                |
 | `/imperative`      | Opening and rendering from outside the component          |
 | `/interop`         | Foreign observers, and a render with no document          |
@@ -274,7 +274,7 @@ the outline at equal specificity and is injected later. Do not add per-component
 
 Reference UI — not exported from the library; users copy them into their projects. `vanilla/`
 covers every family in pure HTML/CSS with CSS modules and dark mode, and it is the only flavour: the
-MUI set was one `form-modal/` serving one example, and that example reads better written against MUI
+MUI set was one `form-dialog/` serving one example, and that example reads better written against MUI
 directly.
 
 **The catalogue and the examples now teach different things, deliberately.** `/ui-templates` is
@@ -285,11 +285,11 @@ template — three do — but it is no longer the default.
 All layouts use children-based composition:
 
 ```tsx
-<MessageModal.DefaultLayout>
-  <MessageModal.Header>…</MessageModal.Header>
-  <MessageModal.Content>…</MessageModal.Content>
-  <MessageModal.Footer>…</MessageModal.Footer>
-</MessageModal.DefaultLayout>
+<MessageDialog.DefaultLayout>
+  <MessageDialog.Header>…</MessageDialog.Header>
+  <MessageDialog.Content>…</MessageDialog.Content>
+  <MessageDialog.Footer>…</MessageDialog.Footer>
+</MessageDialog.DefaultLayout>
 ```
 
 ## Adding an Example
@@ -329,10 +329,10 @@ The convention is derived from the id you already wrote, so there is nothing to 
 ```tsx
 const MODAL_ID = 'delete-item';
 
-useMessageModal({
+useMessageDialog({
   id: MODAL_ID,
   ariaLabelledBy: `${MODAL_ID}-title`,
-  render: () => <MessageModal.Title id={`${MODAL_ID}-title`}>Delete item</MessageModal.Title>,
+  render: () => <MessageDialog.Title id={`${MODAL_ID}-title`}>Delete item</MessageDialog.Title>,
 });
 ```
 

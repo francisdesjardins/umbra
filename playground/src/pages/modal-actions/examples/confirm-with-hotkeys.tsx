@@ -1,9 +1,9 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { AppButton } from '@/shared/ui/AppButton';
-import { Key, useMessageModal } from 'umbra/react';
+import { Key, useMessageDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -15,18 +15,18 @@ const resultStore = createResultStore();
 export function ConfirmWithHotkeysExample() {
   const { result } = useStore(resultStore);
 
-  const modal = useMessageModal({
+  const modal = useMessageDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     // A plain dialog, not an `alertdialog`: this asks, it does not interrupt.
     render: ({ action, hasRunningAction, error, phase }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="info" />
-            <MessageModal.Title id={`${MODAL_ID}-title`}>Confirm Action</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="info" />
+            <MessageDialog.Title id={`${MODAL_ID}-title`}>Confirm Action</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--app-space-4)' }}>
               <Shared.Message>
                 This will perform an important action. Are you sure you want to continue?
@@ -51,8 +51,8 @@ export function ConfirmWithHotkeysExample() {
               </span>
               {error && <Shared.Alert severity="error">{error.message}</Shared.Alert>}
             </div>
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel', { hotkey: Key.Escape })}>Cancel</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -69,8 +69,8 @@ export function ConfirmWithHotkeysExample() {
             >
               Confirm
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
     onClose: (closeResult) => {

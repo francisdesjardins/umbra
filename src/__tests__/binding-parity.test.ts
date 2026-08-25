@@ -85,7 +85,7 @@ test.describe('binding parity', () => {
 
     const moduleNames = (source: string, folder: string) => {
       return new Set(
-        // The path, not the basename: `templates/use-slide-modal` and `use-slide-modal` differ.
+        // The path, not the basename: `templates/use-slide-dialog` and `use-slide-dialog` differ.
         [...source.matchAll(new RegExp(`from '\\./${folder}/([\\w/-]+)\\.js'`, 'g'))].map(
           (match) => {
             return match[1];
@@ -119,7 +119,7 @@ test.describe('the controller binding', () => {
     expect(vanilla.has('DialogController')).toBe(true);
 
     // Each of these presumes a renderer — shipping one here ships the UI the library refuses to.
-    for (const rendering of ['useDialog', 'useMessageModal', 'useSlideModal', 'ModalOutlet']) {
+    for (const rendering of ['useDialog', 'useMessageDialog', 'useSlideDialog', 'ModalOutlet']) {
       expect(vanilla.has(rendering), `./vanilla should not export ${rendering}`).toBe(false);
     }
   });

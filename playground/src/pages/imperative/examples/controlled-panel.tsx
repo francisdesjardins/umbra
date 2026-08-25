@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useStore } from '@/shared/lib/use-store';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useEffect, useState } from 'react';
-import { dialogManager, reconcileOpen, useLookup, useSlideModal } from 'umbra/react';
+import { dialogManager, reconcileOpen, useLookup, useSlideDialog } from 'umbra/react';
 
 export const PANEL_ID = 'controlled-filters';
 
@@ -31,7 +31,7 @@ export function ControlledPanelExample() {
   /** The owner's state. In a real wrapper this is a prop, and this component is `<Filters open>`. */
   const [open, setOpen] = useState(false);
 
-  const modal = useSlideModal({
+  const modal = useSlideDialog({
     id: PANEL_ID,
     direction: 'right',
     nonModal: true,
@@ -46,11 +46,11 @@ export function ControlledPanelExample() {
     },
     render: ({ direction, action }) => {
       return (
-        <SlideModal.DefaultLayout direction={direction}>
-          <SlideModal.Header>
-            <SlideModal.Title id={`${PANEL_ID}-title`}>Filters</SlideModal.Title>
-          </SlideModal.Header>
-          <SlideModal.Content>
+        <SlideDialog.DefaultLayout direction={direction}>
+          <SlideDialog.Header>
+            <SlideDialog.Title id={`${PANEL_ID}-title`}>Filters</SlideDialog.Title>
+          </SlideDialog.Header>
+          <SlideDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
               <Shared.Message>
                 Escape, the button below, and the switch on the card all end in the same place: the
@@ -60,8 +60,8 @@ export function ControlledPanelExample() {
                 Nothing in here calls <code>close()</code>.
               </Shared.Detail>
             </div>
-          </SlideModal.Content>
-          <SlideModal.Footer>
+          </SlideDialog.Content>
+          <SlideDialog.Footer>
             <Shared.Button
               variant="primary"
               {...action('close', {
@@ -74,8 +74,8 @@ export function ControlledPanelExample() {
             >
               Close
             </Shared.Button>
-          </SlideModal.Footer>
-        </SlideModal.DefaultLayout>
+          </SlideDialog.Footer>
+        </SlideDialog.DefaultLayout>
       );
     },
     onClose: (closeResult) => {

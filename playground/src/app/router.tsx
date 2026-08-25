@@ -63,14 +63,14 @@ const modalActionsRoute = createRoute({
   }, 'ModalActionsPage'),
 });
 
-const slideModalRoute = createRoute({
+const slideDialogRoute = createRoute({
   getParentRoute: () => {
     return rootRoute;
   },
-  path: '/slide-modal',
+  path: '/slide-dialog',
   component: lazyRouteComponent(() => {
-    return import('@/pages/slide-modal');
-  }, 'SlideModalPage'),
+    return import('@/pages/slide-dialog');
+  }, 'SlideDialogPage'),
 });
 
 const stackingRoute = createRoute({
@@ -179,7 +179,7 @@ const routeTree = rootRoute.addChildren([
   modalActionsRoute,
   apiRoute,
   apiCategoryRoute,
-  slideModalRoute,
+  slideDialogRoute,
   stackingRoute,
   imperativeRoute,
   interopRoute,

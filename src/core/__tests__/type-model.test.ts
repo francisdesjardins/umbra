@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test';
 import { noop } from '../../__tests__/noop.js';
 import type { ActionFactory } from '../../actions/types.js';
 import type { BaseRenderContext, TemplateCommonOptions } from '../../templates/shared.js';
-import type { useMessageModal } from '../../react/templates/use-message-modal.js';
+import type { useMessageDialog } from '../../react/templates/use-message-dialog.js';
 import type {
-  SlideModalRenderContext,
-  useSlideModal,
-} from '../../react/templates/use-slide-modal.js';
+  SlideDialogRenderContext,
+  useSlideDialog,
+} from '../../react/templates/use-slide-dialog.js';
 import type { useDialog } from '../../react/use-dialog.js';
 import type { CloseResult, ModalHandle, ModalRenderArgs, ModalVariant } from '../types.js';
 // React's instantiations, not the core model: the hooks asserted are React's, so the types they
@@ -32,7 +32,7 @@ export type _ReturnProvidesRenderArgs = Extends<UseDialogReturn, ModalRenderArgs
 export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, ModalRenderArgs>;
 
 // Extended rather than redefined, so a field added to `ModalRenderArgs` reaches every template.
-export type _SlideContextExtendsBase = Extends<SlideModalRenderContext, BaseRenderContext>;
+export type _SlideContextExtendsBase = Extends<SlideDialogRenderContext, BaseRenderContext>;
 
 export type _RenderArgsCarryTheFactory = Equals<
   ModalRenderArgs<Payload>['action'],
@@ -47,7 +47,7 @@ export type _RenderHandleTakesPayload = Equals<
 >;
 
 export type _SlideHandleTakesPayload = Equals<
-  SlideModalRenderContext<Payload>['handle'],
+  SlideDialogRenderContext<Payload>['handle'],
   ModalHandle<Payload>
 >;
 
@@ -67,8 +67,8 @@ export type _DismissIsAlwaysAvailable = Equals<
 >;
 
 declare const useDialogT: typeof useDialog;
-declare const useMessageModalT: typeof useMessageModal;
-declare const useSlideModalT: typeof useSlideModal;
+declare const useMessageDialogT: typeof useMessageDialog;
+declare const useSlideDialogT: typeof useSlideDialog;
 
 // Never called: its body is real call sites, so inference runs against the real signatures. The
 // hooks are imported type-only — this is a unit test and nothing here may pull React in.
@@ -141,7 +141,7 @@ export function useDismissInTheDeclaredUnion() {
 
 function useTemplateReasons() {
   return {
-    message: useMessageModalT<Payload, Reasons>({
+    message: useMessageDialogT<Payload, Reasons>({
       id: 'i',
       render: ({ action }) => {
         action('save');
@@ -150,7 +150,7 @@ function useTemplateReasons() {
         return null;
       },
     }),
-    slide: useSlideModalT<Payload, Reasons>({
+    slide: useSlideDialogT<Payload, Reasons>({
       id: 'i',
       direction: 'right',
       render: ({ action, direction }) => {

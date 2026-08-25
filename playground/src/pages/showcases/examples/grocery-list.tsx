@@ -1,11 +1,11 @@
 import { ExampleLayout } from '@/entities/example';
-import * as MessageModal from '@/entities/modal-template/ui/vanilla/message-modal';
+import * as MessageDialog from '@/entities/modal-template/ui/vanilla/message-dialog';
 import * as Shared from '@/entities/modal-template/ui/vanilla/shared';
-import * as SlideModal from '@/entities/modal-template/ui/vanilla/slide-modal';
+import * as SlideDialog from '@/entities/modal-template/ui/vanilla/slide-dialog';
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { AppButton } from '@/shared/ui/AppButton';
 import { useState } from 'react';
-import { Key, useMessageModal, useSlideModal } from 'umbra/react';
+import { Key, useMessageDialog, useSlideDialog } from 'umbra/react';
 
 export const LIST_ID = 'grocery-list';
 
@@ -39,23 +39,23 @@ export function GroceryListExample() {
   };
 
   // The confirm: it closes with the number of items it sent, and the panel reads that back.
-  const confirm = useMessageModal({
+  const confirm = useMessageDialog({
     id: 'grocery-confirm',
     ariaLabelledBy: 'grocery-confirm-title',
     render: ({ action, error }) => {
       return (
-        <MessageModal.DefaultLayout>
-          <MessageModal.Header>
-            <MessageModal.Icon variant="warning" />
-            <MessageModal.Title id="grocery-confirm-title">Send the list?</MessageModal.Title>
-          </MessageModal.Header>
-          <MessageModal.Content>
+        <MessageDialog.DefaultLayout>
+          <MessageDialog.Header>
+            <MessageDialog.Icon variant="warning" />
+            <MessageDialog.Title id="grocery-confirm-title">Send the list?</MessageDialog.Title>
+          </MessageDialog.Header>
+          <MessageDialog.Content>
             <Shared.Message>
               {checked.length} item{checked.length === 1 ? '' : 's'} will be sent to the store.
             </Shared.Message>
             {error ? <Shared.Alert severity="error">{error.message}</Shared.Alert> : null}
-          </MessageModal.Content>
-          <MessageModal.Footer>
+          </MessageDialog.Content>
+          <MessageDialog.Footer>
             <Shared.Button {...action('cancel', { focusOnOpen: true })}>Keep editing</Shared.Button>
             <Shared.Button
               variant="primary"
@@ -70,30 +70,30 @@ export function GroceryListExample() {
             >
               Send
             </Shared.Button>
-          </MessageModal.Footer>
-        </MessageModal.DefaultLayout>
+          </MessageDialog.Footer>
+        </MessageDialog.DefaultLayout>
       );
     },
   });
 
-  const list = useSlideModal({
+  const list = useSlideDialog({
     id: LIST_ID,
     direction: 'right',
     // Point at the heading rather than repeat its text in `ariaLabel` — the drift its doc warns of.
     ariaLabelledBy: `${LIST_ID}-title`,
     render: ({ direction, action, handle }) => {
       return (
-        <SlideModal.DefaultLayout direction={direction}>
-          <SlideModal.Header>
-            <SlideModal.Title id={`${LIST_ID}-title`}>Grocery list</SlideModal.Title>
-          </SlideModal.Header>
-          <SlideModal.Content>
+        <SlideDialog.DefaultLayout direction={direction}>
+          <SlideDialog.Header>
+            <SlideDialog.Title id={`${LIST_ID}-title`}>Grocery list</SlideDialog.Title>
+          </SlideDialog.Header>
+          <SlideDialog.Content>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {ITEMS.map((item) => {
                 return (
                   <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {/* The wrapping label names the checkbox, so no `aria-label` is repeated. */}
-                    <SlideModal.CheckboxLabel>
+                    <SlideDialog.CheckboxLabel>
                       <input
                         type="checkbox"
                         checked={checked.includes(item.id)}
@@ -102,7 +102,7 @@ export function GroceryListExample() {
                         }}
                       />
                       <Shared.Detail>{item.name}</Shared.Detail>
-                    </SlideModal.CheckboxLabel>
+                    </SlideDialog.CheckboxLabel>
                     <span
                       style={{
                         marginLeft: 'auto',
@@ -119,8 +119,8 @@ export function GroceryListExample() {
                 );
               })}
             </div>
-          </SlideModal.Content>
-          <SlideModal.Footer>
+          </SlideDialog.Content>
+          <SlideDialog.Footer>
             <Shared.Button {...action('close')}>Close</Shared.Button>
             {/* Inside the panel's render: what keeps it clickable once the confirm is open. */}
             <Shared.Button
@@ -136,8 +136,8 @@ export function GroceryListExample() {
               Send…
             </Shared.Button>
             {confirm.Modal}
-          </SlideModal.Footer>
-        </SlideModal.DefaultLayout>
+          </SlideDialog.Footer>
+        </SlideDialog.DefaultLayout>
       );
     },
     onClose: (result) => {

@@ -1,6 +1,6 @@
 import styles from '@/widgets/code-viewer/model/useCodeModal.module.css';
 import { useRouterState } from '@tanstack/react-router';
-import { useSlideModal } from 'umbra/react';
+import { useSlideDialog } from 'umbra/react';
 import { useState } from 'react';
 import { useCodePane } from '@/shared/lib/code-pane-context';
 import { CodeModalContent } from '@/widgets/code-viewer/ui/CodeModal';
@@ -19,7 +19,7 @@ export const useCodeModal = () => {
   const codeKey = selectedExample ?? routeKey;
   const code = codeSamples[codeKey] ?? '';
 
-  return useSlideModal({
+  return useSlideDialog({
     id: 'code-viewer',
     direction: 'right',
     ariaLabelledBy: CODE_VIEWER_TITLE_ID,
