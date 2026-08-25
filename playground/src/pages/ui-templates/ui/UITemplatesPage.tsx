@@ -7,7 +7,7 @@ import { useState, type ReactNode } from 'react';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-type Flavor = 'vanilla' | 'mui' | 'shared';
+type Flavor = 'vanilla' | 'shared';
 
 type TemplateItem = {
   readonly name: string;
@@ -19,39 +19,6 @@ type TemplateGroup = {
   readonly description: string;
   readonly items: readonly TemplateItem[];
 };
-
-const MUI_GROUPS: readonly TemplateGroup[] = [
-  {
-    title: 'FormModal',
-    description:
-      'The one family kept in Material UI, because one worked pair is what proves the library is not UI-aware — four proved it four times.',
-    items: [
-      { name: 'FormLayout', codeKey: 'template-form-form-layout' },
-      { name: 'Header', codeKey: 'template-form-header' },
-      { name: 'Content', codeKey: 'template-form-content' },
-      { name: 'Footer', codeKey: 'template-form-footer' },
-      { name: 'FieldError', codeKey: 'template-form-field-error' },
-    ],
-  },
-  {
-    title: 'Content atoms',
-    description: 'What the form pair renders inside its layout.',
-    items: [
-      { name: 'Heading', codeKey: 'template-shared-heading' },
-      { name: 'Detail', codeKey: 'template-shared-detail' },
-      { name: 'AlertContent', codeKey: 'template-shared-alert-content' },
-    ],
-  },
-  {
-    title: 'Utilities',
-    description:
-      'An MUI button carrying loading and hotkey-label support, and the sx merge helper.',
-    items: [
-      { name: 'Button', codeKey: 'template-shared-mui-button' },
-      { name: 'mergeSx / sxToObject', codeKey: 'template-util-sx-utils' },
-    ],
-  },
-];
 
 const VANILLA_GROUPS: readonly TemplateGroup[] = [
   {
@@ -116,7 +83,7 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
   {
     title: 'Shared',
     description:
-      'Button (forwards aria-keyshortcuts — required for hotkeys) and the content atoms mirroring the MUI set.',
+      'Button (forwards aria-keyshortcuts — required for hotkeys) and the content atoms the families render inside their layouts.',
     items: [
       { name: 'Button', codeKey: 'vanilla-shared-button' },
       { name: 'Alert', codeKey: 'vanilla-shared-alert' },
@@ -159,7 +126,7 @@ const PATTERNS_GROUP: TemplateGroup = {
 const TEMPLATE_SHARED_GROUP: TemplateGroup = {
   title: 'Template internals',
   description:
-    'Under entities/modal-template/ui/shared: read by the vanilla families and the MUI one alike, which is why they are here rather than under a flavour.',
+    'Under entities/modal-template/ui/shared: read by the template families and by the shell itself, which is why they are here rather than under a flavour.',
   items: [
     { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
     { name: 'tokens', codeKey: 'template-util-tokens' },
@@ -181,14 +148,8 @@ const PLAYGROUND_GROUP: TemplateGroup = {
 };
 
 const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
-  mui: (
-    <>
-      Material UI implementations. Import them as namespaces —{' '}
-      <code>import * as MessageModal from …/mui/message-modal</code>.
-    </>
-  ),
   vanilla:
-    'Zero-dependency implementations: semantic elements, CSS modules, dark mode via prefers-color-scheme. Same component names as the MUI set, so examples port across by changing one import.',
+    'Zero-dependency implementations: semantic elements, CSS modules, dark mode via prefers-color-scheme. Reference UI to copy into a project — the examples on /ui-integrations deliberately write their markup out instead, so that what they teach is the library rather than this catalogue.',
   shared: (
     <>
       Works under either flavour, because none of it renders anything. What the two sets have in
@@ -196,8 +157,7 @@ const FLAVOR_BLURB: Record<Flavor, ReactNode> = {
       spreads the same props onto a Material UI button and a bare <code>&lt;button&gt;</code>, and
       both must forward <code>aria-keyshortcuts</code> and <code>data-focus-on-open</code> or the
       hotkey and the opening focus quietly stop working. Only the markup differs — which is the
-      whole argument for a headless library, and the reason this page has three tabs rather than
-      two.
+      whole argument for a headless library.
     </>
   ),
 };
@@ -233,26 +193,23 @@ const TemplateGroupSection = ({ title, description, items }: TemplateGroup) => {
 // is the one a reader should meet before the one that needs a component library.
 const FLAVOR_TABS: readonly { readonly value: Flavor; readonly label: string }[] = [
   { value: 'vanilla', label: 'Vanilla' },
-  { value: 'mui', label: 'Material UI' },
   { value: 'shared', label: 'Shared' },
 ];
 
 export const UITemplatesPage = () => {
   const [flavor, setFlavor] = useState<Flavor>('vanilla');
   const groups =
-    flavor === 'mui'
-      ? MUI_GROUPS
-      : flavor === 'vanilla'
-        ? VANILLA_GROUPS
-        : [TEMPLATE_SHARED_GROUP, PATTERNS_GROUP, PLAYGROUND_GROUP];
+    flavor === 'vanilla'
+      ? VANILLA_GROUPS
+      : [TEMPLATE_SHARED_GROUP, PATTERNS_GROUP, PLAYGROUND_GROUP];
 
   return (
     <PageLayout
       title="UI Templates"
-      description="Reference implementations you copy into your own project — the library ships no UI. The two rendering flavours expose the same component names; the third tab is what works under both."
+      description="Reference implementations you copy into your own project — the library ships no UI. Vanilla is the markup; Shared is what renders nothing and works under any flavour. The examples on /ui-integrations write their markup out by hand instead, so what they teach is the library rather than this catalogue."
       actions={
-        // Exclusive selection with a tab always active: pressing the selected tab re-selects it,
-        // which is what the MUI group's ignored-null branch amounted to.
+        // Exclusive selection with a tab always active: pressing the selected tab re-selects it
+        // rather than clearing, so there is no "nothing shown" state to design for.
         <div role="group" className={styles['segmented']}>
           {FLAVOR_TABS.map((tab) => {
             return (

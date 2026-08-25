@@ -2,16 +2,6 @@
  * The copy-paste catalogue behind `/ui-templates`: both template flavours, the playground's shared
  * components, and the `shared/lib` patterns the Shared tab lists. Split off — see `codeSamples.ts`.
  */
-import templateFormFormLayoutSrc from '@/entities/modal-template/ui/mui/form-modal/components/FormLayout.tsx?raw';
-import templateFormHeaderSrc from '@/entities/modal-template/ui/mui/form-modal/components/Header.tsx?raw';
-import templateFormContentSrc from '@/entities/modal-template/ui/mui/form-modal/components/Content.tsx?raw';
-import templateFormFooterSrc from '@/entities/modal-template/ui/mui/form-modal/components/Footer.tsx?raw';
-import templateFormFieldErrorSrc from '@/entities/modal-template/ui/mui/form-modal/components/FieldError.tsx?raw';
-import templateSharedHeadingSrc from '@/entities/modal-template/ui/mui/shared/content/Heading.tsx?raw';
-import templateSharedDetailSrc from '@/entities/modal-template/ui/mui/shared/content/Detail.tsx?raw';
-import templateSharedAlertContentSrc from '@/entities/modal-template/ui/mui/shared/content/AlertContent.tsx?raw';
-import templateSharedMuiButtonSrc from '@/entities/modal-template/ui/mui/shared/MuiButton.tsx?raw';
-import templateUtilSxUtilsSrc from '@/entities/modal-template/ui/mui/shared/sxUtils.ts?raw';
 import templateUtilScrollRegionSrc from '@/entities/modal-template/ui/shared/scroll-region.ts?raw';
 import templateUtilTokensSrc from '@/entities/modal-template/ui/shared/tokens.ts?raw';
 import templateUtilTypesSrc from '@/entities/modal-template/ui/shared/types.ts?raw';
@@ -77,16 +67,6 @@ import sharedLibImmerStoreSrc from '@/shared/lib/immer-store.ts?raw';
 import sharedComponentResultDisplaySrc from '@/shared/ui/ResultDisplay/ResultDisplay.tsx?raw';
 
 export const templates: Record<string, string> = {
-  'template-form-form-layout': templateFormFormLayoutSrc,
-  'template-form-header': templateFormHeaderSrc,
-  'template-form-content': templateFormContentSrc,
-  'template-form-footer': templateFormFooterSrc,
-  'template-form-field-error': templateFormFieldErrorSrc,
-  'template-shared-heading': templateSharedHeadingSrc,
-  'template-shared-detail': templateSharedDetailSrc,
-  'template-shared-alert-content': templateSharedAlertContentSrc,
-  'template-shared-mui-button': templateSharedMuiButtonSrc,
-  'template-util-sx-utils': templateUtilSxUtilsSrc,
   'template-util-scroll-region': templateUtilScrollRegionSrc,
   'template-util-tokens': templateUtilTokensSrc,
   'template-util-types': templateUtilTypesSrc,
