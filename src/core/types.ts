@@ -15,13 +15,13 @@ import type { DialogStyle } from './style.js';
  *
  * A plain object, not a conditional: the `void` default makes `data` unusable anyway, and a
  * conditional is opaque at every generic boundary the result crosses (store, resolver queue,
- * `onClose`) — this shape lets `TData` flow from `useModal` to `openAndWait` with no casts.
+ * `onClose`) — this shape lets `TData` flow from `useDialog` to `openAndWait` with no casts.
  */
 export type CloseResult<TData = void, TReason extends string = string> = {
   /**
    * Why it closed: an action's reason, or `'dismiss'` (Escape, backdrop click, teardown — always
    * possible regardless of `TReason`). No action may be *named* `'dismiss'`, so this carrying it
-   * means nobody acted; declare a union on `useModal` to narrow it and make a `switch` exhaustive
+   * means nobody acted; declare a union on `useDialog` to narrow it and make a `switch` exhaustive
    * (at the `string` default the engine can only warn at declaration). See {@link DismissReason}.
    */
   readonly reason: TReason | DismissReason;
@@ -72,12 +72,12 @@ export type ModalAnimation<TStyle extends DialogStyle = DialogStyle> = {
 // ── Modal Handle ───────────────────────────────────────────────────────────────
 
 /**
- * Imperative handle for closing a modal, returned from `useModal` and passed to
+ * Imperative handle for closing a modal, returned from `useDialog` and passed to
  * the `render` callback. Distinct from the modal's *actions*, which are its buttons: `handle`
  * closes the modal, an action is what the user presses to get there.
  *
  * @typeParam TData - The modal's close payload type. `close` accepts exactly this, so a
- * modal declared `useModal<{ id: string }>` rejects `close('ok', 42)`, and the default
+ * modal declared `useDialog<{ id: string }>` rejects `close('ok', 42)`, and the default
  * (`void`) rejects a payload altogether.
  */
 export type ModalHandle<TData = void, TReason extends string = string> = {
@@ -90,7 +90,7 @@ export type ModalHandle<TData = void, TReason extends string = string> = {
  * *during* render, without reaching back into the hook's return value (which would be a TDZ
  * error, since `render` is passed to the call that produces it).
  *
- * This is the origin of that slice rather than a copy of it. `UseModalReturn` intersects it,
+ * This is the origin of that slice rather than a copy of it. `UseDialogReturn` intersects it,
  * so the hook cannot return a differently-shaped `isPreparing`, and `BaseRenderContext` aliases
  * it, so every template's render context inherits the same two fields with the same meaning.
  * Adding a render-time field here reaches all of them at once.
@@ -125,7 +125,7 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
   /**
    * Declare an action and get the props for its button, in one expression.
    *
-   * There is no config to write and nothing to pass into `useModal`: an action exists because
+   * There is no config to write and nothing to pass into `useDialog`: an action exists because
    * it is rendered, and the reason it is given is its identity — the name and the close reason
    * in one. See {@link ActionFactory}.
    */
@@ -142,7 +142,7 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
   readonly error: Error | null;
 };
 
-// ── useModal Options & Return ────────────────────────────────────────────────
+// ── useDialog Options & Return ────────────────────────────────────────────────
 
 // ── Modal Variant ────────────────────────────────────────────────────────────
 
@@ -157,14 +157,14 @@ export type ModalRenderArgs<TData = void, TReason extends string = string> = {
  *
  * A **non-modal** dialog (`show()`) does none of that: no backdrop, no top layer, clicks pass
  * through to what is underneath, scroll stays free. Not being in the top layer is what makes
- * its positioning depend on placement — see `portal` on {@link UseModalBaseOptions}.
+ * its positioning depend on placement — see `portal` on {@link UseDialogBaseOptions}.
  *
  * The dismissal option follows from the variant, which is why they are unioned rather than
  * flags on one object: with no backdrop there is nothing to click, so `dismissOnBackdropClick`
  * is `never` in the non-modal branch and `dismissOnClickOutside` is `never` in the modal one.
  * Passing the wrong one is a type error instead of a silently ignored prop.
  *
- * Used by `UseModalOptions` and `TemplateCommonOptions`.
+ * Used by `UseDialogOptions` and `TemplateCommonOptions`.
  */
 export type ModalVariant =
   | {
@@ -228,16 +228,16 @@ export type ModalVariant =
     };
 
 /**
- * Variant-independent options for `useModal`. Does not include `nonModal` or
+ * Variant-independent options for `useDialog`. Does not include `nonModal` or
  * `dismissOnBackdropClick` — those live in `ModalVariant`.
  *
- * `UseModalOptions` is `UseModalBaseOptions & ModalVariant`; template hooks
+ * `UseDialogOptions` is `UseDialogBaseOptions & ModalVariant`; template hooks
  * also `Pick` from this flat type without intersecting with `ModalVariant`.
  *
  * @typeParam TStyle - The style object type this binding speaks.
  * @typeParam TNode - What this binding's `render` returns and what it renders.
  */
-export type UseModalBaseOptions<
+export type UseDialogBaseOptions<
   TData = void,
   TReason extends string = string,
   TStyle extends DialogStyle = DialogStyle,
@@ -262,7 +262,7 @@ export type UseModalBaseOptions<
    * The library places a dialog but never sizes it — a `<dialog>` keeps the UA's `fit-content`,
    * so a panel that should fill its region says so here (`{ width: '100%', height: '100%' }`).
    * This is the same lever the template hooks pull; `useSlideModal` is a `style` and an
-   * animation over `useModal` and nothing else.
+   * animation over `useDialog` and nothing else.
    *
    * Styles for what is *inside* the dialog belong in `render`, where they can respond to the
    * state the callback is handed. These are merged after the placement and before the
@@ -334,7 +334,7 @@ export type UseModalBaseOptions<
    *
    * @example
    * ```ts
-   * useModal({
+   * useDialog({
    *   id: 'filters',
    *   nonModal: true,
    *   dismissOnClickOutside: true,
@@ -403,7 +403,7 @@ export type UseModalBaseOptions<
    * something anyone verified.
    *
    * @example
-   * const { open, Modal } = useModal<void, 'confirm'>({
+   * const { open, Modal } = useDialog<void, 'confirm'>({
    *   id: 'patient:merge',
    *   onOpenRequest: (payload, request) => {
    *     const parsed = mergeRequestSchema.safeParse(payload);
@@ -497,7 +497,7 @@ export type UseModalBaseOptions<
    * still settles — so this is a report, not a veto. Throwing from it is not caught.
    *
    * @example
-   * useModal({
+   * useDialog({
    *   id: 'invoice',
    *   prepare: loadInvoice,
    *   onError: ({ error, source }) => {
@@ -518,7 +518,7 @@ export type UseModalBaseOptions<
    * accessibility defect in a dialog implementation — the library cannot invent it, because
    * only the caller knows what this dialog is.
    *
-   * Prefer {@link UseModalBaseOptions.ariaLabelledBy} when the name is already on screen as a
+   * Prefer {@link UseDialogBaseOptions.ariaLabelledBy} when the name is already on screen as a
    * heading: naming it twice is how the two drift apart.
    */
   readonly ariaLabel?: string | undefined;
@@ -587,26 +587,26 @@ export type UseModalBaseOptions<
 };
 
 /**
- * Options for `useModal`.
+ * Options for `useDialog`.
  *
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
  * @typeParam TStyle - The style object type this binding speaks.
  * @typeParam TNode - What this binding's `render` returns.
  */
-export type UseModalOptions<
+export type UseDialogOptions<
   TData = void,
   TReason extends string = string,
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
-> = UseModalBaseOptions<TData, TReason, TStyle, TNode> & ModalVariant;
+> = UseDialogBaseOptions<TData, TReason, TStyle, TNode> & ModalVariant;
 
 /**
- * Return type of `useModal`.
+ * Return type of `useDialog`.
  *
  * @typeParam TData - Type of the close data payload.
  * @typeParam TNode - What this binding renders. `Modal` is one of these.
  */
-export type UseModalReturn<
+export type UseDialogReturn<
   TData = void,
   TReason extends string = string,
   TNode = unknown,
@@ -743,7 +743,7 @@ export type CloseResolver<TData = unknown, TReason extends string = string> = (
  *
  * @typeParam TData - The modal's close payload type. Defaults to `unknown` because a
  * *reader* of the snapshot (the dialog manager, a devtool) is generic over every modal;
- * `useModal<TData>` instantiates it with the payload its own store carries.
+ * `useDialog<TData>` instantiates it with the payload its own store carries.
  */
 export type ModalStoreSnapshot<TData = unknown, TReason extends string = string> = {
   /** Where the `<dialog>` is in its lifecycle. */

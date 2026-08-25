@@ -80,7 +80,7 @@ export const ImperativePage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="ModalOutlet"
-            description="Wrap a subtree with ModalOutlet — inner useModal calls render automatically, no {modal.Modal} needed."
+            description="Wrap a subtree with ModalOutlet — inner useDialog calls render automatically, no {modal.Modal} needed."
             codeKey="modal-outlet"
             example={<ModalOutletExample />}
           />

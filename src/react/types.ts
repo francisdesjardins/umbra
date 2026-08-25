@@ -1,9 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type {
   ModalAnimation as ModalAnimationModel,
-  UseModalBaseOptions as UseModalBaseOptionsModel,
-  UseModalOptions as UseModalOptionsModel,
-  UseModalReturn as UseModalReturnModel,
+  UseDialogBaseOptions as UseDialogBaseOptionsModel,
+  UseDialogOptions as UseDialogOptionsModel,
+  UseDialogReturn as UseDialogReturnModel,
 } from '../core/types.js';
 
 /**
@@ -25,21 +25,21 @@ import type {
 export type ModalAnimation = ModalAnimationModel<CSSProperties>;
 
 /**
- * Variant-independent options for `useModal`: `nonModal` and `dismissOnBackdropClick` live in
- * `ModalVariant`, `UseModalOptions` intersects the two, template hooks `Pick` from this flat one.
+ * Variant-independent options for `useDialog`: `nonModal` and `dismissOnBackdropClick` live in
+ * `ModalVariant`, `UseDialogOptions` intersects the two, template hooks `Pick` from this flat one.
  */
-export type UseModalBaseOptions<
+export type UseDialogBaseOptions<
   TData = void,
   TReason extends string = string,
-> = UseModalBaseOptionsModel<TData, TReason, CSSProperties, ReactNode>;
+> = UseDialogBaseOptionsModel<TData, TReason, CSSProperties, ReactNode>;
 
 /**
- * Options for `useModal`.
+ * Options for `useDialog`.
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
  * @typeParam TReason - The reasons this modal closes with. Declare them: the `string` default
  * accepts anything, costing the typo-safety and exhaustive `switch` the design exists for.
  */
-export type UseModalOptions<TData = void, TReason extends string = string> = UseModalOptionsModel<
+export type UseDialogOptions<TData = void, TReason extends string = string> = UseDialogOptionsModel<
   TData,
   TReason,
   CSSProperties,
@@ -47,11 +47,11 @@ export type UseModalOptions<TData = void, TReason extends string = string> = Use
 >;
 
 /**
- * Return type of `useModal`.
+ * Return type of `useDialog`.
  * @typeParam TData - Type of the close data payload.
  * @example
  * function DeleteButton() {
- *   const { openAndWait, Modal } = useModal<boolean>({
+ *   const { openAndWait, Modal } = useDialog<boolean>({
  *     id: 'confirm-delete',
  *     render: ({ handle, action }) => {
  *       return <button onClick={() => handle.close('confirm', true)}>Yes, delete</button>;
@@ -71,7 +71,7 @@ export type UseModalOptions<TData = void, TReason extends string = string> = Use
  *   );
  * }
  */
-export type UseModalReturn<TData = void, TReason extends string = string> = UseModalReturnModel<
+export type UseDialogReturn<TData = void, TReason extends string = string> = UseDialogReturnModel<
   TData,
   TReason,
   ReactNode

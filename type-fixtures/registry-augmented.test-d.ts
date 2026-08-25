@@ -7,7 +7,7 @@
 
 import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../src/core/registry.js';
 import { createOpenRequest, dialogManager } from '../src/manager/dialog-manager.js';
-import { useModal } from '../src/react/use-modal.js';
+import { useDialog } from '../src/react/use-dialog.js';
 
 declare module '../src/core/registry.js' {
   interface ModalRegistry {
@@ -63,7 +63,7 @@ export function _manager() {
 
 /** Inferred from the id literal: no type argument, and both halves come back typed. */
 export function Inferred() {
-  return useModal({
+  return useDialog({
     id: 'delete-account',
     ariaLabel: 'Delete account',
     render: ({ handle }) => {
@@ -81,7 +81,7 @@ export function Inferred() {
 
 /** The explicit form, naming the id as the one type argument. */
 export function Explicit() {
-  return useModal<'session-warning'>({
+  return useDialog<'session-warning'>({
     id: 'session-warning',
     ariaLabel: 'Session warning',
     render: ({ handle }) => {
@@ -93,7 +93,7 @@ export function Explicit() {
 
 /** A modal the registry never named still declares, with its reasons left open. */
 export function Undeclared() {
-  return useModal({
+  return useDialog({
     id: 'third-party-panel',
     ariaLabel: 'Third party',
     render: ({ handle }) => {

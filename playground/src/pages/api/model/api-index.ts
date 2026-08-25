@@ -9,7 +9,7 @@ export const SYMBOLS: readonly ApiSymbol[] = CATEGORIES.flatMap((category) => {
 
 /**
  * The only symbol-to-route mapping, keyed `specifier#name`: a symbol changing category relinks all
- * cross-references, and a bare name (three bindings export `useModal`) misses and renders as code.
+ * cross-references, and a bare name (three bindings export `useDialog`) misses and renders as code.
  */
 const BY_KEY = new Map(
   SYMBOLS.map((symbol) => {

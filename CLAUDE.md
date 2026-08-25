@@ -14,7 +14,7 @@ the optional layer.
 | Specifier       | Contents                                                                                                                                                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `umbra`         | The manager, `ModalRegistry`, placement and style, the store engine, the hotkey utilities, `normalizeError`, `setLogLevel`. No framework; `src/index.ts` is the list.                                                           |
-| `umbra/react`   | `useModal`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.               |
+| `umbra/react`   | `useDialog`, `useMessageModal`, `useSlideModal`, `ModalOutlet`, `DialogManagerProvider`, `useDialogManager`, `useLookup` — **plus a wholesale re-export of the root**, so a React app imports from this path only.              |
 | `umbra/solid`   | The same names, for Solid, plus `fromStore` — and the same wholesale re-export of the root.                                                                                                                                     |
 | `umbra/vanilla` | `bindDialog` — a _controller_ for a `<dialog>` you wrote yourself, whose `bindAction` is a member of the returned controller rather than an export. No `render`, no `Modal`, no outlet, no framework. Same wholesale re-export. |
 
@@ -144,8 +144,8 @@ by hand.
 - **Hotkeys**: `action('save', { hotkey: Key.Enter, onAction })` — no standalone `useHotkey`. Custom button wrappers **must forward three props** — `aria-keyshortcuts`, `data-focus-on-open`, `data-action-reason` — because all three are queried out of the DOM, so dropping one makes that feature silently do nothing. See [src/CLAUDE.md](src/CLAUDE.md#hotkey-system).
 - **The stack order is three keys, and only the middle one is a policy**: modality, then `dialogManager.prioritize((modal) => number)`, then open order. **Modality is a fact the policy cannot touch** — the top layer paints above ordinary content and no `z-index` reaches between them, so a big number on a panel ranks it against the other panels and moves it no nearer the user. Order decides who answers the dismiss key, which is why `isForeground` matters beyond paint. The rules are on `prioritize`, the cost of reordering a modal dialog on `raiseDialog` ([core/dialog-lifecycle.ts](src/core/dialog-lifecycle.ts)), the limits in the matrix.
 - **A dialog only answers for its own subtree**: a modal opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the modal underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
-- **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useModal`.
-- **Declare the reasons**: `useModal<TData, 'save' | 'cancel'>`, or name them once in `ModalRegistry` — `closesWith: 'save' | 'cancel'`, or `closesWith: { save: Doc; cancel: void }` to give each reason its own payload, which is then **required** where declared. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
+- **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useDialog`.
+- **Declare the reasons**: `useDialog<TData, 'save' | 'cancel'>`, or name them once in `ModalRegistry` — `closesWith: 'save' | 'cancel'`, or `closesWith: { save: Doc; cancel: void }` to give each reason its own payload, which is then **required** where declared. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
 - **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and
   Solid ^1.9.0 as optional peers, each required only by its own binding and neither by `./vanilla` |
   Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. **The peer ranges
@@ -176,7 +176,7 @@ by hand.
   is how the `attach*` functions, the action factory, the dialog attributes, the slide geometry
   and the default animation ended up there.
 - **Headless-first**: zero shipped UI — never add UI components
-- **Minimal surface**: extend `useModal` over adding template hooks
+- **Minimal surface**: extend `useDialog` over adding template hooks
 - **No abstraction leakage**: templates must not expose core internals
 - **Bring your own everything**: animations, styling, layout are user-land
 

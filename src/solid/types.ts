@@ -2,9 +2,9 @@ import type { JSX } from 'solid-js';
 import type { DialogStyle } from '../core/style.js';
 import type {
   ModalAnimation as ModalAnimationModel,
-  UseModalBaseOptions as UseModalBaseOptionsModel,
-  UseModalOptions as UseModalOptionsModel,
-  UseModalReturn as UseModalReturnModel,
+  UseDialogBaseOptions as UseDialogBaseOptionsModel,
+  UseDialogOptions as UseDialogOptionsModel,
+  UseDialogReturn as UseDialogReturnModel,
 } from '../core/types.js';
 
 /**
@@ -17,18 +17,18 @@ import type {
 /** CSS transition configuration for modal entrance/exit animations. */
 export type ModalAnimation = ModalAnimationModel;
 
-/** Variant-independent options for `useModal`; `nonModal` and friends live in `ModalVariant`. */
-export type UseModalBaseOptions<
+/** Variant-independent options for `useDialog`; `nonModal` and friends live in `ModalVariant`. */
+export type UseDialogBaseOptions<
   TData = void,
   TReason extends string = string,
-> = UseModalBaseOptionsModel<TData, TReason, DialogStyle, JSX.Element>;
+> = UseDialogBaseOptionsModel<TData, TReason, DialogStyle, JSX.Element>;
 
 /**
- * Options for `useModal`.
+ * Options for `useDialog`.
  * @typeParam TData - Type of the close data payload. Defaults to void (no data).
- * @typeParam TReason - The reasons this modal closes with; declare them, see `useModal`.
+ * @typeParam TReason - The reasons this modal closes with; declare them, see `useDialog`.
  */
-export type UseModalOptions<TData = void, TReason extends string = string> = UseModalOptionsModel<
+export type UseDialogOptions<TData = void, TReason extends string = string> = UseDialogOptionsModel<
   TData,
   TReason,
   DialogStyle,
@@ -36,12 +36,12 @@ export type UseModalOptions<TData = void, TReason extends string = string> = Use
 >;
 
 /**
- * Return type of `useModal`. Shape-identical to React's, and live: `isVisible`, `isPreparing`,
+ * Return type of `useDialog`. Shape-identical to React's, and live: `isVisible`, `isPreparing`,
  * `hasRunningAction` and `error` are getters over the modal's stores, so the property *is* the
  * reactive read — reading one inside JSX subscribes that expression, with no accessor to call.
  * @typeParam TData - Type of the close data payload.
  */
-export type UseModalReturn<TData = void, TReason extends string = string> = UseModalReturnModel<
+export type UseDialogReturn<TData = void, TReason extends string = string> = UseDialogReturnModel<
   TData,
   TReason,
   JSX.Element

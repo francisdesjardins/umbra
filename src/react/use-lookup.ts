@@ -36,7 +36,7 @@ function lookupIn(
 
 export function useLookup(id: ModalId): ModalInfo {
   const manager = useDialogManagerContext();
-  // Server-readable for the reason on `useModal`: nothing here asks the DOM anything.
+  // Server-readable for the reason on `useDialog`: nothing here asks the DOM anything.
   const snapshot = useSyncExternalStore(
     manager.subscribeSnapshot,
     manager.getSnapshot,

@@ -1,11 +1,11 @@
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: modal.Modal is null when outlet is present ────────────────────
 
 function ModalNullChecker() {
-  const { open, Modal } = useModal<void, 'done'>({
+  const { open, Modal } = useDialog<void, 'done'>({
     id: 'outlet-null-check',
     render: ({ handle }) => {
       return (

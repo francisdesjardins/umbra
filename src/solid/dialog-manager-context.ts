@@ -22,7 +22,7 @@ export function useDialogManagerContext(): DialogManager {
 /**
  * Provides an isolated `DialogManager` to descendant hooks, as `umbra/react`'s does and for the
  * same test-story reasons. Written with `createComponent` rather than JSX so the binding compiles
- * with nothing but TypeScript — see the note atop `use-modal.ts`.
+ * with nothing but TypeScript — see the note atop `use-dialog.ts`.
  */
 export function DialogManagerProvider(props: { readonly children: JSX.Element }): JSX.Element {
   const instance = createDialogManager();

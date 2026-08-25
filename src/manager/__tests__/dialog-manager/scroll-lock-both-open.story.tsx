@@ -1,10 +1,10 @@
 import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** The nested manager's own modal, opened from inside the outer one. */
 function InnerModal() {
-  const { open, Modal, isVisible } = useModal<void, 'done'>({
+  const { open, Modal, isVisible } = useDialog<void, 'done'>({
     id: 'both-open-inner',
     render: ({ handle }) => {
       return (
@@ -46,7 +46,7 @@ function InnerModal() {
  * boolean would let the first to let go release the other's lock. Claims are idempotent per owner.
  */
 export function ScrollLockBothOpenHarness() {
-  const { open, Modal } = useModal<void, 'done'>({
+  const { open, Modal } = useDialog<void, 'done'>({
     id: 'both-open-outer',
     render: ({ handle }) => {
       return (

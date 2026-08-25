@@ -1,5 +1,5 @@
 import { useDialogManager } from '../../../react/use-dialog-manager.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -14,7 +14,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function MultiModalHarness() {
   const { openDialogs, foreground } = useDialogManager();
 
-  const { Modal: Modal1, dialogManager } = useModal<void, 'close'>({
+  const { Modal: Modal1, dialogManager } = useDialog<void, 'close'>({
     id: 'dm-first',
     render: ({ handle }) => {
       return (
@@ -39,7 +39,7 @@ export function MultiModalHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal<void, 'close'>({
+  const { Modal: Modal2 } = useDialog<void, 'close'>({
     id: 'dm-second',
     render: ({ handle }) => {
       return (

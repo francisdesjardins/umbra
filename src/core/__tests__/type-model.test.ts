@@ -7,16 +7,16 @@ import type {
   SlideModalRenderContext,
   useSlideModal,
 } from '../../react/templates/use-slide-modal.js';
-import type { useModal } from '../../react/use-modal.js';
+import type { useDialog } from '../../react/use-dialog.js';
 import type { CloseResult, ModalHandle, ModalRenderArgs, ModalVariant } from '../types.js';
 // React's instantiations, not the core model: the hooks asserted are React's, so the types they
 // must agree with are the ones carrying `ReactNode`.
-import type { UseModalBaseOptions, UseModalReturn } from '../../react/types.js';
+import type { UseDialogBaseOptions, UseDialogReturn } from '../../react/types.js';
 
 /**
  * Compile-time assertions on the public type model, checked by `yarn type-check`; the runtime
  * bodies exist only so the file is a test. These relationships are *derivations* —
- * `UseModalReturn` and `BaseRenderContext` are expressed in terms of `ModalRenderArgs` — and
+ * `UseDialogReturn` and `BaseRenderContext` are expressed in terms of `ModalRenderArgs` — and
  * flattening one back into a literal object type compiles while silently desyncing the three.
  */
 
@@ -27,7 +27,7 @@ type Extends<T extends U, U> = T;
 type Equals<A extends B, B extends C, C = A> = A;
 
 // What lets `render` read live state without touching the value the hook is still producing.
-export type _ReturnProvidesRenderArgs = Extends<UseModalReturn, ModalRenderArgs>;
+export type _ReturnProvidesRenderArgs = Extends<UseDialogReturn, ModalRenderArgs>;
 
 export type _BaseContextIsRenderArgs = Equals<BaseRenderContext, ModalRenderArgs>;
 
@@ -66,14 +66,14 @@ export type _DismissIsAlwaysAvailable = Equals<
   'save' | 'cancel' | 'dismiss'
 >;
 
-declare const useModalT: typeof useModal;
+declare const useDialogT: typeof useDialog;
 declare const useMessageModalT: typeof useMessageModal;
 declare const useSlideModalT: typeof useSlideModal;
 
 // Never called: its body is real call sites, so inference runs against the real signatures. The
 // hooks are imported type-only — this is a unit test and nothing here may pull React in.
 function useDeclaredReasons() {
-  return useModalT<Payload, Reasons>({
+  return useDialogT<Payload, Reasons>({
     id: 'i',
     render: ({ action, handle }) => {
       action('save', (close) => {
@@ -120,13 +120,13 @@ function useDeclaredReasons() {
 
 export type _DeclaredReasonsReachTheReturn = Equals<
   ReturnType<typeof useDeclaredReasons>,
-  UseModalReturn<Payload, Reasons>
+  UseDialogReturn<Payload, Reasons>
 >;
 
 // Declaring `'dismiss'` yourself is legitimate — `onClose` sees it either way. It must not yield
 // a nameable action, which is why `ActionReason` is an `Exclude`: without it, this compiles.
 export function useDismissInTheDeclaredUnion() {
-  return useModalT<void, 'save' | 'dismiss'>({
+  return useDialogT<void, 'save' | 'dismiss'>({
     id: 'i',
     render: ({ action, handle }) => {
       action('save');
@@ -164,13 +164,16 @@ function useTemplateReasons() {
 type TemplateReasons = ReturnType<typeof useTemplateReasons>;
 export type _MessageKeepsReasons = Equals<
   TemplateReasons['message'],
-  UseModalReturn<Payload, Reasons>
+  UseDialogReturn<Payload, Reasons>
 >;
-export type _SlideKeepsReasons = Equals<TemplateReasons['slide'], UseModalReturn<Payload, Reasons>>;
+export type _SlideKeepsReasons = Equals<
+  TemplateReasons['slide'],
+  UseDialogReturn<Payload, Reasons>
+>;
 
 // Left undeclared, a modal accepts any reason — the permissive default.
 function useLooseReasons() {
-  return useModalT<Payload>({
+  return useDialogT<Payload>({
     id: 'i',
     render: ({ action }) => {
       action('anything-at-all');
@@ -187,10 +190,10 @@ export type _LooseReasonIsString = Equals<
   CloseResult<Payload> | null
 >;
 
-// `TemplateCommonOptions` is the *complement*, so a new `UseModalBaseOptions` option reaches every
+// `TemplateCommonOptions` is the *complement*, so a new `UseDialogBaseOptions` option reaches every
 // template unnamed. Were it an enumeration, a new core option would reach none and nothing fail.
 export type _TemplateOptionsAreTheComplement = Equals<
-  Exclude<keyof UseModalBaseOptions, keyof TemplateCommonOptions>,
+  Exclude<keyof UseDialogBaseOptions, keyof TemplateCommonOptions>,
   'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 >;
 

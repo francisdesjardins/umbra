@@ -10,7 +10,7 @@ import { useMessageModal } from '../templates/use-message-modal.js';
 import { useSlideModal } from '../templates/use-slide-modal.js';
 import { useDialogManager } from '../use-dialog-manager.js';
 import { useLookup } from '../use-lookup.js';
-import { useModal } from '../use-modal.js';
+import { useDialog } from '../use-dialog.js';
 
 /**
  * The Solid half of the binding's component tests, written with `h` because Solid's JSX needs
@@ -37,7 +37,7 @@ function BasicApp(): Built {
   const [lastReason, setLastReason] = createSignal('none');
   const [slow, setSlow] = createSignal(false);
 
-  const modal = useModal<void, 'confirm' | 'cancel'>({
+  const modal = useDialog<void, 'confirm' | 'cancel'>({
     id: 'solid-basic',
     ariaLabel: 'Solid basic',
     prepare: async () => {
@@ -142,7 +142,7 @@ function BasicApp(): Built {
 function DeclarationApp(): Built {
   const [withAction, setWithAction] = createSignal(true);
 
-  const modal = useModal<void, 'confirm'>({
+  const modal = useDialog<void, 'confirm'>({
     id: 'solid-declaration',
     ariaLabel: 'Solid declaration',
     render: (ctx) => {
@@ -192,7 +192,7 @@ function DeclarationApp(): Built {
 
 /** An outlet takes the dialog, and `Modal` becomes `null` — the same contract React's has. */
 function OutletInner(): Built {
-  const modal = useModal<void, 'confirm'>({
+  const modal = useDialog<void, 'confirm'>({
     id: 'solid-outlet',
     ariaLabel: 'Solid outlet',
     render: () => {
@@ -330,7 +330,7 @@ function MessageApp(): Built {
  * hyperscript re-runs it and disposes the owner of the branch it replaces — Solid's unmount.
  */
 function DisposalInner(props: { readonly dispose: () => void }): Built {
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-disposal',
     ariaLabel: 'Solid disposal',
     render: () => {
@@ -411,7 +411,7 @@ function DisposalApp(): Built {
 
 /** The same disposal, one level down: the outlet has to forget it too. */
 function OutletDisposalInner(props: { readonly dispose: () => void }): Built {
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-outlet-disposal',
     ariaLabel: 'Solid outlet disposal',
     render: () => {
@@ -479,7 +479,7 @@ function OutletDisposalApp(): Built {
 
 /** `portal: true` — the binding mounts the element itself, and `Modal` stays null. */
 function PortalApp(): Built {
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-portal',
     ariaLabel: 'Solid portal',
     portal: true,
@@ -511,7 +511,7 @@ function PortalApp(): Built {
 /**
  * A portal into a host the caller owns.
  *
- * The host is created before `useModal` runs, which is what `PortalTarget` requires and what this
+ * The host is created before `useDialog` runs, which is what `PortalTarget` requires and what this
  * binding makes unavoidable: Solid resolves the option once, in the setup body, so a getter over a
  * node from this component's own JSX would answer `null` and land on the body.
  */
@@ -523,7 +523,7 @@ function PortalHostApp(): Built {
     host.remove();
   });
 
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-portal-host',
     ariaLabel: 'Solid portal host',
     portal: () => {
@@ -561,7 +561,7 @@ function PortalHostApp(): Built {
 function DismissRequestApp(): Built {
   const [cause, setCause] = createSignal('none');
 
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-dismiss-request',
     ariaLabel: 'Solid dismiss request',
     dismissOnBackdropClick: true,
@@ -594,7 +594,7 @@ function DismissRequestApp(): Built {
 
 /** A contained non-modal panel: positioned against a host the binding creates. */
 function ContainedApp(): Built {
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'solid-contained',
     ariaLabel: 'Solid contained',
     nonModal: true,
@@ -626,7 +626,7 @@ function ContainedApp(): Built {
  * first is a type error; all of it is asserted *outside* `render`, where a frozen getter never moves.
  */
 function LiveStateApp(): Built {
-  const modal = useModal<void, 'boom'>({
+  const modal = useDialog<void, 'boom'>({
     id: 'solid-live-state',
     ariaLabel: 'Solid live state',
     prepare: async () => {
@@ -696,7 +696,7 @@ function BusyApp(): Built {
   // A signal, not a `let`: the gate is set from inside an async callback.
   const [release, setRelease] = createSignal<(() => void) | undefined>();
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'solid-busy',
     ariaLabel: 'Solid loading',
     prepare: async () => {
@@ -771,7 +771,7 @@ function LabellingApp(): Built {
   };
   onCleanup(dropLogging);
 
-  const dangling = useModal({
+  const dangling = useDialog({
     id: 'solid-dangling',
     onClose: dropLogging,
     ariaLabelledBy: 'solid-dangling-title',
@@ -781,7 +781,7 @@ function LabellingApp(): Built {
     },
   });
 
-  const late = useModal({
+  const late = useDialog({
     id: 'solid-late',
     onClose: dropLogging,
     ariaLabelledBy: 'solid-late-title',
@@ -908,7 +908,7 @@ export const SolidContainedApp = (): JSX.Element => {
  */
 function stackPriorityApp(withPolicy: boolean): () => Built {
   return () => {
-    const panel = useModal<void, 'close'>({
+    const panel = useDialog<void, 'close'>({
       id: 'solid-sp-panel',
       template: 'slide',
       style: { width: '300px', height: '300px' },
@@ -917,7 +917,7 @@ function stackPriorityApp(withPolicy: boolean): () => Built {
       },
     });
 
-    const warning = useModal<void, 'close'>({
+    const warning = useDialog<void, 'close'>({
       id: 'solid-sp-warning',
       template: 'alert',
       style: { width: '300px', height: '300px' },
@@ -990,7 +990,7 @@ function NonModalOptionsApp(): Built {
   const [holdPrepare, setHoldPrepare] = createSignal(false);
   const [refuse, setRefuse] = createSignal(false);
 
-  const modal = useModal<void, 'inside'>({
+  const modal = useDialog<void, 'inside'>({
     id: 'solid-non-modal-options',
     ariaLabel: 'Solid non-modal options',
     nonModal: true,
@@ -1119,7 +1119,7 @@ function ReconcileApp(): Built {
   const [openCount, setOpenCount] = createSignal(0);
   const [asked, setAsked] = createSignal<string[]>([]);
 
-  const modal = useModal<void, 'close'>({
+  const modal = useDialog<void, 'close'>({
     id: 'solid-reconcile',
     ariaLabel: 'Solid reconcile',
     nonModal: true,
@@ -1246,7 +1246,7 @@ export const SolidReconcileApp = (): JSX.Element => {
 function FailedActionApp(): Built {
   const [failures, setFailures] = createSignal(0);
 
-  const modal = useModal<void, 'boom'>({
+  const modal = useDialog<void, 'boom'>({
     id: 'solid-failed-action',
     ariaLabel: 'Solid failed action',
     render: ({ action }) => {
@@ -1317,7 +1317,7 @@ export const SolidFailedActionApp = (): JSX.Element => {
  * placed the opening focus. Two actions, since with one a restore and a stay are the same element.
  */
 function ClaimlessReclaimApp(): Built {
-  const modal = useModal<void, 'confirm' | 'cancel'>({
+  const modal = useDialog<void, 'confirm' | 'cancel'>({
     id: 'solid-claimless',
     ariaLabel: 'Solid modal claiming no opening focus',
     render: (ctx) => {
@@ -1333,7 +1333,7 @@ function ClaimlessReclaimApp(): Built {
     },
   });
 
-  const panel = useModal<void, 'close'>({
+  const panel = useDialog<void, 'close'>({
     id: 'solid-claimless-panel',
     nonModal: true,
     // Viewport-anchored: contained would lay an `inset: 0` wrapper over the trigger below.
@@ -1381,7 +1381,7 @@ function PrepareFailureApp(): Built {
   const [sources, setSources] = createSignal<string[]>([]);
   const [message, setMessage] = createSignal('none');
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'solid-prepare-failure',
     ariaLabel: 'Solid prepare that fails',
     prepare: async () => {

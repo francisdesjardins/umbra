@@ -1,11 +1,11 @@
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: nested outlets — inner wins ───────────────────────────────────
 
 function InnerScopeModal() {
-  const { open, isVisible, dialogManager } = useModal<void, 'inner-done'>({
+  const { open, isVisible, dialogManager } = useDialog<void, 'inner-done'>({
     id: 'outlet-nested-inner',
     render: ({ handle }) => {
       return (
@@ -45,7 +45,7 @@ function InnerScopeModal() {
 }
 
 function OuterScopeModal() {
-  const { open, isVisible, dialogManager } = useModal<void, 'outer-done'>({
+  const { open, isVisible, dialogManager } = useDialog<void, 'outer-done'>({
     id: 'outlet-nested-outer',
     render: ({ handle }) => {
       return (

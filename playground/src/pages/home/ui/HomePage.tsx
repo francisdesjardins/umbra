@@ -15,13 +15,13 @@ cd umbra && yarn install && yarn dev
 
 # Or lift what you need out of src/ — plain TypeScript, MIT, no ceremony.
 import { dialogManager } from 'umbra';   // the root: no framework needed
-import { useModal } from 'umbra/react';  // the React binding
-import { useModal } from 'umbra/solid';  // …or the Solid one, same surface
+import { useDialog } from 'umbra/react';  // the React binding
+import { useDialog } from 'umbra/solid';  // …or the Solid one, same surface
 import { bindDialog } from 'umbra/vanilla'; // …or none: drive your own <dialog>`;
 
 const HELLO = `// The first type argument is what this modal closes *with*; the second, the
 // reasons it may close for. Both come back to \`onClose\`, both are exhaustive.
-const modal = useModal<{ remember: boolean }, 'confirm' | 'cancel'>({
+const modal = useDialog<{ remember: boolean }, 'confirm' | 'cancel'>({
   id: 'hello',
   ariaLabel: 'Hello',
   // Every field an action returns is a DOM prop, so this spread fits a bare

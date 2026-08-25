@@ -10,7 +10,7 @@
 // Free of MUI too: a worker bundle pulls in whatever this imports, and the point is that a modal
 // needs no DOM to be *described*.
 import { createElement as h } from 'react';
-import { useModal } from 'umbra/react';
+import { useDialog } from 'umbra/react';
 
 export const SSR_MODAL_ID = 'ssr-worker-demo';
 
@@ -43,12 +43,12 @@ const column = {
 
 /**
  * A modal declared the ordinary way, and that is the whole claim: nothing here is written for the
- * server. `useModal` closes over its own store, `Modal` is a `<dialog>` React can describe without a
+ * server. `useDialog` closes over its own store, `Modal` is a `<dialog>` React can describe without a
  * document, and what comes back is a **closed** dialog — the only honest answer, since the top layer
  * is enterable from `showModal()` alone and no served HTML can hand one back open.
  */
 export function SsrWorkerApp({ renderedAt }: { readonly renderedAt: string }) {
-  const modal = useModal({
+  const modal = useDialog({
     id: SSR_MODAL_ID,
     ariaLabel: 'Rendered without a DOM',
     render: ({ action }) => {

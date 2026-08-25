@@ -1,7 +1,7 @@
 import { StrandedFocusHarness } from 'umbra/core/__tests__/stranded-focus.story';
-import { ActionIsRunningHarness } from 'umbra/actions/__tests__/use-modal-actions/action-is-running.story';
-import { DomSafeSpreadHarness } from 'umbra/actions/__tests__/use-modal-actions/dom-safe-spread.story';
-import { SpreadContractHarness } from 'umbra/actions/__tests__/use-modal-actions/spread-contract.story';
+import { ActionIsRunningHarness } from 'umbra/actions/__tests__/use-dialog-actions/action-is-running.story';
+import { DomSafeSpreadHarness } from 'umbra/actions/__tests__/use-dialog-actions/dom-safe-spread.story';
+import { SpreadContractHarness } from 'umbra/actions/__tests__/use-dialog-actions/spread-contract.story';
 import {
   AsymmetricKeyframesHarness,
   NameTranslationHarness,
@@ -24,21 +24,21 @@ import {
   MultiRaiseHarness,
 } from 'umbra/manager/__tests__/stack-priority.story';
 import { UseLookupPreparingHarness } from 'umbra/react/__tests__/use-lookup.story';
-import { ActionErrorHotkeyRetryHarness } from 'umbra/react/__tests__/use-modal/action-error-hotkey-retry.story';
-import { ContainedOverlayHarness } from 'umbra/react/__tests__/use-modal/contained-overlay.story';
-import { EscAnsweredByNobodyHarness } from 'umbra/react/__tests__/use-modal/esc-answered-by-nobody.story';
+import { ActionErrorHotkeyRetryHarness } from 'umbra/react/__tests__/use-dialog/action-error-hotkey-retry.story';
+import { ContainedOverlayHarness } from 'umbra/react/__tests__/use-dialog/contained-overlay.story';
+import { EscAnsweredByNobodyHarness } from 'umbra/react/__tests__/use-dialog/esc-answered-by-nobody.story';
 import {
   DanglingLabelHarness,
   LateTitleHarness,
   OutletLabelHarness,
-} from 'umbra/react/__tests__/use-modal/labelling-diagnostics.story';
-import { OnOpenAbortHarness } from 'umbra/react/__tests__/use-modal/on-open-abort.story';
-import { OpenAndWaitOrderingHarness } from 'umbra/react/__tests__/use-modal/open-and-wait-ordering.story';
-import { PrepareFailureHarness } from 'umbra/react/__tests__/use-modal/prepare-failure.story';
-import { ReconcileOpenHarness } from 'umbra/react/__tests__/use-modal/reconcile-open.story';
-import { RestoreNotInFrontHarness } from 'umbra/react/__tests__/use-modal/restore-not-in-front.story';
-import { ShadowRootHarness } from 'umbra/react/__tests__/use-modal/shadow-root.story';
-import { VolatileKeyDownHarness } from 'umbra/react/__tests__/use-modal/volatile-keydown.story';
+} from 'umbra/react/__tests__/use-dialog/labelling-diagnostics.story';
+import { OnOpenAbortHarness } from 'umbra/react/__tests__/use-dialog/on-open-abort.story';
+import { OpenAndWaitOrderingHarness } from 'umbra/react/__tests__/use-dialog/open-and-wait-ordering.story';
+import { PrepareFailureHarness } from 'umbra/react/__tests__/use-dialog/prepare-failure.story';
+import { ReconcileOpenHarness } from 'umbra/react/__tests__/use-dialog/reconcile-open.story';
+import { RestoreNotInFrontHarness } from 'umbra/react/__tests__/use-dialog/restore-not-in-front.story';
+import { ShadowRootHarness } from 'umbra/react/__tests__/use-dialog/shadow-root.story';
+import { VolatileKeyDownHarness } from 'umbra/react/__tests__/use-dialog/volatile-keydown.story';
 import {
   EditableContentHarness,
   EditableOnlyHarness,
@@ -120,7 +120,7 @@ import {
   ReasonSourceHarness,
   VanillaAriaKeyshortcutsHarness,
   FocusOnOpenHarness,
-} from 'umbra/actions/__tests__/use-modal-actions.story';
+} from 'umbra/actions/__tests__/use-dialog-actions.story';
 import {
   RefusesEverythingHarness,
   OpenRequestHarness,
@@ -166,7 +166,7 @@ import {
   BusyWhilePreparingHarness,
   RenderPhaseHarness,
   StylingSurfaceHarness,
-} from 'umbra/react/__tests__/use-modal.story';
+} from 'umbra/react/__tests__/use-dialog.story';
 import {
   DomEventHarness,
   EventSubscribeHarness,
@@ -581,158 +581,158 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         title: 'Basic Harness',
         description: 'Open/close with confirm, cancel, and Escape. Tracks last close reason.',
         component: BasicHarness,
-        codeKey: 'story-use-modal-basic',
+        codeKey: 'story-use-dialog-basic',
       },
       {
         title: 'Transitions Toggled Between Opens',
         description:
           'The same <dialog> opened once with CSS transitions live and once with them disabled — the close path re-measures per open instead of trusting the first answer.',
         component: TransitionToggleHarness,
-        codeKey: 'story-use-modal-transition-toggle',
+        codeKey: 'story-use-dialog-transition-toggle',
       },
       {
         title: 'Dismiss Key Passthrough',
         description:
           'A non-modal panel that refuses to dismiss while prepare is pending. The key it refuses still reaches the page’s own Escape handler; the key it acts on does not.',
         component: KeyPassthroughHarness,
-        codeKey: 'story-use-modal-key-passthrough',
+        codeKey: 'story-use-dialog-key-passthrough',
       },
       {
         title: 'Structural Prop Toggle',
         description:
           'Flipping nonModal/portal while open changes the rendered structure, which a native <dialog> cannot survive — the modal is torn down and closed cleanly instead of being left stuck.',
         component: StructuralToggleHarness,
-        codeKey: 'story-use-modal-structural-toggle',
+        codeKey: 'story-use-dialog-structural-toggle',
       },
       {
         title: 'Wait For Close',
         description: 'Awaits openAndWait(). Status reflects the resolved reason.',
         component: OpenAndWaitHarness,
-        codeKey: 'story-use-modal-open-and-wait',
+        codeKey: 'story-use-dialog-open-and-wait',
       },
       {
         title: 'Non-Modal Dialog',
         description:
           'Opens with dialog.show() instead of showModal(). No backdrop, clicks pass through, z-index tracked via data-modal-z.',
         component: NonModalHarness,
-        codeKey: 'story-use-modal-non-modal',
+        codeKey: 'story-use-dialog-non-modal',
       },
       {
         title: 'Non-Modal Stack',
         description:
           'Two stacked non-modal dialogs with increasing z-index. Body scroll remains free.',
         component: NonModalStackHarness,
-        codeKey: 'story-use-modal-non-modal-stack',
+        codeKey: 'story-use-dialog-non-modal-stack',
       },
       {
         title: 'Non-Modal ESC Isolation',
         description:
           'ESC closes the panel even when focus is outside it, and does not propagate to underlying elements. leak-count stays 0.',
         component: NonModalEscIsolationHarness,
-        codeKey: 'story-use-modal-non-modal-esc-isolation',
+        codeKey: 'story-use-dialog-non-modal-esc-isolation',
       },
       {
         title: 'dismissOnClickOutside',
         description:
           'Non-modal with dismissOnClickOutside: true. Clicking outside the dialog closes it with reason "dismiss". Clicking inside does not.',
         component: NonModalClickOutsideHarness,
-        codeKey: 'story-use-modal-non-modal-click-outside',
+        codeKey: 'story-use-dialog-non-modal-click-outside',
       },
       {
         title: 'dismissOnClickOutside — Default (false)',
         description:
           'Non-modal without dismissOnClickOutside set. Clicking outside does not close the dialog — default is false.',
         component: NonModalClickOutsideDefaultHarness,
-        codeKey: 'story-use-modal-non-modal-click-outside-default',
+        codeKey: 'story-use-dialog-non-modal-click-outside-default',
       },
       {
         title: 'Custom dismissKey',
         description:
           'Modal with dismissKey: Delete — Delete closes with "dismiss", Escape does not.',
         component: CustomDismissKeyHarness,
-        codeKey: 'story-use-modal-custom-dismiss-key',
+        codeKey: 'story-use-dialog-custom-dismiss-key',
       },
       {
         title: 'dismissKey: false',
         description: 'Key dismissal disabled — only the explicit Close button works.',
         component: DismissKeyDisabledHarness,
-        codeKey: 'story-use-modal-dismiss-key-disabled',
+        codeKey: 'story-use-dialog-dismiss-key-disabled',
       },
       {
         title: 'Non-Modal Custom dismissKey',
         description:
           'Non-modal with dismissKey: Delete. Delete closes from outside focus and does not leak. Escape ignored.',
         component: NonModalCustomDismissKeyHarness,
-        codeKey: 'story-use-modal-non-modal-custom-dismiss-key',
+        codeKey: 'story-use-dialog-non-modal-custom-dismiss-key',
       },
       {
         title: 'Portal — Default (Inline)',
         description:
           'Modal dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
         component: PortalDefaultHarness,
-        codeKey: 'story-use-modal-portal-default',
+        codeKey: 'story-use-dialog-portal-default',
       },
       {
         title: 'Portal — Opt-In',
         description: 'Modal dialog with portal: true. Dialog is portaled to document.body.',
         component: PortalOptInHarness,
-        codeKey: 'story-use-modal-portal-opt-in',
+        codeKey: 'story-use-dialog-portal-opt-in',
       },
       {
         title: 'Portal — a host of the caller’s own',
         description:
           '`portal: true` is `document.body`, which is the wrong answer wherever the tree the dialog left was doing something. A getter names the host instead — here a themed container, so the custom property the dialog reads survives the move. A getter and not an element, because the host is still being rendered when the hook runs.',
         component: PortalHostHarness,
-        codeKey: 'story-use-modal-portal-host',
+        codeKey: 'story-use-dialog-portal-host',
       },
       {
         title: 'Portal — Non-Modal Default (Inline)',
         description:
           'Non-modal dialog without portal (default). Dialog renders inline — parent is NOT document.body.',
         component: PortalNonModalDefaultHarness,
-        codeKey: 'story-use-modal-portal-non-modal-default',
+        codeKey: 'story-use-dialog-portal-non-modal-default',
       },
       {
         title: 'Portal — Non-Modal Opt-In',
         description:
           'Non-modal dialog with portal: true. Dialog is portaled to document.body. Click-through still works.',
         component: PortalNonModalOptInHarness,
-        codeKey: 'story-use-modal-portal-non-modal-opt-in',
+        codeKey: 'story-use-dialog-portal-non-modal-opt-in',
       },
       {
         title: 'dismissWhilePreparing: false',
         description:
           'Modal with dismissWhilePreparing: false. ESC is blocked while prepare is running. Click "Resolve" to finish loading, then ESC closes.',
         component: DismissWhilePreparingDisabledHarness,
-        codeKey: 'story-use-modal-dismiss-while-preparing-disabled',
+        codeKey: 'story-use-dialog-dismiss-while-preparing-disabled',
       },
       {
         title: 'dismissWhilePreparing — Default (true)',
         description:
           'Modal with default dismissWhilePreparing (true). ESC closes even while prepare is still running.',
         component: DismissWhilePreparingDefaultHarness,
-        codeKey: 'story-use-modal-dismiss-while-preparing-default',
+        codeKey: 'story-use-dialog-dismiss-while-preparing-default',
       },
       {
         title: 'Reopen Settles',
         description:
           'Regression: open() always settles — calling it while the modal is already open resolves immediately instead of hanging.',
         component: ReopenSettlesHarness,
-        codeKey: 'story-use-modal-reopen-settles',
+        codeKey: 'story-use-dialog-reopen-settles',
       },
       {
         title: 'Stable Identity',
         description:
           'open/openAndWait/handle keep the same reference across re-renders and a full open/close cycle — no ref dance needed to use them in effects.',
         component: StableIdentityHarness,
-        codeKey: 'story-use-modal-stable-identity',
+        codeKey: 'story-use-dialog-stable-identity',
       },
       {
         title: 'Backdrop Hit Testing',
         description:
           'A backdrop click is identified by its target, not coordinates: keyboard-activated buttons (which report a click at 0,0) must not dismiss, and content clicks must still bubble to ancestors.',
         component: BackdropHitTestHarness,
-        codeKey: 'story-use-modal-backdrop-hit-test',
+        codeKey: 'story-use-dialog-backdrop-hit-test',
       },
     ],
   },

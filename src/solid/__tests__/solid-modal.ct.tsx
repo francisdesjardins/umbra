@@ -28,11 +28,11 @@ import {
 
 /**
  * `umbra/solid`, against a real browser and a real `<dialog>` — deliberately the same assertions
- * `use-modal.ct.tsx` makes of React, in the same order, because the claim is one shared surface.
+ * `use-dialog.ct.tsx` makes of React, in the same order, because the claim is one shared surface.
  * Tests with no React counterpart cover what only a fine-grained renderer can get wrong.
  */
 
-test.describe('useModal (Solid)', () => {
+test.describe('useDialog (Solid)', () => {
   test('modal is initially closed', async ({ mount, page }) => {
     await mount(<SolidBasicHarness />);
     await expect(page.getByTestId('is-visible')).toHaveText('closed');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useModal } from '../../react.js';
+import { useDialog } from '../../react.js';
 
 /**
  * Three stops in a panel. `containFocus` is a prop so the same stops walk out when off and wrap
@@ -13,7 +13,7 @@ export function FocusContainmentHarness({
   readonly containFocus: boolean;
   readonly nonModal?: boolean;
 }) {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment',
     ...(nonModal ? { nonModal: true as const } : { nonModal: false as const }),
     containFocus,
@@ -63,7 +63,7 @@ export function FocusContainmentHarness({
  * land *after* the real last stop, so "the last one" never matches and the wrap never fires.
  */
 export function RovingToolbarHarness() {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment-toolbar',
     nonModal: true,
     containFocus: true,
@@ -127,7 +127,7 @@ export function RovingToolbarHarness() {
  * `keydown` approach cannot see the Tab that leaves it — but the browser walks onto a marker.
  */
 export function FramedContentHarness() {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment-frame',
     nonModal: true,
     containFocus: true,
@@ -174,7 +174,7 @@ export function FramedContentHarness() {
 export function HiddenStopHarness() {
   const [hideMiddle, setHideMiddle] = useState(false);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment-hidden',
     nonModal: true,
     containFocus: true,
@@ -230,7 +230,7 @@ export function HiddenStopHarness() {
  * tag, so a scan of those never proposes it and the wrap hands focus back where it started.
  */
 export function EditableContentHarness() {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment-editable',
     nonModal: true,
     containFocus: true,
@@ -279,7 +279,7 @@ export function EditableContentHarness() {
  * the recovery is the unconditional half and must not need the flag.
  */
 export function EditableOnlyHarness() {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'focus-containment-editable-only',
     nonModal: true,
     ariaLabel: 'Editor panel',
@@ -325,7 +325,7 @@ export function EditableOnlyHarness() {
  * and only `Shift+Tab` discriminates — it scans from the end, where the nested button sits.
  */
 export function NestedPanelScanHarness() {
-  const panel = useModal({
+  const panel = useDialog({
     id: 'nested-scan-panel',
     nonModal: true,
     ariaLabel: 'Panel inside the modal',
@@ -341,7 +341,7 @@ export function NestedPanelScanHarness() {
     },
   });
 
-  const outer = useModal({
+  const outer = useDialog({
     id: 'nested-scan-outer',
     ariaLabel: 'Outer modal',
     style: { width: '420px', height: '420px' },

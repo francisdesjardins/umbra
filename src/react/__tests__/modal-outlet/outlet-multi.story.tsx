@@ -1,11 +1,11 @@
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: multiple modals in one outlet ─────────────────────────────────
 
 function ModalA() {
-  const { open, isVisible, dialogManager } = useModal<void, 'done-a'>({
+  const { open, isVisible, dialogManager } = useDialog<void, 'done-a'>({
     id: 'outlet-multi-a',
     render: ({ handle }) => {
       return (
@@ -45,7 +45,7 @@ function ModalA() {
 }
 
 function ModalB() {
-  const { open, isVisible, dialogManager } = useModal<void, 'done-b'>({
+  const { open, isVisible, dialogManager } = useDialog<void, 'done-b'>({
     id: 'outlet-multi-b',
     render: ({ handle }) => {
       return (

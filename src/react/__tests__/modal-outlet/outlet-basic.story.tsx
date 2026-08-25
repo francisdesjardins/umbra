@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: basic outlet renders modal without {Modal} in JSX ─────────────
 
 function InnerModal({ onCloseReason }: { readonly onCloseReason: (r: string) => void }) {
-  const { open, isVisible, isPreparing } = useModal<void, 'confirm'>({
+  const { open, isVisible, isPreparing } = useDialog<void, 'confirm'>({
     id: 'outlet-basic',
     render: ({ handle }) => {
       return (

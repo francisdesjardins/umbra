@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDialogManager } from '../../../react/use-dialog-manager.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -12,7 +12,7 @@ export function ImperativeHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { Modal, dialogManager } = useModal<void, 'close' | 'dm-imperative'>({
+  const { Modal, dialogManager } = useDialog<void, 'close' | 'dm-imperative'>({
     id: 'dm-imperative',
     render: ({ handle }) => {
       return (

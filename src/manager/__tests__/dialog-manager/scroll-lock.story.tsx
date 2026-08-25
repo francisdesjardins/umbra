@@ -1,4 +1,4 @@
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -7,7 +7,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * opts into `--dialog-scrollbar-width`: user-land can use it, the library never touches it.
  */
 export function ScrollLockHarness() {
-  const { Modal, dialogManager } = useModal<void, 'done'>({
+  const { Modal, dialogManager } = useDialog<void, 'done'>({
     id: 'scroll-lock-modal',
     render: ({ handle }) => {
       return (
@@ -34,7 +34,7 @@ export function ScrollLockHarness() {
   });
 
   // Stacked on the first: both lock, but the compensation must be applied exactly once.
-  const { Modal: Modal2 } = useModal<void, 'done'>({
+  const { Modal: Modal2 } = useDialog<void, 'done'>({
     id: 'scroll-lock-modal-2',
     render: ({ handle }) => {
       return (
@@ -52,7 +52,7 @@ export function ScrollLockHarness() {
     },
   });
 
-  const { Modal: NonModal } = useModal<void, 'done'>({
+  const { Modal: NonModal } = useDialog<void, 'done'>({
     id: 'scroll-lock-non-modal',
     nonModal: true,
     // Viewport-anchored: this harness tests scroll locking, not contained positioning.

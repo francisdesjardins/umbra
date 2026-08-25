@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Key, useModal } from '../../react.js';
+import { Key, useDialog } from '../../react.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
 /**
@@ -9,7 +9,7 @@ import { dialogStyle } from '../../__tests__/story-styles.js';
  * modal's render only because the top layer swallows outside clicks — the trigger is placement.
  */
 export function OpeningFocusForegroundHarness() {
-  const panel = useModal<void, 'ok'>({
+  const panel = useDialog<void, 'ok'>({
     id: 'off-panel',
     nonModal: true,
     ariaLabel: 'Panel underneath',
@@ -24,7 +24,7 @@ export function OpeningFocusForegroundHarness() {
     },
   });
 
-  const interruption = useModal<void, 'stay'>({
+  const interruption = useDialog<void, 'stay'>({
     id: 'off-interruption',
     ariaLabel: 'Interruption in front',
     render: ({ action }) => {
@@ -86,7 +86,7 @@ export function OpeningFocusForegroundHarness() {
  * It opens on a **timer** — a click would move focus to the opener and pass for the wrong reason.
  */
 export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean }) {
-  const behind = useModal<void, 'ack'>({
+  const behind = useDialog<void, 'ack'>({
     id: 'rf-behind',
     ariaLabel: 'The one behind',
     ...(behindIsModal ? {} : { nonModal: true }),
@@ -104,7 +104,7 @@ export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean 
     },
   });
 
-  const front = useModal<void, 'done'>({
+  const front = useDialog<void, 'done'>({
     id: 'rf-front',
     ariaLabel: 'The one in front',
     render: ({ action, handle }) => {
@@ -176,7 +176,7 @@ export function ReclaimFocusHarness({ behindIsModal }: { behindIsModal: boolean 
  * to `dialog.focus()`, which an open `<dialog>` refuses, leaving the keyboard on `<body>`.
  */
 export function ReclaimWithoutClaimHarness() {
-  const modal = useModal({
+  const modal = useDialog({
     id: 'reclaim-no-claim',
     ariaLabel: 'A modal that claims no opening focus',
     render: ({ action }) => {
@@ -193,7 +193,7 @@ export function ReclaimWithoutClaimHarness() {
     },
   });
 
-  const panel = useModal({
+  const panel = useDialog({
     id: 'reclaim-panel',
     nonModal: true,
     ariaLabel: 'A panel opening underneath',
@@ -242,7 +242,7 @@ export function ShadowReclaimWithoutClaimHarness() {
     setShadow(host.attachShadow({ mode: 'open' }));
   }, []);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'shadow-reclaim-no-claim',
     ariaLabel: 'A modal in a shadow root that claims no opening focus',
     render: ({ action }) => {
@@ -259,7 +259,7 @@ export function ShadowReclaimWithoutClaimHarness() {
     },
   });
 
-  const panel = useModal({
+  const panel = useDialog({
     id: 'shadow-reclaim-panel',
     nonModal: true,
     ariaLabel: 'A panel opening underneath, in the same root',

@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { RegisteredModalId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
-import type { UseModalReturn } from '../types.js';
-import { useModal } from '../use-modal.js';
+import type { UseDialogReturn } from '../types.js';
+import { useDialog } from '../use-dialog.js';
 import { slideAnimation, slideDialogStyle } from '../../templates/slide-geometry.js';
 import {
   buildModalOptions,
@@ -33,7 +33,7 @@ export type RegisteredSlideContext<TId> = RegisteredBaseRenderContext<TId> & {
 /**
  * Options for `useSlideModal`.
  * @typeParam TData - Typed data payload from close, declared here and nowhere else. Default `void`.
- * @typeParam TReason - The reasons this panel closes with; declare them, see `useModal`.
+ * @typeParam TReason - The reasons this panel closes with; declare them, see `useDialog`.
  */
 export type UseSlideModalOptions<
   TData = void,
@@ -56,7 +56,7 @@ export type UseSlideModalOptions<
 };
 
 /** Return type of `useSlideModal`. */
-export type UseSlideModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+export type UseSlideModalReturn<TData = void, TReason extends string = string> = UseDialogReturn<
   TData,
   TReason
 >;
@@ -97,11 +97,11 @@ export function useSlideModal<TData = void, TReason extends string = string>(
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
 ): UseSlideModalReturn<TData, TReason> {
-  // Inline non-modal panels anchor to their container, not the viewport — see `useModal`.
+  // Inline non-modal panels anchor to their container, not the viewport — see `useDialog`.
   const contained = options.nonModal === true && options.portal !== true;
   const align = options.align ?? 'stretch';
 
-  return useModal<TData, TReason>({
+  return useDialog<TData, TReason>({
     // Spelled out for the reason `useMessageModal` gives.
     ...buildModalOptions<
       TData,

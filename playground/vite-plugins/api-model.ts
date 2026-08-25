@@ -29,7 +29,7 @@ const ENTRY_LABEL: Record<string, string> = {
 
 /**
  * How a symbol is addressed downstream: the specifier it ships from, then its name. The bindings
- * export the same words (`useModal`, `ModalHandle`) with different signatures, so keying on the
+ * export the same words (`useDialog`, `ModalHandle`) with different signatures, so keying on the
  * bare name shows one binding's declaration under another's specifier.
  */
 export const symbolKey = (specifier: string, name: string): string => {
@@ -172,15 +172,15 @@ export const CATEGORIES: readonly CategoryDef[] = [
     ],
   },
   {
-    id: 'use-modal',
-    label: 'useModal',
+    id: 'use-dialog',
+    label: 'useDialog',
     specifier: REACT,
     blurb: 'The base hook — one native dialog, its render callback, its typed close result.',
     symbols: [
-      'useModal',
-      'UseModalOptions',
-      'UseModalBaseOptions',
-      'UseModalReturn',
+      'useDialog',
+      'UseDialogOptions',
+      'UseDialogBaseOptions',
+      'UseDialogReturn',
       'ModalRenderArgs',
       'ModalHandle',
       'ModalVariant',
@@ -193,7 +193,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'templates',
     label: 'Template hooks',
     specifier: REACT,
-    blurb: 'useModal pre-shaped for the two layouts that come up every time: message and slide.',
+    blurb: 'useDialog pre-shaped for the two layouts that come up every time: message and slide.',
     symbols: [
       'useMessageModal',
       'UseMessageModalOptions',
@@ -238,16 +238,16 @@ export const CATEGORIES: readonly CategoryDef[] = [
     ],
   },
   {
-    id: 'solid-use-modal',
-    label: 'useModal',
+    id: 'solid-use-dialog',
+    label: 'useDialog',
     specifier: SOLID,
     blurb:
       'The same hook, the same words. Two differences and both are the renderer’s: the live values are getters over signals, so do not destructure the render args — and `portal: true` mounts the dialog itself, leaving `Modal` as null.',
     symbols: [
-      'useModal',
-      'UseModalOptions',
-      'UseModalBaseOptions',
-      'UseModalReturn',
+      'useDialog',
+      'UseDialogOptions',
+      'UseDialogBaseOptions',
+      'UseDialogReturn',
       'ModalRenderArgs',
       'ModalHandle',
       'ModalVariant',
@@ -261,7 +261,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     label: 'Template hooks',
     specifier: SOLID,
     blurb:
-      'Message and slide, built on Solid’s useModal — the same three lines over the same framework-free geometry the React pair uses.',
+      'Message and slide, built on Solid’s useDialog — the same three lines over the same framework-free geometry the React pair uses.',
     symbols: [
       'useMessageModal',
       'UseMessageModalOptions',
@@ -994,7 +994,7 @@ async function buildModel(
 
   // Two indexes because a re-exported type is **one** reflection: `ModalHandle` is named by all
   // three bindings but materialises under whichever entry point typedoc walked first, so a binding
-  // must fall back to it. `UseModalOptions` is the opposite — two aliases, two keys, no fallback.
+  // must fall back to it. `UseDialogOptions` is the opposite — two aliases, two keys, no fallback.
   const declarations = new Map<string, Declaration>();
   const byName = new Map<string, Declaration[]>();
   for (const module of root.children ?? []) {

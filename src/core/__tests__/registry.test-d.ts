@@ -8,7 +8,7 @@
 
 import type { DataOf, ModalId, PayloadOf, ReasonOf } from '../registry.js';
 import { dialogManager } from '../../manager/dialog-manager.js';
-import { useModal } from '../../react/use-modal.js';
+import { useDialog } from '../../react/use-dialog.js';
 
 // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- the two-signature identity trick needs a parameter the rule counts as used once
 type Equals<A, B> =
@@ -36,7 +36,7 @@ export function _doorsStayOpen(id: string) {
 
 /** And the hook keeps the signature the docs mandate: reasons declared at the call site. */
 export function HookKeepsItsGenerics() {
-  return useModal<{ name: string }, 'save' | 'cancel'>({
+  return useDialog<{ name: string }, 'save' | 'cancel'>({
     id: 'some-modal',
     ariaLabel: 'Some modal',
     render: ({ handle }) => {

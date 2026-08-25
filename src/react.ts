@@ -7,7 +7,7 @@
  */
 
 export { ModalOutlet } from './react/modal-outlet.js';
-export { useModal } from './react/use-modal.js';
+export { useDialog } from './react/use-dialog.js';
 
 export { useMessageModal } from './react/templates/use-message-modal.js';
 export { useSlideModal } from './react/templates/use-slide-modal.js';
@@ -30,9 +30,9 @@ export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from '.
 // The four the core leaves open, with style and node turned to `CSSProperties` and `ReactNode`.
 export type {
   ModalAnimation,
-  UseModalBaseOptions,
-  UseModalOptions,
-  UseModalReturn,
+  UseDialogBaseOptions,
+  UseDialogOptions,
+  UseDialogReturn,
 } from './react/types.js';
 
 // Actions are declared by being rendered — `render` is handed an `ActionFactory` and there is no

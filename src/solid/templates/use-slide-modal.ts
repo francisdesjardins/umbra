@@ -16,8 +16,8 @@ import {
   type RegisteredTemplateOptions,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
-import { useModal } from '../use-modal.js';
-import type { UseModalReturn } from '../types.js';
+import { useDialog } from '../use-dialog.js';
+import type { UseDialogReturn } from '../types.js';
 
 export type { SlideAlign, SlideDirection };
 
@@ -57,7 +57,7 @@ export type UseSlideModalOptions<
 };
 
 /** Return type of `useSlideModal`. */
-export type UseSlideModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+export type UseSlideModalReturn<TData = void, TReason extends string = string> = UseDialogReturn<
   TData,
   TReason
 >;
@@ -83,11 +83,11 @@ export function useSlideModal<TData = void, TReason extends string = string>(
 export function useSlideModal<TData = void, TReason extends string = string>(
   options: UseSlideModalOptions<TData, TReason>
 ): UseSlideModalReturn<TData, TReason> {
-  // Inline non-modal panels anchor to their container, not the viewport — see `useModal`.
+  // Inline non-modal panels anchor to their container, not the viewport — see `useDialog`.
   const contained = options.nonModal === true && options.portal !== true;
   const align = options.align ?? 'stretch';
 
-  return useModal<TData, TReason>({
+  return useDialog<TData, TReason>({
     ...buildModalOptions<
       TData,
       SlideModalRenderContext<TData, TReason>,

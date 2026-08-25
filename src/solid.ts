@@ -18,7 +18,7 @@
  * and the root is re-exported wholesale below, so an app imports this one path.
  */
 
-export { useModal } from './solid/use-modal.js';
+export { useDialog } from './solid/use-dialog.js';
 export { ModalOutlet } from './solid/modal-outlet.js';
 
 export { useMessageModal } from './solid/templates/use-message-modal.js';
@@ -43,9 +43,9 @@ export type { ModalHandle, ModalRenderArgs, ModalVariant, AwaitedClose } from '.
 // names and meanings, a different instantiation.
 export type {
   ModalAnimation,
-  UseModalBaseOptions,
-  UseModalOptions,
-  UseModalReturn,
+  UseDialogBaseOptions,
+  UseDialogOptions,
+  UseDialogReturn,
 } from './solid/types.js';
 
 export type {

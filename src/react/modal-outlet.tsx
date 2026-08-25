@@ -19,7 +19,7 @@ type ModalOutletContextValue = {
 const ModalOutletContext = createContext<ModalOutletContextValue | null>(null);
 
 /**
- * The nearest outlet context, or `null` when none wraps the caller — then `useModal` returns the
+ * The nearest outlet context, or `null` when none wraps the caller — then `useDialog` returns the
  * dialog via `Modal` as usual.
  *
  * @internal Not part of the public API.
@@ -32,7 +32,7 @@ export function useModalOutletContext(): ModalOutletContextValue | null {
 // element only renders while some component returns it and the consumer must never write
 // `{Modal}`. Two inherent costs: registration is an effect (mutating an external store during
 // render breaks concurrent rendering), so content lands one commit behind its owner — not a visible
-// frame, see the paint-timing note in `use-modal.tsx` — and every descendant render republishes,
+// frame, see the paint-timing note in `use-dialog.tsx` — and every descendant render republishes,
 // re-rendering the outlet cheaply (`children` is unchanged, so React bails out). Two redesigns
 // rejected: a portal-anchor outlet removes both but reintroduces `{Modal}`; a per-modal host
 // component would confine the second, for no measurable win.
@@ -76,7 +76,7 @@ type OutletStoreMethods = {
 };
 
 /**
- * Scoped outlet that renders the dialogs of every descendant `useModal` call, so nothing has to
+ * Scoped outlet that renders the dialogs of every descendant `useDialog` call, so nothing has to
  * place `{modal.Modal}` in JSX. Inside one a modal registers here instead and its `Modal` becomes
  * `null` — destructuring still works, it renders nothing. Outlets nest: the nearest wins.
  * @example
@@ -91,7 +91,7 @@ type OutletStoreMethods = {
  * }
  *
  * function Dashboard() {
- *   const { open } = useModal({ id: 'info', render: () => <div>Hello</div> });
+ *   const { open } = useDialog({ id: 'info', render: () => <div>Hello</div> });
  *   // No need to render `Modal` — the outlet handles it.
  *   return (
  *     <button
@@ -107,7 +107,7 @@ type OutletStoreMethods = {
  */
 export function ModalOutlet({ children }: { readonly children: ReactNode }) {
   // Created once with the store so its identity is stable: a fresh context object per render would
-  // re-render every descendant `useModal`, which re-registers, which is a loop.
+  // re-render every descendant `useDialog`, which re-registers, which is a loop.
   const [init] = useState(() => {
     const store = createOutletStore();
     const ctx: ModalOutletContextValue = {
@@ -121,7 +121,7 @@ export function ModalOutlet({ children }: { readonly children: ReactNode }) {
     return { store, ctx };
   });
 
-  // Server-readable for the reason on `useModal`: the outlet's store is built above and holds no DOM.
+  // Server-readable for the reason on `useDialog`: the outlet's store is built above and holds no DOM.
   const snap = useSyncExternalStore(
     init.store.subscribe,
     init.store.getSnapshot,

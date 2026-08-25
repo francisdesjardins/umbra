@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -12,7 +12,7 @@ function Inner() {
   const [count, setCount] = useState(0);
   const [paintedCount, setPaintedCount] = useState('-');
 
-  const { open, isVisible } = useModal({
+  const { open, isVisible } = useDialog({
     id: 'outlet-paint-timing',
     render: () => {
       return (

@@ -83,7 +83,7 @@ test.describe('the compatibility matrix', () => {
     });
     expect(
       unknown,
-      `These rows name options that no longer exist on UseModalBaseOptions or ModalVariant: ${unknown.join(', ')}`
+      `These rows name options that no longer exist on UseDialogBaseOptions or ModalVariant: ${unknown.join(', ')}`
     ).toEqual([]);
 
     const duplicated = rows.filter((row, index) => {

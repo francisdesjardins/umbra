@@ -22,7 +22,7 @@
 /**
  * The attributes as they are **on the element**, not as they were passed as options.
  *
- * That distinction is the whole reason this takes strings rather than `UseModalOptions`: in
+ * That distinction is the whole reason this takes strings rather than `UseDialogOptions`: in
  * `umbra/vanilla` the `<dialog>` is the caller's own markup, and `setDialogAttributes` skips
  * `undefined` precisely so an `aria-labelledby` they wrote by hand survives an option they never
  * passed. Reading the options there would report a perfectly named dialog as anonymous, and miss

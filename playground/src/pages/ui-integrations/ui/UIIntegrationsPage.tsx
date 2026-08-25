@@ -12,7 +12,7 @@ export const UIIntegrationsPage = () => {
     >
       <ExampleSection
         title="The same modal, two stacks"
-        description="Both files call one useForm and one useModal, declare the same actions and return the same typed payload. Everything they disagree about is markup. Material UI supplies Box, Stack, TextField and a theme; the <dialog>, the focus and the close reasons stay the library's."
+        description="Both files call one useForm and one useDialog, declare the same actions and return the same typed payload. Everything they disagree about is markup. Material UI supplies Box, Stack, TextField and a theme; the <dialog>, the focus and the close reasons stay the library's."
       >
         <ExampleGrid>
           <ExampleCard

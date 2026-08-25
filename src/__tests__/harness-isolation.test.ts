@@ -23,7 +23,7 @@ const UNWRAPPED_BINDINGS = ['solid', 'vanilla'] as const;
 
 /** Importing one of these means the file builds a modal, so it owns which registry it lands in. */
 const BUILDS_A_MODAL =
-  /from '(?:\.\.\/(?:bind-dialog|use-modal)\.js|\.\.\/templates\/[^']+\.js|\.\.\/\.\.\/(?:solid|vanilla)\.js)'/;
+  /from '(?:\.\.\/(?:bind-dialog|use-dialog)\.js|\.\.\/templates\/[^']+\.js|\.\.\/\.\.\/(?:solid|vanilla)\.js)'/;
 
 /** Either way of naming one: Solid wraps a provider, vanilla passes the instance. */
 const NAMES_A_MANAGER = /createDialogManager|DialogManagerProvider/;

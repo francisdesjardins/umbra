@@ -10,7 +10,7 @@ import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/ex
  * The list is the point. An id is a string the manager routes on, so without somewhere to write
  * them down "which component owns `stack-priority-warning`" is a grep — and with them written down
  * it is find-references on the key. The typing follows: a declared modal infers its payload and its
- * reasons at every `useModal` call, and `close` refuses a reason belonging to a different one.
+ * reasons at every `useDialog` call, and `close` refuses a reason belonging to a different one.
  *
  * **The list is not enforced to be complete**, which is what lets `/stories` render the library's
  * own harnesses — a few hundred modals this app does not own. Adding a line is still worth it: an

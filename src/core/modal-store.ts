@@ -6,7 +6,7 @@ import type { CloseResolver, CloseResult, ModalStoreSnapshot } from './types.js'
 const log = createLogger('modal');
 
 /**
- * The whole `useModal` state machine, with no framework in it — `createStore` for the
+ * The whole `useDialog` state machine, with no framework in it — `createStore` for the
  * subscribe/getSnapshot contract, closure variables for what must not be reactive (pending
  * resolvers, the animation frame, the current `onClose`).
  *
@@ -16,7 +16,7 @@ const log = createLogger('modal');
  *
  * DOM access stays outside, behind a getter, or the store taints as ref-like to the React Compiler.
  *
- * @typeParam TData - The close payload this modal carries. `useModal<TData>` instantiates
+ * @typeParam TData - The close payload this modal carries. `useDialog<TData>` instantiates
  * it, which is what makes the whole close path — `close()`, the resolver queue, `onClose`,
  * `openAndWait()` — agree on one payload type without a single assertion.
  */

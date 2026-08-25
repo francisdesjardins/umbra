@@ -87,9 +87,9 @@ try {
   writeFileSync(
     join(sandbox, 'react-entry.ts'),
     [
-      "import { useModal, useMessageModal, useSlideModal } from 'umbra/react';",
+      "import { useDialog, useMessageModal, useSlideModal } from 'umbra/react';",
       "import { ModalOutlet, dialogManager } from 'umbra/react';",
-      'export const used = [useModal, useMessageModal, useSlideModal,',
+      'export const used = [useDialog, useMessageModal, useSlideModal,',
       '  ModalOutlet, dialogManager];',
     ].join('\n')
   );
@@ -109,9 +109,9 @@ try {
   writeFileSync(
     join(sandbox, 'solid-entry.ts'),
     [
-      "import { useModal, useMessageModal, useSlideModal } from 'umbra/solid';",
+      "import { useDialog, useMessageModal, useSlideModal } from 'umbra/solid';",
       "import { ModalOutlet, fromStore, dialogManager } from 'umbra/solid';",
-      'export const used = [useModal, useMessageModal, useSlideModal,',
+      'export const used = [useDialog, useMessageModal, useSlideModal,',
       '  ModalOutlet, fromStore, dialogManager];',
     ].join('\n')
   );
@@ -122,7 +122,7 @@ try {
     join(sandbox, 'inference.ts'),
     [
       "import { MODAL_OPEN_EVENT, MODAL_CLOSE_EVENT, dialogManager } from 'umbra';",
-      "import { useModal } from 'umbra/react';",
+      "import { useDialog } from 'umbra/react';",
       "import type { ModalHandle } from 'umbra/react';",
       '',
       '// No cast: the augmentation must survive into the published declarations.',
@@ -147,7 +147,7 @@ try {
       '',
       '// Reasons declared on the hook are enforced at every door. This holds only if the',
       '// published declarations carry `TReason` through the factory, the handle and onClose.',
-      "const modal = useModal<{ id: string }, 'save' | 'cancel'>({",
+      "const modal = useDialog<{ id: string }, 'save' | 'cancel'>({",
       "  id: 'declared',",
       '  render: ({ action, handle }) => {',
       "    action('save', (close) => { close({ id: 'a' }); });",
@@ -313,7 +313,7 @@ report(vanilla.leaks.length === 0 && vanilla.seen.size > 3, {
 // `react({ babel: … })` is accepted under this Vite and transforms *nothing*, so the bundle once
 // shipped uncompiled while the source was documented as compiled. Both halves are asserted — a
 // `compiler-runtime` import alone survives a build that compiled one trivial function and bailed.
-const compiled = readFileSync(join(DIST, 'esm', 'react', 'use-modal.js'), 'utf8');
+const compiled = readFileSync(join(DIST, 'esm', 'react', 'use-dialog.js'), 'utf8');
 const hasRuntime = compiled.includes('react/compiler-runtime');
 const hasMemoCache = /\bc\(\d+\)/.test(compiled);
 report(hasRuntime && hasMemoCache, {
@@ -327,8 +327,8 @@ report(hasRuntime && hasMemoCache, {
         : 'no `react/compiler-runtime` import at all — the plugin did not run',
 });
 
-// The Solid binding must not be: the compiler names hooks by convention and it exports `useModal`.
-const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-modal.js'), 'utf8');
+// The Solid binding must not be: the compiler names hooks by convention and it exports `useDialog`.
+const solidSource = readFileSync(join(DIST, 'esm', 'solid', 'use-dialog.js'), 'utf8');
 report(!solidSource.includes('compiler-runtime'), {
   label: 'the Solid binding is not compiled — no compiler-runtime in it',
 });
@@ -346,14 +346,14 @@ report(!solidSource.includes('compiler-runtime'), {
 {
   const { renderToString } = await import('react-dom/server');
   const { createElement } = await import('react');
-  const { useModal } = await import(pathToFileURL(join(DIST, 'esm', 'react.js')).href);
+  const { useDialog } = await import(pathToFileURL(join(DIST, 'esm', 'react.js')).href);
 
   let html = '';
   let threw = '';
   try {
     html = renderToString(
       createElement(() => {
-        return useModal({
+        return useDialog({
           id: 'ssr-check',
           ariaLabel: 'SSR check',
           render: () => {

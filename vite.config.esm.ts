@@ -26,10 +26,10 @@ export default defineConfig({
     // `react({ babel: … })` is the pre-rolldown form: under Vite 8 it is accepted and silently
     // transforms nothing, which is how the shipped bundle came to carry no compiler output at all
     // while the source was written — and documented — as if it did. The evidence is one grep:
-    // a compiled `use-modal.js` opens with `_c(…)` and imports `react/compiler-runtime`.
+    // a compiled `use-dialog.js` opens with `_c(…)` and imports `react/compiler-runtime`.
     babel({
       // **Scoped to the React binding, and this is not tidiness.** The compiler decides what a
-      // hook is by name, and `umbra/solid` exports `useModal`, `useLookup` and two template hooks
+      // hook is by name, and `umbra/solid` exports `useDialog`, `useLookup` and two template hooks
       // — so unscoped it compiles Solid's hooks and writes `import { c } from
       // "react/compiler-runtime"` into the Solid binding, which is the one thing this package
       // promises never to do. Measured, not feared: it produced exactly that, and

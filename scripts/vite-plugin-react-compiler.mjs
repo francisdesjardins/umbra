@@ -7,7 +7,7 @@ import { relative, resolve } from 'node:path';
  * `{ babel: { plugins } }` is the pre-rolldown form, accepted under this Vite and transforming
  * nothing, and `@rolldown/plugin-babel` has no effect inside Playwright's component runner, which
  * bundles a Vite of its own. Scoped to `src/react/` because the compiler decides what a hook is by
- * name and `umbra/solid` exports `useModal`, `useLookup` and two template hooks — unscoped it
+ * name and `umbra/solid` exports `useDialog`, `useLookup` and two template hooks — unscoped it
  * writes `react/compiler-runtime` into the Solid binding. The path filter is separator-normalised
  * (Vite ids use `/`, `path.relative` the platform's own) or it matches nothing on Windows and the
  * plugin is a silent no-op. Both this and `ct-coverage` are `enforce: 'pre'`, so the array decides

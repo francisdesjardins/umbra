@@ -68,7 +68,7 @@ export type {
 
 // The same rule for `onError`'s payload: `ModalErrorSource` ships beside `ModalFailure` because its
 // doc promises an exhaustive `switch`, and one whose type has no name is not one. (`docs:check`
-// cannot ask for these, reaching them only through `UseModalBaseOptions`.)
+// cannot ask for these, reaching them only through `UseDialogBaseOptions`.)
 export type { ModalErrorSource, ModalFailure } from './core/types.js';
 
 // The reserved close reason, value and type: `CloseResult.reason` is `TReason | DismissReason`, and

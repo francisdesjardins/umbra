@@ -8,7 +8,7 @@
  */
 
 import { dialogManager } from '../src/manager/dialog-manager.js';
-import { useModal } from '../src/react/use-modal.js';
+import { useDialog } from '../src/react/use-dialog.js';
 import { useMessageModal } from '../src/react/templates/use-message-modal.js';
 import type { CloseOf, DataOf, ReasonOf } from '../src/core/registry.js';
 
@@ -80,7 +80,7 @@ export const _cancelRejectsData: CloseOf<'archive-room'> = {
 // ── At the hook ──────────────────────────────────────────────────────────────
 
 export function Hook() {
-  return useModal({
+  return useDialog({
     id: 'archive-room',
     ariaLabel: 'Archive room',
     render: ({ action, handle }) => {

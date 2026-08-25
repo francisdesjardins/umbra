@@ -39,7 +39,7 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 
 ## Code Style
 
-- **Files**: kebab-case (`use-modal.tsx`, `dialog-manager.ts`)
+- **Files**: kebab-case (`use-dialog.tsx`, `dialog-manager.ts`)
 - **Exports**: PascalCase types/components, camelCase functions/hooks
 - **Imports**: Inline type imports enforced — `import { useState, type ReactNode } from 'react'`
 - **Optional props**: Always `| undefined` suffix — `readonly animation?: ModalAnimation | undefined` (required by `exactOptionalPropertyTypes`)
@@ -50,11 +50,11 @@ Test files live in colocated `__tests__/` folders (e.g. `src/utils/__tests__/hot
 
 ## Architecture
 
-Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal`, `useSlideModal`).
+Two-layer design: core primitive (`useDialog`) + template hooks (`useMessageModal`, `useSlideModal`).
 
 - **State**: Closure-based stores bridged to React via `useSyncExternalStore` — not `useState`/`useReducer`
 - **Rendering**: Native `<dialog>` rendered inline by default (opt-in `portal: true` for `createPortal` to `document.body`); `dialog.showModal()` for backdrop + focus trapping
-- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, disabled, 'data-loading', 'aria-keyshortcuts'?: string | undefined }` to spread. **Every field is a DOM prop** — the core never guesses what your buttons are called, so the busy flag ships as `data-loading` and a wrapper maps it to its own (`loading` for MUI/Mantine, `busy` elsewhere). Declare the reasons on the hook (`useModal<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
+- **Actions**: declared by being rendered — `action('save', handler)` inside `render` returns `{ onClick, disabled, 'data-loading', 'aria-keyshortcuts'?: string | undefined }` to spread. **Every field is a DOM prop** — the core never guesses what your buttons are called, so the busy flag ships as `data-loading` and a wrapper maps it to its own (`loading` for MUI/Mantine, `busy` elsewhere). Declare the reasons on the hook (`useDialog<TData, 'save' | 'cancel'>`). Custom state via `createStore` alongside.
 - **Public API**: the root is [src/index.ts](../src/index.ts), the React binding [src/react.ts](../src/react.ts). Internal hooks in `src/hooks/` are NOT exported.
 - **Hotkeys**: declared on the action — `action('save', { hotkey: Key.Enter, onAction })` — not via a standalone `useHotkey` hook. Dispatch finds the button by `aria-keyshortcuts` — custom button wrappers **must forward that prop** or hotkeys silently break.
 
@@ -63,7 +63,7 @@ Two-layer design: core primitive (`useModal`) + template hooks (`useMessageModal
 These are hard constraints — never violate them when generating code:
 
 - **Headless-first**: never add UI components to the library (`src/`). Zero shipped UI — users own all rendering.
-- **Minimal surface**: prefer extending `useModal` over adding new template hooks.
+- **Minimal surface**: prefer extending `useDialog` over adding new template hooks.
 - **Asking vs instructing**: `dialogManager.open(id)` and `openAndWait(id)` instruct — the second waits for the close and resolves the same `[error, result]` tuple a hook does. `requestOpen(id, request)` asks and forgets; `requestOpenAndWait(id, request)` asks and returns an `OpenRequestOutcome` — the owner refuses with `request.refuse(reason)`, and acceptance is the default. Reach for the asking pair across an ownership boundary and the instructing one inside it. A payload crossing that boundary is `unknown` **in both directions** unless the id is in `ModalRegistry`: validate the request in `onOpenRequest`, and validate `outcome.closed`'s `data` before believing it.
 - **Ids may be declared**: a project augments `ModalRegistry` to give an id its `closesWith` (the reasons, or a payload per reason) and its `opensWith`; declaring is optional and per modal, so an undeclared id must keep working everywhere. A payload declared for a reason is required when closing with it.
 - **No abstraction leakage**: template hooks must not expose core internals (store, lifecycle refs, `ModalStoreSnapshot`).
@@ -81,7 +81,7 @@ These are hard constraints — never violate them when generating code:
 - **Never use** `useMemo`, `useCallback`, or `React.memo` — compiler handles memoization
 - **No ref writes during render** — use `useEffect` for ref updates; use `GetDialog` getter pattern instead of passing refs directly
 - **Store creation**: `const [init] = useState(() => createStore())` — not `useRef` (avoids ref-tainting)
-- **`createModalStore` lives in its own module** ([src/core/modal-store.ts](../src/core/modal-store.ts)) — verified compiler-neutral: `useModal` compiles to the same memo slots imported or colocated
+- **`createModalStore` lives in its own module** ([src/core/modal-store.ts](../src/core/modal-store.ts)) — verified compiler-neutral: `useDialog` compiles to the same memo slots imported or colocated
 - **`Map` writes are safe** — handler registries use `Map<string, handler>` (not treated as ref writes)
 - **Stable identities**: `open()`, `openAndWait()` and `handle` keep the same reference for the life of the hook — use them directly in dependency arrays, no ref indirection
 

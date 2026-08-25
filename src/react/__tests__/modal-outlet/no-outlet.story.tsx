@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function NoOutletHarness() {
   const [lastReason, setLastReason] = useState('');
 
-  const { open, isVisible, Modal } = useModal<void, 'confirm'>({
+  const { open, isVisible, Modal } = useDialog<void, 'confirm'>({
     id: 'no-outlet',
     render: ({ handle }) => {
       return (

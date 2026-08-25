@@ -9,7 +9,7 @@
 // It owns `checkout:receipt` through the React binding, and it asks Billing — a microfrontend it
 // never imports — to open a dialog it does not own.
 import { createOpenRequest, dialogManager, Key } from 'umbra';
-import { useModal } from 'umbra/react';
+import { useDialog } from 'umbra/react';
 import { createElement as h, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createLog } from './log.js';
@@ -68,7 +68,7 @@ function asReceipt(data) {
 function Checkout() {
   const [amount, setAmount] = useState(240);
 
-  const receipt = useModal({
+  const receipt = useDialog({
     id: 'checkout:receipt',
     ariaLabel: 'Receipt',
     // Billing can ask this dialog to open too — the traffic runs both ways.

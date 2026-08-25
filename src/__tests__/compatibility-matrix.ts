@@ -133,7 +133,7 @@ export type Cell = OpenSince & {
 
 /** One option, and what it does and does not combine with. */
 export type OptionRow = {
-  /** Must be a member of `UseModalBaseOptions` or `ModalVariant` — the gate checks both ways. */
+  /** Must be a member of `UseDialogBaseOptions` or `ModalVariant` — the gate checks both ways. */
   readonly option: string;
   readonly dependsOn?: readonly string[];
   readonly excludes?: readonly string[];
@@ -228,7 +228,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'Escape defers to the action that claimed it',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'dismissKey: false disables all key-based dismissal',
       },
     ],
@@ -320,15 +320,15 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'a controller destroyed mid-prepare does not leave the dialog marked busy',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'closing aborts the work it started',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'a prepare that throws is reported, and the modal still settles',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'a modal with no prepare is not busy to begin with',
       },
     ],
@@ -345,11 +345,11 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     note: 'Both may be passed and the platform prefers `aria-labelledby`; nothing rejects the pair. Omitted entirely when absent, because `aria-label=""` would hide the omission from an audit.',
     references: [
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: '`ariaLabel` names the dialog for assistive technology',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'a dialog given no name has none — the library never invents one',
       },
     ],
@@ -365,7 +365,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'reports a reference the caller’s markup gets wrong',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'reports an `ariaLabelledBy` that points at no element',
       },
       {
@@ -384,7 +384,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     note: 'Not required by `role: "alertdialog"`, deliberately: the APG says to omit a description when the content has semantic structure, so a type would turn a conditional recommendation into a rule.',
     references: [
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title:
           '`ariaLabelledBy` / `ariaDescribedBy` point at the content, and `role` can interrupt',
       },
@@ -430,7 +430,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
         title: 'portal places without relocating',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'a portal host of the caller’s own is where the dialog lands',
       },
       {
@@ -487,7 +487,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'closes with reason "confirm" via controller',
         },
       ],
@@ -517,7 +517,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'opens when open() is called',
         },
       ],
@@ -647,7 +647,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'ModalRegistry — project-level id and contract typing',
     react: {
       state: 'works',
-      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useModal`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
+      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useDialog`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useDialog<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
     },
     solid: {
       state: 'works',
@@ -727,7 +727,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'On the render args and the hook return. `isVisible` and `isPreparing` are not the two answers a caller needs after all: `isVisible` is true for both `open` and `closing`, so nothing but `phase` separates a panel that is leaving from one that is up — and the render callback, which decides what is on screen, carried neither. Transient state is what forces it: an action stops running before the exit animation ends, so a label read from `hasRunningAction` reverts with the panel still painted. The `closing` window is asserted rather than inferred: a harness asking for `{ duration: 0, exitDuration: 900 }` holds it for 900ms, which is a real exit and not a harness artefact — it used to finalize instantly because the transition check read the *entrance* duration at open and applied that verdict to the close.',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'phase reaches the render callback, and agrees with the hook return',
         },
       ],
@@ -778,7 +778,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
           title: 'the marked action takes the opening focus from the first focusable',
         },
       ],
@@ -809,7 +809,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
           title: 'a different button than the opening one keeps the focus on itself',
         },
       ],
@@ -842,7 +842,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Read through a ref, so a teardown reports to whichever handler is current rather than to the one captured when the effect last ran.',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'a prepare that throws is reported, and the modal still settles',
         },
       ],
@@ -874,7 +874,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'reports an `ariaLabelledBy` that points at no element',
         },
       ],
@@ -907,7 +907,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'The one attribute the library owns rather than relays — written both ways, `"false"` included, so a dialog is never silently stuck announcing itself as loading.',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'the dialog says it is loading, and stops saying so',
         },
       ],
@@ -940,15 +940,15 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'The attribute is the mechanism, not a decoration: dispatch queries `[aria-keyshortcuts]` and clicks what it finds, so a custom wrapper that drops the prop loses its hotkeys silently — pinned in both directions.',
       references: [
         {
-          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
           title: 'action buttons have aria-keyshortcuts when hotkey is declared',
         },
         {
-          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
           title: 'hotkey dispatch works through custom wrapper that forwards aria-keyshortcuts',
         },
         {
-          file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+          file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
           title: 'hotkey dispatch fails silently when wrapper drops aria-keyshortcuts',
         },
       ],
@@ -1096,7 +1096,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'custom dismissKey closes on that key, Escape does not',
         },
       ],
@@ -1148,7 +1148,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       state: 'works',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'the prop drives the dialog, and stays authoritative over an imperative open',
         },
       ],
@@ -1220,7 +1220,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'Portaled into the root with `createPortal`, which is the shape a web component hosting a React tree takes.',
       references: [
         {
-          file: 'src/react/__tests__/use-modal.ct.tsx',
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
           title: 'gets the library backdrop and its opening focus',
         },
       ],
@@ -1420,11 +1420,11 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     why: 'A modal opened from inside another renders its `<dialog>` in that subtree, so every event bubbles through the one underneath. `isOwnEventTarget` and `queryOwn` scope both the keydown and the hotkey dispatch.',
     references: [
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'the dismiss key unwinds the stack one modal per press, front to back',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'an outer modal never dispatches through a nested dialog’s button',
       },
     ],
@@ -1446,7 +1446,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     why: 'Put a modal with `dismissKey: false` in front of a non-modal panel and **nothing closes** — the modal was told not to listen and the panel is no longer the foreground. That is the right answer rather than a gap: the front dialog is what the user is looking at and it opted out, so falling through to the panel behind would close the one thing they cannot see. What makes it acceptable rather than a dead keyboard is measured separately — the press is **not swallowed**, so the application can still handle it, while a press the panel *does* claim is stopped at the capture phase and never reaches the page. Both halves of that are asserted.',
     references: [
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title:
           'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
       },
@@ -1503,7 +1503,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'the React Compiler is verified to have run',
     state: 'works',
-    why: '`verify:package` asserts both halves of the one grep the docs point at: the built `react/use-modal.js` imports React’s `compiler-runtime` **and** opens with a `c(n)` memo-cache allocation — the import alone would survive a build that compiled one trivial function and bailed on the hook. The complement is asserted too: the Solid binding must contain no `compiler-runtime`, since the compiler decides what a hook is by name and `umbra/solid` exports `useModal` as well. Seen to fail by restoring the pre-rolldown `react({ babel: … })` wiring, which is accepted and transforms nothing.',
+    why: '`verify:package` asserts both halves of the one grep the docs point at: the built `react/use-dialog.js` imports React’s `compiler-runtime` **and** opens with a `c(n)` memo-cache allocation — the import alone would survive a build that compiled one trivial function and bailed on the hook. The complement is asserted too: the Solid binding must contain no `compiler-runtime`, since the compiler decides what a hook is by name and `umbra/solid` exports `useDialog` as well. Seen to fail by restoring the pre-rolldown `react({ babel: … })` wiring, which is accepted and transforms nothing.',
   },
   {
     fact: 'nothing in the repo still needs TypeScript 6',
@@ -1553,7 +1553,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
         title: 'an action hotkey runs the same path its button does',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'the dismiss key unwinds the stack one modal per press, front to back',
       },
     ],
@@ -1570,7 +1570,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
         title: 'lets Tab walk out of it — which is what show() means',
       },
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title:
           'a deaf modal in front leaves the panel behind alone, and the press reaches the page',
       },
@@ -1598,7 +1598,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     why: 'Opening focus goes to the claim (`focusOnOpen`) or to what the platform chose, never to a dialog that is not in front; the restore after an action returns to whoever ran it; the reclaim when the stack moves prefers where the user actually was. Order inside the content is the caller’s markup, in DOM order, untouched — the library never rewrites a `tabindex`.',
     references: [
       {
-        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
         title: 'the marked action takes the opening focus from the first focusable',
       },
       {
@@ -1615,11 +1615,11 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     why: 'Every focus move the library makes on the user’s behalf carries `focusVisible: true`, because input modality would otherwise hide it: a dialog opened by mouse inherits “pointer”, and two engines out of three draw no ring on a library-made focus. The ring itself is the page’s own `:focus-visible` styling — the library asks for it, the caller draws it.',
     references: [
       {
-        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
         title: 'the opening focus is visibly focused, claimed or not',
       },
       {
-        file: 'src/actions/__tests__/use-modal-actions.ct.tsx',
+        file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
         title: 'the button it returns to is visibly focused, not silently',
       },
     ],
@@ -1639,7 +1639,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     why: 'The name is relayed and never invented (`aria-label=""` is refused), the role is a closed union that narrows with the variant, `aria-busy` is owned and written both ways, and the hotkey a button advertises through `aria-keyshortcuts` is the exact string dispatch queries — value and behaviour cannot drift apart. The labelling diagnostic reports the three ways the element can still end up lying.',
     references: [
       {
-        file: 'src/react/__tests__/use-modal.ct.tsx',
+        file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: '`ariaLabel` names the dialog for assistive technology',
       },
       {

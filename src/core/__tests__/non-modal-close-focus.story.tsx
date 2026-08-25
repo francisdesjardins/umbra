@@ -1,4 +1,4 @@
-import { useModal } from '../../react.js';
+import { useDialog } from '../../react.js';
 
 /**
  * A trigger and a non-modal panel, for measuring where the keyboard goes when the panel closes.
@@ -14,7 +14,7 @@ export function NonModalCloseRestoreHarness({
 }: {
   readonly closeVia: 'action' | 'handle';
 }) {
-  const modal = useModal<void, 'done'>({
+  const modal = useDialog<void, 'done'>({
     id: 'nonmodal-close-restore',
     nonModal: true,
     ariaLabel: 'Closable panel',

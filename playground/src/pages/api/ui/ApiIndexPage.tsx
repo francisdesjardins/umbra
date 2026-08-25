@@ -15,10 +15,10 @@ import { ApiLayout } from './ApiLayout';
 import { KindBadge } from './KindBadge';
 import { RouterLink } from './RouterLink';
 
-/** Doors in, qualified: three bindings export `useModal`, so bare chips would repeat one word. */
+/** Doors in, qualified: three bindings export `useDialog`, so bare chips would repeat one word. */
 const START_HERE: readonly { readonly specifier: string; readonly name: string }[] = [
-  { specifier: 'umbra/react', name: 'useModal' },
-  { specifier: 'umbra/solid', name: 'useModal' },
+  { specifier: 'umbra/react', name: 'useDialog' },
+  { specifier: 'umbra/solid', name: 'useDialog' },
   { specifier: 'umbra/vanilla', name: 'bindDialog' },
   { specifier: 'umbra', name: 'dialogManager' },
 ];

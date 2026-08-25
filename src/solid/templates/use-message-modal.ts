@@ -10,8 +10,8 @@ import {
   type RegisteredTemplateOptions,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
-import { useModal } from '../use-modal.js';
-import type { UseModalReturn } from '../types.js';
+import { useDialog } from '../use-dialog.js';
+import type { UseDialogReturn } from '../types.js';
 
 /** Modal state and the close handle, passed to the MessageModal render function. */
 export type MessageModalRenderContext<
@@ -38,7 +38,7 @@ export type UseMessageModalOptions<
 >;
 
 /** Return type of `useMessageModal`. */
-export type UseMessageModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+export type UseMessageModalReturn<TData = void, TReason extends string = string> = UseDialogReturn<
   TData,
   TReason
 >;
@@ -61,7 +61,7 @@ export function useMessageModal<TData = void, TReason extends string = string>(
 export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason> {
-  return useModal<TData, TReason>({
+  return useDialog<TData, TReason>({
     // Spelled out because inference cannot reach through the `Omit` in `TemplateBaseOptions`.
     ...buildModalOptions<
       TData,

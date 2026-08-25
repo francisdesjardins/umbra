@@ -6,19 +6,19 @@ import type {
   ModalAnimation,
   ModalRenderArgs,
   ModalVariant,
-  UseModalBaseOptions,
+  UseDialogBaseOptions,
 } from '../core/types.js';
 
 /**
  * Options common to all template hooks (useMessageModal, useSlideModal).
  *
  * Stated as the **complement** of what a template owns rather than a list of what it forwards, so a
- * new `UseModalBaseOptions` option reaches every template by default and only a deliberate edit to
+ * new `UseDialogBaseOptions` option reaches every template by default and only a deliberate edit to
  * the exclusion list keeps it out; an enumeration of forwarded keys would let it reach no template
  * at all, with nothing to fail. The five exclusions: `id`, `render` and `onClose` are redeclared by
  * {@link TemplateBaseOptions} (`render` with the template's own context type), while `template` and
  * `clipContainer` are the template's to set. Intersected with `ModalVariant` directly, so the union
- * is not double-intersected the way omitting from `UseModalOptions` would.
+ * is not double-intersected the way omitting from `UseDialogOptions` would.
  *
  * @internal Not exported from index.ts.
  */
@@ -28,7 +28,7 @@ export type TemplateCommonOptions<
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
 > = Omit<
-  UseModalBaseOptions<TData, TReason, TStyle, TNode>,
+  UseDialogBaseOptions<TData, TReason, TStyle, TNode>,
   'id' | 'render' | 'onClose' | 'template' | 'clipContainer'
 > &
   ModalVariant;
@@ -131,7 +131,7 @@ function mergeStyle<TStyle extends DialogStyle>(
 }
 
 /**
- * Maps template options to `useModal` options, applying the template's own animation, style and
+ * Maps template options to `useDialog` options, applying the template's own animation, style and
  * name. A caller's `style` merges *over* the template's structural one rather than replacing it:
  * the placement makes it that template, but sizing is the caller's.
  *
@@ -148,7 +148,7 @@ export function buildModalOptions<
   defaults: {
     readonly animation: ModalAnimation<TStyle>;
     readonly style?: TStyle | undefined;
-    readonly template?: UseModalBaseOptions['template'];
+    readonly template?: UseDialogBaseOptions['template'];
   }
 ) {
   return {

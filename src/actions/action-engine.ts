@@ -9,7 +9,7 @@ const log = createLogger('action');
 
 /**
  * Execution and state for a modal's actions — a store plus a handler runner, React-free so a second
- * binding needs it unchanged; `useModal` owns one and hands out the `action()` factory that writes
+ * binding needs it unchanged; `useDialog` owns one and hands out the `action()` factory that writes
  * to it, so nothing has to be handed *in*. Actions are declared by being rendered, each pass
  * re-declaring what it draws, so a stale hotkey cannot keep suppressing the dismiss key.
  */
@@ -126,7 +126,7 @@ export function createActionEngine<TData, TReason extends string = string>(modal
       return store.run(reason, handler);
     },
 
-    /** The modal's own close function, bound once by `useModal`. */
+    /** The modal's own close function, bound once by `useDialog`. */
     bindClose(fn: (reason: TReason | DismissReason, data?: TData) => void): void {
       closeFn = fn;
     },
@@ -231,7 +231,7 @@ export type RenderWindow = {
  * makes it worth sharing: a `render` that throws must still close the window, or every later
  * `hasActions()` answers from a half-built map. It also has to live *outside* the hook, since the
  * React Compiler cannot lower a `try` with no `catch` and bails per function — inline, these four
- * lines leave the whole of `useModal` uncompiled.
+ * lines leave the whole of `useDialog` uncompiled.
  *
  * @example
  * const content = runDeclarationWindow(engine, () => {

@@ -1,7 +1,7 @@
 /**
  * Small fuzzy matcher — what a symbol filter needs, no more. Pass 1 is a **subsequence** scan
  * scored by where the letters land: a word-boundary or consecutive hit outweighs a mid-word one,
- * so `useModal` beats `UseSlideModalOptions` for `usmodal`. Pass 2 catches typos that scan cannot
+ * so `useDialog` beats `UseSlideModalOptions` for `usdialog`. Pass 2 catches typos that scan cannot
  * see (`modla`, `modul`) — Damerau–Levenshtein with a free start (Sellers' variant, approximate
  * _substring_ search), always scoring below a real subsequence hit so typos sort last. Ranges come
  * from pass 1 only: a typo hit has no honest character mapping to highlight.

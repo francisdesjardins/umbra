@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 import { fuzzyMatch, fuzzyRank } from '../fuzzy-match';
 
 const SYMBOLS = [
-  'useModal',
-  'useModalActions',
+  'useDialog',
+  'useDialogActions',
   'useMessageModal',
   'useSlideModal',
   'dialogManager',
@@ -38,11 +38,11 @@ const names = (query: string) => {
 
 test.describe('fuzzyMatch', () => {
   test('matches an exact substring', () => {
-    expect(fuzzyMatch('modal', 'useModal')).not.toBeNull();
+    expect(fuzzyMatch('dialog', 'useDialog')).not.toBeNull();
   });
 
   test('matches a gapped subsequence', () => {
-    expect(fuzzyMatch('usmodal', 'useModal')).not.toBeNull();
+    expect(fuzzyMatch('usdialog', 'useDialog')).not.toBeNull();
   });
 
   test('matches camelCase initials', () => {
@@ -50,12 +50,12 @@ test.describe('fuzzyMatch', () => {
   });
 
   test('is case insensitive both ways', () => {
-    expect(fuzzyMatch('USEMODAL', 'useModal')).not.toBeNull();
+    expect(fuzzyMatch('USEDIALOG', 'useDialog')).not.toBeNull();
     expect(fuzzyMatch('key', 'Key')).not.toBeNull();
   });
 
   test('rejects letters the target does not contain', () => {
-    expect(fuzzyMatch('zzz', 'useModal')).toBeNull();
+    expect(fuzzyMatch('zzz', 'useDialog')).toBeNull();
   });
 
   test('rejects an out-of-order query', () => {
@@ -64,17 +64,17 @@ test.describe('fuzzyMatch', () => {
   });
 
   test('an empty query matches everything with no highlight', () => {
-    expect(fuzzyMatch('  ', 'useModal')).toEqual({ score: 0, ranges: [] });
+    expect(fuzzyMatch('  ', 'useDialog')).toEqual({ score: 0, ranges: [] });
   });
 
   test('reports the matched ranges, merging consecutive hits', () => {
-    const match = fuzzyMatch('modal', 'useModal');
-    expect(match?.ranges).toEqual([[3, 8]]);
+    const match = fuzzyMatch('dialog', 'useDialog');
+    expect(match?.ranges).toEqual([[3, 9]]);
   });
 
   test('reports one range per run', () => {
-    // u·s·e·M·o·d·a·l — `u` alone, then `e`,`M`,`o`,`d` as one unbroken run.
-    const match = fuzzyMatch('uemod', 'useModal');
+    // u·s·e·D·i·a·l·o·g — `u` alone, then `e`,`D`,`i`,`a` as one unbroken run.
+    const match = fuzzyMatch('uedia', 'useDialog');
     expect(match?.ranges).toEqual([
       [0, 1],
       [2, 6],
@@ -82,7 +82,7 @@ test.describe('fuzzyMatch', () => {
   });
 
   test('scores a boundary hit above a mid-word hit', () => {
-    const boundary = fuzzyMatch('m', 'useModal')?.score ?? 0;
+    const boundary = fuzzyMatch('m', 'createDialogManager')?.score ?? 0;
     const midWord = fuzzyMatch('m', 'formatHotkeyLabel')?.score ?? 0;
     expect(boundary).toBeGreaterThan(midWord);
   });
@@ -90,32 +90,32 @@ test.describe('fuzzyMatch', () => {
 
 test.describe('fuzzyMatch — typos', () => {
   test('tolerates a transposition', () => {
-    expect(fuzzyMatch('modla', 'useModal')).not.toBeNull();
+    expect(fuzzyMatch('dialgo', 'useDialog')).not.toBeNull();
   });
 
   test('tolerates a wrong letter', () => {
-    expect(fuzzyMatch('modul', 'useModal')).not.toBeNull();
+    expect(fuzzyMatch('diulog', 'useDialog')).not.toBeNull();
   });
 
   test('does not report ranges it cannot honestly map', () => {
-    expect(fuzzyMatch('modla', 'useModal')?.ranges).toEqual([]);
+    expect(fuzzyMatch('dialgo', 'useDialog')?.ranges).toEqual([]);
   });
 
   test('spends at most one slip per four characters', () => {
     // Two wrong letters in five is a different word, not a typo.
-    expect(fuzzyMatch('modxy', 'useModal')).toBeNull();
+    expect(fuzzyMatch('diaxy', 'useDialog')).toBeNull();
   });
 
   test('always scores below a real subsequence match', () => {
-    const typo = fuzzyMatch('modla', 'useModal')?.score ?? 0;
-    const subsequence = fuzzyMatch('modal', 'useSlideModal')?.score ?? 0;
+    const typo = fuzzyMatch('dialgo', 'useDialog')?.score ?? 0;
+    const subsequence = fuzzyMatch('dialog', 'createDialogManager')?.score ?? 0;
     expect(typo).toBeLessThan(subsequence);
   });
 });
 
 test.describe('fuzzyRank', () => {
   test('ranks the exact name first', () => {
-    expect(best('useModal')).toBe('useModal');
+    expect(best('useDialog')).toBe('useDialog');
     expect(best('createStore')).toBe('createStore');
   });
 

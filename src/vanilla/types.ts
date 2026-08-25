@@ -8,7 +8,7 @@ import type {
   ModalHandle,
   ModalPhase,
   ModalVariant,
-  UseModalBaseOptions,
+  UseDialogBaseOptions,
 } from '../core/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
 
@@ -19,7 +19,7 @@ import type { DialogManager } from '../manager/dialog-manager.js';
 
 /** Options for {@link bindDialog}. */
 export type BindDialogOptions<TData = void, TReason extends string = string> = Omit<
-  UseModalBaseOptions<TData, TReason, DialogStyle, never>,
+  UseDialogBaseOptions<TData, TReason, DialogStyle, never>,
   'render'
 > &
   ModalVariant &
@@ -160,7 +160,7 @@ export type RegisteredController<TId> = Omit<
  * of the assembled type, `ModalVariant` being a union that omitting across would flatten.
  */
 export type RegisteredBindOptions<TId> = Omit<
-  UseModalBaseOptions<DataOf<TId>, ReasonOf<TId>, DialogStyle, never>,
+  UseDialogBaseOptions<DataOf<TId>, ReasonOf<TId>, DialogStyle, never>,
   'id' | 'onClose' | 'render'
 > &
   ModalVariant &

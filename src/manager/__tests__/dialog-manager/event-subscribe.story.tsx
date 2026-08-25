@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -9,7 +9,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function EventSubscribeHarness() {
   const [events, setEvents] = useState<string[]>([]);
 
-  const { Modal, dialogManager } = useModal<void, 'close'>({
+  const { Modal, dialogManager } = useDialog<void, 'close'>({
     id: 'dm-events',
     render: ({ handle }) => {
       return (

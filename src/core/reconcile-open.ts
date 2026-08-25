@@ -6,7 +6,7 @@ export type OpenReconciliation = 'open' | 'close' | 'none';
 /**
  * Decide whether a dialog driven by an `open` prop has to be opened, closed, or left alone.
  *
- * **Shipped rather than left to the caller** because `useModal` is imperative and a great deal of
+ * **Shipped rather than left to the caller** because `useDialog` is imperative and a great deal of
  * component API is a boolean prop, so everyone wrapping this in a `<Panel open={…} />` writes the
  * same thing — and it is wrong in two ways that both show on screen.
  *
@@ -26,7 +26,7 @@ export type OpenReconciliation = 'open' | 'close' | 'none';
  * @example
  * ```tsx
  * function Panel({ open }: { open: boolean }) {
- *   const modal = useModal<void, 'close'>({ id: 'panel', render: () => <p>…</p> });
+ *   const modal = useDialog<void, 'close'>({ id: 'panel', render: () => <p>…</p> });
  *   const { phase } = useLookup('panel');
  *
  *   useEffect(() => {

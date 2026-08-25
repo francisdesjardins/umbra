@@ -108,7 +108,7 @@ export type ActionButtonProps = {
  * What an action accepts when a bare handler is not enough: `disabled` is **or**-ed with the
  * action's own reasons (it may add one, such as an invalid form, but never remove one), and
  * `onClick` runs **before** the action and can cancel it with `preventDefault()` — the protocol
- * `useModal`'s `onKeyDown` uses. Fixed, so that spreading cannot quietly lose behaviour.
+ * `useDialog`'s `onKeyDown` uses. Fixed, so that spreading cannot quietly lose behaviour.
  *
  * @typeParam TData - The modal's close payload.
  */
@@ -142,12 +142,12 @@ export type ActionOptions<TData = never> = {
 
 /**
  * Declares an action and returns the props to spread onto its button, at the single place the
- * action is used: nothing is passed into `useModal`, an action existing because it is rendered, and
+ * action is used: nothing is passed into `useDialog`, an action existing because it is rendered, and
  * `reason` **is** its identity — the name and the close reason both, so nothing drifts.
  *
  * @typeParam TData - The modal's close payload, so `close(data)` is as typed as the modal.
  * @typeParam TReason - The declared reasons; at the `string` default any is accepted, so declare a
- *   union on `useModal` for autocomplete and an exhaustive `switch` in `onClose`.
+ *   union on `useDialog` for autocomplete and an exhaustive `switch` in `onClose`.
  *
  * @example
  * render: ({ action }) => {

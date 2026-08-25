@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 function BystanderModal() {
-  const { Modal } = useModal({
+  const { Modal } = useDialog({
     id: 'two-managers-bystander',
     render: () => {
       return null;
@@ -22,7 +22,7 @@ function BystanderModal() {
 export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);
 
-  const { open, Modal } = useModal<void, 'done'>({
+  const { open, Modal } = useDialog<void, 'done'>({
     id: 'two-managers-modal',
     render: ({ handle }) => {
       return (

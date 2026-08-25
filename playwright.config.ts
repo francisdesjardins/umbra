@@ -47,7 +47,7 @@ const vitePlugins: any[] = [
  * A browser test locally shares the machine with `cpus/2` siblings, and Playwright's actionability
  * wait — visible, enabled, stable — is wall-clock: a page that would settle in 400ms alone can miss
  * a 10s deadline when eight workers are compiling and painting at once, and the failure arrives as a
- * timeout on an ordinary click rather than as a wrong answer. Measured on `use-modal.ct.tsx`
+ * timeout on an ordinary click rather than as a wrong answer. Measured on `use-dialog.ct.tsx`
  * ×15 on WebKit — 1245 tests: **1 red at 10s, 0 red at 30s, and no slower** (2.6 min against 2.8),
  * because the budget is a ceiling and green runs never touch it.
  *

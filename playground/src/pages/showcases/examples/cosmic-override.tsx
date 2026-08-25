@@ -1,7 +1,7 @@
 import { simulateApiCall } from '@/shared/lib/simulate-api-call';
 import { ResultDisplay } from '@/shared/ui/ResultDisplay/ResultDisplay';
 import { dialogPlacement } from 'umbra';
-import { Key, useModal } from 'umbra/react';
+import { Key, useDialog } from 'umbra/react';
 import { useState, type CSSProperties } from 'react';
 
 export const GATE_ID = 'cosmic-gate';
@@ -195,11 +195,11 @@ const pickSector = () => {
 export function CosmicOverrideExample() {
   const [result, setResult] = useState<string | null>(null);
 
-  // The same table `useModal` places its dialog with, read as plain data — a hand-built host
+  // The same table `useDialog` places its dialog with, read as plain data — a hand-built host
   // outside React applies exactly this.
   const placement = dialogPlacement({ nonModal: true, portal: false });
 
-  const warp = useModal({
+  const warp = useDialog({
     id: WARP_ID,
     ariaLabel: 'Warp core',
     // The label a cross-cutting listener sees, the way `useSlideModal` reports 'slide'.
@@ -294,7 +294,7 @@ export function CosmicOverrideExample() {
     },
   });
 
-  const gate = useModal({
+  const gate = useDialog({
     id: GATE_ID,
     // Named even though it never takes focus: a non-modal `<dialog>` stays in the accessibility
     // tree, so a virtual cursor walks into it and an unnamed one announces as just "dialog".

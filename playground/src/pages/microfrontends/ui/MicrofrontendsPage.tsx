@@ -58,7 +58,7 @@ export const MicrofrontendsPage = () => {
       <ExampleSection
         id="the-four-panels"
         title="The four panels"
-        description="Four ways of writing the same modal, none of which imports another. Read Checkout and Support side by side: the useModal call is the same call. Then Billing, which does not render at all. Then Audit, which is not even in the same DOM tree."
+        description="Four ways of writing the same modal, none of which imports another. Read Checkout and Support side by side: the useDialog call is the same call. Then Billing, which does not render at all. Then Audit, which is not even in the same DOM tree."
       >
         <ExampleGrid columns={2}>
           <ExampleCard
@@ -68,7 +68,7 @@ export const MicrofrontendsPage = () => {
           />
           <ExampleCard
             title="mfa3.js — Support, on the Solid binding"
-            description="Put this beside Checkout: the same useModal call, the same options, the same typed close. What differs is Solid's — live values arrive as getters, so the render args are read rather than destructured. Billing asks it for a ticket without knowing it is Solid."
+            description="Put this beside Checkout: the same useDialog call, the same options, the same typed close. What differs is Solid's — live values arrive as getters, so the render args are read rather than destructured. Billing asks it for a ticket without knowing it is Solid."
             codeKey="mfe-support"
           />
           <ExampleCard

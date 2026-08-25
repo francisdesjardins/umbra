@@ -126,7 +126,7 @@ function collectExamples() {
 
 /**
  * Format one example with the repo's prettier config. `null` when prettier cannot parse it, which
- * is not a failure: a few are deliberately elliptical (`useModal({ ... })`) or show sibling JSX
+ * is not a failure: a few are deliberately elliptical (`useDialog({ ... })`) or show sibling JSX
  * call sites, and the normalisation below type-checks them anyway.
  */
 async function formatExample(example, options) {

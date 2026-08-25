@@ -20,8 +20,8 @@ const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** The two bindings the director now wires, and the one that still wires itself. */
 const DIRECTED = {
-  react: 'react/use-modal.tsx',
-  solid: 'solid/use-modal.ts',
+  react: 'react/use-dialog.tsx',
+  solid: 'solid/use-dialog.ts',
 } as const;
 const CONTROLLER = 'vanilla/bind-dialog.ts';
 

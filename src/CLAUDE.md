@@ -100,7 +100,7 @@ so does putting it at a different depth.
 **The paths matter as much as the names**, because a surface can be complete while the folders lie: a
 `solid/` folder with no `use-slide-modal` reads as "Solid does not have one", whatever a combined
 `templates.ts` exports. A `templates/` folder on each side says the other true thing — the template
-hooks are built _on_ `useModal`, not peers of it, and their framework-free half lives in
+hooks are built _on_ `useDialog`, not peers of it, and their framework-free half lives in
 `src/templates/`. For the same reason React's effects are **not** split into per-concern hook files:
 a `react/hooks/` folder holding `use-click-outside.ts` reads as a feature list Solid is missing.
 Both hook bindings run the whole lifecycle through **one** deps-free call into
@@ -136,8 +136,8 @@ The short list, and the measure of whether the core is doing its job. A binding:
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys,
 placement, slide geometry, the action factory, the default animation — is shared.
 
-**That list is one file per binding, and that file is the measure**: `react/use-modal.tsx` and
-`solid/use-modal.ts` are a little over 200 code lines each, `vanilla/bind-dialog.ts` about 260, none
+**That list is one file per binding, and that file is the measure**: `react/use-dialog.tsx` and
+`solid/use-dialog.ts` are a little over 200 code lines each, `vanilla/bind-dialog.ts` about 260, none
 of it logic. Say which file — the folder is not the same number, the outlet, the provider,
 `useLookup` and the templates roughly doubling it as surface rather than lifecycle.
 
@@ -152,7 +152,7 @@ itself, there being no other clock — safe here precisely because there is no c
 frameworks: the type of a **style object** and the type of a **rendered node**. Each binding pins
 them in one small file — [react/types.ts](react/types.ts) says `CSSProperties` and `ReactNode`,
 [solid/types.ts](solid/types.ts) says `DialogStyle` and `JSX.Element` — and re-exports the four
-resulting types (`ModalAnimation`, `UseModalBaseOptions`, `UseModalOptions`, `UseModalReturn`)
+resulting types (`ModalAnimation`, `UseDialogBaseOptions`, `UseDialogOptions`, `UseDialogReturn`)
 under their ordinary names. A consumer never sees a type parameter.
 
 `DialogStyle` ([core/style.ts](core/style.ts)) is the framework-free default: a mapped type over the
@@ -187,7 +187,7 @@ restating any of it here is how the two drift.
 
 | Concern                | File                                                                                                                                                                                     |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useModal`             | [react/use-modal.tsx](react/use-modal.tsx), [solid/use-modal.ts](solid/use-modal.ts)                                                                                                     |
+| `useDialog`            | [react/use-dialog.tsx](react/use-dialog.tsx), [solid/use-dialog.ts](solid/use-dialog.ts)                                                                                                 |
 | The state machine      | [core/modal-store.ts](core/modal-store.ts) — one method per transition                                                                                                                   |
 | The lifecycle sequence | [core/modal-director.ts](core/modal-director.ts) — who asks the `attach*` functions, in what order                                                                                       |
 | The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, the doors, the asking door                                                                                            |
@@ -280,7 +280,7 @@ optimisations. See [core/dialog-props.ts](core/dialog-props.ts).
 
 ### Layer 2: Template Hooks
 
-Each wraps `useModal` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
+Each wraps `useDialog` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideModal`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
 
 `buildModalOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
 
@@ -291,12 +291,12 @@ Each wraps `useModal` with a template-specific render context. Shared internals 
 
 Actions are **declared by being rendered**. `render` is handed an `action` factory; calling it names
 the reason, binds the handler and returns the props to spread. There is no config object, no second
-hook, and nothing to pass into `useModal`.
+hook, and nothing to pass into `useDialog`.
 
 - **The reason is the action's identity** — it names the action _and_ is the close reason.
   `action('confirm')` closes with `reason: 'confirm'`; the handler is optional, omitting it
   auto-closing with that reason.
-- **Declare the reasons and the payload** — `useModal<Result, 'save' | 'cancel'>`, or once in
+- **Declare the reasons and the payload** — `useDialog<Result, 'save' | 'cancel'>`, or once in
   `ModalRegistry`. The `TReason = string` default accepts anything, costing the three things the
   design exists for: a mistyped `action('savee')` rejected, autocomplete, an exhaustive `switch`.
 - **`'dismiss'` is reserved, and the reservation is a type** —
@@ -383,17 +383,17 @@ the concept, not editing three that describe it. The chain, rooted in [core/type
 ```
 ModalRenderArgs<TData>                ← the render-time slice:
 │                                       { isPreparing, phase, handle, action, hasRunningAction, error }
-├── UseModalReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
+├── UseDialogReturn<TData>   = ModalRenderArgs<TData> & { open, openAndWait, isVisible, Modal,
 │                                                        dialogManager }
 └── BaseRenderContext<TData>= ModalRenderArgs<TData>               (templates/shared.ts)
     ├── MessageModalRenderContext<TData> = BaseRenderContext<TData>
     └── SlideModalRenderContext<TData>   = BaseRenderContext<TData> & { direction }
 
-UseModalBaseOptions<TData, …, TStyle, TNode>   ← flat, variant-free option surface
-├── UseModalOptions<…>      = UseModalBaseOptions<…> & ModalVariant
-│   ├── react/types.ts      = …<CSSProperties, ReactNode>     ← exported as `UseModalOptions`
-│   └── solid/types.ts      = …<DialogStyle, JSX.Element>     ← exported as `UseModalOptions`
-└── TemplateCommonOptions<…> = Omit<UseModalBaseOptions<…>, the 5 a template owns>
+UseDialogBaseOptions<TData, …, TStyle, TNode>   ← flat, variant-free option surface
+├── UseDialogOptions<…>      = UseDialogBaseOptions<…> & ModalVariant
+│   ├── react/types.ts      = …<CSSProperties, ReactNode>     ← exported as `UseDialogOptions`
+│   └── solid/types.ts      = …<DialogStyle, JSX.Element>     ← exported as `UseDialogOptions`
+└── TemplateCommonOptions<…> = Omit<UseDialogBaseOptions<…>, the 5 a template owns>
     │                          & ModalVariant
     └── TemplateBaseOptions<TData, TRenderContext, …>
 ```
@@ -403,7 +403,7 @@ The two trailing parameters are the whole of what a binding contributes, and the
 either: each binding re-exports the instantiation under the plain name.
 
 `TemplateCommonOptions` is stated as a **complement** on purpose: an option added to
-`UseModalBaseOptions` reaches every template hook by default, and only a deliberate edit to the
+`UseDialogBaseOptions` reaches every template hook by default, and only a deliberate edit to the
 exclusion list keeps it out. Spelled the other way round — the enumeration of forwarded keys it
 replaced — a new core option reached no template and nothing failed.
 
@@ -413,7 +413,7 @@ the `'opening'` phase) written in one home rather than three.
 
 **One input comes from outside the model.** `core/registry.ts` declares `ModalRegistry` for a
 consumer to augment; `ModalId`, `ReasonOf` and `DataOf` read off it, and every hook —
-`useModal`, both templates, `bindDialog` — leads with an overload constrained to
+`useDialog`, both templates, `bindDialog` — leads with an overload constrained to
 `RegisteredModalId`, so a declared id supplies `TData` and `TReason`. `ModalId` stays open, since a
 project hosts modals it does not own. The augmented half is `yarn type-check:registry` over
 `type-fixtures/`, compiled alone because declaration merging is global.
@@ -424,7 +424,7 @@ project hosts modals it does not own. The augmented half is `yarn type-check:reg
 one any of its doors accepts:
 
 ```
-useModal<TData, TReason>
+useDialog<TData, TReason>
 ├── ModalHandle<TData, TReason>.close(reason?: TReason | 'dismiss', data?: TData)
 ├── ActionFactory<TData, TReason>      ← the `action` in the render args
 ├── createModalStore<TData, TReason>   → ModalStoreSnapshot.closeResult: CloseResult<TData, TReason>
@@ -483,7 +483,7 @@ caught by [api-categories.test.ts](../playground/src/__tests__/api-categories.te
 - **No property assignment on `useState` values** — `st.x = value` is forbidden everywhere. Use
   closure mutations or `Map.set()` (method calls are exempt).
 - `open()`, `openAndWait()` and `handle` close over the store alone, so they are built once in
-  `useModal`'s `useState` initialiser and are reference-stable — the compiler treats the store as
+  `useDialog`'s `useState` initialiser and are reference-stable — the compiler treats the store as
   opaque and cannot memoise them, and hoisting is what makes them usable as effect deps.
 
 **The wiring is by hand and the obvious form does nothing** — `react({ babel: … })` is accepted under
@@ -491,12 +491,12 @@ this Vite and transforms nothing. That, the `src/react/` scoping and the externa
 documented where they are configured: [vite.config.esm.ts](../vite.config.esm.ts) and
 [scripts/vite-plugin-react-compiler.mjs](../scripts/vite-plugin-react-compiler.mjs).
 
-**One grep tells you which state you are in**: a compiled `use-modal.js` opens with `c(…)` and
+**One grep tells you which state you are in**: a compiled `use-dialog.js` opens with `c(…)` and
 imports `react/compiler-runtime`. `verify:package` asserts that against the built artifact, and
 asserts the Solid binding is _not_ compiled — the half that catches a lost scope.
 
 It bails **per function** on constructs it cannot lower, silently. `runDeclarationWindow` exists
-for one of them: four lines of `try` with no `catch` around `render()` left the whole of `useModal`
+for one of them: four lines of `try` with no `catch` around `render()` left the whole of `useDialog`
 uncompiled.
 
 ## Code Organization
@@ -526,10 +526,10 @@ Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](.
 
 **Solid harnesses** ([solid/\_\_tests\_\_/](solid/__tests__/)) are a Solid root hosted inside a React CT story: the story renders a `<div>`, calls Solid's `render` into it from an effect, and returns the disposer as the cleanup. They are written with `h` rather than JSX, so no Solid compiler enters the CT bundle — and nothing is lost, because hyperscript detects the getters an action's props carry and spreads them reactively, exactly as compiled JSX would.
 
-**Cross-modal in stories** — use `dialogManager` from `useModal` return, not the static singleton:
+**Cross-modal in stories** — use `dialogManager` from `useDialog` return, not the static singleton:
 
 ```tsx
-const { Modal, dialogManager } = useModal({ id: 'my-modal', ... });
+const { Modal, dialogManager } = useDialog({ id: 'my-modal', ... });
 dialogManager.open('other-modal'); // ✅ context-aware
 ```
 

@@ -47,7 +47,7 @@ type SymbolSearchProps = {
 };
 
 /**
- * Fuzzy symbol search, typo-tolerant so `usemodl` still finds `useModal`. Computed inline on every
+ * Fuzzy symbol search, typo-tolerant so `usemodl` still finds `useDialog`. Computed inline on every
  * keystroke: ninety names is nothing, and the React Compiler rules out memoising anyway.
  */
 export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => {
@@ -87,7 +87,7 @@ export const SymbolSearch = ({ placeholder, onNavigate }: SymbolSearchProps) => 
                 <span className={styles['rowName']}>
                   <Highlight text={hit.symbol.name} ranges={hit.match.ranges} />
                 </span>
-                {/* Three bindings export `useModal`; without the specifier the rows are alike. */}
+                {/* Three bindings export `useDialog`; without the specifier the rows are alike. */}
                 <span className={styles['rowSpecifier']}>{hit.symbol.specifier}</span>
                 <KindBadge kind={hit.symbol.kind} />
               </RouterLink>

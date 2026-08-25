@@ -22,7 +22,7 @@ const INITIAL_HEIGHT = 660;
  * singleton, so pointing every side at one build is the whole mechanism; four copies would be four
  * registries finding nothing.
  *
- * The four are written four ways on purpose: Checkout with `useModal` from `umbra/react`, Support
+ * The four are written four ways on purpose: Checkout with `useDialog` from `umbra/react`, Support
  * with the same call from `umbra/solid`, Billing with `umbra/vanilla` over a hand-written
  * `<dialog>`, Audit as a web component whose dialog lives in a shadow root — a different DOM tree
  * rather than a different framework. They address each other regardless, because what they share

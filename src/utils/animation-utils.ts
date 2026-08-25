@@ -19,7 +19,7 @@ export function getPrimaryTransitionProperty(transitionProp: string): string {
 }
 
 /**
- * What a bare `useModal` animates with when the caller names no animation. Shared by every binding
+ * What a bare `useDialog` animates with when the caller names no animation. Shared by every binding
  * on purpose: two copies would be two products the day one of them is tuned.
  */
 export const DEFAULT_MODAL_ANIMATION = {

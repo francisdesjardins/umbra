@@ -45,7 +45,7 @@ type DeclareAction<TData, TReason extends string> = (
  *   `useSyncExternalStore` value, Solid passes a signal accessor — which is the whole reason
  *   this is a parameter rather than a call to `engine.getSnapshot()` inside.
  *
- * @internal Not part of the public API — `useModal` builds one and hands out the result.
+ * @internal Not part of the public API — `useDialog` builds one and hands out the result.
  */
 export function createActionFactory<TData, TReason extends string = string>(
   engine: ActionEngine<TData, TReason>,

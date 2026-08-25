@@ -1,6 +1,6 @@
 // MFA 3 — "Support", a Solid microfrontend.
 //
-// The third framework on the page, and the reason it is here: `useModal` from `umbra/solid` is
+// The third framework on the page, and the reason it is here: `useDialog` from `umbra/solid` is
 // the same call, with the same options and the same return, as the one Checkout makes from
 // `umbra/react` twenty lines away. Two bindings, one core — which is the claim the library makes
 // about React being optional, made twice.
@@ -10,7 +10,7 @@
 // the real binding, fine-grained reactivity included. `action(...)` returns props whose live
 // fields are getters, and Solid's hyperscript detects them and tracks each one, so the button's
 // `disabled` follows the running action without anything re-rendering.
-import { useModal } from 'umbra/solid';
+import { useDialog } from 'umbra/solid';
 import { createOpenRequest, dialogManager } from 'umbra';
 import { createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
@@ -67,7 +67,7 @@ function Support() {
   const [reference, setReference] = createSignal('INV-204');
   const [subject, setSubject] = createSignal(null);
 
-  const ticket = useModal({
+  const ticket = useDialog({
     id: 'support:ticket',
     ariaLabel: 'Support ticket',
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDialogManagerContext, useLookup, useModal, type OpenRequest } from '../../react.js';
+import { useDialogManagerContext, useLookup, useDialog, type OpenRequest } from '../../react.js';
 
 /**
  * A dialog asked to open by code that does not own it: the owner declares `onOpenRequest` and
@@ -16,7 +16,7 @@ export function OpenRequestHarness() {
     });
   };
 
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'asked',
     onOpenRequest: (payload: unknown, { context }: OpenRequest) => {
       const from = context?.source ?? 'anonyme';
@@ -107,7 +107,7 @@ function Caller() {
 export function RefusesEverythingHarness() {
   const info = useLookup('unasked');
   const dialogManager = useDialogManagerContext();
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'unasked',
     render: () => {
       return <p style={{ padding: '1rem' }}>Ouverte</p>;

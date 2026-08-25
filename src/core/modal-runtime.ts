@@ -35,7 +35,7 @@ const log = createLogger('modal');
 
 /**
  * The option fields whose defaults and variant-narrowing are shared. Deliberately structural
- * rather than `UseModalOptions<…>`: it takes four type parameters, and none of them affects a
+ * rather than `UseDialogOptions<…>`: it takes four type parameters, and none of them affects a
  * single answer computed here.
  */
 export type UnresolvedModalOptions = ModalVariant & {

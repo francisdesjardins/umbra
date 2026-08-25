@@ -185,7 +185,7 @@ four chapters. **A new export must be added there**: `buildModel` throws on an u
 which would otherwise be unreachable.
 
 **All four entry points are documented, and a symbol's identity is `specifier#name`.** A bare name
-is not one: `useModal` is three declarations and `UseModalOptions` three aliases, so keying on the
+is not one: `useDialog` is three declarations and `UseDialogOptions` three aliases, so keying on the
 name shows one binding's signature under another's specifier. Two things follow:
 
 - **A shared type is one reflection.** `core/types.ts` is named by every binding but declared once,
@@ -193,7 +193,7 @@ name shows one binding's signature under another's specifier. Two things follow:
   to that declaration, and only when there is exactly one — two declarations of a name are two
   different types.
 - **Links follow the category table, not the declaration.** `PrintContext.resolve` asks where
-  `CATEGORIES` renders a name for _this_ specifier, then for the core. So `UseModalOptions` in a
+  `CATEGORIES` renders a name for _this_ specifier, then for the core. So `UseDialogOptions` in a
   Solid signature links to the Solid chapter and `ModalPhase` beside it links to the core's,
   whichever module typedoc happened to walk first.
 
@@ -205,7 +205,7 @@ newline inside an `@example` are left alone.
 
 A symbol is a URL, built by `categoryHref` + `symbolAnchor` in `pages/api/model/api-index.ts`. The
 page never constructs a key — the plugin mints them and the page resolves one with `symbolFor`. The
-**anchor** stays the bare name: a category renders one specifier, so `api-useModal` is unique on its
+**anchor** stays the bare name: a category renders one specifier, so `api-useDialog` is unique on its
 page and is what a reader can guess and share.
 
 ## Modals are declared in one place

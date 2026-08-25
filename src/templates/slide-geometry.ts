@@ -2,7 +2,7 @@ import type { ModalAnimation } from '../core/types.js';
 
 /**
  * The geometry of a slide panel, as data — no framework, no hook. `useSlideModal` is a style and an
- * animation over `useModal`, and neither half is renderer work, so both bindings must answer these
+ * animation over `useDialog`, and neither half is renderer work, so both bindings must answer these
  * identically or the two templates are two templates wearing one name.
  */
 
@@ -37,7 +37,7 @@ export type SlideGeometry = {
   /**
    * `true` for a non-modal, inline (non-portaled) dialog: it anchors to the library's positioned
    * wrapper via `absolute` and sizes to that container (`100%`) rather than the viewport — see
-   * `useModal`'s contained mode.
+   * `useDialog`'s contained mode.
    */
   readonly contained: boolean;
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMessageModal } from '../../../react/templates/use-message-modal.js';
 import { useSlideModal } from '../../../react/templates/use-slide-modal.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -11,7 +11,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 export function DomEventHarness() {
   const [log, setLog] = useState<string[]>([]);
 
-  const { Modal: ModalA, dialogManager } = useModal<void, 'ok'>({
+  const { Modal: ModalA, dialogManager } = useDialog<void, 'ok'>({
     id: 'dom-ev-modal',
     render: ({ handle }) => {
       return (

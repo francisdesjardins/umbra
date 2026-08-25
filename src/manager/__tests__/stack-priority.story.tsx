@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useModal } from '../../react/use-modal.js';
+import { useDialog } from '../../react/use-dialog.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
 /**
@@ -11,7 +11,7 @@ import { dialogStyle } from '../../__tests__/story-styles.js';
  * button sits inside the warning's `render` because the top layer swallows outside clicks.
  */
 export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
-  const { Modal: Panel } = useModal<void, 'close'>({
+  const { Modal: Panel } = useDialog<void, 'close'>({
     id: 'sp-panel',
     template: 'slide',
     style: { width: 300, height: 300 },
@@ -36,7 +36,7 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
     Modal: Warning,
     dialogManager,
     open: openWarning,
-  } = useModal<void, 'close'>({
+  } = useDialog<void, 'close'>({
     id: 'sp-warning',
     template: 'alert',
     style: { width: 300, height: 300 },
@@ -103,21 +103,21 @@ export function StackPriorityHarness({ withPolicy }: { withPolicy: boolean }) {
 export function MultiRaiseHarness() {
   const [policyOn, setPolicyOn] = useState(false);
 
-  const low = useModal<void, 'close'>({
+  const low = useDialog<void, 'close'>({
     id: 'mr-low',
     style: { width: 260, height: 260 },
     render: () => {
       return <div style={dialogStyle}>Low</div>;
     },
   });
-  const mid = useModal<void, 'close'>({
+  const mid = useDialog<void, 'close'>({
     id: 'mr-mid',
     style: { width: 260, height: 260 },
     render: () => {
       return <div style={dialogStyle}>Mid</div>;
     },
   });
-  const high = useModal<void, 'close'>({
+  const high = useDialog<void, 'close'>({
     id: 'mr-high',
     style: { width: 260, height: 260 },
     render: () => {
@@ -186,7 +186,7 @@ export function MultiRaiseHarness() {
 export function LatePolicyFocusHarness() {
   const [policyOn, setPolicyOn] = useState(false);
 
-  const only = useModal<void, 'close'>({
+  const only = useDialog<void, 'close'>({
     id: 'lp-only',
     style: { width: 280, height: 280 },
     render: () => {

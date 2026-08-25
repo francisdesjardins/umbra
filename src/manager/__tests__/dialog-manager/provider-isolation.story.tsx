@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DialogManagerProvider } from '../../../react/dialog-manager-context.js';
 import { useDialogManager } from '../../../react/use-dialog-manager.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /** A modal registering with the nearest manager, exposing state via `label`-scoped testids. */
@@ -9,7 +9,7 @@ function ScopedModal({ id, label }: { readonly id: string; readonly label: strin
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useModal<void, 'confirm'>({
+  const { open, Modal } = useDialog<void, 'confirm'>({
     id,
     render: ({ handle }) => {
       return (
@@ -69,7 +69,7 @@ export function NoProviderHarness() {
   const [lastReason, setLastReason] = useState('');
   const { openDialogs } = useDialogManager();
 
-  const { open, Modal } = useModal<void, 'done'>({
+  const { open, Modal } = useDialog<void, 'done'>({
     id: 'no-provider-modal',
     render: ({ handle }) => {
       return (

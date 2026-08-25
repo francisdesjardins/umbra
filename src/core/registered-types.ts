@@ -5,8 +5,8 @@ import type { DialogStyle } from './style.js';
 import type {
   ModalRenderArgs,
   ModalVariant,
-  UseModalBaseOptions,
-  UseModalReturn,
+  UseDialogBaseOptions,
+  UseDialogReturn,
 } from './types.js';
 
 /**
@@ -96,7 +96,7 @@ export type RegisteredOptions<
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
 > = Omit<
-  UseModalBaseOptions<DataOf<TId>, ReasonOf<TId>, TStyle, TNode>,
+  UseDialogBaseOptions<DataOf<TId>, ReasonOf<TId>, TStyle, TNode>,
   'id' | 'onClose' | 'render'
 > &
   ModalVariant & {
@@ -110,10 +110,10 @@ export type RegisteredOptions<
 
 /** Return type for a declared id. */
 export type RegisteredReturn<TId, TNode = unknown> = Omit<
-  UseModalReturn<DataOf<TId>, ReasonOf<TId>, TNode>,
+  UseDialogReturn<DataOf<TId>, ReasonOf<TId>, TNode>,
   'action' | 'handle' | 'openAndWait'
 > &
   RegisteredRenderArgs<TId> & {
-    /** Open the modal and resolve with how it closed — see {@link UseModalReturn.openAndWait}. */
+    /** Open the modal and resolve with how it closed — see {@link UseDialogReturn.openAndWait}. */
     readonly openAndWait: () => Promise<AwaitedCloseOf<TId>>;
   };

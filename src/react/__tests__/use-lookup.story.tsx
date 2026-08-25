@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { dialogStyle } from '../../__tests__/story-styles.js';
-import { useModal } from '../use-modal.js';
+import { useDialog } from '../use-dialog.js';
 import { useLookup } from '../use-lookup.js';
 
 /** `useLookup(id)` reactivity: ModalInfo values update with no manual query. */
 export function UseLookupHarness() {
   const info = useLookup('reactive-modal');
 
-  const { Modal, dialogManager } = useModal<void, 'done'>({
+  const { Modal, dialogManager } = useDialog<void, 'done'>({
     id: 'reactive-modal',
     render: ({ handle }) => {
       return (
@@ -85,7 +85,7 @@ export function UseLookupPreparingHarness() {
     };
   });
 
-  const { Modal, dialogManager } = useModal<void, 'done'>({
+  const { Modal, dialogManager } = useDialog<void, 'done'>({
     id: 'preparing-modal',
     prepare: () => {
       return gate.arm();
@@ -135,7 +135,7 @@ export function UseLookupForegroundHarness() {
   const infoA = useLookup('fg-lookup-a');
   const infoB = useLookup('fg-lookup-b');
 
-  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
+  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
     id: 'fg-lookup-a',
     render: ({ handle }) => {
       return (
@@ -160,7 +160,7 @@ export function UseLookupForegroundHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal<void, 'done'>({
+  const { Modal: Modal2 } = useDialog<void, 'done'>({
     id: 'fg-lookup-b',
     render: ({ handle }) => {
       return (

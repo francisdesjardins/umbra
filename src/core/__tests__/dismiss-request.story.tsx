@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useModal } from '../../react.js';
+import { useDialog } from '../../react.js';
 import type { DismissCause } from '../../react.js';
 
 // A modal dialog whose dismissals are *requests*: the dialog reports and the state above it
@@ -10,7 +10,7 @@ export function ControlledModalHarness() {
   const [cause, setCause] = useState<DismissCause | ''>('');
   const [allow, setAllow] = useState(false);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'controlled-modal',
     ariaLabel: 'A controlled modal',
     onDismissRequest: (dismissedBy) => {
@@ -72,7 +72,7 @@ export function ControlledPanelHarness() {
   const [declining, setDeclining] = useState(false);
   const [pageSaw, setPageSaw] = useState(0);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'controlled-panel',
     nonModal: true,
     ariaLabel: 'A controlled panel',
@@ -141,7 +141,7 @@ export function ControlledPanelHarness() {
 export function ControlledClickOutsideHarness() {
   const [causes, setCauses] = useState<DismissCause[]>([]);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'controlled-click-outside',
     nonModal: true,
     dismissOnClickOutside: true,

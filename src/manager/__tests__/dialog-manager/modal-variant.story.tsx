@@ -1,5 +1,5 @@
 import { useDialogManager } from '../../../react/use-dialog-manager.js';
-import { useModal } from '../../../react/use-modal.js';
+import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
@@ -17,7 +17,7 @@ export function ModalVariantHarness() {
     return d.nonModal;
   });
 
-  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
+  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
     id: 'variant-modal',
     render: ({ handle }) => {
       return (
@@ -35,7 +35,7 @@ export function ModalVariantHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal<void, 'done'>({
+  const { Modal: Modal2 } = useDialog<void, 'done'>({
     id: 'variant-non-modal',
     nonModal: true,
     render: ({ handle }) => {
@@ -86,7 +86,7 @@ export function ModalVariantHarness() {
  * Tests the getOpen() filter argument on the ModalLookup API.
  */
 export function ModalVariantLookupHarness() {
-  const { Modal: Modal1, dialogManager } = useModal<void, 'done'>({
+  const { Modal: Modal1, dialogManager } = useDialog<void, 'done'>({
     id: 'lookup-modal',
     render: ({ handle }) => {
       return (
@@ -132,7 +132,7 @@ export function ModalVariantLookupHarness() {
     },
   });
 
-  const { Modal: Modal2 } = useModal<void, 'done'>({
+  const { Modal: Modal2 } = useDialog<void, 'done'>({
     id: 'lookup-non-modal',
     nonModal: true,
     render: ({ handle }) => {

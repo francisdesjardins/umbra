@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { RegisteredModalId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
-import { useModal } from '../use-modal.js';
-import type { UseModalReturn } from '../types.js';
+import { useDialog } from '../use-dialog.js';
+import type { UseDialogReturn } from '../types.js';
 import {
   DEFAULT_FADE_ANIMATION,
   buildModalOptions,
@@ -27,7 +27,7 @@ export type RegisteredMessageContext<TId> = RegisteredBaseRenderContext<TId>;
 /**
  * Options for `useMessageModal`.
  * @typeParam TData - Typed data payload from close, declared here and nowhere else. Default `void`.
- * @typeParam TReason - The reasons this modal closes with; declare them, see `useModal`.
+ * @typeParam TReason - The reasons this modal closes with; declare them, see `useDialog`.
  */
 export type UseMessageModalOptions<
   TData = void,
@@ -41,7 +41,7 @@ export type UseMessageModalOptions<
 >;
 
 /** Return type of `useMessageModal`. */
-export type UseMessageModalReturn<TData = void, TReason extends string = string> = UseModalReturn<
+export type UseMessageModalReturn<TData = void, TReason extends string = string> = UseDialogReturn<
   TData,
   TReason
 >;
@@ -50,7 +50,7 @@ export type UseMessageModalReturn<TData = void, TReason extends string = string>
  * Headless template hook for a standard message/confirmation modal. Bring your own UI in the
  * render callback and use the `action` factory for async actions with per-button loading.
  * @typeParam TData - Typed data payload from close. Defaults to `void`.
- * @typeParam TReason - The reasons this modal closes with; declare them, see `useModal`.
+ * @typeParam TReason - The reasons this modal closes with; declare them, see `useDialog`.
  * @example
  * const modal = useMessageModal<void, 'cancel' | 'confirm'>({
  *   id: 'delete-confirm',
@@ -85,7 +85,7 @@ export function useMessageModal<TData = void, TReason extends string = string>(
 export function useMessageModal<TData = void, TReason extends string = string>(
   options: UseMessageModalOptions<TData, TReason>
 ): UseMessageModalReturn<TData, TReason> {
-  return useModal<TData, TReason>({
+  return useDialog<TData, TReason>({
     // Spelled out because `TemplateBaseOptions` is an `Omit` and inference cannot reach through a
     // mapped type: left alone, style and node fall back to their framework-free defaults.
     ...buildModalOptions<

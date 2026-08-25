@@ -9,7 +9,7 @@ import { type Theme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useForm } from '@/shared/lib/use-form';
-import { useModal } from 'umbra/react';
+import { useDialog } from 'umbra/react';
 import { useStore } from '@/shared/lib/use-store';
 
 export const MODAL_ID = 'mui-form-example';
@@ -52,7 +52,7 @@ export function MuiFormExample() {
   const { 'aria-describedby': _emailDescribedBy, ...emailField } = form.field('email');
 
   // Payload and reasons once: `action('submmit')` would not compile, and `onClose` is exhaustive.
-  const formModal = useModal({
+  const formModal = useDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {

@@ -5,7 +5,7 @@ import buttonRowStyles from '@/entities/modal-template/ui/vanilla/shared/ButtonR
 import { createResultStore } from '@/shared/lib/createResultStore';
 import styles from '@/entities/modal-template/ui/vanilla/form-modal/styles.module.css';
 import { useForm } from '@/shared/lib/use-form';
-import { useModal } from 'umbra/react';
+import { useDialog } from 'umbra/react';
 import { useScrollRegion } from '@/entities/modal-template/ui/shared/scroll-region';
 import { useStore } from '@/shared/lib/use-store';
 
@@ -17,7 +17,7 @@ const resultStore = createResultStore();
 
 /**
  * The same form as the MUI card; the diff between the two files is the page's subject. `useForm`
- * and `useModal` are identical down to the validator; only markup differs — a bare `<input>` taking
+ * and `useDialog` are identical down to the validator; only markup differs — a bare `<input>` taking
  * `field('email')`'s plain DOM props with no adapter, and an error element the caller associates by
  * hand where MUI's `helperText` does it for you.
  *
@@ -54,7 +54,7 @@ export function VanillaFormExample() {
   const { ref: contentRef, regionProps } = useScrollRegion<HTMLDivElement>('Dialog content');
 
   // Same two type arguments as the MUI version; only the markup below differs.
-  const formModal = useModal({
+  const formModal = useDialog({
     id: MODAL_ID,
     ariaLabelledBy: `${MODAL_ID}-title`,
     prepare: () => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MODAL_OPEN_EVENT, useModal } from '../../react.js';
+import { MODAL_OPEN_EVENT, useDialog } from '../../react.js';
 
 /** What the last `modal:open` carried, flattened to something a test can read off the page. */
 type Seen = {
@@ -35,7 +35,7 @@ function useOpenEventProbe(modalId: string): Seen | null {
 /** A dialog in the document, where a query would have worked and the event agrees. */
 export function OpenEventInDocumentHarness() {
   const seen = useOpenEventProbe('open-event-plain');
-  const modal = useModal({
+  const modal = useDialog({
     id: 'open-event-plain',
     ariaLabel: 'Plain',
     render: () => {
@@ -73,7 +73,7 @@ export function OpenEventInShadowHarness() {
     }
   }, []);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'open-event-shadow',
     ariaLabel: 'In a shadow root',
     render: () => {

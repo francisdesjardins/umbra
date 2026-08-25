@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ModalOutlet } from '../../modal-outlet.js';
-import { useModal } from '../../use-modal.js';
+import { useDialog } from '../../use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Harness: a modal unmounting out from under its outlet ──────────────────
 
 function TeardownModal({ onRemove }: { readonly onRemove: () => void }) {
-  const { open, isVisible } = useModal<void, 'close'>({
+  const { open, isVisible } = useDialog<void, 'close'>({
     id: 'outlet-teardown',
     render: ({ handle }) => {
       return (

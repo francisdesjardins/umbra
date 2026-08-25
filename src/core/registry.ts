@@ -7,7 +7,7 @@
  *
  * **Declare as few or as many as you like.** An id the registry does not name still works, so a
  * project can adopt this one modal at a time and can host modals it does not own — a third-party
- * panel, a test harness. What a declared entry buys is its contract: `useModal` reads the payload
+ * panel, a test harness. What a declared entry buys is its contract: `useDialog` reads the payload
  * and the reasons off the id, and `close` accepts only the reasons that id declared.
  *
  * The trade is that a mistyped id is **not** an error, because an unknown id is a supported one.

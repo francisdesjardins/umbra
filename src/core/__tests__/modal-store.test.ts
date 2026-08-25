@@ -3,7 +3,7 @@ import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frame
 import { createModalStore } from '../modal-store.js';
 import type { AwaitedClose } from '../types.js';
 
-// The modal state machine — `useModal`'s logic with React removed, so every transition is
+// The modal state machine — `useDialog`'s logic with React removed, so every transition is
 // assertable without a browser. The store schedules its own animation frame, so these tests
 // install a controllable `requestAnimationFrame`: frames advance only when the test says so,
 // which is what makes the "close cancels a pending open frame" assertions deterministic.

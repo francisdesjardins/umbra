@@ -125,7 +125,7 @@ export function createOpenRequest<TPayload>(
 }
 
 /**
- * Answers a bridged open on the dialog's behalf. Declared through the binding — `useModal({
+ * Answers a bridged open on the dialog's behalf. Declared through the binding — `useDialog({
  * onOpenRequest })` in React.
  *
  * Declaring one is what makes a dialog reachable by {@link DialogManager.requestOpen}; a dialog
@@ -408,10 +408,10 @@ const emptySnapshot: DialogManagerSnapshot = {
  * to give each test its own instance.
  */
 export type DialogManager = {
-  /** Register a modal store. Called internally by useModal. */
+  /** Register a modal store. Called internally by useDialog. */
   register(id: ModalId, options: RegisterOptions): void;
 
-  /** Unregister a modal store. Called internally by useModal. */
+  /** Unregister a modal store. Called internally by useDialog. */
   unregister(id: ModalId): void;
 
   /**
@@ -985,7 +985,7 @@ export function createDialogManager(): DialogManager {
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
-   * Register a modal store with the registry. Called by `useModal` on mount.
+   * Register a modal store with the registry. Called by `useDialog` on mount.
    * Subscribes to the store's snapshot changes to track open/close transitions
    * and emit events to external listeners.
    */
@@ -1093,7 +1093,7 @@ export function createDialogManager(): DialogManager {
   }
 
   /**
-   * Unregister a modal store. Called by `useModal` on unmount.
+   * Unregister a modal store. Called by `useDialog` on unmount.
    */
   function unregister(id: string) {
     const entry = registry.get(id);

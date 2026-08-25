@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
-import { isKeyClaimedByPopup, useModal } from '../../react.js';
+import { isKeyClaimedByPopup, useDialog } from '../../react.js';
 
 // The two shapes an open overlay comes in, where the capturing window listener running first is
 // wrong: a control reporting its own open list, and a popup portaled out of the dialog holding
@@ -10,7 +10,7 @@ export function DismissKeyOwnershipHarness() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [closed, setClosed] = useState(false);
 
-  const modal = useModal({
+  const modal = useDialog({
     id: 'dismiss-ownership',
     nonModal: true,
     ariaLabel: 'Panel with overlays',

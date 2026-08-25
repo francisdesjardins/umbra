@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useModal } from '../../react.js';
+import { useDialog } from '../../react.js';
 import { dialogStyle } from '../../__tests__/story-styles.js';
 
 /**
@@ -15,7 +15,7 @@ export function StrandedFocusHarness() {
   const [busy, setBusy] = useState(false);
   const [runs, setRuns] = useState(0);
 
-  const modal = useModal<void, 'ok'>({
+  const modal = useDialog<void, 'ok'>({
     id: 'stranded-focus',
     ariaLabel: 'Stranded focus',
     render: ({ action }) => {
