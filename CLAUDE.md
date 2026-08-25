@@ -192,7 +192,7 @@ It exists because these facts were spread over five places that disagreed with e
 **inventorying the rows produced seven defects before a cell was written.** So a new compatibility
 fact goes in the table, not in prose here — and if it is about one module, in that module's JSDoc.
 
-Three things the vocabulary buys:
+Five things the vocabulary buys:
 
 - **The two kinds of ✗ are different facts.** `✗ platform` is a browser law; `✗ by design` is a
   refusal that owes a reason — carried in `why`, which the gate requires of it and of `~`. Neither is
@@ -201,11 +201,21 @@ Three things the vocabulary buys:
   that list _is_ the backlog, from the same data. A `TODO.md` would be a second answer that drifts.
 - **A `✓` can still carry an open question**, through `caveat` — a claim proven on one binding and
   not the others. The enumeration reads the _state_, and the state says done, so in a note it would
-  reach a reader of the table and not the backlog. `yarn todo` lists caveats prefixed `?`.
+  reach a reader of the table and not the backlog. `yarn todo` lists caveats prefixed `?`. **A
+  caveat owes a `question` and a `nextStep`**, both gated: one nobody can name a next step for is a
+  `note`, which is what two of the first four turned out to be.
+- **`⏸ blocked` is not work and does not print as work.** A cell waiting on typedoc's peer range or
+  on a WebKit release is neither half-working nor fixable here, so it owes a `recheck` — what to look
+  at, and the ISO date someone last did — and `yarn todo` returns it in a **second** list. Filing
+  those beside real work is what made a ten-item backlog unfinishable by construction.
+- **Every open cell carries a `since`**, and `yarn todo` sorts by it and prints the age —
+  deliberately instead of a threshold on the count: six `~` for ten days reads exactly like six
+  closed and six opened.
 
 The gate checks that every option has a row, that no row names an option that no longer exists, that
-every cited test resolves to a real file and title, and that a refusal carries its `why`. It cannot
-check that the cited test proves the cell; that part stays human.
+every cited test resolves to a real file and title, that a refusal carries its `why`, that a
+`⏸` carries its `recheck`, and that a caveat carries both halves. It cannot check that the cited
+test proves the cell; that part stays human.
 
 ## Deeper Context
 

@@ -11,6 +11,81 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-24
 
+### Changed — the matrix worklist says which of ten things were actually work
+
+`yarn todo` printed **10 open cells** and had printed nine or ten for eleven days. The file's own
+history says which half of that was real:
+
+| Date       | `✓ untested` | `~` | `caveat` |
+| ---------- | ------------ | --- | -------- |
+| 2026-08-13 | 16           | 4–6 | 0        |
+| 2026-08-17 | 0            | 6   | 1        |
+| 2026-08-23 | 0            | 6   | 4        |
+
+`✓ untested` went to zero and stayed there — that lane worked. `~` sat at six for ten days, and
+**not one caveat was ever removed**: all four arrived attached to a feature branch. So the list was
+not growing so much as never finishing, and it could not finish, because three different things were
+printing under one heading — work, decisions already taken, and answers somebody else has to ship.
+
+**`⏸ blocked` is the state that was missing**, and it owes a `recheck`: what to look at, and the ISO
+date someone last did. Two cells were it all along and their own prose said so — the WebKit half of
+the Tab recovery is "left open only to be re-measured", and the TypeScript 6 pin "is blocked on
+typedoc rather than on this repo". `worklist()` returns them in a second list nobody is expected to
+burn down. `no-platform` could not carry them: it means _never_, and both change when somebody else
+releases.
+
+**Four cells were decisions wearing a `~` or a `?`**, each already argued in the cell that carried
+it. `portal: true` on the controller and a fragment swapped underneath it are `✗ by design` —
+"this binding never moves the element", "**deliberately not detected**", the second with two named
+tests and the `destroy()`/re-bind recipe. The `ModalRegistry` and Solid `phase` caveats are notes:
+per-modal adoption and the cost of reading a getter inside JSX are trades, not open questions. No
+judgement was reversed here; the state caught up with the sentence beside it.
+
+**A caveat is now `{ question, nextStep }`, both gated.** That is what stops the ratchet, and it is
+the same shape as the `why` a refusal owes: an author who cannot say what would close it has written
+a note. Both remaining caveats gained a real next step — instrument the controller's publish path
+before touching anything for `reconcileOpen`; decide whether a transitions-on assertion is reachable
+at all before writing one for React's `phase`, given `playwright.config.ts` has no e2e project.
+
+**Every open cell carries a `since`, and there is deliberately no threshold on the count.** The
+count is what hid the plateau — six `~` for ten days reads exactly like six closed and six opened —
+so `yarn todo` sorts oldest-first and prints the age instead. A failing number would say the list is
+too long; an age says which line has been ignored, and that is the one a person can act on. The
+"list is the output, not a threshold" decision in the test stands, with the reasoning now written
+beside it.
+
+Two smaller things fell out. `openTail` is shared by all three axes, because the platform and WCAG
+loops rendered `why` and nothing else — so a caveat on one of those rows reached `yarn todo` and
+never reached `API.md`, the exact hiding the caveat is rendered to prevent on a binding cell. And
+`bindingCells` replaces the react/solid/vanilla triple written out in four places, one of them the
+gate that exists to catch a fourth binding.
+
+**Nothing the library does changed.** Before and after:
+
+```
+10 open cells — the worklist the matrix produces:
+  ~  portal: true — umbra/vanilla
+  ~  markup replaced underneath it (htmx, Turbo, Unpoly) — umbra/vanilla
+  ~  Tab reaches the content when the dialog element itself has focus
+  ~  a raise keeps the caret where the user left it
+  ~  installing a policy over dialogs already open is minimal
+  ~  nothing in the repo still needs TypeScript 6
+  ? (✓)  ModalRegistry — project-level id and contract typing — umbra/react
+  ? (✓)  phase, exposed to the caller — umbra/react
+  ? (✓)  phase, exposed to the caller — umbra/solid
+  ? (✓)  reconcileOpen — umbra/vanilla
+
+4 open — the worklist the matrix produces, oldest first:
+    11d  ? (✓)  reconcileOpen — umbra/vanilla
+    11d  ~  a raise keeps the caret where the user left it
+    11d  ~  installing a policy over dialogs already open is minimal
+     3d  ? (✓)  phase, exposed to the caller — umbra/react
+
+2 on the watch list — nothing to do here until somebody else ships:
+    11d  ⏸ blocked  Tab reaches the content when the dialog element itself has focus
+    10d  ⏸ blocked  nothing in the repo still needs TypeScript 6
+```
+
 ### Changed — a modal's contract declares what each reason closes with
 
 `ModalRegistry` entries said `{ data, reason }`: one payload for every reason a modal has. Five of
@@ -42,7 +117,7 @@ entries declaring both — the heuristic the design set out to avoid. The bare-u
 the 30-odd payload-free entries stay one line, the way `PortalTarget` takes a boolean or a getter.
 
 **And the pair is named by direction: `closesWith` / `opensWith`.** `closes` alone reads as a
-transitive verb — closes *what* — where the sense is what it closes *with*, which is the phrase the
+transitive verb — closes _what_ — where the sense is what it closes _with_, which is the phrase the
 docs already used for it. `payload` followed: it had been named after the runtime field it types
 (`OpenRequest.payload`), a rule `closesWith` does not follow, so keeping it would have been two
 naming rules for two neighbouring keys. `PayloadOf` keeps its name, since what it returns really is
@@ -54,7 +129,7 @@ the store, the engine and the resolver queue never name `CloseOf`. A union keyed
 opaque at a generic boundary the way a conditional is, so proving a value inhabits it inside
 `createModalStore` would have wanted an `as` — instead the correlation is stated only in the
 registered-id overloads every entry point already had, which is the one seam TypeScript sanctions
-for a signature narrower than its body can prove. The two manager doors whose *return* narrows moved
+for a signature narrower than its body can prove. The two manager doors whose _return_ narrows moved
 from object-literal members to function declarations for the same reason: only a declaration carries
 overloads.
 

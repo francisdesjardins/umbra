@@ -13,12 +13,21 @@
  * | `works`           | works, and a named test proves it                             | no                    |
  * | `works-untested`  | should work, nothing verifies it                              | **yes** — write it    |
  * | `partial`         | half works, the limit is written down and fixable             | **yes**               |
+ * | `blocked`         | the answer is somebody else's to ship; `recheck` says what     | no — the watch list   |
  * | `no-platform`     | the browser forbids it; no implementation would change it     | no — never            |
  * | `no-by-design`    | the library refuses, with a documented reason                 | no — the reason is due |
  * | `n-a`             | the combination has no meaning on this path                   | no                    |
  *
  * Without that split the list of ✗ contains items nobody can ever act on, and a real gap reads the
  * same as a platform law.
+ *
+ * **`blocked` is the third thing that was wearing `~`'s symbol**, and the reason the list stayed at
+ * six for ten days: a cell waiting on typedoc's peer range or on a WebKit release is not half-working
+ * and is not fixable here, so filing it beside real work makes the worklist unfinishable by
+ * construction. It owes a {@link Recheck} — what to look at, and when someone last did — the way `~`
+ * owes a `why`, and `worklist()` returns it in a second list nobody is expected to burn down.
+ *
+ * **And every open cell owes a `since`.** The count alone hid the plateau; the age does not.
  *
  * **What the gate can and cannot check** — the same honesty `docs-exports.test.ts` keeps about its
  * own scope. It checks that every option has a row, that no row names an option that does not exist,
@@ -30,7 +39,7 @@
 
 /** One cell's verdict. See the table in this module's doc comment. */
 export type CellState =
-  'works' | 'works-untested' | 'partial' | 'no-platform' | 'no-by-design' | 'n-a';
+  'works' | 'works-untested' | 'partial' | 'blocked' | 'no-platform' | 'no-by-design' | 'n-a';
 
 /**
  * How strongly a constraint is held — and it is a second dimension because it decides whether a cell
@@ -51,7 +60,58 @@ export type TestReference = {
   readonly title: string;
 };
 
-export type Cell = {
+/**
+ * What a `blocked` cell is waiting on, and when somebody last looked.
+ *
+ * Required of `blocked` the way `why` is required of `~`, and for the same reason: the state's whole
+ * content is this. A cell that says "wait" without saying what for is indistinguishable from a cell
+ * nobody has thought about, which is how one gets filed as work and re-read every week.
+ *
+ * `measured` is what makes the state honest over time — the answer is somebody else's release, so
+ * the only thing this repo owns is the date it last checked. `yarn todo` sorts the watch list by it,
+ * stalest first, and the prose form ("Re-measured 2026-08-14: unchanged") that this replaces was
+ * buried mid-paragraph in the one row that bothered.
+ */
+export type Recheck = {
+  /** The external fact to look at — a peer range, an engine's behaviour. Nothing about this repo. */
+  readonly what: string;
+  /** ISO date it was last measured, e.g. `'2026-08-14'`. */
+  readonly measured: string;
+};
+
+/**
+ * An open question a cell carries **despite** its state, and the reason the field exists.
+ *
+ * A `✓` can be true and still have a hole in it — a claim proven on one binding and not the others, a
+ * discrimination that does not reproduce and is unexplained. Written into `note`, that reaches a
+ * reader of the table and **not** the worklist, so it is a to-do nothing enumerates: the state is
+ * what `worklist()` reads, and the state says "done". This is how such a thing gets listed.
+ *
+ * **It is two fields because one was a place to put anything.** Four caveats were written in two
+ * weeks and none was ever removed; two of them turned out to be explanations of a deliberate trade —
+ * a `note` wearing the worklist's clothes — and a third had gone false under a branch that edited
+ * the cell right beside it. Naming the `nextStep` is the cheapest gate against both: an author who
+ * cannot say what would close it has written a `note`, and one who can has left the next reader
+ * something to act on. Same move as `why` on a refusal, at the smaller scale.
+ */
+export type Caveat = {
+  /** What is not known, or not proven. */
+  readonly question: string;
+  /** What would close it — the measurement to take, the test to write, the surface to change. */
+  readonly nextStep: string;
+};
+
+/**
+ * The ISO date an open cell went open — a `~`, a `✓ untested`, or a {@link Caveat}.
+ *
+ * The count alone hid a plateau: six `~` for ten days reads exactly like six different `~` closed and
+ * re-opened. `yarn todo` sorts by this and prints the age, so the oldest thing is the first thing.
+ */
+type OpenSince = {
+  readonly since?: string;
+};
+
+export type Cell = OpenSince & {
   readonly state: CellState;
   /**
    * Why the cell is what it is — **required of a refusal and of a `~`**, whose whole content is the
@@ -66,15 +126,9 @@ export type Cell = {
   /** Elaboration a `✓` does not owe — how it works, what it costs, what it is not. */
   readonly note?: string;
   readonly references?: readonly TestReference[];
-  /**
-   * An open question this cell carries **despite** its state, and the reason the field exists.
-   *
-   * A `✓` can be true and still have a hole in it — a claim proven on one binding and not the others, a
-   * discrimination that does not reproduce and is unexplained. Written into `note`, that reaches a
-   * reader of the table and **not** the worklist, so it is a to-do nothing enumerates: the state is
-   * what `worklist()` reads, and the state says "done". This is how such a thing gets listed.
-   */
-  readonly caveat?: string;
+  readonly caveat?: Caveat;
+  /** Required of `blocked`, meaningless on anything else — see {@link Recheck}. */
+  readonly recheck?: Recheck;
 };
 
 /** One option, and what it does and does not combine with. */
@@ -98,14 +152,32 @@ export type BindingRow = {
   readonly vanilla: Cell;
 };
 
+/**
+ * A binding row as the pairs every consumer of it wants: the specifier, and the cell under it.
+ *
+ * Written out inline in four places before this existed — `worklist()` twice, `allReferences()`, and
+ * the gate in `compatibility-matrix.test.ts` — which is three chances for a fourth binding to be
+ * added to the type and missed by an enumeration. The type already fails on a missing column; this
+ * makes the walks fail with it.
+ */
+export function bindingCells(row: BindingRow): readonly (readonly [string, Cell])[] {
+  return [
+    ['umbra/react', row.react],
+    ['umbra/solid', row.solid],
+    ['umbra/vanilla', row.vanilla],
+  ];
+}
+
 /** One fact about the platform, or about two features meeting. */
-export type PlatformRow = {
+export type PlatformRow = OpenSince & {
   readonly fact: string;
   readonly state: CellState;
   readonly why: string;
   readonly references?: readonly TestReference[];
-  /** An open question this row carries despite its state — see {@link Cell.caveat}. */
-  readonly caveat?: string;
+  /** An open question this row carries despite its state — see {@link Caveat}. */
+  readonly caveat?: Caveat;
+  /** Required of `blocked` — see {@link Recheck}. */
+  readonly recheck?: Recheck;
 };
 
 // ── Axis A — option × option ──────────────────────────────────────────────────
@@ -479,7 +551,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       ],
     },
     vanilla: {
-      state: 'partial',
+      state: 'no-by-design',
       why: 'Selects the placement, does not relocate: the `<dialog>` is markup the caller wrote. So `fixed` reaches the viewport only if they placed it outside any transformed ancestor. **And it keeps `portal: boolean`, not `PortalTarget`**: this binding never moves the element, so a host getter is an option it could only ignore — silently, which is the failure the typed surface exists to prevent.',
       references: [
         {
@@ -575,9 +647,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     capability: 'ModalRegistry — project-level id and contract typing',
     react: {
       state: 'works',
-      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useModal`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused.',
-      caveat:
-        'Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
+      note: 'A consumer augments `ModalRegistry` and every door narrows: `open`, `close`, `requestOpen`, `requestOpenAndWait`, `openAndWait`, `lookup` and `useModal`. An entry declares two things — `closesWith` for the close, `opensWith` for the open — so a request is checked against what the modal said it takes, in the same call whose result was already typed. `closesWith` takes either the bare reasons (`"confirm" | "cancel"`) or a payload per reason (`{ confirm: Receipt; cancel: void }`), and a declared payload is **required**: `close("confirm", receipt)` must be given it, a bare `action("confirm")` is rejected, and `onClose` narrows `data` off `reason` instead of leaving it optional on every branch. The hook gains an overload that reads all of it off the id, so a declared modal needs no type arguments at all; the per-call-site `useModal<TData, TReason>` form is untouched, and is what an empty registry resolves to. Proven at compile time rather than by a runtime test: `src/core/__tests__/registry.test-d.ts` asserts the empty state inside the main type-check, and `yarn type-check:registry` compiles `type-fixtures/` alone — declaration merging is global, so an augmented registry in the main project would hide the very fallback it asserts. `type-fixtures/closes-with-contract.test-d.ts` is the correlated half, every rejection a `@ts-expect-error` so it fails both ways — a broken guarantee errors, and one that quietly widens to `any` leaves the directive unused. Adoption is per modal, not all-or-nothing: an undeclared id still works, which is what lets a project host modals it does not own — the playground renders a few hundred of the library’s own harnesses. The trade is that a mistyped id is not an error, since an unknown one is supported; what an entry buys is its contract. `close` keeps per-id reason checking through one generic signature rather than an overload pair, because a failing first overload falls through to the permissive one instead of erroring — `requestOpen` is written the same way, and `requestOpenAndWait`, which needs its pair for the *return*, constrains the payload in **both** halves so neither rescues what the other rejected. **`onOpenRequest` is the one door that does not narrow**, deliberately: `PayloadOf` types the asking side, where both call sites are the project’s own, and the receiving side is where a message from outside arrives — a parameter annotated with a declaration nobody checked at run time would read as a guarantee never made.',
     },
     solid: {
       state: 'works',
@@ -655,8 +725,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     react: {
       state: 'works',
       note: 'On the render args and the hook return. `isVisible` and `isPreparing` are not the two answers a caller needs after all: `isVisible` is true for both `open` and `closing`, so nothing but `phase` separates a panel that is leaving from one that is up — and the render callback, which decides what is on screen, carried neither. Transient state is what forces it: an action stops running before the exit animation ends, so a label read from `hasRunningAction` reverts with the panel still painted.',
-      caveat:
-        'The `closing` window itself is not assertable in a component test: transitions are off in a harness, so `runCloseSequence` finalizes with no exit to observe. It is measured in a real browser instead — 18 painted frames of a playground modal holding its running label through the exit.',
+      since: '2026-08-21',
+      caveat: {
+        question:
+          'The `closing` window itself is not assertable in a component test: transitions are off in a harness, so `runCloseSequence` finalizes with no exit to observe. It is measured in a real browser instead — 18 painted frames of a playground modal holding its running label through the exit.',
+        nextStep:
+          'Decide whether a transitions-on assertion is reachable at all: `playwright.config.ts` has only `unit` and `component` projects, so it means a new one against the playground. Cheap — reuse the server `scripts/smoke-playground.mjs` starts — write it. Not cheap for one cell — demote this to a note, since 18 painted frames in a real browser is already a measured answer rather than an open question.',
+      },
       references: [
         {
           file: 'src/react/__tests__/use-modal.ct.tsx',
@@ -666,9 +741,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
     solid: {
       state: 'works',
-      note: 'A getter, like every other live value.',
-      caveat:
-        'A `phase` read inside JSX subscribes that expression to every transition. That is the getter\u2019s cost and the caller\u2019s to spend: read it where the transition matters and nowhere else.',
+      note: 'A getter, like every other live value. A `phase` read inside JSX subscribes that expression to every transition. That is the getter\u2019s cost and the caller\u2019s to spend: read it where the transition matters and nowhere else.',
     },
     vanilla: {
       state: 'works',
@@ -1099,8 +1172,13 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     vanilla: {
       state: 'works',
       note: 'Read off the snapshot the controller publishes rather than through `useLookup`, which is why `phase` is on this binding’s surface and on neither of the others.',
-      caveat:
-        'The `phase`-versus-`isVisible` half is proven on React only, and the reason has narrowed twice. The two forms differ on exactly one input pair — `phase === "closing"` with `open === false`; every other pair is identical, since `isVisible` is `phase !== "closed"`. **The controller never publishes that phase here.** The harness now accumulates every phase it is notified of with a functional updater, which cannot drop one to a React batch, and it reads `opening,open,closed` — so this is the store’s own sequence rather than an observation problem, which is what the first reading of this assumed. React’s harness, on the same animation config, does reach `"closing"`. Closing this means an exit that stays observable through the controller’s snapshot long enough to be reconciled against — not a change to `reconcileOpen`, whose decision is already the right one.',
+      since: '2026-08-13',
+      caveat: {
+        question:
+          'The `phase`-versus-`isVisible` half is proven on React only, and the reason has narrowed twice. The two forms differ on exactly one input pair — `phase === "closing"` with `open === false`; every other pair is identical, since `isVisible` is `phase !== "closed"`. **The controller never publishes that phase here.** The harness now accumulates every phase it is notified of with a functional updater, which cannot drop one to a React batch, and it reads `opening,open,closed` — so this is the store’s own sequence rather than an observation problem, which is what the first reading of this assumed. React’s harness, on the same animation config, does reach `"closing"`. Closing this means an exit that stays observable through the controller’s snapshot long enough to be reconciled against — not a change to `reconcileOpen`, whose decision is already the right one.',
+        nextStep:
+          'Instrument the controller’s publish path first — the store is shared and React reaches `"closing"` on the same animation config, so the question is why this binding’s snapshot goes `opening,open,closed`. If the exit can be held observable, assert the one input pair that separates the two forms (`phase === "closing"` with `open === false`) in `bind-dialog.ct.tsx`. If it cannot without moving the close sequence’s timing, that is the answer: record it and demote this to a note.',
+      },
       references: [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
@@ -1120,7 +1198,7 @@ export const BINDING_ROWS: readonly BindingRow[] = [
       note: 'As React: the dialog is the binding’s own output, not a fragment somebody hands it.',
     },
     vanilla: {
-      state: 'partial',
+      state: 'no-by-design',
       why: 'The binding a hypermedia page would use, and the one arrangement where nothing tells the library. `bindDialog` closes over the element it was handed and registers `getDialog` with the manager, so a swap leaves the controller driving a detached node while the fragment on screen carries none of the library’s attributes — it is a plain `<dialog>` again. **Deliberately not detected**: an observer per dialog is every consumer paying for one integration style, and the code doing the swapping is the one thing that already knows. `destroy()` then bind again over what arrived restores the whole surface and leaves the registry at one entry — run it from `htmx:beforeSwap` / `htmx:afterSwap` or the equivalent.',
       references: [
         {
@@ -1215,7 +1293,11 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'Tab reaches the content when the dialog element itself has focus',
-    state: 'partial',
+    state: 'blocked',
+    recheck: {
+      what: 'WebKit swallowing forward Tab from the dialog element — and Shift+Tab, which reaches nothing on any of the three',
+      measured: '2026-08-13',
+    },
     why: 'Clicking a dialog’s empty space focuses the `<dialog>` element — it is click-focusable while open, though it takes no `tabindex` and refuses `focus()` from script. What Tab does from there is the engines’ own answer and they do not agree: **forward Tab reaches the content on Chromium and Firefox and is swallowed by WebKit**, and **Shift+Tab reaches nothing on any of the three**. Measured both ways on all three. `attachFocusContainment` answers it unconditionally now — the recovery used to sit behind `containFocus`, which made an ordinary click cost the keyboard in any dialog that had not opted into an option about something else. Left open only to be re-measured: if WebKit descends one day, the forward half becomes redundant.',
     references: [
       {
@@ -1254,6 +1336,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'a raise keeps the caret where the user left it',
     state: 'partial',
+    since: '2026-08-13',
     why: 'Restored for the dialog that **held** the keyboard — the case a late policy install hits. One that did not is re-shown by `showModal()`, and where focus lands then is **the engine’s answer, not the library’s**: Chromium puts it on the dialog’s first focusable, WebKit preserves the field. So the guarantee is that the dialog in front keeps the keyboard; the position is not one, and a test that pinned a control was pinning one engine. Fixing it for real means teaching the `focusin` bookkeeping to ignore focus the library itself moves during a raise, which needs a window `raiseDialog` can publish and the coordinator can read.',
     references: [
       {
@@ -1327,6 +1410,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'installing a policy over dialogs already open is minimal',
     state: 'partial',
+    since: '2026-08-13',
     why: 'The top layer is not tracked until a policy exists, so the first plan compares `planRaises` against an empty `current` — which by its own arithmetic returns every open modal dialog, bottom-first. **Seeding the tracking at install time was tried and is not in the code**, because nothing observable changed: with two modal dialogs open in the order the policy already wants, the harness that counts native `close` events reports **zero either way**, so whatever costs a round-trip here is not reached by the obvious arrangement, and a fix nobody can show working is not one. What is still true is the arithmetic, so the cost is real somewhere the measurement has not gone — a third dialog, an order the policy actually changes, or a phase the snapshot holds and the elements do not. Installing at start-up costs nothing and remains the advice.',
   },
   {
@@ -1433,7 +1517,11 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'nothing in the repo still needs TypeScript 6',
-    state: 'partial',
+    state: 'blocked',
+    recheck: {
+      what: 'typedoc’s `typescript` peer range — `typedoc@0.28.20` still declares `5.0.x || … || 6.0.x`, so the pin is the range rather than a stale entry. There is nothing else to try until it moves.',
+      measured: '2026-08-14',
+    },
     why: 'The linter runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, whose two remaining jobs are `docs:check` and the JSON model behind the playground’s `/api` page — the HTML half is gone. TS 7 ships an API (`typescript/unstable/sync`) and it is **most of the way there**: exports, doc comments, `@example` tags, `typeToString` and `emitter.printNode` all work, and a lazy declaration node inflates through `resolve()`. Three measured blockers remain, and the middle one is the surprise: the resolved node exposes **no child traversal** (`children` is `undefined`, and no `forEachChild` is exported), so a syntax-level check like `notExported` cannot be written; walking the resolved _type graph_ instead is semantically the wrong question — it reports **0** findings against typedoc’s 10 allowances, because an alias resolves away; and the server **panics** rather than throwing on an unsupported checker call, so preconditions must be guarded rather than probed. So the `/api` model is the nearer half of this, not the validator. **Re-measured 2026-08-14: unchanged.** `typedoc@0.28.20` still declares `typescript: "5.0.x || … || 6.0.x"`, so the pin is not a stale one to drop — it is the peer range, and the cell is blocked on typedoc rather than on this repo. Check that range first; there is nothing else to try until it moves.',
   },
 ];
@@ -1447,7 +1535,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
 // file: a named test proves it.
 
 /** One WCAG 2.2 success criterion, and where a headless dialog library stands on it. */
-export type WcagRow = {
+export type WcagRow = OpenSince & {
   /** The numbered criterion, e.g. `'2.1.2'`. */
   readonly criterion: string;
   /** Its name as the spec titles it. */
@@ -1456,8 +1544,10 @@ export type WcagRow = {
   readonly state: CellState;
   readonly why: string;
   readonly references?: readonly TestReference[];
-  /** An open question this row carries despite its state — see {@link Cell.caveat}. */
-  readonly caveat?: string;
+  /** An open question this row carries despite its state — see {@link Caveat}. */
+  readonly caveat?: Caveat;
+  /** Required of `blocked` — see {@link Recheck}. */
+  readonly recheck?: Recheck;
 };
 
 export const WCAG_ROWS: readonly WcagRow[] = [
@@ -1580,25 +1670,49 @@ const SYMBOL: Record<CellState, string> = {
   works: '✓',
   'works-untested': '✓ untested',
   partial: '~',
+  blocked: '⏸ blocked',
   'no-platform': '✗ platform',
   'no-by-design': '✗ by design',
   'n-a': 'n/a',
 };
 
-/** Every state that puts a cell on the worklist. */
+/**
+ * Every state that puts a cell on the **actionable** worklist.
+ *
+ * `blocked` is deliberately absent: it goes on the watch list instead, which is the whole of what
+ * that state buys. Adding it here restores the undifferentiated list the split exists to end.
+ */
 export const OPEN_STATES: readonly CellState[] = ['works-untested', 'partial'];
 
 const escapeCell = (text: string): string => {
   return text.replaceAll('|', '\\|');
 };
 
+/**
+ * The clauses any row may carry after its reason, rendered identically wherever the row lives.
+ *
+ * The caveat is rendered at all because the document would otherwise hide what `yarn todo` prints,
+ * and a reader of the table is exactly who needs to know a ✓ has a hole in it. It is rendered *here*
+ * because the platform and WCAG loops printed `why` and nothing else — so a caveat on one of those
+ * rows reached the worklist and never reached the document, the very hiding this guards against on a
+ * binding cell. One function, three call sites, no row that can quietly carry less than another.
+ */
+const openTail = (value: { readonly caveat?: Caveat; readonly recheck?: Recheck }): string => {
+  const caveat =
+    value.caveat === undefined
+      ? ''
+      : ` **Still open:** ${value.caveat.question} **Next:** ${value.caveat.nextStep}`;
+  const recheck =
+    value.recheck === undefined
+      ? ''
+      : ` **Re-check:** ${value.recheck.what} — last measured ${value.recheck.measured}.`;
+  return `${caveat}${recheck}`;
+};
+
 const cell = (value: Cell): string => {
   const reason = value.why ?? value.note;
   const note = reason === undefined ? '' : ` — ${reason}`;
-  // The caveat is rendered too, or the document would hide what `yarn todo` prints — and a reader of
-  // the table is exactly who needs to know a ✓ has a hole in it.
-  const caveat = value.caveat === undefined ? '' : ` **Still open:** ${value.caveat}`;
-  return escapeCell(`${SYMBOL[value.state]}${note}${caveat}`);
+  return escapeCell(`${SYMBOL[value.state]}${note}${openTail(value)}`);
 };
 
 const list = (label: string, values: readonly string[] | undefined): string => {
@@ -1622,13 +1736,16 @@ export function renderMatrix(): string {
   lines.push('| ✓ untested | should work, nothing verifies it | **yes** — write the test |');
   lines.push('| ~ | half works, and the limit is written down and fixable | **yes** |');
   lines.push(
+    "| ⏸ blocked | the answer is somebody else's to ship; the cell names what to re-check and when it was last measured | no — the watch list |"
+  );
+  lines.push(
     '| ✗ platform | the browser forbids it; no implementation would change it | no — never |'
   );
   lines.push('| ✗ by design | the library refuses, with a documented reason | no |');
   lines.push('| n/a | the combination has no meaning on this path | no |');
   lines.push('');
   lines.push(
-    'The two kinds of ✗ are **not the same fact**, and keeping them apart is the point: without the split, a list of everything that does not work contains items nobody can ever act on, and a real gap reads like a platform law.'
+    'The two kinds of ✗ are **not the same fact**, and keeping them apart is the point: without the split, a list of everything that does not work contains items nobody can ever act on, and a real gap reads like a platform law. ⏸ is that argument one step further in: a cell waiting on a peer range or on a browser release is neither half-working nor fixable here, so filing it beside real work is what makes a list unfinishable by construction.'
   );
   lines.push('');
 
@@ -1665,7 +1782,9 @@ export function renderMatrix(): string {
   lines.push('| Can it? | | Why |');
   lines.push('| --- | --- | --- |');
   for (const row of PLATFORM_ROWS) {
-    lines.push(`| ${escapeCell(row.fact)} | ${SYMBOL[row.state]} | ${escapeCell(row.why)} |`);
+    lines.push(
+      `| ${escapeCell(row.fact)} | ${SYMBOL[row.state]} | ${escapeCell(`${row.why}${openTail(row)}`)} |`
+    );
   }
   lines.push('');
 
@@ -1678,78 +1797,102 @@ export function renderMatrix(): string {
   lines.push('| --- | --- | --- | --- |');
   for (const row of WCAG_ROWS) {
     lines.push(
-      `| ${row.criterion} ${escapeCell(row.name)} | ${row.level} | ${SYMBOL[row.state]} | ${escapeCell(row.why)} |`
+      `| ${row.criterion} ${escapeCell(row.name)} | ${row.level} | ${SYMBOL[row.state]} | ${escapeCell(`${row.why}${openTail(row)}`)} |`
     );
   }
 
   return lines.join('\n');
 }
 
+/** One line `yarn todo` prints, and the date that decides where it prints. */
+export type WorklistEntry = {
+  /** The line itself, without the age — the caller owns "today". */
+  readonly line: string;
+  /** When the item went open, or when a `blocked` one was last measured. */
+  readonly since?: string;
+};
+
+/** The backlog, split into the part that is work and the part that is not. */
+export type Worklist = {
+  /** `✓ untested`, `~`, and every caveat. This is the list to burn down. */
+  readonly open: readonly WorklistEntry[];
+  /** `blocked` — waiting on somebody else, with the date it was last checked. Not work. */
+  readonly watch: readonly WorklistEntry[];
+};
+
+/**
+ * Oldest first, undated last.
+ *
+ * Undated sorts to the bottom rather than the top on purpose: a cell with no date is not the oldest
+ * thing here, it is the one nobody recorded — and putting it first would make the age column lie in
+ * the direction that gets the list ignored.
+ */
+const byAge = (a: WorklistEntry, b: WorklistEntry): number => {
+  if (a.since === undefined || b.since === undefined) {
+    return Number(a.since === undefined) - Number(b.since === undefined);
+  }
+  return a.since.localeCompare(b.since);
+};
+
 /**
  * Everything the table leaves open — the backlog it produces rather than describes.
  *
- * Two kinds, and the second is the one a state-only reading misses: a cell whose **state** is open
- * (`✓ untested`, `~`), and a cell that is otherwise done but carries a `caveat`. Both are printed by
- * `yarn todo`, which is the answer to "is there anything else to validate" — there is one place to ask,
- * and it is generated from the same data the document is.
+ * **Two lists, because they are two different asks.** `open` is work: a cell whose state is
+ * `✓ untested` or `~`, and a cell that is otherwise done but carries a {@link Caveat} — the second
+ * being the kind a state-only reading misses, since the state says "done". `watch` is not work: a
+ * `blocked` cell is waiting on somebody else's release, and printing it beside the first list is what
+ * kept the count at ten while only four things could be acted on.
+ *
+ * **Both are sorted oldest-first and carry their date.** For `open` that is `since`, the day the cell
+ * went open; for `watch` it is `recheck.measured`, the day someone last looked — so the stalest
+ * assumption is the first line printed. The count alone hid a ten-day plateau at six: it reads
+ * exactly like six cells closed and six others opened.
  */
-export function worklist(): string[] {
-  const open = (state: CellState): boolean => {
-    return OPEN_STATES.includes(state);
+export function worklist(): Worklist {
+  const open: WorklistEntry[] = [];
+  const watch: WorklistEntry[] = [];
+
+  // `exactOptionalPropertyTypes` is on, so an absent date is an absent property rather than one
+  // spelled `undefined` — which is also the honest shape: undated is not the same as dateless.
+  const entry = (line: string, since: string | undefined): WorklistEntry => {
+    return since === undefined ? { line } : { line, since };
   };
-  return [
-    ...BINDING_ROWS.flatMap((row) => {
-      return (
-        [
-          ['umbra/react', row.react],
-          ['umbra/solid', row.solid],
-          ['umbra/vanilla', row.vanilla],
-        ] as const
-      )
-        .filter(([, value]) => {
-          return open(value.state);
-        })
-        .map(([binding, value]) => {
-          return `${SYMBOL[value.state]}  ${row.capability} — ${binding}`;
-        });
-    }),
-    ...PLATFORM_ROWS.filter((row) => {
-      return open(row.state);
-    }).map((row) => {
-      return `${SYMBOL[row.state]}  ${row.fact}`;
-    }),
-    // The caveats, whatever their cell's state — including the ones whose state says "done".
-    ...BINDING_ROWS.flatMap((row) => {
-      return (
-        [
-          ['umbra/react', row.react],
-          ['umbra/solid', row.solid],
-          ['umbra/vanilla', row.vanilla],
-        ] as const
-      )
-        .filter(([, value]) => {
-          return value.caveat !== undefined;
-        })
-        .map(([binding, value]) => {
-          return `? (${SYMBOL[value.state]})  ${row.capability} — ${binding}: ${value.caveat ?? ''}`;
-        });
-    }),
-    ...PLATFORM_ROWS.filter((row) => {
-      return row.caveat !== undefined;
-    }).map((row) => {
-      return `? (${SYMBOL[row.state]})  ${row.fact}: ${row.caveat ?? ''}`;
-    }),
-    ...WCAG_ROWS.filter((row) => {
-      return open(row.state);
-    }).map((row) => {
-      return `${SYMBOL[row.state]}  WCAG ${row.criterion} ${row.name}`;
-    }),
-    ...WCAG_ROWS.filter((row) => {
-      return row.caveat !== undefined;
-    }).map((row) => {
-      return `? (${SYMBOL[row.state]})  WCAG ${row.criterion} ${row.name}: ${row.caveat ?? ''}`;
-    }),
-  ];
+
+  const record = (
+    label: string,
+    row: {
+      readonly state: CellState;
+      readonly since?: string;
+      readonly caveat?: Caveat;
+      readonly recheck?: Recheck;
+    }
+  ): void => {
+    if (OPEN_STATES.includes(row.state)) {
+      open.push(entry(`${SYMBOL[row.state]}  ${label}`, row.since));
+    }
+    if (row.state === 'blocked') {
+      const what = row.recheck === undefined ? 'nothing recorded' : row.recheck.what;
+      watch.push(entry(`${SYMBOL[row.state]}  ${label} — re-check ${what}`, row.recheck?.measured));
+    }
+    // Whatever the state, including the ones that say "done".
+    if (row.caveat !== undefined) {
+      open.push(entry(`? (${SYMBOL[row.state]})  ${label}: ${row.caveat.question}`, row.since));
+    }
+  };
+
+  for (const row of BINDING_ROWS) {
+    for (const [binding, value] of bindingCells(row)) {
+      record(`${row.capability} — ${binding}`, value);
+    }
+  }
+  for (const row of PLATFORM_ROWS) {
+    record(row.fact, row);
+  }
+  for (const row of WCAG_ROWS) {
+    record(`WCAG ${row.criterion} ${row.name}`, row);
+  }
+
+  return { open: open.sort(byAge), watch: watch.sort(byAge) };
 }
 
 /** Every reference any cell rests on, for the gate to resolve. */
@@ -1767,13 +1910,7 @@ export function allReferences(): readonly {
       return spread(`option ${row.option}`, row.references);
     }),
     ...BINDING_ROWS.flatMap((row) => {
-      return (
-        [
-          ['react', row.react],
-          ['solid', row.solid],
-          ['vanilla', row.vanilla],
-        ] as const
-      ).flatMap(([binding, value]) => {
+      return bindingCells(row).flatMap(([binding, value]) => {
         return spread(`${row.capability} (${binding})`, value.references);
       });
     }),

@@ -23,11 +23,38 @@ const END = '<!-- END COMPATIBILITY MATRIX -->';
 const CHECK = process.argv.includes('--check');
 const LIST_ONLY = process.argv.includes('--list');
 
-const open = worklist();
+const { open, watch } = worklist();
+
+// The age is computed here rather than in the table module, which owns no clock: a pure data module
+// that reads the date renders differently on two days and the gate comparing it to `API.md` fails on
+// the calendar. So the module carries the dates and this prints how old they are.
+const DAY = 24 * 60 * 60 * 1000;
+const TODAY = Date.now();
+const age = (entry) => {
+  if (entry.since === undefined) {
+    return '      ';
+  }
+  return `${String(Math.floor((TODAY - Date.parse(entry.since)) / DAY)).padStart(4)}d `;
+};
+
+const printList = (heading, entries) => {
+  console.log(`\n${String(entries.length)} ${heading}`);
+  for (const entry of entries) {
+    console.log(`  ${age(entry)} ${entry.line}`);
+  }
+};
+
+/**
+ * Two lists, oldest first — and the split is the output's whole point.
+ *
+ * Printed as one list, a cell waiting on typedoc's peer range read exactly like a test somebody owes,
+ * so the backlog could never be finished and stopped being read. The watch half is dated by when it
+ * was last measured, which is the only thing this repo controls about it.
+ */
 const printWorklist = () => {
-  console.log(`\n${String(open.length)} open cells — the worklist the matrix produces:`);
-  for (const entry of open) {
-    console.log(`  ${entry}`);
+  printList('open — the worklist the matrix produces, oldest first:', open);
+  if (watch.length > 0) {
+    printList('on the watch list — nothing to do here until somebody else ships:', watch);
   }
 };
 
