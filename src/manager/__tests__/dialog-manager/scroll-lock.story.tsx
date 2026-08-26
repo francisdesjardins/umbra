@@ -8,7 +8,7 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  */
 export function ScrollLockHarness() {
   const { Dialog, dialogManager } = useDialog<void, 'done'>({
-    id: 'scroll-lock-dialog',
+    id: 'scroll-lock',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -16,7 +16,7 @@ export function ScrollLockHarness() {
           {/* Top-layer rule: a control usable while this dialog is open lives in the render. */}
           <button
             onClick={() => {
-              dialogManager.open('scroll-lock-dialog-2');
+              dialogManager.open('scroll-lock-2');
             }}
           >
             Stack Second Dialog
@@ -35,7 +35,7 @@ export function ScrollLockHarness() {
 
   // Stacked on the first: both lock, but the compensation must be applied exactly once.
   const { Dialog: Dialog2 } = useDialog<void, 'done'>({
-    id: 'scroll-lock-dialog-2',
+    id: 'scroll-lock-2',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -78,7 +78,7 @@ export function ScrollLockHarness() {
       <div style={{ height: '250vh' }}>
         <button
           onClick={() => {
-            dialogManager.open('scroll-lock-dialog');
+            dialogManager.open('scroll-lock');
           }}
         >
           Open Dialog

@@ -11,7 +11,7 @@ export function NonModalHarness() {
   const [openCount, setOpenCount] = useState(0);
 
   const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
-    id: 'non-modal-dialog',
+    id: 'non-modal',
     nonModal: true,
     animation: {
       entrance: { opacity: 1 },

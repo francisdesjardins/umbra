@@ -70,7 +70,7 @@ export function NoProviderHarness() {
   const { openDialogs } = useDialogManager();
 
   const { open, Dialog } = useDialog<void, 'done'>({
-    id: 'no-provider-dialog',
+    id: 'no-provider',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

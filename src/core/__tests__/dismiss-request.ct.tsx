@@ -10,7 +10,7 @@ import {
 // behaviour. The three doors are asserted separately because they were wired separately: routing
 // only the dismiss key through the owner is a version of this that passes half the file.
 
-const MODAL = 'dialog[data-dialog-id="controlled-dialog"]';
+const MODAL = 'dialog[data-dialog-id="controlled"]';
 const PANEL = 'dialog[data-dialog-id="controlled-panel"]';
 const OUTSIDE_PANEL = 'dialog[data-dialog-id="controlled-click-outside"]';
 

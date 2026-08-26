@@ -23,7 +23,7 @@ export function ScrollLockTwoManagersHarness() {
   const [bystanderMounted, setBystanderMounted] = useState(true);
 
   const { open, Dialog } = useDialog<void, 'done'>({
-    id: 'two-managers-dialog',
+    id: 'two-managers',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>

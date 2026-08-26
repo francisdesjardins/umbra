@@ -11,7 +11,7 @@ export function ControlledDialogHarness() {
   const [allow, setAllow] = useState(false);
 
   const dialog = useDialog({
-    id: 'controlled-dialog',
+    id: 'controlled',
     ariaLabel: 'A controlled dialog',
     onDismissRequest: (dismissedBy) => {
       setRequests((count) => {

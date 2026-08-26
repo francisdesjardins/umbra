@@ -10,7 +10,7 @@ export function NonModalClickOutsideHarness() {
   const [lastReason, setLastReason] = useState('');
 
   const { open, isVisible, Dialog } = useDialog<void, 'confirm'>({
-    id: 'click-outside-dialog',
+    id: 'click-outside',
     nonModal: true,
     dismissOnClickOutside: true,
     animation: {

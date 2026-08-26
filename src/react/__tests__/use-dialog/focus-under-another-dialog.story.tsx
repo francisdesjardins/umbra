@@ -14,7 +14,7 @@ export function FocusUnderAnotherDialogHarness() {
   const [done, setDone] = useState(0);
 
   const child = useDialog<void, 'close'>({
-    id: 'over-dialog',
+    id: 'over',
     ariaLabel: 'On top',
     render: ({ action }) => {
       return (
@@ -29,7 +29,7 @@ export function FocusUnderAnotherDialogHarness() {
   });
 
   const owner = useDialog<void, 'save'>({
-    id: 'under-dialog',
+    id: 'under',
     ariaLabel: 'Underneath',
     render: ({ action }) => {
       return (

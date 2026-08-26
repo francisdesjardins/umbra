@@ -1122,7 +1122,7 @@ export function VanillaShadowStackHarness() {
       <span data-testid="native-closes">{closes}</span>
       <span data-testid="open-when-closed">{openWhenClosed}</span>
       <div ref={hostRef} data-testid="shadow-stack-host" />
-      <dialog ref={overRef} data-testid="light-over-dialog">
+      <dialog ref={overRef} data-testid="light-over">
         <p>Over it</p>
       </dialog>
     </>

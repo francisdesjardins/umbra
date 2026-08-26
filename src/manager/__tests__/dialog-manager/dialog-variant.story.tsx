@@ -18,7 +18,7 @@ export function DialogVariantHarness() {
   });
 
   const { Dialog: Dialog1, dialogManager } = useDialog<void, 'done'>({
-    id: 'variant-dialog',
+    id: 'variant',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -58,7 +58,7 @@ export function DialogVariantHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('variant-dialog');
+          dialogManager.open('variant');
         }}
       >
         Open Dialog
@@ -87,7 +87,7 @@ export function DialogVariantHarness() {
  */
 export function DialogVariantLookupHarness() {
   const { Dialog: Dialog1, dialogManager } = useDialog<void, 'done'>({
-    id: 'lookup-dialog',
+    id: 'lookup',
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
@@ -155,7 +155,7 @@ export function DialogVariantLookupHarness() {
     <div>
       <button
         onClick={() => {
-          dialogManager.open('lookup-dialog');
+          dialogManager.open('lookup');
         }}
       >
         Open Dialog

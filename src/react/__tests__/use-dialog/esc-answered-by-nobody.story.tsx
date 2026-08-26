@@ -39,7 +39,7 @@ export function EscAnsweredByNobodyHarness() {
   const [dialogReason, setDialogReason] = useState('');
 
   const front = useDialog<void, 'confirm'>({
-    id: 'esc-gap-dialog',
+    id: 'esc-gap',
     // The whole point of the configuration: this dialog is in front and does not listen.
     dismissKey: false,
     animation: INSTANT,
