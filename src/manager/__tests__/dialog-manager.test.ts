@@ -197,7 +197,7 @@ test.describe('createDialogManager', () => {
       // The dialog leaves the screen before it leaves the registry, and both are worth hearing.
       { type: 'unregister', id: 'm' },
     ]);
-    // The `dialog:close` event shares this branch; no DOM here, so see `complib-bridge.ct.tsx`.
+    // The `dialog:close` event shares this branch; no DOM here, so see `dialog-manager.ct.tsx`.
   });
 
   test('unregistering a closed dialog reports no second close', () => {

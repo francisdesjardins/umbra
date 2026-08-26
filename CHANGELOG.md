@@ -84,6 +84,31 @@ adjective:
   `setLogLevel('dialog:lifecycle')` was being read as `'lifecycle'` and matching nothing. Both
   spellings are tried now, and two tests pin it.
 
+#### The tail of it
+
+Four things surfaced after the main passes, none of which any gate would have caught:
+
+- **Five constants had been protected by their own underscores.** The token rule that renamed
+  `MODAL_ID` treats `_` as a word character, so it refused to match inside `FAILURE_MODAL_ID` —
+  correct by its contract, wrong for the job. `DEFAULT_MODAL_ANIMATION` (internal),
+  `BUILDS_A_MODAL` and the three `*_MODAL_ID` constants in the playground are `*_DIALOG_*` now.
+  Nothing had failed over them: a constant is only ever compared to itself.
+- **Three markdown anchors had been dead links** since the type surface moved — `#modalregistry`,
+  `#usemodal-base-primitive`, `#declaring-your-modals-in-one-place`. An anchor that resolves to
+  nothing scrolls nowhere and reports nothing.
+- **`failureModal` had become `dialogFailure`**, the only name the rename map turned around; it is
+  the failure dialog, not the dialog's failure. It reads `failureDialog`.
+- **Sixteen dialog ids stopped saying "dialog".** The generated test id is `dialog-<id>`, so an id
+  ending `-dialog` came out `dialog-basic-dialog`. Not a regression — it read `modal-basic-modal`
+  before — but this was the moment. `my-dialog` and `some-dialog` stay: they are the placeholders
+  in the examples, written to read like a name a caller would pick.
+
+**Two links in this file broke and are left broken.** The entries that named
+`src/core/modal-director.ts` and `src/core/__tests__/modal-store.test.ts` still point at those
+paths, which the sweep renamed. Three other links here were already dead before it started. Both
+facts say the same thing: a record of what was true on a date will outlive the paths it names, and
+repointing them would be editing the past to flatter the present.
+
 `CHANGELOG.md` itself is the one file the sweep never touched: this file's own header says entries
 are left as written, and renaming a symbol inside a 2026-05 entry would make it name something that
 did not exist for another three months.
