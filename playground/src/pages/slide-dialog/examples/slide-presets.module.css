@@ -60,13 +60,27 @@
   overflow-wrap: anywhere;
 }
 
+/* The whole row is the button, because the contained panel covers the right 62% of this card:
+   a control parked at the row's end is unreachable by mouse while the panel is open, and the
+   name is not. */
 .row {
   display: flex;
   align-items: center;
   gap: var(--app-space-4);
   /* 10px sits between the 8/12 steps — the denser rhythm this data list wants. */
   padding: 10px var(--app-space-4);
+  border: 0;
   border-bottom: 1px solid var(--app-divider);
+  width: 100%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--app-hover);
 }
 
 .rowSelected {

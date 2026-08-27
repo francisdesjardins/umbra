@@ -371,6 +371,109 @@ const flows = {
     return checks;
   },
 
+  /**
+   * A contained non-modal panel leaves the region it sits over usable, by mouse and by keyboard.
+   *
+   * Geometry, so it is checked as geometry: `elementFromPoint` at a row's left edge is the only
+   * thing that answers what the browser would hit, and the click is placed there because a
+   * full-width row is covered at its centre. No other gate renders the playground.
+   */
+  async contained(page) {
+    const checks = [];
+    await gotoRoute(page, '/slide-dialog');
+
+    const rows = page.getByRole('button', { name: /Invoice 10\d\d/ });
+    const panel = page.locator('dialog[data-dialog-id="slide-preset-inspector"]');
+
+    await rows.first().click();
+    await panel.waitFor({ state: 'visible' });
+    await page.waitForTimeout(500);
+
+    const covered = [];
+    for (const index of [0, 1, 2]) {
+      const box = await rows.nth(index).boundingBox();
+      if (box === null) {
+        covered.push(index);
+        continue;
+      }
+      const hitsPanel = await page.evaluate(
+        ([x, y]) => {
+          return document.elementFromPoint(x, y)?.closest('dialog') !== null;
+        },
+        [box.x + 40, box.y + box.height / 2]
+      );
+      if (hitsPanel) {
+        covered.push(index);
+      }
+    }
+    checks.push([
+      covered.length === 0,
+      'every row is reachable while the panel is open',
+      `covered: [${covered.join(', ')}]`,
+    ]);
+
+    // Stated as "focus can leave" rather than "focus is contained": a non-modal panel exists so
+    // the page behind it stays usable, and `containFocus` over a single focusable child loops Tab
+    // and Shift+Tab onto it, leaving Escape the only exit.
+    const left = await (async () => {
+      for (let i = 0; i < 6; i += 1) {
+        await page.keyboard.press('Tab');
+        const inside = await page.evaluate(() => {
+          return document.activeElement?.closest('dialog') !== null;
+        });
+        if (!inside) return true;
+      }
+      return false;
+    })();
+    checks.push([left, 'Tab leaves the non-modal panel rather than looping inside it']);
+
+    // The list answers ↑/↓ itself, through the library's own key utilities.
+    const focused = async () => {
+      return page.evaluate(() => {
+        return document.activeElement?.textContent?.trim().slice(0, 12) ?? 'none';
+      });
+    };
+    await rows.first().focus();
+    await page.keyboard.press('ArrowDown');
+    checks.push([(await focused()).startsWith('Invoice 1044'), 'the list walks down on ArrowDown']);
+    await page.keyboard.press('ArrowUp');
+    checks.push([(await focused()).startsWith('Invoice 1043'), 'and back up on ArrowUp']);
+    // `matchesHotkey` compares modifiers exactly, so a held one is the browser's press, not ours.
+    const held = await focused();
+    await page.keyboard.press('Control+ArrowDown');
+    checks.push([(await focused()) === held, 'a held modifier falls through instead of moving']);
+
+    // The rows are tab stops, so the ring has to survive the scroller that clips this card.
+    await rows.nth(2).focus();
+    const ring = await rows.nth(2).evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      const sr = el.parentElement.getBoundingClientRect();
+      const w = Number.parseFloat(s.outlineWidth);
+      return {
+        drawn: s.outlineStyle !== 'none' && w > 0,
+        inside: r.top - w >= sr.top - 1 && r.bottom + w <= sr.bottom + 1,
+      };
+    });
+    checks.push([
+      ring.drawn && ring.inside,
+      'a focused row draws a ring the scroller does not clip',
+    ]);
+
+    await rows.nth(2).click({ position: { x: 40, y: 20 } });
+    await page.waitForTimeout(400);
+    checks.push([await panel.isVisible(), 'choosing another row does not close the panel']);
+    checks.push([
+      (await rows.nth(2).getAttribute('aria-current')) === 'true',
+      'the chosen row reports itself, rather than only being painted',
+    ]);
+    checks.push([
+      await panel.getByText('Invoice 1045').first().isVisible(),
+      'the panel followed the row that was chosen',
+    ]);
+    return checks;
+  },
+
   /** Section jump bars stick under the top bar (an ancestor `overflow` silently breaks this). */
   async sticky(page) {
     await gotoRoute(page, '/stories');

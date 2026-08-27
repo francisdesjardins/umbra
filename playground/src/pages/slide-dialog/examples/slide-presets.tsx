@@ -5,11 +5,10 @@ import { focusRingSpace } from '@/entities/dialog-template/ui/shared/tokens';
 import { createResultStore } from '@/shared/lib/createResultStore';
 import { useAnnouncer } from '@/shared/lib/use-announcer';
 import { useStore } from '@/shared/lib/use-store';
-import { AppButton } from '@/shared/ui/AppButton';
 import styles from '@/pages/slide-dialog/examples/slide-presets.module.css';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { Key, useSlideDialog } from 'umbra/react';
+import { isKeyClaimedByPopup, Key, matchesHotkey, useSlideDialog } from 'umbra/react';
 
 export const DRAWER_ID = 'slide-preset-drawer';
 export const SHEET_ID = 'slide-preset-sheet';
@@ -161,6 +160,17 @@ function usePalettePreset() {
   });
 }
 
+/** One comparison for both surfaces that answer ↑/↓; `matchesHotkey` lets a held modifier through. */
+const arrowDelta = (event: KeyboardEvent): 1 | -1 | null => {
+  if (matchesHotkey(event, Key.ArrowDown)) {
+    return 1;
+  }
+  if (matchesHotkey(event, Key.ArrowUp)) {
+    return -1;
+  }
+  return null;
+};
+
 /** The rows the contained inspector slides over — a list is what makes a details pane make sense. */
 const ROWS = [
   { id: 'r-1', name: 'Invoice 1043', detail: 'Paid · 3 items · $128.40' },
@@ -181,26 +191,19 @@ function useInspectorPreset(
     direction: 'right',
     nonModal: true,
     portal: false,
-    containFocus: true,
+    // No `containFocus`: over one focusable child its Tab wrap leaves Escape the only way out.
     dismissOnClickOutside: false,
     ariaLabel: 'Row details',
     // A share of the host, not a fixed width: the host is what decides how big this can be.
     style: { width: '62%' },
-    // The library leaves arrow keys alone and this handler only sees presses raised inside the
-    // panel, so ↑/↓ can browse the host's rows while `containFocus` keeps focus parked on Close.
-    // Bare arrows only — a held modifier stays native — and only because nothing in this panel
-    // edits text: an input or a role="listbox" inside would need the arrows for itself.
+    // Only presses raised inside the panel reach this, so it moves the row rather than the focus.
     onKeyDown: (event) => {
-      if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
+      const delta = arrowDelta(event);
+      if (delta === null) {
         return;
       }
-      if (event.key === Key.ArrowDown) {
-        event.preventDefault();
-        onNavigate(1);
-      } else if (event.key === Key.ArrowUp) {
-        event.preventDefault();
-        onNavigate(-1);
-      }
+      event.preventDefault();
+      onNavigate(delta);
     },
     render: ({ action }) => {
       return (
@@ -236,7 +239,8 @@ function useInspectorPreset(
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 16px' }}>
             <Shared.Hint>
               Slides inside the card, not over the page — and the rows behind it stay clickable,
-              because nothing entered the top layer. ↑ and ↓ switch rows while focus stays on Close.
+              because nothing entered the top layer. ↑ and ↓ switch rows from here, and Tab leaves
+              for the page.
             </Shared.Hint>
           </div>
 
@@ -323,6 +327,25 @@ export function SlidePresetsExample() {
 
   const inspector = useInspectorPreset(selected, navigate);
 
+  // Focus moves; the panel follows only while it is showing, since a row marked current with
+  // nothing displaying it is a state the reader cannot see.
+  const moveThroughList = (list: HTMLElement, delta: 1 | -1) => {
+    const rows = [...list.querySelectorAll<HTMLButtonElement>('[data-row]')];
+    const active = document.activeElement;
+    const from = rows.findIndex((row) => {
+      return row === active;
+    });
+    const next = Math.min(rows.length - 1, Math.max(0, (from === -1 ? 0 : from) + delta));
+    const target = rows[next];
+    if (target === undefined || next === from) {
+      return;
+    }
+    target.focus();
+    if (inspector.isVisible) {
+      setSelectedIndex(next);
+    }
+  };
+
   return (
     <ExampleLayout
       result={result}
@@ -384,7 +407,7 @@ export function SlidePresetsExample() {
             }}
           >
             Contained panel — a details pane inside a card, not an overlay on the page. While it is
-            open, ↑ and ↓ move through the rows:
+            open, another row is still one click away — and ↑ / ↓ browse the list from either side:
           </span>
           <div
             style={{
@@ -410,16 +433,35 @@ export function SlidePresetsExample() {
                 paddingBlock: focusRingSpace,
                 scrollPaddingBlock: focusRingSpace,
               }}
+              // A surface answering a key over the page owns none of the library's listeners, so it
+              // asks `isKeyClaimedByPopup` first — a combobox in a row would need these keys itself.
+              onKeyDown={(event) => {
+                const delta = arrowDelta(event.nativeEvent);
+                if (delta === null || isKeyClaimedByPopup(event.currentTarget, event.target)) {
+                  return;
+                }
+                event.preventDefault();
+                moveThroughList(event.currentTarget, delta);
+              }}
             >
               {ROWS.map((row, index) => {
                 return (
-                  <div
+                  <button
                     key={row.id}
+                    type="button"
+                    data-row=""
                     className={
                       selected?.id === row.id
                         ? `${styles['row']} ${styles['rowSelected']}`
                         : styles['row']
                     }
+                    // The class paints it; this is the half a screen reader can hear.
+                    aria-current={selected?.id === row.id ? true : undefined}
+                    // The whole row, because the panel covers the end of it.
+                    onClick={async () => {
+                      setSelectedIndex(index);
+                      await inspector.open();
+                    }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 'var(--app-text-md)', lineHeight: 1.43 }}>
@@ -435,18 +477,7 @@ export function SlidePresetsExample() {
                         {row.detail}
                       </span>
                     </div>
-                    {/* Still clickable while the panel is open — nothing entered the top layer. */}
-                    <AppButton
-                      size="small"
-                      variant="text"
-                      onClick={async () => {
-                        setSelectedIndex(index);
-                        await inspector.open();
-                      }}
-                    >
-                      Details
-                    </AppButton>
-                  </div>
+                  </button>
                 );
               })}
             </div>
