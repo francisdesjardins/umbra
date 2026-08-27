@@ -90,9 +90,8 @@ export function findLabellingProblems(
   }
 
   // Whether the element *ends up* named, not whether an attribute is present: an empty
-  // `aria-label`, or an `aria-labelledby` whose ids resolve to nothing, leaves the dialog exactly
-  // as anonymous as writing neither — and `aria-label=""` is the spelling that hides the omission
-  // from an audit, which is why the option surface refuses to emit it in the first place.
+  // `aria-label`, or an `aria-labelledby` whose ids resolve to nothing, leaves the dialog as
+  // anonymous as writing neither — and `aria-label=""` hides the omission from an audit.
   const named =
     (label !== null && label.trim() !== '') ||
     idsOf(labelledBy).some((id) => {

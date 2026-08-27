@@ -26,51 +26,16 @@ import type { GetDialog, DialogFailure, DialogPhase } from './types.js';
 /**
  * Who asks the lifecycle's decisions, in what order, and on which pass.
  *
- * The core owns every framework-free decision — `canDismiss`, `orderStack`, `chooseActionRunner` —
- * but the *sequence* they are asked in existed only as the order of statements in three binding
- * files, and a sequence nobody names is a sequence nobody can test. This file is that sequence.
+ * The core owns every framework-free decision; the *sequence* existed only as the order of
+ * statements in three binding files, and a sequence nobody names is one nobody can test. A binding
+ * gets one pass and one teardown, and **the pass effect must not return a cleanup** — that would
+ * tear the sequence down before every re-run.
  *
- * ## What a binding is left with
+ * **One key per step, not one for the sequence.** A single key is the union of every step's inputs,
+ * and that union holds `onKeyDown`, an inline arrow whose identity moves every render — so
+ * `focus.sync` would rebuild mid-action with `wasRunning` back to `false`.
  *
- * One pass with no dependency list, and one teardown:
- *
- * ```ts
- * useEffect(() => {
- *   director.sync({ phase, isPreparing, prepare, onKeyDown, …options });
- * });
- * useEffect(() => {
- *   return () => {
- *     director.destroy();
- *   };
- * }, [director]);
- * ```
- *
- * The pass effect **must not return a cleanup**: a cleanup would tear the whole sequence down
- * before every re-run and the diffing below would be pointless. All teardown belongs to
- * {@link DialogDirector.destroy}.
- *
- * ## One key per step, not one key for the sequence
- *
- * React's dependency array, made framework-free. A single key for the whole pass is the union of
- * every step's inputs, and that union contains `onKeyDown` — an inline arrow whose identity
- * changes on every render, including the render an action start causes. `focus.sync` would then
- * be rebuilt mid-action with `wasRunning` back to `false`, the settle unrecognised and focus never
- * given back. So each step declares its own inputs; `focus.sync` reads the phase alone, which
- * `dialog-director.test.ts` asserts directly. Only `syncOpenSequence` runs unkeyed.
- *
- * ## What is not here
- *
- * Render-time steps — `setDialogAttributes`, `getDialogAnimationStyles` — are absent: a binding
- * writes them where its renderer runs, so no order shared with an effect would mean anything.
- *
- * `umbra/vanilla` does not use this; its `sync()` runs `syncOpenSequence` **last** where the hook
- * bindings run it first, recorded by `wiring-order.test.ts`. One thing notices: `focus.sync` arms
- * the `focusin` bookkeeping, so running it first means vanilla hears the opening focus and
- * remembers a `lastFocusInside` the hook bindings leave empty — a later `reclaimFocus` takes its
- * `preferred` path there and the floor here. Same guarantee either way; the matrix carries the
- * measurement on the raise-hands-the-keyboard-back row.
- *
- * @internal Not part of the public API. A binding is the only caller.
+ * @internal A binding is the only caller.
  */
 
 // ── What the director is handed ──────────────────────────────────────────────

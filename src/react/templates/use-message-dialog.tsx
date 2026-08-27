@@ -18,7 +18,7 @@ export type MessageDialogRenderContext<
   TReason extends string = string,
 > = BaseRenderContext<TData, TReason>;
 
-/** Semantic intent of a message dialog, used to drive icon and color selection in UI templates. */
+/** Semantic intent of a message dialog, driving icon and color selection in UI templates. */
 export type MessageDialogType = 'info' | 'warning' | 'error' | 'success';
 
 /** {@link MessageDialogRenderContext} for a declared id. */

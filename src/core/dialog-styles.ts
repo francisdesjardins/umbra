@@ -32,13 +32,10 @@ const adopted = new WeakSet<Document | ShadowRoot>();
 
 function build(): CSSStyleSheet {
   const built = new CSSStyleSheet();
-  // The scrollbar-width compensation itself is an inline style set by `lockBodyScroll()` — it
-  // has to be measured at lock time and added to the page's own padding, which CSS cannot
-  // express. Only the overflow rule lives here.
-  //
-  // The backdrop is the one piece of appearance the library ships, and it is a custom property
-  // so overriding it is a declaration rather than a specificity fight: set `--dialog-backdrop`
-  // anywhere above the dialog (`:root`, a theme class, the dialog itself) and this picks it up.
+  // Only the overflow rule lives here: the scrollbar compensation is an inline style set by
+  // `lockBodyScroll()`, measured at lock time against the page's own padding, which CSS cannot
+  // express. The backdrop is a custom property so overriding it is a declaration rather than a
+  // specificity fight.
   built.replaceSync(`
     body[${BODY_LOCK_ATTR}] {
       overflow: hidden;

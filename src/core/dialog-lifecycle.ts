@@ -85,12 +85,11 @@ export function showDialog(
  * Give the keyboard back to whoever had it before the open — but only when the close left it on
  * nothing.
  *
- * The floor under the platform's own restore, not a replacement for it: when the close-the-dialog
- * steps already returned focus, or the user is somewhere real — typing in the page a non-modal
- * panel never blocked, holding a control in the dialog underneath — the read below finds a live
- * element and this does nothing. It acts on the one outcome that serves nobody: a close that
- * stranded the keyboard on `<body>`, which is what an action-driven close produces on Chromium
- * (see {@link openerFocus}) and what the APG's "focus returns to the invoker" exists to rule out.
+ * The floor under the platform's own restore rather than a replacement: when the close-the-dialog
+ * steps already returned focus, or the user is somewhere real, the read below finds a live element
+ * and this does nothing. It acts on the one outcome that serves nobody — a close that stranded the
+ * keyboard on `<body>`, which an action-driven close produces on Chromium (see {@link openerFocus})
+ * and which the APG's "focus returns to the invoker" exists to rule out.
  *
  * Visibly, like every focus move the library makes from nowhere — see `SHOW_THE_RING`.
  *
@@ -160,13 +159,11 @@ let raiseDepth = 0;
  * **Every focus move inside that window is the library's, not the user's**, and telling the two
  * apart is the whole problem: `close()` + `showModal()` makes the engine focus something, and the
  * `focusin` it fires is indistinguishable at the listener from a person clicking a field. Recording
- * it overwrites the memory that exists to put the caret back, which is why the dialog that was
- * *not* holding the keyboard used to come back on the engine's choice of control.
+ * it would overwrite the memory that exists to put the caret back.
  *
  * **A plain synchronous flag is enough because focus events are synchronous**: `close()`,
- * `showModal()` and `focus()` dispatch `focusin` before they return, so every event this is meant
- * to cover is delivered inside the `try` below. Anything arriving later is somebody's actual doing
- * and must be recorded.
+ * `showModal()` and `focus()` dispatch `focusin` before they return, so every event this covers is
+ * delivered inside the `try` below. Anything arriving later is somebody's actual doing.
  *
  * @internal Not part of the public API.
  */

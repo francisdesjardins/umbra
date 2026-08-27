@@ -1,11 +1,9 @@
 // ── Store module ──────────────────────────────────────────────────────────────
 //
 // A tiny reactive cell with a stable, framework-agnostic contract (`subscribe`/`getSnapshot`),
-// hand-rolled with zero runtime dependencies — the single swap point for the state layer, so
-// nothing outside `src/store/` reaches for its internals. Snapshots are plain POJOs with methods
-// beside the state (in the builder) and never inside it, keeping `getSnapshot()` clone-safe and
-// selector-stable; mutation is `set(next | (prev) => next)` and `reset()`, and draft-style nested
-// updates compose an immutable-update helper at the call site (`set((s) => produce(s, recipe))`).
+// hand-rolled with zero runtime dependencies — the single swap point for the state layer.
+// Snapshots are plain POJOs with methods beside the state and never inside it, which keeps
+// `getSnapshot()` clone-safe and selector-stable.
 
 /**
  * Minimal read-only contract satisfied by every store — and precisely the surface

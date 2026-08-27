@@ -29,23 +29,16 @@ type DeclareAction<TData, TReason extends string> = (
 /**
  * Build the `action` factory a dialog's `render` is handed.
  *
- * Calling the factory declares the action — the only place an action is ever declared — and
- * returns the props for its button. None of that is renderer work: the props are DOM props, the
- * declaration is a write to the engine, and the reason is the action's identity in every
- * framework.
- *
- * **The three live fields are getters**, and that is what lets one factory serve both bindings.
- * A virtual-DOM renderer spreads the object during render and reads them once, which is exactly
- * the snapshot it wanted. A fine-grained renderer spreads it inside a tracking scope, so reading
- * `disabled` subscribes that one attribute to the engine — no re-render, no wrapper, and no
- * second factory that returns accessors instead.
+ * Calling it declares the action — the only place one is ever declared — and returns the props for
+ * its button. **The three live fields are getters**, which is what lets one factory serve both
+ * bindings: a virtual-DOM renderer spreads the object and reads them once, a fine-grained one
+ * spreads it inside a tracking scope, so reading `disabled` subscribes that attribute to the engine.
  *
  * @param engine - The dialog's action engine; `declare` and `run` go here.
- * @param readState - The engine's state *as the binding sees it*. React passes its
- *   `useSyncExternalStore` value, Solid passes a signal accessor — which is the whole reason
- *   this is a parameter rather than a call to `engine.getSnapshot()` inside.
+ * @param readState - The engine's state *as the binding sees it*: React's `useSyncExternalStore`
+ *   value, Solid a signal accessor — the reason this is a parameter rather than a call inside.
  *
- * @internal Not part of the public API — `useDialog` builds one and hands out the result.
+ * @internal Not part of the public API.
  */
 export function createActionFactory<TData, TReason extends string = string>(
   engine: ActionEngine<TData, TReason>,

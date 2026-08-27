@@ -30,12 +30,8 @@ export function useDialogOutletContext(): DialogOutletContextValue | null {
 
 // The outlet holds rendered *nodes* rather than a DOM anchor to portal into, because a React
 // element only renders while some component returns it and the consumer must never write
-// `{Dialog}`. Two inherent costs: registration is an effect (mutating an external store during
-// render breaks concurrent rendering), so content lands one commit behind its owner — not a visible
-// frame, see the paint-timing note in `use-dialog.tsx` — and every descendant render republishes,
-// re-rendering the outlet cheaply (`children` is unchanged, so React bails out). Two redesigns
-// rejected: a portal-anchor outlet removes both but reintroduces `{Dialog}`; a per-dialog host
-// component would confine the second, for no measurable win.
+// `{Dialog}` — which is what a portal-anchor outlet costs. Registration is an effect, so content
+// lands one commit behind its owner.
 
 type OutletSnapshot = {
   readonly dialogs: ReadonlyMap<string, ReactNode>;

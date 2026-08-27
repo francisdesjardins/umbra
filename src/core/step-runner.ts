@@ -1,26 +1,18 @@
 /**
  * React's dependency array, made framework-free — the executor, with no idea what a step does.
  *
- * The rule it implements is one sentence: **only the steps whose own inputs moved are rebuilt**,
- * and everything stale is detached before anything is attached. Why the granularity has to be per
- * step rather than one key for the sequence belongs to the caller that chose it, and is on
+ * **Only the steps whose own inputs moved are rebuilt**, and everything stale is detached before
+ * anything is attached. Why the granularity is per step belongs to the caller that chose it, in
  * `dialog-director.ts`.
  *
- * **It is here rather than inside the director because it is a decision, and every other decision
- * in this library is a named function with a test.** The director's own table is DOM to the last
- * line, which is what kept its executor out of the unit project's reach — so the two invariants
- * below were carried by paragraphs and by nothing that fails. They are what this file exists to
- * make assertable:
+ * A named function with a test, because both invariants below were otherwise carried by prose:
  *
- * - **Detach every stale step before attaching any of them.** Rebuilding each in place would
- *   interleave, and listener dispatch follows the order listeners were added — so the steps that
- *   survived a pass would quietly change places with the ones that did not. React tears down every
- *   effect of a commit before it runs any of them, for the same reason.
- * - **`destroy` clears the keys, not just the teardowns.** A runner that only ran its teardowns
- *   would still believe every step attached, so the next `sync` would rebuild nothing — which is a
- *   dialog that works on mount and is inert after a remount, and passes in one React mode.
+ * - **Detach every stale step before attaching any.** Listener dispatch follows the order listeners
+ *   were added, so rebuilding in place would quietly reorder the steps that survived a pass.
+ * - **`destroy` clears the keys, not just the teardowns.** Otherwise the next `sync` rebuilds
+ *   nothing — a dialog that works on mount and is inert after a remount.
  *
- * @internal Not part of the public API.
+ * @internal
  */
 
 /** A step's inputs, compared with `Object.is` the way React compares a dependency array. */

@@ -171,12 +171,10 @@ export function useDialog<TData = void, TReason extends string = string>(
     };
   }, [director]);
 
-  // The registration below re-runs when `template` / `nonModal` change, because those change the
-  // rendered structure (inline / portal / contained wrapper) and a native <dialog> cannot survive
-  // remounting into a different one while open — so its cleanup unregisters *and* finalizes,
-  // closing it cleanly rather than orphaning it and, on unmount, settling `onClose` and any pending
-  // resolver with 'dismiss'. Both callbacks below go through a ref: listing one whose identity
-  // moves every render would re-register on every render.
+  // Re-runs when `template` / `nonModal` change, because those change the rendered structure and a
+  // native <dialog> cannot survive remounting into a different one while open — so the cleanup
+  // unregisters *and* finalizes rather than orphaning it. Both callbacks below go through a ref:
+  // one whose identity moves every render would re-register.
   const openRequestHandler = useRef(onOpenRequest);
   useEffect(() => {
     openRequestHandler.current = onOpenRequest;
@@ -280,25 +278,15 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   let dialogNode: ReactNode;
 
-  // Asked at placement rather than at hook time, so a host mounted by the time this first portals
-  // is found. A host that changes identity *within* an era is deliberately not followed — see the
-  // era below and `PortalTarget`'s own contract. `null` here is the un-portaled answer, which is
-  // why it doubles as the branch below.
-  //
-  // Guarded on `isPortaled` rather than left to `resolvePortalHost`'s own `null` branch, because
-  // the *argument* is the problem: `document.body` on a server pass throws where this binding
-  // otherwise renders a closed `<dialog>` with no DOM in scope. Portaling has never server-rendered
-  // — `createPortal` needs a live container — but the default and contained paths do, and asserting
-  // that is what `verify:package` does.
-  // Held across renders, and re-read only when `portal` flips between portaled and not — the one
-  // structural change, and the one the teardown effect already treats as such. Re-reading it every
-  // render is what a getter invites and what strands an open dialog: a container of a different
-  // identity makes React unmount the portal subtree and mount a *fresh*, closed `<dialog>`, and
-  // `syncOpenSequence` will not show it again outside `'opening'`. The dialog vanishes with the
-  // store still reporting `phase: 'open'`, and nothing on screen left to dismiss.
+  // Asked at placement rather than at hook time, so a host mounted by then is found, and guarded on
+  // `isPortaled` because the *argument* is the problem: `document.body` on a server pass throws
+  // where this binding otherwise renders a closed `<dialog>` with no DOM in scope.
   const [portalEra, setPortalEra] = useState(() => {
     return { isPortaled, host: isPortaled ? resolvePortalHost(portal, document.body) : null };
   });
+  // An era, so the host is re-read only when `portal` flips between portaled and not. Re-reading it
+  // every render strands an open dialog: a container of a different identity makes React mount a
+  // *fresh*, closed `<dialog>`, which `syncOpenSequence` will not show again outside `'opening'`.
   if (portalEra.isPortaled !== isPortaled) {
     setPortalEra({
       isPortaled,
@@ -323,8 +311,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   // No cleanup: the <dialog> is always mounted, so `dialogNode` is never null and unmount is the
   // effect below. Passive, not layout — measured, the frame a layout effect would buy does not
-  // exist, the outlet's re-render being a cascade rather than part of this commit either way.
-  // Bounded by the paint-timing test in __tests__.
+  // exist, the outlet's re-render being a cascade either way. Bounded by the paint-timing test.
   useEffect(() => {
     if (!outlet) {
       return;

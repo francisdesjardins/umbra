@@ -1,12 +1,10 @@
 // ── Placement ────────────────────────────────────────────────────────────────
 //
-// Where a dialog is positioned from, expressed as data rather than as markup.
+// Where a dialog is positioned from, as data rather than markup.
 //
-// A `<dialog>` opened with `showModal()` is promoted into the browser's top layer and needs no
-// positioning at all. `show()` does not promote it, so a non-modal dialog is positioned like
-// any other element — and *what it is positioned against* is the whole question. This module is
-// the single answer, so the React binding, a future binding, and a host you write yourself all
-// place a dialog the same way.
+// `showModal()` promotes a dialog into the top layer and needs no positioning; `show()` does not,
+// so a non-modal dialog is positioned like any other element — and *what against* is the whole
+// question. One answer here, so every binding agrees.
 
 /**
  * Styles for the element a contained dialog is positioned against.
@@ -89,18 +87,15 @@ export type DialogPlacementOptions = {
 };
 
 const CONTAINED_HOST: DialogHostStyle = {
-  // Absolute, not a block in the flow: the ordinary use of a contained dialog is to cover
-  // something already in its region — a detail pane over the list it belongs to — and a
-  // `height: 100%` block is laid out *after* that content, pushing it out of a clipped region
-  // the moment the dialog mounts. Overlaying is what "contained" means; displacing is not.
-  // It resolves against the sized, positioned host the placement contract already requires.
+  // Absolute, not a block in the flow: a contained dialog covers something already in its
+  // region, and a `height: 100%` block is laid out *after* that content, pushing it out of a
+  // clipped region the moment the dialog mounts. Overlaying is what "contained" means.
   position: 'absolute',
   inset: 0,
   minHeight: 0,
   // The host exists to be a containing block and nothing else. Without this it is also an
-  // invisible hit target the size of its region, so everything behind it — the trigger that
-  // opens the dialog, the content the dialog sits over — stops being clickable the moment a
-  // contained dialog is mounted, open or not. The dialog takes its own hits back below.
+  // invisible hit target the size of its region, so everything behind it stops being clickable
+  // the moment a contained dialog mounts, open or not. The dialog takes its own hits back below.
   pointerEvents: 'none',
 };
 

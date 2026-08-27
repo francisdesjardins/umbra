@@ -88,10 +88,9 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
       options.nonModal === true ? (options.dismissOnClickOutside ?? false) : false,
     dismissWhilePreparing: options.dismissWhilePreparing ?? true,
     dismissKey: options.dismissKey ?? Key.Escape,
-    // Off by default, and **not narrowed on the variant**: a modal dialog is contained by the
-    // browser and needs no wrap, but the same attachment is what answers a Tab pressed while
-    // focus is on the `<dialog>` itself — which WebKit otherwise swallows. So `nonModal: false`
-    // does not make this inert, and reading it out here would be the bug.
+    // Off by default, and **not narrowed on the variant**: the same attachment answers a Tab
+    // pressed while focus is on the `<dialog>` itself, which WebKit swallows. So `nonModal: false`
+    // does not make this inert, and reading the variant out here would be the bug.
     containFocus: options.containFocus ?? false,
     template: options.template ?? 'dialog',
     // Where this dialog is positioned from, and what it has to be positioned *against*. The

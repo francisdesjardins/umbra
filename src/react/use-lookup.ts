@@ -45,8 +45,7 @@ export function useLookup(id: DialogId): DialogInfo {
 
   // `snapshot` is passed rather than read inside, and it is the difference between working and
   // silently freezing: the closed branch reads mutable state through `manager.lookup(id)`, so
-  // inline the compiler memoises on `manager` and `id` — neither moves when a dialog registers —
-  // and the hook repeats its first answer for ever. Naming the snapshot makes it the dependency it
-  // already was; uncompiled the two look identical, which is why this took the compiled bundle.
+  // inline the compiler memoises on `manager` and `id`, neither of which moves when a dialog
+  // registers.
   return lookupIn(id, { manager, snapshot });
 }

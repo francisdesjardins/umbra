@@ -19,8 +19,8 @@ export { useLookup } from './react/use-lookup.js';
 
 // The core, wholesale, so a React consumer needs one import path. This line is where dropping a
 // `.js` extension goes most visibly wrong: `export *` cannot enumerate an unresolvable module, so
-// the entry point would look as though the root's names had vanished while the runtime bundle
-// still had them all. `scripts/verify-package.mjs` fails on any extensionless specifier.
+// the entry would look as though the root's names had vanished. `verify-package.mjs` fails on any
+// extensionless specifier.
 export * from './index.js';
 
 // `CloseResult`, `DialogPhase` and `DialogStoreSnapshot` are absent: naming them again would be a

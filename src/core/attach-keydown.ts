@@ -155,10 +155,9 @@ export function attachDialogKeydown(
       }
     }
 
-    // A control inside the dialog with an open popup answers this press itself, and neither a
-    // hotkey nor dismissal may take it: Escape at an open list means "close the list", and Enter
-    // there means "take the highlighted option" rather than "confirm". Left un-prevented too, so
-    // the control still gets it.
+    // A control inside with an open popup answers this press itself, and neither a hotkey nor
+    // dismissal may take it: Escape at an open list means "close the list", Enter means "take the
+    // highlighted option". Left un-prevented, so the control still gets it.
     if (isKeyClaimedByPopup(dialog, event.target)) {
       return;
     }
@@ -305,10 +304,9 @@ export function attachWindowDismissKey(
     }
 
     if (actionOwnsDismissKey(engine, dismissKey)) {
-      // An action declared this key as its hotkey. The panel acts, so the key is ours — no
-      // underlying listener should react a second time to the press that fired it. And because
-      // stopping propagation here also stops the dialog-level keydown, the action has to be
-      // dispatched by clicking its button directly.
+      // An action declared this key as its hotkey, so the press is ours and no underlying listener
+      // should react twice. Stopping propagation also stops the dialog-level keydown, which is why
+      // the action is dispatched by clicking its button directly.
       event.preventDefault();
       event.stopPropagation();
       const dialog = getDialog();

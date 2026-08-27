@@ -50,10 +50,8 @@ export function syncOpenSequence(ctx: DialogDomContext, options: OpenSequenceOpt
   showDialog(dialog, { nonModal, zIndex: manager.getZIndex(dialogId) });
 
   // The one moment the manager cannot see for itself: it observes *stores*, and a store reaching
-  // `'opening'` is a dialog that has not been shown. So a stack policy would only get to reorder a
-  // frame later — one painted frame with the wrong dialog in front. Here it is still the same task
-  // as the `showModal()` above, so the reorder lands before anything is painted. A no-op unless
-  // `prioritize` was called.
+  // `'opening'` is a dialog that has not been shown, so a stack policy would only reorder a frame
+  // later. Here it is still the `showModal()`'s own task. A no-op unless `prioritize` was called.
   manager.syncStackOrder(dialogId);
 
   store.scheduleOpenTransition();

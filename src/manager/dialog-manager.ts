@@ -762,11 +762,10 @@ export function createDialogManager(): DialogManager {
   // ── Event emission ────────────────────────────────────────────────────────
 
   function emit(event: DialogManagerEvent) {
-    // The copy is load-bearing, not ceremony: a `Set` iterator picks up entries added during
-    // iteration, so a listener that subscribes another one — lazily attaching per-dialog
-    // tracking on the first event it sees, say — would deliver that same event to the
-    // newcomer, which reads as a duplicate. Copying also makes self-unsubscription during
-    // dispatch unambiguous. Pinned by dialog-manager-registry.test.ts.
+    // The copy is load-bearing: a `Set` iterator picks up entries added during iteration, so a
+    // listener that subscribes another one would deliver it the same event, reading as a duplicate.
+    // It also makes self-unsubscription during dispatch unambiguous. Pinned by
+    // dialog-manager-registry.test.ts.
     // oxlint-disable-next-line no-useless-spread -- snapshot before dispatch, see above
     for (const listener of [...listeners]) {
       listener(event);
@@ -1049,27 +1048,25 @@ export function createDialogManager(): DialogManager {
       // the snapshot — which lookup() also reads — never lags the registry.
       notifyChange();
       // Reads the snapshot just published, so it must follow. This is the clock that catches a
-      // *close*: the dialogs left behind keep their relative order, but their z-index no longer
-      // matches their position. The opens are caught by the lifecycle's own call, which is a step
-      // later than this one — a store at `'opening'` has not been shown yet.
+      // *close*: the dialogs left behind keep their relative order but their z-index no longer
+      // matches it. Opens are caught by the lifecycle's own call — a store at `'opening'` has not
+      // been shown yet.
       syncStackOrder();
       syncBodyScrollLock();
     });
 
     // Two live registrations cannot share an id: `registry` holds one entry per id, so the
-    // displaced store's subscription would never be reachable by `unregister(id)` again and
-    // would keep driving snapshot recomputation from outside the registry for the lifetime of
-    // this manager. Release it here, and say so — a duplicate id is a user-land mistake whose
-    // other symptoms (one dialog's actions closing the other) are much harder to trace back.
+    // displaced store's subscription would never be reachable by `unregister(id)` again and would
+    // keep driving snapshot recomputation for this manager's life. Released here and reported — a
+    // duplicate id's other symptoms are much harder to trace back.
     const displaced = registry.get(id);
     if (displaced) {
       displaced.unsubscribe();
       registry.delete(id);
       log.warn('Duplicate dialog id — the previous registration was released', { id });
-      // Emitted, and before the `register` below, because a listener keeping membership from this
-      // pair is the reason the pair exists: two arrivals against one departure leaves it holding a
-      // waiter for an id that has gone. The entry is out of the map first, so the event is true
-      // when it fires — the same rule the `register` emission follows.
+      // Emitted before the `register` below, because a listener keeping membership from this pair
+      // is why the pair exists: two arrivals against one departure leaves it holding a waiter for
+      // an id that has gone. The entry is out of the map first, so the event is true when it fires.
       emit({ type: 'unregister', id });
     }
 
@@ -1101,14 +1098,10 @@ export function createDialogManager(): DialogManager {
       return;
     }
 
-    // A dialog torn down while open is a close nobody else would hear about: `close()` is never
-    // called, so the phase never reaches `'closed'` and the subscription that emits on that
-    // transition is about to be removed. Anything counting opens from outside — a bridge pushing
-    // onto a shared stack, a shell disabling its shortcuts while a dialog is up — would be left one
-    // open ahead for the life of the page, with nothing on screen to explain it.
-    //
-    // Reported as `'dismiss'`, which is what the store tells an awaiting caller in the same
-    // situation: nobody answered.
+    // A dialog torn down while open is a close nobody else hears: `close()` is never called, the
+    // phase never reaches `'closed'`, and the subscription that emits on it is about to go.
+    // Anything counting opens from outside would sit one ahead for the page's life. `'dismiss'`,
+    // because nobody answered.
     const wasOpen = entry.store.getSnapshot().phase !== 'closed';
 
     entry.unsubscribe();
@@ -1251,9 +1244,8 @@ export function createDialogManager(): DialogManager {
     });
 
     // Held on an object rather than in a `let`: the assignment happens inside `refuse`, which the
-    // checker cannot see into, so a `let` stays narrowed to `null` at the test below and the
-    // whole branch reads as dead code. Property narrowing resets across the call, which is
-    // exactly the truth here.
+    // checker cannot see into, so a `let` stays narrowed to `null` at the test below and the whole
+    // branch reads as dead code. Property narrowing resets across the call.
     const answer: { reason: string | null } = { reason: null };
     const dispatch: OpenRequestDispatch = {
       ...request,

@@ -144,8 +144,8 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   // The core factory plus the expiry a fine-grained renderer owes it: the owner is whatever scope
   // drew the button, so one that disappears takes its declaration with it. `typeof baseAction`
-  // stops a bare arrow dropping `isRunning` off the wrapper, which `binding-parity.test.ts` would
-  // not catch (it diffs export names); a component test asserts it stays *live* through it.
+  // stops a bare arrow dropping `isRunning` off the wrapper, which `binding-parity.test.ts` cannot
+  // catch.
   const action: typeof baseAction = Object.assign(
     (...args: Parameters<typeof baseAction>) => {
       const props = baseAction(...args);
@@ -221,9 +221,9 @@ export function useDialog<TData = void, TReason extends string = string>(
   });
 
   // One effect, and **no `onCleanup` inside it**: Solid runs an effect's cleanups before every
-  // re-run, which would tear the sequence down each pass and leave the director nothing to diff —
-  // everything comes off in `destroy()` instead. It tracks what the body reads, the snapshot and
-  // the option getters, which is Solid's half of "never a pass behind".
+  // re-run, which would tear the sequence down each pass and leave the director nothing to diff.
+  // Everything comes off in `destroy()`. It tracks the snapshot and the option getters the body
+  // reads.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
   const director = createDialogDirector({ store, getDialog, dialogId, manager, engine });
 
@@ -282,9 +282,8 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   if (isPortaled) {
     // The one place the surface differs from React's: a Solid dialog owns its element, so the
-    // binding mounts it and `Dialog` is `null` — hence no outlet registration on this branch.
-    // Resolved once, unlike React's per-render read: this branch mounts the node itself and runs
-    // exactly once, so the host a moving getter would name later has nothing left to move.
+    // binding mounts it and `Dialog` is `null`. Resolved once: this branch mounts the node itself
+    // and runs exactly once, so a moving getter has nothing left to move.
     const host = resolvePortalHost(options.portal, document.body) ?? document.body;
     host.append(placed);
     onCleanup(() => {

@@ -48,11 +48,9 @@ export type { StackDialog, StackPriority } from './manager/stack-order.js';
 // rendering, so they stay on a binding.
 export type { CloseResult, DialogPhase, DialogStoreSnapshot, PortalTarget } from './core/types.js';
 
-// The registry, and the types derived from it. `DialogRegistry` is exported so a project can
-// augment it — an interface nobody can name is an interface nobody can merge into — and `DialogId`
-// because it is what every door on the manager now says, so a consumer annotating one needs it.
-// `CloseOf` is here for the same reason: it is what a declared dialog's close *is*, so a function
-// taking one has to be able to say so.
+// The registry and the types derived from it. `DialogRegistry` is exported so a project can augment
+// it — an interface nobody can name is one nobody can merge into — and `DialogId` because it is what
+// every door on the manager says. `CloseOf` likewise: it is what a declared dialog's close *is*.
 export type {
   CloseOf,
   DataOf,
@@ -104,11 +102,10 @@ export { isOwnEventTarget } from './utils/dialog-scope.js';
 export { reconcileOpen } from './core/reconcile-open.js';
 export type { OpenReconciliation } from './core/reconcile-open.js';
 
-// The reactive cell the dialog store, the action engine, the outlet and the manager all run on. The
-// rule is **export what the library runs on and would otherwise be duplicated** — private, this
-// would force a second copy into the playground. `StoreContract` is the `{ subscribe, getSnapshot }`
-// pair `useSyncExternalStore`, Solid's `from` and a Vue `ref` bridge consume; what is built *over*
-// it (`useStore`, `createStoreContext`, `watch`, `shallowEqual`) had no caller here.
+// The reactive cell the store, the engine, the outlet and the manager all run on. The rule is
+// **export what the library runs on and would otherwise be duplicated**. `StoreContract` is the
+// `{ subscribe, getSnapshot }` pair `useSyncExternalStore` and Solid's `from` consume; what is
+// built *over* it has no caller here.
 export { createStore } from './store/create-store.js';
 export type {
   CreateDomainStoreOptions,
@@ -125,11 +122,9 @@ export type {
 export { normalizeError } from './utils/normalize-error.js';
 
 // Two formatters, because a hotkey has two audiences: `formatHotkeyLabel` for a person reading a
-// menu item (`Ctrl`, the keycap spelling), `formatAriaKeyshortcuts` for the platform, where every
-// token must be a `KeyboardEvent.key` value — `Control`, and `Space` for the key whose value is a
-// space and so cannot sit in a space-delimited list. The library dispatches by the second, so a
-// wrapper building the attribute needs it; `parseHotkey` is the way back in, for a shortcut off
-// configuration or the wire without an unchecked cast or a validator per call site.
+// menu item, `formatAriaKeyshortcuts` for the platform, where every token must be a
+// `KeyboardEvent.key` value — `Control`, and `Space` for the key whose value cannot sit in a
+// space-delimited list. `parseHotkey` is the way back in.
 export {
   formatAriaKeyshortcuts,
   formatHotkeyLabel,

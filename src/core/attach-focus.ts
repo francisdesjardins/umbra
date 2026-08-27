@@ -107,10 +107,9 @@ export function createFocusCoordinator(
         return undefined;
       }
 
-      // Settle the opening focus once open — unless something else is in front, since a dialog
-      // opening *underneath* another would leave the one the user is looking at with no focus and
-      // so no dismiss key. Asked of the manager, which is what knows the order; declining is all
-      // this does, and the watcher below puts focus back.
+      // Declined when something else is in front: focusing a dialog opening *underneath* another
+      // would leave the one the user is looking at without its dismiss key. The manager knows the
+      // order; the stack watcher below hands focus back.
       if (phase === 'open' && !settled) {
         const dialog = getDialog();
         if (dialog) {
@@ -138,10 +137,9 @@ export function createFocusCoordinator(
           if (!dialog?.open) {
             return;
           }
-          // Not while something else is in front: an action settling *underneath* the dialog the
-          // user is looking at has no claim on their keyboard. A guard rather than an assumption —
-          // Chromium's top-layer inertness makes this `focus()` a silent no-op, WebKit lets it
-          // through, and CI found the difference.
+          // An action settling *underneath* the dialog in front has no claim on the keyboard. A
+          // guard rather than an assumption: Chromium's top-layer inertness makes this `focus()` a
+          // silent no-op where WebKit lets it through.
           if (!manager.lookup().isForeground(dialogId)) {
             return;
           }
@@ -164,11 +162,9 @@ export function createFocusCoordinator(
         const { hasRunningAction } = engine.aggregated();
         if (hasRunningAction) {
           if (!wasRunning) {
-            // Three reads, narrowing. The live one is the most specific and is what the hook
-            // bindings give on an engine that focuses what it clicks. The activation is the only
-            // one that survives WebKit refusing to. `lastFocusInside` is the floor for an action
-            // that nothing pressed — a hotkey on a control already focused, or a programmatic
-            // start. See both declarations.
+            // Three reads, narrowing: the live one where the engine focuses what it clicks, the
+            // activation where WebKit refuses to, and `lastFocusInside` as the floor for an action
+            // nothing pressed. See both declarations.
             runner = chooseActionRunner(
               captureActionRunner(getDialog()),
               lastActivated,
@@ -199,17 +195,9 @@ export function createFocusCoordinator(
 
       const unsubscribe = engine.subscribe(check);
 
-      // Remember focus as it arrives, scoped with `isOwnEventTarget`: both events bubble, and a
-      // nested dialog renders in this subtree, so the one underneath would restore to its button.
-      //
-      // **Bound to the root, and the dialog resolved per event.** Binding to the element is the
-      // obvious shape and it silently stops working: a renderer that replaces the `<dialog>` leaves
-      // every listener on an orphan, and nothing re-attaches them — this step's inputs are the phase
-      // alone, which does not change when the node does. The bookkeeping then reports an empty
-      // memory for the rest of the dialog's life, so a restore that depends on it does nothing.
-      // Measured under a loaded suite: the handler was never once called while the events reached
-      // the dialog on screen throughout. The root outlives the node, and `getRootNode()` rather than
-      // `document` keeps a dialog inside a shadow root heard in its own tree.
+      // Scoped with `isOwnEventTarget`: both events bubble, and a nested dialog renders in this
+      // subtree. Bound to the **root**, dialog resolved per event — this step's input is the phase,
+      // so a renderer replacing the node re-attaches nothing and an orphaned listener goes silent.
       let stopRemembering: (() => void) | undefined;
       const watched = getDialog();
       const eventRoot = watched?.getRootNode();
@@ -227,10 +215,9 @@ export function createFocusCoordinator(
         };
 
         const remember = (event: Event) => {
-          // A raise is `close()` + `showModal()`, and the engine focuses something on the way back
-          // — the library's own doing, arriving here as an ordinary `focusin`. Recording it
-          // overwrites the caret this memory exists to restore, which is the whole reason the
-          // dialog that was not holding the keyboard used to come back on the engine's choice.
+          // A raise is `close()` + `showModal()`, so the engine focuses something on the way back —
+          // the library's own doing, arriving as an ordinary `focusin`. Recording it would overwrite
+          // the caret this memory exists to restore.
           if (isRaisingDialog()) {
             return;
           }
@@ -239,12 +226,9 @@ export function createFocusCoordinator(
             lastFocusInside = target;
           }
         };
-        // `closest` because the press often lands on a label or icon inside the control. Capture
-        // is load-bearing: the engine notifies synchronously from the button's own handler, so a
-        // bubbling listener would hear the click after the restore target had been chosen.
-        //
-        // A press outside this dialog leaves the memory alone rather than clearing it: on the root
-        // this listener hears the whole page, where on the element it heard only its own.
+        // `closest` because the press often lands on a label or icon inside the control; capture
+        // because the engine notifies synchronously from the button's own handler, so a bubbling
+        // listener would hear the click too late. A press outside leaves the memory alone.
         const rememberActivation = (event: Event) => {
           const target = ownTarget(event);
           if (target) {
@@ -261,11 +245,9 @@ export function createFocusCoordinator(
 
       // ── Taking the focus back when the stack moves ────────────────────────
       //
-      // Every dialog answers for its own focus, by watching the manager: it owns its element (no
-      // `document.querySelector`, which finds nothing in a shadow root), it remembers where focus
-      // actually was rather than re-honouring `focusOnOpen` over a caret, and it hears every way
-      // the stack moves — including the close that leaves it in front. The snapshot changes on
-      // dialog transitions and nothing else, so a click on the page behind never reaches here.
+      // Every dialog answers for its own focus by watching the manager: it owns its element, it
+      // restores the caret rather than re-honouring `focusOnOpen`, and it hears every way the stack
+      // moves — the close that leaves it in front included.
       let stopWatchingStack: (() => void) | undefined;
       let stopWatchingStrand: (() => void) | undefined;
       /** Its own handle: the restore's `frame` is a different question, asked at a different time. */
@@ -278,10 +260,9 @@ export function createFocusCoordinator(
           }
           const info = manager.lookup(dialogId);
           if (!info.isForeground || (info.exists && info.nonModal)) {
-            // Dialog only, as a rule: a non-modal panel never owned the page's focus, and its
-            // dismiss key comes from `attachWindowDismissKey`, which answers wherever focus is. A
-            // dialog has no such listener — its keydown is scoped to itself — so focus is its
-            // keyboard.
+            // Dialog only: a non-modal panel never owned the page's focus, and its dismiss key
+            // comes from `attachWindowDismissKey`, which answers wherever focus is. A dialog's
+            // keydown is scoped to itself, so focus is its keyboard.
             return;
           }
           const active = activeWithin(dialog);
@@ -295,20 +276,9 @@ export function createFocusCoordinator(
 
         // ── …and when a control inside strands it ──────────────────────────
         //
-        // The stack is not the only way a dialog loses its keyboard: a control that disables itself
-        // — the shape of every loading button — is blurred by the engine, and focus lands on
-        // `<body>`, where this dialog's keydown listener cannot hear it. Only the platform's own
-        // `cancel` still works, which is why such a dialog answers Escape and no other hotkey.
-        //
-        // **It gives the keyboard back to that control and to nothing else.** Sending it to the
-        // dialog's first focusable instead would end an ordinary "saving…" on the confirm button,
-        // where the Enter meant for the work commits the dialog — a repair worth less than the
-        // fault. So a strand this cannot undo is left alone: focus stays where the engine put it,
-        // which is exactly the state without this listener.
-        //
-        // `relatedTarget === null` is what says *stranded* rather than *moved*: focus going to
-        // another element is somebody's choice and carries its destination, while focus going
-        // nowhere is what the engine does when the thing holding it stops being focusable.
+        // A control that disables itself — every loading button — is blurred by the engine and
+        // focus lands on `<body>`, out of reach of this dialog's keydown. It goes back to that
+        // control alone: the first focusable would put the Enter meant for the work on confirm.
         if (watched) {
           let watchEnable: MutationObserver | undefined;
 
@@ -337,10 +307,12 @@ export function createFocusCoordinator(
             }
             // Resolved per event, never captured: a renderer may replace the `<dialog>` between the
             // open and the strand, and a listener bound to the node this attachment started with
-            // then hears nothing at all. Measured — under a loaded suite the handler simply stopped
-            // being called, while the event was reaching the dialog on screen the whole time.
+            // then hears nothing at all.
             const dialog = getDialog();
             if (
+              // *Stranded* rather than *moved*: focus going somewhere carries its destination,
+              // where focus going nowhere is what the engine does to a control that stops being
+              // focusable.
               event.relatedTarget !== null ||
               !(control instanceof HTMLElement) ||
               !dialog ||
@@ -356,18 +328,10 @@ export function createFocusCoordinator(
             }
             watchEnable?.disconnect();
 
-            // Armed **synchronously and over the whole dialog**, because neither narrowing survives
-            // contact: work that finishes inside the same task re-enables the control before any
-            // deferral could arm this, and watching that one element for `disabled` misses every
-            // other way a renderer brings it back — a re-created node, a wrapper toggled around it,
-            // a property set without the attribute. Anything changing in the dialog is the cue to
-            // re-ask a cheap question, and the answer disconnects it.
-            // **Disconnected on success, not on the first attempt.** The control coming back and the
-            // control being focusable are not the same instant — a renderer that re-enables it and
-            // re-paints it in the same batch will refuse the focus in between, and a one-shot
-            // observer spends its only try there and leaves the keyboard on the page. Every later
-            // mutation is another chance, so the repair costs a predicate rather than a guess about
-            // when the DOM has settled.
+            // Armed **synchronously and over the whole dialog**: work finishing in the same task
+            // beats any deferral, and watching that one element misses a re-created node.
+            // Disconnected on success rather than on the first try, which a renderer re-enabling
+            // and re-painting in one batch refuses.
             watchEnable = new MutationObserver(() => {
               if (control.matches(':disabled') || !control.isConnected) {
                 return;
@@ -380,10 +344,9 @@ export function createFocusCoordinator(
             });
             watchEnable.observe(dialog, { subtree: true, childList: true, attributes: true });
 
-            // The other shape: a control blurred without being disabled — hidden, or re-rendered
-            // away. A task later, so the renderer has committed and may have placed focus itself,
-            // and on a timer rather than a frame because a page the engine is not painting
-            // throttles `requestAnimationFrame`, and this must not depend on being visible.
+            // The other shape: a control blurred without being disabled. A task later, so the
+            // renderer has committed, and on a timer rather than a frame because a page the engine
+            // is not painting throttles `requestAnimationFrame`.
             clearTimeout(strandedTimer);
             strandedTimer = setTimeout(() => {
               if (!control.matches(':disabled')) {
@@ -393,10 +356,9 @@ export function createFocusCoordinator(
             }, 0);
           };
 
-          // Bound to the **root**, not to the element: `focusout` bubbles there either way, and the
-          // root outlives a dialog its renderer replaces. `getRootNode()` rather than `document`, so
-          // a dialog inside a shadow root is heard in its own tree instead of at a boundary the
-          // event is retargeted across.
+          // Bound to the **root**, which outlives a dialog its renderer replaces. `getRootNode()`
+          // rather than `document`, so a dialog inside a shadow root is heard in its own tree
+          // instead of at a boundary the event is retargeted across.
           const strandRoot = watched.getRootNode();
           strandRoot.addEventListener('focusout', reclaimIfStranded);
           stopWatchingStrand = () => {
