@@ -4,12 +4,10 @@ import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 // ── Custom button wrapper (mirrors VanillaButton pattern) ────────────────
-// Accepts typed props instead of spreading ActionButtonProps directly.
-// Must forward aria-keyshortcuts for hotkey dispatch to work.
 //
 // `onClick` is typed from React's own button props rather than as `() => void`: it is handed
-// straight to a `<button>`, which calls it with an event, and an action's click handler needs
-// that event. A wrapper that declares `() => void` here is describing something it does not do.
+// straight to a `<button>`, which calls it with an event, and an action's click handler needs that
+// event. A wrapper that declares `() => void` describes something it does not do.
 
 type CustomButtonProps = {
   readonly children: ReactNode;

@@ -1385,12 +1385,10 @@ test.describe('the phase a render can see', () => {
     await expect(component.getByTestId('render-busy')).toHaveText('idle');
     await expect(component.getByTestId('render-held')).toHaveText('idle');
 
-    // **The `'closing'` window, which this harness was long thought unable to hold.** It asks for
-    // `{ duration: 0, exitDuration: 900 }` — instant in, animated out — and the transition check
-    // read only the *entrance* duration at open, filed `0s` as "transitions are disabled" and
-    // skipped the exit entirely, so the close finalized with nothing to observe. Read at the phase
-    // that owns the question, the window is real and the render callback sees it. That is also the
-    // regression test for the configuration itself: an exit animation the caller asked for.
+    // **The `'closing'` window.** `{ duration: 0, exitDuration: 900 }` — instant in, animated out —
+    // is the arrangement that separates the two durations: read the *entrance* one at open and `0s`
+    // files as "transitions are disabled", skipping the exit so the close finalizes with nothing to
+    // observe.
     await component.getByTestId('close-direct').click();
     await expect(component.getByTestId('hook-phase')).toHaveText('closing');
     await expect(component.getByTestId('render-phase')).toHaveText('closing');

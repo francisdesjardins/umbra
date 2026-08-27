@@ -992,15 +992,13 @@ export function VanillaLabellingHarness() {
 }
 
 /**
- * A shadow-root dialog and a light-DOM one, one manager, one stack policy — three things nothing else
- * reaches. **Reclaim across a shadow boundary**: `activeWithin` asks the dialog's *own* root, where a
- * document-scoped answer would be "focus left" forever. **The native `close` a raise fires**: a raise
- * is `close()` + `showModal()`, and `close()` *queues* its event, so it arrives with `dialog.open`
- * already `true` — the only way a caller's listener tells a raise from a real close. **`prioritize`
- * through a non-React binding**: the policy is core, so nothing would fail if a binding stopped
- * reaching it, `binding-parity.test.ts` comparing only export names. The manager is hoisted so two
- * controllers share it; tests dispatch the policy toggle's click directly, since under the policy the
- * light-DOM dialog is underneath and a real press would hit a backdrop.
+ * A shadow-root dialog and a light-DOM one, one manager, one stack policy — three things nothing
+ * else reaches. **Reclaim across a shadow boundary**: `activeWithin` asks the dialog's *own* root,
+ * where a document-scoped answer would be "focus left" forever. **The native `close` a raise
+ * fires**: `close()` *queues* its event, so it arrives with `dialog.open` already `true` — the only
+ * way a caller's listener tells a raise from a real close. **`prioritize` through a non-React
+ * binding**: the policy is core, so nothing would fail if a binding stopped reaching it. The
+ * manager is hoisted so two controllers share it.
  */
 export function VanillaShadowStackHarness() {
   const hostRef = useRef<HTMLDivElement>(null);

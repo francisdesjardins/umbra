@@ -2,7 +2,8 @@ import { useDialog } from '../../../react/use-dialog.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests that an action handler throwing populates actions.error.
+ * A handler that throws. The render args carry `error` so a caller can show the failure without
+ * wrapping every handler in its own `try`.
  */
 export function ErrorActionsHarness() {
   const { open, Dialog } = useDialog<void, 'bad' | 'ok'>({

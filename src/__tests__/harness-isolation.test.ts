@@ -8,11 +8,10 @@ import { fileURLToPath } from 'node:url';
  * wrapped in a `DialogManagerProvider` by `playwright/index.tsx`; a Solid harness is a Solid root
  * inside a React story, so it wraps itself; a vanilla one has no provider and passes its own
  * `manager: createDialogManager()` to `bindDialog`. Forgetting registers with the module-level
- * singleton and leaks across the run — a test that passes alone and fails in the suite — so the two
- * bindings that wrapper cannot reach are checked statically: a file that *imports a dialog
- * constructor* must *name a manager*, and one that only mounts what another built is not asked to.
- * Static, because a runtime check needs the whole suite mounted and reports the symptom rather than
- * the file to edit.
+ * singleton and leaks across the run, so the two bindings that wrapper cannot reach are checked
+ * statically: a file that *imports a dialog constructor* must *name a manager*, and one that only
+ * mounts what another built is not asked to. Static, because a runtime check needs the whole suite
+ * mounted and reports the symptom rather than the file to edit.
  */
 
 const here = dirname(fileURLToPath(import.meta.url));

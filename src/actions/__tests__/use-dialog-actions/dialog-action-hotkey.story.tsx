@@ -4,7 +4,8 @@ import { Key } from '../../../utils/keys.js';
 import { dialogStyle } from '../../../__tests__/story-styles.js';
 
 /**
- * Tests callable actions with hotkeys — verifies aria-keyshortcuts is forwarded.
+ * Two actions with hotkeys and nothing else: the attribute is what dispatch queries out of the
+ * DOM, so a wrapper that drops it fails here rather than silently doing nothing.
  */
 export function DialogActionHotkeyHarness() {
   const [lastReason, setLastReason] = useState('');

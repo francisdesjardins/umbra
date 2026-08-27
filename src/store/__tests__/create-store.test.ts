@@ -182,10 +182,9 @@ test.describe('createStore — domain (builder)', () => {
 });
 
 // Both overloads take an options object and differ in type-parameter arity, so an explicit
-// `createStore<Snap, Methods>(initial, …)` looks like it could match the *generic* one and bind
-// `TContext = Methods`. It cannot: the domain overload is declared first and requires `builder`,
-// so a call carrying one matches before arity is consulted. Declaration order is what makes that
-// hold — excess-property checking rejects a stray `builder` on a literal, but not on a variable.
+// `createStore<Snap, Methods>(initial, …)` looks like it could match the *generic* one. It
+// cannot: the domain overload is declared first and requires `builder`, so a call carrying one
+// matches before arity is consulted.
 
 /** Compile error unless `A` and `B` are mutually assignable. */
 type Equals<A extends B, B extends C, C = A> = A;

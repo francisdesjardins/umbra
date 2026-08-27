@@ -6,9 +6,9 @@ import {
 } from './dismiss-request.story.js';
 
 // `onDismissRequest` — every user-initiated dismissal handed to the owner instead of closing on it.
-// Every gate before that step is asserted elsewhere; each test here would fail on the un-optioned
-// behaviour. The three doors are asserted separately because they were wired separately: routing
-// only the dismiss key through the owner is a version of this that passes half the file.
+// Each test here would fail on the un-optioned behaviour. The three doors are asserted separately
+// because they were wired separately: routing only the dismiss key through the owner passes half
+// the file.
 
 const MODAL = 'dialog[data-dialog-id="controlled"]';
 const PANEL = 'dialog[data-dialog-id="controlled-panel"]';

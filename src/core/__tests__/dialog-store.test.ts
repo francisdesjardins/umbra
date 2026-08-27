@@ -4,9 +4,9 @@ import { createDialogStore } from '../dialog-store.js';
 import type { AwaitedClose } from '../types.js';
 
 // The dialog state machine — `useDialog`'s logic with React removed, so every transition is
-// assertable without a browser. The store schedules its own animation frame, so these tests
-// install a controllable `requestAnimationFrame`: frames advance only when the test says so,
-// which is what makes the "close cancels a pending open frame" assertions deterministic.
+// assertable without a browser. The store schedules its own animation frame, so these tests install
+// a controllable `requestAnimationFrame`: that is what makes the "close cancels a pending open
+// frame" assertions deterministic.
 
 let frames: FrameControl;
 

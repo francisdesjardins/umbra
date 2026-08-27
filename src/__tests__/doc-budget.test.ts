@@ -6,17 +6,15 @@ import { expect, test } from '@playwright/test';
 /**
  * The agent-instruction files have a size budget, because nothing else notices: every `CLAUDE.md`
  * loads in full into every session, so a paragraph costs on every task forever and costs nothing
- * visible when written — which is how these reached 15 300 words a little at a time. The budget is
- * the routing rule made enforceable: a fact belongs first in a test or gate (it cannot drift), then
- * in JSDoc on the thing it constrains, and in `CLAUDE.md` only when it attaches to no single file —
- * the folder rule, the vocabulary, the commands, pointers to the first two. So passing is almost
- * never deleting a fact: move it, or let the CHANGELOG own the historical ones. The limits are the
- * sizes reached by doing that, so raising one is a decision for the commit that raises it.
+ * visible when written.
  *
- * **Land at 90% of a budget, not at it.** These numbers are ceilings, and a document sitting on its
- * ceiling taxes every later session with a word hunt for whatever it wants to add — which is what
- * the trim that opened this headroom was paying off. Adding a paragraph is meant to cost writing
- * the paragraph.
+ * The budget is the routing rule made enforceable: a fact belongs first in a test or gate, then in
+ * JSDoc on the thing it constrains, and in `CLAUDE.md` only when it attaches to no single file. So
+ * passing is almost never deleting a fact — move it. Raising a limit is a decision for the commit
+ * that raises it.
+ *
+ * **Land at 90% of a budget, not at it.** One sitting on its ceiling taxes every later session
+ * with a word hunt.
  */
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');

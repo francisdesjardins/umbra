@@ -6,11 +6,10 @@ import { fileURLToPath } from 'node:url';
  * The names an entry point publishes, read out of its source. Shared because two gates need the
  * same list — `docs-exports.test.ts` (documented symbols are exported) and the playground's
  * `api-categories.test.ts` (every export has a reference page) — and a name that stopped parsing
- * would make both pass vacuously, hence the floor the callers assert on the count. Static rather
- * than `import * as ns`: the unit project is plain Node, importing `src/react.ts` pulls `.tsx` it
- * cannot transform, and only parsing works with React uninstalled or sees **type-only** exports,
- * which leave no runtime trace and are most of the API reference. Only `export { … } from`,
- * `export type { … } from` and `export * from` are handled; anything else is a missing symbol.
+ * would make both pass vacuously, hence the floor on the count. Static rather than `import * as
+ * ns`: the unit project is plain Node, and only parsing works with React uninstalled or sees
+ * **type-only** exports, which leave no runtime trace and are most of the API reference. Only
+ * `export { … } from`, `export type { … } from` and `export * from` are handled.
  * @param entryFile A path relative to `src/`, e.g. `'index.ts'` or `'react.ts'`.
  */
 export function collectExports(entryFile: string): string[] {

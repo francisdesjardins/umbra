@@ -135,9 +135,8 @@ export function ControlledPanelHarness() {
 }
 
 // The door that could not be heard until every dismissal went through the same one. A non-modal
-// panel outside the top layer: the pointer reaches the page underneath it, so a click there is the
-// library's to notice and the owner's to answer. Left to close itself, this is the arrangement
-// where a controlled surface reopens on the next render.
+// panel sits outside the top layer, so the pointer reaches the page underneath and a click there is
+// the library's to notice and the owner's to answer.
 export function ControlledClickOutsideHarness() {
   const [causes, setCauses] = useState<DismissCause[]>([]);
 

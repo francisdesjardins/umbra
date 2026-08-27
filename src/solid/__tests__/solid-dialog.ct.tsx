@@ -535,10 +535,9 @@ test.describe('umbra/solid — focus after a failed action', () => {
     mount,
     page,
   }) => {
-    // The discriminating arrangement: the opening focus is `other` (first focusable, no claim), so a
-    // restore that falls to its floor is visible as *not* landing on `fail`. Solid replaces the
-    // button when the action's state changes, so every element the coordinator captured is detached
-    // by the time this settles — it re-queries `[data-action-reason]` instead of trusting a node.
+    // The discriminating arrangement: the opening focus is `other` (first focusable, no claim), so
+    // a restore that falls to its floor is visible as *not* landing on `fail`. Solid replaces the
+    // button when the action's state changes, so the coordinator re-queries `[data-action-reason]`.
     await mount(<SolidFailedActionHarness />);
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');

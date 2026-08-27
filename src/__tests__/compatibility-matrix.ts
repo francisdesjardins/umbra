@@ -1,40 +1,23 @@
 /**
  * What works with what — as data, so it can be checked.
  *
- * The compatibility facts of this library were spread across `API.md`, two `CLAUDE.md` files, the
- * changelog and a hundred JSDoc blocks, and prose in five places is prose that disagrees with itself
- * in five places: inventorying these rows produced seven defects before a single cell existed. This
- * is the one place where "X with Y" has one answer.
+ * Inventorying these rows, out of the five documents that disagreed, produced seven defects
+ * before a single cell existed.
  *
- * **The vocabulary is the point**, and in particular the two kinds of ✗ are not the same fact:
+ * | State            | Means                       | Worklist       |
+ * | ---------------- | --------------------------- | -------------- |
+ * | `works`          | proven by a named test      | no             |
+ * | `works-untested` | should work, unverified     | **yes**        |
+ * | `partial`        | limit written down, fixable | **yes**        |
+ * | `blocked`        | somebody else's to ship     | the watch list |
+ * | `no-platform`    | the browser forbids it      | never          |
+ * | `no-by-design`   | refused, with a reason      | never          |
+ * | `n-a`            | meaningless on this path    | no             |
  *
- * | State             | Means                                                        | On the worklist?      |
- * | ----------------- | ------------------------------------------------------------ | --------------------- |
- * | `works`           | works, and a named test proves it                             | no                    |
- * | `works-untested`  | should work, nothing verifies it                              | **yes** — write it    |
- * | `partial`         | half works, the limit is written down and fixable             | **yes**               |
- * | `blocked`         | the answer is somebody else's to ship; `recheck` says what     | no — the watch list   |
- * | `no-platform`     | the browser forbids it; no implementation would change it     | no — never            |
- * | `no-by-design`    | the library refuses, with a documented reason                 | no — the reason is due |
- * | `n-a`             | the combination has no meaning on this path                   | no                    |
+ * **The two kinds of ✗ are not the same fact**: without the split a real gap reads like a platform
+ * law. An open cell owes a `since`, a refusal a `why`, a `blocked` a {@link Recheck}.
  *
- * Without that split the list of ✗ contains items nobody can ever act on, and a real gap reads the
- * same as a platform law.
- *
- * **`blocked` is the third thing that was wearing `~`'s symbol**, and the reason the list stayed at
- * six for ten days: a cell waiting on typedoc's peer range or on a WebKit release is not half-working
- * and is not fixable here, so filing it beside real work makes the worklist unfinishable by
- * construction. It owes a {@link Recheck} — what to look at, and when someone last did — the way `~`
- * owes a `why`, and `worklist()` returns it in a second list nobody is expected to burn down.
- *
- * **And every open cell owes a `since`.** The count alone hid the plateau; the age does not.
- *
- * **What the gate can and cannot check** — the same honesty `docs-exports.test.ts` keeps about its
- * own scope. It checks that every option has a row, that no row names an option that does not exist,
- * and that every test a cell cites resolves to a real file and a real title. It **cannot** check that
- * the cited test proves the cell. That part stays human.
- *
- * @internal Test data, not part of the public API.
+ * @internal Test data.
  */
 
 /** One cell's verdict. See the table in this module's doc comment. */
@@ -82,17 +65,13 @@ export type Recheck = {
 /**
  * An open question a cell carries **despite** its state, and the reason the field exists.
  *
- * A `✓` can be true and still have a hole in it — a claim proven on one binding and not the others, a
- * discrimination that does not reproduce and is unexplained. Written into `note`, that reaches a
- * reader of the table and **not** the worklist, so it is a to-do nothing enumerates: the state is
- * what `worklist()` reads, and the state says "done". This is how such a thing gets listed.
+ * A `✓` can be true and still have a hole in it — a claim proven on one binding and not the others.
+ * Written into `note`, that reaches a reader of the table and **not** the worklist, since the state
+ * is what `worklist()` reads and the state says "done".
  *
- * **It is two fields because one was a place to put anything.** Four caveats were written in two
- * weeks and none was ever removed; two of them turned out to be explanations of a deliberate trade —
- * a `note` wearing the worklist's clothes — and a third had gone false under a branch that edited
- * the cell right beside it. Naming the `nextStep` is the cheapest gate against both: an author who
- * cannot say what would close it has written a `note`, and one who can has left the next reader
- * something to act on. Same move as `why` on a refusal, at the smaller scale.
+ * **It is two fields because one was a place to put anything.** Naming the `nextStep` is the
+ * cheapest gate: an author who cannot say what would close it has written a `note`, and one who can
+ * has left the next reader something to act on. Same move as `why` on a refusal.
  */
 export type Caveat = {
   /** What is not known, or not proven. */
@@ -182,11 +161,9 @@ export type PlatformRow = OpenSince & {
 
 // ── Axis A — option × option ──────────────────────────────────────────────────
 //
-// One row per option, and the interesting column is `enforcement`: **two pairs are `TYPE`
-// today**, both through `DialogVariant`'s discriminated union and both pinned by `@ts-expect-error`
-// assertions in `core/__tests__/type-model.test.ts` — `nonModal` against the two dismissal
-// options, and `nonModal: true` against `role: 'alertdialog'`. Everything else is a function that
-// narrows at run time, or a sentence.
+// One row per option, and the interesting column is `enforcement`: **two pairs are `TYPE`**, both
+// through `DialogVariant`'s discriminated union and both pinned by `@ts-expect-error` assertions in
+// `core/__tests__/type-model.test.ts`. Everything else narrows at run time, or is a sentence.
 
 export const OPTION_ROWS: readonly OptionRow[] = [
   {
@@ -475,10 +452,9 @@ export const OPTION_ROWS: readonly OptionRow[] = [
 
 // ── Axis B — capability × binding ─────────────────────────────────────────────
 //
-// `binding-parity.test.ts` already diffs the *names* the two hook bindings export and refuses to
-// follow `export *`. What it cannot express is what a name does differently, or which binding a
-// capability has actually been exercised on — and that second column is where this axis earns its
-// keep. Fifteen capabilities are proven on React and on nothing else.
+// `binding-parity.test.ts` already diffs the *names* the two hook bindings export. What it cannot
+// express is what a name does differently, or which binding a capability has been exercised on —
+// and that second column is where this axis earns its keep.
 
 export const BINDING_ROWS: readonly BindingRow[] = [
   {
@@ -1520,9 +1496,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
 //
 // The success criteria a dialog *engine* touches, mapped with the same states as everything else —
 // not a conformance claim. A headless library renders nothing, so most criteria land on the
-// caller's content; these rows say which halves are the library's, which are the platform's, and
-// which are deliberately handed over. The bar for a `works` is the same as everywhere in this
-// file: a named test proves it.
+// caller's content; these rows say which halves are the library's and which are handed over.
 
 /** One WCAG 2.2 success criterion, and where a headless dialog library stands on it. */
 export type WcagRow = OpenSince & {
@@ -1827,16 +1801,14 @@ const byAge = (a: WorklistEntry, b: WorklistEntry): number => {
 /**
  * Everything the table leaves open — the backlog it produces rather than describes.
  *
- * **Two lists, because they are two different asks.** `open` is work: a cell whose state is
- * `✓ untested` or `~`, and a cell that is otherwise done but carries a {@link Caveat} — the second
- * being the kind a state-only reading misses, since the state says "done". `watch` is not work: a
- * `blocked` cell is waiting on somebody else's release, and printing it beside the first list is what
- * kept the count at ten while only four things could be acted on.
+ * **Two lists, because they are two different asks.** `open` is work: a cell at `✓ untested` or `~`,
+ * and a cell otherwise done that carries a {@link Caveat} — the kind a state-only reading misses.
+ * `watch` is not work: a `blocked` cell waits on somebody else's release, and printing it beside the
+ * first is what kept the count at ten while only four things could be acted on.
  *
- * **Both are sorted oldest-first and carry their date.** For `open` that is `since`, the day the cell
- * went open; for `watch` it is `recheck.measured`, the day someone last looked — so the stalest
- * assumption is the first line printed. The count alone hid a ten-day plateau at six: it reads
- * exactly like six cells closed and six others opened.
+ * **Both are sorted oldest-first and carry their date** — `since` for `open`, `recheck.measured` for
+ * `watch` — so the stalest assumption is the first line printed. The count alone hid a ten-day
+ * plateau at six.
  */
 export function worklist(): Worklist {
   const open: WorklistEntry[] = [];

@@ -190,10 +190,9 @@ test.describe('what counts as a stop', () => {
 
 test.describe('the dead-space click, whatever containFocus says', () => {
   // **The recovery is unconditional and this pair holds it there.** A dead-space click focuses the
-  // `<dialog>` element; Chromium and Firefox move Tab into the content, **WebKit swallows it**.
-  // Run for both variants and both flag values on purpose — the flag must make no difference, and
-  // a `true`-only test would pass the day someone puts the recovery back behind it. The title is
-  // spelled out, not generated: the matrix gate matches it verbatim and cannot find a template.
+  // `<dialog>`; Chromium and Firefox move Tab into the content, **WebKit swallows it**. Both
+  // variants and both flag values: the flag must make no difference. The title is spelled out —
+  // the matrix gate matches it verbatim.
   test('a dead-space click leaves the keyboard reachable without containFocus', async ({
     mount,
     page,

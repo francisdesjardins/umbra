@@ -3,8 +3,7 @@ import { applyStyle } from '../style.js';
 
 // `applyStyle`, without an element. The interesting half is the *clearing*: a style object is
 // recomputed per phase, so a property named only in the entrance keyframe has to be removed when
-// the exit one omits it — otherwise a dialog keeps a transform, reading as an animation bug three
-// layers away. `StyleTarget` is what lets that bookkeeping be asserted without a browser.
+// the exit one omits it, or a dialog keeps a transform and reads as an animation bug layers away.
 
 /** Records what was written and removed, in order. */
 const spyTarget = () => {
@@ -88,10 +87,10 @@ test.describe('applyStyle', () => {
   });
 
   test('a custom property goes through untouched, both writing and clearing', () => {
-    // `--dialog-backdrop` is the documented styling lever, and `umbra/vanilla` is called from
-    // plain JS. `DialogStyle` maps `CSSStyleDeclaration`'s keys, so an object *literal* carrying a
-    // custom property is rejected while a `Record<string, string>` is assignable — what a caller
-    // assembling a style at runtime holds. The hyphenation must not touch a name already correct.
+    // `--dialog-backdrop` is the documented styling lever, and `umbra/vanilla` is called from plain
+    // JS. `DialogStyle` maps `CSSStyleDeclaration`'s keys, so an object *literal* carrying a custom
+    // property is rejected while a `Record<string, string>` is assignable — what a caller assembling
+    // a style at runtime holds.
     const target = spyTarget();
     const custom: Record<string, string> = { '--dialog-backdrop': 'rgba(0, 0, 0, 0.7)' };
 

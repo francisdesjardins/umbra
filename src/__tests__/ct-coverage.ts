@@ -7,11 +7,11 @@ import { resolve } from 'node:path';
  * process: `scripts/vite-plugin-ct-coverage.mjs` instruments the source into the bundle, counters
  * land on `window.__coverage__` in that page, and this fixture reads them back before the page
  * closes, writing one file per test to `.nyc_output/` for the report step to merge. `auto: true`
- * applies it unasked — the price is every CT file importing `test` from here, which is also where a
- * `page`-level default would go. Inert without `CT_COVERAGE=1`, costing one `evaluate`. Counters
- * carry *source* line numbers, which that plugin exists to arrange: read its note before swapping
- * in `vite-plugin-istanbul` — right totals, wrong lines. `.nyc_output/` is emptied per run by
- * `scripts/ct-coverage-reset.mjs`, since a file outliving its run merges into the next report.
+ * applies it unasked — the price is every CT file importing `test` from here. Inert without
+ * `CT_COVERAGE=1`. Counters carry *source* line numbers, which that plugin exists to arrange: read
+ * its note before swapping in `vite-plugin-istanbul` — right totals, wrong lines. `.nyc_output/` is
+ * emptied per run by `scripts/ct-coverage-reset.mjs`, since a file outliving its run merges into
+ * the next report.
  */
 
 declare global {

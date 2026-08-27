@@ -604,13 +604,9 @@ test.describe('a shadow-root dialog in a stack', () => {
       })
       .toBe('vanilla-shadow-front');
 
-    // **And on the control the user left, on every engine.** This is the assertion that used to
-    // accept either answer: the raise re-shows the dialog, the engine focuses something on the way
-    // back — Chromium the first focusable, WebKit the field — and the `focusin` it fires used to
-    // land on the coordinator's memory, so there was nothing left to restore from. `isRaisingDialog`
-    // closes that window, and the reclaim now treats focus-inside-but-not-where-I-remember as the
-    // signature of a move the library made. Pinning one engine broke CI before; pinning the
-    // library's own answer is what makes it the same on all three.
+    // **And on the control the user left, on every engine.** A raise re-shows the dialog and the
+    // engine focuses something on the way back. `isRaisingDialog` closes that window, so the
+    // reclaim reads focus inside but not where the memory says as the library's own move.
     await expect
       .poll(() => {
         return focusedInShadow(page);
@@ -768,17 +764,10 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     // The flag lowered and the dialog gone, with nothing asked twice.
     await expect(page.getByTestId('asked')).toHaveText('open');
 
-    // **The exit is a real one, and the sequence says so.** It used to read `opening,open,closed`:
-    // this harness asks for `{ duration: 0, exitDuration: 120 }`, and the transition check read the
-    // *entrance* duration at open, so the exit was skipped and `'closing'` never published. It is
-    // published now.
-    //
-    // **What this still does not prove, and it is not the pair the note used to name.** Deciding on
-    // `isVisible` rather than `phase` disagrees on `['closing', true]` **only** — the flag going back
-    // *up* mid-exit — since a closing dialog is not open and `open: false` answers `'none'` either
-    // way. That case is exhaustive at the unit level in `core/__tests__/reconcile-open.test.ts`, and
-    // it is not reachable from here: raising the flag is not a store event, so no notification lands
-    // while the phase is `'closing'` and the flag is up.
+    // **The exit is a real one, and the sequence says so.** This harness asks for
+    // `{ duration: 0, exitDuration: 120 }`: read the *entrance* duration at open and the exit is
+    // skipped, so `'closing'` never publishes. `isVisible` versus `phase` on `['closing', true]` is
+    // exhaustive in `core/__tests__/reconcile-open.test.ts` instead.
     await expect(page.getByTestId('phases-seen')).toHaveText('opening,open,closing,closed');
     await expect(page.getByTestId('open-count')).toHaveText('1');
   });

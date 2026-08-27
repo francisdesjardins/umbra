@@ -10,10 +10,10 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * dialog still renders and only looks wrong. The harness reads a CSS variable declared on the host
  * so the loss is measurable rather than argued.
  *
- * **The host is mounted before the dialog is**, which is the arrangement `PortalTarget` requires and
- * the one it describes: a design-system root, a themed shell, a microfrontend's mount point. A host
- * rendered as the dialog's own sibling is not one — the getter would answer `null` on the render
- * that places the dialog, and the fallback to the body is what a caller would see.
+ * **The host is mounted before the dialog is**, which is what `PortalTarget` requires: a
+ * design-system root, a themed shell, a microfrontend's mount point. A host rendered as the
+ * dialog's own sibling is not one — the getter would answer `null` on the render that places the
+ * dialog.
  */
 function PortaledDialog({ host }: { readonly host: Element }) {
   const [inheritedInk, setInheritedInk] = useState('');

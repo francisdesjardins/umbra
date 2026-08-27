@@ -22,12 +22,9 @@ export function StrandedFocusHarness() {
       return (
         <div style={dialogStyle}>
           {/*
-            The label is **constant** and the busy state is reported beside it, deliberately. A
-            button whose children change between the two states is a button the renderer is free to
-            replace rather than update — and a replaced node is blurred by being *removed*, which
-            dispatches `focusout` on a node already out of the tree, where it bubbles to nobody.
-            That is a real limit and a different one from what this harness is for; keeping the
-            children stable holds the node identity so this asks its own question.
+            The label is **constant** and the busy state reported beside it: a button whose children
+            change is one the renderer may replace, and a replaced node is blurred by being removed,
+            dispatching `focusout` where it bubbles to nobody — a different limit from this one.
           */}
           <button
             data-testid="stranded-work"

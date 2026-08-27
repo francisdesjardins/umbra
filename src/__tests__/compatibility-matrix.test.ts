@@ -21,12 +21,11 @@ import { collectOptionNames } from './option-surface.js';
  * Three checks, each answering a way this document has already gone stale: every option has a row
  * and every row a real option; every cited test resolves by file and title; `API.md` carries the
  * rendered table byte for byte. What it cannot check — that a cited test *proves* its cell — stays
- * a human claim, the same scope limit `docs-exports.test.ts` keeps about type-only imports.
+ * a human claim.
  *
  * Two more hold the *vocabulary* rather than the facts, and both exist because a state whose whole
  * content is a field goes hollow the moment the field is optional: a `⏸ blocked` cell owes a
- * `recheck`, and a `caveat` owes both of its halves. Same argument as the `why` gate below,
- * applied to the two shapes added after it.
+ * `recheck`, and a `caveat` owes both of its halves.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -145,10 +144,9 @@ test.describe('the compatibility matrix', () => {
       return bindingCells(row)
         .filter(([, value]) => {
           const owes = value.state === 'no-by-design' || value.state === 'partial';
-          // `why`, not "anything at all": a reference proves a behaviour and says nothing about why
-          // it is the behaviour, and a `note` is what a `✓` carries when it feels like it. The two
-          // states here have no content *but* the explanation, so the field that names it is the
-          // one they must fill.
+          // `why`, not "anything at all": a reference proves a behaviour and says nothing about why it is
+          // the behaviour, and a `note` is what a `✓` carries when it feels like it. These two states have
+          // no content *but* the explanation.
           return owes && value.why === undefined;
         })
         .map(([binding]) => {
@@ -231,9 +229,9 @@ test.describe('the compatibility matrix', () => {
 
   test('a blocked cell says what to re-check and when it was last measured', () => {
     // `⏸` buys exactly one thing — it leaves the actionable list — and `recheck` is the price. A
-    // blocked cell with nothing to look at is a `~` that stopped being counted, which is the failure
-    // the state was introduced to prevent rather than to enable. The date is checked for shape as
-    // well as presence: an unparseable one sorts wrong, and the watch list is sorted by staleness.
+    // blocked cell with nothing to look at is a `~` that stopped being counted. The date is checked
+    // for shape as well as presence: an unparseable one sorts wrong, and the watch list sorts by
+    // staleness.
     const silent = everyRow()
       .filter((row) => {
         return row.state === 'blocked';
@@ -256,10 +254,9 @@ test.describe('the compatibility matrix', () => {
   });
 
   test('a caveat names the question and what would close it', () => {
-    // The half that stops the ratchet. Four caveats were written in two weeks and none was ever
-    // removed; two of them turned out to be explanations of a deliberate trade wearing the
-    // worklist's clothes. An author who cannot write `nextStep` has written a `note` — that is the
-    // whole test, and it is the same shape as the `why` a refusal owes.
+    // The half that stops the ratchet. Four caveats were written in two weeks and none removed; two
+    // turned out to be explanations of a deliberate trade wearing the worklist's clothes. An author
+    // who cannot write `nextStep` has written a `note` — the same shape as the `why` a refusal owes.
     const vague = everyRow()
       .filter((row) => {
         return row.caveat !== undefined;
@@ -282,12 +279,9 @@ test.describe('the compatibility matrix', () => {
   test('the open cells are the worklist', () => {
     const { open, watch } = worklist();
 
-    // The list is the output, not a threshold: printing it makes the matrix a backlog, which is
-    // why `✓ untested` and `~` are declared states rather than something found by reading.
-    // **No threshold was added when the plateau was found**, deliberately: the count sat at six for
-    // ten days and the count is not what made that visible — the `since` date is, which `yarn todo`
-    // sorts by and prints the age of. A failing number would say the list is too long; an age says
-    // which line has been ignored, and that is the one a person can act on.
+    // The list is the output, not a threshold: printing it makes the matrix a backlog, which is why
+    // `✓ untested` and `~` are declared states. **And no threshold** — a failing number says the list
+    // is too long, where the `since` age says which line has been ignored.
     console.log(
       `\ncompatibility matrix — ${String(open.length)} open, ${String(watch.length)} on watch:\n${[
         ...open,

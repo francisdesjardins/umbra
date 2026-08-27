@@ -211,11 +211,9 @@ test.describe('what a late install costs', () => {
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('mr-policy')).toHaveText('on');
 
-    // **`mr-low` is the saving, and it is the whole point.** Re-showing always puts a dialog in
-    // front, so the cheapest plan keeps the longest prefix of the wanted order that is already a
-    // subsequence of the real one — `low` is at the top and belongs at the bottom, and lifting the
-    // two above it gets it there without touching it. Seeded from the stack as it stands this is
-    // two; against an empty `current` it was three, since `planRaises` then returns everything.
+    // **`mr-low` is the saving.** Re-showing always puts a dialog in front, so the cheapest plan
+    // keeps the longest prefix of the wanted order already a subsequence of the real one: `low` is
+    // at the top and belongs at the bottom, and lifting the two above it gets it there untouched.
     await expect
       .poll(() => {
         return raisesSoFar(page);

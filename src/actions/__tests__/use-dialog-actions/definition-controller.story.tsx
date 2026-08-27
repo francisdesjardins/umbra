@@ -24,7 +24,8 @@ const countStore = createStore(
 );
 
 /**
- * Tests a standalone store alongside useDialogActions.
+ * A store of the library's own, driven from inside a dialog: the action engine is not the only
+ * state a `render` may read, and neither subscription interferes with the other.
  */
 export function DefinitionActionsHarness() {
   const [lastReason, setLastReason] = useState('');

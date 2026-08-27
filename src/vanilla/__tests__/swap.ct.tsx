@@ -2,15 +2,15 @@ import { expect, test } from '../../__tests__/ct-coverage.js';
 import { VanillaSwapHarness } from './swap.story.js';
 
 /**
- * `umbra/vanilla` over markup somebody else replaces — the hypermedia case, and the one arrangement
- * where the library's usual assumption fails: a renderer tells it when a dialog goes, and a fragment
- * swap tells it nothing. The controller closes over the element it was handed, so the swap leaves it
- * driving a node that is no longer in the document.
+ * `umbra/vanilla` over markup somebody else replaces — the hypermedia case, where the library's
+ * usual assumption fails: a renderer tells it when a dialog goes, and a fragment swap tells it
+ * nothing. The controller closes over the element it was handed, so the swap leaves it driving a
+ * node that is not in the document.
  *
- * There is nothing to detect here and deliberately no attempt to: an observer per dialog would be
- * every consumer paying for one integration style, and the caller doing the swapping is the one
- * thing that already knows it happened. What these pin is that the pair it must run — `destroy()`
- * then bind again — puts everything back, and that skipping it fails the way the docs say.
+ * Nothing to detect here, and deliberately no attempt to: an observer per dialog would be every
+ * consumer paying for one integration style, and the caller doing the swapping already knows it
+ * happened. What these pin is that the pair it must run — `destroy()` then bind again — puts
+ * everything back, and that skipping it fails the way the docs say.
  */
 test.describe('a dialog whose markup is swapped underneath it', () => {
   test('the controller drives the element it was handed, not the one on screen', async ({

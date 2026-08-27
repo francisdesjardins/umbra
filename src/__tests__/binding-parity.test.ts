@@ -10,8 +10,8 @@ import { fileURLToPath } from 'node:url';
  * nothing until someone reaches for it. `./vanilla` is a *controller* with no `render`, `Dialog` or
  * outlet, so its own test below records what it must and must not have instead. Only *names* are
  * compared; whether they mean the same thing is the shared type model's job, pinned by
- * `core/__tests__/type-model.test.ts`. Parsed rather than imported, because the unit project runs
- * in plain Node and can transform neither a framework nor JSX.
+ * `core/__tests__/type-model.test.ts`. Parsed rather than imported: the unit project is plain Node
+ * and can transform neither a framework nor JSX.
  */
 
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
