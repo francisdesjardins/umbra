@@ -17,19 +17,13 @@ const INITIAL_HEIGHT = 660;
  *
  * The page inside is deliberately not part of this app — plain HTML, an import map, four
  * `<script type="module">` — because a build step that resolved `umbra` for all four would prove
- * nothing about the import map. It demonstrates what `requestOpen` exists for: a dialog owned by
- * one microfrontend, addressed by another that never imports it. `dialogManager` is a module-level
- * singleton, so pointing every side at one build is the whole mechanism; four copies would be four
- * registries finding nothing.
+ * nothing about the import map. `dialogManager` is a module-level singleton, so pointing every side
+ * at one build is the whole mechanism; four copies would be four registries finding nothing.
  *
  * The four are written four ways on purpose: Checkout with `useDialog` from `umbra/react`, Support
- * with the same call from `umbra/solid`, Billing with `umbra/vanilla` over a hand-written
- * `<dialog>`, Audit as a web component whose dialog lives in a shadow root — a different DOM tree
- * rather than a different framework. They address each other regardless, because what they share
- * is the manager and not the renderer. Push Checkout past Billing's approval limit and a request
- * crosses three of them: React asks plain JS, plain JS refuses and hands the refusal to Solid.
- *
- * No `ExampleLayout`: no trigger row, no dialog of ours, no result — it all happens in the frame.
+ * from `umbra/solid`, Billing with `umbra/vanilla` over a hand-written `<dialog>`, Audit as a web
+ * component whose dialog lives in a shadow root. They address each other regardless, because what
+ * they share is the manager and not the renderer.
  */
 export function HostFrame() {
   const [reloadKey, setReloadKey] = useState(0);
@@ -39,17 +33,14 @@ export function HostFrame() {
 
   /**
    * Take the height from the document inside, not from breakpoints: breakpoints key off the
-   * **viewport** while the host's grid keys off the **frame's width**, and the two diverge by the sidebar plus
-   * the page padding — a `md` height computed for a 1200px viewport applied to a 604px frame that
-   * had reflowed to two columns and wanted twice as much.
+   * **viewport** while the host's grid keys off the **frame's width**, and the two diverge by the
+   * sidebar plus the page padding.
    *
    * **The body, not `documentElement`** — that is the difference between measuring and latching.
    * `documentElement.scrollHeight` is never less than its viewport, which here *is* the frame this
-   * sets the height of, so the two agree at the tallest layout ever produced and stay there: it can
-   * grow but never shrink. The body is sized by its content instead. Same origin, so
-   * `contentDocument` is readable and no `postMessage` handshake is needed, and the
-   * `ResizeObserver` covers what `load` cannot — the frame's width crossing a host-grid breakpoint
-   * re-lays the panels and changes the document's height.
+   * sets the height of, so it can grow but never shrink. Same origin, so `contentDocument` is
+   * readable, and the `ResizeObserver` covers what `load` cannot — a width crossing a host-grid
+   * breakpoint re-lays the panels.
    */
   useEffect(() => {
     const frame = frameRef.current;

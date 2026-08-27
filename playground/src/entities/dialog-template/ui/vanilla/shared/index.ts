@@ -2,7 +2,6 @@ export { ButtonRow } from '@/entities/dialog-template/ui/vanilla/shared/ButtonRo
 export { Alert } from '@/entities/dialog-template/ui/vanilla/shared/Alert';
 export { VanillaButton as Button } from '@/entities/dialog-template/ui/vanilla/shared/VanillaButton';
 
-// Content components
 export { Detail } from '@/entities/dialog-template/ui/vanilla/shared/content/Detail';
 export { DetailList } from '@/entities/dialog-template/ui/vanilla/shared/content/DetailList';
 export { Heading } from '@/entities/dialog-template/ui/vanilla/shared/content/Heading';

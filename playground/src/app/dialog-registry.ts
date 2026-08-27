@@ -8,14 +8,13 @@ import type { FormValues as VanillaFormValues } from '@/pages/ui-integrations/ex
  * Every dialog this playground opens, and what each one closes with.
  *
  * The list is the point. An id is a string the manager routes on, so without somewhere to write
- * them down "which component owns `stack-priority-warning`" is a grep — and with them written down
- * it is find-references on the key. The typing follows: a declared dialog infers its payload and its
+ * them down "which component owns `stack-priority-warning`" is a grep — written down, it is
+ * find-references on the key. The typing follows: a declared dialog infers its payload and its
  * reasons at every `useDialog` call, and `close` refuses a reason belonging to a different one.
  *
  * **The list is not enforced to be complete**, which is what lets `/stories` render the library's
  * own harnesses — a few hundred dialogs this app does not own. Adding a line is still worth it: an
- * entry missing from here is a dialog nobody can find. A dialog with no payload declares only its
- * reasons; `code-viewer` declares neither.
+ * entry missing from here is a dialog nobody can find.
  */
 declare module 'umbra' {
   interface DialogRegistry {

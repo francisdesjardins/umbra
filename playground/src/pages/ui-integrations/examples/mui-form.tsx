@@ -59,20 +59,10 @@ export function MuiFormExample() {
       form.reset();
     },
     render: ({ action, error }) => {
-      // **The seam, and the reason this example is not templated.** The library ships the running
-      // state as the DOM attribute `data-loading`, because a core agnostic of the UI cannot know
-      // your kit's word for it — MUI says `loading`, another says `busy`, a third has nothing. So
-      // the mapping is one line, here, in the only place that knows the answer.
-      //
-      // **Read, not removed.** The props are spread whole and `loading` is derived beside them, so
-      // the attribute still reaches the DOM: it is the documented styling contract
-      // (`button[data-loading='true'] { … }`) and the only form the library ships the state in.
-      // Destructuring it out maps the flag and silently drops the hook — measured, by taking it
-      // away and finding no attribute on the rendered button.
-      //
-      // Reading it here is safe *in React*, where `action()` runs again on every render. Its live
-      // fields are getters for the benefit of a fine-grained renderer; under Solid, pulling one out
-      // into a `const` would freeze it.
+      // **The seam.** The library ships the running state as the DOM attribute `data-loading`,
+      // because a core agnostic of the UI cannot know your kit's word for it. **Read, not
+      // removed**: the props are spread whole so the attribute still reaches the DOM, and
+      // destructuring `loading` out drops the styling contract.
       const submit = action('submit', async (close) => {
         // `submit` calls back only if nothing is wrong, and no `close` keeps the dialog open.
         await form.submit(async (values) => {

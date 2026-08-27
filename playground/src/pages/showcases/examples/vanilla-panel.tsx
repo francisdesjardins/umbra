@@ -541,7 +541,7 @@ export function VanillaPanelExample() {
           resultStore.setResult(`openAndWait → dismissed: ${closeResult.reason}`);
         }
       } catch {
-        // fire-and-forget safety net
+        // The open is fire-and-forget, so a rejection has nowhere to go but the console.
       }
     })();
   };

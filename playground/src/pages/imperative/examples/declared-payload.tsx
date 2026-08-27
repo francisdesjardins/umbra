@@ -15,10 +15,9 @@ export type PrintJob = { readonly copies: number; readonly colour: boolean };
  * The other half of the registry: what a dialog is *opened* with.
  *
  * `data` is what a dialog closes with and `payload` is what it opens with, and `PayloadOf` reads the
- * second the way `DataOf` reads the first. The card beside this one — "an open the dialog may
- * refuse" — is the same door with the opposite trust: its payload is typed into a textarea, so it
- * arrives `unknown` and is parsed. This one is asked and answered inside the project, so the
- * compiler checks the ask.
+ * second the way `DataOf` reads the first. The card beside this one is the same door with the
+ * opposite trust: its payload is typed into a textarea, so it arrives `unknown` and is parsed. This
+ * one is asked and answered inside the project, so the compiler checks the ask.
  *
  * **The handler still receives `unknown`, deliberately.** `requestOpen` is the door a microfrontend
  * or a `postMessage` relay comes through, and those callers are not compiled here. What the

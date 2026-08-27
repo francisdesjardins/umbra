@@ -192,7 +192,7 @@ const routeTree = rootRoute.addChildren([
   warzoneRoute,
 ]);
 
-// Use hash-based history when built for file:// (VITE_HASH_ROUTER=true)
+// A `file://` build has no server to rewrite paths, so the single-file bundle needs the hash.
 const history = import.meta.env['VITE_HASH_ROUTER'] === 'true' ? createHashHistory() : undefined;
 
 export const router = createRouter({

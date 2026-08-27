@@ -19,36 +19,15 @@ const TICK_MS = 100;
  * Corner toast — the use case `align` exists for.
  *
  * `direction: 'right'` slides in from the right edge; `align: 'start'` pins it to the top of the
- * cross axis rather than the default `stretch` (a floor-to-ceiling drawer), which makes the panel
- * content-sized on the cross axis — hence the explicit `width` and no height. `nonModal: true`
- * keeps the page interactive, `portal: true` anchors it to the viewport (a non-modal dialog never
- * enters the top layer, so otherwise it positions against its container), and `dismissKey: false`
- * because a toast ends on its own action or its timer. The countdown lives here rather than in the
- * trigger so the pointer can pause it, which doubles as proof the page underneath is interactive.
+ * cross axis instead of the default `stretch`, making the panel content-sized there.
+ * `nonModal: true` keeps the page interactive, `portal: true` anchors it to the viewport, `dismissKey: false`
+ * because a toast ends on its own action or timer.
  *
- * **A toast is not a dialog.** `<dialog>` carries an implicit `role="dialog"` — a surface to
- * attend to and dismiss — where a toast is a passing status message that taking focus for would be
- * hostile. So the element is only a shell (positioning, slide, lifecycle, typed close) and the
- * announcement goes through a live region **outside** it, because a live region announces
- * *changes*: one rendered by `render` mounts in the same pass that shows the dialog and enters the
- * accessibility tree already holding its text, the case screen readers miss. `useAnnouncer` mounts
- * a hidden `role="status"` beside the trigger on first render, long before there is anything to
- * say; every binding inherits the rule, since markup inside a closed dialog sits under
- * `display: none`, out of the tree, and becomes an insertion when it opens. The element disagrees
- * and that is handled rather than asserted: the focusing steps run on `show()` too — measured,
- * focus lands on Dismiss within 50ms — so the trigger remembers where focus was and `prepare` puts
- * it back. (Same reasoning behind `role` being only `'dialog' | 'alertdialog'`: a role that
- * contradicts its own element is not a fix.) It is still named, for the other way in — the element
- * stays in the tree, so a virtual cursor can land on it later and "dialog" is not useful to find.
+ * **A toast is not a dialog**, so the element is only a shell and the announcement goes through a
+ * live region **outside** it. `useAnnouncer` carries why.
  *
- * **Once a toast carries actions, three things stop being optional.** The timer must pause on
- * focus as well as hover, or a keyboard user tabbing to the action is exactly who the countdown
- * robs (WCAG 2.2.1) — this one listens to both. The actions must be *reachable*: a live region
- * announces text and puts nothing in the tab order, so a control that leaves after five seconds
- * may never be arrived at, and either auto-dismiss stops or the app offers a jump to the
- * notification region. And a choice the user *must* make is not a toast — it is `alertdialog`,
- * taking focus, dismissible with Escape, a different hook call rather than a restyling of this
- * one; `dismissKey: false` is defensible here only because nothing in this toast needs an answer.
+ * **Once a toast carries actions**, the timer must pause on focus as well as hover (WCAG 2.2.1),
+ * and a choice the user *must* make is an `alertdialog` rather than a restyled toast.
  */
 export function SlideCornerToastExample() {
   const { result } = useStore(resultStore);

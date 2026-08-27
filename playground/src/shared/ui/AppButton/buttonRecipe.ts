@@ -14,11 +14,8 @@ export type AppButtonLook = {
  * example writes itself, because `action(...)` spreads `aria-keyshortcuts`, `data-focus-on-open`
  * and `data-action-reason` onto it and a wrapper that enumerates props drops them silently.
  *
- * Everything else uses `AppButton`. This exists so those two do not re-declare the metrics — which
- * is how the shell came to own three copies of the same button, each needing the same edit.
- *
- * It lives beside the component rather than inside it because a module that exports both a
- * component and a function loses Fast Refresh.
+ * This exists so those two do not re-declare the metrics. It lives beside the component rather
+ * than inside it because a module that exports both a component and a function loses Fast Refresh.
  */
 export function appButtonClass({
   variant = 'text',

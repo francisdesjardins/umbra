@@ -1,26 +1,16 @@
-// The component both sides run: a worker renders it to a string, the page hydrates that string back
-// into it.
+// The component both sides run — a worker renders it to a string, the page hydrates it back.
 //
-// **Written with `createElement` and kept out of a `.tsx`**, which is not a style choice. Vite's
-// React plugin injects its Fast Refresh preamble into any module it sees exporting a component, and
-// that preamble reaches for `window` — which a Worker has not got, so the worker died on import
-// before rendering anything. The same reason `public/mfe/` uses `createElement`: a file that has to
-// run where nothing compiled it cannot afford a transform's assumptions.
-//
-// Free of MUI too: a worker bundle pulls in whatever this imports, and the point is that a dialog
-// needs no DOM to be *described*.
+// **Written with `createElement` and free of MUI.** Vite's React plugin
+// injects a Fast Refresh preamble into any module exporting a component, and it reaches for
+// `window`, which a Worker has not got.
 import { createElement as h } from 'react';
 import { useDialog } from 'umbra/react';
 
 export const SSR_DIALOG_ID = 'ssr-worker-demo';
 
 // Colours arrive as CSS variables the page sets on the host, never as values computed here: the
-// worker and the page have to emit byte-identical markup or hydration reports a mismatch, and a
-// theme is exactly the sort of thing the worker cannot know. The fallbacks are what the worker's own
-// markup shows before any page adopts it.
-//
-// The library ships no UI, so a dialog with no background is a transparent one over the backdrop —
-// this is the consumer's half, front page included.
+// worker and the page have to emit byte-identical markup or hydration reports a mismatch. The
+// fallbacks are what the worker's own markup shows before any page adopts it.
 const surface = {
   padding: 16,
   background: 'var(--ssr-surface, #ffffff)',

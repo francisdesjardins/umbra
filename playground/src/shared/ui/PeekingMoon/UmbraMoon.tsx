@@ -1,15 +1,13 @@
 /**
  * Umbra's mascot: the heraldic/woodcut sun inverted, because this is an *umbra* — the disc is the
  * dark body, the face is cut into it in light, and the flames are the corona escaping around the
- * rim, the same thing `--dialog-backdrop` does to a page. Eight flames (not the reference's ten)
- * drawn from inside the disc so only their tips clear the rim, each flanked by a short and a
- * middling one, because eight identical rays read as a cog. The tall one is widened, not
- * lengthened: reach turns a silhouette into noise at 120px, breadth makes it burn. Inline, so the
- * playground keeps its no-binary-assets rule.
+ * rim — what `--dialog-backdrop` does to a page. Eight flames drawn from inside the disc
+ * so only their tips clear the rim, each flanked by a short and a middling one, because eight
+ * identical rays read as a cog. Inline, keeping the no-binary-assets rule.
  *
  * @param breathing - Let the outer halo swell and fade, giving the three flame rhythms a common
  *   beat. Off on the peeking mascot, which already moves. Slower than the slowest flame (8.3s
- *   against 5.1s) and low amplitude, or it stops being a floor under the flicker.
+ *   against 5.1s), or it stops being a floor under the flicker.
  */
 export function UmbraMoon({
   isDark,

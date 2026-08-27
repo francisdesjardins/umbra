@@ -42,10 +42,9 @@ export function SsrWorkerExample() {
   }, []);
 
   const renderOnTheServer = () => {
-    // A second run starts from nothing, which means retiring the root the first one left. React
+    // A second run starts from nothing, which means retiring the root the first one left: React
     // refuses `hydrateRoot` on a container that already has one, and the container is the same node
-    // every time — so the reset belongs here rather than in `hydrate`, where the markup is already
-    // in place and it would be too late to say what owns it.
+    // every time. It belongs here rather than in `hydrate`, where the markup is already in place.
     const previous = rootRef.current;
     rootRef.current = null;
     previous?.unmount();

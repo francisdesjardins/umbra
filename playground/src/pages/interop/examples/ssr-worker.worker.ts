@@ -1,8 +1,7 @@
 /// <reference lib="webworker" />
-// The "server", and it is a Worker. `renderToString` is pure JavaScript — it needs a React tree and
-// nothing else — so the one environment a browser offers with no `document` in it is a faithful
-// stand-in for a Node render. Nothing here is a mock: this is the real `react-dom/server`, over the
-// real binding, in a scope where reaching for the DOM would throw.
+// The "server", and it is a Worker. `renderToString` needs a React tree and nothing else, so the
+// one environment a browser offers with no `document` in it is a faithful stand-in for a Node
+// render. Nothing here is a mock: the real `react-dom/server`, over the real binding.
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { SsrWorkerApp } from './ssr-worker-app';

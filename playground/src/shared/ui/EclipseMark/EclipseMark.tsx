@@ -23,8 +23,8 @@ export function EclipseMark({ size = 26 }: { readonly size?: number | undefined 
     >
       <circle cx="100" cy="100" r="88" fill="var(--app-flame)" />
       {/* `--app-body-edge`, not `--app-body`: in dark mode the deep body is the page ground exactly,
-          and a disc the colour of what is behind it turns the whole mark into a ring. The edge tone
-          is the same slate one step up, which is what keeps a disc reading as a disc. */}
+          and a disc the colour of what is behind it turns the mark into a ring. The edge tone is
+          the same slate one step up, which keeps a disc reading as a disc. */}
       <circle cx="100" cy="100" r="66" fill="var(--app-body-edge)" />
       {/* The limb: the trailing half darkened, so the body reads as a sphere rather than a hole. */}
       <path d="M100 34a66 66 0 0 1 0 132a66 66 0 0 0 0-132z" fill="var(--app-body)" opacity="0.9" />

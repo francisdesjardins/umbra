@@ -11,7 +11,7 @@ export {
 export { VanillaInput as Input } from '@/entities/dialog-template/ui/vanilla/form-dialog/components/VanillaInput';
 export { VanillaLabel as Label } from '@/entities/dialog-template/ui/vanilla/form-dialog/components/VanillaLabel';
 
-// namespace object for convenient access
+// Imported as values, not just re-exported: the namespace object below needs them in scope.
 import { VanillaContent as Content } from '@/entities/dialog-template/ui/vanilla/form-dialog/components/Content';
 import { VanillaFooter as Footer } from '@/entities/dialog-template/ui/vanilla/form-dialog/components/Footer';
 import { VanillaHeader as Header } from '@/entities/dialog-template/ui/vanilla/form-dialog/components/Header';

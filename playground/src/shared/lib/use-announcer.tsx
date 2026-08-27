@@ -18,13 +18,12 @@ const VISUALLY_HIDDEN: CSSProperties = {
  * A live region that exists **before** it has anything to say, which is the whole trick. Screen
  * readers announce a region's *changes*, and one inserted into the accessibility tree already
  * holding its text is the case they miss — exactly what `role="status"` inside a dialog's `render`
- * produces, since the content mounts in the same pass that shows the `<dialog>`. The fix is
- * structural: the region lives *outside* the dialog, mounted from the first render.
+ * produces. The fix is structural: the region lives *outside* the dialog, mounted from the first
+ * render.
  *
  * `announce` clears the region and writes a frame later, so two identical toasts are two
  * announcements — `"Saved"` → `"Saved"` has, to the platform, never changed. The library ships
- * nothing like this on purpose (and refuses `role: 'status'` on a `<dialog>` for the same reason);
- * copy it next to whatever raises your notifications.
+ * nothing like this on purpose; copy it next to whatever raises your notifications.
  *
  * @example
  * const { announce, region } = useAnnouncer();

@@ -339,9 +339,9 @@ export function CosmicOverrideExample() {
             /**
              * Inset, and opaque enough to survive being split. Measured at DPR 1: left/right land
              * on whole pixels (41.000, 334.000) while top/bottom are fractional (222.4375,
-             * 567.875), so a 1px band there spreads over two device pixels at ~56/44 — at the 0.45
-             * alpha this used to carry, each half lands near 0.25 against a dark gradient and
-             * vanishes. Geometry belongs to the ancestors; alpha is the fixable half.
+             * 567.875), so a 1px band there spreads over two device pixels at ~56/44 — at 0.45
+             * alpha each half would land near 0.25 against a dark gradient and vanish. Geometry
+             * belongs to the ancestors; alpha is the fixable half.
              */
             boxShadow: 'inset 0 0 0 1px rgba(245,158,11,0.9)',
             borderRadius: 12,

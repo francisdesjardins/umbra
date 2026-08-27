@@ -1,21 +1,17 @@
 import type { SVGProps } from 'react';
 
 /**
- * The shell's icon set — drawn for this app, on the mascot's engraved line rather than a
- * component library's filled silhouettes. Every glyph is a stroke on `currentColor`: colour and
- * size come from the caller, accessibility from the site of use (`aria-hidden` is the default; a
- * functional icon gets its name from the control around it).
+ * The shell's icon set — drawn for this app, on the mascot's engraved line rather than a component
+ * library's filled silhouettes. Every glyph is a stroke on `currentColor`, so colour and size come
+ * from the caller.
  *
  * The rules the set is drawn to, so a twenty-seventh glyph matches the twenty-six:
  *
  * - **24×24 grid, content inside a ~3px inset.** A glyph that touches the box reads a size bigger
  *   than its neighbours on the same row.
- * - **Stroke 1.75, round caps and joins, no fill.** The weight is the thing that has to be
- *   constant — a hairline among them looks broken rather than lighter. `Palette`'s two wells are
- *   the one deliberate fill, because a stroked 2px circle at 20px is a smudge.
- * - **Open forms over closed ones.** `Menu`'s third rule is short and `Tune`'s handles sit off
- *   centre for the same reason: an asymmetry is what stops a set of straight lines reading as a
- *   texture.
+ * - **Stroke 1.75, round caps and joins, no fill.** The weight has to be constant — a hairline
+ *   among them looks broken rather than lighter. `Palette`'s two wells are the one deliberate fill.
+ * - **Open forms over closed ones**: an asymmetry stops straight lines reading as a texture.
  */
 
 type IconProps = SVGProps<SVGSVGElement>;

@@ -13,18 +13,16 @@ const resultStore = createResultStore();
 
 /**
  * A dialog whose `open` is a prop — the component-library shape. It cannot close itself: the
- * boolean above it is still `true`, the next render puts it back, and the user sees a blink.
+ * boolean above it is still `true`, so the next render puts it back.
  *
- * - `onDismissRequest` reports the dismiss key instead of closing, leaving every gate above it
- *   (which key, an action's claim, a `prepare` or running action, which dialog is in front) the
+ * - `onDismissRequest` reports the dismiss key instead of closing, leaving every gate above it the
  *   library's. By hand it is three implementations: a modal dialog hears Escape through its own
- *   `keydown` and the native `cancel`, a non-modal panel through neither, being outside the top
- *   layer. Returning `false` declines, handing back a press the window-level capture ate.
- * - `reconcileOpen` runs every pass rather than reacting, making the prop authoritative, and
- *   decides on `phase` not `isVisible` — the difference is a cut animation.
- * - An action whose `onAction` never calls `close` leaves the dialog, so `onClose` reports the
- *   owner's `'close'`, never `'dismiss'`. Non-modal is required: the top layer's native backdrop
- *   would block the switch driving it.
+ *   `keydown` and the native `cancel`, a non-modal panel through neither. Returning `false`
+ *   declines.
+ * - `reconcileOpen` runs every pass rather than reacting, and decides on `phase` not `isVisible` —
+ *   the difference is a cut animation.
+ * - An action whose `onAction` never calls `close` leaves the dialog open, so `onClose` reports the
+ *   owner's `'close'`. Non-modal is required: the top layer would block the switch.
  */
 export function ControlledPanelExample() {
   const { result } = useStore(resultStore);

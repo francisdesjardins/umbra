@@ -10,28 +10,22 @@ const DIALOG_ID = 'deferred-open-target';
 /**
  * Opening a dialog that has not arrived yet.
  *
- * A dialog joins the registry when its component mounts, so an imperative open from a service, a
- * router guard or a deep link can land before the dialog behind a code-split route exists. That is
- * the ordinary case, not a typo — and it used to do nothing quietly, because a `log.warn` is
- * invisible until `setLogLevel`.
+ * A dialog joins the registry when its component mounts, so an imperative open from a router guard
+ * or a deep link can land before the dialog behind a code-split route exists — the ordinary case,
+ * not a typo, and a `log.warn` about it is invisible until `setLogLevel`. No queue ships in the
+ * library on purpose: a held open needs an expiry, and how long to wait is the application's
+ * question.
  *
- * `open(id)` answers now, and `subscribe` carries `register` / `unregister`, which is what makes the
- * waiter below writable at all. No queue ships in the library on purpose: a held open needs an
- * expiry, and how long a deep link should wait for its route is the application's question.
- *
- * **It waits for the dialog to be open, not for the register that let it try.** Retiring the
- * subscription on `register` is the version that fails, and React's own development double-mount is
- * enough to show it: the first registration is torn down and replaced, so an open fired at it lands
- * on a dialog that is about to be unmounted, and the second registration finds nobody listening.
- * Watching for the fact you wanted costs one more branch and survives every cause of that shape.
+ * **It waits for the dialog to be open, not for the register that let it try.** React's development
+ * double-mount shows why: the first registration is torn down and replaced, so an open fired at it
+ * lands on a dialog about to be unmounted.
  */
 function openWhenItArrives(id: string, onOpened: (how: string) => void): () => void {
   let waited = false;
 
-  // Subscribed **before** the open is attempted, for the reason `openAndWait` registers its resolver
-  // first: an answer that lands inside the call is one a listener added afterwards never hears. It
-  // also leaves one return path — an early "it was already there" would have to hand back a canceller
-  // with nothing to cancel, and an empty function is a branch pretending to be a value.
+  // Subscribed **before** the open is attempted, like `openAndWait`'s resolver: an answer that
+  // lands inside the call is one a listener added afterwards never hears. It also leaves one return
+  // path — an early "it was already there" would hand back a canceller with nothing to cancel.
   const stop = dialogManager.subscribe((event) => {
     if (event.id !== id) {
       return;

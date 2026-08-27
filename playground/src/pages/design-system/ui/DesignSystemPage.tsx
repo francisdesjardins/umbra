@@ -297,10 +297,9 @@ export function DesignSystemPage() {
               </AppButton>
             </div>
 
-            {/* Each control names its own recipe, the way the buttons above do — so the 4px the
+            {/* Each control names its own recipe, the way the buttons above do, so the 4px the
                 default stands taller than `compact` reads as the variant it is. The popup is drawn
-                by the browser outside the page, so this card's dark mode is checked by opening
-                one, never by reading it. */}
+                by the browser outside the page: check this card's dark mode by opening one. */}
             <div className={styles['recipeRow']}>
               <SelectionDropdown id="ds-select-default" aria-label="Default select">
                 <option>Default</option>

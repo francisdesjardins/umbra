@@ -5,8 +5,7 @@ import { useStore } from './use-store';
 // ── A form, small enough to read ──────────────────────────────────────────────
 // A stand-in, not a form library — no schema, resolver, field array, uncontrolled mode or ref
 // registration; wanting any of those means wanting React Hook Form. It exists so `/ui-integrations`
-// can claim the same hook wears two UIs: with the logic shared, the MUI and vanilla forms differ
-// only in what they render rather than being two implementations that happen to agree.
+// can claim the same hook wears two UIs, rather than two implementations that happen to agree.
 
 /**
  * The keys whose value is a `string`, and therefore the only ones {@link Form.field} can serve.

@@ -6,20 +6,17 @@ import { expect, test } from '@playwright/test';
 /**
  * Every prop-free `*.story.tsx` harness reaches the `/stories` page.
  *
- * As prose in `playground/CLAUDE.md` the rule enforced nothing, and the failure is silent in every
- * direction: a harness off the page still builds, still type-checks, still runs in the component
- * suite, and is reachable by nobody. Nothing fails — the demo simply does not exist for readers,
- * which is the shape of silence the compatibility matrix and the doc budget were each written to
- * break.
+ * As prose in `playground/CLAUDE.md` the rule enforced nothing, and the failure is silent: a
+ * harness off the page still builds, type-checks and runs in the component suite, reachable by
+ * nobody.
  *
- * The exemption list below is a **door, not a design**: an omission has to be written down, so
- * adding a harness is a decision rather than a lapse. It also fails when it names a harness that no
- * longer exists or one that has since been placed, so it cannot rot into a second source of truth.
- * It is empty, and an entry added to it owes a reason here.
+ * The exemption list below is a **door, not a design**: an omission has to be written down. It
+ * also fails when it names a harness that is gone or one since placed, so it cannot rot into a
+ * second source of truth. It is empty.
  *
- * A harness taking **required props** is out of scope: `StoryEntry.component` is a `ComponentType`
- * with no props, so those are fixtures rather than demos — see `playground/CLAUDE.md`. That is why
- * this parses `export function X()` with an empty parameter list rather than every export.
+ * A harness taking **required props** is out of scope: `StoryEntry.component` takes none, so those
+ * are fixtures rather than demos — which is why this parses `export function X()` with an empty
+ * parameter list.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
