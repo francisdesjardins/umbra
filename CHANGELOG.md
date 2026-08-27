@@ -9,6 +9,46 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-27
+
+### Changed — the comment rule is a gate, and the comments now pass it
+
+Four sentences in `CLAUDE.md` governed every comment in the repository and nothing enforced any of
+them: **why, not what**, **never the past**, **one dense sentence beats a paragraph**, and **JSDoc on
+public API is the exception**. A rule that lives only in prose is a rule someone has to remember, and
+the drift is invisible one paragraph at a time — the same shape the doc budget was written to break.
+
+**The pass.** 76 files, 425 insertions against 752 deletions, and no executable line touched. Roughly
+130 comment blocks were compressed, the longest from 623 words to 118. Where a measured fact would
+not fit a sentence it moved rather than went: the `relatedTarget === null` reasoning now sits on the
+guard that reads it, the `aria-hidden` decision on `createGuard` where the markers are built, and the
+`'closing'`-window scope note points at the unit test that is exhaustive about it. Past-tense
+narration is gone from the source — this file is where it belongs. Two `used to`s were instrumental
+rather than historical (`used to drive icon and color selection`) and were reworded so a gate can be
+strict with no exemption list.
+
+### Added — `comment-budget.test.ts`
+
+A `//` run or a bare `/* */` gets **50 words**; JSDoc gets **120** wherever the public-API exception
+does not reach — marked `@internal`, under `playground/`, or in a test. Public JSDoc in `src/` is
+uncapped, being what `/api` renders.
+
+**It reads comments, not lines**, through a scanner that skips strings, template literals and regex
+literals: the compatibility matrix and `StoriesPage` carry prose _in data_, banned words included,
+and a line-based match would gate on it. Cross-checked against the TypeScript parser file by file,
+where it turned out to find strictly more — trailing `//` and JSX `{/* */}` comments, which a
+leading-trivia walk misses.
+
+Three deliberate exemptions, each an argument rather than a convenience. **Section rails**
+(`── Placement ──`) are structure, and a rule against them would only move them. **Directive lines**
+(`oxlint-disable`, `@ts-`) are machinery, so they neither count nor join the block above — without
+that, `dialog-manager.ts`'s disable comment inflates the paragraph it justifies. And **the exemption
+list is empty**, so an omission is a written decision.
+
+**The seam it cannot close**: the public-API exception is read off `@internal`, so removing the tag
+removes the cap. That is the same human boundary `compatibility-matrix.test.ts` keeps about whether a
+cited test proves its cell, and it is written down rather than left to be discovered.
+
 ## 2026-08-25
 
 ### Changed — `modal` was never the noun: the whole surface says `dialog`

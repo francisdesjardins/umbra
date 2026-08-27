@@ -131,7 +131,11 @@ by hand.
 - **Commits**: [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 - **Changelog**: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), by date
 - **Files**: kebab-case. **Exports**: PascalCase types/components, camelCase functions/hooks
-- **Comments**: **why, not what** — and never the past (`used to`, `previously`); the CHANGELOG is the history. One dense sentence beats a paragraph; JSDoc on public API is the exception, being the documentation.
+- **Comments**: **why, not what** — and never the past (`used to`, `previously`); the CHANGELOG is
+  the history. One dense sentence beats a paragraph; JSDoc on public API is the exception, being
+  the documentation. **All of that is a gate** —
+  [comment-budget.test.ts](src/__tests__/comment-budget.test.ts) carries the budgets, the two ways
+  the public-API exception is read, and the one seam it cannot close.
 - **No implicit returns**: every arrow function uses a block body with an explicit `return` (`arrow-body-style: ['error', 'always']`, `yarn lint:fix` auto-fixes)
 - **Optional props**: `| undefined` suffix (`onClose?: ((r: CloseResult) => void) | undefined`)
 - **Type safety**: No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening.
