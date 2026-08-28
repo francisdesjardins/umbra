@@ -194,6 +194,94 @@ const flows = {
     return checks;
   },
 
+  /**
+   * A controller drives the dialog: close, activate, and the d-pad walk.
+   *
+   * The device is stubbed, which is the whole of what can be automated — no engine exposes a real
+   * gamepad — but the adapter under it is the page's own, so what the checks measure is the code a
+   * reader would copy.
+   */
+  async gamepad(page) {
+    const checks = [];
+    await page.addInitScript(() => {
+      const buttons = Array.from({ length: 17 }, () => {
+        return { pressed: false, value: 0 };
+      });
+      const pad = {
+        axes: [0, 0, 0, 0],
+        buttons,
+        connected: true,
+        id: 'Smoke Controller (STANDARD GAMEPAD)',
+        index: 0,
+        mapping: 'standard',
+        timestamp: 0,
+      };
+      Object.defineProperty(navigator, 'getGamepads', {
+        configurable: true,
+        value: () => {
+          return [pad];
+        },
+      });
+      window.__pad = (index, pressed) => {
+        buttons[index] = { pressed, value: pressed ? 1 : 0 };
+      };
+    });
+
+    await gotoRoute(page, '/interop');
+    await page.getByRole('button', { name: 'Open', exact: true }).click();
+    await page.waitForTimeout(900);
+
+    const reach = (await page.getByTestId('gamepad-reach').textContent()) ?? '';
+    checks.push([
+      reach.endsWith('2 of 4'),
+      'an adapter outside the library reaches half the controls',
+      reach,
+    ]);
+
+    /** One press, released — the adapter reads edges, so a held button is one move. */
+    const tap = async (index) => {
+      await page.evaluate((i) => window.__pad(i, true), index);
+      await page.waitForTimeout(140);
+      await page.evaluate((i) => window.__pad(i, false), index);
+      await page.waitForTimeout(140);
+    };
+
+    const walked = [];
+    for (let step = 0; step < 4; step += 1) {
+      await tap(13);
+      walked.push(
+        await page.evaluate(() => {
+          const active = document.activeElement;
+          return (
+            active?.getAttribute('data-testid') ??
+            active?.getAttribute('data-action-reason') ??
+            active?.tagName ??
+            'none'
+          );
+        })
+      );
+    }
+    checks.push([
+      new Set(walked).size === 4,
+      'the d-pad reaches every control, not only the action buttons',
+      walked.join(' → '),
+    ]);
+    checks.push([
+      await page.evaluate(() => {
+        return document.activeElement?.matches(':focus-visible') ?? false;
+      }),
+      'and the control it lands on is visibly focused',
+    ]);
+
+    await tap(1);
+    await page.waitForTimeout(700);
+    checks.push([
+      !(await page.locator('dialog[data-dialog-id="gamepad-panel"]').isVisible()),
+      'east closes the dialog through the public handle',
+    ]);
+    return checks;
+  },
+
   /** The framework-agnostic service drives confirm → API → outcome without a component. */
   async service(page) {
     const checks = [];

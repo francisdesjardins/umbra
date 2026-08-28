@@ -53,7 +53,12 @@ export type _SlideHandleTakesPayload = Equals<
 
 // `void` makes `data` unusable rather than absent, so assert the *rejection* — the part users
 // rely on.
-const voidHandle: DialogHandle = { close: noop };
+const voidHandle: DialogHandle = {
+  close: noop,
+  moveFocus: () => {
+    return false;
+  },
+};
 // @ts-expect-error a dialog with no declared payload takes no payload
 voidHandle.close('done', { id: 1 });
 

@@ -1494,6 +1494,58 @@ function RestoreFocusToApp(): Built {
   );
 }
 
+function MoveFocusApp(): Built {
+  const dialog = useDialog<void, 'done'>({
+    id: 'solid-move-focus',
+    nonModal: true,
+    ariaLabel: 'Solid walkable panel',
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          h('button', { 'data-testid': 'solid-mf-first', ...ctx.action('done') }, 'First'),
+          h('input', { 'aria-label': 'Field', 'data-testid': 'solid-mf-field' })
+        )
+      );
+    },
+  });
+
+  // A key listener rather than a button: a button takes the focus this is measuring, and WebKit
+  // does not focus a clicked one — so the two engines would disagree about the starting point.
+  createEffect(() => {
+    const walk = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown') {
+        dialog.handle.moveFocus('next');
+      }
+    };
+    window.addEventListener('keydown', walk);
+    onCleanup(() => {
+      window.removeEventListener('keydown', walk);
+    });
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'solid-mf-open',
+        onClick: () => {
+          void dialog.open();
+        },
+      },
+      'Open'
+    ),
+    dialog.Dialog
+  );
+}
+
+export const SolidMoveFocusApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, MoveFocusApp));
+};
+
 export const SolidRestoreFocusToApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, RestoreFocusToApp));
 };

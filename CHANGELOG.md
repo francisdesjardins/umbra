@@ -11,6 +11,36 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-28
 
+### Added — `handle.moveFocus`, for input that is not a keyboard
+
+A controller is not a keyboard, and the browser does not pretend otherwise: the Gamepad API delivers
+**no events at all** — a caller polls `navigator.getGamepads()` and reads the edges itself — and a
+synthetic `Tab` moves nothing, because an untrusted event runs no default action. Measured on
+Chromium and WebKit: a `keydown` dispatched from the focused element closes a dialog, since the
+library acts by program rather than through a default action; the same event as `Tab` leaves focus
+exactly where it was.
+
+So closing and activating from a controller needed nothing new. **Walking the controls did.** A
+page-level adapter can only find what carries `data-action-reason`, which on the playground's own
+panel is **two controls out of four** — it misses the field and the declared reading region. And a
+hand-rolled `querySelectorAll` gets four things wrong: it reaches into a nested dialog rendered in
+the same subtree, it counts the focus-containment markers, it trusts a candidate that cannot take
+focus, and it draws no ring — a controller carries no input modality the engines recognise.
+
+`handle.moveFocus('next' | 'previous')` is that scan, wrapping at either end, one implementation in
+`createDialogRuntime` so the three bindings differ only in how they hand the handle out. It returns
+whether anything took the focus, which is `false` for a dialog that is closed or has nothing
+focusable in it.
+
+`/interop` gains the adapter that motivated it — d-pad, South to activate, East to close — and
+`yarn smoke` drives it against a stubbed controller, asserting the walk reaches all four controls
+where the outside scan reaches two.
+
+**One incidental change**: React's binding now holds its element in a plain box behind a callback
+ref rather than a `useRef`. The runtime is handed `getDialog` while the component renders, and a
+closure over a React ref crossing that call is what the React Compiler reads as a render-phase ref
+access — a suppression would have been the first in `src/`.
+
 ### Fixed — the same conclusion whichever way the story began
 
 Reported as a divergence and it was one: on _Simple Dialog_, `click → open` then **Space** on the

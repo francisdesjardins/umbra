@@ -20,6 +20,7 @@ import ssrWorkerSrc from '@/pages/interop/examples/ssr-worker.tsx?raw';
 import deploymentServiceSrc from '@/pages/imperative/examples/deployment-service.ts?raw';
 import cosmicOverrideSrc from '@/pages/showcases/examples/cosmic-override.tsx?raw';
 import domEventsSrc from '@/pages/interop/examples/dom-events.tsx?raw';
+import gamepadSrc from '@/pages/interop/examples/gamepad.tsx?raw';
 import groceryListSrc from '@/pages/showcases/examples/grocery-list.tsx?raw';
 import vanillaPanelSrc from '@/pages/showcases/examples/vanilla-panel.tsx?raw';
 import imperativeSrc from '@/pages/imperative/examples/imperative.tsx?raw';
@@ -62,6 +63,7 @@ export const examples: Record<string, string> = {
   'imperative-deployment-service': deploymentServiceSrc,
   'cosmic-override': cosmicOverrideSrc,
   'dom-events': domEventsSrc,
+  gamepad: gamepadSrc,
   'grocery-list': groceryListSrc,
   'vanilla-panel': vanillaPanelSrc,
   imperative: imperativeSrc,

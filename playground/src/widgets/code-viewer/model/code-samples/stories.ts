@@ -137,6 +137,7 @@ const SOLID_CARDS: ReadonlyArray<readonly [key: string, names: readonly string[]
   ['story-solid-failed-action', ['FailedActionApp']],
   ['story-solid-claimless-reclaim', ['ClaimlessReclaimApp']],
   ['story-solid-prepare-failure', ['PrepareFailureApp']],
+  ['story-solid-move-focus', ['MoveFocusApp']],
   ['story-solid-restore-focus-to', ['RestoreFocusToApp']],
 ];
 const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> = [
@@ -158,6 +159,7 @@ const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> =
   ['story-vanilla-non-modal-options', 'VanillaNonModalOptionsHarness'],
   ['story-vanilla-reconcile', 'VanillaReconcileHarness'],
   ['story-vanilla-claimless-reclaim', 'VanillaClaimlessReclaimHarness'],
+  ['story-vanilla-move-focus', 'VanillaMoveFocusHarness'],
   ['story-vanilla-restore-focus-to', 'VanillaRestoreFocusToHarness'],
   ['story-vanilla-prepare-failure', 'VanillaPrepareFailureHarness'],
 ];

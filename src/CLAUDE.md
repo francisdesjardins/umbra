@@ -382,6 +382,13 @@ the show falls back to it. And the platform's own restore rings by input modalit
 came back visible from the keyboard and invisible from the mouse; the restore now blurs and refocuses
 where the ring is missing, the dance `settleOpeningFocus` already makes on the way in.
 
+**`handle.moveFocus` is that same scan, offered outward**, and the only public focus move the
+library makes on request. It exists for an input device the browser does not turn into Tab: the
+Gamepad API delivers no events, and a synthetic `Tab` runs no default action. Closing and activating
+from such a device need nothing new — `handle.close` and `.click()` are already public — so the
+scan is the whole of what was missing, and it is the part user-land gets wrong: scoping past a
+nested dialog, the containment markers, the per-candidate check, and the ring.
+
 ### Never hold an element across something that replaces it
 
 **The defect this codebase keeps producing** — three times in a day, one shape: a reference captured

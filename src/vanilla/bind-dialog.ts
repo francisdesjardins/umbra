@@ -92,12 +92,13 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const animation: DialogAnimation = options.animation ?? DEFAULT_DIALOG_ANIMATION;
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
-    dialogId
-  );
   const getDialog: GetDialog = () => {
     return dialog;
   };
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+    dialogId,
+    getDialog
+  );
 
   // Absent options skip rather than empty, so an audit still sees an unnamed dialog and an
   // `aria-labelledby` in the caller's markup survives. A function, because `aria-busy` moves.

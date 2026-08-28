@@ -507,6 +507,41 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'handle.moveFocus',
+    react: {
+      state: 'works',
+      note: 'One implementation, in `createDialogRuntime` — so the three bindings differ only in how they hand out the handle, and each row below is that hand-off rather than a second scan. Scoped with `queryOwn`, guards excluded, each candidate verified, and focused with a `:focus-visible` ring: the four things a hand-rolled `querySelectorAll` gets wrong, which is why this is a method and not a recipe in the docs.',
+      references: [
+        {
+          file: 'src/core/__tests__/move-focus.ct.tsx',
+          title: 'next reaches the field and the region, not only the buttons',
+        },
+        {
+          file: 'src/core/__tests__/move-focus.ct.tsx',
+          title: 'a nested dialog’s controls are never the answer',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
+          title: 'the handle walks the panel’s own controls',
+        },
+      ],
+    },
+    vanilla: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'the handle walks the panel’s own controls',
+        },
+      ],
+    },
+  },
+  {
     capability: 'the render callback and the Dialog it returns',
     react: {
       state: 'works',
@@ -1436,6 +1471,21 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
         file: 'src/core/__tests__/close-focus-ring.ct.tsx',
         title:
           'a non-modal panel opened by click, closed by click on the action button, rings the trigger',
+      },
+    ],
+  },
+  {
+    fact: 'an input device the browser does not turn into Tab can still walk a dialog',
+    state: 'works',
+    why: 'The Gamepad API delivers no events at all — a caller polls `navigator.getGamepads()` and reads edges itself — and a synthetic `Tab` moves nothing, because an untrusted event runs no default action (measured: `keydown` dispatched from the focused element closes a dialog, since the library acts by program, while the same event as `Tab` leaves focus exactly where it was). Closing and activating therefore need nothing new: `handle.close` and a `.click()` on whatever holds the keyboard are already public. Walking the controls is the half that was not — a page-level adapter finds `[data-action-reason]` and stops, which on the playground’s own panel is **two controls out of four**, missing the field and the declared reading region. `handle.moveFocus` is that scan, and it is also where the ring comes from: a controller carries no input modality the engines recognise.',
+    references: [
+      {
+        file: 'src/core/__tests__/move-focus.ct.tsx',
+        title: 'next reaches the field and the region, not only the buttons',
+      },
+      {
+        file: 'src/core/__tests__/move-focus.ct.tsx',
+        title: 'the control it lands on is visibly focused, not silently',
       },
     ],
   },

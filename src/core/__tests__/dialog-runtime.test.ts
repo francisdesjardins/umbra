@@ -23,6 +23,11 @@ test.afterEach(() => {
   frames.restore();
 });
 
+/** No element to walk: these tests are the runtime's own logic, and Node has no `<dialog>`. */
+const noDialog = () => {
+  return null;
+};
+
 test.describe('resolveDialogOptions', () => {
   test('applies the defaults a bare dialog relies on', () => {
     expect(resolveDialogOptions({})).toMatchObject({
@@ -105,7 +110,7 @@ test.describe('resolveDialogOptions', () => {
 
 test.describe('createDialogRuntime', () => {
   test('open() settles when prepare does, not when the dialog is shown', async () => {
-    const { store, open } = createDialogRuntime('runtime-open');
+    const { store, open } = createDialogRuntime('runtime-open', noDialog);
 
     let settled = false;
     const opening = open().then(() => {
@@ -121,7 +126,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('openAndWait() registers its resolver before requesting the open', async () => {
-    const { store, openAndWait } = createDialogRuntime<string, 'save'>('runtime-wait');
+    const { store, openAndWait } = createDialogRuntime<string, 'save'>('runtime-wait', noDialog);
 
     // The close lands *inside* the open — the window a resolver added on the next line would miss.
     const closed = openAndWait();
@@ -134,7 +139,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('the handle closes with the reason and payload it is given', () => {
-    const { store, handle } = createDialogRuntime<number, 'ok'>('runtime-handle');
+    const { store, handle } = createDialogRuntime<number, 'ok'>('runtime-handle', noDialog);
     store.beginOpen();
 
     handle.close('ok', 7);
@@ -143,7 +148,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('the handle defaults to dismiss, which is the library’s own reason', () => {
-    const { store, handle } = createDialogRuntime('runtime-default');
+    const { store, handle } = createDialogRuntime('runtime-default', noDialog);
     store.beginOpen();
 
     handle.close();
@@ -152,7 +157,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('an action closes through the engine, with the action’s own reason', async () => {
-    const { store, engine } = createDialogRuntime<string, 'confirm'>('runtime-engine');
+    const { store, engine } = createDialogRuntime<string, 'confirm'>('runtime-engine', noDialog);
     store.beginOpen();
 
     // `bindClose` is wired inside the runtime, which is why nothing has to be handed in.
@@ -167,7 +172,7 @@ test.describe('createDialogRuntime', () => {
 test.describe('teardownDialog', () => {
   test('closes an open dialog and reports it through onClose', () => {
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-open');
+    const { store } = createDialogRuntime('teardown-open', noDialog);
     dm.register('teardown-open', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 
@@ -190,7 +195,7 @@ test.describe('teardownDialog', () => {
 
   test('a dialog torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
-    const { store, openAndWait } = createDialogRuntime('teardown-waiting');
+    const { store, openAndWait } = createDialogRuntime('teardown-waiting', noDialog);
     dm.register('teardown-waiting', { store, template: 'dialog', nonModal: false });
 
     const closed = openAndWait();
@@ -213,7 +218,7 @@ test.describe('teardownDialog', () => {
     // Why `abandon()` is unconditional: a resolver answers the *next* close, so one queued on a
     // dialog that never reopens stays pending for the life of the process.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-closed');
+    const { store } = createDialogRuntime('teardown-closed', noDialog);
     dm.register('teardown-closed', { store, template: 'dialog', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
@@ -263,7 +268,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   };
 
   test('a non-modal dialog has no backdrop to click', () => {
-    const { store } = createDialogRuntime('backdrop-non-modal');
+    const { store } = createDialogRuntime('backdrop-non-modal', noDialog);
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
         dialog: boxed,
@@ -280,7 +285,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // Drawing an action flips the default — both halves, because the default is the subtlety.
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-default');
+      const { store } = createDialogRuntime('backdrop-default', noDialog);
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -316,7 +321,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('an explicit `true` opts a dialog with actions back in', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-explicit');
+      const { store } = createDialogRuntime('backdrop-explicit', noDialog);
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -341,7 +346,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // The shared gate the dismiss key and click-outside also ask, reached after the first two.
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-running');
+      const { store } = createDialogRuntime('backdrop-running', noDialog);
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -363,7 +368,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 
   test('a closed dialog never dismisses, whatever the pointer did', () => {
-    const { store } = createDialogRuntime('backdrop-closed');
+    const { store } = createDialogRuntime('backdrop-closed', noDialog);
     expect(store.getSnapshot().phase).toBe('closed');
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
@@ -380,7 +385,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('and the geometry still decides, last', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-geometry');
+      const { store } = createDialogRuntime('backdrop-geometry', noDialog);
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -419,7 +424,7 @@ test.describe('teardownDialog reports a failing onClose', () => {
   test('logs instead of losing an error thrown during cleanup', async () => {
     // Teardown has nobody left to catch a throwing `onClose`; `fireAndForget` logs it instead.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime<void, 'save'>('teardown-throws');
+    const { store } = createDialogRuntime<void, 'save'>('teardown-throws', noDialog);
     dm.register('teardown-throws', { store, template: 'dialog', nonModal: false });
 
     store.setOnClose(() => {
@@ -462,7 +467,7 @@ test.describe('teardownDialog reports through onError', () => {
   test('an onClose that throws on unmount reaches onError, like one that throws on close', async () => {
     // The gap: `onClose` failures reached `onError` on the close path but not on unmount.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-on-error');
+    const { store } = createDialogRuntime('teardown-on-error', noDialog);
     dm.register('teardown-on-error', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
     store.setOnClose(() => {
@@ -488,7 +493,7 @@ test.describe('teardownDialog reports through onError', () => {
   test('a clean unmount reports nothing', async () => {
     // Failures only — a consumer wiring a reporter must not get an event per normal unmount.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-quiet');
+    const { store } = createDialogRuntime('teardown-quiet', noDialog);
     dm.register('teardown-quiet', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 

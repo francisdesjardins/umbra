@@ -83,6 +83,34 @@ export type DialogAnimation<TStyle extends DialogStyle = DialogStyle> = {
 export type DialogHandle<TData = void, TReason extends string = string> = {
   /** Close the dialog with a reason and, if the dialog declares one, a payload. */
   readonly close: (reason?: TReason | DismissReason, data?: TData) => void;
+  /**
+   * Move the keyboard one control forward or back **inside this dialog**, wrapping at either end.
+   *
+   * For an input device the browser does not turn into Tab — a controller's d-pad is the case this
+   * exists for, since the Gamepad API delivers no keyboard events and a synthetic `Tab` moves
+   * nothing. Every other caller already has Tab, and should use it.
+   *
+   * Not expressible outside the library: the scan is scoped to this dialog's own subtree, so a
+   * nested dialog's controls are never the answer, the focus-containment markers are excluded, and
+   * each candidate is verified rather than trusted. A hand-rolled `querySelectorAll` gets all three
+   * wrong, and draws no `:focus-visible` ring — this move announces itself like every other the
+   * library makes.
+   *
+   * @param direction - `'next'` walks document order, `'previous'` walks it backwards.
+   * @returns Whether anything took the focus — `false` for a dialog with nothing focusable in it,
+   *   and for one that is not open.
+   *
+   * @example
+   * ```ts
+   * const dialog = useDialog({ id: 'panel', render: () => <Panel /> });
+   *
+   * // A controller's d-pad, polled: the Gamepad API has no events to listen for.
+   * if (pad.buttons[13]?.pressed === true) {
+   *   dialog.handle.moveFocus('next');
+   * }
+   * ```
+   */
+  readonly moveFocus: (direction: 'next' | 'previous') => boolean;
 };
 
 /**

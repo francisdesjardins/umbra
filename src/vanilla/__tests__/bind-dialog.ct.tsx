@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   VanillaBasicHarness,
+  VanillaMoveFocusHarness,
   VanillaRestoreFocusToHarness,
   VanillaBusyHarness,
   VanillaClaimlessReclaimHarness,
@@ -869,5 +870,22 @@ test.describe('umbra/vanilla — restoreFocusTo', () => {
     await expect(panel).not.toBeVisible();
 
     await expect(page.getByTestId('v-rft-row-1')).toBeFocused();
+  });
+});
+
+test.describe('umbra/vanilla — moveFocus', () => {
+  test('the handle walks the panel’s own controls', async ({ mount, page }) => {
+    await mount(<VanillaMoveFocusHarness />);
+    await page.getByTestId('v-mf-open').click();
+    await expect(page.locator('dialog[data-dialog-id="vanilla-move-focus"]')).toBeVisible();
+
+    await page.getByTestId('v-mf-first').focus();
+    await page.keyboard.press('ArrowDown');
+
+    expect(
+      await page.evaluate(() => {
+        return document.activeElement?.getAttribute('data-testid');
+      })
+    ).toBe('v-mf-field');
   });
 });

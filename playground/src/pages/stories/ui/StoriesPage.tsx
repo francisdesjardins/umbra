@@ -58,6 +58,7 @@ import {
   SolidBasicHarness,
   SolidBusyHarness,
   SolidClaimlessReclaimHarness,
+  SolidMoveFocusHarness,
   SolidRestoreFocusToHarness,
   SolidContainedHarness,
   SolidDeclarationHarness,
@@ -83,6 +84,7 @@ import {
   VanillaBasicHarness,
   VanillaBusyHarness,
   VanillaClaimlessReclaimHarness,
+  VanillaMoveFocusHarness,
   VanillaRestoreFocusToHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
@@ -1095,6 +1097,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-vanilla-restore-focus-to',
       },
       {
+        title: 'Walking a panel’s controls from something that is not a keyboard',
+        description:
+          'handle.moveFocus on the controller binding. ArrowDown stands in for a d-pad: the step reaches the field, which a page-level scan for data-action-reason never finds, and draws the ring a device with no input modality would otherwise go without.',
+        component: VanillaMoveFocusHarness,
+        codeKey: 'story-vanilla-move-focus',
+      },
+      {
         title: 'A prepare that throws, heard through onError',
         description:
           'Its own harness because there is no render pass — the state reaches the page through the caller’s own listener. aria-busy, the library’s one owned attribute sitting on the caller’s markup, says the settle reached the element and not only the store.',
@@ -1266,6 +1275,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'restoreFocusTo on the second hook binding. The panel opens from row 0 and Next row moves the selection without moving focus, so the captured opener and what is on screen disagree by the time it closes — which is the arrangement the option exists for, and the one a list driving a details pane produces every time.',
         component: SolidRestoreFocusToHarness,
         codeKey: 'story-solid-restore-focus-to',
+      },
+      {
+        title: 'Walking a panel’s controls from something that is not a keyboard',
+        description:
+          'handle.moveFocus on the second hook binding. ArrowDown stands in for a d-pad: the step reaches the field, which a page-level scan for data-action-reason never finds, and draws the ring a device with no input modality would otherwise go without.',
+        component: SolidMoveFocusHarness,
+        codeKey: 'story-solid-move-focus',
       },
     ],
   },

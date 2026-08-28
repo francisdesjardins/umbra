@@ -83,18 +83,19 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   const manager = useDialogManagerContext();
 
-  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
-    dialogId
-  );
-
-  const snapshot = fromStore(store);
-  const actionState = fromStore(engine);
-
   // Built here rather than handed to a renderer, so `getDialog` closes over it — no ref dance.
   const dialog = document.createElement('dialog');
   const getDialog: GetDialog = () => {
     return dialog;
   };
+
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+    dialogId,
+    getDialog
+  );
+
+  const snapshot = fromStore(store);
+  const actionState = fromStore(engine);
 
   // A render effect, so the element is stamped at creation, before anything can insert or show it.
   // `aria-busy` is why it is an effect at all — the rest of the table is fixed.

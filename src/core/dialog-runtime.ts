@@ -5,6 +5,7 @@ import { createLogger } from '../utils/logger.js';
 import { isBackdropClick, type BackdropClickEvent, type BackdropDialog } from './dialog-props.js';
 import { DISMISS_REASON } from './dismiss-reason.js';
 import { finalizeDialogClose } from './finalize-close.js';
+import { focusStep } from './focus-policy.js';
 import { createDialogStore } from './dialog-store.js';
 import { dialogPlacement, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
@@ -17,6 +18,7 @@ import type {
   DialogFailure,
   DialogHandle,
   DialogVariant,
+  GetDialog,
   PortalTarget,
 } from './types.js';
 
@@ -118,7 +120,8 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
  * opaque).
  */
 export function createDialogRuntime<TData = void, TReason extends string = string>(
-  dialogId: DialogId
+  dialogId: DialogId,
+  getDialog: GetDialog
 ) {
   const store = createDialogStore<TData, TReason>(dialogId);
   const engine = createActionEngine<TData, TReason>(dialogId);
@@ -153,6 +156,12 @@ export function createDialogRuntime<TData = void, TReason extends string = strin
   const handle: DialogHandle<TData, TReason> = {
     close: (reason = DISMISS_REASON, data?: TData) => {
       store.close(reason, data);
+    },
+    moveFocus: (direction) => {
+      // A closed dialog has no controls to walk and `display: none` takes no focus, so the answer
+      // is the same `false` a dialog with nothing focusable gives.
+      const dialog = getDialog();
+      return dialog?.open === true ? focusStep(dialog, direction === 'next') : false;
     },
   };
 

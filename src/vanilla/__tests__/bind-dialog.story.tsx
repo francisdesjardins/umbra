@@ -1632,6 +1632,74 @@ export function VanillaPrepareFailureHarness() {
 }
 
 /**
+ * A panel whose controls are walked by the handle rather than by Tab — the shape an input device
+ * that produces no key events is left with.
+ */
+export function VanillaMoveFocusHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const firstRef = useRef<HTMLButtonElement>(null);
+  const [controller, setController] = useState<Bound<'done'> | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const first = firstRef.current;
+    if (!dialog || !first) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'done'>({
+      id: 'vanilla-move-focus',
+      dialog,
+      nonModal: true,
+      ariaLabel: 'Vanilla walkable panel',
+      manager: createDialogManager(),
+    });
+    const unbindFirst = bound.bindAction(first, { reason: 'done' });
+    setController(bound);
+
+    // A key listener rather than a button: a button takes the focus this is measuring, and WebKit
+    // does not focus a clicked one — so the two engines would disagree about the starting point.
+    const walk = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown') {
+        bound.handle.moveFocus('next');
+      }
+    };
+    window.addEventListener('keydown', walk);
+
+    return () => {
+      window.removeEventListener('keydown', walk);
+      unbindFirst();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        type="button"
+        data-testid="v-mf-open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+
+      {/* Sized and positioned, for the reason the row harness below states. */}
+      <div style={{ position: 'relative', width: 400, height: 300 }}>
+        <dialog ref={dialogRef}>
+          <button ref={firstRef} type="button" data-testid="v-mf-first">
+            First
+          </button>
+          <input aria-label="Field" data-testid="v-mf-field" />
+        </dialog>
+      </div>
+    </>
+  );
+}
+
+/**
  * A list whose selection moves while the panel is open. No React state for it, which is the
  * faithful shape: this binding never rendered the rows, so the callback finds one the way a
  * consumer would — queried at the close, from a selection the page owns.

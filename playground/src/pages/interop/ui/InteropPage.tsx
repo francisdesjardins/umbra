@@ -1,5 +1,6 @@
 import { ExampleCard, ExampleGrid, ExampleSection } from '@/entities/example';
 import { DomEventsExample } from '@/pages/interop/examples/dom-events';
+import { GamepadExample } from '@/pages/interop/examples/gamepad';
 import { SsrWorkerExample } from '@/pages/interop/examples/ssr-worker';
 import { PageLayout } from '@/shared/ui/PageLayout';
 
@@ -25,6 +26,20 @@ export const InteropPage = () => {
             description="A Worker has no document, which is the one thing separating a Node render from a browser tab — so it can run react-dom/server over the real binding. Render, and you get a closed <dialog>: the only honest answer, since the top layer opens from showModal() alone. Hydrate, and React adopts that markup."
             codeKey="ssr-worker"
             example={<SsrWorkerExample />}
+          />
+        </ExampleGrid>
+      </ExampleSection>
+
+      <ExampleSection
+        title="Input that is not a keyboard"
+        description="A controller adapter written entirely against the public API."
+      >
+        <ExampleGrid columns={1}>
+          <ExampleCard
+            title="Driving a dialog from a controller"
+            description="The Gamepad API ships no events, so an adapter polls and reports edges itself. East closes through handle.close and South clicks whatever holds the keyboard — both plain public API. Walking the controls is the part that is not: a page-level adapter can only find what carries data-action-reason, and the reading region and the field are invisible to it."
+            codeKey="gamepad"
+            example={<GamepadExample />}
           />
         </ExampleGrid>
       </ExampleSection>

@@ -41,6 +41,8 @@ export type RegisteredHandle<TId> = {
   readonly close: <TReason extends ReasonOf<TId> | DismissReason>(
     ...args: CloseArgs<TId, TReason>
   ) => void;
+  /** Move the keyboard inside this dialog — see {@link DialogHandle.moveFocus}. */
+  readonly moveFocus: (direction: 'next' | 'previous') => boolean;
 };
 
 /**

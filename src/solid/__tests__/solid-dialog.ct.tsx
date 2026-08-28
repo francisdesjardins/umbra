@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
+  SolidMoveFocusHarness,
   SolidRestoreFocusToHarness,
   SolidClaimlessReclaimHarness,
   SolidFailedActionHarness,
@@ -684,5 +685,24 @@ test.describe('umbra/solid — restoreFocusTo', () => {
     await expect(panel).not.toBeVisible();
 
     await expect(page.getByTestId('solid-rft-row-1')).toBeFocused();
+  });
+});
+
+test.describe('umbra/solid — moveFocus', () => {
+  test('the handle walks the panel’s own controls', async ({ mount, page }) => {
+    // The same runtime every binding shares, asked through Solid's handle — a walk that reaches
+    // the field proves the scan, not only the action button a page-level scan would have found.
+    await mount(<SolidMoveFocusHarness />);
+    await page.getByTestId('solid-mf-open').click();
+    await expect(page.locator('dialog[data-dialog-id="solid-move-focus"]')).toBeVisible();
+
+    await page.getByTestId('solid-mf-first').focus();
+    await page.keyboard.press('ArrowDown');
+
+    expect(
+      await page.evaluate(() => {
+        return document.activeElement?.getAttribute('data-testid');
+      })
+    ).toBe('solid-mf-field');
   });
 });

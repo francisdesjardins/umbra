@@ -101,6 +101,46 @@ export function focusFirstAvailable(dialog: HTMLDialogElement, fromEnd: boolean)
 }
 
 /**
+ * Move focus one step through the dialog's own controls, wrapping at either end.
+ *
+ * The scan a device that is not a keyboard has no other way to ask for: `queryAllOwn` scopes it to
+ * this dialog, so a nested one's controls are never the answer, and the containment markers are
+ * excluded like they are for the opening focus. Verified per candidate rather than computed, for
+ * {@link focusFirstAvailable}'s reason — a candidate that refuses focus costs a step.
+ *
+ * @returns Whether anything took it; `false` on a dialog with nothing focusable in it.
+ * @internal
+ */
+export function focusStep(dialog: HTMLDialogElement, forward: boolean): boolean {
+  const candidates = queryAllOwn(dialog, FOCUSABLE).filter((element) => {
+    return element.getAttribute(FOCUS_GUARD_ATTRIBUTE) === null;
+  });
+  const { length } = candidates;
+  if (length === 0) {
+    return false;
+  }
+
+  const active = activeWithin(dialog);
+  const from = active instanceof HTMLElement ? candidates.indexOf(active) : -1;
+
+  // Nothing inside holds it, so there is no step to take from anywhere — the end the caller is
+  // walking towards is the answer.
+  if (from === -1) {
+    return focusFirstAvailable(dialog, !forward);
+  }
+
+  const step = forward ? 1 : -1;
+  for (let taken = 1; taken <= length; taken += 1) {
+    const candidate = candidates[(((from + taken * step) % length) + length) % length];
+    candidate?.focus(SHOW_THE_RING);
+    if (activeWithin(dialog) === candidate) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Who holds focus, **as this dialog's own tree sees it**.
  *
  * `document.activeElement` is the wrong question for a dialog inside a shadow root: it answers

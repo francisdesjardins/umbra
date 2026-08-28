@@ -100,21 +100,25 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   const manager = useDialogManagerContext();
 
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
   // Built once: fresh doors each render would force consumers through refs and defeat memoization
   // inside `render`, and React Compiler cannot hoist them — they capture a value it treats opaque.
   const [init] = useState(() => {
-    const runtime = createDialogRuntime<TData, TReason>(dialogId);
-
-    // Safe to pass around: the closure captures the ref but never reads `.current` during render.
+    // A plain box behind a callback ref, not `useRef`: the runtime is handed `getDialog` while the
+    // component renders, and a closure over a React ref crossing that call is what the compiler
+    // reads as a render-phase ref access. Stable identity, so React never re-invokes the callback.
+    const box: { element: HTMLDialogElement | null } = { element: null };
     const getDialog: GetDialog = () => {
-      return dialogRef.current;
+      return box.element;
+    };
+    const setDialog = (node: HTMLDialogElement | null) => {
+      box.element = node;
     };
 
-    return { ...runtime, getDialog };
+    const runtime = createDialogRuntime<TData, TReason>(dialogId, getDialog);
+
+    return { ...runtime, getDialog, setDialog };
   });
-  const { store, engine, getDialog, open, openAndWait, handle } = init;
+  const { store, engine, getDialog, setDialog, open, openAndWait, handle } = init;
 
   // Kept likewise: the director remembers each step's attachment and where opening focus landed.
   const [director] = useState(() => {
@@ -222,7 +226,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   // `answerDismiss`'s — a controlled surface hears this door the way it hears the dismiss key. It
   // takes only a structural slice of the event, so React's synthetic one satisfies it unchanged.
   const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
-    const dialog = dialogRef.current;
+    const dialog = getDialog();
     if (!dialog) {
       return;
     }
@@ -259,7 +263,7 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   const dialogElement = (
     <dialog
-      ref={dialogRef}
+      ref={setDialog}
       // Styling surface and accessible name, from the table both bindings read (`dialog-props.ts`).
       {...dialogAttributes({
         dialogId,
