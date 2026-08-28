@@ -1,5 +1,5 @@
 import { isOwnEventTarget } from '../utils/dialog-scope.js';
-import { isRaisingDialog, restoreOpenerFocus } from './dialog-lifecycle.js';
+import { isRaisingDialog, restoreOpenerFocus, watchOpenerActivation } from './dialog-lifecycle.js';
 import {
   activeWithin,
   captureActionRunner,
@@ -46,6 +46,15 @@ export function createFocusCoordinator(
   let lastActivated: HTMLElement | null = null;
 
   /**
+   * Recording who the reader activated outside this dialog, so the show has an opener to capture on
+   * the engine that focuses no clicked button. Armed on the first pass rather than at construction —
+   * a director is built inside a `useState` initializer, and StrictMode both re-runs that and runs
+   * an extra cleanup, so a listener bound here would be attached twice and released while the
+   * dialog still lives. Re-armed by the next pass for the same reason.
+   */
+  let releaseActivationWatch: (() => void) | undefined;
+
+  /**
    * Whether focus sits inside this dialog somewhere **other** than where the bookkeeping last saw
    * it — which is the signature of a move the library made rather than the user.
    *
@@ -87,12 +96,20 @@ export function createFocusCoordinator(
   };
 
   return {
+    /** Stop recording activations. Called when the dialog this coordinator belongs to goes away. */
+    destroy(): void {
+      releaseActivationWatch?.();
+      releaseActivationWatch = undefined;
+    },
+
     /**
      * Bring focus handling in line with a phase, and return the teardown for what it attached.
      *
      * Call it whenever the phase changes, tearing down the previous attachment first.
      */
     sync(phase: DialogPhase): (() => void) | undefined {
+      releaseActivationWatch ??= watchOpenerActivation();
+
       // Clear on close, but after the restore: by this pass the platform's own has had its turn,
       // which is what makes where focus landed readable at all. See `restoreOpenerFocus`.
       if (phase === 'closed') {

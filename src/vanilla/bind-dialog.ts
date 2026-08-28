@@ -356,6 +356,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }
     detachments = [];
     dialog.removeEventListener('click', handleDialogClick);
+    focus.destroy();
     teardownDialog(store, { manager, dialogId, dialog, onError: options.onError });
     // Destroyed mid-`prepare`, nothing else would ever clear `aria-busy` off the caller's element.
     writeAttributes();

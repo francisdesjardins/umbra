@@ -330,6 +330,7 @@ export function createDialogDirector(ctx: DialogDirectorContext) {
     /** Tear the whole sequence down, in the order it was wired. */
     destroy(): void {
       runner.destroy();
+      parts.focus.destroy();
     },
   };
 }

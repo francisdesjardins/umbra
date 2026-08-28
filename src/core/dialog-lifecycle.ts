@@ -49,6 +49,61 @@ export function checkTransitionsDisabled(dialog: HTMLDialogElement): boolean {
 const openerFocus = new WeakMap<HTMLDialogElement, HTMLElement>();
 
 /**
+ * The last control the reader activated, for the engine where that is the only record of it: WebKit
+ * does not focus a clicked `<button>`, so a pointer-opened dialog has no previously-focused element
+ * to capture and the close would strand the keyboard on `<body>`. Read only where focus is nowhere.
+ */
+let lastActivated: HTMLElement | null = null;
+
+/** How many dialogs are listening, so one document listener serves them all. */
+let activationWatchers = 0;
+
+/** What a server-side watch hands back: nothing was attached, so nothing is released. */
+const noRelease = () => {
+  // nothing attached
+};
+
+const recordActivation = (event: Event) => {
+  const { target } = event;
+  lastActivated = target instanceof HTMLElement ? target.closest('button, [role="button"]') : null;
+};
+
+/**
+ * Start recording activations for {@link showDialog}'s fallback, and return the release.
+ *
+ * Bound at capture on the document rather than per open: the click that opens a dialog is the one
+ * that has to be heard, and by the time the show runs the event is over. Refcounted, and released
+ * with the dialog that asked.
+ *
+ * @internal
+ */
+export function watchOpenerActivation(): () => void {
+  // Constructed during render, which on the server has no document to listen to and no click to
+  // hear either — the same guard the manager's own DOM reads carry.
+  if (typeof document === 'undefined') {
+    return noRelease;
+  }
+
+  if (activationWatchers === 0) {
+    document.addEventListener('click', recordActivation, true);
+  }
+  activationWatchers += 1;
+
+  let released = false;
+  return () => {
+    if (released) {
+      return;
+    }
+    released = true;
+    activationWatchers -= 1;
+    if (activationWatchers === 0) {
+      document.removeEventListener('click', recordActivation, true);
+      lastActivated = null;
+    }
+  };
+}
+
+/**
  * Open the dialog in the requested mode and stamp its stacking z-index.
  *
  * @param nonModal - `dialog.show()` (normal flow, no top layer) vs `dialog.showModal()` (top layer).
@@ -68,8 +123,13 @@ export function showDialog(
   // Before the show: the focusing steps run for `show()` too, so a read afterwards would already
   // find focus inside. `<body>` records as nothing — restoring to it is the failure to prevent.
   const opener = deepActiveElement(dialog.ownerDocument);
-  if (opener instanceof HTMLElement && opener !== dialog.ownerDocument.body && opener !== dialog) {
-    openerFocus.set(dialog, opener);
+  const focused =
+    opener instanceof HTMLElement && opener !== dialog.ownerDocument.body && opener !== dialog
+      ? opener
+      : null;
+  const invoker = focused ?? openerByActivation(dialog);
+  if (invoker) {
+    openerFocus.set(dialog, invoker);
   } else {
     openerFocus.delete(dialog);
   }
@@ -183,6 +243,19 @@ function deepActiveElement(root: DocumentOrShadowRoot): Element | null {
     return deepActiveElement(active.shadowRoot);
   }
   return active;
+}
+
+/**
+ * The control that opened this dialog when nothing holds focus to name it — {@link lastActivated},
+ * checked for the three ways it can be the wrong answer: gone from the DOM, in another document, or
+ * inside the dialog it would be restoring out of.
+ */
+function openerByActivation(dialog: HTMLDialogElement): HTMLElement | null {
+  return lastActivated?.isConnected === true &&
+    lastActivated.ownerDocument === dialog.ownerDocument &&
+    !containsAcrossRoots(dialog, lastActivated)
+    ? lastActivated
+    : null;
 }
 
 /** Whether `element` is inside `dialog`, counting through shadow boundaries. */
