@@ -363,3 +363,46 @@ test.describe('close resolvers and the order they must be registered in', () => 
     expect(result, 'the in-flight close belongs to the caller that asked for it').toBeNull();
   });
 });
+
+test.describe('resolveRestoreTarget', () => {
+  // The store runs `restoreFocusTo` for `runOnClose`'s reason, so the reason it is handed — and the
+  // fact that it is handed one at all — is assertable without a browser. The element it answers
+  // with is not: the focus coordinator is where that lands.
+
+  test('hands the callback the close that is being finalized', () => {
+    const store = createDialogStore<{ id: number }, 'save'>('restore-target-result');
+    const seen: string[] = [];
+    store.setRestoreFocusTo((result) => {
+      seen.push(`${result.reason}:${String(result.data?.id)}`);
+      return null;
+    });
+
+    store.beginOpen();
+    store.close('save', { id: 7 });
+
+    expect(store.resolveRestoreTarget()).toBeNull();
+    expect(seen).toEqual(['save:7']);
+  });
+
+  test('answers undefined when nobody registered one', () => {
+    const store = createDialogStore<void, 'save'>('restore-target-none');
+    store.beginOpen();
+    store.close('save');
+
+    expect(store.resolveRestoreTarget()).toBeUndefined();
+  });
+
+  test('and asks nothing when there is no close to report', () => {
+    // The restore runs on a `'closed'` pass, and a binding reaches its first one before anything
+    // has closed — asking a caller about a close that never happened would be a wrong question.
+    const store = createDialogStore<void, 'save'>('restore-target-unopened');
+    let asked = false;
+    store.setRestoreFocusTo(() => {
+      asked = true;
+      return null;
+    });
+
+    expect(store.resolveRestoreTarget()).toBeUndefined();
+    expect(asked).toBe(false);
+  });
+});

@@ -67,6 +67,48 @@ test.describe('finalizeDialogClose', () => {
     expect(store.getSnapshot().phase).toBe('closed');
   });
 
+  test('runs beforeClose in the instant before the element closes', () => {
+    // The ordering is the whole of what the hook is for: the caret the reader left is readable
+    // until `close()` moves it, and one line later the answer is gone.
+    const store = createDialogStore('finalize-before-close');
+    const order: string[] = [];
+    const dialog = fakeDialog(true);
+
+    finalizeDialogClose(store, {
+      dialog: {
+        get open() {
+          return dialog.open;
+        },
+        close: () => {
+          order.push('close');
+          dialog.close();
+        },
+      },
+      beforeClose: () => {
+        order.push('beforeClose');
+      },
+      onCloseError: noop,
+    });
+
+    expect(order).toEqual(['beforeClose', 'close']);
+  });
+
+  test('and never asks for it when there is nothing to close', () => {
+    // The ESC race again: the browser closed it first, so there is no move to read a caret ahead of.
+    const store = createDialogStore('finalize-before-close-noop');
+    let asked = false;
+
+    finalizeDialogClose(store, {
+      dialog: fakeDialog(false),
+      beforeClose: () => {
+        asked = true;
+      },
+      onCloseError: noop,
+    });
+
+    expect(asked).toBe(false);
+  });
+
   test('runs onClose with the result, then finalizes', async () => {
     const store = createDialogStore<{ id: number }, 'save'>('finalize-order');
     const seen: string[] = [];
