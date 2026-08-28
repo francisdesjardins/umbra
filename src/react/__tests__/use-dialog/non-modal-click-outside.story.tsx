@@ -23,7 +23,7 @@ export function NonModalClickOutsideHarness() {
     render: ({ handle }) => {
       return (
         <div style={dialogStyle}>
-          <p>Click outside to dismiss</p>
+          <p data-testid="inside-target">Click outside to dismiss</p>
           <button
             onClick={() => {
               handle.close('confirm');

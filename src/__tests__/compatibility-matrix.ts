@@ -1707,15 +1707,18 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     criterion: '2.5.2',
     name: 'Pointer Cancellation',
     level: 'A',
-    state: 'partial',
-    since: '2026-08-28',
-    why: '`dismissOnClickOutside` answers **`pointerdown`**, which completes the dismissal on the down-event: a reader who presses outside a panel and drags back into it before releasing has already lost the panel, with no up-reversal and nothing to abort. None of the criterion’s four escapes applies — the down-event is not essential here. The other pointer path is fine: a backdrop click is decided on `click`, so the press and the release must both land outside the box. The reason it has not simply been moved is that the two are not interchangeable — `pointerdown` is what makes an outside press feel like it took, and a drag that starts inside a panel and ends outside must not dismiss either, so the fix is a paired down/up test rather than a one-line swap.',
-    caveat: {
-      question:
-        'Does dismissing a panel count as "activation" under 2.5.2, and does moving `dismissOnClickOutside` to a paired down/up test break the interactions the current listener gets right?',
-      nextStep:
-        'Write the paired-pointer harness first — press outside then release inside, press inside then release outside, and a plain outside click — and read what the current listener does with all three before changing it.',
-    },
+    state: 'works',
+    why: '`dismissOnClickOutside` answers the **pair**, not the press: the pointer going down outside only arms the dismissal, and the release decides it. Measured before the change and red on all three engines — a press outside a panel, dragged back in and released, had already closed it, with no up-reversal and nothing to abort. Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a drag *out* of the panel as a press on the page; that direction is the second half of the criterion and is pinned as its own case. The gates are read at the release rather than the press, so the gesture is judged when it finishes and an action starting under it still suppresses the dismissal. A backdrop click was always decided on `click` and needed nothing.',
+    references: [
+      {
+        file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
+        title: 'a press outside released back inside leaves it open',
+      },
+      {
+        file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
+        title: 'a press inside released outside leaves it open too',
+      },
+    ],
   },
   {
     criterion: '2.5.6',

@@ -11,6 +11,22 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-28
 
+### Fixed — a dismissal you changed your mind about no longer happens
+
+The `~` the WCAG chapter opened, closed the way its own next step said to: measure first.
+`dismissOnClickOutside` answered `pointerdown`, so the dismissal completed on the press. Red on all
+three engines before the change — press outside a panel, drag back into it, release, and the panel
+was already gone, with no up-reversal and nothing to abort. That is WCAG 2.5.2 (Level A).
+
+It now answers the **pair**: the press outside arms the dismissal, the release decides it.
+Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a
+drag _out_ of the panel as a press on the page — the second direction, pinned as its own case. And
+the suppression gates moved from the press to the release, so the gesture is judged when it
+finishes: an action that starts under it still suppresses the dismissal. A backdrop click was always
+decided on `click` and needed nothing.
+
+`yarn todo` is back to 0 open.
+
 ### Changed — the WCAG chapter covers what a dialog engine actually touches
 
 Axis D mapped eight criteria and stopped at the ones focus and keyboard reach. Seven more, each

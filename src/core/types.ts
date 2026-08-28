@@ -246,8 +246,15 @@ export type DialogVariant =
       readonly role?: 'dialog' | undefined;
       /**
        * Whether clicking outside the dialog dismisses it.
+       *
+       * The **whole click**: the press outside arms the dismissal and the release decides it, so a
+       * press you drag back into the panel before letting go changes nothing — and neither does one
+       * that starts inside and ends out on the page. WCAG 2.5.2 asks for the first of those; the
+       * second is why this is not simply a `click` listener.
+       *
        * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
-       * `prepare` is still preparing.
+       * `prepare` is still preparing; both read at the release, so an action that starts under the
+       * gesture still suppresses it.
        * Only the dialog in front responds — and no non-modal dialog is in front while a modal one
        * is open.
        * @default false

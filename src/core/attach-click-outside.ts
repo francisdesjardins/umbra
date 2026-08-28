@@ -7,7 +7,7 @@ const log = createLogger('dialog:click-outside');
 /**
  * Dismiss a non-modal dialog when the user clicks outside its bounds.
  *
- * A document-level `pointerdown` listener (covers mouse and touch), attached only while
+ * Document-level pointer listeners (covering mouse and touch), attached only while
  * `dismissOnClickOutside` is `true` and the dialog is open. Suppressed while an action is
  * running, and — unless `dismissWhilePreparing` — while `prepare` is still preparing. Only the
  * dialog **in front** responds, which is a stricter test than "the topmost non-modal": no non-modal
@@ -32,7 +32,31 @@ export function attachClickOutside(
     return undefined;
   }
 
+  /** Whether the pointer that is currently down went down outside the dialog. */
+  let pressedOutside = false;
+
+  const landedOutside = (event: PointerEvent): boolean => {
+    const dialog = getDialog();
+    return dialog !== null && !(event.target instanceof Node && dialog.contains(event.target));
+  };
+
   const handlePointerDown = (event: PointerEvent) => {
+    pressedOutside = landedOutside(event);
+  };
+
+  const handlePointerUp = (event: PointerEvent) => {
+    const armed = pressedOutside;
+    pressedOutside = false;
+
+    // Both ends, because a dismissal is the whole gesture and WCAG 2.5.2 rules out settling it on
+    // the down-event. Not `click`: it fires on the common ancestor of the pair, which reads a drag
+    // out of the panel as a press on the page.
+    if (!armed || !landedOutside(event)) {
+      return;
+    }
+
+    // Read here rather than at the press: the gesture is judged when it finishes, so an action
+    // that started under it still suppresses the dismissal.
     const snap = store.getSnapshot();
     if (
       !canDismiss({
@@ -50,21 +74,21 @@ export function attachClickOutside(
       return;
     }
 
-    const dialog = getDialog();
-    if (!dialog) {
-      return;
-    }
-
-    if (event.target instanceof Node && dialog.contains(event.target)) {
-      return;
-    }
-
     log('Click outside', { id: dialogId });
     answerDismiss(store, { request: onDismissRequest, cause: 'click-outside' });
   };
 
+  /** A gesture the platform took away — a scroll claiming it, a pointer leaving the window. */
+  const handlePointerCancel = () => {
+    pressedOutside = false;
+  };
+
   document.addEventListener('pointerdown', handlePointerDown);
+  document.addEventListener('pointerup', handlePointerUp);
+  document.addEventListener('pointercancel', handlePointerCancel);
   return () => {
     document.removeEventListener('pointerdown', handlePointerDown);
+    document.removeEventListener('pointerup', handlePointerUp);
+    document.removeEventListener('pointercancel', handlePointerCancel);
   };
 }
