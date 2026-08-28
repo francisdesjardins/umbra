@@ -1435,3 +1435,65 @@ function PrepareFailureApp(): Built {
 export const SolidPrepareFailureApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, PrepareFailureApp));
 };
+
+/**
+ * A list whose selection moves while the panel is open, so the captured opener and the row on
+ * screen disagree by the time it closes — the arrangement `restoreFocusTo` answers.
+ */
+function RestoreFocusToApp(): Built {
+  const [selected, setSelected] = createSignal(0);
+
+  const dialog = useDialog<void, 'done'>({
+    id: 'solid-restore-focus-to',
+    nonModal: true,
+    ariaLabel: 'Solid row details',
+    restoreFocusTo: () => {
+      return document.querySelector<HTMLElement>(
+        `[data-testid="solid-rft-row-${String(selected())}"]`
+      );
+    },
+    render: (ctx) => {
+      return el(
+        h(
+          'div',
+          null,
+          h(
+            'button',
+            {
+              'data-testid': 'solid-rft-next',
+              onClick: () => {
+                setSelected((current) => {
+                  return current + 1;
+                });
+              },
+            },
+            'Next row'
+          ),
+          h('button', { 'data-testid': 'solid-rft-close', ...ctx.action('done') }, 'Close')
+        )
+      );
+    },
+  });
+
+  return h(
+    'div',
+    null,
+    h(
+      'button',
+      {
+        'data-testid': 'solid-rft-row-0',
+        onClick: () => {
+          setSelected(0);
+          void dialog.open();
+        },
+      },
+      'Row 0'
+    ),
+    h('button', { 'data-testid': 'solid-rft-row-1' }, 'Row 1'),
+    dialog.Dialog
+  );
+}
+
+export const SolidRestoreFocusToApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, RestoreFocusToApp));
+};

@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { chooseActionRunner, preferredRestoreTarget } from '../focus-restore-policy.js';
+import {
+  chooseActionRunner,
+  preferredRestoreTarget,
+  restoreOwnsTheFocus,
+} from '../focus-restore-policy.js';
 
 // The ordering that decides who a settled action hands focus back to. Tested in Node because it is
 // a decision, not a DOM operation — candidates only answer `isConnected`. As a `??` chain inside
@@ -96,5 +100,59 @@ test.describe('preferredRestoreTarget', () => {
     // stale opening focus costs a no-op. A check here would be a second guard for one hazard.
     const opening = { isConnected: false };
     expect(preferredRestoreTarget(null, opening)).toBe(opening);
+  });
+});
+
+test.describe('restoreOwnsTheFocus', () => {
+  // The guard `restoreFocusTo` is consulted behind. Identity only, so Node answers it: what makes
+  // it worth a named function is that the two variants land on *different* values and both are
+  // the restore's, while everything else is the reader's own and must be left alone.
+  const body = { name: 'body' };
+  const documentElement = { name: 'html' };
+  const opener = { name: 'opener' };
+  const owns = (active: { name: string } | null): boolean => {
+    return restoreOwnsTheFocus({ active, insideDialog: false, opener, body, documentElement });
+  };
+
+  test('a close that stranded the keyboard is the restore’s', () => {
+    // What a non-modal close produces: the content went away and nothing took focus.
+    expect(owns(null)).toBe(true);
+    expect(owns(body)).toBe(true);
+    expect(owns(documentElement)).toBe(true);
+  });
+
+  test('and so is one the platform handed back to the opener', () => {
+    // What a modal close produces: the close-the-dialog steps already restored, to the very
+    // element `showDialog` captured. Without this the option would be dead on the modal variant.
+    expect(owns(opener)).toBe(true);
+  });
+
+  test('and so is a keyboard still inside the dialog that is going away', () => {
+    // WebKit focuses the `<dialog>` element on a click inside it, so the close pass can find focus
+    // there. A node about to be `display: none` is nowhere, whatever `activeElement` says.
+    const inside = { name: 'panel-close' };
+    expect(
+      restoreOwnsTheFocus({ active: inside, insideDialog: true, opener, body, documentElement })
+    ).toBe(true);
+  });
+
+  test('a caret the reader put somewhere real is not', () => {
+    expect(owns({ name: 'page-field' })).toBe(false);
+  });
+
+  test('with nothing captured, only the stranded answers stay true', () => {
+    // `showDialog` records nothing when the page had no focus to begin with, and `undefined` must
+    // not become a wildcard that matches every live element.
+    const none = (active: { name: string } | null): boolean => {
+      return restoreOwnsTheFocus({
+        active,
+        insideDialog: false,
+        opener: undefined,
+        body,
+        documentElement,
+      });
+    };
+    expect(none(null)).toBe(true);
+    expect(none({ name: 'page-field' })).toBe(false);
   });
 });

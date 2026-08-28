@@ -23,6 +23,7 @@ import {
   SolidPrepareFailureApp,
   SolidStackPriorityApp,
   SolidSlideApp,
+  SolidRestoreFocusToApp,
 } from './solid-app.js';
 
 /**
@@ -160,4 +161,8 @@ export function SolidClaimlessReclaimHarness() {
 /** A `prepare` that throws, reported through `onError` — see the app for why Solid measures it too. */
 export function SolidPrepareFailureHarness() {
   return <SolidRoot app={SolidPrepareFailureApp} />;
+}
+
+export function SolidRestoreFocusToHarness() {
+  return <SolidRoot app={SolidRestoreFocusToApp} />;
 }

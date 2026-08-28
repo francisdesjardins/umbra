@@ -1630,3 +1630,81 @@ export function VanillaPrepareFailureHarness() {
     </div>
   );
 }
+
+/**
+ * A list whose selection moves while the panel is open. No React state for it, which is the
+ * faithful shape: this binding never rendered the rows, so the callback finds one the way a
+ * consumer would — queried at the close, from a selection the page owns.
+ */
+export function VanillaRestoreFocusToHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const selectedRef = useRef(0);
+  const [controller, setController] = useState<Bound<'done'> | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const close = closeRef.current;
+    if (!dialog || !close) {
+      return;
+    }
+
+    const bound = bindDialog<void, 'done'>({
+      id: 'vanilla-restore-focus-to',
+      dialog,
+      nonModal: true,
+      ariaLabel: 'Vanilla row details',
+      manager: createDialogManager(),
+      restoreFocusTo: () => {
+        return document.querySelector<HTMLElement>(
+          `[data-testid="v-rft-row-${String(selectedRef.current)}"]`
+        );
+      },
+    });
+    const unbindClose = bound.bindAction(close, { reason: 'done' });
+    setController(bound);
+
+    return () => {
+      unbindClose();
+      bound.destroy();
+      setController(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        type="button"
+        data-testid="v-rft-row-0"
+        onClick={() => {
+          selectedRef.current = 0;
+          void controller?.open();
+        }}
+      >
+        Row 0
+      </button>
+      <button type="button" data-testid="v-rft-row-1">
+        Row 1
+      </button>
+
+      {/* A contained panel is only as big as its nearest sized, positioned ancestor — without
+          one it spans the document and covers the very rows this is about. */}
+      <div style={{ position: 'relative', width: 400, height: 300 }}>
+        <dialog ref={dialogRef}>
+          <button
+            type="button"
+            data-testid="v-rft-next"
+            onClick={() => {
+              selectedRef.current += 1;
+            }}
+          >
+            Next row
+          </button>
+          <button ref={closeRef} type="button" data-testid="v-rft-close">
+            Close
+          </button>
+        </dialog>
+      </div>
+    </>
+  );
+}

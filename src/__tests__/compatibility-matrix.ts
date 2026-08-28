@@ -277,6 +277,25 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     note: 'Scoped with `isOwnEventTarget`, so a dialog opened from inside this one does not deliver its keys here on the way up.',
   },
   {
+    option: 'restoreFocusTo',
+    enforcement: 'RUNTIME',
+    note: 'Redirects the close restore; it never invents one. Consulted only where the restore already owns the focus — the close stranded the keyboard, or the close-the-dialog steps handed it back to the element captured before the open — so a caret the reader moved themselves is not this option to move. A function rather than an element, because a node captured at the open is detached by the time a renderer has replaced the list under it; the answer is asked for at the close and focused with a `:focus-visible` ring like every move the library makes. Nullish keeps the captured opener.',
+    references: [
+      {
+        file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+        title: 'the close lands on the row the panel was showing',
+      },
+      {
+        file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+        title: 'it wins over the restore the platform already made',
+      },
+      {
+        file: 'src/utils/__tests__/focus-restore-policy.test.ts',
+        title: 'a caret the reader put somewhere real is not',
+      },
+    ],
+  },
+  {
     option: 'onError',
     enforcement: 'RUNTIME',
     note: 'Userland errors only, and only the two with nowhere else to go: a throwing `prepare` (the dialog is already shown and `isPreparing` settles either way, so the dialog announces itself ready) and a throwing `onClose` (detached, with nothing left rendering). An action’s throw is already the render args’ `error`, `render` reaches the framework’s error boundary, and `onKeyDown` / `onClick` escape to the DOM listener that called them — none of those arrive here. The library’s own failures never do either: routing them into a consumer callback would make a bug unreportable. A report, not a veto — the close still completes.',
@@ -990,6 +1009,41 @@ export const BINDING_ROWS: readonly BindingRow[] = [
     },
   },
   {
+    capability: 'restoreFocusTo',
+    react: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+          title: 'the close lands on the row the panel was showing',
+        },
+        {
+          file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+          title: 'it wins over the restore the platform already made',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
+          title: 'the close lands on the row the panel was showing',
+        },
+      ],
+    },
+    vanilla: {
+      state: 'works',
+      note: 'On rows the binding never rendered — the selection is the page’s, which is the shape a controller consumer already has.',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'the close lands on the row the panel was showing',
+        },
+      ],
+    },
+  },
+  {
     capability: 'containFocus',
     react: {
       state: 'works',
@@ -1334,9 +1388,25 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     ],
   },
   {
+    fact: 'a close leaves a caret the reader moved outside the dialog alone',
+    state: 'partial',
+    since: '2026-08-27',
+    why: 'The close-the-dialog steps are specified to restore the element focused before the open **only when focus is still inside the dialog at `close()` time**. Chromium and Firefox honour that condition; WebKit restores regardless, so a reader who left a non-modal panel for a field on the page loses the caret to the opener. Measured on the same harness, one press, three engines. The library cannot repair it from where it stands: its own restore reads focus after the platform has already moved it, so by then the theft is indistinguishable from a close that stranded nothing. Recording it rather than normalising it, because normalising means capturing whether focus was inside at `close()` and changing the default on one engine.',
+    references: [
+      {
+        file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+        title: 'and WebKit takes that caret with no callback in sight',
+      },
+      {
+        file: 'src/core/__tests__/restore-focus-to.ct.tsx',
+        title: 'a caret the reader moved themselves is not this option to move',
+      },
+    ],
+  },
+  {
     fact: 'closing a non-modal panel returns the keyboard to what opened it',
     state: 'works',
-    why: 'The close-the-dialog steps restore the previously focused element for `show()` as well as `showModal()` — measured on all three engines with a bare dialog — but only when focus is still inside the dialog at `close()` time, and an action-driven close broke that condition on Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element, and by `close()` the keyboard was on `<body>` and stayed there. Firefox and WebKit passed the same harness. `showDialog` now remembers who held the keyboard before the show and the coordinator’s closed pass gives it back — **only when the close left focus on nothing**, so it never competes with the platform’s own restore and never takes the keyboard from a page the panel never blocked.',
+    why: 'The close-the-dialog steps restore the previously focused element for `show()` as well as `showModal()` — measured on all three engines with a bare dialog — but only when focus is still inside the dialog at `close()` time, and an action-driven close broke that condition on Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element, and by `close()` the keyboard was on `<body>` and stayed there. Firefox and WebKit passed the same harness. `showDialog` now remembers who held the keyboard before the show and the coordinator’s closed pass gives it back — **only when the close left focus on nothing**, so it never competes with the platform’s own restore. Which element it hands back is `restoreFocusTo`’s to redirect; whether it hands one back at all is not, and the sibling row above records the one engine that ignores the condition.',
     references: [
       {
         file: 'src/core/__tests__/non-modal-close-focus.ct.tsx',

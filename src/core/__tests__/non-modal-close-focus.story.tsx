@@ -3,11 +3,11 @@ import { useDialog } from '../../react.js';
 /**
  * A trigger and a non-modal panel, for measuring where the keyboard goes when the panel closes.
  *
- * The library does nothing here on purpose — no `focusOnOpen`, no restore of its own — because
- * what is under measurement is the platform: the close-the-dialog steps restore the previously
- * focused element for `show()` too, but only when focus is still inside the dialog at close time,
- * and the library unmounts the content in the same pass that closes the element. Whether the
- * trigger gets the keyboard back is exactly what the test asks.
+ * Deliberately bare — no `focusOnOpen`, no `restoreFocusTo` — because what is under measurement is
+ * the platform: the close-the-dialog steps restore the element focused before the open for `show()`
+ * too, but only when focus is still inside the dialog at close time, and the library unmounts the
+ * content in the same pass that closes the element. Whether the trigger gets the keyboard back is
+ * exactly what the test asks; the library's own floor is what answers when the platform will not.
  */
 export function NonModalCloseRestoreHarness({
   closeVia,

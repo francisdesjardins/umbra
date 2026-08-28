@@ -76,6 +76,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     onError,
     onOpenRequest,
     onClose,
+    restoreFocusTo,
     onDismissRequest,
     ariaLabel,
     ariaLabelledBy,
@@ -139,9 +140,10 @@ export function useDialog<TData = void, TReason extends string = string>(
   // The resolution the inline `transition` uses, so the exit's property and timeout match it.
   const { primaryProperty, exitDuration } = resolveAnimation(animation);
 
-  // No deps array, so the store always holds the latest `onClose` without a ref.
+  // No deps array, so the store always holds the latest callbacks without a ref.
   useEffect(() => {
     store.setOnClose(onClose);
+    store.setRestoreFocusTo(restoreFocusTo);
   });
 
   // No deps, so `prepare` and `onKeyDown` are never a render behind; no cleanup, because one would

@@ -110,7 +110,9 @@ are deliberately yours.
   failed action, the reclaim when the stack moves, and the keyboard handed back to the opener when
   a non-modal panel closes — each is pinned per engine, and every focus move the library makes on
   the user's behalf shows a `:focus-visible` ring, because input-modality heuristics make a
-  library-made focus invisible on two engines out of three.
+  library-made focus invisible on two engines out of three. `restoreFocusTo` redirects that last
+  one when the opener is no longer the right answer — a list that drove the panel's content is the
+  case — and only where the restore already owns the focus, so a caret you moved yourself stays.
 - **`containFocus` buys the Tab wrap; the recovery is unconditional.** Keeping Tab inside is
   opt-in because on a toast or a popover it is the defect rather than the fix — but recovering a
   Tab pressed on the `<dialog>` element itself (a dead-space click puts it there, and WebKit

@@ -469,8 +469,51 @@ export type UseDialogBaseOptions<
    * is not this signal's to cancel: the dialog never knew about it. Cancel that where it began.
    */
   readonly prepare?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
-  /** Called when the dialog closes with the close result */
+  /**
+   * Called when the dialog closes, with the close result.
+   *
+   * A notification: it runs after the close has happened and its result is ignored. To decide
+   * *where* the keyboard lands afterwards, reach for `restoreFocusTo` rather than focusing from
+   * here — that one is guarded, and this one would also fire on a close the reader made from
+   * somewhere else on the page.
+   */
   readonly onClose?: ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
+  /**
+   * Where the keyboard goes when this dialog closes, for when the element that opened it is no
+   * longer the right answer.
+   *
+   * A list driving a panel is the case it exists for: opening from one row and then arrowing to
+   * another leaves the captured opener naming a row the reader has moved on from. Return the
+   * element to focus; anything nullish keeps the default.
+   *
+   * **A function, never an element.** A node captured when the dialog opened is detached by the
+   * time a renderer has replaced the list under it, and focusing a detached element is a silent
+   * no-op — so this is asked at the close, and answers with what is on screen then.
+   *
+   * **It redirects a restore rather than competing with the page.** It is consulted only where the
+   * restore already owns the focus: the close stranded the keyboard, or the close-the-dialog steps
+   * handed it back to the element focused before the open. A reader who moved the caret themselves
+   * — tabbed to a row, typing in a page a non-modal panel never blocked — keeps it, and this is
+   * never asked. The focus is applied with a `:focus-visible` ring, like every move the library
+   * makes on your behalf.
+   *
+   * @example
+   * ```tsx
+   * useDialog({
+   *   id: 'inspector',
+   *   nonModal: true,
+   *   // Re-queried at the close, so a re-rendered list answers with the node on screen.
+   *   restoreFocusTo: () => {
+   *     return document.querySelector<HTMLElement>(`[data-row="${selectedId}"]`);
+   *   },
+   *   render: () => {
+   *     return <Details id={selectedId} />;
+   *   },
+   * });
+   * ```
+   */
+  readonly restoreFocusTo?:
+    ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined) | undefined;
   /**
    * One of **your** callbacks threw, and the library caught it rather than let it escape.
    *

@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   SolidBasicHarness,
+  SolidRestoreFocusToHarness,
   SolidClaimlessReclaimHarness,
   SolidFailedActionHarness,
   SolidPrepareFailureHarness,
@@ -664,5 +665,24 @@ test.describe('onError (Solid)', () => {
       'aria-busy',
       'false'
     );
+  });
+});
+
+test.describe('umbra/solid — restoreFocusTo', () => {
+  test('the close lands on the row the panel was showing', async ({ mount, page }) => {
+    // Solid replaces nothing here, but the callback is asked at the close for the same reason it
+    // is on React: the row it names is re-queried, never a node captured when the panel opened.
+    await mount(<SolidRestoreFocusToHarness />);
+
+    await page.getByTestId('solid-rft-row-0').focus();
+    await page.keyboard.press('Enter');
+    const panel = page.locator('dialog[data-dialog-id="solid-restore-focus-to"]');
+    await expect(panel).toBeVisible();
+
+    await page.getByTestId('solid-rft-next').click();
+    await page.getByTestId('solid-rft-close').click();
+    await expect(panel).not.toBeVisible();
+
+    await expect(page.getByTestId('solid-rft-row-1')).toBeFocused();
   });
 });

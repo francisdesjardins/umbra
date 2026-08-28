@@ -253,6 +253,10 @@ export function useDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
+  store.setRestoreFocusTo((result) => {
+    return options.restoreFocusTo?.(result);
+  });
+
   manager.register(dialogId, {
     store,
     template,

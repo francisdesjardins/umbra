@@ -58,6 +58,7 @@ import {
   SolidBasicHarness,
   SolidBusyHarness,
   SolidClaimlessReclaimHarness,
+  SolidRestoreFocusToHarness,
   SolidContainedHarness,
   SolidDeclarationHarness,
   SolidDisposalHarness,
@@ -82,6 +83,7 @@ import {
   VanillaBasicHarness,
   VanillaBusyHarness,
   VanillaClaimlessReclaimHarness,
+  VanillaRestoreFocusToHarness,
   VanillaContainedHarness,
   VanillaDestroyHarness,
   VanillaDismissRequestHarness,
@@ -1086,6 +1088,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-vanilla-claimless-reclaim',
       },
       {
+        title: 'A close that lands on the row on screen, on markup the library never wrote',
+        description:
+          'No render pass, so the selection is the page’s own — which is the shape a controller consumer already has, and the reason the callback is asked at the close rather than handed an element at the open. The rows are the caller’s buttons; the binding only ever saw the <dialog>.',
+        component: VanillaRestoreFocusToHarness,
+        codeKey: 'story-vanilla-restore-focus-to',
+      },
+      {
         title: 'A prepare that throws, heard through onError',
         description:
           'Its own harness because there is no render pass — the state reaches the page through the caller’s own listener. aria-busy, the library’s one owned attribute sitting on the caller’s markup, says the settle reached the element and not only the store.',
@@ -1250,6 +1259,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'Measured rather than inherited: React reads the callback through a ref, so a teardown reports to whichever onError is current, while Solid passes options.onError straight through. Two routes to the same guarantee is two chances to lose it.',
         component: SolidPrepareFailureHarness,
         codeKey: 'story-solid-prepare-failure',
+      },
+      {
+        title: 'A close that lands on the row the panel was showing',
+        description:
+          'restoreFocusTo on the second hook binding. The panel opens from row 0 and Next row moves the selection without moving focus, so the captured opener and what is on screen disagree by the time it closes — which is the arrangement the option exists for, and the one a list driving a details pane produces every time.',
+        component: SolidRestoreFocusToHarness,
+        codeKey: 'story-solid-restore-focus-to',
       },
     ],
   },

@@ -133,6 +133,10 @@ export function bindDialog<TData = void, TReason extends string = string>(
     return options.onClose?.(result);
   });
 
+  store.setRestoreFocusTo((result) => {
+    return options.restoreFocusTo?.(result);
+  });
+
   manager.register(dialogId, {
     store,
     template: resolved.template,
@@ -167,7 +171,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
 
   // No render and no signal here, so the store is the clock: attachments rebuild when the phase or
   // `prepare`'s progress moves, the dependency list the other two bindings hand their effects.
-  const focus = createFocusCoordinator({ getDialog, dialogId, manager }, { engine });
+  const focus = createFocusCoordinator({ store, getDialog, dialogId, manager }, { engine });
 
   let appliedStyle: DialogStyle | undefined;
   let detachments: (() => void)[] = [];

@@ -365,6 +365,16 @@ those decisions are [core/focus-policy.ts](core/focus-policy.ts)) narrows throug
 who actually ran it, falling back to the claimed one. Why three, and which engine needs each, is on
 that function and on the coordinator in [core/attach-focus.ts](core/attach-focus.ts).
 
+**Closing focus is a floor, not a policy**, and knowing that is what makes `restoreFocusTo` legible.
+The platform restores the element focused before the open — for `show()` as well as `showModal()`,
+but only when focus is still inside at `close()` time — and `restoreOpenerFocus`
+([core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)) covers the case where it did not. So the
+option is consulted **only where the restore already owns the focus**, which
+`restoreOwnsTheFocus` decides: stranded, or landed back on the captured opener. Anywhere else is a
+caret the reader placed, and taking it would be theft rather than repair. That guard is the whole
+reason this is not `onClose` plus a `focus()` — user-land can express the move but not the
+condition, since the opener is a `WeakMap` nobody outside can read.
+
 ### Never hold an element across something that replaces it
 
 **The defect this codebase keeps producing** — three times in a day, one shape: a reference captured

@@ -9,6 +9,7 @@
 
 import { ensureDialogStyles, styleRootOf } from './dialog-styles.js';
 import { SHOW_THE_RING } from './focus-policy.js';
+import { restoreOwnsTheFocus } from '../utils/focus-restore-policy.js';
 
 /**
  * Transition-disabled detection, cached so the closing path never forces a synchronous reflow.
@@ -82,32 +83,43 @@ export function showDialog(
 }
 
 /**
- * Give the keyboard back to whoever had it before the open — but only when the close left it on
- * nothing.
+ * Give the keyboard back where the close left off — the answer `restoreFocusTo` named, or the
+ * element captured before the show when it named none.
  *
- * The floor under the platform's own restore rather than a replacement: when the close-the-dialog
- * steps already returned focus, or the user is somewhere real, the read below finds a live element
- * and this does nothing. It acts on the one outcome that serves nobody — a close that stranded the
- * keyboard on `<body>`, which an action-driven close produces on Chromium (see {@link openerFocus})
- * and which the APG's "focus returns to the invoker" exists to rule out.
+ * Only where the restore owns the focus, which {@link restoreOwnsTheFocus} decides: the platform's
+ * own restore is never competed with, and a reader who moved the caret themselves keeps it. Acting
+ * on the stranded case is what the APG's "focus returns to the invoker" exists to rule out.
  *
  * Visibly, like every focus move the library makes from nowhere — see `SHOW_THE_RING`.
  *
  * @internal
  */
-export function restoreOpenerFocus(dialog: HTMLDialogElement): void {
+export function restoreOpenerFocus(
+  dialog: HTMLDialogElement,
+  resolveTarget?: () => HTMLElement | null | undefined
+): void {
   const opener = openerFocus.get(dialog);
   openerFocus.delete(dialog);
-  if (!opener?.isConnected) {
-    return;
-  }
 
   const doc = dialog.ownerDocument;
   const active = deepActiveElement(doc);
-  const stranded = active === null || active === doc.body || active === doc.documentElement;
-  if (stranded) {
-    opener.focus(SHOW_THE_RING);
+  const owned = restoreOwnsTheFocus({
+    active,
+    insideDialog: active !== null && containsAcrossRoots(dialog, active),
+    opener,
+    body: doc.body,
+    documentElement: doc.documentElement,
+  });
+  if (!owned) {
+    return;
   }
+
+  // A detached answer is no target, and refocusing whatever already holds it buys nothing.
+  const target = resolveTarget?.() ?? opener;
+  if (target?.isConnected !== true || target === active) {
+    return;
+  }
+  target.focus(SHOW_THE_RING);
 }
 
 /**

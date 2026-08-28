@@ -44,6 +44,8 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
       let prepareController: AbortController | null = null;
       let onCloseCallback:
         ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
+      let restoreFocusToCallback:
+        ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined) | undefined;
 
       /** Resolve and drop every pending `open()` promise. */
       const flushOpenResolvers = (): void => {
@@ -72,6 +74,25 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
          */
         runOnClose(result: CloseResult<TData, TReason>): void | Promise<void> {
           return onCloseCallback?.(result);
+        },
+
+        setRestoreFocusTo(
+          fn: ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined) | undefined
+        ): void {
+          restoreFocusToCallback = fn;
+        },
+
+        /**
+         * Where the close should hand the keyboard back, or `undefined` to leave the answer to
+         * the captured opener. Read once the close result is retained, so the reason is available.
+         *
+         * Run here rather than handed out, for {@link runOnClose}'s reason: the focus coordinator
+         * declares the payload-free `DialogStore`, and a callback in an output position is what
+         * would make the generic one unassignable to it.
+         */
+        resolveRestoreTarget(): HTMLElement | null | undefined {
+          const result = get().closeResult;
+          return result === null ? undefined : restoreFocusToCallback?.(result);
         },
 
         /**

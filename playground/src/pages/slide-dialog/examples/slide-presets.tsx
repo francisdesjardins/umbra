@@ -182,10 +182,15 @@ const ROWS = [
  * Contained inspector: non-modal, no portal, over a region of the page — not the shared drawer
  * layout (400px wide, viewport height), since a contained panel is only as big as its host box.
  */
-function useInspectorPreset(
-  selected: (typeof ROWS)[number] | null,
-  onNavigate: (delta: 1 | -1) => void
-) {
+function useInspectorPreset({
+  selected,
+  onNavigate,
+  onRestoreFocus,
+}: {
+  readonly selected: (typeof ROWS)[number] | null;
+  readonly onNavigate: (delta: 1 | -1) => void;
+  readonly onRestoreFocus: () => HTMLElement | null;
+}) {
   return useSlideDialog({
     id: INSPECTOR_ID,
     direction: 'right',
@@ -196,6 +201,9 @@ function useInspectorPreset(
     ariaLabel: 'Row details',
     // A share of the host, not a fixed width: the host is what decides how big this can be.
     style: { width: '62%' },
+    // Closing from inside the panel strands the keyboard, and the row that opened this is not the
+    // row it ended up showing — so the arrow keys would silently cost the reader their place.
+    restoreFocusTo: onRestoreFocus,
     // Only presses raised inside the panel reach this, so it moves the row rather than the focus.
     onKeyDown: (event) => {
       const delta = arrowDelta(event);
@@ -325,7 +333,20 @@ export function SlidePresetsExample() {
     announce(`${row.name} — ${row.detail}`);
   };
 
-  const inspector = useInspectorPreset(selected, navigate);
+  const [list, setList] = useState<HTMLElement | null>(null);
+
+  /** The row on screen, re-queried at the close — the list re-renders whenever selection moves. */
+  const selectedRow = () => {
+    return selectedIndex === null
+      ? null
+      : (list?.querySelectorAll<HTMLElement>('[data-row]')[selectedIndex] ?? null);
+  };
+
+  const inspector = useInspectorPreset({
+    selected,
+    onNavigate: navigate,
+    onRestoreFocus: selectedRow,
+  });
 
   // Focus moves; the panel follows only while it is showing, since a row marked current with
   // nothing displaying it is a state the reader cannot see.
@@ -425,6 +446,7 @@ export function SlidePresetsExample() {
             {/* Scroll-into-view parks a tabbed-to button flush against the edge, clipping its ring;
                 `scroll-padding` moves that edge inward, and the padding covers the resting case. */}
             <div
+              ref={setList}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

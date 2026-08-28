@@ -2,9 +2,10 @@ import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
 import { NonModalCloseRestoreHarness } from './non-modal-close-focus.story.js';
 
-// Where the keyboard goes when a non-modal panel closes — a platform measurement. The close steps
-// restore the previously focused element for `show()` too, but only when focus is still inside the
-// dialog at close time. The library adds nothing here; the matrix cites this as the measurement.
+// Where the keyboard goes when a non-modal panel closes. The close steps restore the element
+// focused before the open for `show()` too, but only while focus is still inside at close time —
+// so the library carries a floor under that condition. Which element it hands back is
+// `restoreFocusTo`'s.
 
 const PANEL = 'dialog[data-dialog-id="nonmodal-close-restore"]';
 

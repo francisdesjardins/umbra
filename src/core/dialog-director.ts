@@ -298,7 +298,7 @@ export function createDialogDirector(ctx: DialogDirectorContext) {
 
   const parts: StepParts = {
     engine,
-    focus: createFocusCoordinator({ getDialog, dialogId, manager }, { engine }),
+    focus: createFocusCoordinator({ store, getDialog, dialogId, manager }, { engine }),
   };
 
   const runner = createStepRunner<DialogLifecyclePass, DialogDomContext>(

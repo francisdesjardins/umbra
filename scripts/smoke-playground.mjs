@@ -471,6 +471,17 @@ const flows = {
       await panel.getByText('Invoice 1045').first().isVisible(),
       'the panel followed the row that was chosen',
     ]);
+    // The panel was opened from row 0 and is showing row 2, so where the close lands is the whole
+    // difference `restoreFocusTo` makes — and nothing else in the suite ever closes this one.
+    await panel.getByRole('button', { name: 'Close' }).click();
+    await page.waitForTimeout(600);
+    checks.push([!(await panel.isVisible()), 'the panel closes from its own button']);
+    checks.push([
+      await rows.nth(2).evaluate((node) => {
+        return node === document.activeElement;
+      }),
+      'the close hands the keyboard to the row on screen, not the row that opened it',
+    ]);
     return checks;
   },
 

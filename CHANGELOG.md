@@ -11,6 +11,60 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-27
 
+### Added — `restoreFocusTo`, for when the row that opened a panel is not the row it ended up showing
+
+A list drives a panel; you open it from _Invoice 1043_, arrow down to _1044_, and close. The keyboard
+went back to _1043_, because that is the element `showDialog` captured before the show and nothing
+since had told it otherwise.
+
+**Why this could not be user-land, which was the question asked.** `onClose` already lands at the
+right instant — `finalizeDialogClose` runs `dialog.close()`, then `onClose`, then `finalize()`, so a
+`focus()` there survives both the platform's restore and the library's floor. But it is
+_unconditional_, and the guard is the feature: closing a panel is not the only way a dialog goes
+away, and a reader who dismissed with the caret in a field elsewhere on the page must keep it.
+Reproducing that condition outside the library means re-implementing the stranded predicate **and**
+comparing against the captured opener — and the opener is a module-level `WeakMap` nobody outside can
+read. The move was expressible; the condition was not.
+
+**Why the obvious core version does not work either.** Hosting the override inside `restoreOpenerFocus`
+as it stood would have made it dead on modal: with focus inside at `close()` the platform restores,
+focus is not stranded, the floor returns early and the callback is never consulted. So the guard is
+composite — `restoreOwnsTheFocus` answers true for the three shapes "the restore already owns this
+focus" takes: the close **stranded** the keyboard, it handed it back to the **captured opener**, or
+focus is still **inside the dialog that is going away**. That third one was measured rather than
+foreseen: WebKit focuses the `<dialog>` element on a click inside it, so on that engine the closed
+pass finds focus on a node about to be `display: none`, and reading it as a caret the reader placed
+left `umbra/vanilla` with no restore at all. Everything else is the reader's own, and it is left alone.
+
+A callback rather than an element, for the reason this codebase keeps relearning: a node captured at
+the open is detached by the time a renderer has replaced the list under it. It is asked at the close
+and answers with what is on screen then, and the focus is applied with `SHOW_THE_RING` like every
+move the library makes on the reader's behalf — a hand-rolled `focus()` in `onClose` silently drops
+that, on two engines out of three.
+
+Threaded through the store rather than the pass, following `runOnClose`'s own note: a callback in an
+output position is checked contravariantly, so handing it out would make `DialogStore<TData>`
+unassignable to the payload-free `DialogStore` the focus coordinator declares. `setRestoreFocusTo`
+and `resolveRestoreTarget` are the pair, one line per binding, and no `as` anywhere.
+
+### Fixed — the contained inspector loses your place no longer
+
+`/slide-dialog`'s contained panel is the example the option was written from: its ↑/↓ move the row
+the panel shows, so closing from inside it used to send the keyboard three rows up from where the
+reader was looking. The smoke flow now closes that panel, which nothing in the suite did before —
+ten checks exercised it and every one of them left it open.
+
+### Changed — a `~` for one engine ignoring the close-restore condition
+
+Measured while pinning the guard, on one press across three engines: the close-the-dialog steps are
+specified to restore only when focus is still inside the dialog at `close()` time. Chromium and
+Firefox honour that; **WebKit restores regardless**, so a reader who left a non-modal panel for a
+field on the page loses the caret to the opener — with or without this option, and before it existed.
+The matrix carries it as `~` rather than a fix, because normalising it means recording whether focus
+was inside at `close()` and changing default behaviour on one engine, which is a decision rather than
+a patch. `restoreFocusTo` redirects that move faithfully where it happens; it never invents one, and
+the pair of tests either side of the callback is what says so.
+
 ### Changed — the comment rule is a gate, and the comments now pass it
 
 Four sentences in `CLAUDE.md` governed every comment in the repository and nothing enforced any of

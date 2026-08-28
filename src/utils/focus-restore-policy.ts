@@ -43,3 +43,32 @@ export function chooseActionRunner<T extends { isConnected: boolean }>(
   }
   return null;
 }
+
+/**
+ * Whether the close left focus where the restore put it, and so is the restore's to redirect.
+ *
+ * Three shapes, because the variants and the engines land differently: a non-modal close **strands**
+ * the keyboard, the close-the-dialog steps hand a modal one back to the element `showDialog`
+ * captured, and WebKit focuses the `<dialog>` on a click inside it — so focus can still sit **within
+ * the dialog that is going away**, which is nowhere once it is `display: none`.
+ *
+ * Anywhere else is the reader's own, and taking it would be theft rather than repair.
+ *
+ * @internal
+ */
+export function restoreOwnsTheFocus<T>(landed: {
+  readonly active: T | null;
+  readonly insideDialog: boolean;
+  readonly opener: T | undefined;
+  readonly body: T;
+  readonly documentElement: T;
+}): boolean {
+  const { active, insideDialog, opener, body, documentElement } = landed;
+  return (
+    active === null ||
+    insideDialog ||
+    active === body ||
+    active === documentElement ||
+    active === opener
+  );
+}

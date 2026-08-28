@@ -20,10 +20,10 @@ import type { DialogPhase } from './types.js';
  * @internal Not part of the public API.
  */
 export function createFocusCoordinator(
-  ctx: Pick<DialogDomContext, 'getDialog' | 'dialogId' | 'manager'>,
+  ctx: Pick<DialogDomContext, 'getDialog' | 'dialogId' | 'manager' | 'store'>,
   options: FocusCoordinatorOptions
 ) {
-  const { getDialog, dialogId, manager } = ctx;
+  const { getDialog, dialogId, manager, store } = ctx;
   const { engine } = options;
 
   let openingFocus: HTMLElement | null = null;
@@ -93,12 +93,14 @@ export function createFocusCoordinator(
      * Call it whenever the phase changes, tearing down the previous attachment first.
      */
     sync(phase: DialogPhase): (() => void) | undefined {
-      // Clear on close, but after the floor: by this pass the platform's own restore has had its
-      // turn, so a keyboard still on `<body>` is one the close stranded. See `restoreOpenerFocus`.
+      // Clear on close, but after the restore: by this pass the platform's own has had its turn,
+      // which is what makes where focus landed readable at all. See `restoreOpenerFocus`.
       if (phase === 'closed') {
         const dialog = getDialog();
         if (dialog) {
-          restoreOpenerFocus(dialog);
+          restoreOpenerFocus(dialog, () => {
+            return store.resolveRestoreTarget();
+          });
         }
         openingFocus = null;
         settled = false;

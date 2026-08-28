@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
 import {
   VanillaBasicHarness,
+  VanillaRestoreFocusToHarness,
   VanillaBusyHarness,
   VanillaClaimlessReclaimHarness,
   VanillaContainedHarness,
@@ -849,5 +850,24 @@ test.describe('bindDialog — onError', () => {
       'aria-busy',
       'false'
     );
+  });
+});
+
+test.describe('umbra/vanilla — restoreFocusTo', () => {
+  test('the close lands on the row the panel was showing', async ({ mount, page }) => {
+    // No render pass here, so the selection lives on the page — and the callback is still asked at
+    // the close, on markup the library never wrote. Opened by click: WebKit focuses the row without
+    // activating it on Enter.
+    await mount(<VanillaRestoreFocusToHarness />);
+
+    await page.getByTestId('v-rft-row-0').click();
+    const panel = page.locator('dialog[data-dialog-id="vanilla-restore-focus-to"]');
+    await expect(panel).toBeVisible();
+
+    await page.getByTestId('v-rft-next').click();
+    await page.getByTestId('v-rft-close').click();
+    await expect(panel).not.toBeVisible();
+
+    await expect(page.getByTestId('v-rft-row-1')).toBeFocused();
   });
 });
