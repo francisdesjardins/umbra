@@ -66,14 +66,9 @@ test.describe('restoreFocusTo on a non-modal panel', () => {
     ).toBe(true);
   });
 
-  test('a caret the reader moved themselves is not this option to move', async ({
-    mount,
-    page,
-    browserName,
-  }) => {
-    // The guard, and the whole reason this is not `onClose` plus a `focus()`: a close landing on
-    // neither nothing nor the opener is nobody's to redirect. WebKit is the exception and it is the
-    // platform's — see the sibling below, which measures the same press with no callback at all.
+  test('a caret the reader moved themselves is left alone', async ({ mount, page }) => {
+    // The guard, and the whole reason this is not `onClose` plus a `focus()`: a close that ran
+    // while the reader was already elsewhere is nobody's to redirect.
     await mount(<RestoreFocusToPanelHarness override />);
     await openAndAdvance(page, PANEL);
 
@@ -81,17 +76,16 @@ test.describe('restoreFocusTo on a non-modal panel', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator(PANEL)).not.toBeVisible();
 
-    expect(await focused(page)).toBe(browserName === 'webkit' ? 'row-1' : 'page-field');
+    expect(await focused(page)).toBe('page-field');
   });
 
-  test('and WebKit takes that caret with no callback in sight', async ({
+  test('and it is left alone on the engine that does not leave it alone', async ({
     mount,
     page,
-    browserName,
   }) => {
-    // The measurement the assertion above rests on: the close-the-dialog steps are specified to
-    // restore only when focus is still inside at `close()` time, and WebKit restores regardless.
-    // So the option redirects a move the reader did not make either way; it never invents one.
+    // The same press with no callback in sight: WebKit restores the opener whether or not focus was
+    // still inside at `close()`, so without the read before the close the reader loses their place
+    // on one engine out of three.
     await mount(<RestoreFocusToPanelHarness override={false} />);
     await openAndAdvance(page, PANEL);
 
@@ -99,7 +93,7 @@ test.describe('restoreFocusTo on a non-modal panel', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator(PANEL)).not.toBeVisible();
 
-    expect(await focused(page)).toBe(browserName === 'webkit' ? 'row-0' : 'page-field');
+    expect(await focused(page)).toBe('page-field');
   });
 });
 

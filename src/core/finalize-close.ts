@@ -16,6 +16,11 @@ export type FinalizeCloseOptions = {
   readonly dialog: ClosableDialog | null;
   /** Where a throwing `onClose` goes. Each call site names its own context. */
   readonly onCloseError: (error: Error) => void;
+  /**
+   * Run in the instant before `close()` — the only one where the caret the reader left is still
+   * readable, and a callback so this file stays DOM-free. See `rememberCaretAtClose`.
+   */
+  readonly beforeClose?: (() => void) | undefined;
 };
 
 /**
@@ -29,9 +34,10 @@ export type FinalizeCloseOptions = {
  * @internal
  */
 export function finalizeDialogClose(store: FinalizableStore, options: FinalizeCloseOptions): void {
-  const { dialog, onCloseError } = options;
+  const { dialog, onCloseError, beforeClose } = options;
 
   if (dialog?.open) {
+    beforeClose?.();
     dialog.close();
   }
 

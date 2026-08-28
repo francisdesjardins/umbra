@@ -1,7 +1,12 @@
 import { fireAndForget } from '../utils/fire-and-forget.js';
 import { createLogger } from '../utils/logger.js';
 import { findLabellingProblems } from './dialog-labelling.js';
-import { refreshTransitionsDisabled, runCloseSequence, showDialog } from './dialog-lifecycle.js';
+import {
+  refreshTransitionsDisabled,
+  rememberCaretAtClose,
+  runCloseSequence,
+  showDialog,
+} from './dialog-lifecycle.js';
 import { styleRootOf } from './dialog-styles.js';
 import { finalizeDialogClose } from './finalize-close.js';
 import type {
@@ -132,6 +137,9 @@ export function syncCloseSequence(
     finalize: () => {
       finalizeDialogClose(store, {
         dialog,
+        beforeClose: () => {
+          rememberCaretAtClose(dialog);
+        },
         onCloseError: (error) => {
           log.error('onClose callback failed', { id: dialogId, error: error.message });
           onError?.({ error, source: 'onClose' });

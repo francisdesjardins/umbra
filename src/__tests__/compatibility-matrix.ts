@@ -1389,17 +1389,16 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   },
   {
     fact: 'a close leaves a caret the reader moved outside the dialog alone',
-    state: 'partial',
-    since: '2026-08-27',
-    why: 'The close-the-dialog steps are specified to restore the element focused before the open **only when focus is still inside the dialog at `close()` time**. Chromium and Firefox honour that condition; WebKit restores regardless, so a reader who left a non-modal panel for a field on the page loses the caret to the opener. Measured on the same harness, one press, three engines. The library cannot repair it from where it stands: its own restore reads focus after the platform has already moved it, so by then the theft is indistinguishable from a close that stranded nothing. Recording it rather than normalising it, because normalising means capturing whether focus was inside at `close()` and changing the default on one engine.',
+    state: 'works',
+    why: 'The close-the-dialog steps are specified to restore the element focused before the open **only when focus is still inside the dialog at `close()` time**. Chromium and Firefox honour that condition; WebKit restores regardless, so a reader who left a non-modal panel for a field on the page lost the caret to the opener — measured on the same harness, one press, three engines. Reading it afterwards cannot tell that theft from an ordinary restore, because by then the move has happened. `rememberCaretAtClose` reads the caret in the **instant before** `close()`, which is the only one where the answer still exists, and a caret that was already elsewhere ends the restore: nothing is redirected, and where the close took it anyway it goes back — plainly, since it is the reader’s own state rather than a move of the library’s.',
     references: [
       {
         file: 'src/core/__tests__/restore-focus-to.ct.tsx',
-        title: 'and WebKit takes that caret with no callback in sight',
+        title: 'and it is left alone on the engine that does not leave it alone',
       },
       {
         file: 'src/core/__tests__/restore-focus-to.ct.tsx',
-        title: 'a caret the reader moved themselves is not this option to move',
+        title: 'a caret the reader moved themselves is left alone',
       },
     ],
   },

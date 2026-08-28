@@ -9,6 +9,30 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-28
+
+### Fixed — a close no longer takes a caret the reader had already moved
+
+Filed yesterday as the matrix's one open `~`, and closed by asking the question at a different
+moment. The close-the-dialog steps are specified to restore the element focused before the open
+**only when focus is still inside the dialog at `close()` time**. Chromium and Firefox honour that;
+WebKit restores regardless — so a reader who left a non-modal panel for a field on the page lost the
+caret to whatever had opened the panel.
+
+**Reading it afterwards cannot tell that theft from an ordinary restore**, because by then the move
+has happened and `activeElement` says the opener either way. That is why yesterday's guard could only
+record the divergence rather than repair it. `rememberCaretAtClose` reads the caret in the **instant
+before** `close()` — the only one where the answer still exists — through a `beforeClose` callback on
+the close tail, so `finalize-close.ts` stays free of the DOM and assertable in Node.
+
+A caret that was already elsewhere ends the restore: nothing is redirected, `restoreFocusTo` is not
+consulted, and where the close took it anyway it goes back. Plainly, with no `:focus-visible` ring —
+it is the reader's own state being put back, not a move of the library's to announce, and the ring
+would appear where a click had deliberately left none.
+
+The two tests that pinned the divergence now assert the same answer on all three engines, which is
+the whole of what changed for a caller. The matrix row is `✓`, and `yarn todo` is empty.
+
 ## 2026-08-27
 
 ### Added — `restoreFocusTo`, for when the row that opened a panel is not the row it ended up showing

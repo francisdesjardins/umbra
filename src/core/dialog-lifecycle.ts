@@ -83,6 +83,34 @@ export function showDialog(
 }
 
 /**
+ * The caret the reader had left **outside** a dialog when its close ran, because the close-the-dialog
+ * steps are specified to restore only when focus is still inside at `close()` time and WebKit
+ * restores regardless. Per close, like {@link openerFocus}.
+ */
+const caretAtClose = new WeakMap<HTMLDialogElement, HTMLElement>();
+
+/**
+ * Note where the reader's keyboard was, if it had already left this dialog — inside and nowhere are
+ * both the restore's own territory, so only a live element elsewhere records.
+ *
+ * @internal
+ */
+export function rememberCaretAtClose(dialog: HTMLDialogElement): void {
+  const doc = dialog.ownerDocument;
+  const active = deepActiveElement(doc);
+  const elsewhere =
+    active instanceof HTMLElement &&
+    active !== doc.body &&
+    active !== doc.documentElement &&
+    !containsAcrossRoots(dialog, active);
+  if (elsewhere) {
+    caretAtClose.set(dialog, active);
+  } else {
+    caretAtClose.delete(dialog);
+  }
+}
+
+/**
  * Give the keyboard back where the close left off — the answer `restoreFocusTo` named, or the
  * element captured before the show when it named none.
  *
@@ -99,10 +127,22 @@ export function restoreOpenerFocus(
   resolveTarget?: () => HTMLElement | null | undefined
 ): void {
   const opener = openerFocus.get(dialog);
+  const caret = caretAtClose.get(dialog);
   openerFocus.delete(dialog);
+  caretAtClose.delete(dialog);
 
   const doc = dialog.ownerDocument;
   const active = deepActiveElement(doc);
+
+  // A close that ran while the reader was already elsewhere is nobody's to redirect, so put the
+  // caret back plainly: their own state, not a move of ours to announce.
+  if (caret !== undefined) {
+    if (caret.isConnected && active !== caret) {
+      caret.focus();
+    }
+    return;
+  }
+
   const owned = restoreOwnsTheFocus({
     active,
     insideDialog: active !== null && containsAcrossRoots(dialog, active),
