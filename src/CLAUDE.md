@@ -375,6 +375,13 @@ caret the reader placed, and taking it would be theft rather than repair. That g
 reason this is not `onClose` plus a `focus()` — user-land can express the move but not the
 condition, since the opener is a `WeakMap` nobody outside can read.
 
+**The floor has two holes the engines dig, and both are patched where they are measurable.** WebKit
+focuses no clicked `<button>`, so a pointer-opened dialog has no invoker to capture and its close
+stranded the keyboard on `<body>` — `watchOpenerActivation` records the last control activated and
+the show falls back to it. And the platform's own restore rings by input modality, so the same close
+came back visible from the keyboard and invisible from the mouse; the restore now blurs and refocuses
+where the ring is missing, the dance `settleOpeningFocus` already makes on the way in.
+
 ### Never hold an element across something that replaces it
 
 **The defect this codebase keeps producing** — three times in a day, one shape: a reference captured

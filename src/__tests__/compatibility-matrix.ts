@@ -1405,7 +1405,7 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'closing a non-modal panel returns the keyboard to what opened it',
     state: 'works',
-    why: 'The close-the-dialog steps restore the previously focused element for `show()` as well as `showModal()` — measured on all three engines with a bare dialog — but only when focus is still inside the dialog at `close()` time, and an action-driven close broke that condition on Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element, and by `close()` the keyboard was on `<body>` and stayed there. Firefox and WebKit passed the same harness. `showDialog` now remembers who held the keyboard before the show and the coordinator’s closed pass gives it back — **only when the close left focus on nothing**, so it never competes with the platform’s own restore. Which element it hands back is `restoreFocusTo`’s to redirect; whether it hands one back at all is not, and the sibling row above records the one engine that ignores the condition.',
+    why: 'The close-the-dialog steps restore the previously focused element for `show()` as well as `showModal()` — measured on all three engines with a bare dialog — but only when focus is still inside the dialog at `close()` time, and an action-driven close broke that condition on Chromium: the button is `disabled` while its action settles, the browser blurs a disabled element, and by `close()` the keyboard was on `<body>` and stayed there. Firefox and WebKit passed the same harness. `showDialog` remembers who held the keyboard before the show and the coordinator’s closed pass gives it back — **only when the close left focus on nothing**, so it never competes with the platform’s own restore. Where nothing held it, the last control the reader activated stands in: WebKit focuses no clicked `<button>`, so a pointer-opened dialog had no invoker to capture and every close of one landed on `<body>` — measured, all three close routes, and the one engine out of three that reaches it. Which element it hands back is `restoreFocusTo`’s to redirect; whether it hands one back at all is not, and the sibling row above records the one engine that ignores the condition.',
     references: [
       {
         file: 'src/core/__tests__/non-modal-close-focus.ct.tsx',
@@ -1414,6 +1414,28 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
       {
         file: 'src/core/__tests__/non-modal-close-focus.ct.tsx',
         title: 'still hands it back when an action closed it',
+      },
+      {
+        file: 'src/core/__tests__/close-focus-ring.ct.tsx',
+        title:
+          'a non-modal panel opened by click, closed by Enter on the handle button, rings the trigger',
+      },
+    ],
+  },
+  {
+    fact: 'the close hands the keyboard back visibly, whatever gesture closed it',
+    state: 'works',
+    why: 'The platform’s own restore draws a `:focus-visible` ring by **input modality**, so the same dialog closed by Space returned a ringed trigger and closed by a click returned a silent one — the beginning of the story deciding whether the end of it could be seen. Where the close left focus on the element the restore would have picked, `restoreOpenerFocus` refocuses it with `SHOW_THE_RING`; refocusing what already holds focus is a no-op on all three engines, so it blurs first, and only where the ring is missing. The same dance `settleOpeningFocus` makes on the way in, for the same reason. Not extended to an action settling under an unmoved caret: nothing took the keyboard there, so nothing has a landing to announce.',
+    references: [
+      {
+        file: 'src/core/__tests__/close-focus-ring.ct.tsx',
+        title:
+          'a modal dialog opened by click, closed by click on the handle button, rings the trigger',
+      },
+      {
+        file: 'src/core/__tests__/close-focus-ring.ct.tsx',
+        title:
+          'a non-modal panel opened by click, closed by click on the action button, rings the trigger',
       },
     ],
   },

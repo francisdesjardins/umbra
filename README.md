@@ -112,7 +112,9 @@ are deliberately yours.
   the user's behalf shows a `:focus-visible` ring, because input-modality heuristics make a
   library-made focus invisible on two engines out of three. `restoreFocusTo` redirects that last
   one when the opener is no longer the right answer — a list that drove the panel's content is the
-  case — and only where the restore already owns the focus, so a caret you moved yourself stays.
+  case — and only where the restore already owns the focus, so a caret you moved yourself stays. The
+  ring is drawn on the way back too: the platform's own restore shows one by input modality, so
+  closing with the mouse would otherwise hand the keyboard back invisibly.
 - **`containFocus` buys the Tab wrap; the recovery is unconditional.** Keeping Tab inside is
   opt-in because on a toast or a popover it is the defect rather than the fix — but recovering a
   Tab pressed on the `<dialog>` element itself (a dead-space click puts it there, and WebKit
@@ -409,11 +411,11 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.66%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.64%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **91.69%** statements over 55 files. Both measured 2026-08-28, and re-measured
+~45% of the run) — **91.67%** statements over 55 files. Both measured 2026-08-28, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. `yarn coverage:update` is that rule made mechanical: it runs both commands and
 rewrites this paragraph, the badges above and CLAUDE.md's copy in one move — still a snapshot, not

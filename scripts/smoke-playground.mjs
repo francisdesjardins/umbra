@@ -168,10 +168,24 @@ const flows = {
     const text = (await page.locator('dialog[open]').first().textContent()) ?? '';
     checks.push([text.includes('import'), 'code viewer shows source', `${text.length} chars`]);
 
+    // Closed by its own X, with the pointer, which is the gesture that hides a library-made focus:
+    // the platform's restore rings by input modality, so this asks for the ring rather than the
+    // element.
+    await page.locator('dialog[open]').first().getByRole('button', { name: 'Close' }).click();
+    await page.waitForTimeout(600);
+    checks.push([
+      await page
+        .getByRole('button', { name: 'View source code' })
+        .first()
+        .evaluate((node) => {
+          return node === document.activeElement && node.matches(':focus-visible');
+        }),
+      'the close rings the button that opened the source panel',
+    ]);
+
     // `/stories` is the group whose samples are *cut* out of shared files, by name, at module
     // evaluation — so a renamed declaration type-checks, passes the stories gate and CT, and throws
     // here on the first click. One panel is enough: opening any of them runs every slice.
-    await page.keyboard.press('Escape');
     await gotoRoute(page, '/stories');
     await page.getByRole('button', { name: 'View source code' }).first().click();
     await page.waitForTimeout(800);

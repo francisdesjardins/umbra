@@ -11,6 +11,35 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-28
 
+### Fixed — the same conclusion whichever way the story began
+
+Reported as a divergence and it was one: on _Simple Dialog_, `click → open` then **Space** on the
+close button brought the ring back to **Open**, while `click → open` then **click** on the close
+button brought focus back with no ring at all. The beginning of the story was deciding whether the
+end of it could be seen.
+
+Two independent causes, both in the same instant.
+
+**The platform's own restore rings by input modality.** Where the close left focus on the element
+the restore would have chosen anyway, `restoreOpenerFocus` returned early — nothing to move — and
+what the reader saw was whatever modality the browser had inferred. It now blurs and refocuses with
+`SHOW_THE_RING`, and only where the ring is actually missing, since refocusing a focused element is
+a no-op on all three engines. That is the same dance `settleOpeningFocus` makes on the way in, for
+the same reason.
+
+**And WebKit had no invoker to restore to.** It focuses no clicked `<button>`, so a pointer-opened
+dialog captured nothing before the show and every close of one left the keyboard on `<body>` —
+measured, three close routes, one engine out of three. The coordinator already carried
+`lastActivated` for this quirk _inside_ a dialog; `watchOpenerActivation` extends the same repair
+outside it, recording the last control activated on a document-level capture `click` and standing in
+for the focus WebKit refused to make. Read **only where focus is nowhere**, which is what keeps a
+stale record from ever taking a caret the reader placed.
+
+The test is the part worth keeping: every way in crossed with every way out — click, Space and Enter
+to open, the same three to close, on a `handle` button and on an `action` button, modal and
+non-modal. 24 cases. Keyboard-open passed before either fix, which is exactly why the gap survived:
+the flows nobody wrote down were the ones that diverged.
+
 ### Fixed — a close no longer takes a caret the reader had already moved
 
 Filed yesterday as the matrix's one open `~`, and closed by asking the question at a different

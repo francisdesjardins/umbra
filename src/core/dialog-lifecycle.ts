@@ -178,7 +178,8 @@ export function rememberCaretAtClose(dialog: HTMLDialogElement): void {
  * own restore is never competed with, and a reader who moved the caret themselves keeps it. Acting
  * on the stranded case is what the APG's "focus returns to the invoker" exists to rule out.
  *
- * Visibly, like every focus move the library makes from nowhere — see `SHOW_THE_RING`.
+ * Visibly either way — the platform's own restore rings by input modality, so where it already
+ * landed on the right element the ring is what is left to fix. See `SHOW_THE_RING`.
  *
  * @internal
  */
@@ -214,10 +215,20 @@ export function restoreOpenerFocus(
     return;
   }
 
-  // A detached answer is no target, and refocusing whatever already holds it buys nothing.
+  // A detached answer is no target.
   const target = resolveTarget?.() ?? opener;
-  if (target?.isConnected !== true || target === active) {
+  if (target?.isConnected !== true) {
     return;
+  }
+
+  // Already standing there because the platform's own restore put it there, which rings by input
+  // modality — so a pointer-driven close would hand the keyboard back invisibly. Refocusing is a
+  // no-op, hence the blur, and only where it buys a ring.
+  if (target === active) {
+    if (target.matches(':focus-visible')) {
+      return;
+    }
+    target.blur();
   }
   target.focus(SHOW_THE_RING);
 }
