@@ -88,7 +88,10 @@ intact — then hand you the one lever only you hold, and refuse the ones that w
 claim below is a cell in the compatibility matrix ([API.md → Compatibility](API.md#compatibility)),
 where each cites the test that proves it on which engine and which binding — including a
 **WCAG 2.2 chapter**, criterion by criterion, that says which halves are the library's and which
-are deliberately yours.
+are deliberately yours. Fifteen criteria, and a mapping rather than a conformance claim: a headless
+library renders nothing, so a page can carry every cell below and still fail an audit on content it
+wrote itself. Where the answer is not yet settled the cell says `~` and carries the question, which
+is how it reaches `yarn todo` instead of a footnote.
 
 - **Native `<dialog>`, natively dialog.** `showModal()` puts the dialog in the top layer and makes
   the rest of the document inert, and that is what assistive technology is told — the library never
@@ -417,7 +420,7 @@ half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) 
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **91.60%** statements over 55 files. Both measured 2026-08-28, and re-measured
+~45% of the run) — **91.54%** statements over 55 files. Both measured 2026-08-28, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. `yarn coverage:update` is that rule made mechanical: it runs both commands and
 rewrites this paragraph, the badges above and CLAUDE.md's copy in one move — still a snapshot, not

@@ -1657,6 +1657,100 @@ export type WcagRow = OpenSince & {
 
 export const WCAG_ROWS: readonly WcagRow[] = [
   {
+    criterion: '1.3.1',
+    name: 'Info and Relationships',
+    level: 'A',
+    state: 'works',
+    why: 'The relationship a dialog *is* — `role="dialog"` or `alertdialog`, the modal flag, and the name pointing at the heading rather than repeating it — is written by the library from `dialog-props.ts`, one table both bindings read. What it cannot write is whether the caller’s `ariaLabelledBy` points at anything: an id that resolves to nothing produces a dialog with no accessible name and no error, so the library ships a development-time diagnostic instead of a silent pass. Everything inside the dialog is the caller’s markup and this criterion’s other half.',
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'reports a reference the caller’s markup gets wrong',
+      },
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'reports a dialog with no accessible name at all',
+      },
+    ],
+  },
+  {
+    criterion: '1.4.13',
+    name: 'Content on Hover or Focus',
+    level: 'AA',
+    state: 'works',
+    why: 'A non-modal panel is the shape this criterion is about, and the library answers two of its three requirements outright. **Dismissible**: `dismissKey` closes it without moving the pointer, and it is remappable or `false`. **Persistent**: nothing in the library closes a panel because the pointer left it — a dialog closes on a reason, and there is no hover timer anywhere in the surface. **Hoverable** is the caller’s, since the library renders no content and places no panel; `dismissOnClickOutside` is the one thing that could take a panel away from under a pointer, and it is opt-in.',
+    references: [
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a custom dismissKey closes it, and Escape does not',
+      },
+    ],
+  },
+  {
+    criterion: '2.1.4',
+    name: 'Character Key Shortcuts',
+    level: 'A',
+    state: 'works',
+    why: 'Two mechanisms, and each satisfies a different bullet. An action’s hotkey is heard on a listener bound to the `<dialog>` itself, so it fires **only while focus is inside that dialog** — the criterion’s "active only on focus". The dismiss key is heard at window capture, which is wider, but it defaults to Escape (not a character key at all, so out of scope) and is both remappable and turn-off-able through the same option: `dismissKey: false` refuses it entirely. What the criterion asks for is one of the three, and the surface carries all three.',
+    references: [
+      {
+        file: 'src/solid/__tests__/solid-dialog.ct.tsx',
+        title: 'an action hotkey runs the same path its button does',
+      },
+      {
+        file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+        title: 'a custom dismissKey closes it, and Escape does not',
+      },
+    ],
+  },
+  {
+    criterion: '2.5.2',
+    name: 'Pointer Cancellation',
+    level: 'A',
+    state: 'partial',
+    since: '2026-08-28',
+    why: '`dismissOnClickOutside` answers **`pointerdown`**, which completes the dismissal on the down-event: a reader who presses outside a panel and drags back into it before releasing has already lost the panel, with no up-reversal and nothing to abort. None of the criterion’s four escapes applies — the down-event is not essential here. The other pointer path is fine: a backdrop click is decided on `click`, so the press and the release must both land outside the box. The reason it has not simply been moved is that the two are not interchangeable — `pointerdown` is what makes an outside press feel like it took, and a drag that starts inside a panel and ends outside must not dismiss either, so the fix is a paired down/up test rather than a one-line swap.',
+    caveat: {
+      question:
+        'Does dismissing a panel count as "activation" under 2.5.2, and does moving `dismissOnClickOutside` to a paired down/up test break the interactions the current listener gets right?',
+      nextStep:
+        'Write the paired-pointer harness first — press outside then release inside, press inside then release outside, and a plain outside click — and read what the current listener does with all three before changing it.',
+    },
+  },
+  {
+    criterion: '2.5.6',
+    name: 'Concurrent Input Mechanisms',
+    level: 'AAA',
+    state: 'works',
+    why: 'Adaptive controllers mapped at the operating-system level — the Xbox Adaptive and the Sony Access among them — arrive as an ordinary keyboard, and the library serves those with nothing added. What is left is the device the browser hands over raw: the Gamepad API delivers no events and a synthetic `Tab` runs no default action, so closing and activating work through `handle.close` and a plain `.click()` while **walking the controls did not**. `handle.moveFocus` is that half, and `/interop` drives a controller through all three. No mode to enter and nothing to switch off: the keyboard, the pointer and the device all reach the same dialog at the same time.',
+    references: [
+      {
+        file: 'src/core/__tests__/move-focus.ct.tsx',
+        title: 'next reaches the field and the region, not only the buttons',
+      },
+    ],
+  },
+  {
+    criterion: '3.2.1',
+    name: 'On Focus',
+    level: 'A',
+    state: 'works',
+    why: 'Every focus move the library makes is a move **within** what is already on screen, or back to what put it there: the opening focus, the reclaim when the stack moves, the restore after a settled action, the hand-back at the close, and `handle.moveFocus`. None of them opens, closes or navigates anything, so none of them is a change of context — and the one operation that *is* a context change, opening a dialog, is reached by activation and never by focus. The caller’s own controls inside the dialog are the criterion’s other half.',
+    references: [
+      {
+        file: 'src/core/__tests__/opening-focus-foreground.ct.tsx',
+        title: 'a dialog that claims nothing still shows where the keyboard went',
+      },
+    ],
+  },
+  {
+    criterion: '4.1.3',
+    name: 'Status Messages',
+    level: 'AA',
+    state: 'no-by-design',
+    why: 'A live region **rendered inside `render`** is born holding its text, and screen readers announce a region’s *changes* rather than its arrival — so the pattern the library could most easily ship is the one that does not work. The arrangement that does is structural and lives outside any dialog: a persistent, visually hidden region on the page, written to when the dialog opens. That is the caller’s to place, which is why `role: "status"` is not on the option surface and why the playground carries `useAnnouncer` instead of the library carrying it. The platform row on the same subject records the measurement behind this.',
+  },
+  {
     criterion: '2.1.1',
     name: 'Keyboard',
     level: 'A',

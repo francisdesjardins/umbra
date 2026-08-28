@@ -11,6 +11,35 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-28
 
+### Changed — the WCAG chapter covers what a dialog engine actually touches
+
+Axis D mapped eight criteria and stopped at the ones focus and keyboard reach. Seven more, each
+picked because a dialog engine has a real half of it rather than because the number exists:
+
+- **1.3.1 Info and Relationships** and **3.2.1 On Focus** — `works`, citing tests already written.
+  Every focus move the library makes is within what is on screen or back to what opened it, so none
+  of them is a change of context; the one operation that is, opening a dialog, is reached by
+  activation and never by focus.
+- **2.1.4 Character Key Shortcuts** — `works`, and worth writing down because the answer is not the
+  obvious one. An action's hotkey is bound to the `<dialog>` itself, so it fires only while focus is
+  inside it; the dismiss key is heard wider but defaults to Escape and is both remappable and
+  turn-off-able. The criterion asks for one of three mechanisms and the surface has all three.
+- **1.4.13 Content on Hover or Focus** — `works` for the two halves a headless library owns:
+  dismissible, and persistent because nothing here closes a panel on a pointer leaving it.
+- **2.5.6 Concurrent Input Mechanisms** — `works`, and only since `handle.moveFocus` landed.
+- **4.1.3 Status Messages** — `no-by-design`, promoting the reasoning already recorded as a platform
+  fact: a live region rendered inside `render` is born holding its text, which is the case screen
+  readers miss.
+- **2.5.2 Pointer Cancellation** — **`~`, and the first thing this chapter found.**
+  `dismissOnClickOutside` answers `pointerdown`, so the dismissal completes on the down-event: press
+  outside a panel, drag back in, release — the panel is already gone, with no up-reversal and
+  nothing to abort. None of the criterion's four escapes applies. It is not a one-line swap to
+  `click`, because a drag that starts inside and ends outside must not dismiss either, so the cell
+  carries the question and the measurement that would settle it.
+
+`yarn todo` goes from 0 open to 2 — the cell and the question it carries, counted separately —
+which is the chapter doing its job rather than a regression.
+
 ### Added — `handle.moveFocus`, for input that is not a keyboard
 
 A controller is not a keyboard, and the browser does not pretend otherwise: the Gamepad API delivers
