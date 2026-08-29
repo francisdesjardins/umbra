@@ -68,6 +68,27 @@ const COMPONENT_TIMEOUT = 30 * 1000;
 const NEEDS_REAL_FOCUS = /@focus-dependent/;
 
 /**
+ * Tests that need a touchscreen, which is a **device** rather than an engine.
+ *
+ * The dismissal paths are pointer-driven, and a finger is not a small mouse: a press that becomes a
+ * scroll ends in `pointercancel` with no `pointerup` at all, and the compatibility mouse events a
+ * tap synthesises arrive after it. Neither shape occurs on the desktop projects, so nothing there
+ * measures them.
+ */
+const NEEDS_TOUCH = /@touch/;
+
+/**
+ * The touch cases only Chromium can be made to drive: Playwright's touchscreen taps and nothing
+ * else, so a *moving* finger needs `Input.dispatchTouchEvent` over CDP, which WebKit has no
+ * equivalent of. Excluded there rather than skipped inside a test, so the reason lives in one
+ * place and the run says plainly what it covered.
+ */
+const NEEDS_TOUCH_CDP = /@touch-cdp/;
+
+/** What a desktop mouse cannot drive: the focus-serialised set, and the touch set. */
+const NOT_A_DESKTOP_MOUSE = /@focus-dependent|@touch/;
+
+/**
  * Unified Playwright configuration for both unit and component tests.
  *
  * Projects:
@@ -75,6 +96,8 @@ const NEEDS_REAL_FOCUS = /@focus-dependent/;
  *   component          — *.ct.tsx via Playwright CT, on Chromium
  *   component-firefox  — the same, on Gecko
  *   component-webkit   — the same, on WebKit
+ *   component-touch    — the `@touch` subset, Chromium with a touchscreen
+ *   component-touch-webkit — the same subset on WebKit, less the CDP-only cases
  *
  * VS Code test explorer discovers all tests from this single config.
  * Run subsets with --project=unit, or `yarn test:component:{chromium,firefox,webkit}`.
@@ -159,7 +182,7 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Chrome'] },
       timeout: COMPONENT_TIMEOUT,
-      grepInvert: NEEDS_REAL_FOCUS,
+      grepInvert: NOT_A_DESKTOP_MOUSE,
     },
     // Gecko and WebKit run the same harnesses as Chromium. The declared floor names Firefox 115
     // and Safari 16.4, and a support claim nothing exercises is a guess with a version number on
@@ -181,7 +204,7 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Firefox'] },
       timeout: COMPONENT_TIMEOUT,
-      grepInvert: NEEDS_REAL_FOCUS,
+      grepInvert: NOT_A_DESKTOP_MOUSE,
     },
     // WebKit, which is the engine that found the focus bug rather than merely tripping over it —
     // see `captureActionRunner`. It is in the default list because it passes, and because the
@@ -193,7 +216,28 @@ export default defineConfig({
       testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
       use: { ...devices['Desktop Safari'] },
       timeout: COMPONENT_TIMEOUT,
-      grepInvert: NEEDS_REAL_FOCUS,
+      grepInvert: NOT_A_DESKTOP_MOUSE,
+    },
+    // The same two engines with a touchscreen, and **only** that: a mobile device descriptor would
+    // move the viewport, the scale factor and the user agent at once, so a red test would not say
+    // which of the four it was about. Firefox has no third: Playwright cannot emulate touch on
+    // Gecko, which is a gap in the tooling rather than a claim about the engine.
+    {
+      name: 'component-touch',
+      testDir: './',
+      testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
+      use: { ...devices['Desktop Chrome'], hasTouch: true },
+      timeout: COMPONENT_TIMEOUT,
+      grep: NEEDS_TOUCH,
+    },
+    {
+      name: 'component-touch-webkit',
+      testDir: './',
+      testMatch: ['{src,playground/src}/**/__tests__/**/*.ct.tsx'],
+      use: { ...devices['Desktop Safari'], hasTouch: true },
+      timeout: COMPONENT_TIMEOUT,
+      grep: NEEDS_TOUCH,
+      grepInvert: NEEDS_TOUCH_CDP,
     },
   ],
 });

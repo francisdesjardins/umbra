@@ -15,7 +15,15 @@
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
-const PROJECTS = ['component', 'component-firefox', 'component-webkit'];
+// The three engines, then the same two of them with a touchscreen — a device rather than an engine,
+// and the only place the `@touch` set runs at all.
+const PROJECTS = [
+  'component',
+  'component-firefox',
+  'component-webkit',
+  'component-touch',
+  'component-touch-webkit',
+];
 const cli = createRequire(import.meta.url).resolve('@playwright/test/cli');
 const forwarded = process.argv.slice(2);
 

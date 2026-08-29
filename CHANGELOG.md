@@ -11,6 +11,37 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Added — the dismissal paths are driven by a finger too
+
+The last of the three thin axes the cross-route audit named, and the one worth paying for: **nothing
+in the suite had ever used a touchscreen.** Both dismissal surfaces are pointer-driven, and the
+pointer-pair rewrite two entries down made them wait on a release — so "does a finger give one"
+was an open question the desktop projects could not answer.
+
+It does: a tap is `pointerdown` then `pointerup`, and both surfaces settle on the release exactly as
+they do with a mouse. What a mouse never produces is the interesting half — a finger that _moves_ is
+taken away as a pan:
+
+```
+pointerdown:touch  touchstart  pointercancel:touch  touchend      <- no release, ever
+```
+
+So an abandoned press must leave nothing armed for the next release to claim, which is what the
+`pointercancel` handler is for and what is now measured rather than reasoned.
+
+**Two new projects, changing `hasTouch` and nothing else.** A mobile device descriptor would move the
+viewport, the scale factor and the user agent at once, and a red test would not say which of the four
+it was about. They run in `yarn test:component` and as their own CI legs — one project per
+invocation, which is what keeps this suite from going flaky.
+
+Two honest limits, recorded rather than papered over. The moving-finger case is Chromium's alone:
+Playwright's touchscreen taps and nothing else, so a drag needs `Input.dispatchTouchEvent` over CDP,
+which WebKit has no equivalent of — it is excluded there by tag (`@touch-cdp`) rather than skipped
+inside a test. And Gecko has no touch leg at all, because Playwright cannot emulate a touchscreen on
+it; that is a gap in the tooling, not a claim about the engine.
+
+## 2026-08-29
+
 ### Fixed — the modal backdrop answers the pointer pair too
 
 Yesterday's entry said a backdrop click "was always decided on `click` and needed nothing." That was

@@ -134,9 +134,15 @@ jobs:
   # Chromium and red on WebKit, which in a single job is one line buried in a 951-test log and here is
   # a job name.
   #
-  # `fail-fast: false` for the same reason. Cancelling the other two the moment one goes red would
+  # `fail-fast: false` for the same reason. Cancelling the others the moment one goes red would
   # throw away exactly the comparison that makes a cross-engine run worth paying for — "which engines
   # disagree" is the question, and a cancelled leg cannot answer it.
+  #
+  # The last two legs are the same Chromium and WebKit with a touchscreen, running the `@touch` set
+  # and nothing else. A finger is not a small mouse — a press that moves is cancelled rather than
+  # released — and the dismissal paths wait on a release, so the desktop legs cannot answer for them.
+  # They are short (a handful of tests) and are legs rather than an append to an existing one,
+  # because one project per invocation is what keeps this suite from going flaky.
   test-component:
     name: Component Tests (${{ matrix.browser }})
     needs: install
@@ -144,7 +150,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: [chromium, firefox, webkit, touch, touch-webkit]
     container:
       image: mcr.microsoft.com/playwright:v${{ needs.install.outputs.playwright-version }}-noble
       options: --user 1001

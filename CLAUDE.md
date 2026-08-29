@@ -81,6 +81,15 @@ Every one of those has a `:ui` variant that opens the Playwright UI.
 | `*.ct.tsx`    | Component tests — Playwright CT         |
 | `*.story.tsx` | Harness components imported by CT tests |
 
+**Two tags move a test off the default projects and onto one that can answer it**, and both are
+config-level rather than a condition inside a test, so a run says plainly what it covered.
+`@focus-dependent` needs the one worker that holds the browser's focus. `@touch` needs a
+**touchscreen** — a device, not an engine, so the touch projects change `hasTouch` and nothing else:
+a mobile descriptor would move the viewport, the scale factor and the user agent at once, and a red
+test would not say which of the four it was about. `@touch-cdp` is the subset that needs a _moving_
+finger, which only `Input.dispatchTouchEvent` over CDP produces, so it is Chromium's alone. Gecko has
+no touch leg — Playwright cannot emulate one there.
+
 ### What coverage measures
 
 Two reports, because one project cannot reach the whole library.
@@ -93,7 +102,7 @@ shows up as a gap until someone decides which kind it is. The line is _zero_ rea
 Node; a file with a testable half stays visible and partially covered.
 
 `yarn test:component:coverage` is the other half and exists so the first list is honest. Opt-in
-(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-29: **91.33% over 55 files**, against unit's **96.59%**. Never add them; re-measure both or neither — **and the
+(`CT_COVERAGE=1`) because instrumentation costs about 45% of the run. Measured 2026-08-29: **91.44% over 55 files**, against unit's **96.59%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points behind, which is why
 **`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one

@@ -1475,6 +1475,21 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     ],
   },
   {
+    fact: 'a dismissal driven by a finger behaves like one driven by a mouse',
+    state: 'works',
+    why: 'A tap produces `pointerdown` then `pointerup` the way a click does, so both dismissal surfaces settle on the release exactly as they do with a mouse — measured, on Chromium and WebKit, with a touchscreen and **only** a touchscreen changed, since a mobile device descriptor would move the viewport, the scale factor and the user agent at once and a red test would not say which. The shape a mouse never makes is the one worth the device: a finger that moves is taken away as a pan, `pointerdown` then `pointercancel` with **no release**, so an abandoned press must leave nothing armed for the next release to claim. That last case is Chromium-only, because driving a *moving* finger needs `Input.dispatchTouchEvent` over CDP and Playwright can otherwise only tap; it is excluded on WebKit by tag rather than skipped inside the test, so the run says what it covered. Gecko has no touch leg at all — Playwright cannot emulate a touchscreen there.',
+    references: [
+      {
+        file: 'src/core/__tests__/touch-dismissal.ct.tsx',
+        title: 'a tap outside dismisses it @touch',
+      },
+      {
+        file: 'src/core/__tests__/touch-dismissal.ct.tsx',
+        title: 'a finger that moves is cancelled, and dismisses nothing @touch-cdp',
+      },
+    ],
+  },
+  {
     fact: 'an input device the browser does not turn into Tab can still walk a dialog',
     state: 'works',
     why: 'The Gamepad API delivers no events at all — a caller polls `navigator.getGamepads()` and reads edges itself — and a synthetic `Tab` moves nothing, because an untrusted event runs no default action (measured: `keydown` dispatched from the focused element closes a dialog, since the library acts by program, while the same event as `Tab` leaves focus exactly where it was). Closing and activating therefore need nothing new: `handle.close` and a `.click()` on whatever holds the keyboard are already public. Walking the controls is the half that was not — a page-level adapter finds `[data-action-reason]` and stops, which on the playground’s own panel is **two controls out of four**, missing the field and the declared reading region. `handle.moveFocus` is that scan, and it is also where the ring comes from: a controller carries no input modality the engines recognise.',
@@ -1708,7 +1723,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'Pointer Cancellation',
     level: 'A',
     state: 'works',
-    why: '`dismissOnClickOutside` answers the **pair**, not the press: the pointer going down outside only arms the dismissal, and the release decides it. Measured before the change and red on all three engines — a press outside a panel, dragged back in and released, had already closed it, with no up-reversal and nothing to abort. Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a drag *out* of the panel as a press on the page; that direction is the second half of the criterion and is pinned as its own case. The gates are read at the release rather than the press, so the gesture is judged when it finishes and an action starting under it still suppresses the dismissal. The modal backdrop needed the same repair in the other direction, and the reason it was missed is instructive: a `click` fires on the **ancestor the press and the release share**, so a drag from the content out past the edge reports the `<dialog>` itself and reads exactly like a press on the backdrop — a dialog dismissed under a text selection. `createBackdropPressGuard` records where the press landed and the click consumes it, so one press answers for one click; the reverse direction was already right, since the geometry reads the release.',
+    why: '`dismissOnClickOutside` answers the **pair**, not the press: the pointer going down outside only arms the dismissal, and the release decides it. Measured before the change and red on all three engines — a press outside a panel, dragged back in and released, had already closed it, with no up-reversal and nothing to abort. Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a drag *out* of the panel as a press on the page; that direction is the second half of the criterion and is pinned as its own case. The gates are read at the release rather than the press, so the gesture is judged when it finishes and an action starting under it still suppresses the dismissal. Both surfaces are driven by a finger as well as a mouse, on their own device projects, because a tap is not a small click: a finger that *moves* is taken away as a pan — `pointerdown` then `pointercancel`, **no release at all** — so the pair the dismissal waits for never completes, and nothing on the desktop projects produces that shape. The modal backdrop needed the same repair in the other direction, and the reason it was missed is instructive: a `click` fires on the **ancestor the press and the release share**, so a drag from the content out past the edge reports the `<dialog>` itself and reads exactly like a press on the backdrop — a dialog dismissed under a text selection. `createBackdropPressGuard` records where the press landed and the click consumes it, so one press answers for one click; the reverse direction was already right, since the geometry reads the release.',
     references: [
       {
         file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
@@ -1721,6 +1736,10 @@ export const WCAG_ROWS: readonly WcagRow[] = [
       {
         file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
         title: 'a press inside the content released on the backdrop leaves it open',
+      },
+      {
+        file: 'src/core/__tests__/touch-dismissal.ct.tsx',
+        title: 'a finger that moves is cancelled, and dismisses nothing @touch-cdp',
       },
     ],
   },
