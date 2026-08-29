@@ -1,6 +1,6 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { MoveFocusHarness } from './move-focus.story.js';
+import { MoveFocusEmptyHarness, MoveFocusHarness } from './move-focus.story.js';
 
 // `handle.moveFocus` — the Tab a device that is not a keyboard cannot press. What it has to get
 // right is what a hand-rolled `querySelectorAll` gets wrong: the kinds it reaches, the dialog it
@@ -117,5 +117,38 @@ test.describe('walking a dialog’s controls', () => {
 
     await expect(page.getByTestId('took')).toHaveText('false');
     expect(await focused(page)).toBe('open');
+  });
+});
+
+test.describe('a walk with nowhere to start or land', () => {
+  test('a dialog with nothing focusable answers false', async ({ mount, page }) => {
+    // The one shape where there is no answer to give, and the return value is the whole of what a
+    // caller can act on — an adapter that read `true` here would think it had moved the keyboard.
+    await mount(<MoveFocusEmptyHarness empty />);
+    await page.getByTestId('open').click();
+    await expect(page.locator('dialog[data-dialog-id="move-focus-empty"]')).toBeVisible();
+
+    await page.getByTestId('open').focus();
+    await page.keyboard.press('ArrowDown');
+
+    await expect(page.getByTestId('took')).toHaveText('false');
+  });
+
+  test('and from outside a panel the step lands on its first control', async ({ mount, page }) => {
+    // Non-modal, so the keyboard can genuinely be on the page while the panel is open — the state
+    // a step has to answer for without a control inside to step from.
+    await mount(<MoveFocusEmptyHarness empty={false} />);
+    await page.getByTestId('open').click();
+    await expect(page.locator('dialog[data-dialog-id="move-focus-empty"]')).toBeVisible();
+
+    await page.getByTestId('open').focus();
+    await page.keyboard.press('ArrowDown');
+
+    await expect(page.getByTestId('took')).toHaveText('true');
+    expect(
+      await page.evaluate(() => {
+        return document.activeElement?.getAttribute('data-testid');
+      })
+    ).toBe('only');
   });
 });

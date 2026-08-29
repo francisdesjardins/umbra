@@ -10,6 +10,8 @@ import {
   DismissKeyOwnershipHarness,
   KeyClaimProbeHarness,
 } from 'umbra/core/__tests__/dismiss-key-ownership.story';
+import { InertEscapeHarness } from 'umbra/core/__tests__/dismiss-gates.story';
+import { SilentExitHarness, ThrowingCloseHarness } from 'umbra/core/__tests__/close-failure.story';
 import {
   ControlledClickOutsideHarness,
   ControlledDialogHarness,
@@ -479,6 +481,27 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'Asked directly rather than through a dismissal, because a caller that imports it gets the function and not the machinery — so it has to answer correctly standing alone.',
         component: KeyClaimProbeHarness,
         codeKey: 'story-dismiss-key-ownership',
+      },
+      {
+        title: 'A dismiss key that is not Escape, and an Escape that must still not close it',
+        description:
+          'The native cancel event fires for Escape whatever the dialog declares, so it is always prevented — the browser closing the element behind the store is the failure being ruled out. F2 is the key this one answers.',
+        component: InertEscapeHarness,
+        codeKey: 'story-dismiss-gates',
+      },
+      {
+        title: 'An onClose that throws, heard through onError',
+        description:
+          'onClose runs detached — no render pass, no promise to await — so a failing one is otherwise a quiet log and a close that looks like it worked. Closed through the animated path, which reports from a different call site than teardown does.',
+        component: ThrowingCloseHarness,
+        codeKey: 'story-close-failure',
+      },
+      {
+        title: 'An exit transition that never fires, closed anyway',
+        description:
+          'transitionProperty names a property the exit style never changes, so no transitionend arrives — what a display swap or a reduced-motion override produces. The safety timer is the only thing that finishes the close.',
+        component: SilentExitHarness,
+        codeKey: 'story-close-failure',
       },
       {
         title: 'A dialog whose Escape is a request, not a close',

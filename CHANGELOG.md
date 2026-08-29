@@ -11,6 +11,48 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Added — six contracts nothing was asking for
+
+Coverage came up, and the first useful thing was that **neither number is the question**. The two
+reports are complements by design: `hotkey-utils.ts` is 100% in Node and 38% in the browser, and
+raising the second would mean re-testing arithmetic the first already proves. The number worth
+looking at is what **neither** project runs — 45 lines, out of ~7,300.
+
+Reading it took two corrections worth writing down. A first pass counted 153 lines by treating
+"not tracked by a report" as "not covered", which is wrong in both directions: c8 records one entry
+per _line_ and the CT instrumenter one per _statement_, so each sees lines the other does not. The
+rule that holds is: where both projects measure a file, a gap needs both to agree; where `.c8rc.json`
+excludes it by design, the browser's verdict stands alone.
+
+Of the 45, six carried a contract nothing was asserting, and those are now tests:
+
+- **`onKeyDown` plus `preventDefault` stops a hotkey.** The only door a caller has for keeping a key
+  their own content answers. Not reachable through the dismiss key — the window listener claims that
+  one at capture, before the dialog's own keydown runs, which is why the test presses a hotkey.
+- **A click outside is refused while an action runs**, and works once it settles.
+- **A press the platform takes away arms nothing** — `pointercancel` arriving _instead of_ the
+  release the dismissal waits for, dispatched rather than gestured, so a desktop run pins it too.
+- **A dismiss key that is not Escape leaves Escape inert** without letting the browser close the
+  dialog behind the store.
+- **A walk of a dialog with nothing focusable answers `false`**, and one from outside a non-modal
+  panel lands on its first control.
+- **An `onClose` that throws is reported through `onError`** on the _animated_ close path, which is
+  a different call site than teardown's — and **an exit transition that never fires is finished by
+  the safety timer** rather than left on screen.
+
+Component coverage 91.41% → 91.92%. **Unit is unchanged at 96.59%, and that is the honest answer**:
+every line it still misses sits past a `typeof document` guard or an `instanceof HTMLDialogElement`
+check, which is what the exclude list already says the Node project cannot reach.
+
+Two of the remaining gaps are measurement artefacts rather than holes, recorded here so the next
+reader does not re-chase them. `test:component:coverage` runs **Chromium only**, so a line reached
+only by WebKit, by the touch projects or by `component-focus` can be perfectly tested and never
+counted — `scroll-lock.ts`'s compensation branch is exactly that, already covered by an existing
+test and unreachable in headless Chromium, which uses overlay scrollbars. Measured, not assumed:
+forcing `::-webkit-scrollbar` on the root scroller still reports a gutter of zero.
+
+## 2026-08-29
+
 ### Changed — `umbra/vanilla` runs the director, and the recorded divergence closes
 
 `bind-dialog.ts` hand-wired the nine lifecycle steps: its own phase key, its own detachment array,

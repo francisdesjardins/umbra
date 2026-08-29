@@ -102,3 +102,53 @@ export function MoveFocusHarness({ nested = false }: { readonly nested?: boolean
     </>
   );
 }
+
+/**
+ * A **non-modal** panel with nothing focusable in it, and a page control to step from.
+ *
+ * Two things the modal harness cannot ask. A modal keeps the keyboard, so there is no stepping
+ * from outside; and a dialog whose content takes no focus at all is the one shape where the walk
+ * has nothing to answer with.
+ */
+export function MoveFocusEmptyHarness({ empty }: { readonly empty: boolean }) {
+  const [took, setTook] = useState<string>('—');
+
+  const panel = useDialog<void, 'done'>({
+    id: 'move-focus-empty',
+    nonModal: true,
+    ariaLabel: 'Empty panel',
+    render: () => {
+      return empty ? <p>Nothing to focus in here.</p> : <button data-testid="only">Only</button>;
+    },
+  });
+
+  const { handle } = panel;
+
+  useEffect(() => {
+    const walk = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown') {
+        setTook(String(handle.moveFocus('next')));
+      }
+    };
+    window.addEventListener('keydown', walk);
+    return () => {
+      window.removeEventListener('keydown', walk);
+    };
+  }, [handle]);
+
+  return (
+    <>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void panel.open();
+        }}
+        type="button"
+      >
+        Open
+      </button>
+      <span data-testid="took">{took}</span>
+      {panel.Dialog}
+    </>
+  );
+}
