@@ -11,6 +11,42 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Changed — the component coverage number stops lying about which engine ran
+
+Asked why the number came from Chromium alone, and there is no answer in the repo: nothing
+documents it, the report already sums counters per file across every run it finds, and the founding
+commit (2026-08-10) was an experiment whose scope was "the component project". **One engine was
+inherited, not decided.**
+
+It made the number wrong in a specific direction. A line only WebKit reaches — the caret restore, the
+opener a clicked button never gives — is perfectly tested and was counted as missed. Measured by
+running all five browser projects and diffing: **six lines** in `dialog-lifecycle.ts` and
+`attach-focus.ts`, worth 0.28 points, for twice the wall clock on a command nobody runs in CI. Worth
+it: a coverage report whose misses are half real and half artefact is one nobody can act on.
+
+`component-focus` stays out. It needs a single worker, and serialising 1,341 tests to reach a handful
+of lines is the trade that is not worth it.
+
+### Corrected — scroll-lock's compensation is not covered by an existing test
+
+Yesterday's entry said `scroll-lock.ts`'s compensation branch was "already covered by an existing
+test and unreachable in headless Chromium". The second half is right and the first is not, which the
+multi-engine run above proved by failing to rescue those four lines.
+
+The existing test guards its assertion with `if (measured.published > 0)`, and that condition is
+never true in a component test — measured on all three engines. The page Playwright mounts into does
+not scroll the document: with `overflow-y: scroll` forced the gutter is permanently reserved, so the
+lock reclaims nothing (compensation zero by the table on `computeScrollCompensation`); without it the
+document never overflows, whatever the content height, because the mount container scrolls instead.
+Firefox is the only engine that produces a space-taking gutter at all, and only in the first shape.
+
+So the branch is genuinely unexercised in the browser, and that is why `computeScrollCompensation`
+and `compensationPadding` were extracted as pure functions in the first place — the arithmetic is
+unit-tested, and the file already says the browser cannot reproduce a classic gutter. What is left
+untested is the wiring between them, which nothing available here can reach.
+
+## 2026-08-29
+
 ### Added — six contracts nothing was asking for
 
 Coverage came up, and the first useful thing was that **neither number is the question**. The two
