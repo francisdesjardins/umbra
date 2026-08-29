@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { dialogAttributes, isBackdropClick, setDialogAttributes } from '../dialog-props.js';
+import {
+  dialogAttributes,
+  isBackdropClick,
+  setDialogAttributes,
+  createBackdropPressGuard,
+} from '../dialog-props.js';
 
 // The attribute table both bindings spread onto their `<dialog>`. `data-dialog-id` and
 // `data-dialog-type` are a *contract* — user-land CSS reaches dialogs through them. The aria fields
@@ -186,5 +191,42 @@ test.describe('isBackdropClick', () => {
         `${String(point.clientX)},${String(point.clientY)} is on the edge`
       ).toBe(false);
     }
+  });
+});
+
+test.describe('createBackdropPressGuard', () => {
+  // The half a click cannot answer: it fires on the ancestor the press and the release share, so a
+  // drag out of the content reports the dialog and reads as a press on the backdrop.
+  const dialog = { id: 'dialog' };
+  const content = { id: 'content' };
+
+  test('a press on the dialog itself is a press on the backdrop', () => {
+    const guard = createBackdropPressGuard();
+    guard.press({ target: dialog, currentTarget: dialog });
+
+    expect(guard.take()).toBe(true);
+  });
+
+  test('a press on the content is not', () => {
+    const guard = createBackdropPressGuard();
+    guard.press({ target: content, currentTarget: dialog });
+
+    expect(guard.take()).toBe(false);
+  });
+
+  test('one press answers for one click', () => {
+    // Consumed rather than read, so a second click with no press of its own dismisses nothing.
+    const guard = createBackdropPressGuard();
+    guard.press({ target: dialog, currentTarget: dialog });
+
+    expect(guard.take()).toBe(true);
+    expect(guard.take()).toBe(false);
+  });
+
+  test('a click that never had a press behind it answers no', () => {
+    // A scripted `.click()`, or the one a keyboard activation synthesises.
+    const guard = createBackdropPressGuard();
+
+    expect(guard.take()).toBe(false);
   });
 });

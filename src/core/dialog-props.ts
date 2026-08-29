@@ -141,6 +141,45 @@ export type BackdropDialog = {
 };
 
 /**
+ * Remembers whether the press that a backdrop click answers for landed on the backdrop too.
+ *
+ * A `click` fires on the common ancestor of the press and the release, so a drag from the content
+ * out onto the backdrop reports the `<dialog>` as its target and reads exactly like a press on the
+ * backdrop — which dismissed a dialog the reader was only selecting text in. WCAG 2.5.2 asks the
+ * same of the other direction, and there the release coordinates already answer.
+ *
+ * A binding owns one of these per dialog: it feeds `press` from `pointerdown` and hands `take`'s
+ * answer to {@link shouldDismissOnBackdropClick}.
+ *
+ * @internal
+ */
+export function createBackdropPressGuard() {
+  let onBackdrop = false;
+
+  return {
+    /**
+     * Record where a press landed — the same target test the click makes, one event earlier.
+     *
+     * `unknown` rather than `EventTarget`, for {@link BackdropClickEvent}'s reason narrowed further:
+     * identity is the whole of what is read, so the check runs in Node over two plain objects.
+     */
+    press: (event: { readonly currentTarget: unknown; readonly target: unknown }): void => {
+      onBackdrop = event.target === event.currentTarget;
+    },
+    /**
+     * Whether the press this click answers for was on the backdrop — and forget it, so one press
+     * answers for one click and a click arriving with no press behind it (a scripted one, a
+     * keyboard-activated button) is not a dismissal.
+     */
+    take: (): boolean => {
+      const was = onBackdrop;
+      onBackdrop = false;
+      return was;
+    },
+  };
+}
+
+/**
  * Whether this click landed on the backdrop rather than in the dialog.
  *
  * Two questions, and the order matters. A real backdrop click targets the `<dialog>` itself;

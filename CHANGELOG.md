@@ -9,6 +9,32 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-29
+
+### Fixed — the modal backdrop answers the pointer pair too
+
+Yesterday's entry said a backdrop click "was always decided on `click` and needed nothing." That was
+half right, and the wrong half is the interesting one. Measured on Chromium and WebKit:
+
+```
+inside -> backdrop:  closed    <- a drag out of the dialog dismissed it
+backdrop -> inside:  open      <- this direction was already fine
+```
+
+A `click` fires on the **ancestor the press and the release share**. Press inside the content, drag
+out past the edge, release: the click reports the `<dialog>` itself, which is exactly what a press on
+the backdrop reports — so the release alone cannot tell them apart, and a dialog went away under a
+text selection. The reverse direction was fine only by accident: the geometry reads the release
+coordinates, which land inside the box.
+
+`createBackdropPressGuard` records where the press landed and the click consumes it, so one press
+answers for one click and a click with no press behind it — a scripted one, a keyboard-activated
+button — is not a dismissal.
+
+**Found by asking where else the same shape was hiding**, which is the answer to the question the
+close-ring bug raised: one outcome, several routes, only one of them tested. Both dismissal surfaces
+now carry all three sequences, on all three engines.
+
 ## 2026-08-28
 
 ### Fixed — a dismissal you changed your mind about no longer happens

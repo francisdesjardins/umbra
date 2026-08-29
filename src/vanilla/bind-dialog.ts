@@ -13,7 +13,11 @@ import {
   syncCloseSequence,
   syncLabellingDiagnostics,
 } from '../core/attach-lifecycle.js';
-import { dialogAttributes, setDialogAttributes } from '../core/dialog-props.js';
+import {
+  dialogAttributes,
+  setDialogAttributes,
+  createBackdropPressGuard,
+} from '../core/dialog-props.js';
 import {
   createDialogRuntime,
   resolveDialogOptions,
@@ -154,9 +158,15 @@ export function bindDialog<TData = void, TReason extends string = string>(
     }),
   });
 
+  const backdropPress = createBackdropPressGuard();
+  const handleDialogPointerDown = (event: PointerEvent) => {
+    backdropPress.press(event);
+  };
+
   const handleDialogClick = (event: MouseEvent) => {
     if (
       shouldDismissOnBackdropClick(event, {
+        pressedOnBackdrop: backdropPress.take(),
         dialog,
         store,
         engine,
@@ -168,6 +178,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
       answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
     }
   };
+  dialog.addEventListener('pointerdown', handleDialogPointerDown);
   dialog.addEventListener('click', handleDialogClick);
 
   // No render and no signal here, so the store is the clock: attachments rebuild when the phase or
@@ -356,6 +367,7 @@ export function bindDialog<TData = void, TReason extends string = string>(
       detach();
     }
     detachments = [];
+    dialog.removeEventListener('pointerdown', handleDialogPointerDown);
     dialog.removeEventListener('click', handleDialogClick);
     focus.destroy();
     teardownDialog(store, { manager, dialogId, dialog, onError: options.onError });

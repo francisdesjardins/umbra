@@ -11,7 +11,11 @@ import { runDeclarationWindow } from '../actions/action-engine.js';
 import { createActionFactory } from '../core/action-factory.js';
 import type { RegisteredDialogId } from '../core/registry.js';
 import type { RegisteredOptions, RegisteredReturn } from '../core/registered-types.js';
-import { DIALOG_CONTENT_STYLE, dialogAttributes } from '../core/dialog-props.js';
+import {
+  DIALOG_CONTENT_STYLE,
+  dialogAttributes,
+  createBackdropPressGuard,
+} from '../core/dialog-props.js';
 import { createDialogDirector } from '../core/dialog-director.js';
 import {
   createDialogRuntime,
@@ -116,9 +120,9 @@ export function useDialog<TData = void, TReason extends string = string>(
 
     const runtime = createDialogRuntime<TData, TReason>(dialogId, getDialog);
 
-    return { ...runtime, getDialog, setDialog };
+    return { ...runtime, backdropPress: createBackdropPressGuard(), getDialog, setDialog };
   });
-  const { store, engine, getDialog, setDialog, open, openAndWait, handle } = init;
+  const { backdropPress, store, engine, getDialog, setDialog, open, openAndWait, handle } = init;
 
   // Kept likewise: the director remembers each step's attachment and where opening focus landed.
   const [director] = useState(() => {
@@ -232,6 +236,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     }
     if (
       shouldDismissOnBackdropClick(event, {
+        pressedOnBackdrop: backdropPress.take(),
         dialog,
         store,
         engine,
@@ -275,6 +280,7 @@ export function useDialog<TData = void, TReason extends string = string>(
         role,
       })}
       onClick={handleBackdropClick}
+      onPointerDown={backdropPress.press}
       style={getDialogAnimationStyles(snap.phase, { animation, customStyle: styleProp, placement })}
     >
       {/* Content wrapper — see `DIALOG_CONTENT_STYLE`, which both bindings read. */}

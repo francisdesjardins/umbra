@@ -277,6 +277,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
         isNonModal: true,
         dismissOnBackdropClick: true,
         dismissWhilePreparing: true,
+        pressedOnBackdrop: true,
       })
     ).toBe(false);
   });
@@ -295,6 +296,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
         store,
         isNonModal: false as const,
         dismissWhilePreparing: true,
+        pressedOnBackdrop: true,
         dismissOnBackdropClick: undefined,
       };
 
@@ -335,6 +337,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
           isNonModal: false,
           dismissOnBackdropClick: true,
           dismissWhilePreparing: true,
+          pressedOnBackdrop: true,
         })
       ).toBe(true);
     } finally {
@@ -360,6 +363,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
           isNonModal: false,
           dismissOnBackdropClick: true,
           dismissWhilePreparing: true,
+          pressedOnBackdrop: true,
         })
       ).toBe(false);
     } finally {
@@ -378,6 +382,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
         isNonModal: false,
         dismissOnBackdropClick: true,
         dismissWhilePreparing: true,
+        pressedOnBackdrop: true,
       })
     ).toBe(false);
   });
@@ -397,6 +402,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
         isNonModal: false as const,
         dismissOnBackdropClick: true,
         dismissWhilePreparing: true,
+        pressedOnBackdrop: true,
       };
 
       // Inside the box, and on the element: not a backdrop click.

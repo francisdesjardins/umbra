@@ -250,7 +250,8 @@ export type DialogVariant =
        * The **whole click**: the press outside arms the dismissal and the release decides it, so a
        * press you drag back into the panel before letting go changes nothing — and neither does one
        * that starts inside and ends out on the page. WCAG 2.5.2 asks for the first of those; the
-       * second is why this is not simply a `click` listener.
+       * second is why this is not simply a `click` listener. `dismissOnBackdropClick` answers the
+       * same pair.
        *
        * Suppressed while an action is running, and — unless `dismissWhilePreparing` — while
        * `prepare` is still preparing; both read at the release, so an action that starts under the

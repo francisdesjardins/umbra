@@ -215,24 +215,34 @@ export type BackdropDismissOptions = {
   readonly isNonModal: boolean;
   readonly dismissOnBackdropClick: boolean | undefined;
   readonly dismissWhilePreparing: boolean;
+  /** Whether the press this click answers for landed on the backdrop — `createBackdropPressGuard`. */
+  readonly pressedOnBackdrop: boolean;
 };
 
 /**
  * Whether this click should dismiss the dialog — the full chain, in order.
  *
- * Four questions, and each one exists: a non-modal dialog has no backdrop at all; dismissal is
+ * Five questions, and each one exists: a non-modal dialog has no backdrop at all; dismissal is
  * opt-out without actions and opt-in with them (a dialog offering buttons wants to be dismissed
- * through one); the shared gate covers phase, `prepare` and a running action; and only then does
- * the geometry decide whether the pointer actually landed outside the box.
+ * through one); the shared gate covers phase, `prepare` and a running action; the press must have
+ * landed on the backdrop too, since a click reports the ancestor the press and release share; and
+ * only then does the geometry decide whether the pointer actually landed outside the box.
  */
 export function shouldDismissOnBackdropClick(
   event: BackdropClickEvent,
   options: BackdropDismissOptions
 ): boolean {
-  const { dialog, store, engine, isNonModal, dismissOnBackdropClick, dismissWhilePreparing } =
-    options;
+  const {
+    dialog,
+    store,
+    engine,
+    isNonModal,
+    dismissOnBackdropClick,
+    dismissWhilePreparing,
+    pressedOnBackdrop,
+  } = options;
 
-  if (isNonModal) {
+  if (isNonModal || !pressedOnBackdrop) {
     return false;
   }
 

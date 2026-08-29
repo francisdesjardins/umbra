@@ -9,6 +9,7 @@ import {
   DIALOG_CONTENT_STYLE,
   dialogAttributes,
   setDialogAttributes,
+  createBackdropPressGuard,
 } from '../core/dialog-props.js';
 import { createDialogDirector } from '../core/dialog-director.js';
 import {
@@ -203,10 +204,16 @@ export function useDialog<TData = void, TReason extends string = string>(
     });
   });
 
+  const backdropPress = createBackdropPressGuard();
+  dialog.addEventListener('pointerdown', (event: PointerEvent) => {
+    backdropPress.press(event);
+  });
+
   // The decision is `dialog-runtime.ts`'s — the same call React's binding makes from its `onClick`.
   dialog.addEventListener('click', (event: MouseEvent) => {
     if (
       shouldDismissOnBackdropClick(event, {
+        pressedOnBackdrop: backdropPress.take(),
         dialog,
         store,
         engine,

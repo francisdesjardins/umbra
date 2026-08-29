@@ -1708,7 +1708,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'Pointer Cancellation',
     level: 'A',
     state: 'works',
-    why: '`dismissOnClickOutside` answers the **pair**, not the press: the pointer going down outside only arms the dismissal, and the release decides it. Measured before the change and red on all three engines — a press outside a panel, dragged back in and released, had already closed it, with no up-reversal and nothing to abort. Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a drag *out* of the panel as a press on the page; that direction is the second half of the criterion and is pinned as its own case. The gates are read at the release rather than the press, so the gesture is judged when it finishes and an action starting under it still suppresses the dismissal. A backdrop click was always decided on `click` and needed nothing.',
+    why: '`dismissOnClickOutside` answers the **pair**, not the press: the pointer going down outside only arms the dismissal, and the release decides it. Measured before the change and red on all three engines — a press outside a panel, dragged back in and released, had already closed it, with no up-reversal and nothing to abort. Deliberately not a move to `click`, which fires on the common ancestor of down and up and so reads a drag *out* of the panel as a press on the page; that direction is the second half of the criterion and is pinned as its own case. The gates are read at the release rather than the press, so the gesture is judged when it finishes and an action starting under it still suppresses the dismissal. The modal backdrop needed the same repair in the other direction, and the reason it was missed is instructive: a `click` fires on the **ancestor the press and the release share**, so a drag from the content out past the edge reports the `<dialog>` itself and reads exactly like a press on the backdrop — a dialog dismissed under a text selection. `createBackdropPressGuard` records where the press landed and the click consumes it, so one press answers for one click; the reverse direction was already right, since the geometry reads the release.',
     references: [
       {
         file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
@@ -1717,6 +1717,10 @@ export const WCAG_ROWS: readonly WcagRow[] = [
       {
         file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
         title: 'a press inside released outside leaves it open too',
+      },
+      {
+        file: 'src/core/__tests__/pointer-cancellation.ct.tsx',
+        title: 'a press inside the content released on the backdrop leaves it open',
       },
     ],
   },
