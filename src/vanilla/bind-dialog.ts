@@ -1,18 +1,6 @@
 import { createActionFactory } from '../core/action-factory.js';
 import type { RegisteredDialogId } from '../core/registry.js';
-import { attachClickOutside } from '../core/attach-click-outside.js';
-import { attachFocusContainment } from '../core/attach-focus-containment.js';
-import { createFocusCoordinator } from '../core/attach-focus.js';
-import {
-  attachDialogCancel,
-  attachDialogKeydown,
-  attachWindowDismissKey,
-} from '../core/attach-keydown.js';
-import {
-  syncOpenSequence,
-  syncCloseSequence,
-  syncLabellingDiagnostics,
-} from '../core/attach-lifecycle.js';
+import { createDialogDirector } from '../core/dialog-director.js';
 import {
   dialogAttributes,
   setDialogAttributes,
@@ -33,7 +21,6 @@ import {
 } from '../utils/animation-utils.js';
 import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
-import type { DialogDomContext } from '../core/attach-types.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, DialogAnimation } from '../core/types.js';
 import type {
@@ -181,17 +168,11 @@ export function bindDialog<TData = void, TReason extends string = string>(
   dialog.addEventListener('pointerdown', handleDialogPointerDown);
   dialog.addEventListener('click', handleDialogClick);
 
-  // No render and no signal here, so the store is the clock: attachments rebuild when the phase or
-  // `prepare`'s progress moves, the dependency list the other two bindings hand their effects.
-  const focus = createFocusCoordinator({ store, getDialog, dialogId, manager }, { engine });
+  // No render and no signal here, so the store is the clock: the director rebuilds what the phase or
+  // `prepare`'s progress moved, off the pass the other two bindings hand their effects.
+  const director = createDialogDirector({ store, getDialog, dialogId, manager, engine });
 
   let appliedStyle: DialogStyle | undefined;
-  let detachments: (() => void)[] = [];
-  let attachedFor = '';
-
-  const domContext = (phase: DialogSnapshot['phase']): DialogDomContext => {
-    return { store, getDialog, dialogId, phase, manager };
-  };
 
   const sync = () => {
     const snapshot = store.getSnapshot();
@@ -199,7 +180,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
     // `aria-busy` is the only one of these that moves.
     writeAttributes();
 
-    // Styles first, so the exit/entrance state is on the element before `syncOpenSequence` shows it.
+    // Styles first, and it is a placement constraint rather than a preference: `director.sync` shows
+    // the element, so the exit/entrance state has to be on it by then.
     appliedStyle = applyStyle(dialog, {
       next: getDialogAnimationStyles(snapshot.phase, {
         animation,
@@ -209,56 +191,20 @@ export function bindDialog<TData = void, TReason extends string = string>(
       previous: appliedStyle,
     });
 
-    const key = `${snapshot.phase}:${String(snapshot.isPreparing)}`;
-    if (key !== attachedFor) {
-      attachedFor = key;
-      for (const detach of detachments) {
-        detach();
-      }
-
-      const ctx = domContext(snapshot.phase);
-      const keydownOptions = {
-        isPreparing: snapshot.isPreparing,
-        onKeyDown: options.onKeyDown,
-        dismissKey: resolved.dismissKey,
-        engine,
-        nonModal: resolved.isNonModal,
-        dismissWhilePreparing: resolved.dismissWhilePreparing,
-        onDismissRequest: options.onDismissRequest,
-      };
-
-      detachments = [
-        attachDialogKeydown(ctx, keydownOptions),
-        attachDialogCancel(ctx, keydownOptions),
-        attachWindowDismissKey(ctx, keydownOptions),
-        attachClickOutside(ctx, {
-          dismissOnClickOutside: resolved.dismissOnClickOutside,
-          dismissWhilePreparing: resolved.dismissWhilePreparing,
-          engine,
-          onDismissRequest: options.onDismissRequest,
-        }),
-        attachFocusContainment(ctx, { containFocus: resolved.containFocus }),
-        syncCloseSequence(ctx, {
-          onError: options.onError,
-          nonModal: resolved.isNonModal,
-          primaryProperty,
-          exitDuration,
-        }),
-        focus.sync(snapshot.phase),
-      ].filter((detach) => {
-        return detach !== undefined;
-      });
-    }
-
-    // Guarded internally on `phase === 'opening'` and `!dialog.open`, so every notification is safe.
-    syncOpenSequence(domContext(snapshot.phase), {
+    director.sync({
+      phase: snapshot.phase,
+      isPreparing: snapshot.isPreparing,
       prepare: options.prepare,
       onError: options.onError,
+      onKeyDown: options.onKeyDown,
       nonModal: resolved.isNonModal,
-    });
-
-    syncLabellingDiagnostics(domContext(snapshot.phase), {
-      isPreparing: snapshot.isPreparing,
+      primaryProperty,
+      exitDuration,
+      dismissKey: resolved.dismissKey,
+      dismissWhilePreparing: resolved.dismissWhilePreparing,
+      onDismissRequest: options.onDismissRequest,
+      containFocus: resolved.containFocus,
+      dismissOnClickOutside: resolved.dismissOnClickOutside,
     });
   };
 
@@ -362,14 +308,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
   };
 
   const destroy = () => {
+    // Unsubscribed first: `teardownDialog` notifies, and a `sync` running from inside it would find
+    // a moved phase and rebuild every step the director just tore down.
     unsubscribe();
-    for (const detach of detachments) {
-      detach();
-    }
-    detachments = [];
+    director.destroy();
     dialog.removeEventListener('pointerdown', handleDialogPointerDown);
     dialog.removeEventListener('click', handleDialogClick);
-    focus.destroy();
+    // After the detachments, or the armed `transitionend` finalizes a second time and `onClose`
+    // fires twice.
     teardownDialog(store, { manager, dialogId, dialog, onError: options.onError });
     // Destroyed mid-`prepare`, nothing else would ever clear `aria-busy` off the caller's element.
     writeAttributes();

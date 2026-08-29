@@ -11,6 +11,32 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Changed — `umbra/vanilla` runs the director, and the recorded divergence closes
+
+`bind-dialog.ts` hand-wired the nine lifecycle steps: its own phase key, its own detachment array,
+its own focus coordinator, and a word-for-word copy of the seven keydown fields. That was recorded
+rather than accidental — `wiring-order.test.ts` carried it in `UNRECONCILED` with the honest note
+that moving it had been run green on three engines and taken no further. **The decision is reversed
+here**, and the reason it could be is that the open question finally got measured instead of argued.
+
+The question was `syncOpenSequence`, which the director runs **first** and the controller ran
+**last** — so `showModal()` now happens before the focus coordinator is armed. That changed which
+path delivers the opening focus: the controller used to hear the `focusin` that `showModal()` fires,
+set `preferred`, and never reach the floor; it now falls to `focusFirstAvailable` like the two hook
+bindings. Both land on the first focusable, which the CT already asserted — but it is measured now,
+on three engines plus the focus-serialised project, and the matrix cell that recorded the divergence
+says so rather than describing a controller that no longer exists.
+
+`sync()` becomes three gestures and `destroy()` six lines, of which three still carry an ordering
+invariant — so all three are written down rather than one. `applyStyle` staying ahead of
+`director.sync` was guaranteed by source order and is now a placement constraint nothing gates,
+which the comment there says in those words.
+
+The file goes from 389 lines to 335, and the controller stops being the outlier of the three
+bindings — it is now the smallest.
+
+## 2026-08-29
+
 ### Added — the dismissal paths are driven by a finger too
 
 The last of the three thin axes the cross-route audit named, and the one worth paying for: **nothing

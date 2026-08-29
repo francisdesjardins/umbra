@@ -142,9 +142,9 @@ The short list, and the measure of whether the core is doing its job. A binding:
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys,
 placement, slide geometry, the action factory, the default animation — is shared.
 
-**That list is one file per binding, and that file is the measure**: `react/use-dialog.tsx` and
-`solid/use-dialog.ts` are a little over 200 code lines each, `vanilla/bind-dialog.ts` about 260, none
-of it logic. Say which file — the folder is not the same number, the outlet, the provider,
+**That list is one file per binding, and that file is the measure**: the three sit within a dozen
+code lines of each other, none of it logic — and the controller is now the _smallest_ of them, which
+is what moving it onto the director bought. Say which file — the folder is not the same number, the outlet, the provider,
 `useLookup` and the templates roughly doubling it as surface rather than lifecycle.
 
 A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the caller's
