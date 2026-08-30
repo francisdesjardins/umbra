@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dialogPlacement, isContainedArrangement, isPortaledTarget } from '../placement.js';
+import { dialogPlacement, isContainedArrangement, namesAPortal } from '../placement.js';
 
 test.describe('dialogPlacement', () => {
   test('a modal dialog is positioned by the top layer, so it needs neither host nor styles', () => {
@@ -98,13 +98,13 @@ test.describe('reading a portal target', () => {
   };
 
   test('true and a host getter both portal', () => {
-    expect(isPortaledTarget(true)).toBe(true);
-    expect(isPortaledTarget(host)).toBe(true);
+    expect(namesAPortal(true)).toBe(true);
+    expect(namesAPortal(host)).toBe(true);
   });
 
   test('false and nothing leave the dialog where it was declared', () => {
-    expect(isPortaledTarget(false)).toBe(false);
-    expect(isPortaledTarget(undefined)).toBe(false);
+    expect(namesAPortal(false)).toBe(false);
+    expect(namesAPortal(undefined)).toBe(false);
   });
 
   test('contained is non-modal and unportaled, and nothing else', () => {

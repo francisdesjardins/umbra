@@ -74,10 +74,10 @@ export function MoveFocusHarness({ nested = false }: { readonly nested?: boolean
   useEffect(() => {
     const walk = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
-        setTook(String(handle.moveFocus('next')));
+        setTook(String(handle.moveFocus('forwards')));
       }
       if (event.key === 'ArrowUp') {
-        setTook(String(handle.moveFocus('previous')));
+        setTook(String(handle.moveFocus('backwards')));
       }
     };
     window.addEventListener('keydown', walk);
@@ -127,7 +127,7 @@ export function MoveFocusEmptyHarness({ empty }: { readonly empty: boolean }) {
   useEffect(() => {
     const walk = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
-        setTook(String(handle.moveFocus('next')));
+        setTook(String(handle.moveFocus('forwards')));
       }
     };
     window.addEventListener('keydown', walk);

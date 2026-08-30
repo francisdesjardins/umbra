@@ -41,6 +41,7 @@ last row was found by a reader noticing a comment used a word to mean something 
 | A caller who may refuse        | **`on…Request`**              | a plain `on…` that reads a return value      |
 | A flag covering every item     | **the name states the scope** | hanging it off the object that names one     |
 | Which edge a panel slides from | **`direction`**               | anything else calling itself a direction     |
+| A step along the tab order     | **`forwards` / `backwards`**  | `next` / `previous`, and never `direction`   |
 
 **A per-item flag is one word; an aggregate names its scope.** `action.isRunning(reason)` is one word
 because the argument says whose it is; `hasRunningAction` says its own, and keeps that name on all
@@ -49,7 +50,8 @@ factory to move it to, so one fact would end up with two names across the seam b
 
 **`direction` is the slide axis and nothing else.** `SlideDirection` is public and means one of four
 edges, so the word is spent: Tab order is _forwards / backwards_, an assertion's positive and
-negative cases are its **halves**.
+negative cases are its **halves**. `handle.moveFocus(step)` is the public surface that has to spell
+it — a step is `'forwards'` or `'backwards'`, which is also what `focusStep` calls its boolean.
 
 **A callback's name says how it refuses**, and there are exactly three answers. **`on…Request` asks,
 and the answer is the return value** — `onOpenRequest` through `request.refuse(reason)`,

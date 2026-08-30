@@ -96,7 +96,7 @@ export type DialogHandle<TData = void, TReason extends string = string> = {
    * wrong, and draws no `:focus-visible` ring — this move announces itself like every other the
    * library makes.
    *
-   * @param direction - `'next'` walks document order, `'previous'` walks it backwards.
+   * @param step - `'forwards'` walks document order, `'backwards'` walks it the other way.
    * @returns Whether anything took the focus — `false` for a dialog with nothing focusable in it,
    *   and for one that is not open.
    *
@@ -106,11 +106,11 @@ export type DialogHandle<TData = void, TReason extends string = string> = {
    *
    * // A controller's d-pad, polled: the Gamepad API has no events to listen for.
    * if (pad.buttons[13]?.pressed === true) {
-   *   dialog.handle.moveFocus('next');
+   *   dialog.handle.moveFocus('forwards');
    * }
    * ```
    */
-  readonly moveFocus: (direction: 'next' | 'previous') => boolean;
+  readonly moveFocus: (step: 'forwards' | 'backwards') => boolean;
 };
 
 /**

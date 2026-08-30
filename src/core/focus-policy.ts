@@ -111,7 +111,7 @@ export function focusFirstAvailable(dialog: HTMLDialogElement, fromEnd: boolean)
  * @returns Whether anything took it; `false` on a dialog with nothing focusable in it.
  * @internal
  */
-export function focusStep(dialog: HTMLDialogElement, forward: boolean): boolean {
+export function focusStep(dialog: HTMLDialogElement, forwards: boolean): boolean {
   const candidates = queryAllOwn(dialog, FOCUSABLE).filter((element) => {
     return element.getAttribute(FOCUS_GUARD_ATTRIBUTE) === null;
   });
@@ -126,10 +126,10 @@ export function focusStep(dialog: HTMLDialogElement, forward: boolean): boolean 
   // Nothing inside holds it, so there is no step to take from anywhere — the end the caller is
   // walking towards is the answer.
   if (from === -1) {
-    return focusFirstAvailable(dialog, !forward);
+    return focusFirstAvailable(dialog, !forwards);
   }
 
-  const step = forward ? 1 : -1;
+  const step = forwards ? 1 : -1;
   for (let taken = 1; taken <= length; taken += 1) {
     const candidate = candidates[(((from + taken * step) % length) + length) % length];
     candidate?.focus(SHOW_THE_RING);

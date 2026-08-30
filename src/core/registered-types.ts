@@ -42,7 +42,7 @@ export type RegisteredHandle<TId> = {
     ...args: CloseArgs<TId, TReason>
   ) => void;
   /** Move the keyboard inside this dialog — see {@link DialogHandle.moveFocus}. */
-  readonly moveFocus: (direction: 'next' | 'previous') => boolean;
+  readonly moveFocus: (step: 'forwards' | 'backwards') => boolean;
 };
 
 /**

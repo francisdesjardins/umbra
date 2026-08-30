@@ -11,6 +11,27 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Changed — `moveFocus` spells its step the way the vocabulary already did
+
+`src/CLAUDE.md` carries a table of one-act-one-word decisions, and two of its rows say this
+outright: **`direction` is the slide axis and nothing else**, and **Tab order is forwards /
+backwards**. `handle.moveFocus(direction: 'next' | 'previous')` broke both, a day after the table
+said not to.
+
+`handle.moveFocus(step: 'forwards' | 'backwards')` now, matching `focusStep`'s own boolean, and the
+table gains the row that names the case so the next reader does not have to derive it from two
+others. Two smaller alignments in the same pass: `namesAPortal` rather than `isPortaledTarget`,
+because the value _is_ the target and asking whether a target is portaled parses wrong; and one
+comment that spent `direction` on a pointer gesture now says _the reverse gesture_.
+
+Nothing else moved. The audit that found this looked at every public option name against the table,
+and the rest hold — including the ones that read oddly on purpose: `nonModal` is a negative because
+the modal case is the default and the table spends **modal / non-modal** on exactly this, and
+`restoreFocusTo` is deliberately not an `on…` because that suffix is reserved for callbacks that
+refuse.
+
+## 2026-08-29
+
 ### Fixed — a slide panel portaled into your own host is placed like a portal
 
 Audited the three bindings for differences that belong in the core, the way the controller's wiring

@@ -1516,7 +1516,7 @@ function MoveFocusApp(): Built {
   createEffect(() => {
     const walk = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
-        dialog.handle.moveFocus('next');
+        dialog.handle.moveFocus('forwards');
       }
     };
     window.addEventListener('keydown', walk);

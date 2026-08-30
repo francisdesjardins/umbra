@@ -1661,7 +1661,7 @@ export function VanillaMoveFocusHarness() {
     // does not focus a clicked one — so the two engines would disagree about the starting point.
     const walk = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown') {
-        bound.handle.moveFocus('next');
+        bound.handle.moveFocus('forwards');
       }
     };
     window.addEventListener('keydown', walk);

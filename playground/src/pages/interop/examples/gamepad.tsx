@@ -179,7 +179,7 @@ function GamepadDriver({
     }
     // The d-pad, and the one thing the adapter cannot write itself: a synthetic `Tab` moves no
     // focus, and a hand-rolled scan reaches only the two buttons the count above compares against.
-    handle.moveFocus(press === 'down' ? 'next' : 'previous');
+    handle.moveFocus(press === 'down' ? 'forwards' : 'backwards');
   });
 
   return null;

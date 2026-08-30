@@ -146,7 +146,7 @@ export type BackdropDialog = {
  * A `click` fires on the common ancestor of the press and the release, so a drag from the content
  * out onto the backdrop reports the `<dialog>` as its target and reads exactly like a press on the
  * backdrop — which dismissed a dialog the reader was only selecting text in. WCAG 2.5.2 asks the
- * same of the other direction, and there the release coordinates already answer.
+ * same of the reverse gesture, and there the release coordinates already answer.
  *
  * A binding owns one of these per dialog: it feeds `press` from `pointerdown` and hands `take`'s
  * answer to {@link shouldDismissOnBackdropClick}.

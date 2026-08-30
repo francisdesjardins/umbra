@@ -7,7 +7,7 @@ import { DISMISS_REASON } from './dismiss-reason.js';
 import { finalizeDialogClose } from './finalize-close.js';
 import { focusStep } from './focus-policy.js';
 import { createDialogStore } from './dialog-store.js';
-import { dialogPlacement, isPortaledTarget, type DialogPlacement } from './placement.js';
+import { dialogPlacement, namesAPortal, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
@@ -78,9 +78,9 @@ export type ResolvedDialogOptions = {
  */
 export function resolveDialogOptions(options: UnresolvedDialogOptions): ResolvedDialogOptions {
   const isNonModal = options.nonModal ?? false;
-  // A host getter is a portal too, which is `isPortaledTarget`'s whole reason for existing — and
+  // A host getter is a portal too, which is `namesAPortal`'s whole reason for existing — and
   // the slide templates ask it the same way, so the two cannot disagree about one shape.
-  const isPortaled = isPortaledTarget(options.portal);
+  const isPortaled = namesAPortal(options.portal);
 
   return {
     isNonModal,
@@ -157,11 +157,11 @@ export function createDialogRuntime<TData = void, TReason extends string = strin
     close: (reason = DISMISS_REASON, data?: TData) => {
       store.close(reason, data);
     },
-    moveFocus: (direction) => {
+    moveFocus: (step) => {
       // A closed dialog has no controls to walk and `display: none` takes no focus, so the answer
       // is the same `false` a dialog with nothing focusable gives.
       const dialog = getDialog();
-      return dialog?.open === true ? focusStep(dialog, direction === 'next') : false;
+      return dialog?.open === true ? focusStep(dialog, step === 'forwards') : false;
     },
   };
 

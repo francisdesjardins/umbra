@@ -18,7 +18,7 @@ import type { PortalTarget } from './types.js';
  *
  * @internal
  */
-export function isPortaledTarget(portal: PortalTarget | undefined): boolean {
+export function namesAPortal(portal: PortalTarget | undefined): boolean {
   return portal !== undefined && portal !== false;
 }
 
@@ -35,7 +35,7 @@ export function isContainedArrangement(options: {
   readonly nonModal?: boolean | undefined;
   readonly portal?: PortalTarget | undefined;
 }): boolean {
-  return options.nonModal === true && !isPortaledTarget(options.portal);
+  return options.nonModal === true && !namesAPortal(options.portal);
 }
 
 /**
