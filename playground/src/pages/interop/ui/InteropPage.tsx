@@ -37,7 +37,7 @@ export const InteropPage = () => {
         <ExampleGrid columns={1}>
           <ExampleCard
             title="Driving a dialog from a controller"
-            description="The Gamepad API ships no events, so an adapter polls and reports edges itself. East closes through handle.close and South clicks whatever holds the keyboard — both plain public API. Walking the controls is the part that is not: a page-level adapter can only find what carries data-action-reason, and the reading region and the field are invisible to it."
+            description="The Gamepad API ships no events, so an adapter polls and reports edges itself. South — A on Xbox, Cross on PlayStation — clicks whatever holds the keyboard, so a dialog's own actions close it with their own reason; East calls handle.close directly. Both are plain public API. Walking the controls is the part that is not: a page-level adapter can only find what carries data-action-reason, and the reading region and the field are invisible to it."
             codeKey="gamepad"
             example={<GamepadExample />}
           />

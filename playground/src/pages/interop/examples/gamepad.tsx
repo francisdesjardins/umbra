@@ -7,11 +7,25 @@ import { useMessageDialog, type DialogHandle } from 'umbra/react';
 
 const DIALOG_ID = 'gamepad-panel';
 
-/** The standard-mapping indices this demo reads. A controller reports buttons by position. */
-const BUTTON = { east: 1, south: 0, up: 12, down: 13 } as const;
-
 /** What the adapter reports each frame, so the page can show what a press did. */
 type Press = 'east' | 'south' | 'up' | 'down';
+
+/**
+ * The standard-mapping indices this demo reads.
+ *
+ * Named by **position**, which is the API's own vocabulary and not pedantry: index 0 is the bottom
+ * button of the right cluster — A on Xbox, Cross on PlayStation, and **B on Nintendo**, where the
+ * letters are swapped. A constant called `A` would be wrong on a controller in the room.
+ */
+const BUTTON = { east: 1, south: 0, up: 12, down: 13 } as const;
+
+/** What each one is called on the pad in your hands, for the legend below. */
+const LABEL: Record<Press, string> = {
+  down: 'D-pad down',
+  east: 'East — B / Circle',
+  south: 'South — A / Cross',
+  up: 'D-pad up',
+};
 
 /**
  * Poll the Gamepad API and report edges.
@@ -67,10 +81,16 @@ export function GamepadExample() {
   const [pad, setPad] = useState<string | null>(null);
   const [last, setLast] = useState<string>('—');
   const [reach, setReach] = useState<string>('—');
+  const [result, setResult] = useState<string | null>(null);
 
-  const dialog = useMessageDialog({
+  // Reasons declared, so `onClose` narrows and a controller closing through `handle.close` is
+  // reported by the same door a button press comes through — which is the claim worth showing.
+  const dialog = useMessageDialog<void, 'cancel' | 'confirm'>({
     id: DIALOG_ID,
     ariaLabelledBy: `${DIALOG_ID}-title`,
+    onClose: (closeResult) => {
+      setResult(`Closed: ${closeResult.reason}`);
+    },
     render: ({ action, handle }) => {
       return (
         <MessageDialog.DefaultLayout>
@@ -128,10 +148,15 @@ export function GamepadExample() {
           ? 'No controller detected — connect one and press a button.'
           : `Reading: ${pad}`}
       </div>
+      <div data-testid="gamepad-legend">
+        {Object.values(LABEL).join(' · ')} — South clicks whatever holds the keyboard, so the
+        dialog&apos;s own actions close it with their own reason.
+      </div>
       <div data-testid="gamepad-last">Last press: {last}</div>
+      <div data-testid="gamepad-reason">Close reason: {result ?? '—'}</div>
       <div data-testid="gamepad-reach">Controls an outside adapter can reach: {reach}</div>
 
-      <ExampleLayout dialogs={dialog.Dialog} result={null}>
+      <ExampleLayout dialogs={dialog.Dialog} result={result}>
         <AppButton
           variant="contained"
           size="small"

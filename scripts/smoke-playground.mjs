@@ -273,11 +273,34 @@ const flows = {
       'and the control it lands on is visibly focused',
     ]);
 
+    // Index 0 is the bottom button of the right cluster — A on Xbox, Cross on PlayStation. It
+    // clicks whatever holds the keyboard, and the walk left that on Confirm, so this close comes
+    // through the action's own reason rather than through the adapter.
+    await tap(0);
+    await page.waitForTimeout(700);
+    const confirmed = (await page.getByTestId('gamepad-reason').textContent()) ?? '';
+    checks.push([
+      confirmed.includes('confirm'),
+      'south (A / Cross) activates the focused action',
+      confirmed,
+    ]);
+
+    await page.getByRole('button', { name: 'Open', exact: true }).click();
+    await page.waitForTimeout(700);
     await tap(1);
     await page.waitForTimeout(700);
     checks.push([
       !(await page.locator('dialog[data-dialog-id="gamepad-panel"]').isVisible()),
       'east closes the dialog through the public handle',
+    ]);
+
+    // The reason, not just the disappearance: a dialog that went away for some other cause looks
+    // identical, and `handle.close('cancel')` reporting `cancel` through `onClose` is the claim.
+    const dismissed = (await page.getByTestId('gamepad-reason').textContent()) ?? '';
+    checks.push([
+      dismissed.includes('cancel'),
+      'and reports its reason through onClose',
+      dismissed,
     ]);
     return checks;
   },

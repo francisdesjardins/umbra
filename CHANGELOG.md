@@ -11,6 +11,36 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Fixed — the controller example says what it closed with
+
+Reported from the page: the close reason was nowhere to be seen, so there was no way to tell whether
+the adapter worked. Fair, and it was a hole in the demo rather than in the library — the example
+carried no `onClose` and handed `ExampleLayout` a `null` result, so a dialog that went away for any
+reason looked the same as one closed through the handle.
+
+It now declares its reasons (`useMessageDialog<void, 'cancel' | 'confirm'>`, which is what the repo
+tells callers to do) and reports through `onClose`, on the page and in `yarn smoke`. The two
+mappings are asserted apart, because they close by different routes and only one of them is the
+adapter's:
+
+```
+south activates the focused action         Close reason: Closed: confirm
+east closes through the public handle      Close reason: Closed: cancel
+```
+
+South clicks whatever holds the keyboard — the walk leaves it on Confirm — so that close comes
+through the action's own reason. East is `handle.close('cancel')`. A check that only asserted the
+panel had gone would have passed for either, which is how the gap survived the first pass.
+
+**And the example now says which physical button that is.** Asked why pressing A did not appear
+anywhere: it does, as `south`. The Gamepad API names buttons by **position** because the letters
+move — index 0 is the bottom of the right cluster, A on Xbox, Cross on PlayStation and **B on
+Nintendo** — so a constant called `A` would be wrong on a controller in the room. The positional
+names stay and the page carries the legend, which is what was missing: naming a thing correctly and
+never saying what it is leaves the reader unable to test it.
+
+## 2026-08-29
+
 ### Changed — `moveFocus` spells its step the way the vocabulary already did
 
 `src/CLAUDE.md` carries a table of one-act-one-word decisions, and two of its rows say this
