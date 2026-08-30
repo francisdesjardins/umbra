@@ -123,4 +123,34 @@ test.describe('the agent instructions have a budget', () => {
 
     expect(broken).toEqual([]);
   });
+
+  test('every yarn script these files name is a script', () => {
+    // The other way a pointer rots, and the one prose hides best: a renamed script leaves the
+    // instruction reading perfectly and doing nothing. Found by hand once, so it is a gate now.
+    const SCRIPT = /`yarn ([a-z][\w:-]*)`/g;
+    // `JSON.parse` answers `any`, so the shape is asserted the way the matrix gate asserts it.
+    const manifest: { scripts: Record<string, unknown> } = JSON.parse(
+      readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8')
+    ) as { scripts: Record<string, unknown> };
+
+    /** Yarn's own verbs, which are not this package's to declare. */
+    const BUILT_IN = new Set(['add', 'dlx', 'info', 'install', 'node', 'run', 'set', 'workspace']);
+
+    const missing: string[] = [];
+    for (const doc of Object.keys(BUDGETS)) {
+      const text = readFileSync(resolve(REPO_ROOT, doc), 'utf8');
+      for (const match of text.matchAll(SCRIPT)) {
+        const name = match[1] ?? '';
+        if (!(name in manifest.scripts) && !BUILT_IN.has(name)) {
+          missing.push(`${doc} → yarn ${name}`);
+        }
+      }
+    }
+
+    // Guards the guard: a pattern that stopped matching passes on an empty list.
+    expect(
+      [...readFileSync(resolve(REPO_ROOT, 'CLAUDE.md'), 'utf8').matchAll(SCRIPT)].length
+    ).toBeGreaterThan(5);
+    expect(missing).toEqual([]);
+  });
 });

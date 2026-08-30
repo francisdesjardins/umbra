@@ -138,7 +138,7 @@ The short list, and the measure of whether the core is doing its job. A binding:
 3. calls `director.sync(pass)` from whatever it calls an effect and `director.destroy()` from
    whatever it calls a cleanup — the `attach*` functions and their order are the director's,
 4. writes the computed style (`getDialogAnimationStyles`) onto the element,
-5. calls `render` inside `engine.beginRender()` / `engine.endRender()`,
+5. calls `render` inside `runDeclarationWindow(engine, …)`, the wrapper over the declaration window,
 6. registers with the manager and unregisters on teardown.
 
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys,
@@ -150,9 +150,10 @@ is what moving it onto the director bought. Say which file — the folder is not
 `useLookup` and the templates roughly doubling it as surface rather than lifecycle.
 
 A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the caller's
-element, and drops 2 and 5: there is no render pass, so actions are declared by `bindAction` and
-retired by the unbind it returns rather than by a declaration window. Its driver is the store
-itself, there being no other clock — safe here precisely because there is no commit timing to race.
+element, and drops 5 — there is no render pass, so actions are declared by `bindAction` and
+retired by the unbind it returns rather than by a declaration window. It still does 2, against the
+store and the engine **directly**: its driver is the store itself, there being no other clock —
+safe here precisely because there is no commit timing to race.
 
 ### The two open knobs
 

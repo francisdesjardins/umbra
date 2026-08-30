@@ -9,6 +9,44 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-30
+
+### Fixed — six claims in the CLAUDE.md files that had stopped being true
+
+Raised as a process problem rather than a bug, and it was the right way round: these files get cited
+as evidence — several times in the last two days by me — and nothing had ever checked them against
+the code. A pass over every claim that could be verified mechanically found six that had rotted.
+
+- **"Every one of those has a `:ui` variant."** Not for the two coverage scripts, which have none.
+- **"Every relative import in `src/` carries a `.js` extension."** Ninety-three inside `__tests__`
+  do not, and nothing is wrong with that: `verify:package` scans `dist/`, which holds no tests. The
+  rule is about shipped source, and a reader taking it literally would "fix" ninety-three imports.
+- **Step 5 of what a binding does** named `engine.beginRender()` / `engine.endRender()`. No binding
+  calls them — both hook bindings call `runDeclarationWindow`, the wrapper that exists for exactly
+  this. A fourth-binding author would have reached for two methods instead of the one.
+- **"A controller … drops 2 and 5."** It drops 5. It does 2 — `bind-dialog.ts` subscribes to the
+  store _and_ the engine — and the next sentence already said so ("its driver is the store itself"),
+  so the paragraph contradicted itself.
+- **"No `as` casts."** True of shipped `src/` — zero — and not of the tests, where nine assert a
+  shape at a boundary `JSON.parse` and `globalThis` leave untyped. Stated absolutely, it reads as
+  nine violations. The gate added below needed one of those casts to be written at all.
+- **"A word budget, deliberately left with 10% of headroom. Spend it."** Measured: the root file is
+  at 99% of its cap and the set at 98% of the total. There is nothing left to spend, and the
+  instruction now says to trade a sentence out instead — which this entry's own edits did.
+
+**And one of the six is now a gate.** `doc-budget.test.ts` already checked that every path these
+files link to exists; it now checks that every `` `yarn <script>` `` they name is a script, Yarn's own
+verbs excepted. A renamed script leaves the instruction reading perfectly and doing nothing, which
+is the failure mode prose hides best.
+
+The rest of the sweep held, and is worth recording so the next pass starts narrower: the entry-point
+export tables, the four strict-TypeScript flags, every `tsc` call going through `typescript-7`, the
+React Compiler ban list and its `src/react/` scoping, the three attributes a button wrapper forwards,
+the absence of `useHotkey`, `StackPriority`, the debug log key, the `.c8rc.json` exclusion groups,
+coverage being absent from CI, the workspace names, the measured browser floor (`new CSSStyleSheet`,
+`toSorted`), and the six things the matrix gate is said to check — all true. One imprecision fixed on
+the way past: the environment line named two optional peers where `peerDependenciesMeta` marks three.
+
 ## 2026-08-29
 
 ### Fixed — the controller example says what it closed with

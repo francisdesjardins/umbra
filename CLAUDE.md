@@ -3,8 +3,8 @@
 Framework-agnostic dialog manager, with React, Solid and vanilla shipped as three bindings
 over it. No UI components exported; users bring their own.
 
-**Every `CLAUDE.md` carries a word budget, deliberately left with 10% of headroom. Spend it rather
-than shave prose to fit** — see [doc-budget.test.ts](src/__tests__/doc-budget.test.ts).
+**Every `CLAUDE.md` carries a word budget, and they are near full** — measure first, then trade a
+sentence out rather than raising a cap. See [doc-budget.test.ts](src/__tests__/doc-budget.test.ts).
 
 ## Entry points
 
@@ -73,7 +73,7 @@ yarn test:unit:coverage      # Unit tests with coverage (c8)
 yarn test:component:coverage # Component tests with coverage (istanbul, see below)
 ```
 
-Every one of those has a `:ui` variant that opens the Playwright UI.
+The three that are not coverage runs have a `:ui` variant that opens the Playwright UI.
 
 | Suffix        | Purpose                                 |
 | ------------- | --------------------------------------- |
@@ -108,7 +108,7 @@ made the number lie in a specific way: a line only WebKit reaches (the caret res
 clicked button never gives) is perfectly tested and was counted as missed. Measured: six such lines,
 0.28 points, for twice the wall clock on a command nobody runs in CI. `component-focus` is still
 out — it needs one worker, and serialising the whole run to reach a handful of lines is the trade
-that is not worth it. Measured 2026-08-30: **92.29% over 56 files**, against unit's **96.62%**. Never add them; re-measure both or neither — **and the
+that is not worth it. Measured 2026-08-30: **92.18% over 56 files**, against unit's **96.62%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points behind, which is why
 **`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one
@@ -153,7 +153,7 @@ by hand.
   the public-API exception is read, and the one seam it cannot close.
 - **No implicit returns**: every arrow function uses a block body with an explicit `return` (`arrow-body-style: ['error', 'always']`, `yarn lint:fix` auto-fixes)
 - **Optional props**: `| undefined` suffix (`onClose?: ((r: CloseResult) => void) | undefined`)
-- **Type safety**: No `as` casts — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening.
+- **Type safety**: No `as` casts in shipped `src/` — use `Extract<Source, Target>` for narrowing, `satisfies` to prevent widening. A test may assert a shape at an untyped boundary (`JSON.parse`, `globalThis`).
 - **`createStore` type arguments**: prefer none — annotate the initial snapshot and the builder's return and let inference do the rest, the way `createDialogStore` and the action engine do. Explicit arguments do resolve correctly (a builder is a function, so weak-type detection rules out the options overload before arity is consulted); that resolution is pinned by the overload assertions in [create-store.test.ts](src/store/__tests__/create-store.test.ts) rather than left to be rediscovered.
 
 ## Key Constraints
@@ -165,8 +165,9 @@ by hand.
 - **A dialog only answers for its own subtree**: a dialog opened from inside another renders its `<dialog>` in that one's tree, so every event bubbles through the dialog underneath. `utils/dialog-scope.ts` scopes keydown handling and hotkey dispatch — without it one Escape unwinds the whole stack.
 - **Actions are declared by use**: `action('confirm', handler)` inside `render` names the action and closes with `reason: 'confirm'`. No config, nothing to pass into `useDialog`.
 - **Declare the reasons**: `useDialog<TData, 'save' | 'cancel'>`, or name them once in `DialogRegistry` — `closesWith: 'save' | 'cancel'`, or `closesWith: { save: Doc; cancel: void }` to give each reason its own payload, which is then **required** where declared. The `TReason = string` default accepts any string, silently costing the typo-safety and the exhaustive `switch` in `onClose` that are the point of the design.
-- **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React ^19.0.0 and
-  Solid ^1.9.0 as optional peers, each required only by its own binding and neither by `./vanilla` |
+- **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React and
+  `react-dom` ^19.0.0 and Solid ^1.9.0 as the three optional peers, each required only by its own
+  binding and none by `./vanilla` |
   Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. **The peer ranges
   are the requirement, not this repo's `devDependencies`**, which sit far above them; quoting a dev
   pin asks for more than the package does. **The browser floor is measured** — the highest thing the
@@ -176,7 +177,7 @@ by hand.
   (`playground/`, private); one `yarn install` at the root installs both. **The published dependency
   list is the root manifest**, so anything the demo needs belongs in `playground/package.json` and
   never in the root, whose `dependencies` stay empty. Root `dev`/`playground:*` scripts delegate.
-- **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin, so published types can't drift from what `type-check` validates. **Every relative import in `src/` carries a `.js` extension** — `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext`, silently under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
+- **Declarations**: emitted by `tsc -p tsconfig.build.json`, not a Vite plugin, so published types can't drift from what `type-check` validates. **Every relative import in shipped `src/` carries a `.js` extension** (tests are exempt — nothing emits them) — `tsc` copies specifiers into the `.d.ts` verbatim and an extensionless one is invalid on `moduleResolution: node16`/`nodenext`, silently under `skipLibCheck`. `yarn verify:package` fails on any that slip through.
 - **TypeScript 7, and nothing beside it in the lint path**: every `tsc` call in `scripts` is
   `node node_modules/typescript-7/bin/tsc`, and `oxlint --type-aware` runs its type-aware half
   through **tsgolint**, built on the TS 7 compiler — so the linter and `tsc` are one generation.
