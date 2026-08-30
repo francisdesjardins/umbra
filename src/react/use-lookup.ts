@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { DialogId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
-import type { DialogManager, DialogManagerSnapshot } from '../manager/dialog-manager.js';
+import { lookupIn } from '../manager/lookup.js';
 import type { DialogInfo } from '../manager/types.js';
 
 /**
@@ -17,23 +17,6 @@ import type { DialogInfo } from '../manager/types.js';
  *   return <span>{info.isVisible ? 'Open' : 'Closed'}</span>;
  * }
  */
-function lookupIn(
-  id: string,
-  source: { readonly manager: DialogManager; readonly snapshot: DialogManagerSnapshot }
-): DialogInfo {
-  const { manager, snapshot } = source;
-  // Linear scan — n is always tiny (1-3 open dialogs)
-  const openDialog = snapshot.openDialogs.find((d) => {
-    return d.id === id;
-  });
-  if (openDialog) {
-    return openDialog;
-  }
-
-  // Closed or unregistered — derive from imperative lookup
-  return manager.lookup(id);
-}
-
 export function useLookup(id: DialogId): DialogInfo {
   const manager = useDialogManagerContext();
   // Server-readable for the reason on `useDialog`: nothing here asks the DOM anything.
@@ -43,9 +26,6 @@ export function useLookup(id: DialogId): DialogInfo {
     manager.getSnapshot
   );
 
-  // `snapshot` is passed rather than read inside, and it is the difference between working and
-  // silently freezing: the closed branch reads mutable state through `manager.lookup(id)`, so
-  // inline the compiler memoises on `manager` and `id`, neither of which moves when a dialog
-  // registers.
+  // `snapshot` is passed rather than read inside — see `lookupIn`.
   return lookupIn(id, { manager, snapshot });
 }

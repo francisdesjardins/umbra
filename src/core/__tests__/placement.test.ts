@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dialogPlacement } from '../placement.js';
+import { dialogPlacement, isContainedArrangement, isPortaledTarget } from '../placement.js';
 
 test.describe('dialogPlacement', () => {
   test('a modal dialog is positioned by the top layer, so it needs neither host nor styles', () => {
@@ -87,5 +87,36 @@ test.describe('the scrim a non-modal dialog has to draw itself', () => {
   test('carries no z-index, because the placement is not what decides the stack', () => {
     // `getZIndex(id)` is the manager's answer, and it depends on how many dialogs are open.
     expect(dialogPlacement({ nonModal: true }).backdrop).not.toHaveProperty('zIndex');
+  });
+});
+
+test.describe('reading a portal target', () => {
+  // `PortalTarget` is `boolean | (() => Element | null)`, and the shorthand that is right for the
+  // boolean — `portal !== true` — calls a host getter inline. Two readers depend on the answer.
+  const host = () => {
+    return null;
+  };
+
+  test('true and a host getter both portal', () => {
+    expect(isPortaledTarget(true)).toBe(true);
+    expect(isPortaledTarget(host)).toBe(true);
+  });
+
+  test('false and nothing leave the dialog where it was declared', () => {
+    expect(isPortaledTarget(false)).toBe(false);
+    expect(isPortaledTarget(undefined)).toBe(false);
+  });
+
+  test('contained is non-modal and unportaled, and nothing else', () => {
+    expect(isContainedArrangement({ nonModal: true, portal: false })).toBe(true);
+    expect(isContainedArrangement({ nonModal: true })).toBe(true);
+
+    // A host getter names *where* the element lives, never how it is positioned.
+    expect(isContainedArrangement({ nonModal: true, portal: host })).toBe(false);
+    expect(isContainedArrangement({ nonModal: true, portal: true })).toBe(false);
+
+    // A modal dialog is in the top layer, which no arrangement here reaches.
+    expect(isContainedArrangement({ nonModal: false, portal: false })).toBe(false);
+    expect(isContainedArrangement({ portal: false })).toBe(false);
   });
 });

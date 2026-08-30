@@ -1,3 +1,5 @@
+import type { PortalTarget } from './types.js';
+
 // ── Placement ────────────────────────────────────────────────────────────────
 //
 // Where a dialog is positioned from, as data rather than markup.
@@ -5,6 +7,36 @@
 // `showModal()` promotes a dialog into the top layer and needs no positioning; `show()` does not,
 // so a non-modal dialog is positioned like any other element — and *what against* is the whole
 // question. One answer here, so every binding agrees.
+
+/**
+ * Whether `portal` names a destination at all.
+ *
+ * Read the way {@link PortalTarget} defines it and nowhere else: `true` means `document.body` and a
+ * function names its own host, so **both portal** — only `false`, or nothing, leaves the dialog
+ * where it was declared. Its own function because two readers have to agree, and a shorthand that
+ * happens to be right for the boolean (`portal !== true`) silently calls a host getter *inline*.
+ *
+ * @internal
+ */
+export function isPortaledTarget(portal: PortalTarget | undefined): boolean {
+  return portal !== undefined && portal !== false;
+}
+
+/**
+ * Whether these options describe the **contained** arrangement: non-modal, and rendered where it
+ * was declared rather than portaled anywhere.
+ *
+ * The answer decides two things that must agree — the placement the runtime resolves, and the
+ * geometry a slide template writes onto the element — so it is asked once.
+ *
+ * @internal
+ */
+export function isContainedArrangement(options: {
+  readonly nonModal?: boolean | undefined;
+  readonly portal?: PortalTarget | undefined;
+}): boolean {
+  return options.nonModal === true && !isPortaledTarget(options.portal);
+}
 
 /**
  * Styles for the element a contained dialog is positioned against.

@@ -2,6 +2,7 @@ import type { Accessor } from 'solid-js';
 import type { DialogId } from '../core/registry.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
+import { lookupIn } from '../manager/lookup.js';
 import type { DialogInfo } from '../manager/types.js';
 
 /**
@@ -23,15 +24,6 @@ export function useLookup(id: DialogId): Accessor<DialogInfo> {
   });
 
   return () => {
-    // Linear scan — n is always tiny (1-3 open dialogs)
-    const openDialog = snapshot().openDialogs.find((d) => {
-      return d.id === id;
-    });
-    if (openDialog) {
-      return openDialog;
-    }
-
-    // Closed or unregistered — derive from imperative lookup
-    return manager.lookup(id);
+    return lookupIn(id, { manager, snapshot: snapshot() });
   };
 }

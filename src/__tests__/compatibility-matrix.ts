@@ -419,7 +419,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'portal',
     ignoredBy: ['nonModal: false'],
     enforcement: 'PROSE',
-    note: 'A modal dialog is placed by the top layer, so `portal` changes nothing about where it *appears* — but **where it is mounted** still matters, because a dialog portaled out of a themed container, a design-system root or a microfrontend’s mount point loses whatever that ancestor provided. `true` is `document.body`; a getter names the host instead (`PortalTarget`), asked at placement rather than at hook-call time so a host still being rendered is found. A getter answering `null` falls back to the body and warns rather than un-portaling, the placement CSS having already been chosen. In `umbra/vanilla` it stays a `boolean`: that binding selects the placement and does **not** move the element — the markup is the caller’s — so a host it could only ignore is a type error instead.',
+    note: 'A modal dialog is placed by the top layer, so `portal` changes nothing about where it *appears* — but **where it is mounted** still matters, because a dialog portaled out of a themed container, a design-system root or a microfrontend’s mount point loses whatever that ancestor provided. `true` is `document.body`; a getter names the host instead (`PortalTarget`), asked at placement rather than at hook-call time so a host still being rendered is found. A getter answering `null` falls back to the body and warns rather than un-portaling, the placement CSS having already been chosen. In `umbra/vanilla` it stays a `boolean`: that binding selects the placement and does **not** move the element — the markup is the caller’s — so a host it could only ignore is a type error instead. **A getter is a portal, so it is never the contained arrangement** — it names where the element lives, not how it is positioned, and `isContainedArrangement` is where both readers of that ask: the placement the runtime resolves, and the geometry a slide template writes onto the element.',
     references: [
       {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
@@ -428,6 +428,10 @@ export const OPTION_ROWS: readonly OptionRow[] = [
       {
         file: 'src/react/__tests__/use-dialog.ct.tsx',
         title: 'a portal host of the caller’s own is where the dialog lands',
+      },
+      {
+        file: 'src/core/__tests__/portal-host-geometry.ct.tsx',
+        title: 'a host getter is a portal, so the panel is anchored to the viewport',
       },
       {
         file: 'src/core/__tests__/dialog-runtime.test.ts',

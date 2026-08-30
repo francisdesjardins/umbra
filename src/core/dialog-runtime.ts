@@ -7,7 +7,7 @@ import { DISMISS_REASON } from './dismiss-reason.js';
 import { finalizeDialogClose } from './finalize-close.js';
 import { focusStep } from './focus-policy.js';
 import { createDialogStore } from './dialog-store.js';
-import { dialogPlacement, type DialogPlacement } from './placement.js';
+import { dialogPlacement, isPortaledTarget, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
@@ -78,9 +78,9 @@ export type ResolvedDialogOptions = {
  */
 export function resolveDialogOptions(options: UnresolvedDialogOptions): ResolvedDialogOptions {
   const isNonModal = options.nonModal ?? false;
-  // A host getter is a portal too — `?? false` would leave the function itself standing in for a
-  // boolean, and every reader of `isPortaled` asks it as one.
-  const isPortaled = options.portal !== undefined && options.portal !== false;
+  // A host getter is a portal too, which is `isPortaledTarget`'s whole reason for existing — and
+  // the slide templates ask it the same way, so the two cannot disagree about one shape.
+  const isPortaled = isPortaledTarget(options.portal);
 
   return {
     isNonModal,

@@ -16,6 +16,7 @@ import {
   type RegisteredTemplateOptions,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
+import { isContainedArrangement } from '../../core/placement.js';
 import { useDialog } from '../use-dialog.js';
 import type { UseDialogReturn } from '../types.js';
 
@@ -83,8 +84,9 @@ export function useSlideDialog<TData = void, TReason extends string = string>(
 export function useSlideDialog<TData = void, TReason extends string = string>(
   options: UseSlideDialogOptions<TData, TReason>
 ): UseSlideDialogReturn<TData, TReason> {
-  // Inline non-modal panels anchor to their container, not the viewport — see `useDialog`.
-  const contained = options.nonModal === true && options.portal !== true;
+  // Asked of the core rather than re-derived: the geometry written here and the placement the
+  // runtime resolves are one decision, and a host getter is a portal in both.
+  const contained = isContainedArrangement(options);
   const align = options.align ?? 'stretch';
 
   return useDialog<TData, TReason>({

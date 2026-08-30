@@ -108,7 +108,7 @@ made the number lie in a specific way: a line only WebKit reaches (the caret res
 clicked button never gives) is perfectly tested and was counted as missed. Measured: six such lines,
 0.28 points, for twice the wall clock on a command nobody runs in CI. `component-focus` is still
 out — it needs one worker, and serialising the whole run to reach a handful of lines is the trade
-that is not worth it. Measured 2026-08-29: **92.20% over 55 files**, against unit's **96.59%**. Never add them; re-measure both or neither — **and the
+that is not worth it. Measured 2026-08-29: **92.29% over 56 files**, against unit's **96.62%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points behind, which is why
 **`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one

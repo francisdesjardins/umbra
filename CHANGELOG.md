@@ -11,6 +11,52 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-29
 
+### Fixed — a slide panel portaled into your own host is placed like a portal
+
+Audited the three bindings for differences that belong in the core, the way the controller's wiring
+turned out to. Two, and the first is a bug.
+
+`PortalTarget` is `boolean | (() => Element | null)`, and the documented contract is explicit:
+"`true` means `document.body`; a function names the host instead", with "`false` and the contained
+arrangement unaffected by either". **The two readers of that read it differently.**
+`resolveDialogOptions` asked `portal !== undefined && portal !== false`, so a getter portals; both
+slide templates asked `portal !== true`, so a getter is _contained_. They disagree on exactly one
+input shape, and it is written identically in both hook bindings — so they drift together and are
+wrong together.
+
+Measured, on a slide panel with `nonModal: true` and a host getter:
+
+```
+portal: () => host   position: absolute   <- the template's contained geometry
+portal: true         position: fixed      <- the placement the runtime resolved
+```
+
+The template's style wins, so the panel was positioned against a container while the runtime had
+placed it against the viewport. `isContainedArrangement` in `core/placement.ts` is the one place
+that answer now comes from, and `resolveDialogOptions` asks it too — the shorthand that is right for
+the boolean is the whole trap, so the reason lives on the function.
+
+**A behaviour change**, small and deliberate: `useSlideDialog({ nonModal: true, portal: () => host })`
+now gets viewport geometry (`fixed`, `100dvh`/`100dvw`) rather than container geometry (`absolute`,
+`100%`). That is what the contract says a portal is, and `portal: false` is still the contained
+arrangement it always described.
+
+### Changed — `useLookup`'s fallback is written once
+
+The second finding, and only tidying. Reading one dialog's `DialogInfo` — the snapshot first, the
+manager second — is the same two lines in both hook bindings. React had already extracted it as
+`lookupIn`, into the React file, where Solid could not reach it; Solid rewrote it inline. It moves to
+`manager/lookup.ts` and both call it, which also gives the snapshot-as-a-parameter rule one home
+instead of a comment in one binding and nothing in the other.
+
+Three differences audited and left alone, because measuring said they are the renderer's rather than
+oversights: the two outlets' registration (React must republish a rendered node, a Solid dialog owns
+its element from creation), the templates' type duplication (the overloads cannot come from a
+factory without a consumer seeing a type parameter), and `mergeProps` over a spread in Solid's slide
+render, which keeps the render args as getters.
+
+## 2026-08-29
+
 ### Changed — the component coverage number stops lying about which engine ran
 
 Asked why the number came from Chromium alone, and there is no answer in the repo: nothing
