@@ -63,3 +63,14 @@ export function collectOptionNames(): string[] {
     ...membersOf(typeBody(source, 'DialogVariant')),
   ];
 }
+
+/**
+ * The members of one exported type in `core/types.ts`, for the tables that promise to name them.
+ *
+ * Same parser as the options above and for the same reason: a hand-written table is a second copy
+ * of a type, and the copy is the one that goes quietly out of date.
+ */
+export function collectMembersOf(typeName: string): string[] {
+  const source = readFileSync(resolve(SRC_ROOT, 'core', 'types.ts'), 'utf8');
+  return membersOf(typeBody(source, typeName));
+}

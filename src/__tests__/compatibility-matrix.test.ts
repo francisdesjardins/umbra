@@ -13,7 +13,7 @@ import {
   renderMatrix,
   worklist,
 } from './compatibility-matrix.js';
-import { collectOptionNames } from './option-surface.js';
+import { collectMembersOf, collectOptionNames } from './option-surface.js';
 
 /**
  * The compatibility matrix, held to the source it describes.
@@ -184,6 +184,41 @@ test.describe('the compatibility matrix', () => {
     expect(
       missing,
       `Add a row to API.md's \`### Options\` table for: ${missing.join(', ')}`
+    ).toEqual([]);
+  });
+
+  test('the Render Args table names every field render is handed', () => {
+    // The same promise the Options table makes, about the other hand-written copy of a type. Both
+    // `phase` and `handle.moveFocus` had gone missing from it before this existed.
+    const doc = readFileSync(resolve(REPO_ROOT, 'API.md'), 'utf8');
+    const start = doc.indexOf('### Render Args');
+    expect(start, 'API.md is missing the `### Render Args` heading').toBeGreaterThan(-1);
+    const table = doc.slice(start, doc.indexOf('\n### ', start + 1));
+
+    const fields = collectMembersOf('DialogRenderArgs');
+    expect(
+      fields.length,
+      'the parser found no fields, so this would pass vacuously'
+    ).toBeGreaterThan(3);
+
+    // The first column, not the table: `phase` was named in another row's prose while having no
+    // row of its own, which a whole-table search reads as documented.
+    const missing = fields.filter((name) => {
+      return !table.includes(`| \`${name}\``);
+    });
+    expect(
+      missing,
+      `Add a row to API.md's \`### Render Args\` table for: ${missing.join(', ')}`
+    ).toEqual([]);
+
+    // The handle is one cell rather than a table, so its own members are checked in that cell.
+    const handleCell = table.slice(table.indexOf('| `handle`'));
+    const handleMissing = collectMembersOf('DialogHandle').filter((name) => {
+      return !handleCell.slice(0, handleCell.indexOf('\n')).includes(name);
+    });
+    expect(
+      handleMissing,
+      `API.md's \`handle\` cell does not mention: ${handleMissing.join(', ')}`
     ).toEqual([]);
   });
 

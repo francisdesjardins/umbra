@@ -111,9 +111,11 @@ is how it reaches `yarn todo` instead of a footnote.
   loses its hotkeys, which is pinned in both directions.
 - **Focus moves are measured, and visible.** Opening focus (`focusOnOpen`), the restore after a
   failed action, the reclaim when the stack moves, and the keyboard handed back to the opener when
-  a non-modal panel closes — each is pinned per engine, and every focus move the library makes on
-  the user's behalf shows a `:focus-visible` ring, because input-modality heuristics make a
-  library-made focus invisible on two engines out of three. `restoreFocusTo` redirects that last
+  a non-modal panel closes — each is pinned per engine, and every focus move the library makes **of
+  its own** shows a `:focus-visible` ring, because input-modality heuristics make a library-made
+  focus invisible on two engines out of three. The exception says the same thing from the other
+  side: putting back a caret you had placed yourself is done silently, being your state rather than
+  a move of ours to announce. `restoreFocusTo` redirects that last
   one when the opener is no longer the right answer — a list that drove the panel's content is the
   case — and only where the restore already owns the focus, so a caret you moved yourself stays. The
   ring is drawn on the way back too: the platform's own restore shows one by input modality, so
@@ -411,7 +413,7 @@ yarn type-check      # TypeScript strict check
 yarn test            # Unit + component tests
 yarn lint            # oxlint (type-aware)
 yarn format          # Prettier
-yarn check           # type-check + lint + format + docs, the pre-commit gate
+yarn check           # type-check + lint + format + docs — what CI runs, in four jobs
 yarn verify:all      # lint + type-check + build + package checks, against the built artifact
 ```
 

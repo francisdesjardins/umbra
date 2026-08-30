@@ -366,13 +366,14 @@ const { isPreparing, handle, action, hasRunningAction, error } = dialog;
 `DialogRenderArgs` — what `render` is handed. The hook's return **intersects** it, so every field
 below is also readable outside `render` (`dialog.hasRunningAction` on a trigger button, for instance).
 
-| Property           | Type                           | Description                                                                |
-| ------------------ | ------------------------------ | -------------------------------------------------------------------------- |
-| `isPreparing`      | `boolean`                      | Whether the `prepare` callback is still running — a second axis to `phase` |
-| `handle`           | `DialogHandle<TData, TReason>` | `{ close(reason?, data?: TData) }`                                         |
-| `action`           | `ActionFactory<TData>`         | Declare an action and get its button props — see [Actions](#actions)       |
-| `hasRunningAction` | `boolean`                      | True while **any** action on this dialog is running                        |
-| `error`            | `Error \| null`                | The last error thrown by any action on this dialog                         |
+| Property           | Type                           | Description                                                                                                                                       |
+| ------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isPreparing`      | `boolean`                      | Whether the `prepare` callback is still running — a second axis to `phase`                                                                        |
+| `phase`            | `DialogPhase`                  | The dialog's own phase — `'closing'` holds a leaving state an action's `isRunning` has already dropped                                            |
+| `handle`           | `DialogHandle<TData, TReason>` | `{ close(reason?, data?), moveFocus(step) }` — `moveFocus` walks this dialog's own controls, for an input device the browser never turns into Tab |
+| `action`           | `ActionFactory<TData>`         | Declare an action and get its button props — see [Actions](#actions)                                                                              |
+| `hasRunningAction` | `boolean`                      | True while **any** action on this dialog is running                                                                                               |
+| `error`            | `Error \| null`                | The last error thrown by any action on this dialog                                                                                                |
 
 ### Return
 

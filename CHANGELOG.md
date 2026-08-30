@@ -11,6 +11,40 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-30
 
+### Fixed — the same pass over `README.md` and `API.md`, and five more corrections
+
+The mechanical half held everywhere: every relative link in `README.md`, `API.md` and
+`CONTRIBUTING.md` resolves, every `` `yarn <script>` `` they name exists, the clone URL matches the
+remote, the peer ranges match the manifest, the browser floor is the one the code actually calls
+(`new CSSStyleSheet`, `toSorted`), `ActionButtonProps` really has the eight fields the Features list
+spells out, `AwaitedClose` really is the `[error, result]` tuple, `requestOpen` / `requestOpenAndWait`
+really are manager methods, and the stack order really is modality, then the policy, then the open
+counter — read off `orderStack`'s comparator, in that order.
+
+Five claims were not.
+
+- **`API.md`'s Render Args table had no row for `phase`.** It was named in another row's prose,
+  which is how it survived: a whole-table search finds it.
+- **The same table describes `handle` as `{ close(reason?, data?) }`.** `moveFocus` landed two days
+  ago and the hand-written copy of the type never heard about it.
+- **`README.md`: "every focus move the library makes on the user's behalf shows a `:focus-visible`
+  ring".** No longer absolute, and the exception is deliberate: putting back a caret the reader
+  placed is done silently, being their state rather than a move of ours to announce.
+- **`SHOW_THE_RING`'s own JSDoc named two exceptions where there are three** — it had not been
+  updated when the caret branch was added, which is how the README claim went unnoticed.
+- **`README.md` calls `yarn check` "the pre-commit gate".** There is no hook — no husky, no
+  lefthook, nothing in `.git/hooks` — and CI runs its four parts as separate jobs rather than
+  running it. A contributor would have assumed their commits were checked.
+
+**Two gates, both modelled on the one that already checks the Options table.** `API.md`'s
+`### Render Args` table must now name every member of `DialogRenderArgs`, and its `handle` cell every
+member of `DialogHandle` — the first version of that check passed on `phase` by searching the whole
+table, so it reads the first column instead. And the `` `yarn <script>` `` gate added earlier today
+now covers `README.md`, `API.md` and `CONTRIBUTING.md`, which are read more often than the
+`CLAUDE.md` files and rot the same way.
+
+## 2026-08-30
+
 ### Fixed — six claims in the CLAUDE.md files that had stopped being true
 
 Raised as a process problem rather than a bug, and it was the right way round: these files get cited

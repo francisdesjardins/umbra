@@ -137,7 +137,8 @@ test.describe('the agent instructions have a budget', () => {
     const BUILT_IN = new Set(['add', 'dlx', 'info', 'install', 'node', 'run', 'set', 'workspace']);
 
     const missing: string[] = [];
-    for (const doc of Object.keys(BUDGETS)) {
+    // The public documents too: they are read more often than these, and rot the same way.
+    for (const doc of [...Object.keys(BUDGETS), 'README.md', 'API.md', 'CONTRIBUTING.md']) {
       const text = readFileSync(resolve(REPO_ROOT, doc), 'utf8');
       for (const match of text.matchAll(SCRIPT)) {
         const name = match[1] ?? '';

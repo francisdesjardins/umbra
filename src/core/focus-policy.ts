@@ -34,8 +34,10 @@ export function findActionButton(dialog: HTMLElement, reason: string): HTMLEleme
  * ring on Chromium or Firefox — and the post-action restore needs it too, since the browser
  * blurred the disabled button long before the settle.
  *
- * Not for `clickHotkeyButton` (keydown modality already rings) nor `restoreFocus`'s last-resort
- * `dialog.focus()` (the element takes no ring).
+ * Three exceptions, and each is a different reason: `clickHotkeyButton` (keydown modality already
+ * rings), `restoreFocus`'s last-resort `dialog.focus()` (the element takes no ring), and
+ * `restoreOpenerFocus`'s caret branch — putting back a caret the reader placed is their state
+ * rather than a move of ours, so it is done silently.
  *
  * @internal
  */
