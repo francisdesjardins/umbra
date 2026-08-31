@@ -372,7 +372,9 @@ See **[API.md](API.md)** for the complete API documentation covering:
 
 ## <img src="docs/brand/moon-last-quarter.svg" width="18" height="18" alt="" /> Reference Templates
 
-The library ships no UI components. Reference implementations live in `playground/src/entities/dialog-template/ui/`: a full **vanilla HTML/CSS** set, since it depends on nothing, and one **MUI** family beside it — the form dialog, kept as the worked proof that a component library's chrome fits over the same hooks. Copy either into your project or write your own.
+The library ships no UI components. Reference implementations live in `playground/src/entities/dialog-template/ui/vanilla/`: a full **HTML/CSS** set for the message dialog, the slide panel, the form dialog and the shared content helpers, since plain markup is the one flavour that depends on nothing. Copy it into your project or write your own.
+
+**A component kit gets no template layer, deliberately.** `playground/src/pages/ui-integrations/` puts the same form on MUI and on plain markup — the same values, messages, timing and submit gate, shared byte-for-byte, so only `TextField` and `<input>` differ. It is written against MUI directly because the interesting line is where this library's DOM contract meets a kit's props, and an indirection over that seam hides exactly the line worth reading.
 
 > **If you write a custom button wrapper**, you must forward three props onto the underlying `<button>` element: `aria-keyshortcuts`, `data-focus-on-open` and `data-action-reason`. All three are how the library finds a button in the DOM — hotkeys dispatch by querying `[aria-keyshortcuts]`, `focusOnOpen` finds its button by `[data-focus-on-open]`, and the focus restore after an action re-queries `[data-action-reason]` when your renderer has replaced the node it ran on. Dropping any one of them makes that feature silently do nothing. A wrapper that spreads `...rest` onto its button already forwards all three. A wrapper that _builds_ `aria-keyshortcuts` instead of forwarding it must build it with `formatAriaKeyshortcuts`, which is the spelling dispatch looks for.
 

@@ -9,6 +9,65 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-08-31
+
+### Fixed — a third pass over `API.md` and `README.md`, and where the gates stop
+
+The audit two days ago covered the mechanical half and five prose claims. This one read the
+chapters against the source and found eleven more, which is the number worth recording: the
+document had been audited the day before and still drifted, so the finding is less the list than
+where the existing checks end.
+
+**The largest is a reference set that moved and left its documentation behind.** The playground
+once carried two flavours of every template, vanilla and MUI; it now carries one, and the MUI
+family is a single card on `/ui-integrations` written against MUI directly, because the seam worth
+reading is where the library's DOM contract meets a kit's props and a template layer over it hides
+that line. Five places in `API.md` and one in `README.md` still sent readers to
+`dialog-template/ui/mui/…`, a directory that does not exist. Two of them described components by
+props the surviving vanilla twin does not take — `OverflowContainer` was documented with `sx` and
+`overflowSx` and a `--scrollbar-width` custom property, where it takes `children`, `label` and
+`style` and publishes `data-overflowing`; `Content.AlertContent message=…` is exported as
+`Content.Alert` and takes children.
+
+Six more, each checkable and each wrong:
+
+- **A table row that never rendered.** `onError`'s row was soldered onto the end of
+  `restoreFocusTo`'s — one line, eleven pipes — so the Options table quietly showed one row fewer
+  than it had text for. See the gate note below.
+- **`data-action-reason` was missing from the action chapter's returned-props list**, and from its
+  "custom button wrappers must forward" callout, which named two of the three. It is a required
+  field of `ActionButtonProps` and the one the focus restore re-queries when a renderer has
+  replaced the node an action ran on — the third prop a wrapper drops at its peril.
+- **Three tables typed a query as `DialogInfo` where the source returns `RegisteredDialogInfo`** —
+  `DialogLookup`'s `getForeground`/`getOpen`/`getClosed`, and both `DialogManagerSnapshot` fields.
+  The `DialogLookup` table contradicted the paragraph directly above it, and the snapshot prose then
+  told the reader to filter on `DialogInfo.nonModal`, which does not compile on the union: the
+  registration-time fields live on the `exists: true` branch, which is the point of the split.
+- **`DialogOpenEventDetail` was documented with three fields and has four.** The missing one is
+  `element`, and it is the answer for a dialog in a shadow root, where the obvious
+  `document.querySelector('dialog[data-dialog-id="…"]')` finds nothing.
+- **The Solid peer was quoted as `^1.9.14`.** The package asks `^1.9.0`; the dev pin is `^1.9.15`.
+  It matched neither, which is the failure mode `CLAUDE.md` already warns about — quoting a dev pin
+  asks a consumer for more than the library needs, and this asked for a version that is nobody's.
+- **The `useSlideDialog` chapter enumerates the shared template options** and named fifteen of
+  twenty-two, having gone seven behind: `onError`, `onOpenRequest`, `onDismissRequest`,
+  `restoreFocusTo`, `containFocus` and both dismiss-on-click options. It is the one list in the
+  document with no way of noticing.
+
+**`onOpenRequest` now has a row, and the exemption that kept it out is spent.**
+`OPTIONS_TABLE_EXEMPT` held it on the grounds that the Dialog Manager chapter carries its example
+— which is the reasoning the gate exists to reject, in its own words: a row in the matrix reaches a
+chapter nobody looking up "what can I pass" opens. The row links to the example rather than
+repeating it.
+
+**Where the gates stop, since two of them do read these tables.** The `### Render Args` gate reads
+the **first column**, because a whole-table search once passed on `phase` while it was named only in
+another row's prose. The `### Options` gate still searches the whole table — which is precisely how
+the soldered `onError` row passed: the substring was present and the table was not. The fix is the
+one already written next door, plus the check neither makes, that every row in a table carries the
+same number of cells. Beyond the two tables nothing is read at all: not a cited path, not a type in
+a Returns column, not a version range, not a prose enumeration. All four kinds appear above.
+
 ## 2026-08-30
 
 ### Fixed — the same pass over `README.md` and `API.md`, and five more corrections

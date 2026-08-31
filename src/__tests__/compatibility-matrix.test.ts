@@ -33,8 +33,6 @@ const REPO_ROOT = resolve(SRC_ROOT, '..');
 
 /** Options kept out of `API.md`'s `### Options` table — a set, so adding is a visible choice. */
 const OPTIONS_TABLE_EXEMPT = new Set([
-  // Documented with an example in the Dialog Manager chapter, where the asking door belongs.
-  'onOpenRequest',
   // `@internal`, set by the template hooks rather than by a caller.
   'clipContainer',
 ]);

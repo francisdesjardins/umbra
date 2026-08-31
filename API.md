@@ -42,7 +42,7 @@ specifier if they prefer a single import path.
 4. **`handle.close(reason, data?)`** — Closes the dialog with a typed result (`handle` is the render-context close handle).
 5. **`DialogOutlet`** — Optional portal manager. Wrap a subtree to auto-render dialogs without placing `{dialog.Dialog}` in JSX.
 
-> **Note:** For reference UI component implementations, see `playground/src/entities/dialog-template/ui/` — `vanilla/` depends on nothing, `mui/` exposes the same component names under Material UI.
+> **Note:** For reference UI component implementations, see `playground/src/entities/dialog-template/ui/vanilla/` — a full HTML/CSS set that depends on nothing. A component kit needs no template layer of its own: `playground/src/pages/ui-integrations/` puts the same form on MUI and on plain markup, each written against its own primitives, because the seam worth reading is where this library’s DOM contract meets a kit’s props, and an indirection over that seam hides it.
 
 ---
 
@@ -99,9 +99,10 @@ its own reason.
 | `hotkey`      | `HotkeyDef`                  | Keyboard shortcut, dispatched by clicking the button                       |
 | `focusOnOpen` | `boolean`                    | Take the dialog's opening focus instead of the first focusable element     |
 
-Returned props: `{ type, onClick, 'data-loading', disabled, 'aria-busy', 'aria-keyshortcuts'?, 'data-focus-on-open'? }`.
+Returned props: `{ type, onClick, 'data-loading', disabled, 'aria-busy', 'data-action-reason', 'aria-keyshortcuts'?, 'data-focus-on-open'? }`.
 `data-loading` is this action alone; `disabled` is true while **any** action runs, which is what
-stops a double click submitting twice.
+stops a double click submitting twice. `data-action-reason` names the action on its own button, so
+the focus restore can find it again when your renderer has replaced the node the action ran on.
 
 #### Every field is a DOM prop, on purpose
 
@@ -155,7 +156,9 @@ The prop is `data-focus-on-open`, not React's `autoFocus`: React does not put th
 so the dialog applies the focus itself once the dialog is open.
 
 > **Custom button wrappers must forward it**, the same way they must forward
-> `aria-keyshortcuts` — a wrapper that spreads `...rest` onto its `<button>` already does.
+> `aria-keyshortcuts` and `data-action-reason` — all three are queried back out of the DOM, so
+> dropping one makes that feature silently do nothing. A wrapper that spreads `...rest` onto its
+> `<button>` already forwards all three.
 
 ### Aggregated state
 
@@ -398,7 +401,8 @@ Everything above, plus:
 | `style?`                  | `CSSProperties`                                                             | Structural styles for the `<dialog>` box itself — the library places a dialog but never sizes it. Styles for what is _inside_ belong in `render`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `prepare?`                | `(signal: AbortSignal) => void \| Promise<void>`                            | Called as the dialog opens, alongside the entrance animation; `isPreparing` stays true until it settles, and the `<dialog>` carries `aria-busy` for that window. The signal aborts when the dialog closes — a `() => …` callback stays assignable, so ignoring it costs nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `onClose?`                | `(result: CloseResult<TData, TReason>) => void \| Promise<void>`            | Called on close                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `restoreFocusTo?`         | `(result: CloseResult<TData, TReason>) => HTMLElement \| null \| undefined` | Where the keyboard goes when this dialog closes, for when the element that opened it is no longer the right answer — a list driving a panel is the case. Asked at the close, so a re-rendered list answers with the node on screen; a function rather than an element for that reason. It **redirects a restore rather than competing with the page**: consulted only where the close stranded the keyboard or the platform handed it back to the captured opener, so a caret the reader moved themselves is left alone. Nullish keeps the opener.                                                                                                                                                                                               |     | `onError?` | `(failure: DialogFailure) => void` | Reports a callback of **yours** that threw, and only the two with nowhere else to go: a `prepare` (the dialog is already shown and `isPreparing` settles either way, so without this the dialog announces itself ready) and an `onClose` (detached, with nothing left rendering). An action's throw is already the render args' `error`, `render` reaches the framework's error boundary, and `onKeyDown` / an action's `onClick` escape to the DOM listener that called them — none arrive here, and neither do the library's own failures, which would be unreportable bugs if they did. A report, not a veto: the close still completes. `failure.source` is `'prepare' \| 'onClose'`. |
+| `restoreFocusTo?`         | `(result: CloseResult<TData, TReason>) => HTMLElement \| null \| undefined` | Where the keyboard goes when this dialog closes, for when the element that opened it is no longer the right answer — a list driving a panel is the case. Asked at the close, so a re-rendered list answers with the node on screen; a function rather than an element for that reason. It **redirects a restore rather than competing with the page**: consulted only where the close stranded the keyboard or the platform handed it back to the captured opener, so a caret the reader moved themselves is left alone. Nullish keeps the opener.                                                                                                                                                                                               |
+| `onError?`                | `(failure: DialogFailure) => void`                                          | Reports a callback of **yours** that threw, and only the two with nowhere else to go: a `prepare` (the dialog is already shown and `isPreparing` settles either way, so without this the dialog announces itself ready) and an `onClose` (detached, with nothing left rendering). An action's throw is already the render args' `error`, `render` reaches the framework's error boundary, and `onKeyDown` / an action's `onClick` escape to the DOM listener that called them — none arrive here, and neither do the library's own failures, which would be unreportable bugs if they did. A report, not a veto: the close still completes. `failure.source` is `'prepare' \| 'onClose'`.                                                        |
 | `ariaLabel?`              | `string`                                                                    | The dialog's accessible name. Omitted entirely when absent — a dialog with no name is announced as just "dialog", and `aria-label=""` would hide that from an audit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `ariaLabelledBy?`         | `string`                                                                    | Id of the element naming the dialog — usually its own heading. Takes precedence over `ariaLabel`; prefer it when the name is already on screen.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `ariaDescribedBy?`        | `string`                                                                    | Id of the element describing the dialog — usually its body text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -408,6 +412,7 @@ Everything above, plus:
 | `dismissOnBackdropClick?` | `boolean`                                                                   | Whether a backdrop click dismisses the dialog. Not applicable when `nonModal: true`. Defaults to `false` when the render pass **drew** any actions (a dialog offering buttons wants to be dismissed through one) and `true` when it drew none.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `dismissOnClickOutside?`  | `boolean`                                                                   | Whether clicking outside the dialog dismisses it. Only applicable when `nonModal: true`. Suppressed while an action runs and, unless `dismissWhilePreparing`, while `prepare` is preparing. Only the dialog in front responds, and no non-modal dialog is in front while a modal one is open. Default: `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `dismissWhilePreparing?`  | `boolean`                                                                   | Whether the dismiss key, backdrop click, and click-outside can close the dialog while `prepare` is executing. Default: `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `onOpenRequest?`          | `(payload: unknown, request: OpenRequestDispatch) => void \| Promise<void>` | Answers `requestOpen` / `requestOpenAndWait` for this dialog — accept by opening, or `request.refuse(reason)`. The payload arrives `unknown` however the id was declared, because this is where a message from outside the project lands: parse it, `PayloadOf<TId>` being the type to parse to. See [requestOpen](#createopenrequest).                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `onDismissRequest?`       | `(cause: DismissCause) => boolean \| void`                                  | Report every user-initiated dismissal instead of acting on it, for a surface whose open state is a prop. Replaces the **last** step only — which key, whether an action claimed it, whether a popup answers it first, where the pointer landed, whether `prepare` or a running action forbids it, and which dialog is in front all stay the library's. The dismiss key, a backdrop click and a click outside a panel all arrive here, each naming itself, so a controlled surface cannot answer one door and reopen itself through another. Return `false` to decline, which only the non-modal window listener acts on: it captures, so a press it takes is one the page never sees. Reaches `useMessageDialog` and `useSlideDialog` unchanged. |
 | `containFocus?`           | `boolean`                                                                   | Wrap Tab from the last focusable back to the first. Default: `false`. For a **non-modal** dialog that behaves like a dialog in everything but its stacking — `showModal()` already contains a modal one, and on a toast or a popover keeping Tab inside is the defect rather than the fix. It answers Tab; it does not trap focus, and it cannot bring focus back once it has left by another route. Nothing to set on a modal dialog: the separate recovery for a Tab pressed while the `<dialog>` element itself has focus is unconditional.                                                                                                                                                                                                   |
 | `nonModal?`               | `boolean`                                                                   | Use `dialog.show()` instead of `showModal()` (see below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -572,13 +577,14 @@ const panel = useSlideDialog({ id: 'fast-panel', direction: 'left', animation: N
 
 **Headless** message dialog hook. Provides dialog lifecycle and animation. The hook exports **no UI components** — users provide their own layout, title, footer, etc. in the `render` callback. Sizing constraints (min/max width, height) are user-land concerns — apply them to your content wrapper inside `render`.
 
-> **Reference implementations:** For ready-made MUI components (`MessageDialog.DefaultLayout`, `MessageDialog.Title`, `MessageDialog.Content`, `MessageDialog.Header`, `MessageDialog.Footer`, `MessageDialog.Icon`), see `playground/src/entities/dialog-template/ui/mui/message-dialog/`. For `Shared.OverflowContainer`, see `playground/src/entities/dialog-template/ui/mui/shared/content/OverflowContainer.tsx`. The `OverflowContainer` sets a `--scrollbar-width` CSS custom property and exposes two props:
+> **Reference implementations:** For ready-made components (`DefaultLayout`, `Title`, `Content`, `Header`, `Footer`, `Container`, `Icon`), see `playground/src/entities/dialog-template/ui/vanilla/message-dialog/`. For `OverflowContainer`, see `playground/src/entities/dialog-template/ui/vanilla/shared/content/OverflowContainer.tsx`. It caps its own height and takes three props:
 
-- `sx` – base styles forwarded to the underlying `Box` (replaces the previous
-  `slotProps` pattern). `maxHeight` defaults to `sizes.maxHeight` but can be
-  overridden here.
-- `overflowSx` – styles applied only when the container is overflowing. Use it
-  for padding, background, etc.
+- `children` – the content it scrolls.
+- `label` – the accessible name the region announces once it is scrollable.
+- `style` – overrides for anything its CSS module sets, `max-height` (`70vh`) included.
+
+While it is actually overflowing it carries `data-overflowing`, so that state is styled from CSS
+alone (`[data-overflowing] { … }`) rather than through a second prop.
 
 These are **not** library exports — copy them into your project or write your own.
 
@@ -618,7 +624,7 @@ if (result?.reason === 'confirm') {
 
 **Headless** slide-in panel hook with direction-based animation and positioning. The hook exports **no UI components** — users provide their own layout in the `render` callback.
 
-> **Reference implementations:** For ready-made MUI components (`SlideDialog.DefaultLayout`, `SlideDialog.Title`, `SlideDialog.Content`), see `playground/src/entities/dialog-template/ui/mui/slide-dialog/`. These are **not** library exports — copy them into your project or write your own.
+> **Reference implementations:** For ready-made components (`DefaultLayout`, `Title`, `Content`, `Header`, `Footer`, `SectionGroup`, `ButtonContainer`, `CheckboxLabel`), see `playground/src/entities/dialog-template/ui/vanilla/slide-dialog/`. These are **not** library exports — copy them into your project or write your own.
 
 ```typescript
 import { useSlideDialog } from 'umbra/react';
@@ -650,15 +656,18 @@ const panel = useSlideDialog<void, 'save'>({
 
 Plus the shared template options — every `useDialog` option except the two a template owns
 (`template`, since a template names itself, and the internal `clipContainer`): `id`, `render`,
-`animation`, `style`, `dismissKey`, `dismissWhilePreparing`, `nonModal`, `portal`, `prepare`,
-`onClose`, `onKeyDown`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`, `role`. The exclusion is
-stated that way round in the source, so a new core option reaches every template by default.
+`animation`, `style`, `prepare`, `onClose`, `onKeyDown`, `onError`, `onOpenRequest`,
+`onDismissRequest`, `restoreFocusTo`, `containFocus`, `dismissKey`, `dismissWhilePreparing`,
+`dismissOnBackdropClick`, `dismissOnClickOutside`, `nonModal`, `portal`, `role`, `ariaLabel`,
+`ariaLabelledBy`, `ariaDescribedBy`. The exclusion is stated that way round in the source, so a new
+core option reaches every template by default — and this list is the one that has to be re-read
+against [useDialog](#usedialog-base-primitive) when one is added.
 
 ### Cross-axis alignment (`align`)
 
 The **cross axis** is perpendicular to the slide: vertical for `left`/`right`, horizontal for `top`/`bottom`.
 
-- **`'stretch'` (default)** — fill the cross axis edge-to-edge: a classic full-height side drawer or full-width top/bottom sheet. Unchanged from previous versions.
+- **`'stretch'` (default)** — fill the cross axis edge-to-edge: a classic full-height side drawer or full-width top/bottom sheet. It is the default because it is the shape a panel usually wants, and the only one the library can size for you.
 - **`'start'` / `'center'` / `'end'`** — the panel is **content-sized** on the cross axis and pinned to that position (`start` = top/left, `end` = bottom/right). You must size the panel yourself in `render` — nothing stretches it.
 
 ```typescript
@@ -800,27 +809,27 @@ boundary, where the owner may refuse; use this one inside it.
 
 ## Content Helpers
 
-> **Playground reference implementations only.** The `Content.*` components (`Content.Message`, `Content.Heading`, `Content.Detail`, `Content.Hint`, `Content.DetailList`, `Content.AlertContent`, `Content.Section`) are **not** exported from the library. They are available as reference implementations in `playground/src/entities/dialog-template/ui/mui/shared/content/`. Copy them into your project or write your own typography/content components.
+> **Playground reference implementations only.** The `Content.*` components (`Content.Message`, `Content.Heading`, `Content.Detail`, `Content.Hint`, `Content.DetailList`, `Content.Alert`, `Content.Section`, plus `Content.OverflowContainer`, `Content.OverflownTypography` and `Content.ContentTransition`) are **not** exported from the library. They are available as reference implementations in `playground/src/entities/dialog-template/ui/vanilla/shared/content/`. Copy them into your project or write your own typography/content components.
 
 ```tsx
 // These are NOT library imports — copy from playground or write your own
-// import { Content } from 'playground/src/entities/dialog-template/ui/mui/shared/content';
+// import { Content } from 'playground/src/entities/dialog-template/ui/vanilla/shared/content';
 
-// Simple helpers - accept children and optional sx prop
-<Content.Message>Are you sure?</Content.Message>
-<Content.Heading>Title</Content.Heading>
+// Simple helpers - children, and an `id` on the two a dialog's aria attributes point at
+<Content.Message id="confirm-body">Are you sure?</Content.Message>
+<Content.Heading id="confirm-title">Title</Content.Heading>
 <Content.Detail>Detail text</Content.Detail>
 <Content.Hint>Hint text</Content.Hint>
 
 // Complex helpers - accept specific props
 <Content.DetailList items={['item1', 'item2']} icon={<Icon />} />
-<Content.AlertContent message="Error message" severity="error" />
+<Content.Alert severity="error" title="Could not save">Error message</Content.Alert>
 <Content.Section title="Section Title">
   <Content.Message>Section content</Content.Message>
 </Content.Section>
 ```
 
-Since the library is headless, you can use any UI framework or plain HTML/CSS for your content. The above shows one of the playground's two reference sets; the vanilla one carries the same component names with no dependency.
+Since the library is headless, you can use any UI framework or plain HTML/CSS for your content. The set above is the playground’s, and it is plain HTML/CSS with no dependency — every helper styles itself from a CSS module rather than taking style props.
 
 ---
 
@@ -963,8 +972,9 @@ createEffect(() => {
 when the next snapshot is equal, so a second identity check could only swallow a notification the
 store meant to send.
 
-> Solid is an **optional** peer (`^1.9.14`). Only this entry point touches it; the root and
-> `umbra/vanilla` resolve with it absent.
+> Solid is an **optional** peer (`^1.9.0`) — the range the package asks for, not this repo’s dev
+> pin, which sits above it. Only this entry point touches it; the root and `umbra/vanilla` resolve
+> with it absent.
 
 ---
 
@@ -1183,7 +1193,7 @@ call site is a **boundary**: the keys have to be remembered exactly (this payloa
 this is the single place a protocol would grow — a version, a correlation id — without every
 caller being edited.
 
-It **checks** rather than validates, and only where a project said what to check against: a
+It **checks** rather than validates, and only where a project said what to check against:
 a declared `opensWith` in `DialogRegistry` types this argument (`PayloadOf<TId>`), so asking with the
 wrong shape is a compile error. An id the registry does not name keeps `unknown`, which is what
 hosting someone else's dialog means. Neither is a run-time guarantee — the dialog receiving a
@@ -1331,16 +1341,16 @@ dialogs, so they are typed `RegisteredDialogInfo` and need no narrowing at all.
 
 ### DialogLookup
 
-| Method                 | Returns                   | Description                                                  |
-| ---------------------- | ------------------------- | ------------------------------------------------------------ |
-| `get(id)`              | `DialogInfo`              | Same as `lookup(id)` — null-object default for unregistered  |
-| `exists(id)`           | `boolean`                 | Whether the dialog is registered                             |
-| `getForeground()`      | `DialogInfo \| undefined` | The dialog in front, or undefined                            |
-| `getOpen(filter?)`     | `DialogInfo[]`            | Open dialogs in stack order; filter `'dialog'`/`'non-modal'` |
-| `isVisible(id)`        | `boolean`                 | Whether a specific dialog is on screen                       |
-| `isForeground(id)`     | `boolean`                 | Whether a specific dialog is the one in front                |
-| `getClosed()`          | `DialogInfo[]`            | All registered but closed dialogs                            |
-| `getRegisteredCount()` | `number`                  | Total registered dialogs                                     |
+| Method                 | Returns                             | Description                                                  |
+| ---------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| `get(id)`              | `DialogInfo`                        | Same as `lookup(id)` — null-object default for unregistered  |
+| `exists(id)`           | `boolean`                           | Whether the dialog is registered                             |
+| `getForeground()`      | `RegisteredDialogInfo \| undefined` | The dialog in front, or undefined                            |
+| `getOpen(filter?)`     | `RegisteredDialogInfo[]`            | Open dialogs in stack order; filter `'dialog'`/`'non-modal'` |
+| `isVisible(id)`        | `boolean`                           | Whether a specific dialog is on screen                       |
+| `isForeground(id)`     | `boolean`                           | Whether a specific dialog is the one in front                |
+| `getClosed()`          | `RegisteredDialogInfo[]`            | All registered but closed dialogs                            |
+| `getRegisteredCount()` | `number`                            | Total registered dialogs                                     |
 
 ### What "in front" means
 
@@ -1671,11 +1681,12 @@ document.addEventListener(DIALOG_CLOSE_EVENT, (e: Event) => {
 
 **`DialogOpenEventDetail`**
 
-| Field      | Type     | Description                   |
-| ---------- | -------- | ----------------------------- |
-| `id`       | `string` | Dialog id                     |
-| `template` | `string` | The label its creator gave it |
-| `openedAt` | `number` | `Date.now()` at open start    |
+| Field      | Type                  | Description                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`              | Dialog id                                                                                                                                                                                                                                                                                                                                                |
+| `template` | `string`              | The label its creator gave it                                                                                                                                                                                                                                                                                                                            |
+| `openedAt` | `number`              | `Date.now()` at open start                                                                                                                                                                                                                                                                                                                               |
+| `element`  | `HTMLElement \| null` | The `<dialog>` itself, when the binding that registered it supplies one. Carried rather than looked up: `document.querySelector('dialog[data-dialog-id="…"]')` finds nothing for a dialog in a shadow root, and this library supports one. **Open event only** — by the close the element may be on its way out, and the id is enough to match the pair. |
 
 **`DialogCloseEventDetail`**
 
@@ -1727,13 +1738,16 @@ function DialogOverlay() {
 
 ### DialogManagerSnapshot
 
-| Property      | Type                      | Description                                                                |
-| ------------- | ------------------------- | -------------------------------------------------------------------------- |
-| `openDialogs` | `readonly DialogInfo[]`   | Open dialogs (modal and nonModal), in stack order — index = stack position |
-| `foreground`  | `DialogInfo \| undefined` | The dialog in front — see the note under DialogLookup                      |
+| Property      | Type                                | Description                                                                |
+| ------------- | ----------------------------------- | -------------------------------------------------------------------------- |
+| `openDialogs` | `readonly RegisteredDialogInfo[]`   | Open dialogs (modal and nonModal), in stack order — index = stack position |
+| `foreground`  | `RegisteredDialogInfo \| undefined` | The dialog in front — see the note under DialogLookup                      |
+
+Both are `RegisteredDialogInfo`, not the `DialogInfo` union: an open dialog is one that registered,
+so nothing here needs narrowing on `exists` first.
 
 Everything else derives from `openDialogs`: counts via `.length`, dialog vs
-non-modal via `DialogInfo.nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
+non-modal via `nonModal` (`openDialogs.filter((d) => !d.nonModal)`),
 and stack position via array index.
 
 Ordered by modality first (every non-modal dialog under every modal one), then by whatever
