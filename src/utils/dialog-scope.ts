@@ -3,6 +3,12 @@
  * here: a dialog in the top layer swallows every click outside itself, so the documented way to open
  * a second dialog puts it in the first's subtree — and a plain `querySelector` on the outer dialog
  * would reach into the inner one.
+ *
+ * **A DOM module among pure ones, deliberately.** The folder rule here is framework-free rather
+ * than DOM-free, and `isOwnEventTarget` is a root export with a public example — the predicate a
+ * caller writing their own keydown needs. `core/` would tidy the taxonomy and unblock nothing: all
+ * three exports reach for `querySelectorAll`, so this file sits on `.c8rc.json`'s DOM-only list
+ * wherever it lives.
  */
 
 /**
