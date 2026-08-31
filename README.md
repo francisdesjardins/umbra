@@ -418,7 +418,7 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.62%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.64%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs

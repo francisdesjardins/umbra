@@ -1,8 +1,9 @@
 /**
- * Who a settled action hands focus back to — the two decisions behind the restore, and no DOM.
+ * Who a settled action hands focus back to, and whether a focus move was the library's own — the
+ * decisions behind the restores, and no DOM.
  *
  * Beside `dismiss-gate.ts` and for its reason: a predicate every caller of a DOM operation shares,
- * kept where it can be asked without one. Both are generic over `{ isConnected }` because that
+ * kept where it can be asked without one. Three of the four are generic over `{ isConnected }` because that
  * member is the whole of what they read, which is what makes the ordering a unit test rather than a
  * browser one — and the ordering is the part that fails silently, since a truthy-but-wrong candidate
  * looks exactly like a correct answer. The functions that *act* on the answer are
@@ -70,5 +71,30 @@ export function restoreOwnsTheFocus<T>(landed: {
     active === body ||
     active === documentElement ||
     active === opener
+  );
+}
+
+/**
+ * Whether focus sits inside the dialog somewhere **other** than where the bookkeeping last saw it —
+ * the signature of a move the library made rather than the reader, and so the stack watcher's to
+ * undo.
+ *
+ * Sound because every other way focus travels inside is recorded: a click, a Tab and a scripted
+ * `focus()` all fire `focusin`, so the memory is re-synced by the time anything asks. The one
+ * window that does not record is the raise's, and restoring the caret across it is the point.
+ *
+ * **Focus on the `<dialog>` itself** and **a memory that has left the DOM** are deliberately not
+ * divergence; the tests carry what reading either as one would cost.
+ *
+ * @internal
+ */
+export function divergedFromMemory<T extends { isConnected: boolean }>(standing: {
+  readonly active: T | null;
+  readonly dialog: T;
+  readonly remembered: T | null;
+}): boolean {
+  const { active, dialog, remembered } = standing;
+  return (
+    active !== dialog && remembered !== null && remembered.isConnected && active !== remembered
   );
 }

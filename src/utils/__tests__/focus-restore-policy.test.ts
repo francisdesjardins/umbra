@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {
   chooseActionRunner,
+  divergedFromMemory,
   preferredRestoreTarget,
   restoreOwnsTheFocus,
 } from '../focus-restore-policy.js';
@@ -154,5 +155,51 @@ test.describe('restoreOwnsTheFocus', () => {
     };
     expect(none(null)).toBe(true);
     expect(none({ name: 'page-field' })).toBe(false);
+  });
+});
+
+test.describe('divergedFromMemory', () => {
+  // The stack watcher's question, and the reason it is a decision rather than a DOM read: it fires
+  // on every snapshot the manager publishes, so a wrong answer either yanks the keyboard off where
+  // the reader put it or leaves a dialog in front holding nobody.
+  const dialog = live('dialog');
+
+  const diverged = (
+    active: { isConnected: boolean; name: string } | null,
+    remembered: { isConnected: boolean; name: string } | null
+  ): boolean => {
+    return divergedFromMemory({ active, dialog, remembered });
+  };
+
+  test('focus standing where the memory says it should is not divergence', () => {
+    const field = live('field');
+    expect(diverged(field, field)).toBe(false);
+  });
+
+  test('focus somewhere else inside is', () => {
+    // What a raise leaves behind: `close()` + `showModal()` focuses the first focusable, and the
+    // caret the memory holds is the one to put back.
+    expect(diverged(live('first-focusable'), live('field'))).toBe(true);
+  });
+
+  test('focus gone altogether is too', () => {
+    // The reclaim's other trigger: nothing holds it, so there is nobody the answer could rob.
+    expect(diverged(null, live('field'))).toBe(true);
+  });
+
+  test('focus on the dialog element itself is not', () => {
+    // A dead-space click, which is never recorded — reading it as divergence would yank the
+    // keyboard off a state `focus-containment.ct.tsx` pins.
+    expect(diverged(dialog, live('field'))).toBe(false);
+  });
+
+  test('a memory that has left the DOM is no target, so nothing has diverged from it', () => {
+    // Falling through with one sends `preferredRestoreTarget` to the `focusOnOpen` button,
+    // re-honouring an opening choice over wherever the reader had got to.
+    expect(diverged(live('field'), detached('unmounted'))).toBe(false);
+  });
+
+  test('nothing recorded yet is not divergence either', () => {
+    expect(diverged(live('field'), null)).toBe(false);
   });
 });

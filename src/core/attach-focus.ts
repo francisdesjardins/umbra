@@ -8,7 +8,11 @@ import {
   restoreFocus,
   settleOpeningFocus,
 } from './focus-policy.js';
-import { chooseActionRunner, preferredRestoreTarget } from '../utils/focus-restore-policy.js';
+import {
+  chooseActionRunner,
+  divergedFromMemory,
+  preferredRestoreTarget,
+} from '../utils/focus-restore-policy.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { FocusCoordinatorOptions, DialogDomContext } from './attach-types.js';
 import type { DialogPhase } from './types.js';
@@ -52,12 +56,6 @@ type FocusMemory = {
   lastActivated: HTMLElement | null;
 };
 
-/** Where focus stands right now, read once and asked about twice. */
-type FocusStanding = {
-  readonly active: Element | null;
-  readonly dialog: Element;
-};
-
 /** What the action restore needs beyond the context, in the `(ctx, options)` shape every
  * `attach*` function takes: the engine it listens to, the memory it reads, and the phase that
  * decides whether it does anything at all. */
@@ -70,32 +68,6 @@ type ActionRestoreOptions = {
 const createFocusMemory = (): FocusMemory => {
   return { openingFocus: null, settled: false, lastFocusInside: null, lastActivated: null };
 };
-
-/**
- * Whether focus sits inside this dialog somewhere **other** than where the bookkeeping last saw
- * it — which is the signature of a move the library made rather than the user.
- *
- * Sound because every other way focus travels inside is recorded: a click, a Tab and a scripted
- * `focus()` all fire `focusin`, so `lastFocusInside` is re-synced by the time anything asks. The
- * one window that does not record is {@link isRaisingDialog}'s, and restoring the caret across it
- * is the point.
- *
- * Two states are deliberately *not* divergence. **Focus on the `<dialog>` element itself** is what
- * a dead-space click produces, and it is never recorded — reading it as divergence would yank the
- * keyboard off a state `focus-containment.ct.tsx` pins. **A memory that has left the DOM** is no
- * target either: falling through with one sends `preferredRestoreTarget` to the `focusOnOpen`
- * button, re-honouring an opening choice over wherever the user had got to.
- */
-function divergedFromMemory(memory: FocusMemory, standing: FocusStanding): boolean {
-  const { lastFocusInside } = memory;
-  const { active, dialog } = standing;
-  return (
-    active !== dialog &&
-    lastFocusInside !== null &&
-    lastFocusInside.isConnected &&
-    active !== lastFocusInside
-  );
-}
 
 /**
  * Which action is running, by reason.
@@ -342,7 +314,10 @@ function attachStackReclaim(ctx: FocusContext, memory: FocusMemory): () => void 
       return;
     }
     const active = activeWithin(dialog);
-    if (dialog.contains(active) && !divergedFromMemory(memory, { active, dialog })) {
+    if (
+      dialog.contains(active) &&
+      !divergedFromMemory({ active, dialog, remembered: memory.lastFocusInside })
+    ) {
       // Ours, and standing where the memory says it should — nothing to do.
       return;
     }
