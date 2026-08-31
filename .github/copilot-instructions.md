@@ -2,6 +2,8 @@
 
 Headless React dialog library (`umbra`) — zero shipped UI (users bring their own: MUI, vanilla) and zero runtime dependencies (state layer is a hand-rolled reactive cell). See [CLAUDE.md](../CLAUDE.md) and [src/CLAUDE.md](../src/CLAUDE.md) for deeper context.
 
+> **See also:** [`.instructions.md`](../.instructions.md) (IDE-agnostic overview for Cursor/Windsurf), [`.claude/react-compiler-reference.md`](.claude/react-compiler-reference.md) (React Compiler rules quick-ref), [`.claude/settings-hooks.md`](.claude/settings-hooks.md) (automation hooks explained)
+
 ## Build and Test
 
 ```bash
@@ -20,6 +22,29 @@ yarn test:unit:ui        # Unit tests with Playwright UI
 yarn test:component      # Component tests only (*.ct.tsx, Chromium)
 yarn test:component:ui   # Component tests with Playwright UI
 ```
+
+## Domain-Specific Skills
+
+These specialized workflows automate testing and debugging of the dialog library. **Invoke by name** when:
+
+| Skill              | When to use                                                         | What it does                                                                                               |
+| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `playground-smoke` | After refactors to shell/routing/entry points                       | Walks every playground route in a real browser; asserts no console errors; tests open/dismiss/hotkey flows |
+| `dom-probe`        | When behavior disagrees with code; clicks "do nothing"              | Queries a real Chrome: element under a point, what a click hit, top-layer status, computed box             |
+| `dialog-debug`     | Dialog visibly misbehaves (jumps, stuck, wrong size) but tests pass | Drives a real browser against the playground; measures animation, positioning, lifecycle state             |
+| `chrome-cdp`       | Styling wrong but computed value doesn't explain why                | Attaches to Chrome over DevTools protocol; shows which CSS rule won a property and which lost to it        |
+| `wcag-audit`       | Before claiming accessibility (contrast, keyboard focus)            | Measures WCAG 2.2 AA on the real page; includes open dialogs and states a button press produces            |
+
+All five live in [`.claude/skills/`](.claude/skills/); each is a self-contained skill with full instructions.
+
+## Custom Commands
+
+Two commands automate common development workflows:
+
+| Command          | Invoked by        | Purpose                                                                                                                                  | See                                                     |
+| ---------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `add-example`    | `/add-example`    | Creates a playground example in 3 steps (file → register → add card). Asks for route, name, UI lib, description                          | [add-example.md](.claude/commands/add-example.md)       |
+| `store-engineer` | `/store-engineer` | Designs a clean domain-specific store: gathers requirements → picks primitives → generates implementation. For any mutation-driven state | [store-engineer.md](.claude/commands/store-engineer.md) |
 
 ### Testing conventions
 
