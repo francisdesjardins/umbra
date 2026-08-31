@@ -11,6 +11,29 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-31
 
+### Added — the two checks the entry below said were missing
+
+The `### Options` gate now reads the **first column**, which the `### Render Args` gate beside it
+already did, and a third gate counts cells: **every row in a table against its header**, across
+`API.md`, `README.md` and `CONTRIBUTING.md`.
+
+**Neither check subsumes the other, and the two failures prove it separately.** Delete the
+`dismissWhilePreparing` row and the name survives in a neighbouring row's prose — the old
+whole-table search finds it and passes; the first-column read does not. Solder the `onError` row
+back onto the end of the row above and the first column is intact on a line that renders as no row
+at all — both name searches pass, and only the cell count fails, which is what it did when this was
+mutation-checked: `API.md:404 — 8 cells, header has 4`.
+
+The cell count covers three documents rather than one because a row that does not render is a
+defect of the file format, not of that chapter. It found nothing else on this tree, which is the
+answer a new gate should give on the pass that adds it.
+
+What is still read by nothing: a cited path, a type in a Returns column, a version range, a prose
+enumeration. All four kinds appear in the entry below, so whether they are worth a gate is now the
+open question rather than the tables.
+
+## 2026-08-31
+
 ### Fixed — a third pass over `API.md` and `README.md`, and where the gates stop
 
 The audit two days ago covered the mechanical half and five prose claims. This one read the

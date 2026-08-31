@@ -175,8 +175,10 @@ test.describe('the compatibility matrix', () => {
       .filter((option) => {
         return !OPTIONS_TABLE_EXEMPT.has(option);
       })
+      // The first column, not the table — the fix the Render Args gate below already carries: a
+      // name a neighbouring row's prose mentions otherwise reads as a row of its own.
       .filter((option) => {
-        return !table.includes(`\`${option}?\``) && !table.includes(`\`${option}\``);
+        return !table.includes(`| \`${option}?\``) && !table.includes(`| \`${option}\``);
       });
 
     expect(
@@ -217,6 +219,55 @@ test.describe('the compatibility matrix', () => {
     expect(
       handleMissing,
       `API.md's \`handle\` cell does not mention: ${handleMissing.join(', ')}`
+    ).toEqual([]);
+  });
+
+  /**
+   * The check both gates above assume and neither makes: a row is only documentation if it renders
+   * as one. Two rows on one line satisfy every search that looks for a name — the text is all
+   * there — and markdown draws the surplus cells into the row above, so the second row is simply
+   * not on the page. Nothing else notices: prettier pads columns rather than counting them, and a
+   * reader who does not already know the option is missing has no reason to look.
+   *
+   * Every hand-written document with tables, not just `API.md`, because the failure is the file
+   * format's rather than this chapter's.
+   */
+  test('every table row carries as many cells as its header', () => {
+    // A `\|` is an escaped pipe inside a cell — `HTMLElement \| null` — and not a boundary.
+    const cellCount = (row: string): number => {
+      return row.split('\\|').join('\u0000').split('|').length - 1;
+    };
+
+    const malformed = ['API.md', 'README.md', 'CONTRIBUTING.md'].flatMap((name) => {
+      const lines = readFileSync(resolve(REPO_ROOT, name), 'utf8').split('\n');
+      // A fence resets the header too: a union type at the start of a line looks like a table row.
+      let fenced = false;
+      let header: number | undefined;
+
+      return lines.flatMap((line, index) => {
+        if (/^\s*```/.test(line)) {
+          fenced = !fenced;
+          header = undefined;
+          return [];
+        }
+        if (fenced || !line.startsWith('|')) {
+          header = undefined;
+          return [];
+        }
+        const cells = cellCount(line);
+        if (header === undefined) {
+          header = cells;
+          return [];
+        }
+        return cells === header
+          ? []
+          : [`${name}:${String(index + 1)} — ${String(cells)} cells, header has ${String(header)}`];
+      });
+    });
+
+    expect(
+      malformed,
+      'A row with the wrong number of cells does not render as a row — the surplus is drawn into the one above.'
     ).toEqual([]);
   });
 
