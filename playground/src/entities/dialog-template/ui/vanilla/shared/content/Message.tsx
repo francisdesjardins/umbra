@@ -3,7 +3,8 @@ import styles from '@/entities/dialog-template/ui/vanilla/shared/content/styles.
 
 type MessageProps = {
   readonly children: ReactNode;
-  /** What `ariaDescribedBy` points at — see the MUI `Message` for when an alertdialog wants one. */
+  /** What `ariaDescribedBy` points at. An `alertdialog` wants one: assistive technology announces
+   * its description on open rather than waiting to be read. */
   readonly id?: string | undefined;
 };
 

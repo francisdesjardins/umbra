@@ -3,7 +3,8 @@ import styles from '@/entities/dialog-template/ui/vanilla/message-dialog/styles.
 
 type VanillaTitleProps = {
   readonly children: ReactNode;
-  /** What `ariaLabelledBy` points at — see the MUI `Title` for why it is a prop rather than a spread. */
+  /** What `ariaLabelledBy` points at. Named rather than left to a `...rest` spread, because it is
+   * the one attribute the dialog's option has to match and a spread is where it goes missing. */
   readonly id?: string | undefined;
 };
 

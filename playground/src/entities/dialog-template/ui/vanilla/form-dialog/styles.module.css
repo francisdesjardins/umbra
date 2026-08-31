@@ -60,8 +60,8 @@
      stretches to exactly the dialog's height — putting its bottom border on the last row of an
      `overflow: auto` box whose own height lands on a fraction of a pixel. Whatever the compositor
      does with that final fraction it does to the border, and the bottom edge read as simply
-     missing while the other three were fine. MUI's twin never showed it, because its Paper is not
-     flush with the scroll container.
+     missing while the other three are fine. A surface that is not flush with its scroll container
+     never shows it, which is why the markup’s shape is the condition rather than the border width.
      Vertical only: the horizontal edges were never clipped, and a side margin on a `width: 100%`
      box overflows by exactly that margin — which trades a missing border for a scrollbar. */
   margin-block: 1px;

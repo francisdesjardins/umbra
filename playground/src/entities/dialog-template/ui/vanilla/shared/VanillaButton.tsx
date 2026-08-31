@@ -34,8 +34,8 @@ export function VanillaButton({
   'data-focus-on-open': dataFocusOnOpen,
   'data-action-reason': dataActionReason,
 }: VanillaButtonProps) {
-  // The same seam as the MUI wrapper: the library ships `data-loading`, this decides what it
-  // means for its own markup — here, a class.
+  // The seam every button wrapper sits on: the library ships `data-loading` and never guesses
+  // what a design system calls busy, so this decides — here, a class.
   const busy: boolean = loading ?? dataLoading ?? false;
   const className = [
     styles['button'],

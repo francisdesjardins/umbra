@@ -84,9 +84,9 @@
 
 /* ========== Footer ========== */
 /* Placement comes from `Shared.ButtonRow`, which this footer renders as its own element; what is
-   left here is the chrome. This template used to have no `display: flex` at all, so two actions
-   sat left-aligned and touching while its siblings flexed theirs to the trailing edge — the panel
-   read as a different product from the MUI twin it is paired against. */
+   left here is the chrome. Without the row two actions sit left-aligned and touching while the
+   sibling templates flex theirs to the trailing edge, and one panel then reads as a different
+   product from the rest. */
 .slideFooter {
   flex-shrink: 0;
   padding: var(--slide-spacing-lg);
@@ -112,8 +112,9 @@
 /* The label is the target, not the box.
    A native checkbox renders 13×13, under the 24×24 WCAG 2.2 asks of a target (2.5.8) — a thumb
    against a fingernail on a phone. Sizing the input itself to 24 does clear the bar and looks
-   wrong beside the MUI panel: measured, MUI's is a 38px button around a 24px icon, so its mark
-   is light and its hit area is generous, while a native input at 24 is 24px of solid square.
+   wrong: a component kit reaches the bar differently — MUI’s checkbox measures a 38px button
+   around a 24px icon, so its mark stays light while its hit area is generous, where a native
+   input at 24 is 24px of solid square.
    Growing the label instead gets both — clicking a label toggles its input, so the target is
    this whole row at 32px, and the box stays the weight of the one next door. */
 .checkboxLabel {

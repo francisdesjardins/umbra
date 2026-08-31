@@ -12,8 +12,8 @@ type OverflowContainerProps = {
 
 /**
  * Height-capped scroll container for long content. While actually overflowing it carries
- * `data-overflowing`, so a copy styles the state from CSS alone (`[data-overflowing] { … }`) the
- * way the MUI flavour spends `overflowSx`.
+ * `data-overflowing`, so a copy styles that state from CSS alone (`[data-overflowing] { … }`)
+ * rather than through a second prop.
  */
 export function OverflowContainer({ children, label, style }: OverflowContainerProps) {
   const { ref, isOverflowing, regionProps } = useScrollRegion<HTMLDivElement>(
