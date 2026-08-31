@@ -1,11 +1,6 @@
-// Shared visual tokens for playground template parity
-export const spacing = {
-  gapUnit: 2, // MUI theme spacing units, for numeric `sx` gaps
-  content: 8, // px — `Content` helpers across templates
-  small: 6, // px — kbd, tiny paddings
-  medium: 12, // px
-  large: 24, // px
-};
+// Visual tokens a template needs as a value rather than as CSS: a measurement the markup computes
+// with, or one the shell has to agree with. Anything a stylesheet can hold belongs in the template's
+// own CSS module, which is what a reader copies out.
 
 /**
  * Room a bounded box leaves for a focus ring drawn outside its controls: the ring is a 2px outline
@@ -16,19 +11,8 @@ export const spacing = {
  */
 export const focusRingSpace = '4px';
 
-export const sizes = {
-  minWidth: 475, // px
-  maxWidth: 800, // px
-  maxHeight: '70vh',
-};
-
 export const colors = {
   // Dialog surface background (kept in sync with vanilla CSS :root values)
   dialogBgLight: '#ffffff',
   dialogBgDark: '#121212',
-};
-
-export const motion = {
-  durationMs: 240,
-  easing: 'cubic-bezier(0.2, 0, 0, 1)',
 };
