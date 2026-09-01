@@ -11,6 +11,52 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-31
 
+### Added — the browser floor, derived from a table instead of declared
+
+A reader on Chrome 142 reported the focus ring missing when a dialog opens. It was not a
+regression, and the cause turned out to be worth more than the report.
+
+**`SHOW_THE_RING` rests entirely on `FocusOptions.focusVisible`, and that option is younger than the
+floor.** Measured with the flag neutralised: a plain `focus()` after pointer input draws no ring,
+and **blur-then-focus draws none either** — two comments in this repo credited the blur, and both
+were wrong. The blur only makes the re-focus take at all, refocusing an already-focused element
+being a no-op; the flag does the visible work. It ships in Chrome 145 (10 February 2026), Safari
+18.4 and Firefox 104, against a declared floor of Chrome 110 / Safari 16.4 / Firefox 115.
+
+**The gap is narrower than that sounds, and the measurement is why it is not being "fixed".**
+`:focus-visible` propagates to a scripted focus from an element that already matched it, so a
+dialog opened **from the keyboard** rings on every engine. Only the pointer-opened case loses it —
+and `:focus-visible` suppresses the ring for pointer input by design, so below the threshold the
+library degrades to exactly what an ordinary page does. Nothing throws. An enhancement, not
+conformance.
+
+**So the floor did not move; it became derived.** `FLOOR_ROWS` names every platform feature the
+library reaches for with its per-engine threshold, its source URL and the date somebody read it,
+split two ways: `required` breaks below and owes a `breaks` sentence, `enhancing` is silently
+absent and owes a `degradesTo`. **A gate asserts `browserslist` is the per-engine maximum of the
+`required` rows**, so the four numbers in the manifest can no longer drift from what justifies
+them — mutation-checked by raising one row above the floor and watching it name the engine. The
+eight seed rows put the floor exactly where it already was: Chrome 110 and Firefox 115 from
+`toSorted`, Safari 16.4 from constructed `CSSStyleSheet`.
+
+**What the table cannot do is notice**, and that is the actual lesson. `CLAUDE.md` said the floor
+was "the highest thing the runtime calls" — an inventory of _methods_, which is why an **option on
+a method already called** slipped past it. No linter here reports one either; oxlint has no compat
+rule. Discovery stays human, the way a cited test proving its cell does.
+
+Two capabilities the library does **not** use joined the watch list while the numbers were being
+read: `CloseWatcher` (Chrome 126, Firefox 149, Safari in Technology Preview only), which would
+replace the window-level dismiss listener for non-modal panels and bring the Android back button
+with it; and `<dialog closedby>` (Chrome 134, Firefox 141, same Safari state), which would replace
+click-outside — though not straight across, since the press/release pair WCAG 2.5.2 asks for is not
+obviously what `closedby="any"` does. Both `⏸ blocked`, both owing a recheck.
+
+And `@starting-style` is noted beside `DialogAnimation`: it clears all three engines above this
+package's floor, so a consumer whose own floor is higher can do entrance and exit in CSS alone and
+pass no `animation` at all.
+
+## 2026-08-31
+
 ### Added — the two checks the entry below said were missing
 
 The `### Options` gate now reads the **first column**, which the `### Render Args` gate beside it

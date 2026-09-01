@@ -583,10 +583,9 @@ test.describe('focusOnOpen', () => {
   });
 
   test('the opening focus is visibly focused, claimed or not', async ({ mount, page }) => {
-    // `:focus-visible` follows input modality and the opening click is pointer input — the ring is
-    // absent on Chromium/Firefox, present on WebKit, for the same focus. It works only because
-    // focus is dropped before it is taken: refocusing an already-focused element is a no-op on all
-    // three engines, flags included.
+    // The opening click is pointer input, so modality alone draws no ring. `focusVisible` is what
+    // draws it; the blur only makes the re-focus take. Green here because CI's engines read the
+    // flag — below Chrome 145 / Safari 18.4 they do not, which the matrix carries as `enhancing`.
     await mount(<FocusOnOpenHarness />);
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');

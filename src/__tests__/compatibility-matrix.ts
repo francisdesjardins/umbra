@@ -159,6 +159,149 @@ export type PlatformRow = OpenSince & {
   readonly recheck?: Recheck;
 };
 
+/**
+ * One platform feature the library depends on, and where each engine started answering.
+ *
+ * **This is where the browser floor comes from**: `browserslist` is the per-engine maximum of the
+ * `required` rows, asserted by the gate, so a dependency raising one fails the build until the
+ * manifest agrees. An `enhancing` row is excluded — absent below its threshold is not broken, and
+ * letting one set the baseline would be backwards.
+ *
+ * Every row owes a `source` and the date somebody read it, for {@link Recheck}’s reason: nothing
+ * here is measured, no engine older than CI’s ever being run. **And the table cannot notice.** A
+ * line reaching for a newer API adds no row and no linter reports one; discovery stays human.
+ */
+export type PlatformFeatureRow = {
+  /** The capability, named as the platform names it. */
+  readonly feature: string;
+  /** Where the library reaches for it — a module, and what it does with it. */
+  readonly usedBy: string;
+  /**
+   * `required` breaks below its threshold and sets the floor; `enhancing` is absent below it and
+   * sets nothing. Each owes the sentence its own kind owes.
+   */
+  readonly need: 'required' | 'enhancing';
+  /** Required of `required`: what a consumer below the threshold actually sees go wrong. */
+  readonly breaks?: string;
+  /** Required of `enhancing`: what happens instead, below the threshold. */
+  readonly degradesTo?: string;
+  readonly chrome: number;
+  readonly firefox: number;
+  readonly safari: number;
+  /** Where the numbers came from, so the next reader re-reads rather than re-remembers. */
+  readonly source: string;
+  /** ISO date somebody last read that source. */
+  readonly checked: string;
+};
+
+/**
+ * Every platform feature the library reaches for, required and enhancing alike.
+ *
+ * Edge is absent as a column: it is Chromium, and `browserslist` carries the same number for both —
+ * asserted in the gate rather than assumed here.
+ */
+export const FLOOR_ROWS: readonly PlatformFeatureRow[] = [
+  {
+    feature: 'constructed `CSSStyleSheet` + `adoptedStyleSheets`',
+    usedBy:
+      'core/dialog-styles.ts — the one `dialog::backdrop` rule, adopted per root so it crosses a shadow boundary',
+    need: 'required',
+    breaks: 'The constructor throws, so no dialog gets a backdrop rule at all.',
+    chrome: 73,
+    firefox: 101,
+    safari: 16.4,
+    source: 'https://caniuse.com/mdn-api_document_adoptedstylesheets',
+    checked: '2026-08-31',
+  },
+  {
+    feature: '`Array.prototype.toSorted`',
+    usedBy:
+      'manager/stack-order.ts — ordering the stack without mutating the array the snapshot published',
+    need: 'required',
+    breaks: 'A `TypeError` on every snapshot, so the stack order never computes.',
+    chrome: 110,
+    firefox: 115,
+    safari: 16,
+    source: 'https://caniuse.com/mdn-javascript_builtins_array_tosorted',
+    checked: '2026-08-31',
+  },
+  {
+    feature: 'native `<dialog>` with its top-layer backdrop',
+    usedBy: 'the whole library — `showModal()` and `show()` are what it drives',
+    need: 'required',
+    breaks: 'There is nothing to drive. The headline requirement, and the widest of the three.',
+    chrome: 37,
+    firefox: 98,
+    safari: 15.4,
+    source: 'https://caniuse.com/dialog',
+    checked: '2026-08-31',
+  },
+  {
+    feature: '`dvh` / `dvw` viewport units',
+    usedBy:
+      'templates/slide-geometry.ts — a portaled slide panel sized against the *dynamic* viewport, so a mobile URL bar does not crop it',
+    need: 'required',
+    breaks:
+      'The length is invalid and the declaration is dropped, so the panel falls back to its content size.',
+    chrome: 108,
+    firefox: 101,
+    safari: 15.4,
+    source: 'https://caniuse.com/viewport-unit-variants',
+    checked: '2026-08-31',
+  },
+  {
+    feature: 'Shadow DOM v1',
+    usedBy:
+      'core/dialog-styles.ts and core/focus-policy.ts — the sheet is adopted per root, and the focus scan asks that root rather than the document',
+    need: 'required',
+    breaks:
+      'Only for a caller who has one: a `<dialog>` inside a web component. Nothing else reaches it.',
+    chrome: 53,
+    firefox: 63,
+    safari: 10,
+    source: 'https://caniuse.com/shadowdomv1',
+    checked: '2026-08-31',
+  },
+  {
+    feature: '`AbortController` / `AbortSignal`',
+    usedBy:
+      'core/dialog-store.ts — the signal handed to `prepare`, aborted on close and on teardown',
+    need: 'required',
+    breaks: 'The store cannot build the signal `prepare` is documented to receive.',
+    chrome: 66,
+    firefox: 57,
+    safari: 12.1,
+    source: 'https://caniuse.com/abortcontroller',
+    checked: '2026-08-31',
+  },
+  {
+    feature: '`CSS.escape()`',
+    usedBy:
+      'core/focus-policy.ts — building the `[data-action-reason="…"]` selector out of a reason the caller named',
+    need: 'required',
+    breaks:
+      'A reason carrying a quote or a bracket builds an invalid selector, and `querySelector` throws.',
+    chrome: 46,
+    firefox: 31,
+    safari: 10.1,
+    source: 'https://caniuse.com/mdn-api_css_escape_static',
+    checked: '2026-08-31',
+  },
+  {
+    feature: '`FocusOptions.focusVisible`',
+    usedBy:
+      'core/focus-policy.ts — `SHOW_THE_RING`, on every focus move the library makes of its own',
+    need: 'enhancing',
+    degradesTo:
+      'Input modality decides instead, which is what an ordinary page does. A dialog opened **from the keyboard** still rings: `:focus-visible` propagates to a scripted focus from an element that already matched it, so that path is unaffected on every engine. A dialog opened **by pointer** does not — the move is made, and it is silent. Measured both ways with the option neutralised.',
+    chrome: 145,
+    firefox: 104,
+    safari: 18.4,
+    source: 'https://caniuse.com/mdn-api_htmlelement_focus_options_focusvisible_parameter',
+    checked: '2026-08-31',
+  },
+];
+
 // ── Axis A — option × option ──────────────────────────────────────────────────
 //
 // One row per option, and the interesting column is `enforcement`: **two pairs are `TYPE`**, both
@@ -1650,6 +1793,24 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     },
     why: 'The linter runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, whose two remaining jobs are `docs:check` and the JSON model behind the playground’s `/api` page — the HTML half is gone. TS 7 ships an API (`typescript/unstable/sync`) and it is **most of the way there**: exports, doc comments, `@example` tags, `typeToString` and `emitter.printNode` all work, and a lazy declaration node inflates through `resolve()`. Three measured blockers remain, and the middle one is the surprise: the resolved node exposes **no child traversal** (`children` is `undefined`, and no `forEachChild` is exported), so a syntax-level check like `notExported` cannot be written; walking the resolved _type graph_ instead is semantically the wrong question — it reports **0** findings against typedoc’s 10 allowances, because an alias resolves away; and the server **panics** rather than throwing on an unsupported checker call, so preconditions must be guarded rather than probed. So the `/api` model is the nearer half of this, not the validator. **Re-measured 2026-08-14: unchanged.** `typedoc@0.28.20` still declares `typescript: "5.0.x || … || 6.0.x"`, so the pin is not a stale one to drop — it is the peer range, and the cell is blocked on typedoc rather than on this repo. Check that range first; there is nothing else to try until it moves.',
   },
+  {
+    fact: 'the dismiss key for a non-modal panel is the library’s own window listener',
+    state: 'blocked',
+    recheck: {
+      what: '`CloseWatcher` reaching a Safari release — Chrome 126 and Firefox 149 have it, Safari has it in Technology Preview only',
+      measured: '2026-08-31',
+    },
+    why: 'A non-modal dialog is not in the top layer, so nothing routes the dismiss key to it and `attach-keydown.ts` listens at the window in the capture phase. `CloseWatcher` is the platform’s answer to exactly that, and it would bring what no key listener can: the **Android back button and the system dismiss gesture**, which reach a page as a history event rather than a press. So this is a capability the library lacks, not only a simplification it is missing. Blocked rather than open, because shipping it on two engines and hand-rolling the third is two dismiss paths to keep in step — worse than one.',
+  },
+  {
+    fact: 'click-outside for a non-modal panel is the library’s own press/release pair',
+    state: 'blocked',
+    recheck: {
+      what: '`<dialog closedby>` reaching a Safari release — Chrome 134 and Firefox 141 have it, Safari has it in Technology Preview only',
+      measured: '2026-08-31',
+    },
+    why: 'The platform grew light dismiss after this was written, and it would not be a straight swap. `attachClickOutside` arms on the press and decides on the release, so a press dragged back into the panel changes nothing and neither does one that starts inside and ends on the page: WCAG 2.5.2 asks for the first, and the second is why this is not a `click` listener. Whether `closedby="any"` honours that pair is the thing to measure when Safari ships, before trading a known behaviour for a shorter one.',
+  },
 ];
 
 // ── Axis D — WCAG 2.2, criterion by criterion ────────────────────────────────
@@ -1851,7 +2012,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'Focus Visible',
     level: 'AA',
     state: 'works',
-    why: 'Every focus move the library makes on the user’s behalf carries `focusVisible: true`, because input modality would otherwise hide it: a dialog opened by mouse inherits “pointer”, and two engines out of three draw no ring on a library-made focus. The ring itself is the page’s own `:focus-visible` styling — the library asks for it, the caller draws it.',
+    why: 'Every focus move the library makes on the user’s behalf carries `focusVisible: true`, because input modality would otherwise hide it: a dialog opened by mouse inherits “pointer”, and two engines out of three draw no ring on a library-made focus. The ring itself is the page’s own `:focus-visible` styling — the library asks for it, the caller draws it. **The asking is younger than the floor** — the option is an `enhancing` row (Chrome 145, Safari 18.4), and below it modality decides: the keyboard path still rings, since `:focus-visible` propagates to a scripted focus, and the pointer path does not.',
     references: [
       {
         file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
@@ -2013,6 +2174,30 @@ export function renderMatrix(): string {
   for (const row of PLATFORM_ROWS) {
     lines.push(
       `| ${escapeCell(row.fact)} | ${SYMBOL[row.state]} | ${escapeCell(`${row.why}${openTail(row)}`)} |`
+    );
+  }
+  lines.push('');
+
+  lines.push('### The browser floor, feature by feature', '');
+  lines.push(
+    'Where each engine started answering, per feature the library reaches for. **`browserslist` is',
+    ' the maximum of the required rows** and a gate asserts it, so the floor cannot drift from its',
+    ' own justification. An **enhancing** row sits above the floor on purpose: it is absent below',
+    ' its threshold, not broken, so it sets nothing.'
+  );
+  lines.push('');
+  lines.push(
+    '| Feature | Need | Chrome/Edge | Firefox | Safari | Used by, and what changes below |'
+  );
+  lines.push('| --- | --- | --- | --- | --- | --- |');
+  for (const row of FLOOR_ROWS) {
+    const need = row.need === 'required' ? '**required**' : 'enhancing';
+    const tail =
+      row.need === 'required'
+        ? `**Below:** ${row.breaks ?? ''}`
+        : `**Below:** ${row.degradesTo ?? ''}`;
+    lines.push(
+      `| ${escapeCell(row.feature)} | ${need} | ${String(row.chrome)} | ${String(row.firefox)} | ${String(row.safari)} | ${escapeCell(`${row.usedBy}. ${tail} ([source](${row.source}), read ${row.checked})`)} |`
     );
   }
   lines.push('');

@@ -168,10 +168,11 @@ by hand.
 - **Environment**: Node >=24 | **Yarn 4** (Corepack, pinned by `packageManager`) | React and
   `react-dom` ^19.0.0 and Solid ^1.9.0 as the three optional peers, each required only by its own
   binding and none by `./vanilla` |
-  Chrome/Edge 110+, Safari 16.4+, Firefox 115+ | ES2024, ESNext modules | Vite v8. **The peer ranges
-  are the requirement, not this repo's `devDependencies`**, which sit far above them; quoting a dev
-  pin asks for more than the package does. **The browser floor is measured** — the highest thing the
-  runtime calls: constructed `CSSStyleSheet` (Safari 16.4), `toSorted` (Chrome 110, Firefox 115).
+  ES2024, ESNext modules | Vite v8. **The peer ranges are the requirement, not this repo's
+  `devDependencies`**, which sit far above them; quoting a dev pin asks for more than the package
+  does. **The browser floor is derived** — `browserslist` is the per-engine max of `FLOOR_ROWS`’
+  `required` rows, asserted by a gate. That inventory cannot see an **option** on a method already
+  called, which is why those rows split required from enhancing.
 - **Package manager**: Yarn only — `yarn.lock` is authoritative and `yarn install --immutable` is the CI form. Dependency pins go in `resolutions`; npm's `overrides` is ignored.
 - **Yarn workspaces**: two packages — `umbra` (root, published) and `umbra-playground`
   (`playground/`, private); one `yarn install` at the root installs both. **The published dependency

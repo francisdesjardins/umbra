@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test';
 import * as prettier from 'prettier';
 import {
   BINDING_ROWS,
+  FLOOR_ROWS,
   OPTION_ROWS,
   PLATFORM_ROWS,
   WCAG_ROWS,
@@ -269,6 +270,67 @@ test.describe('the compatibility matrix', () => {
       malformed,
       'A row with the wrong number of cells does not render as a row — the surplus is drawn into the one above.'
     ).toEqual([]);
+  });
+
+  /**
+   * The floor is the maximum of the required rows, and this is what makes that sentence true.
+   *
+   * Stated the other way round it is prose: the manifest holds four numbers and nothing tied them to
+   * the features that justify them, so a dependency raising one drifts silently. Enhancing rows are
+   * excluded on purpose — absent below its threshold is not broken, and letting one set the baseline
+   * refuses the package to everyone below it for a nicety.
+   */
+  test('browserslist is the maximum of the required rows', () => {
+    const required = FLOOR_ROWS.filter((row) => {
+      return row.need === 'required';
+    });
+    const highest = (engine: 'chrome' | 'firefox' | 'safari'): number => {
+      return Math.max(
+        ...required.map((row) => {
+          return row[engine];
+        })
+      );
+    };
+
+    const manifest = JSON.parse(readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8')) as {
+      browserslist: readonly string[];
+    };
+
+    // Edge is Chromium, so it carries Chrome's number rather than a column of its own.
+    expect(
+      [...manifest.browserslist],
+      'browserslist and FLOOR_ROWS disagree — change the row, then the manifest.'
+    ).toEqual([
+      `Chrome >= ${String(highest('chrome'))}`,
+      `Edge >= ${String(highest('chrome'))}`,
+      `Safari >= ${String(highest('safari'))}`,
+      `Firefox >= ${String(highest('firefox'))}`,
+    ]);
+  });
+
+  test('a floor row says where its numbers came from, and what happens below it', () => {
+    const unexplained = FLOOR_ROWS.flatMap((row) => {
+      const faults: string[] = [];
+      if (!/^https?:\/\//.test(row.source)) {
+        faults.push('no source URL');
+      }
+      if (!ISO_DATE.test(row.checked)) {
+        faults.push('no ISO `checked` date');
+      }
+      // The sentence each kind owes: without it a `required` row states a version and not a
+      // consequence, and an `enhancing` row cannot be told from a required one.
+      if (row.need === 'required' && row.breaks === undefined) {
+        faults.push('required, but no `breaks`');
+      }
+      if (row.need === 'enhancing' && row.degradesTo === undefined) {
+        faults.push('enhancing, but no `degradesTo`');
+      }
+      return faults.map((fault) => {
+        return `${row.feature}: ${fault}`;
+      });
+    });
+
+    expect(unexplained, 'Every floor row owes its evidence.').toEqual([]);
   });
 
   test('API.md carries the rendered matrix', async () => {

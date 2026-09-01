@@ -29,15 +29,16 @@ export function findActionButton(dialog: HTMLElement, reason: string): HTMLEleme
 }
 
 /**
- * Focus, and show the ring, for every move the library makes on the user's behalf: input modality
- * would otherwise hide it — measured, a plain `focus()` after a pointer-opened dialog draws no
- * ring on Chromium or Firefox — and the post-action restore needs it too, since the browser
- * blurred the disabled button long before the settle.
+ * Focus, and show the ring, for every move the library makes on the user's behalf: modality would
+ * otherwise hide it, and the post-action restore needs it too, the browser having blurred the
+ * disabled button long before the settle.
  *
- * Three exceptions, and each is a different reason: `clickHotkeyButton` (keydown modality already
- * rings), `restoreFocus`'s last-resort `dialog.focus()` (the element takes no ring), and
- * `restoreOpenerFocus`'s caret branch — putting back a caret the reader placed is their state
- * rather than a move of ours, so it is done silently.
+ * **The flag draws it, and it is younger than the floor** — Chrome 145, Safari 18.4, the matrix's
+ * one `enhancing` row, which carries what happens below. Nothing throws there, so it is not a floor.
+ *
+ * Three exceptions, each for its own reason: `clickHotkeyButton` (keydown modality already rings),
+ * `restoreFocus`'s last-resort `dialog.focus()` (the element takes no ring), and
+ * `restoreOpenerFocus`'s caret branch — a caret the reader placed is their state, so it is silent.
  *
  * @internal
  */
@@ -189,8 +190,8 @@ export function settleOpeningFocus(dialog: HTMLDialogElement): HTMLElement | nul
   // focus, the second is re-taken purely so it is visible.
   const target = queryOwn(dialog, FOCUS_ON_OPEN_SELECTOR) ?? focusInside(dialog);
   if (target !== null) {
-    // Refocusing an already-focused element is a no-op on all three engines, flags included, so
-    // the blur is what makes the ring appear — done only when it buys one.
+    // Two halves: the blur makes the re-focus take at all (refocusing an already-focused element
+    // is a no-op), and the flag draws the ring. Dropped only where the ring is missing.
     if (activeWithin(dialog) === target && !target.matches(':focus-visible')) {
       target.blur();
     }
