@@ -295,7 +295,7 @@ export const FLOOR_ROWS: readonly PlatformFeatureRow[] = [
       'core/focus-policy.ts — `SHOW_THE_RING`, on every focus move the library makes of its own',
     need: 'enhancing',
     degradesTo:
-      'Modality and the engine decide instead, and **the three do not agree** — which is the argument for the flag rather than against it. WebKit rings a library-made focus either way, so the option buys it nothing. Chromium rings it only when the dialog was opened from the keyboard, the modality surviving `showModal()`’s own focus move. Firefox rings neither. Measured on all three with the option neutralised.',
+      'Modality decides instead, and one engine has its own habit. A dialog opened **from the keyboard** rings on all three: the modality survives `showModal()`’s own focus move and reaches the library’s. Opened **by pointer**, Chromium and Firefox draw nothing — what an ordinary page does — while **WebKit rings anyway**. So what the flag buys is a pointer-opened dialog answering alike. Measured on three engines with the option neutralised.',
     chrome: 145,
     firefox: 104,
     safari: 18.4,
@@ -304,7 +304,11 @@ export const FLOOR_ROWS: readonly PlatformFeatureRow[] = [
     references: [
       {
         file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
-        title: "without the flag the ring is the engine's habit, not the library's",
+        title: 'without the flag, only WebKit rings a pointer-opened dialog',
+      },
+      {
+        file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
+        title: 'without the flag, a keyboard-opened dialog still rings',
       },
     ],
   },

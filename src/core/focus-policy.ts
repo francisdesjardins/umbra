@@ -33,9 +33,9 @@ export function findActionButton(dialog: HTMLElement, reason: string): HTMLEleme
  * otherwise hide it, and the post-action restore needs it, the browser having blurred the disabled
  * button long before the settle.
  *
- * **The flag draws it, and it is younger than the floor** — Chrome 145, Safari 18.4. Below that the
- * three disagree about a scripted focus, which is the point of asking; the matrix's `enhancing` row
- * has the measurements, and nothing throws.
+ * **The flag draws it, and it is younger than the floor** — Chrome 145, Safari 18.4. Below that a
+ * keyboard-opened dialog still rings on all three and a pointer-opened one rings only on WebKit;
+ * the matrix's `enhancing` row has the measurements, and nothing throws.
  *
  * Three exceptions, each for its own reason: `clickHotkeyButton` (keydown modality already rings),
  * `restoreFocus`'s last-resort `dialog.focus()` (the element takes no ring), and

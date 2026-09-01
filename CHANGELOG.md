@@ -9,6 +9,44 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-01
+
+### Fixed — the correction below was itself wrong, and the test that carried it was the reason
+
+Two entries ago this claimed the keyboard path was unaffected below the `focusVisible` threshold.
+One entry ago it said that was a Chromium-only generalisation and that **Firefox rings neither**.
+That second claim was the artefact, and the first was right.
+
+**The test manufactured it.** Its keyboard case closed the dialog with a _click_, then reached the
+trigger with a scripted `focus()` before pressing Enter. Measured: after pointer input, a scripted
+focus leaves the element outside `:focus-visible` on all three, and on **Firefox pressing Enter
+does not lift it** where Chromium and WebKit do. So the keyboard case was never a keyboard case
+there — it was pointer modality wearing a keypress.
+
+Measured again, each case on a fresh mount with nothing before it:
+
+| Engine   | opened by pointer | opened from the keyboard |
+| -------- | ----------------- | ------------------------ |
+| Chromium | no ring           | ring                     |
+| Firefox  | no ring           | ring                     |
+| WebKit   | **ring**          | ring                     |
+
+**The keyboard rings everywhere; the one divergence is WebKit ringing a pointer-opened dialog too.**
+That is what the flag buys: the pointer case answering alike. It is now two tests rather than one —
+one per modality, each mounting fresh — because a single test could not avoid letting the first
+case set the modality for the second. Both cite from the `enhancing` row.
+
+`showModal()` was suspected and cleared. Two hypotheses, both measured and both wrong: giving the
+claimed control `autofocus` so the platform lands on it directly changes nothing on any engine, and
+neither does moving the library's own focus call — synchronous, one frame, two frames, a timeout
+all read the same. The platform's focusing steps carry the modality through fine. What is left is
+WebKit being more generous with a scripted focus, which is not a defect to fix.
+
+**The lesson is about the harness, not the platform.** A test that arranges its own preconditions
+with pointer input cannot then ask a question about keyboard modality, and the failure is silent —
+it reports a plausible per-engine table. `installFakeFrames` has an analogue here: a shared
+sequence that quietly makes later assertions mean something other than they read.
+
 ## 2026-08-31
 
 ### Added — an action handler is told when its dialog goes, and a correction to the entry below

@@ -566,6 +566,31 @@ test.describe('focusOnOpen', () => {
     });
   };
 
+  /** The engines disagree below the threshold; this names which one is the odd column. */
+  /** Drop the option on the way through: what an engine below the threshold does with it. */
+  const dropFocusVisible = async (page: Page): Promise<void> => {
+    await page.evaluate(() => {
+      const real = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function focusWithoutOptions(this: HTMLElement) {
+        real.call(this);
+      };
+    });
+  };
+  const settledOnCancel = async (page: Page): Promise<void> => {
+    await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
+    await expect
+      .poll(() => {
+        return activeTestId(page);
+      })
+      .toBe('foo-cancel');
+  };
+  const ringed = (page: Page): Promise<boolean> => {
+    return page.evaluate(() => {
+      const active = document.activeElement;
+      return active instanceof HTMLElement && active.matches(':focus-visible');
+    });
+  };
+
   test('the marked action takes the opening focus from the first focusable', async ({
     mount,
     page,
@@ -602,60 +627,43 @@ test.describe('focusOnOpen', () => {
 
   /**
    * What the ring does on an engine that ignores `focusVisible` — Chrome below 145, Safari below
-   * 18.4, neither of which CI runs. Simulated by dropping the option on the way through, which is
-   * what those engines do with it, so what is left is the engine's own habit.
+   * 18.4, neither of which CI runs. The option is dropped on the way through, which is what those
+   * engines do with it, so what is left is the engine's own habit.
    *
-   * **And the three do not agree, which is the argument for the flag.** WebKit rings a scripted
-   * focus either way. Chromium rings it only when the dialog was opened from the keyboard, the
-   * modality surviving `showModal()`'s own focus move. Firefox rings neither. The flag is what
-   * makes them agree, and the matrix carries it as `enhancing` because none of this throws.
+   * **Two tests rather than one, and the split is the finding.** Reaching the trigger with a
+   * scripted `focus()` after a pointer click leaves Firefox in pointer modality and `Enter` does
+   * not lift it — measured — so a keyboard case built that way is not one. This walks there with
+   * Tab, and mounts fresh so nothing earlier has set the modality.
    */
-  test("without the flag the ring is the engine's habit, not the library's", async ({
+  test('without the flag, only WebKit rings a pointer-opened dialog', async ({
     mount,
     page,
     browserName,
   }) => {
     await mount(<FocusOnOpenHarness />);
-    await page.evaluate(() => {
-      const real = HTMLElement.prototype.focus;
-      HTMLElement.prototype.focus = function focusWithoutOptions(this: HTMLElement) {
-        real.call(this);
-      };
-    });
+    await dropFocusVisible(page);
 
-    const expected = {
-      chromium: { pointer: false, keyboard: true },
-      firefox: { pointer: false, keyboard: false },
-      webkit: { pointer: true, keyboard: true },
-    }[browserName];
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
+    await settledOnCancel(page);
 
-    const trigger = page.getByRole('button', { name: 'Open Focus Dialog' });
-    const ringed = () => {
-      return page.evaluate(() => {
-        const active = document.activeElement;
-        return active instanceof HTMLElement && active.matches(':focus-visible');
-      });
-    };
-    const settled = async () => {
-      await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
-      await expect
-        .poll(() => {
-          return activeTestId(page);
-        })
-        .toBe('foo-cancel');
-    };
+    // WebKit rings a scripted focus whatever the modality; the other two follow the pointer.
+    // The one divergence, and what the flag buys: WebKit rings a scripted focus whatever the
+    // modality, where the other two follow the pointer and draw nothing — as any page does.
+    expect(await ringed(page)).toBe(browserName === 'webkit');
+  });
 
-    await trigger.click();
-    await settled();
-    expect(await ringed(), 'opened by pointer').toBe(expected.pointer);
+  test('without the flag, a keyboard-opened dialog still rings', async ({ mount, page }) => {
+    await mount(<FocusOnOpenHarness />);
+    await dropFocusVisible(page);
 
-    await page.getByTestId('foo-cancel').click();
-    await expect(page.getByTestId('foo-is-visible')).toHaveText('closed');
-
-    await trigger.focus();
+    // A fresh mount, no pointer input yet, so the browser has concluded nothing else. Not a Tab:
+    // WebKit keeps buttons out of the tab order by default.
+    await page.getByRole('button', { name: 'Open Focus Dialog' }).focus();
     await page.keyboard.press('Enter');
-    await settled();
-    expect(await ringed(), 'opened from the keyboard').toBe(expected.keyboard);
+    await settledOnCancel(page);
+
+    // All three: the modality survives `showModal()`’s own focus move and reaches the library’s.
+    expect(await ringed(page)).toBe(true);
   });
 
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
