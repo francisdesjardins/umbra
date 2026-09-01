@@ -114,9 +114,10 @@ is how it reaches `yarn todo` instead of a footnote.
   a non-modal panel closes — each is pinned per engine, and every focus move the library makes **of
   its own** shows a `:focus-visible` ring, because input-modality heuristics make a library-made
   focus invisible on two engines out of three. That ring asks for `FocusOptions.focusVisible`, an
-  _enhancing_ row in the [browser floor table](API.md#compatibility) rather than a floor one: below
-  Chrome 145 / Safari 18.4 the option is ignored and modality decides, so a dialog opened from the
-  keyboard still rings and one opened by pointer does not — the move itself is made either way. The exception says the same thing from the other
+  _enhancing_ row in the [browser floor table](API.md#compatibility) rather than a floor one. Below
+  Chrome 145 / Safari 18.4 the option is ignored and the three engines fall back on habits that do
+  not agree — WebKit rings a library-made focus, Chromium only after a keyboard open, Firefox
+  neither. The move itself is made either way; asking is what makes the three answer alike. The exception says the same thing from the other
   side: putting back a caret you had placed yourself is done silently, being your state rather than
   a move of ours to announce. `restoreFocusTo` redirects that last
   one when the opener is no longer the right answer — a list that drove the panel's content is the

@@ -55,6 +55,7 @@ export type {
   ActionFactory,
   ActionOptions,
   ActionReason,
+  ActionRunContext,
   HotkeyDef,
 } from './actions/types.js';
 

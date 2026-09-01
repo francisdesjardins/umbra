@@ -30,11 +30,12 @@ export function findActionButton(dialog: HTMLElement, reason: string): HTMLEleme
 
 /**
  * Focus, and show the ring, for every move the library makes on the user's behalf: modality would
- * otherwise hide it, and the post-action restore needs it too, the browser having blurred the
- * disabled button long before the settle.
+ * otherwise hide it, and the post-action restore needs it, the browser having blurred the disabled
+ * button long before the settle.
  *
- * **The flag draws it, and it is younger than the floor** — Chrome 145, Safari 18.4, the matrix's
- * one `enhancing` row, which carries what happens below. Nothing throws there, so it is not a floor.
+ * **The flag draws it, and it is younger than the floor** — Chrome 145, Safari 18.4. Below that the
+ * three disagree about a scripted focus, which is the point of asking; the matrix's `enhancing` row
+ * has the measurements, and nothing throws.
  *
  * Three exceptions, each for its own reason: `clickHotkeyButton` (keydown modality already rings),
  * `restoreFocus`'s last-resort `dialog.focus()` (the element takes no ring), and

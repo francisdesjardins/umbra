@@ -45,6 +45,25 @@ export type HotkeyDef =
  *   close(); // closes with reason 'confirm'
  * });
  */
+/**
+ * The second argument an action handler is given: what the library can tell it while it runs.
+ *
+ * **An object rather than the bare signal `prepare` takes**, because this one is the newer of the
+ * two and a second thing to report would otherwise be a second positional argument. A handler
+ * that wants none of it writes none of it.
+ */
+export type ActionRunContext = {
+  /**
+   * Fires when the dialog stops being live for a reason **this action did not choose** — a
+   * dismissal, another action, the manager, an unmount.
+   *
+   * Calling `close()` from inside the handler does **not** abort it: that is the outcome the
+   * action was written for, and what a caller queues after it is the caller’s business. The
+   * library can only tell you the dialog has gone; it cannot stop work it never started.
+   */
+  readonly signal: AbortSignal;
+};
+
 export type ActionCloseFn<TData = never> = (data?: TData) => void;
 
 /**
@@ -113,8 +132,14 @@ export type ActionButtonProps = {
  * @typeParam TData - The dialog's close payload.
  */
 export type ActionOptions<TData = never> = {
-  /** What the action does. Omit to auto-close the dialog with the action's reason. */
-  readonly onAction?: ((close: ActionCloseFn<TData>) => void | Promise<void>) | undefined;
+  /**
+   * What the action does. Omit to auto-close the dialog with the action’s reason.
+   *
+   * The second argument is {@link ActionRunContext} — today, the signal that fires when the
+   * dialog goes away under a handler still running.
+   */
+  readonly onAction?:
+    ((close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>) | undefined;
   /** Runs first; call `preventDefault()` to stop the action from running. */
   readonly onClick?: ((event: ActionClickEvent) => void) | undefined;
   /** An extra reason to disable, or-ed with the action's own. */
@@ -170,7 +195,8 @@ export type ActionFactory<TData = never, TReason extends string = string> = {
   (
     reason: ActionReason<TReason>,
     handlerOrOptions?:
-      ((close: ActionCloseFn<TData>) => void | Promise<void>) | ActionOptions<TData>
+      | ((close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>)
+      | ActionOptions<TData>
   ): ActionButtonProps;
   /**
    * Whether **that** action is running — the per-action question, asked away from its button.

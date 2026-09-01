@@ -125,6 +125,17 @@ export function createDialogRuntime<TData = void, TReason extends string = strin
 ) {
   const store = createDialogStore<TData, TReason>(dialogId);
   const engine = createActionEngine<TData, TReason>(dialogId);
+  /**
+   * The other direction of the same wire: an action still running when the dialog stops being
+   * live is told, on every path but its own close. Subscribed rather than called from the close
+   * seams, because there are five of those and a sixth would be added without this one.
+   */
+  store.subscribe(() => {
+    if (store.getSnapshot().phase === 'closed' || store.getSnapshot().phase === 'closing') {
+      engine.abortRun();
+    }
+  });
+
   engine.bindClose((reason, data) => {
     store.close(reason, data);
   });

@@ -600,6 +600,64 @@ test.describe('focusOnOpen', () => {
       .toBe(true);
   });
 
+  /**
+   * What the ring does on an engine that ignores `focusVisible` — Chrome below 145, Safari below
+   * 18.4, neither of which CI runs. Simulated by dropping the option on the way through, which is
+   * what those engines do with it, so what is left is the engine's own habit.
+   *
+   * **And the three do not agree, which is the argument for the flag.** WebKit rings a scripted
+   * focus either way. Chromium rings it only when the dialog was opened from the keyboard, the
+   * modality surviving `showModal()`'s own focus move. Firefox rings neither. The flag is what
+   * makes them agree, and the matrix carries it as `enhancing` because none of this throws.
+   */
+  test("without the flag the ring is the engine's habit, not the library's", async ({
+    mount,
+    page,
+    browserName,
+  }) => {
+    await mount(<FocusOnOpenHarness />);
+    await page.evaluate(() => {
+      const real = HTMLElement.prototype.focus;
+      HTMLElement.prototype.focus = function focusWithoutOptions(this: HTMLElement) {
+        real.call(this);
+      };
+    });
+
+    const expected = {
+      chromium: { pointer: false, keyboard: true },
+      firefox: { pointer: false, keyboard: false },
+      webkit: { pointer: true, keyboard: true },
+    }[browserName];
+
+    const trigger = page.getByRole('button', { name: 'Open Focus Dialog' });
+    const ringed = () => {
+      return page.evaluate(() => {
+        const active = document.activeElement;
+        return active instanceof HTMLElement && active.matches(':focus-visible');
+      });
+    };
+    const settled = async () => {
+      await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
+      await expect
+        .poll(() => {
+          return activeTestId(page);
+        })
+        .toBe('foo-cancel');
+    };
+
+    await trigger.click();
+    await settled();
+    expect(await ringed(), 'opened by pointer').toBe(expected.pointer);
+
+    await page.getByTestId('foo-cancel').click();
+    await expect(page.getByTestId('foo-is-visible')).toHaveText('closed');
+
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+    await settled();
+    expect(await ringed(), 'opened from the keyboard').toBe(expected.keyboard);
+  });
+
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
     // The claimed button decides where the dialog opens; after a failure, whoever ran the action.
     await mount(<FocusOnOpenHarness />);

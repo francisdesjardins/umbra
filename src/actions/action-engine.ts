@@ -3,7 +3,13 @@ import { formatAriaKeyshortcuts, matchesHotkey } from '../utils/hotkey-utils.js'
 import { createLogger } from '../utils/logger.js';
 import { normalizeError } from '../utils/normalize-error.js';
 import { DISMISS_REASON, type DismissReason } from '../core/dismiss-reason.js';
-import type { ActionCloseFn, ActionReason, ActionState, HotkeyDef } from './types.js';
+import type {
+  ActionCloseFn,
+  ActionReason,
+  ActionRunContext,
+  ActionState,
+  HotkeyDef,
+} from './types.js';
 
 const log = createLogger('action');
 
@@ -42,6 +48,16 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
   /** So the reserved-reason warning below is said once, not once per render pass. */
   let warnedDismiss = false;
 
+  /**
+   * The running action’s signal, and whether that action is what closed the dialog.
+   *
+   * **An action closing the dialog does not abort itself.** The dialog never shuts on its own,
+   * so `close()` from inside a handler is the outcome it was written for. What the signal
+   * reports is the other kind — the dialog went away for a reason this handler never chose.
+   */
+  let runController: AbortController | null = null;
+  let runClosedTheDialog = false;
+
   // The close path accepts `'dismiss'`, because the library produces it; the action-facing
   // methods below do not, because no action may be named it — see `ActionReason`.
   let closeFn: ((reason: TReason | DismissReason, data?: TData) => void) | null = null;
@@ -77,7 +93,7 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
 
         async run(
           reason: ActionReason<TReason>,
-          handler: (close: ActionCloseFn<TData>) => void | Promise<void>
+          handler: (close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>
         ): Promise<void> {
           if (get().hasRunningAction) {
             log.warn('Action overlap', { id: dialogId, incoming: reason });
@@ -85,12 +101,21 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
           setState(reason, { isRunning: true, error: null });
           log('Action started', { id: dialogId, reason });
           const startedAt = Date.now();
+          // A fresh one per run, for `prepareController`’s reason: a re-run must not inherit the
+          // previous run’s aborted signal.
+          runController?.abort();
+          runController = new AbortController();
+          runClosedTheDialog = false;
           try {
-            await handler((data?: TData) => {
-              // Whether a payload came, never the payload itself, which may carry user data.
-              log('Action close', { id: dialogId, reason, withData: data !== undefined });
-              closeFn?.(reason, data);
-            });
+            await handler(
+              (data?: TData) => {
+                // Whether a payload came, never the payload itself, which may carry user data.
+                log('Action close', { id: dialogId, reason, withData: data !== undefined });
+                runClosedTheDialog = true;
+                closeFn?.(reason, data);
+              },
+              { signal: runController.signal }
+            );
             log('Action completed', { id: dialogId, reason, ms: Date.now() - startedAt });
             setState(reason, { isRunning: false, error: null });
           } catch (err: unknown) {
@@ -121,12 +146,25 @@ export function createActionEngine<TData, TReason extends string = string>(dialo
     },
     run: (
       reason: ActionReason<TReason>,
-      handler: (close: ActionCloseFn<TData>) => void | Promise<void>
+      handler: (close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>
     ) => {
       return store.run(reason, handler);
     },
 
     /** The dialog's own close function, bound once by `useDialog`. */
+    /**
+     * Tell a running action the dialog is gone — unless that action is what closed it.
+     *
+     * Called on every transition out of a live phase, so a dismissal, another action, the manager
+     * and an unmount all reach it. Aborting an aborted controller is a no-op, so this is safe on
+     * every notification rather than only on the edge.
+     */
+    abortRun(): void {
+      if (!runClosedTheDialog) {
+        runController?.abort();
+      }
+    },
+
     bindClose(fn: (reason: TReason | DismissReason, data?: TData) => void): void {
       closeFn = fn;
     },

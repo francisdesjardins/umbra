@@ -11,6 +11,54 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-08-31
 
+### Added — an action handler is told when its dialog goes, and a correction to the entry below
+
+`prepare` has had an `AbortSignal` since it was written, aborted on close and on teardown, with the
+reasoning spelled out on `abandon()`: "torn down while open is a close nobody reported; the work has
+to stop for it too." **An action handler had none**, and it is the same shape of async user work the
+dialog can outlive. Torn down mid-action, `teardownDialog` closed the store, unregistered and
+abandoned — and left the handler running. The library's own state was safe, the writes landing in an
+abandoned store; what kept going was the caller's: a `fetch` with nobody waiting, a spinner that
+never clears, a `setState` into a component that has gone.
+
+`onAction` now takes a second argument, `ActionRunContext`, carrying `signal`. An object rather than
+the bare signal `prepare` takes, so a second thing to report later is a field instead of a third
+positional argument.
+
+**Calling `close()` from inside the handler does not abort it**, and that is a decision rather than
+an oversight. A dialog never shuts on its own, so closing from a handler is the outcome the action
+was written for, and what a caller queues after it is the caller's business. The signal reports the
+other kind: a dismissal, another action, the manager, an unmount — the dialog taken away for a
+reason this handler never chose and cannot otherwise see. One flag per run, and the engine's
+`abortRun` skips the run that asked.
+
+### Fixed — the entry below generalised a measurement from one engine
+
+It said the keyboard path was "unaffected on every engine" below the `focusVisible` threshold, on
+the strength of a probe run against Chromium alone. **On a bare page that is true of all three. In a
+dialog it is true of none of them uniformly**, because `showModal()` makes its own focus move first
+and the engines treat what follows differently. Measured, option neutralised, three engines:
+
+| Engine   | opened by pointer | opened from the keyboard |
+| -------- | ----------------- | ------------------------ |
+| Chromium | no ring           | ring                     |
+| Firefox  | no ring           | **no ring**              |
+| WebKit   | **ring**          | ring                     |
+
+So below Chrome 145 / Safari 18.4 the ring is the engine's habit and the three do not agree — which
+is the argument _for_ asking rather than against it, and a better one than the entry below made. The
+`enhancing` row, `SHOW_THE_RING`'s doc and the README now say this, and the row cites the component
+test that measures it, per engine, rather than resting on a throwaway probe.
+
+**Normalising the divergence was considered and refused.** Upward means the library drawing a ring
+on a control the caller owns — the one thing it does not do. Downward means suppressing the ring
+WebKit users get today to buy tidiness, which is consistency bought by subtraction. What is left is
+the honest option: above the threshold the library normalises, which is what asking for the flag
+_is_; below it a dialog behaves like every other control on that page, on the engine the reader is
+actually using.
+
+## 2026-08-31
+
 ### Added — the browser floor, derived from a table instead of declared
 
 A reader on Chrome 142 reported the focus ring missing when a dialog opens. It was not a

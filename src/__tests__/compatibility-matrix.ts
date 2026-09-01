@@ -192,6 +192,8 @@ export type PlatformFeatureRow = {
   readonly source: string;
   /** ISO date somebody last read that source. */
   readonly checked: string;
+  /** What proves the sentence above, where one can be proven — checked by the same gate. */
+  readonly references?: readonly TestReference[];
 };
 
 /**
@@ -293,12 +295,18 @@ export const FLOOR_ROWS: readonly PlatformFeatureRow[] = [
       'core/focus-policy.ts — `SHOW_THE_RING`, on every focus move the library makes of its own',
     need: 'enhancing',
     degradesTo:
-      'Input modality decides instead, which is what an ordinary page does. A dialog opened **from the keyboard** still rings: `:focus-visible` propagates to a scripted focus from an element that already matched it, so that path is unaffected on every engine. A dialog opened **by pointer** does not — the move is made, and it is silent. Measured both ways with the option neutralised.',
+      'Modality and the engine decide instead, and **the three do not agree** — which is the argument for the flag rather than against it. WebKit rings a library-made focus either way, so the option buys it nothing. Chromium rings it only when the dialog was opened from the keyboard, the modality surviving `showModal()`’s own focus move. Firefox rings neither. Measured on all three with the option neutralised.',
     chrome: 145,
     firefox: 104,
     safari: 18.4,
     source: 'https://caniuse.com/mdn-api_htmlelement_focus_options_focusvisible_parameter',
     checked: '2026-08-31',
+    references: [
+      {
+        file: 'src/actions/__tests__/use-dialog-actions.ct.tsx',
+        title: "without the flag the ring is the engine's habit, not the library's",
+      },
+    ],
   },
 ];
 
@@ -2325,6 +2333,9 @@ export function allReferences(): readonly {
       return bindingCells(row).flatMap(([binding, value]) => {
         return spread(`${row.capability} (${binding})`, value.references);
       });
+    }),
+    ...FLOOR_ROWS.flatMap((row) => {
+      return spread(row.feature, row.references);
     }),
     ...PLATFORM_ROWS.flatMap((row) => {
       return spread(row.fact, row.references);
