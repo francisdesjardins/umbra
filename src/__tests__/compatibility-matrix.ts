@@ -295,7 +295,7 @@ export const FLOOR_ROWS: readonly PlatformFeatureRow[] = [
       'core/focus-policy.ts — `SHOW_THE_RING`, on every focus move the library makes of its own',
     need: 'enhancing',
     degradesTo:
-      'Modality decides instead, and one engine has its own habit. A dialog opened **from the keyboard** rings on all three: the modality survives `showModal()`’s own focus move and reaches the library’s. Opened **by pointer**, Chromium and Firefox draw nothing — what an ordinary page does — while **WebKit rings anyway**. So what the flag buys is a pointer-opened dialog answering alike. Measured on three engines with the option neutralised.',
+      'Modality decides instead, and the engines split on the one case the heuristic cannot resolve: a focus the **page** moved, where nothing in the interaction says whether it mattered. A dialog opened **from the keyboard** rings on all three. Opened **by pointer**, Chromium and Firefox carry the pointer modality forward and draw nothing, while **WebKit rings anyway** — which is what the guidance asks for, focus styles being required "when focus is managed via scripts" (https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible). So the flag is not a way around the heuristic; it is how a page answers the question the heuristic is not equipped to ask. Measured on three engines with the option neutralised.',
     chrome: 145,
     firefox: 104,
     safari: 18.4,

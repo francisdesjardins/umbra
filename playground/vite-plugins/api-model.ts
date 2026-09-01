@@ -218,6 +218,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'ActionFactory',
       'ActionReason',
       'ActionOptions',
+      'ActionRunContext',
       'ActionButtonProps',
       'ActionClickEvent',
       'ActionCloseFn',
@@ -286,6 +287,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'ActionFactory',
       'ActionReason',
       'ActionOptions',
+      'ActionRunContext',
       'ActionButtonProps',
       'ActionClickEvent',
       'ActionCloseFn',
@@ -332,6 +334,7 @@ export const CATEGORIES: readonly CategoryDef[] = [
     symbols: [
       'ActionReason',
       'ActionOptions',
+      'ActionRunContext',
       'ActionButtonProps',
       'ActionClickEvent',
       'ActionCloseFn',

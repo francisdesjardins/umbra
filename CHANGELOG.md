@@ -11,6 +11,50 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-01
 
+### Fixed — a new binding export reached a build, because the gate over `CATEGORIES` was scoped to the root
+
+`ActionRunContext` ships from the three bindings and from none of them was it categorised, so
+`playground:build` failed with "1 export(s) belong to no category". Which is the failure that gate
+exists to prevent — `buildModel` refuses an orphan only at serve or build time, so `type-check`,
+`lint`, `docs:check`, `verify:package` and the suite all pass over it.
+
+**It was scoped to `umbra` alone.** Its own doc said so and gave the reason — a bare name is not an
+identity, `HotkeyDef` living under both `umbra` and `umbra/react` — but the conclusion drawn from
+that was to check the root and stop, where `buildModel` refuses an orphan under _any_ specifier.
+Six months of root-only exports never noticed.
+
+The gate now checks each binding against its own categories, minus the root's names, since a
+binding re-exports the root wholesale and the model resolves those against the core. Mutation-
+checked by removing the entry again: it names all three specifiers in about three seconds, where
+the build takes a minute to say the same thing about one.
+
+`api-model.ts` gained the entry under the actions category of all three bindings.
+
+## 2026-09-01
+
+### Changed — the `focusVisible` row named the wrong outlier
+
+No measurement moved. The six cells the two component tests assert are the same six. What changed
+is which engine the prose treats as the odd one out, and it had it backwards.
+
+The row said WebKit "has its own habit" for ringing a pointer-opened dialog. But the spec hands
+this case to the UA — `:focus-visible` matches when "the UA determines via heuristics that the
+focus should be made evident" — and the guidance that goes with it says focus styles are required
+"when users are navigating the page with the keyboard **or when focus is managed via scripts**". A
+focus the library moved is the second kind. **WebKit is the engine doing what that asks**; Chromium
+and Firefox carry the last input modality forward instead, which for a pointer-opened dialog means
+drawing nothing.
+
+That reframes what the flag is for. It is not a way around a heuristic — it is how a page answers
+the one question the heuristic cannot: whether a move the page made matters. The heuristic has no
+way to know, which is why the option was added to the platform at all, and why two engines out of
+three only recently gained the means to honour advice that predates them.
+
+The row, `SHOW_THE_RING`'s doc and the README now say that, and the row links the guidance so the
+next reader re-reads rather than re-remembers.
+
+## 2026-09-01
+
 ### Fixed — the correction below was itself wrong, and the test that carried it was the reason
 
 Two entries ago this claimed the keyboard path was unaffected below the `focusVisible` threshold.

@@ -8,8 +8,11 @@ import { CATEGORIES } from '../../vite-plugins/api-model.ts';
  * Every root export has a page in the generated API reference. `buildModel` refuses an uncategorised
  * one only at serve/build time, so an orphan is invisible to `type-check`, `lint`, `docs:check`,
  * `verify:package` and the suite, surfacing as `/api` answering 500 — as `isOwnEventTarget` did.
- * Scoped to the root's categories, since a bare name is not an identity (`HotkeyDef` is documented
- * under `umbra` *and* `umbra/react`) and the bindings re-export the root wholesale.
+ * **Every entry point, not just the root** — `buildModel` refuses an orphan under any specifier, and
+ * scoping this to `umbra` let `ActionRunContext` reach a build. A bare name is not an identity
+ * (`HotkeyDef` is documented under `umbra` *and* `umbra/react`), so each binding is checked against
+ * its own categories; `collectExports` reads named re-exports only, so the wholesale `export *` of
+ * the root does not come with it.
  */
 
 const CORE_SPECIFIER = 'umbra';
@@ -41,6 +44,42 @@ test.describe('the API reference covers the root', () => {
     expect(
       orphans,
       `Add these to a CORE category in playground/vite-plugins/api-model.ts, or /api will answer 500: ${orphans.join(', ')}`
+    ).toEqual([]);
+  });
+
+  test('every export a binding publishes of its own belongs to a category', () => {
+    const orphans = [
+      ['react.ts', 'umbra/react'],
+      ['solid.ts', 'umbra/solid'],
+      ['vanilla.ts', 'umbra/vanilla'],
+    ].flatMap(([entry, specifier]) => {
+      // Minus the root's: a binding re-exports it wholesale and the model resolves those names
+      // against the core's categories, which is why `HotkeyDef` needs no second home.
+      const own = collectExports(entry ?? '').filter((name) => {
+        return !rootExports.includes(name);
+      });
+      // Guards the guard, per binding: an empty list would pass the filter below silently.
+      expect(own.length, `${String(entry)} parsed to nothing`).toBeGreaterThan(5);
+
+      const categorised = new Set(
+        CATEGORIES.filter((category) => {
+          return category.specifier === specifier;
+        }).flatMap((category) => {
+          return category.symbols;
+        })
+      );
+      return own
+        .filter((name) => {
+          return !categorised.has(name);
+        })
+        .map((name) => {
+          return `${String(specifier)}#${name}`;
+        });
+    });
+
+    expect(
+      orphans,
+      `Add these to their binding's category in playground/vite-plugins/api-model.ts, or the build fails: ${orphans.join(', ')}`
     ).toEqual([]);
   });
 

@@ -116,8 +116,9 @@ is how it reaches `yarn todo` instead of a footnote.
   focus invisible on two engines out of three. That ring asks for `FocusOptions.focusVisible`, an
   _enhancing_ row in the [browser floor table](API.md#compatibility) rather than a floor one. Below
   Chrome 145 / Safari 18.4 the option is ignored and modality decides: a dialog opened from the
-  keyboard rings on all three, and one opened by pointer rings only on WebKit. The move itself is
-  made either way; asking is what makes the pointer case answer alike. The exception says the same thing from the other
+  keyboard rings on all three, and one opened by pointer rings only on WebKit — the engine that
+  follows the guidance for script-managed focus. The move is made either way; asking is how a page
+  answers what an input-modality heuristic cannot. The exception says the same thing from the other
   side: putting back a caret you had placed yourself is done silently, being your state rather than
   a move of ours to announce. `restoreFocusTo` redirects that last
   one when the opener is no longer the right answer — a list that drove the panel's content is the
