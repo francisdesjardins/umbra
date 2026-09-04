@@ -11,6 +11,26 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-03
 
+### Fixed — a dialog's icon buttons had no hover, an inline style being unable to carry one
+
+The toast's ✕ gave no sign it was a control until it was clicked. Its whole appearance was an
+inline `style`, and a `:hover` is a state that cannot live there — the reason
+`slide-presets.module.css` exists, written at the top of that file.
+
+Two more had it, both in the wizard's header: the panel's own ✕, whose inline style was the toast's
+to the letter, and the "apply recommended settings" glyph beside it. So the fix is
+`Shared.IconButton` rather than three copies of one rule — it sits beside `Shared.Button`, forwards
+what a button spread `{...action('close')}` must forward, and takes the dialog's `--button-hover-bg`
+so the wash follows the theme with no second rule.
+
+The transition is `background-color` alone: `color` is the ink and is keyed on the scheme, so
+animating it interpolates the outgoing theme's ink across an already-switched surface. That is the
+rule `.button` found first and `design-system-layering.test.ts` holds — which is how this was
+caught, having been written wrong here first. The glyph still darkens on hover, instantly.
+
+Measured in a real browser rather than asserted: both ✕ change background _and_ ink on hover in
+light and dark, and both still close what they belong to.
+
 ### Changed — every example trigger in the playground is the one button
 
 Three looks were in use for the same job. The standard — `AppButton variant="contained"

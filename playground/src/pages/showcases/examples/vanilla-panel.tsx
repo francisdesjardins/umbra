@@ -238,8 +238,7 @@ export function VanillaPanelExample() {
               actions={
                 <>
                   {/* ── "Use recommended" icon button — a native `title`, not a tooltip widget ── */}
-                  <button
-                    type="button"
+                  <Shared.IconButton
                     aria-label="Apply recommended settings"
                     title={
                       isRecommended(setup)
@@ -248,13 +247,6 @@ export function VanillaPanelExample() {
                     }
                     onClick={() => {
                       setupStore.resetToRecommended();
-                    }}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      padding: 4,
-                      display: 'inline-flex',
                     }}
                   >
                     <svg
@@ -271,7 +263,7 @@ export function VanillaPanelExample() {
                     >
                       <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
                     </svg>
-                  </button>
+                  </Shared.IconButton>
 
                   {/* ── "Jump to" dropdown — the element the platform already ships ── */}
                   <SelectionDropdown
@@ -293,18 +285,7 @@ export function VanillaPanelExample() {
                   </SelectionDropdown>
 
                   {/* No explicit `type`: the action spread already carries `type="button"`. */}
-                  <button
-                    aria-label="Close"
-                    {...action('close')}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      color: 'var(--dialog-text-secondary)',
-                      cursor: 'pointer',
-                      padding: 4,
-                      display: 'inline-flex',
-                    }}
-                  >
+                  <Shared.IconButton aria-label="Close" {...action('close')}>
                     <svg
                       viewBox="0 0 24 24"
                       aria-hidden
@@ -312,7 +293,7 @@ export function VanillaPanelExample() {
                     >
                       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                     </svg>
-                  </button>
+                  </Shared.IconButton>
                 </>
               }
             />

@@ -130,21 +130,10 @@ export function SlideCornerToastExample() {
                   : `closing in ${(remaining / 1000).toFixed(1)}s`}
               </span>
             </div>
-            <button
-              type="button"
+            <Shared.IconButton
               aria-label="Dismiss notification"
               onClick={() => {
                 handle.close('dismiss');
-              }}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--dialog-text-secondary)',
-                cursor: 'pointer',
-                padding: 'var(--app-space-1)',
-                marginTop: -4,
-                marginRight: -4,
-                display: 'inline-flex',
               }}
             >
               <svg
@@ -154,7 +143,7 @@ export function SlideCornerToastExample() {
               >
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
               </svg>
-            </button>
+            </Shared.IconButton>
           </div>
           <div
             style={{

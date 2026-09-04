@@ -277,3 +277,31 @@
     min-width: auto;
   }
 }
+
+/* An icon button in a dialog's header or corner — the ✕, and the glyphs beside it. Transparent
+   until pointed at, because three of these sit in headers where a permanent box would read as
+   chrome; the wash is what says it is a control at all. The focus ring is the shell's global
+   `body :focus-visible` and is deliberately not restated. */
+.iconButton {
+  display: inline-flex;
+  border: none;
+  border-radius: var(--dialog-radius);
+  background: transparent;
+  color: var(--dialog-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  /* The wash only. `color` is the ink and is keyed on the scheme, so transitioning it interpolates
+     the outgoing theme's ink across an already-switched surface — the rule `.button` above found
+     first, and `design-system-layering.test.ts` now holds. The glyph still darkens, instantly. */
+  transition: background-color var(--transition-normal);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--button-hover-bg);
+  /* The glyph darkens too: the wash alone is 5% ink, which reads as nothing on a white surface. */
+  color: var(--dialog-text);
+}
+
+.iconButton:disabled {
+  cursor: not-allowed;
+}
