@@ -109,6 +109,63 @@ type DialogLifecycleStepSpec = {
   readonly run: (dom: DialogDomContext, args: DialogLifecycleStepArgs) => StepTeardown;
 };
 
+/**
+ * The option fields a pass forwards untouched — the caller's, read **live**.
+ *
+ * They are handed over per pass rather than captured, which is what keeps `prepare` and `onKeyDown`
+ * from ever being a render behind. React's pass effect declares no dependency list for the same
+ * reason.
+ */
+export type DialogPassOptions = {
+  readonly prepare?: ((signal: AbortSignal) => void | Promise<void>) | undefined;
+  readonly onError?: ((failure: DialogFailure) => void) | undefined;
+  readonly onKeyDown?: ((event: KeyboardEvent) => void) | undefined;
+  readonly onDismissRequest?: ((cause: DismissCause) => boolean | void) | undefined;
+};
+
+/** The slice of `resolveDialogOptions`' answer the lifecycle reads. */
+export type DialogPassVariant = {
+  readonly isNonModal: boolean;
+  readonly dismissKey: HotkeyDef | false;
+  readonly dismissWhilePreparing: boolean;
+  readonly containFocus: boolean;
+  readonly dismissOnClickOutside: boolean;
+};
+
+/**
+ * Assemble one pass from the four things a binding holds: where the store is, what the caller
+ * passed, what `resolveDialogOptions` decided, and what `resolveAnimation` measured.
+ *
+ * Here rather than in each binding because all three assembled the same thirteen fields from the
+ * same four sources, and a field dropped from one of those copies disables a rule in that binding
+ * alone — which no shared test can see. `keydownOptions` below is the same move one level down.
+ */
+export function lifecyclePass(input: {
+  readonly phase: DialogPhase;
+  readonly isPreparing: boolean;
+  readonly options: DialogPassOptions;
+  readonly variant: DialogPassVariant;
+  readonly timing: { readonly primaryProperty: string; readonly exitDuration: number };
+}): DialogLifecyclePass {
+  const { phase, isPreparing, options, variant, timing } = input;
+
+  return {
+    phase,
+    isPreparing,
+    prepare: options.prepare,
+    onError: options.onError,
+    onKeyDown: options.onKeyDown,
+    onDismissRequest: options.onDismissRequest,
+    nonModal: variant.isNonModal,
+    primaryProperty: timing.primaryProperty,
+    exitDuration: timing.exitDuration,
+    dismissKey: variant.dismissKey,
+    dismissWhilePreparing: variant.dismissWhilePreparing,
+    containFocus: variant.containFocus,
+    dismissOnClickOutside: variant.dismissOnClickOutside,
+  };
+}
+
 // ── The sequence ─────────────────────────────────────────────────────────────
 
 /**

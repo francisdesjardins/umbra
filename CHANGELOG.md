@@ -9,6 +9,75 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-03
+
+### Changed — four kinds of copy-and-paste collapsed into one declaration each
+
+The runtime lost twelve code lines net, which is the wrong number to read this by: 142 lines of
+duplicated code became 133 lines of single-source code, and every one of the 142 had been
+maintained in two, three or four places.
+
+**The four template hooks were letter-identical.** Diffed with the two knobs neutralised,
+`use-message-dialog` differed by nothing but its imports and `use-slide-dialog` by a single line —
+Solid's `mergeProps` where React spreads, because the render args are getters a spread would
+freeze. `messageDialogOptions` and `slideDialogOptions` now own the mapping in
+`templates/shared.ts`, and that one line is the merger they take as a parameter. What stays per
+binding is the type aliases, which are the knobs, and the overloads.
+
+**And the slide's `direction` / `align`, spelled out twice on purpose.** Sharing them as a named
+type cost both of them their entries in the API reference: typedoc renders a referenced alias as a
+bare name, and neither `@inline` nor `@inlineType` inlines it on 0.28.20 — `@inline` silences the
+`notExported` warning while still rendering the name, which is worse than the gap it hides. Checked
+against the emitted JSON model rather than the page, because `docs:check` cannot see it. So the
+shared declaration is unexported and is the mapping's parameter type, nothing more.
+
+Making that mapping generic is what forced `buildDialogOptions` to infer its _defaults_' style
+types rather than fix them to `TStyle`: a concrete literal — the fade, the slide geometry — is
+never assignable to a type parameter. Two parameters rather than one, the slide's being two types.
+Pass none of them explicitly, or the tail falls back and the literals stop fitting.
+
+**Three bindings assembled the same thirteen-field lifecycle pass by hand.** `lifecyclePass` does
+it now, beside the table that reads it, with a test that fails when a field is added and not
+forwarded — the version the three copies could not have, since each was free to lose a different
+field and disable a rule in that binding alone.
+
+**The backdrop chain was asked in three places and acted on in three places.** `answerBackdropClick`
+is both halves, because splitting them is how one binding came to ask the question and dismiss on a
+different rule.
+
+**The conditional `onOpenRequest` spread in all three bindings was redundant.** `RegisterOptions`
+declares the field optional _and_ `| undefined`, and the registry is where absent is told from
+explicitly undefined — so the bindings pass the value and the reasoning lives at the one spread
+that does the work.
+
+**The registered door's five-line explanation existed seven times, verbatim.** It is a fact about
+`RegisteredDialogId`, so it now lives on that type and each of the seven says one line.
+`comment-budget` never saw it: it measures a block, and every copy was under budget.
+
+### Changed — the manager's registration no longer latches what it can derive
+
+`openEmitted` was a mutable flag for "`'open'` with `prepare` settled", which the phase pair already
+says. Nothing else can produce that state — `beginOpen` runs only from `'closed'` and
+`finishPreparing` only clears the flag — so the two reads differ exactly once per open, and one
+variable per registration went with it.
+
+Three more in the same file. A close is announced on both channels through `announceClose`, so the
+pair cannot half-fire (the _open_ pair is deliberately not merged: its DOM event fires at
+`'opening'` and its manager event waits for `prepare`). `entriesWhere` is the registry scan
+`getClosed` had a second copy of, with the predicate inverted. And the open dialogs are indexed by
+id where the snapshot is published, so `lookup.get` and `lookup.isVisible` stop walking a list the
+manager had already built — three linear scans on a path a render loop calls.
+
+### Changed — coverage rose, because the shared code sits where the gates can see it
+
+Unit 96.64% → **96.81%**, component 92.16% → **92.27%**. The lines that moved left
+`src/react/**`, `src/solid/**` and `src/vanilla/**` — globbed out of the unit report, because a
+binding cannot run in Node — for `core/` and `templates/`, which are measured, and arrived with
+thirteen tests of their own; `templates/shared.ts` is at 100%. The component half was measured
+twice, at 92.38% and 92.27%, so treat that number as carrying a tenth of a point of run-to-run
+variance rather than as exact. The three binding files now sit within **four** code lines of each other,
+where the prose had claimed a dozen.
+
 ## 2026-09-01
 
 ### Fixed — a new binding export reached a build, because the gate over `CATEGORIES` was scoped to the root

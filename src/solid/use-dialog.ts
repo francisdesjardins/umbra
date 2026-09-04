@@ -11,12 +11,12 @@ import {
   setDialogAttributes,
   createBackdropPressGuard,
 } from '../core/dialog-props.js';
-import { createDialogDirector } from '../core/dialog-director.js';
+import { createDialogDirector, lifecyclePass } from '../core/dialog-director.js';
 import {
+  answerBackdropClick,
   createDialogRuntime,
   resolveDialogOptions,
   resolvePortalHost,
-  shouldDismissOnBackdropClick,
   teardownDialog,
 } from '../core/dialog-runtime.js';
 import { applyStyle } from '../core/style.js';
@@ -25,7 +25,6 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
-import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { fromStore } from './from-store.js';
 import { useDialogOutletContext } from './dialog-outlet.js';
@@ -49,12 +48,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  * @typeParam TData - Type of the close data payload. Defaults to `void`.
  * @typeParam TReason - The reasons this dialog closes with. Declare them.
  */
-/**
- * The registered door, first so a declared id is matched by it — whether the caller wrote the id as
- * a literal and let it infer, or named it as the one type argument. While `DialogRegistry` is empty
- * `RegisteredDialogId` is `never`, this overload is uninhabitable, and every call falls through to
- * the one below, which is the signature this hook has always had.
- */
+/** The registered door — see {@link RegisteredDialogId} for why it is declared first. */
 export function useDialog<TId extends RegisteredDialogId>(
   options: RegisteredOptions<TId, DialogStyle, JSX.Element>
 ): RegisteredReturn<TId, JSX.Element>;
@@ -66,18 +60,10 @@ export function useDialog<TData = void, TReason extends string = string>(
 ): UseDialogReturn<TData, TReason> {
   const dialogId = options.id;
 
-  // The defaults and the variant narrowing, from the one place both bindings read them.
-  const {
-    isNonModal,
-    isPortaled,
-    dismissOnBackdropClick,
-    dismissOnClickOutside,
-    dismissWhilePreparing,
-    dismissKey,
-    containFocus,
-    template,
-    placement,
-  } = resolveDialogOptions(options);
+  // The defaults and the variant narrowing, from the one place all three bindings read them; the
+  // three named are read here, the rest travel whole into the pass and the backdrop's question.
+  const resolved = resolveDialogOptions(options);
+  const { isNonModal, isPortaled, placement } = resolved;
 
   // Annotated for the reason React's binding gives.
   const animation: DialogAnimation = options.animation ?? DEFAULT_DIALOG_ANIMATION;
@@ -210,22 +196,19 @@ export function useDialog<TData = void, TReason extends string = string>(
   });
 
   // The decision is `dialog-runtime.ts`'s — the same call React's binding makes from its `onClick`.
+  // `options` is read at the event rather than captured: this listener is attached once, and the
+  // owner's handler is a prop like any other.
   dialog.addEventListener('click', (event: MouseEvent) => {
-    if (
-      shouldDismissOnBackdropClick(event, {
-        pressedOnBackdrop: backdropPress.take(),
-        dialog,
-        store,
-        engine,
-        isNonModal,
-        dismissOnBackdropClick,
-        dismissWhilePreparing,
-      })
-    ) {
-      // Read off `options` at the event rather than captured: this listener is attached once, and
-      // the owner's handler is a prop like any other.
-      answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
-    }
+    answerBackdropClick(event, {
+      pressedOnBackdrop: backdropPress.take(),
+      dialog,
+      store,
+      engine,
+      isNonModal,
+      dismissOnBackdropClick: resolved.dismissOnBackdropClick,
+      dismissWhilePreparing: resolved.dismissWhilePreparing,
+      onDismissRequest: options.onDismissRequest,
+    });
   });
 
   // One effect, and **no `onCleanup` inside it**: Solid runs an effect's cleanups before every
@@ -237,21 +220,15 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   createEffect(() => {
     const snap = snapshot();
-    director.sync({
-      phase: snap.phase,
-      isPreparing: snap.isPreparing,
-      prepare: options.prepare,
-      onError: options.onError,
-      onKeyDown: options.onKeyDown,
-      nonModal: isNonModal,
-      primaryProperty,
-      exitDuration,
-      dismissKey,
-      dismissWhilePreparing,
-      onDismissRequest: options.onDismissRequest,
-      containFocus,
-      dismissOnClickOutside,
-    });
+    director.sync(
+      lifecyclePass({
+        phase: snap.phase,
+        isPreparing: snap.isPreparing,
+        options,
+        variant: resolved,
+        timing: { primaryProperty, exitDuration },
+      })
+    );
   });
 
   // Setup, not effect work: a Solid body runs once, so nothing structural changes under the
@@ -267,18 +244,17 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   manager.register(dialogId, {
     store,
-    template,
+    template: resolved.template,
     nonModal: isNonModal,
     getDialog,
-    ...(options.onOpenRequest !== undefined && {
-      // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
-      onOpenRequest: (
-        payload: unknown,
-        request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]
-      ) => {
-        return options.onOpenRequest?.(payload, request);
-      },
-    }),
+    // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
+    // `undefined` is how "this dialog refuses" is spelled; the registry tells it from absent.
+    onOpenRequest:
+      options.onOpenRequest === undefined
+        ? undefined
+        : (payload: unknown, request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]) => {
+            return options.onOpenRequest?.(payload, request);
+          },
   });
 
   onCleanup(() => {

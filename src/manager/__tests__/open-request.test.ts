@@ -245,6 +245,19 @@ test.describe('requestOpenAndWait', () => {
     });
   });
 
+  test('an explicitly undefined handler refuses exactly as an absent one does', async () => {
+    // What all three bindings pass. `RegisterOptions.onOpenRequest` is optional *and* `| undefined`,
+    // so a conditional spread at the call site buys nothing — provided the refusal turns on the
+    // value rather than the key, which is what this pins.
+    const dm = createDialogManager();
+    dm.register('explicit', { store: createFakeStore(), onOpenRequest: undefined });
+
+    expect(await dm.requestOpenAndWait('explicit')).toEqual({
+      accepted: false,
+      reason: 'accepts-none',
+    });
+  });
+
   test('acceptance is the default — a handler that just opens says yes', async () => {
     // React's open is async: a phase read when the handler returns would call an accept a refusal.
     const dm = createDialogManager();

@@ -2,34 +2,20 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { RegisteredDialogId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
 import type { UseDialogReturn } from '../types.js';
-import { isContainedArrangement } from '../../core/placement.js';
 import { useDialog } from '../use-dialog.js';
-import { slideAnimation, slideDialogStyle } from '../../templates/slide-geometry.js';
 import {
-  buildDialogOptions,
-  type BaseRenderContext,
-  type RegisteredBaseRenderContext,
+  slideDialogOptions,
+  type RegisteredSlideContext,
   type RegisteredTemplateOptions,
+  type SlideDialogRenderContext,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
 
+// The geometry is `templates/slide-geometry.ts`'s and the render contexts are the template's —
+// this file is the two knobs turned to React's, and nothing else.
 export type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
 import type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
-
-/** Dialog state, the close handle and the slide direction, passed to the render function. */
-export type SlideDialogRenderContext<
-  TData = void,
-  TReason extends string = string,
-> = BaseRenderContext<TData, TReason> & {
-  /** The slide direction for direction-aware layout */
-  readonly direction: SlideDirection;
-};
-
-/** {@link SlideDialogRenderContext} for a declared id. */
-export type RegisteredSlideContext<TId> = RegisteredBaseRenderContext<TId> & {
-  /** The slide direction for direction-aware layout */
-  readonly direction: SlideDirection;
-};
+export type { RegisteredSlideContext, SlideDialogRenderContext } from '../../templates/shared.js';
 
 /**
  * Options for `useSlideDialog`.
@@ -81,11 +67,7 @@ export type UseSlideDialogReturn<TData = void, TReason extends string = string> 
  *   ),
  * });
  */
-/**
- * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
- * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
- * the one below — which is the signature `useSlideDialog` has always had.
- */
+/** The registered door — see {@link RegisteredDialogId} for why it is declared first. */
 export function useSlideDialog<TId extends RegisteredDialogId>(
   options: RegisteredTemplateOptions<TId, RegisteredSlideContext<TId>, CSSProperties, ReactNode> & {
     readonly direction: SlideDirection;
@@ -98,29 +80,10 @@ export function useSlideDialog<TData = void, TReason extends string = string>(
 export function useSlideDialog<TData = void, TReason extends string = string>(
   options: UseSlideDialogOptions<TData, TReason>
 ): UseSlideDialogReturn<TData, TReason> {
-  // Asked of the core rather than re-derived: the geometry written here and the placement the
-  // runtime resolves are one decision, and a host getter is a portal in both.
-  const contained = isContainedArrangement(options);
-  const align = options.align ?? 'stretch';
-
-  return useDialog<TData, TReason>({
-    // Spelled out for the reason `useMessageDialog` gives.
-    ...buildDialogOptions<
-      TData,
-      SlideDialogRenderContext<TData, TReason>,
-      TReason,
-      CSSProperties,
-      ReactNode
-    >(options, {
-      animation: slideAnimation(options.direction, align),
-      style: slideDialogStyle({ direction: options.direction, contained, align }),
-      template: 'slide',
-    }),
-    // A slide translates past its container edge, so the wrapper is clipped to stop an off-screen
-    // panel expanding document overflow.
-    clipContainer: true,
-    render: (args) => {
-      return options.render({ ...args, direction: options.direction });
-    },
-  });
+  return useDialog<TData, TReason>(
+    // A spread, where Solid's twin must use `mergeProps`: React's render args are plain values.
+    slideDialogOptions<TData, TReason, CSSProperties, ReactNode>(options, (args, extra) => {
+      return { ...args, ...extra };
+    })
+  );
 }

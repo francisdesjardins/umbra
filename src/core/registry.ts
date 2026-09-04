@@ -187,5 +187,12 @@ export type PayloadOf<TId> = TId extends keyof DialogRegistry
 /**
  * Whether a project has opted in at all — the discriminator the hook overloads switch on, so that
  * an empty registry resolves to today's signature rather than to an uninhabitable one.
+ *
+ * **This is what "the registered door" means** on every hook that leads with an overload
+ * constrained to it — `useDialog`, both templates, `bindDialog`, on every binding. That overload is
+ * declared **first** so a declared id is matched by it, whether the caller wrote the id as a
+ * literal and let it infer or named it as the one type argument. While `DialogRegistry` is empty
+ * this type is `never`, the overload is uninhabitable, and every call falls through to the one
+ * below — which is the signature each of those hooks has always had.
  */
 export type RegisteredDialogId = keyof DialogRegistry;

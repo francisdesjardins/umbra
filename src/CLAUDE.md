@@ -121,13 +121,18 @@ surface belongs in `react/__tests__/`; shared harness helpers live in `src/__tes
 
 ### What is shared
 
-[core/dialog-runtime.ts](core/dialog-runtime.ts) holds the parts that were written twice and were
-identical both times: `resolveDialogOptions` (the defaults _and_ the variant narrowing — reading
-`dismissOnBackdropClick` without checking `nonModal` first is a type error here and a
+[core/dialog-runtime.ts](core/dialog-runtime.ts) holds the parts that were written three times and
+were identical every time: `resolveDialogOptions` (the defaults _and_ the variant narrowing —
+reading `dismissOnBackdropClick` without checking `nonModal` first is a type error here and a
 silently-ignored option in a binding that got it wrong), `createDialogRuntime` (store, engine,
-`open`, `openAndWait`, `handle`), `shouldDismissOnBackdropClick`, and `teardownDialog`. `animation`
-is deliberately _not_ resolved there: its fallback is a concrete literal that a function generic
-over the binding's style type could not return, so each binding keeps the one annotated line.
+`open`, `openAndWait`, `handle`), `answerBackdropClick` (the chain **and** the dismissal it leads
+to — split, one binding came to ask the question and act on a different rule), and
+`teardownDialog`. `lifecyclePass` is the same move for the director's thirteen fields, and lives
+beside the table that consumes them.
+
+**A concrete literal is never assignable to a type parameter**, and that law decides what can be
+shared at all: `animation` stays a binding's one annotated line for it, and it is why
+`buildDialogOptions` infers its _defaults_' style types rather than fixing them to `TStyle`.
 
 ### What a binding actually does
 
@@ -144,10 +149,11 @@ The short list, and the measure of whether the core is doing its job. A binding:
 Everything else — the state machine, the DOM lifecycle, the dismissal rules, focus, hotkeys,
 placement, slide geometry, the action factory, the default animation — is shared.
 
-**That list is one file per binding, and that file is the measure**: the three sit within a dozen
-code lines of each other, none of it logic — and the controller is now the _smallest_ of them, which
-is what moving it onto the director bought. Say which file — the folder is not the same number, the outlet, the provider,
-`useLookup` and the templates roughly doubling it as surface rather than lifecycle.
+**That list is one file per binding, and that file is the measure**: the three now sit within
+**four** code lines of each other, none of it logic — the controller among them, which is what
+moving it onto the director and then onto `lifecyclePass` bought. Name the file, not the folder:
+the outlet, the provider, `useLookup` and the templates roughly double it, as surface rather than
+lifecycle.
 
 A **controller** binding does 1, 3 and 6 the same way, replaces 4 with `applyStyle` on the caller's
 element, and drops 5 — there is no render pass, so actions are declared by `bindAction` and
@@ -291,7 +297,7 @@ optimisations. See [core/dialog-props.ts](core/dialog-props.ts).
 
 Each wraps `useDialog` with a template-specific render context. Shared internals in [templates/shared.ts](templates/shared.ts), and the slide panel's transforms and positioning in [templates/slide-geometry.ts](templates/slide-geometry.ts) — framework-free, read by both bindings' `useSlideDialog`. Solid's two templates are in [solid/templates/](solid/templates/), the same three lines each.
 
-`buildDialogOptions` needs its type arguments spelled out at every call site: `TemplateBaseOptions` is an `Omit`, and TypeScript cannot infer through a mapped type, so left alone the style and node parameters fall back to their framework-free defaults and the result stops being that binding's options.
+The whole option mapping is shared — `messageDialogOptions` and `slideDialogOptions`, whose bodies the four hooks were letter-identical copies of. Each takes its four type arguments spelled out, because `TemplateBaseOptions` is an `Omit` and TypeScript cannot infer through a mapped type; `buildDialogOptions` beneath them takes **none**, its two trailing parameters being the defaults' own types.
 
 - `useMessageDialog<TData>` ([react/templates/use-message-dialog.tsx](react/templates/use-message-dialog.tsx)) — `DialogRenderArgs` unchanged; reports `template: 'message'`
 - `useSlideDialog` ([react/templates/use-slide-dialog.tsx](react/templates/use-slide-dialog.tsx)) — direction-based animation, reports `template: 'slide'`, context `DialogRenderArgs & { direction }`. `align?: 'stretch' | 'start' | 'center' | 'end'` (default `stretch`) places the panel on the **cross axis**: `stretch` fills it edge-to-edge, the others pin a content-sized panel. `center` folds its `-50%` self-shift into both keyframes — `transform` is one property and the slide owns it, so a separately-set cross-axis translate would be overwritten.

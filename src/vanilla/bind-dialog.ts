@@ -1,15 +1,15 @@
 import { createActionFactory } from '../core/action-factory.js';
 import type { RegisteredDialogId } from '../core/registry.js';
-import { createDialogDirector } from '../core/dialog-director.js';
+import { createDialogDirector, lifecyclePass } from '../core/dialog-director.js';
 import {
   dialogAttributes,
   setDialogAttributes,
   createBackdropPressGuard,
 } from '../core/dialog-props.js';
 import {
+  answerBackdropClick,
   createDialogRuntime,
   resolveDialogOptions,
-  shouldDismissOnBackdropClick,
   teardownDialog,
 } from '../core/dialog-runtime.js';
 import { applyStyle } from '../core/style.js';
@@ -19,7 +19,6 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
-import { answerDismiss } from '../utils/dismiss-gate.js';
 import { createLogger } from '../utils/logger.js';
 import type { DialogStyle } from '../core/style.js';
 import type { GetDialog, DialogAnimation } from '../core/types.js';
@@ -60,11 +59,7 @@ const log = createLogger('dialog');
  *
  * const [error, result] = await confirm.openAndWait();
  */
-/**
- * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
- * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
- * the one below — which is the signature `bindDialog` has always had.
- */
+/** The registered door — see {@link RegisteredDialogId} for why it is declared first. */
 export function bindDialog<TId extends RegisteredDialogId>(
   options: RegisteredBindOptions<TId>
 ): RegisteredController<TId>;
@@ -134,15 +129,14 @@ export function bindDialog<TData = void, TReason extends string = string>(
     template: resolved.template,
     nonModal: resolved.isNonModal,
     getDialog,
-    ...(options.onOpenRequest !== undefined && {
-      // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
-      onOpenRequest: (
-        payload: unknown,
-        request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]
-      ) => {
-        return options.onOpenRequest?.(payload, request);
-      },
-    }),
+    // Returned, not swallowed — the manager awaits it, so an async validation can still refuse.
+    // `undefined` is how "this dialog refuses" is spelled; the registry tells it from absent.
+    onOpenRequest:
+      options.onOpenRequest === undefined
+        ? undefined
+        : (payload: unknown, request: Parameters<NonNullable<typeof options.onOpenRequest>>[1]) => {
+            return options.onOpenRequest?.(payload, request);
+          },
   });
 
   const backdropPress = createBackdropPressGuard();
@@ -151,19 +145,16 @@ export function bindDialog<TData = void, TReason extends string = string>(
   };
 
   const handleDialogClick = (event: MouseEvent) => {
-    if (
-      shouldDismissOnBackdropClick(event, {
-        pressedOnBackdrop: backdropPress.take(),
-        dialog,
-        store,
-        engine,
-        isNonModal: resolved.isNonModal,
-        dismissOnBackdropClick: resolved.dismissOnBackdropClick,
-        dismissWhilePreparing: resolved.dismissWhilePreparing,
-      })
-    ) {
-      answerDismiss(store, { request: options.onDismissRequest, cause: 'backdrop-click' });
-    }
+    answerBackdropClick(event, {
+      pressedOnBackdrop: backdropPress.take(),
+      dialog,
+      store,
+      engine,
+      isNonModal: resolved.isNonModal,
+      dismissOnBackdropClick: resolved.dismissOnBackdropClick,
+      dismissWhilePreparing: resolved.dismissWhilePreparing,
+      onDismissRequest: options.onDismissRequest,
+    });
   };
   dialog.addEventListener('pointerdown', handleDialogPointerDown);
   dialog.addEventListener('click', handleDialogClick);
@@ -191,21 +182,15 @@ export function bindDialog<TData = void, TReason extends string = string>(
       previous: appliedStyle,
     });
 
-    director.sync({
-      phase: snapshot.phase,
-      isPreparing: snapshot.isPreparing,
-      prepare: options.prepare,
-      onError: options.onError,
-      onKeyDown: options.onKeyDown,
-      nonModal: resolved.isNonModal,
-      primaryProperty,
-      exitDuration,
-      dismissKey: resolved.dismissKey,
-      dismissWhilePreparing: resolved.dismissWhilePreparing,
-      onDismissRequest: options.onDismissRequest,
-      containFocus: resolved.containFocus,
-      dismissOnClickOutside: resolved.dismissOnClickOutside,
-    });
+    director.sync(
+      lifecyclePass({
+        phase: snapshot.phase,
+        isPreparing: snapshot.isPreparing,
+        options,
+        variant: resolved,
+        timing: { primaryProperty, exitDuration },
+      })
+    );
   };
 
   // The hydration gap: a server-rendered `<dialog open>` meets a store saying `closed`, and the

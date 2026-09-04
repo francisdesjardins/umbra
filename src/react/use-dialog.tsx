@@ -16,12 +16,12 @@ import {
   dialogAttributes,
   createBackdropPressGuard,
 } from '../core/dialog-props.js';
-import { createDialogDirector } from '../core/dialog-director.js';
+import { createDialogDirector, lifecyclePass } from '../core/dialog-director.js';
 import {
+  answerBackdropClick,
   createDialogRuntime,
   resolveDialogOptions,
   resolvePortalHost,
-  shouldDismissOnBackdropClick,
   teardownDialog,
 } from '../core/dialog-runtime.js';
 import {
@@ -29,7 +29,6 @@ import {
   getDialogAnimationStyles,
   resolveAnimation,
 } from '../utils/animation-utils.js';
-import { answerDismiss } from '../utils/dismiss-gate.js';
 import { useDialogManagerContext } from './dialog-manager-context.js';
 import { useDialogOutletContext } from './dialog-outlet.js';
 import type { GetDialog } from '../core/types.js';
@@ -55,12 +54,7 @@ import type { DialogAnimation, UseDialogOptions, UseDialogReturn } from './types
  *   onClose: (result) => console.log(result.reason),
  * });
  */
-/**
- * The registered door, first so a declared id is matched by it — whether the caller wrote the id
- * as a literal and let it infer, or named it as the one type argument. While `DialogRegistry` is
- * empty `RegisteredDialogId` is `never`, this overload is uninhabitable, and every call falls
- * through to the one below, which is the signature this hook has always had.
- */
+/** The registered door — see {@link RegisteredDialogId} for why it is declared first. */
 export function useDialog<TId extends RegisteredDialogId>(
   options: RegisteredOptions<TId, CSSProperties, ReactNode>
 ): RegisteredReturn<TId, ReactNode>;
@@ -75,8 +69,6 @@ export function useDialog<TData = void, TReason extends string = string>(
     render,
     animation: animationProp,
     style: styleProp,
-    onKeyDown,
-    prepare,
     onError,
     onOpenRequest,
     onClose,
@@ -89,18 +81,11 @@ export function useDialog<TData = void, TReason extends string = string>(
     portal,
   } = options;
 
-  // The defaults and the variant narrowing, from the one place both bindings read them.
-  const {
-    isNonModal,
-    isPortaled,
-    dismissOnBackdropClick,
-    dismissOnClickOutside,
-    dismissWhilePreparing,
-    dismissKey,
-    containFocus,
-    template,
-    placement,
-  } = resolveDialogOptions(options);
+  // The defaults and the variant narrowing, from the one place all three bindings read them. The
+  // four pulled out are the ones an effect below lists as dependencies, which a fresh object is
+  // not; the rest travel whole into the pass and the backdrop's question.
+  const resolved = resolveDialogOptions(options);
+  const { isNonModal, isPortaled, template, placement } = resolved;
 
   const manager = useDialogManagerContext();
 
@@ -157,21 +142,15 @@ export function useDialog<TData = void, TReason extends string = string>(
   // No deps, so `prepare` and `onKeyDown` are never a render behind; no cleanup, because one would
   // tear the sequence down before every re-run and leave the director nothing to diff.
   useEffect(() => {
-    director.sync({
-      phase: snap.phase,
-      isPreparing: snap.isPreparing,
-      prepare,
-      onError,
-      onKeyDown,
-      nonModal: isNonModal,
-      primaryProperty,
-      exitDuration,
-      dismissKey,
-      dismissWhilePreparing,
-      onDismissRequest,
-      containFocus,
-      dismissOnClickOutside,
-    });
+    director.sync(
+      lifecyclePass({
+        phase: snap.phase,
+        isPreparing: snap.isPreparing,
+        options,
+        variant: resolved,
+        timing: { primaryProperty, exitDuration },
+      })
+    );
   });
 
   // Declared first: React runs cleanups in declaration order, so listeners detach before unregister.
@@ -204,13 +183,15 @@ export function useDialog<TData = void, TReason extends string = string>(
       template,
       nonModal: isNonModal,
       getDialog,
-      ...(acceptsOpenRequests && {
-        // Returned, not swallowed: the manager awaits it, so an owner that validates asynchronously
-        // still refuses before `requestOpenAndWait` answers.
-        onOpenRequest: (payload: unknown, request: OpenRequestDispatch) => {
-          return openRequestHandler.current?.(payload, request);
-        },
-      }),
+      // Returned, not swallowed: the manager awaits it, so an owner that validates asynchronously
+      // still refuses before `requestOpenAndWait` answers. `undefined` is how "this dialog refuses"
+      // is spelled — `RegisterOptions` declares the field optional *and* `| undefined`, and the
+      // registry is where the two are told apart.
+      onOpenRequest: acceptsOpenRequests
+        ? (payload: unknown, request: OpenRequestDispatch) => {
+            return openRequestHandler.current?.(payload, request);
+          }
+        : undefined,
     });
 
     return () => {
@@ -234,19 +215,16 @@ export function useDialog<TData = void, TReason extends string = string>(
     if (!dialog) {
       return;
     }
-    if (
-      shouldDismissOnBackdropClick(event, {
-        pressedOnBackdrop: backdropPress.take(),
-        dialog,
-        store,
-        engine,
-        isNonModal,
-        dismissOnBackdropClick,
-        dismissWhilePreparing,
-      })
-    ) {
-      answerDismiss(store, { request: onDismissRequest, cause: 'backdrop-click' });
-    }
+    answerBackdropClick(event, {
+      pressedOnBackdrop: backdropPress.take(),
+      dialog,
+      store,
+      engine,
+      isNonModal,
+      dismissOnBackdropClick: resolved.dismissOnBackdropClick,
+      dismissWhilePreparing: resolved.dismissWhilePreparing,
+      onDismissRequest,
+    });
   };
 
   const outlet = useDialogOutletContext();

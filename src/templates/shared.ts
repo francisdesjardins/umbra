@@ -1,3 +1,10 @@
+import { isContainedArrangement } from '../core/placement.js';
+import {
+  slideAnimation,
+  slideDialogStyle,
+  type SlideAlign,
+  type SlideDirection,
+} from './slide-geometry.js';
 import type { DialogStyle } from '../core/style.js';
 import type { CloseOf, DataOf, ReasonOf } from '../core/registry.js';
 import type { RegisteredRenderArgs } from '../core/registered-types.js';
@@ -117,10 +124,10 @@ export const DEFAULT_FADE_ANIMATION = {
  *
  * @internal Not exported from index.ts.
  */
-function mergeStyle<TStyle extends DialogStyle>(
-  base: TStyle | undefined,
+function mergeStyle<TStyle extends DialogStyle, TBase extends DialogStyle>(
+  base: TBase | undefined,
   override: TStyle | undefined
-): TStyle | undefined {
+): TStyle | TBase | (TBase & TStyle) | undefined {
   if (base === undefined) {
     return override;
   }
@@ -135,6 +142,11 @@ function mergeStyle<TStyle extends DialogStyle>(
  * name. A caller's `style` merges *over* the template's structural one rather than replacing it:
  * the placement makes it that template, but sizing is the caller's.
  *
+ * The two default styles are **inferred rather than fixed to `TStyle`**, which is what lets the
+ * mapping be shared: a literal is never assignable to a type parameter, and a template's defaults
+ * are literals. Two of them, the slide's being two types. **Pass no type argument here** — one
+ * given makes the rest fall back to `TStyle`, and the literals stop fitting.
+ *
  * @internal Not exported from index.ts.
  */
 export function buildDialogOptions<
@@ -143,11 +155,13 @@ export function buildDialogOptions<
   TReason extends string = string,
   TStyle extends DialogStyle = DialogStyle,
   TNode = unknown,
+  TDefaultAnimation extends DialogStyle = TStyle,
+  TDefaultStyle extends DialogStyle = TStyle,
 >(
   options: TemplateBaseOptions<TData, TRenderContext, TReason, TStyle, TNode>,
   defaults: {
-    readonly animation: DialogAnimation<TStyle>;
-    readonly style?: TStyle | undefined;
+    readonly animation: DialogAnimation<TDefaultAnimation>;
+    readonly style?: TDefaultStyle | undefined;
     readonly template?: UseDialogBaseOptions['template'];
   }
 ) {
@@ -156,5 +170,143 @@ export function buildDialogOptions<
     animation: options.animation ?? defaults.animation,
     style: mergeStyle(defaults.style, options.style),
     template: defaults.template,
+  };
+}
+
+// ── The render contexts, and the two option mappings that produce them ────────
+
+/** Semantic intent of a message dialog, driving icon and color selection in UI templates. */
+export type MessageDialogType = 'info' | 'warning' | 'error' | 'success';
+
+/** Dialog state and the close handle, passed to the MessageDialog render function. */
+export type MessageDialogRenderContext<
+  TData = void,
+  TReason extends string = string,
+> = BaseRenderContext<TData, TReason>;
+
+/** {@link MessageDialogRenderContext} for a declared id. */
+export type RegisteredMessageContext<TId> = RegisteredBaseRenderContext<TId>;
+
+/** Dialog state, the close handle and the slide direction, passed to the render function. */
+export type SlideDialogRenderContext<
+  TData = void,
+  TReason extends string = string,
+> = BaseRenderContext<TData, TReason> & {
+  /** The slide direction for direction-aware layout */
+  readonly direction: SlideDirection;
+};
+
+/** {@link SlideDialogRenderContext} for a declared id. */
+export type RegisteredSlideContext<TId> = RegisteredBaseRenderContext<TId> & {
+  /** The slide direction for direction-aware layout */
+  readonly direction: SlideDirection;
+};
+
+/**
+ * The two knobs the slide's own options add to {@link TemplateBaseOptions}.
+ *
+ * **Not exported, and each binding spells the pair out again in its public `UseSlideDialogOptions`**
+ * — measured, not assumed: typedoc renders a referenced alias as a bare name, so sharing the
+ * declaration there cost `direction` and `align` their entries in the reference. Neither `@inline`
+ * nor `@inlineType` inlines it (0.28.20; `@inline` silences the `notExported` warning without
+ * inlining, which is worse than the gap). So this is the mapping's parameter type and nothing more.
+ *
+ * @internal Not exported from index.ts.
+ */
+type SlideTemplateExtras = {
+  /** Slide direction */
+  readonly direction: SlideDirection;
+  /**
+   * Alignment on the cross axis: `stretch` fills it, `start`/`center`/`end` pin a content-sized
+   * panel you size yourself in `render`.
+   * @default 'stretch'
+   */
+  readonly align?: SlideAlign | undefined;
+};
+
+/**
+ * The message template's whole option mapping: the fade, the name, and `render` restated against
+ * the template's own context.
+ *
+ * Here rather than in each binding because the two bodies were identical to the letter — the only
+ * thing that differed was which pair of knobs they instantiated, and those are type arguments. The
+ * four are spelled out at every call site for the reason {@link buildDialogOptions} gives:
+ * `TemplateBaseOptions` is an `Omit`, and inference cannot reach a mapped type's knobs.
+ *
+ * @internal Not exported from index.ts.
+ */
+export function messageDialogOptions<
+  TData,
+  TReason extends string,
+  TStyle extends DialogStyle,
+  TNode,
+>(
+  options: TemplateBaseOptions<
+    TData,
+    MessageDialogRenderContext<TData, TReason>,
+    TReason,
+    TStyle,
+    TNode
+  >
+) {
+  return {
+    ...buildDialogOptions(options, {
+      animation: DEFAULT_FADE_ANIMATION,
+      // Names itself, so a cross-cutting listener can tell one kind of dialog from another.
+      template: 'message',
+    }),
+    render: (args: MessageDialogRenderContext<TData, TReason>): TNode => {
+      return options.render(args);
+    },
+  };
+}
+
+/**
+ * The slide template's option mapping — the geometry, the clip, and `render` with the direction
+ * added to its context.
+ *
+ * `withDirection` is the one line the two bindings genuinely disagree about, so it is the one
+ * parameter: React spreads, and Solid **must** use `mergeProps`, the render args being getters that
+ * a spread would freeze. Everything above it — asking the core whether the arrangement is contained
+ * rather than re-deriving it, the animation, the style, `clipContainer` — is one answer.
+ *
+ * @internal Not exported from index.ts.
+ */
+export function slideDialogOptions<
+  TData,
+  TReason extends string,
+  TStyle extends DialogStyle,
+  TNode,
+>(
+  options: TemplateBaseOptions<
+    TData,
+    SlideDialogRenderContext<TData, TReason>,
+    TReason,
+    TStyle,
+    TNode
+  > &
+    SlideTemplateExtras,
+  withDirection: (
+    args: BaseRenderContext<TData, TReason>,
+    extra: { readonly direction: SlideDirection }
+  ) => SlideDialogRenderContext<TData, TReason>
+) {
+  // Asked of the core rather than re-derived: the geometry written here and the placement the
+  // runtime resolves are one decision, and a host getter is a portal in both.
+  const contained = isContainedArrangement(options);
+  const align = options.align ?? 'stretch';
+
+  return {
+    ...buildDialogOptions(options, {
+      animation: slideAnimation(options.direction, align),
+      style: slideDialogStyle({ direction: options.direction, contained, align }),
+      template: 'slide',
+    }),
+    // A slide translates past its container edge, so the wrapper is clipped to stop an off-screen
+    // panel expanding document overflow.
+    clipContainer: true,
+    render: (args: BaseRenderContext<TData, TReason>): TNode => {
+      return options.render(withDirection(args, { direction: options.direction }));
+    },
   };
 }

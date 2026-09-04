@@ -1,41 +1,23 @@
 import { mergeProps } from 'solid-js';
+import type { JSX } from 'solid-js';
 import type { RegisteredDialogId } from '../../core/registry.js';
 import type { RegisteredReturn } from '../../core/registered-types.js';
-import type { JSX } from 'solid-js';
 import type { DialogStyle } from '../../core/style.js';
 import {
-  slideAnimation,
-  slideDialogStyle,
-  type SlideAlign,
-  type SlideDirection,
-} from '../../templates/slide-geometry.js';
-import {
-  buildDialogOptions,
-  type BaseRenderContext,
-  type RegisteredBaseRenderContext,
+  slideDialogOptions,
+  type RegisteredSlideContext,
   type RegisteredTemplateOptions,
+  type SlideDialogRenderContext,
   type TemplateBaseOptions,
 } from '../../templates/shared.js';
-import { isContainedArrangement } from '../../core/placement.js';
 import { useDialog } from '../use-dialog.js';
 import type { UseDialogReturn } from '../types.js';
 
-export type { SlideAlign, SlideDirection };
-
-/** Dialog state, the close handle and the slide direction, passed to the render function. */
-export type SlideDialogRenderContext<
-  TData = void,
-  TReason extends string = string,
-> = BaseRenderContext<TData, TReason> & {
-  /** The slide direction for direction-aware layout */
-  readonly direction: SlideDirection;
-};
-
-/** {@link SlideDialogRenderContext} for a declared id. */
-export type RegisteredSlideContext<TId> = RegisteredBaseRenderContext<TId> & {
-  /** The slide direction for direction-aware layout */
-  readonly direction: SlideDirection;
-};
+// The geometry is `templates/slide-geometry.ts`'s and the render contexts are the template's —
+// this file is the two knobs turned to Solid's, and nothing else.
+export type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
+import type { SlideAlign, SlideDirection } from '../../templates/slide-geometry.js';
+export type { RegisteredSlideContext, SlideDialogRenderContext } from '../../templates/shared.js';
 
 /** Options for `useSlideDialog` — declare both parameters on the hook, as React's twin says. */
 export type UseSlideDialogOptions<
@@ -67,11 +49,7 @@ export type UseSlideDialogReturn<TData = void, TReason extends string = string> 
  * Headless template hook for a slide-in panel dialog — `umbra/react`'s, and which edge it pins to
  * and how far it travels are `templates/slide-geometry.ts`'s, which neither binding owns.
  */
-/**
- * The registered door, first so a declared id is matched by it. While `DialogRegistry` is empty
- * `RegisteredDialogId` is `never`, the overload is uninhabitable, and every call falls through to
- * the one below — which is the signature `useSlideDialog` has always had.
- */
+/** The registered door — see {@link RegisteredDialogId} for why it is declared first. */
 export function useSlideDialog<TId extends RegisteredDialogId>(
   options: RegisteredTemplateOptions<TId, RegisteredSlideContext<TId>, DialogStyle, JSX.Element> & {
     readonly direction: SlideDirection;
@@ -84,29 +62,11 @@ export function useSlideDialog<TData = void, TReason extends string = string>(
 export function useSlideDialog<TData = void, TReason extends string = string>(
   options: UseSlideDialogOptions<TData, TReason>
 ): UseSlideDialogReturn<TData, TReason> {
-  // Asked of the core rather than re-derived: the geometry written here and the placement the
-  // runtime resolves are one decision, and a host getter is a portal in both.
-  const contained = isContainedArrangement(options);
-  const align = options.align ?? 'stretch';
-
-  return useDialog<TData, TReason>({
-    ...buildDialogOptions<
-      TData,
-      SlideDialogRenderContext<TData, TReason>,
-      TReason,
-      DialogStyle,
-      JSX.Element
-    >(options, {
-      animation: slideAnimation(options.direction, align),
-      style: slideDialogStyle({ direction: options.direction, contained, align }),
-      template: 'slide',
-    }),
-    // A slide translates past its container edge; clipping stops it expanding document overflow.
-    clipContainer: true,
+  return useDialog<TData, TReason>(
     // `mergeProps`, not a spread: the render args are getters, and spreading would freeze them —
     // the panel would never see `isPreparing` go false.
-    render: (args) => {
-      return options.render(mergeProps(args, { direction: options.direction }));
-    },
-  });
+    slideDialogOptions<TData, TReason, DialogStyle, JSX.Element>(options, (args, extra) => {
+      return mergeProps(args, extra);
+    })
+  );
 }

@@ -1,6 +1,6 @@
 // `../store` is the framework-free barrel (React bindings live in `../store/react`); this entry
 // must resolve without React — pinned by __tests__/entry-isolation.test.ts.
-import type { DialogStoreSnapshot, AwaitedClose } from '../core/types.js';
+import type { DialogPhase, DialogStoreSnapshot, AwaitedClose } from '../core/types.js';
 import type { DismissReason } from '../core/dismiss-reason.js';
 import type {
   DialogId,
@@ -707,18 +707,35 @@ export function createDialogManager(): DialogManager {
   let topLayerOrder: string[] = [];
   // Observable snapshot cell (consumed by `useDialogManager` via useSyncExternalStore).
   const snapshotStore = createStore(emptySnapshot);
+  /**
+   * The same open dialogs the snapshot carries, by id — an index rather than a second source, and
+   * written only where the snapshot is, so the two cannot disagree.
+   *
+   * The per-dialog queries are what a render loop calls: each was a linear scan of a list the
+   * manager had already built, three times over.
+   */
+  let openById: ReadonlyMap<string, RegisteredDialogInfo> = new Map();
 
   // ── Registry query helpers ──────────────────────────────────────────────
 
-  /** Single iteration source of truth for all non-closed entries. */
-  function getOpenEntries(): OpenEntry[] {
+  /**
+   * Single iteration source of truth over the registry, either side of the one question it asks.
+   *
+   * `open: false` is `getClosed`'s half — the same scan with the predicate inverted, which is what
+   * it was before this took the boolean.
+   */
+  function entriesWhere(open: boolean): OpenEntry[] {
     const result: OpenEntry[] = [];
     for (const [id, entry] of registry) {
-      if (entry.store.getSnapshot().phase !== 'closed') {
+      if ((entry.store.getSnapshot().phase !== 'closed') === open) {
         result.push({ id, entry });
       }
     }
     return result;
+  }
+
+  function getOpenEntries(): OpenEntry[] {
+    return entriesWhere(true);
   }
 
   /**
@@ -782,13 +799,36 @@ export function createDialogManager(): DialogManager {
     document.dispatchEvent(new CustomEvent(name, { detail }));
   }
 
+  /**
+   * A close, on both channels at once — the subscriber's and the one `unregister` fires for a
+   * dialog torn down while open.
+   *
+   * Only the *close* pairs. An open does not: the DOM event is dispatched at `'opening'`, so a
+   * listener outside the bundle sees the element as it arrives, while `emit({ type: 'open' })`
+   * waits for `prepare` to settle. Merging those would move one of the two.
+   */
+  function announceClose(
+    id: string,
+    closed: Pick<RegistryEntry, 'template' | 'openedAt'> & { readonly reason: string | undefined }
+  ): void {
+    const { template, openedAt, reason } = closed;
+    emit({ type: 'close', id, reason });
+    dispatchDialogEvent(DIALOG_CLOSE_EVENT, { id, template, reason, openedAt });
+  }
+
   // ── Change notification ───────────────────────────────────────────────────
 
   function notifyChange() {
     // Publish a freshly computed snapshot. Every call produces a new object,
     // so subscribers are always notified — dedup happens upstream via the
     // per-store transition guard in the register() subscriber.
-    snapshotStore.set(computeSnapshot());
+    const next = computeSnapshot();
+    openById = new Map(
+      next.openDialogs.map((info): [string, RegisteredDialogInfo] => {
+        return [info.id, info];
+      })
+    );
+    snapshotStore.set(next);
   }
 
   /** Reads the snapshot — call only after `notifyChange()` for the same transition. */
@@ -993,7 +1033,15 @@ export function createDialogManager(): DialogManager {
     const initial = store.getSnapshot();
     let prevPhase = initial.phase;
     let prevIsPreparing = initial.isPreparing;
-    let openEmitted = false;
+
+    /**
+     * Fully opened is `'open'` with `prepare` settled — **derived from the pair, not latched**.
+     * Nothing else can produce it: `beginOpen` runs only from `'closed'` and `finishPreparing`
+     * only clears the flag, so the two reads below differ exactly once per open.
+     */
+    const isFullyOpen = (phase: DialogPhase, preparing: boolean): boolean => {
+      return phase === 'open' && !preparing;
+    };
 
     const unsubscribe = store.subscribe(() => {
       const { phase, isPreparing } = store.getSnapshot();
@@ -1005,7 +1053,6 @@ export function createDialogManager(): DialogManager {
 
       // ── Opening started ──
       if (phase === 'opening' && prevPhase === 'closed') {
-        openEmitted = false;
         const openedAt = Date.now();
         if (entry) {
           openSequence += 1;
@@ -1020,26 +1067,18 @@ export function createDialogManager(): DialogManager {
       }
 
       // ── Fully opened: phase is 'open' AND prepare has completed ──
-      if (!openEmitted && phase === 'open' && !isPreparing) {
-        openEmitted = true;
+      if (isFullyOpen(phase, isPreparing) && !isFullyOpen(prevPhase, prevIsPreparing)) {
         log('Opened', { id, openCount: getOpenEntries().length });
         emit({ type: 'open', id });
       }
 
       // ── Closed ──
       if (phase === 'closed' && prevPhase !== 'closed') {
-        openEmitted = false;
         // The store retains its close result through 'closed' (until the next
         // open), so the reason is read straight from it — no side bookkeeping.
         const reason = entry?.store.getSnapshot().closeResult?.reason;
         log('Closed', { id, reason, openCount: getOpenEntries().length });
-        emit({ type: 'close', id, reason });
-        dispatchDialogEvent(DIALOG_CLOSE_EVENT, {
-          id,
-          template,
-          reason,
-          openedAt: entry?.openedAt ?? 0,
-        });
+        announceClose(id, { template, openedAt: entry?.openedAt ?? 0, reason });
       }
 
       prevPhase = phase;
@@ -1109,13 +1148,7 @@ export function createDialogManager(): DialogManager {
     log('Unregistered', { id, registeredCount: registry.size });
 
     if (wasOpen) {
-      emit({ type: 'close', id, reason: DISMISS_REASON });
-      dispatchDialogEvent(DIALOG_CLOSE_EVENT, {
-        id,
-        template: entry.template,
-        reason: DISMISS_REASON,
-        openedAt: entry.openedAt,
-      });
+      announceClose(id, { ...entry, reason: DISMISS_REASON });
     }
 
     // After the close, which is the order the two facts happen in: the dialog left the screen and
@@ -1136,9 +1169,7 @@ export function createDialogManager(): DialogManager {
   // touch the registry, since closed dialogs are not part of the snapshot.
   const lookupObj: DialogLookup = {
     get(id: string): DialogInfo {
-      const open = snapshotStore.getSnapshot().openDialogs.find((d) => {
-        return d.id === id;
-      });
+      const open = openById.get(id);
       if (open) {
         return open;
       }
@@ -1173,9 +1204,7 @@ export function createDialogManager(): DialogManager {
     // ── Per-dialog queries ─────────────────────────────────────────────────
 
     isVisible(id: string): boolean {
-      return snapshotStore.getSnapshot().openDialogs.some((d) => {
-        return d.id === id;
-      });
+      return openById.has(id);
     },
 
     isForeground(id: string): boolean {
@@ -1185,13 +1214,10 @@ export function createDialogManager(): DialogManager {
     // ── Registration queries ──────────────────────────────────────────────
 
     getClosed(): RegisteredDialogInfo[] {
-      const result: RegisteredDialogInfo[] = [];
-      for (const [id, entry] of registry) {
-        if (entry.store.getSnapshot().phase === 'closed') {
-          result.push(toDialogInfo(id, { entry }));
-        }
-      }
-      return result;
+      return entriesWhere(false).map(({ id, entry }) => {
+        // A closed dialog is never the foreground — no `topId`.
+        return toDialogInfo(id, { entry });
+      });
     },
 
     getRegisteredCount(): number {

@@ -1,5 +1,5 @@
 import { createActionEngine } from '../actions/action-engine.js';
-import { canDismiss } from '../utils/dismiss-gate.js';
+import { answerDismiss, canDismiss } from '../utils/dismiss-gate.js';
 import { Key } from '../utils/keys.js';
 import { createLogger } from '../utils/logger.js';
 import { isBackdropClick, type BackdropClickEvent, type BackdropDialog } from './dialog-props.js';
@@ -9,6 +9,7 @@ import { focusStep } from './focus-policy.js';
 import { createDialogStore } from './dialog-store.js';
 import { dialogPlacement, namesAPortal, type DialogPlacement } from './placement.js';
 import type { ActionGate } from '../actions/action-engine.js';
+import type { DismissCause } from './dismiss-reason.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
@@ -274,6 +275,26 @@ export function shouldDismissOnBackdropClick(
   }
 
   return isBackdropClick(event, dialog);
+}
+
+/**
+ * The backdrop's whole answer: the chain above, and the dismissal when it agrees.
+ *
+ * One function because all three bindings asked the same question and acted on it the same way,
+ * differing only in how the click reached them — a React `onClick` prop, a listener on an element
+ * the binding owns. `onDismissRequest` is read here rather than captured at attach time, so a
+ * controlled surface's handler is a prop like any other.
+ */
+export function answerBackdropClick(
+  event: BackdropClickEvent,
+  options: BackdropDismissOptions & {
+    /** Controlled surfaces only: report the click instead of closing. See `DialogOptions`. */
+    readonly onDismissRequest: ((cause: DismissCause) => boolean | void) | undefined;
+  }
+): void {
+  if (shouldDismissOnBackdropClick(event, options)) {
+    answerDismiss(options.store, { request: options.onDismissRequest, cause: 'backdrop-click' });
+  }
 }
 
 // ── Teardown ─────────────────────────────────────────────────────────────────

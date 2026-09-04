@@ -4,6 +4,7 @@ import { createActionEngine } from '../../actions/action-engine.js';
 import { createDialogManager } from '../../manager/dialog-manager.js';
 import { setLogLevel } from '../../utils/logger.js';
 import {
+  answerBackdropClick,
   createDialogRuntime,
   resolveDialogOptions,
   resolvePortalHost,
@@ -563,5 +564,88 @@ test.describe('resolvePortalHost', () => {
         return null;
       }, body)
     ).toBe(body);
+  });
+});
+
+test.describe('answerBackdropClick', () => {
+  // The chain's answer *acted on*, which is what all three bindings call — React from an `onClick`
+  // prop, the other two from a listener. Splitting decision from action is how one of them came to
+  // ask the question and dismiss on a different rule.
+  const surface = new EventTarget();
+  const boxed = {
+    getBoundingClientRect: () => {
+      return { left: 100, right: 300, top: 100, bottom: 200 };
+    },
+  };
+  const onBackdrop = { target: surface, currentTarget: surface, clientX: 0, clientY: 0 };
+
+  const opened = (id: string) => {
+    const runtime = createDialogRuntime<void, 'save'>(id, noDialog);
+    runtime.store.beginOpen();
+    // The director's two calls, by hand: nothing here drives a lifecycle, and a dialog still
+    // `'opening'` would pass the assertions below for the wrong reason.
+    runtime.store.scheduleOpenTransition();
+    frames.flush();
+    runtime.store.finishPreparing();
+    return runtime;
+  };
+
+  test('a click the chain accepts closes the dialog, with the dismiss reason', () => {
+    const { store, engine } = opened('backdrop-answer');
+
+    answerBackdropClick(onBackdrop, {
+      pressedOnBackdrop: true,
+      dialog: boxed,
+      store,
+      engine,
+      isNonModal: false,
+      dismissOnBackdropClick: true,
+      dismissWhilePreparing: true,
+      onDismissRequest: undefined,
+    });
+
+    expect(store.getSnapshot().phase).toBe('closing');
+    expect(store.getSnapshot().closeResult?.reason).toBe('dismiss');
+  });
+
+  test('a controlled surface is asked, and its refusal leaves the dialog open', () => {
+    // The same door the dismiss key goes through: `onDismissRequest` returning false is a report,
+    // not a close, so a caller driving `open` itself stays the one deciding.
+    const { store, engine } = opened('backdrop-refused');
+    const seen: string[] = [];
+
+    answerBackdropClick(onBackdrop, {
+      pressedOnBackdrop: true,
+      dialog: boxed,
+      store,
+      engine,
+      isNonModal: false,
+      dismissOnBackdropClick: true,
+      dismissWhilePreparing: true,
+      onDismissRequest: (cause) => {
+        seen.push(cause);
+        return false;
+      },
+    });
+
+    expect(seen).toEqual(['backdrop-click']);
+    expect(store.getSnapshot().phase).toBe('open');
+  });
+
+  test('a click the chain refuses does nothing at all', () => {
+    const { store, engine } = opened('backdrop-declined');
+
+    answerBackdropClick(onBackdrop, {
+      pressedOnBackdrop: false,
+      dialog: boxed,
+      store,
+      engine,
+      isNonModal: false,
+      dismissOnBackdropClick: true,
+      dismissWhilePreparing: true,
+      onDismissRequest: undefined,
+    });
+
+    expect(store.getSnapshot().phase).toBe('open');
   });
 });

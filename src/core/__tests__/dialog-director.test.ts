@@ -4,6 +4,7 @@ import {
   DIALOG_LIFECYCLE_SEQUENCE,
   DIALOG_LIFECYCLE_STEPS,
   keydownOptions,
+  lifecyclePass,
   type DialogLifecyclePass,
   type DialogLifecycleStep,
 } from '../dialog-director.js';
@@ -188,5 +189,75 @@ test.describe('what each step reads', () => {
         expect(carried.has(input), `${step} reads something the pass does not carry`).toBe(true);
       }
     }
+  });
+});
+
+test.describe('lifecyclePass', () => {
+  // All three bindings assemble a pass through this, from the four sources a binding holds. A field
+  // dropped here disables a rule in every binding at once — which is the version a test can see;
+  // the three hand-written copies it replaced could each lose a different one.
+  test('every field of the pass is filled, from the source that owns it', () => {
+    const prepare = () => {
+      return undefined;
+    };
+    const onError = noop;
+    const onKeyDown = noop;
+    const onDismissRequest = () => {
+      return false;
+    };
+
+    const pass = lifecyclePass({
+      phase: 'closing',
+      isPreparing: true,
+      options: { prepare, onError, onKeyDown, onDismissRequest },
+      variant: {
+        isNonModal: true,
+        dismissKey: 'Enter',
+        dismissWhilePreparing: false,
+        containFocus: true,
+        dismissOnClickOutside: true,
+      },
+      timing: { primaryProperty: 'transform', exitDuration: 150 },
+    });
+
+    // Spelled out rather than compared field by field: `toEqual` against a literal is what fails
+    // when a field is added to `DialogLifecyclePass` and not forwarded here.
+    expect(pass).toEqual({
+      phase: 'closing',
+      isPreparing: true,
+      prepare,
+      onError,
+      onKeyDown,
+      onDismissRequest,
+      nonModal: true,
+      primaryProperty: 'transform',
+      exitDuration: 150,
+      dismissKey: 'Enter',
+      dismissWhilePreparing: false,
+      containFocus: true,
+      dismissOnClickOutside: true,
+    });
+    // The pass a step reads has no key the assertion above missed.
+    expect(Object.keys(pass).sort()).toEqual(Object.keys(BASE).sort());
+  });
+
+  test('an absent callback stays absent rather than becoming a no-op', () => {
+    // `syncOpenSequence` runs on every pass and asks `prepare` whether there is work; a stand-in
+    // would make every dialog look as though it had some.
+    const pass = lifecyclePass({
+      phase: 'open',
+      isPreparing: false,
+      options: {},
+      variant: {
+        isNonModal: false,
+        dismissKey: 'Escape',
+        dismissWhilePreparing: true,
+        containFocus: false,
+        dismissOnClickOutside: false,
+      },
+      timing: { primaryProperty: 'opacity', exitDuration: 200 },
+    });
+
+    expect(pass).toEqual(BASE);
   });
 });
