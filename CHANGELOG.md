@@ -11,6 +11,25 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-03
 
+### Changed — every example trigger in the playground is the one button
+
+Three looks were in use for the same job. The standard — `AppButton variant="contained"
+size="small"` — accounted for 21 of them; the rest were the bare `text` default at `medium`, an
+`outlined` variant, `color="error"` on the two destructive ones, and, on the three-step wizard,
+`Shared.Button` — the _dialog template's_ button standing in as a page trigger, which is why "Open
+Vanilla Panel" was visibly taller than "Open the list" right above it. All 37 now read the same.
+
+`Cosmic Override` keeps its own, being the demo whose subject is overriding everything the library
+draws. Left alone too: the `<button>`s that are not action buttons — `slide-presets`' shape tiles
+and list rows — and every `Shared.Button` carrying `{...action(...)}`, which is a dialog's own
+interior and where `AppButton`'s doc says the templates' button belongs.
+
+**The survey that found them was wrong the first time**, and worth recording: a regex reading
+`<AppButton([^>]*)>` stops at the `>` in the `onClick` arrow, so any attribute written _after_ the
+handler was invisible — two buttons were reported as bare that already carried `variant="outlined"`,
+and two as deviating that were already standard. Parsing to the tag's real end, brace-aware, is what
+produced the list above.
+
 ### Changed — four kinds of copy-and-paste collapsed into one declaration each
 
 The runtime lost twelve code lines net, which is the wrong number to read this by: 142 lines of

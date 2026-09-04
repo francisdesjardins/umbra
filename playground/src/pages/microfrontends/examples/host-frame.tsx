@@ -103,7 +103,7 @@ export function HostFrame() {
     <div className={styles['stack']}>
       <div className={styles['controls']}>
         <AppButton
-          variant="outlined"
+          variant="contained"
           size="small"
           onClick={() => {
             setReloadKey((n) => {

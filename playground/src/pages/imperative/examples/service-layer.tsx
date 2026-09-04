@@ -153,7 +153,6 @@ export function ServiceLayerExample() {
         <AppButton
           variant="contained"
           size="small"
-          color="error"
           onClick={() => {
             void deploymentService.deploy('production');
           }}

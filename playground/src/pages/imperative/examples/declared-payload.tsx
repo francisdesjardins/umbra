@@ -81,26 +81,30 @@ export function DeclaredPayloadExample() {
   return (
     <ExampleLayout result={result} dialogs={dialog.Dialog}>
       <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           setCopies((n) => {
             return n === 5 ? 1 : n + 1;
           });
         }}
-        variant="outlined"
       >
         Copies: {copies}
       </AppButton>
       <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           setColour((on) => {
             return !on;
           });
         }}
-        variant="outlined"
       >
         {colour ? 'Colour' : 'Greyscale'}
       </AppButton>
       <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           // Checked against the contract: `{ copies: '2' }` or a stray key is a compile error here,
           // and no type argument is written anywhere — the id is what carries the shape.

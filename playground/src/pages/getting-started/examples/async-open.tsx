@@ -125,7 +125,7 @@ export function AsyncOpenExample() {
           Open
         </AppButton>
         <AppButton
-          variant="outlined"
+          variant="contained"
           size="small"
           disabled={!isSuccess}
           onClick={() => {

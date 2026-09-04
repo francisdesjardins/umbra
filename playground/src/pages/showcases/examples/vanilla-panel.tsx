@@ -1,4 +1,5 @@
 import { ExampleLayout } from '@/entities/example';
+import { AppButton } from '@/shared/ui/AppButton';
 import * as FormDialog from '@/entities/dialog-template/ui/vanilla/form-dialog';
 import * as PanelDialog from '@/entities/dialog-template/ui/vanilla/panel-dialog';
 import * as Shared from '@/entities/dialog-template/ui/vanilla/shared';
@@ -548,9 +549,9 @@ export function VanillaPanelExample() {
 
   return (
     <ExampleLayout result={result} dialogs={dialog.Dialog}>
-      <Shared.Button variant="primary" onClick={handleOpen}>
+      <AppButton variant="contained" size="small" onClick={handleOpen}>
         Open Vanilla Panel
-      </Shared.Button>
+      </AppButton>
     </ExampleLayout>
   );
 }

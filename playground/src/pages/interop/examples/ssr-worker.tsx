@@ -119,7 +119,12 @@ export function SsrWorkerExample() {
           <AppButton variant="contained" size="small" onClick={renderOnTheServer}>
             Render in a worker
           </AppButton>
-          <AppButton size="small" disabled={html === null || hydrated} onClick={hydrate}>
+          <AppButton
+            variant="contained"
+            size="small"
+            disabled={html === null || hydrated}
+            onClick={hydrate}
+          >
             Hydrate it
           </AppButton>
         </div>

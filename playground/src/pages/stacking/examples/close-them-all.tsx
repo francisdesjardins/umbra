@@ -60,6 +60,8 @@ export function CloseThemAllExample() {
       }
     >
       <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           for (const panel of PANELS) {
             dialogManager.open(panel.id);

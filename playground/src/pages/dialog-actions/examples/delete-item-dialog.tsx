@@ -125,7 +125,7 @@ export function DeleteItemDialogExample() {
     <ExampleLayout result={result} dialogs={deleteDialog.Dialog}>
       <AppButton
         variant="contained"
-        color="error"
+        size="small"
         onClick={async () => {
           const [, closeResult] = await deleteDialog.openForItem(
             'item-123',
@@ -140,7 +140,7 @@ export function DeleteItemDialogExample() {
       </AppButton>
       <AppButton
         variant="contained"
-        color="error"
+        size="small"
         onClick={async () => {
           const [, closeResult] = await deleteDialog.openForItem('item-456', 'Project Files.zip');
           resultStore.setResult(

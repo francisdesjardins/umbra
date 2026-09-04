@@ -121,7 +121,7 @@ export function ControlledPanelExample() {
       </label>
       {/* Outlined on purpose: this is the wrong door, visually demoted next to the switch. */}
       <AppButton
-        variant="outlined"
+        variant="contained"
         size="small"
         onClick={() => {
           dialogManager.open(PANEL_ID);

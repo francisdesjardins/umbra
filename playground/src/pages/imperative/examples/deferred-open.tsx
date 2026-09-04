@@ -62,6 +62,8 @@ export function DeferredOpenExample() {
       dialogs={mounted ? <DeferredTarget /> : null}
     >
       <AppButton
+        variant="contained"
+        size="small"
         onClick={() => {
           const landed = dialogManager.open(DIALOG_ID);
           record(landed ? 'open() → true' : 'open() → false, nothing registered');
@@ -70,6 +72,8 @@ export function DeferredOpenExample() {
         Open it now
       </AppButton>
       <AppButton
+        variant="contained"
+        size="small"
         disabled={waiting}
         onClick={() => {
           setWaiting(true);
@@ -79,7 +83,6 @@ export function DeferredOpenExample() {
             record(how);
           });
         }}
-        variant="outlined"
       >
         Open when it arrives
       </AppButton>
