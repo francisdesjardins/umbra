@@ -1544,6 +1544,28 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     ],
   },
   {
+    fact: 'a close the element made itself — `<form method="dialog">`, a bare `dialog.close()`',
+    state: 'works',
+    why: '`attachDialogCancel` states the rule — the browser must never close the dialog behind the store — and prevents the one path that can be prevented. These two cannot be: they run the element’s close steps and announce them afterwards, so `attachNativeClose` follows instead of forbidding and closes the store with `DISMISS_REASON`, the way teardown does. It asks nobody for teardown’s reason: the close has already happened, so `onDismissRequest` would be a question with no answer anyone could honour. Its one guard is the row above — a raise fires the same event with the dialog **open again**, which is the only thing telling the two apart. Left unfollowed the store described a dialog nobody could see: still in the stack, still answering the dismiss key for the ones under it, `onClose` never called.',
+    references: [
+      {
+        file: 'src/core/__tests__/native-close.ct.tsx',
+        title: 'leaves the library agreeing that it is closed',
+      },
+    ],
+  },
+  {
+    fact: 'a dialog driven from a document other than the script’s own',
+    state: 'no-by-design',
+    why: 'The core is single-realm throughout, and not by one line that could be changed: every `instanceof Node` / `HTMLElement` / `Document` narrowing is bound to the realm the module was loaded in, so a node from an `<iframe>` or a `window.open`ed page fails each of them, and the one constructed `CSSStyleSheet` may not be adopted by a second document at all. The supported arrangement is the one that costs nothing — a page showing a dialog in another document loads the library **in that document**, where all of those reads are right again. So the mixed idiom in `core/` (the shared listeners say `document`, the functions holding a node say `dialog.ownerDocument`) is not a claim about this case in either direction.',
+  },
+  {
+    fact: 'an exit animated with `@keyframes` rather than a transition',
+    state: 'partial',
+    since: '2026-09-04',
+    why: 'The exit is *observed* through `transitionend` on the one property `transitionProperty` names, which a keyframed exit never fires — so it is finished by the safety timer at `exitDuration + 50`: right whenever the two durations agree, and a cut animation when they do not. `Element.getAnimations()` answers both halves at once — it sees transitions, keyframes and the `::backdrop` animation the close already drives through WAAPI — and would leave `transitionProperty` and `exitDuration` as hints rather than the exit’s only clock. What rules out a straight swap is the measurement the timer exists for: the style write and the recalculation that starts the animation were 245 ms apart on a busy page, and `getAnimations()` returns only animations already created, so a naive read settles the close instantly. Forcing that flush, and what Safari returns for `::backdrop`, are the work.',
+  },
+  {
     fact: 'a raise keeps the caret where the user left it',
     state: 'works',
     why: 'Restored to **where the library last saw the keyboard inside that dialog**, which is the same answer on all three engines. A raise is `close()` + `showModal()`, so the engine focuses something on the way back — Chromium the first focusable, WebKit the field — and the `focusin` that fires is indistinguishable at the listener from a person clicking. `isRaisingDialog` (`core/dialog-lifecycle.ts`) publishes the round-trip as a window and the coordinator stops recording inside it, so the memory survives; the reclaim then reads focus-inside-but-not-where-I-remember as the signature of a move the library made. **What is still the engine\u2019s is the case with no memory to restore** \u2014 a dialog nobody had focused anything in comes back on whatever `showModal()` picks, and there is nothing truer to put there. Two states are deliberately not divergence: focus on the `<dialog>` element itself, which a dead-space click produces and which is never recorded, and a memory that has left the DOM, since falling through with one re-honours `focusOnOpen` over wherever the user had got to.',

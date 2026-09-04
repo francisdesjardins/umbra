@@ -23,18 +23,24 @@ const DIRECTED = {
   vanilla: 'vanilla/bind-dialog.ts',
 } as const;
 
-/** The sequence as it stands, 2026-08-13 — a record; moving it costs a why in the commit. */
-const RECORDED_SEQUENCE: readonly string[] = [
+/**
+ * The sequence as it stands, 2026-09-04 — a record; moving it costs a why in the commit.
+ *
+ * `as const` and deliberately no `satisfies DialogLifecycleStep[]`: a record the checker keeps in
+ * step with the code cannot disagree with it, and the disagreement is the whole output.
+ */
+const RECORDED_SEQUENCE = [
   'syncOpenSequence',
   'syncLabellingDiagnostics',
   'syncCloseSequence',
+  'attachNativeClose',
   'attachDialogKeydown',
   'attachDialogCancel',
   'attachWindowDismissKey',
   'focus.sync',
   'attachFocusContainment',
   'attachClickOutside',
-];
+] as const;
 
 function sourceOf(file: string): string {
   return (

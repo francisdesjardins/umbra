@@ -220,7 +220,9 @@ teardown (or `undefined` when nothing was attached). **Who calls them, in what o
 pass is [core/dialog-director.ts](core/dialog-director.ts)'s**, whose JSDoc holds that reasoning,
 including why each step declares its own inputs rather than sharing one key:
 
-- `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts))
+- `syncOpenSequence` / `syncCloseSequence` ([core/attach-lifecycle.ts](core/attach-lifecycle.ts)),
+  and `attachNativeClose` ([core/attach-native-close.ts](core/attach-native-close.ts)) — the close
+  the element made itself, which is the one `cancel` cannot prevent
 - `attachDialogKeydown` / `attachDialogCancel` / `attachWindowDismissKey`
   ([core/attach-keydown.ts](core/attach-keydown.ts)) — three listeners with three lifetimes
 - `attachClickOutside` ([core/attach-click-outside.ts](core/attach-click-outside.ts))
@@ -557,7 +559,7 @@ State management lives in [store/](store/) — a hand-rolled reactive cell (a `S
 
 ## Debug Logging
 
-`createLogger(namespace)` ([utils/logger.ts](utils/logger.ts)). Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `dialog`, `dialog:lifecycle`, `dialog:keydown`, `dialog:click-outside`, `action`.
+`createLogger(namespace)` ([utils/logger.ts](utils/logger.ts)). Enable: `localStorage.setItem('dialog:log', '*')`. Namespaces: `manager`, `outlet`, `dialog`, `dialog:lifecycle`, `dialog:keydown`, `dialog:click-outside`, `dialog:native-close`, `action`.
 
 ## Testing Details
 

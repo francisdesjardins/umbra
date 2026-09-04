@@ -40,6 +40,7 @@ import storyDismissRequestSrc from 'umbra/core/__tests__/dismiss-request.story.t
 import storyDismissKeyOwnershipSrc from 'umbra/core/__tests__/dismiss-key-ownership.story.tsx?raw';
 import storyDismissGatesSrc from 'umbra/core/__tests__/dismiss-gates.story.tsx?raw';
 import storyCloseFailureSrc from 'umbra/core/__tests__/close-failure.story.tsx?raw';
+import storyNativeCloseSrc from 'umbra/core/__tests__/native-close.story.tsx?raw';
 import storyFocusContainmentSrc from 'umbra/core/__tests__/focus-containment.story.tsx?raw';
 import storyOpeningFocusSrc from 'umbra/core/__tests__/opening-focus-foreground.story.tsx?raw';
 import storyVanillaSwapSrc from 'umbra/vanilla/__tests__/swap.story.tsx?raw';
@@ -219,6 +220,7 @@ export const stories: Record<string, string> = {
   'story-dismiss-key-ownership': storyDismissKeyOwnershipSrc,
   'story-dismiss-gates': storyDismissGatesSrc,
   'story-close-failure': storyCloseFailureSrc,
+  'story-native-close': storyNativeCloseSrc,
   'story-focus-containment': storyFocusContainmentSrc,
   'story-opening-focus-foreground': storyOpeningFocusSrc,
   'story-vanilla-swap': storyVanillaSwapSrc,

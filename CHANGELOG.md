@@ -9,6 +9,55 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-04
+
+### Fixed — the platform's own close button left the library holding an open dialog
+
+`<form method="dialog">` is how HTML closes a `<dialog>`, and a headless library is exactly the
+place someone writes it: the markup inside `render` is the caller's. Submitting it runs the
+element's close steps and announces them afterwards — nothing to ask, nothing to prevent. The store
+went on saying `phase: 'open'` over a dialog nobody could see: still in the manager's stack, still
+answering the dismiss key on behalf of the dialogs under it, with `onClose` never called and
+`openAndWait()` never settled. A bare `dialog.close()` in a caller's own code has the same shape.
+
+`attachDialogCancel` had already written the rule this breaks — _the browser must never close the
+dialog behind the store_ — and prevents the one path that can be prevented, Escape. The two that
+cannot are followed instead of forbidden: `attachNativeClose` hears the element's `close` event and
+closes the store with `DISMISS_REASON`, the way teardown does. It asks nobody, for teardown's
+reason — the close has already happened, so `onDismissRequest` would be a question with no answer
+anyone could honour.
+
+Its one guard is the raise, which fires the same event (`close()` then `showModal()`), and the
+matrix already carried the only thing that tells the two apart: the event arrives with the dialog
+**open again**. The rest falls out of machinery that was already there, which is the measure of the
+seam — `store.close` is a no-op while `'closing'`, so every close the library made itself reaches
+the listener and does nothing, and `runCloseSequence`'s first branch, _the browser already closed
+it_, was written for the Escape race and settles this one too, with no exit left to wait for.
+
+One step in `DIALOG_LIFECYCLE_STEPS`, so all three bindings have it, and the first move of the
+recorded sequence since 2026-08-13.
+
+### Documented — two boundaries the matrix was not carrying
+
+Both came out of asking what the core owes beyond ARIA and WCAG, and neither is work in disguise.
+
+**A dialog driven from a document other than the script's own** is a refusal now, with its reason.
+It is not one line to change: every `instanceof Node` / `HTMLElement` / `Document` in the core is
+bound to the realm the module was loaded in, so a node from an `<iframe>` fails each of them, and
+the one constructed `CSSStyleSheet` may not be adopted by a second document at all. The arrangement
+that costs nothing is loading the library _in_ that document, where all of those reads are right
+again — so `core/`'s mixed idiom (`document` in the shared listeners, `dialog.ownerDocument` in the
+functions already holding a node) claims nothing in either direction.
+
+**An exit animated with `@keyframes`** is a `~`. The exit is _observed_ through `transitionend` on
+the one property `transitionProperty` names, so a keyframed one is finished by the safety timer
+instead: right whenever `exitDuration` agrees with the animation, and a cut animation when it does
+not. `Element.getAnimations()` answers both halves — it sees transitions, keyframes and the
+`::backdrop` animation the close already drives through WAAPI — and would leave `transitionProperty`
+and `exitDuration` as hints rather than the exit's only clock. What rules out a straight swap is the
+measurement the timer exists for: 245 ms between the style write and the recalculation that starts
+the animation, against a `getAnimations()` that returns only what has already been created.
+
 ## 2026-09-03
 
 ### Fixed — a dialog's icon buttons had no hover, an inline style being unable to carry one

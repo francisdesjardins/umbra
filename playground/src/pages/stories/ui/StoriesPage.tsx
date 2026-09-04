@@ -12,6 +12,7 @@ import {
 } from 'umbra/core/__tests__/dismiss-key-ownership.story';
 import { InertEscapeHarness } from 'umbra/core/__tests__/dismiss-gates.story';
 import { SilentExitHarness, ThrowingCloseHarness } from 'umbra/core/__tests__/close-failure.story';
+import { NativeFormCloseHarness } from 'umbra/core/__tests__/native-close.story';
 import {
   ControlledClickOutsideHarness,
   ControlledDialogHarness,
@@ -502,6 +503,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'transitionProperty names a property the exit style never changes, so no transitionend arrives — what a display swap or a reduced-motion override produces. The safety timer is the only thing that finishes the close.',
         component: SilentExitHarness,
         codeKey: 'story-close-failure',
+      },
+      {
+        title: 'A dialog the platform closes, through its own form',
+        description:
+          '`<form method="dialog">` runs the element’s close steps and announces them afterwards — there is nothing to ask and nothing to prevent, which is what separates it from Escape. The store follows rather than forbidding, so the dialog it describes is never one nobody can see.',
+        component: NativeFormCloseHarness,
+        codeKey: 'story-native-close',
       },
       {
         title: 'A dialog whose Escape is a request, not a close',

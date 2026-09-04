@@ -11,6 +11,7 @@ import {
   syncLabellingDiagnostics,
   syncOpenSequence,
 } from './attach-lifecycle.js';
+import { attachNativeClose } from './attach-native-close.js';
 import { createStepRunner } from './step-runner.js';
 import type { ActionGate } from '../actions/action-engine.js';
 import type { DismissCause } from './dismiss-reason.js';
@@ -248,6 +249,16 @@ export const DIALOG_LIFECYCLE_STEPS = [
         primaryProperty: pass.primaryProperty,
         exitDuration: pass.exitDuration,
       });
+    },
+  },
+  {
+    /** The other half of the exit: a close the element made without being asked. */
+    step: 'attachNativeClose',
+    inputs: (pass) => {
+      return [pass.phase];
+    },
+    run: (dom) => {
+      return attachNativeClose(dom);
     },
   },
   {

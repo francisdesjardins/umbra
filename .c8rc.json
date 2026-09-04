@@ -25,6 +25,7 @@
     "src/core/attach-focus.ts",
     "src/core/attach-keydown.ts",
     "src/core/attach-lifecycle.ts",
+    "src/core/attach-native-close.ts",
     "src/core/dialog-lifecycle.ts",
     "src/core/focus-policy.ts",
     "src/utils/dialog-scope.ts"
