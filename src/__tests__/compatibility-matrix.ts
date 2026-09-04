@@ -1546,11 +1546,15 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
   {
     fact: 'a close the element made itself — `<form method="dialog">`, a bare `dialog.close()`',
     state: 'works',
-    why: '`attachDialogCancel` states the rule — the browser must never close the dialog behind the store — and prevents the one path that can be prevented. These two cannot be: they run the element’s close steps and announce them afterwards, so `attachNativeClose` follows instead of forbidding and closes the store with `DISMISS_REASON`, the way teardown does. It asks nobody for teardown’s reason: the close has already happened, so `onDismissRequest` would be a question with no answer anyone could honour. Its one guard is the row above — a raise fires the same event with the dialog **open again**, which is the only thing telling the two apart. Left unfollowed the store described a dialog nobody could see: still in the stack, still answering the dismiss key for the ones under it, `onClose` never called.',
+    why: '`attachDialogCancel` states the rule — the browser must never close the dialog behind the store — and prevents the one path that can be prevented. These two cannot be: they run the element’s close steps and announce them afterwards, so `attachNativeClose` follows instead of forbidding and closes the store with `DISMISS_REASON`, the way teardown does. It asks nobody for teardown’s reason: the close has already happened, so `onDismissRequest` would be a question with no answer anyone could honour. Its one guard is the row above — a raise fires the same event with the dialog **open again**, which is the only thing telling the two apart. Left unfollowed the store described a dialog nobody could see: still in the stack, still answering the dismiss key for the ones under it, `onClose` never called. It composes with a **controlled** surface for one reason worth knowing: `onClose` runs on the finalisation, the same pass the phase reaches its closed state on, so the owner’s flag is down before the reconciliation — authoritative by design — next reads it.',
     references: [
       {
         file: 'src/core/__tests__/native-close.ct.tsx',
         title: 'leaves the library agreeing that it is closed',
+      },
+      {
+        file: 'src/core/__tests__/native-close.ct.tsx',
+        title: 'lowers its own flag rather than putting the dialog back',
       },
     ],
   },

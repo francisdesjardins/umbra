@@ -12,7 +12,10 @@ import {
 } from 'umbra/core/__tests__/dismiss-key-ownership.story';
 import { InertEscapeHarness } from 'umbra/core/__tests__/dismiss-gates.story';
 import { SilentExitHarness, ThrowingCloseHarness } from 'umbra/core/__tests__/close-failure.story';
-import { NativeFormCloseHarness } from 'umbra/core/__tests__/native-close.story';
+import {
+  ControlledNativeCloseHarness,
+  NativeFormCloseHarness,
+} from 'umbra/core/__tests__/native-close.story';
 import {
   ControlledClickOutsideHarness,
   ControlledDialogHarness,
@@ -507,8 +510,15 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A dialog the platform closes, through its own form',
         description:
-          '`<form method="dialog">` runs the element’s close steps and announces them afterwards — there is nothing to ask and nothing to prevent, which is what separates it from Escape. The store follows rather than forbidding, so the dialog it describes is never one nobody can see.',
+          'A form with method="dialog" runs the element’s close steps and announces them afterwards — there is nothing to ask and nothing to prevent, which is what separates it from Escape. The store follows rather than forbidding, so the dialog it describes is never one nobody can see.',
         component: NativeFormCloseHarness,
+        codeKey: 'story-native-close',
+      },
+      {
+        title: 'The same close, under a surface whose open is a flag above it',
+        description:
+          'The reconciliation is authoritative by design, so a close the owner never asked for is a dialog straight back on screen unless onClose reaches the flag first. It runs on the finalisation — the pass the phase lands closed on — which is why the two compose with no flicker.',
+        component: ControlledNativeCloseHarness,
         codeKey: 'story-native-close',
       },
       {
