@@ -163,16 +163,6 @@ const designSystemRoute = createRoute({
   }, 'DesignSystemPage'),
 });
 
-const warzoneRoute = createRoute({
-  getParentRoute: () => {
-    return rootRoute;
-  },
-  path: '/warzone',
-  component: lazyRouteComponent(() => {
-    return import('@/pages/warzone');
-  }, 'WarzonePage'),
-});
-
 const routeTree = rootRoute.addChildren([
   indexRoute,
   gettingStartedRoute,
@@ -189,7 +179,6 @@ const routeTree = rootRoute.addChildren([
   uiTemplatesRoute,
   designSystemRoute,
   storiesRoute,
-  warzoneRoute,
 ]);
 
 // A `file://` build has no server to rewrite paths, so the single-file bundle needs the hash.

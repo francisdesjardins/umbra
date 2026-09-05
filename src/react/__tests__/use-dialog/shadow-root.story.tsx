@@ -6,8 +6,9 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
 /**
  * A React dialog whose `<dialog>` lives in a shadow root — a web component hosting a React tree, or
  * a widget mounted to keep the host page's CSS out. Both things a shadow boundary breaks fail
- * quietly rather than throwing: `adoptedStyleSheets` does not cross it, so the dialog falls back to
- * the UA backdrop, and `document.activeElement` answers with the host, so a focus policy reading it
+ * quietly rather than throwing: `adoptedStyleSheets` does not cross it, which is why the sheet is
+ * adopted per *root* (`ensureDialogStyles` on `getRootNode()`) so the library's backdrop reaches
+ * here too; and `document.activeElement` answers with the host, so a focus policy reading it
  * concludes focus has left the dialog on every check.
  */
 export function ShadowRootHarness() {

@@ -565,11 +565,11 @@ test.describe('umbra/solid — reconcileOpen', () => {
     await mount(<SolidReconcileHarness />);
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    await page.getByTestId('raise').click();
+    await page.getByTestId('signal-toggle').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    await page.getByTestId('lower').click();
+    await page.getByTestId('signal-toggle').uncheck();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     // Opened by id with the signal still false: unreconciled, the call site believes it is closed.
@@ -581,7 +581,7 @@ test.describe('umbra/solid — reconcileOpen', () => {
 
   test('lowering the signal during the exit asks for nothing', async ({ mount, page }) => {
     await mount(<SolidReconcileHarness />);
-    await page.getByTestId('raise').click();
+    await page.getByTestId('signal-toggle').check();
     await expect(page.getByTestId('asked')).toHaveText('open');
 
     // Inside the 120 ms window where `phase` is `'closing'` but `isVisible` is still true.

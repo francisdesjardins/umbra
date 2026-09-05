@@ -957,7 +957,7 @@ test.describe('dialogs working together', () => {
   });
 
   test('a hotkey fires on the dialog in front, and only there', async ({ mount, page }) => {
-    // All three declare Enter; only the front one may run it.
+    // The dialog and the message dialog both declare it; only the front one may run it.
     await mount(<StackedDialogsHarness />);
     await openAllThree(page);
 
@@ -1249,11 +1249,11 @@ test.describe('reconcileOpen — a controlled panel', () => {
     await mount(<ReconcileOpenHarness />);
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    await page.getByTestId('raise-prop').click();
+    await page.getByTestId('open-prop').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    await page.getByTestId('lower-prop').click();
+    await page.getByTestId('open-prop').uncheck();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     // Opened by id with the prop still false: the reconciliation has to put it back, or the call
@@ -1266,7 +1266,7 @@ test.describe('reconcileOpen — a controlled panel', () => {
 
   test('a dismissal from inside settles once, and does not reopen', async ({ mount, page }) => {
     await mount(<ReconcileOpenHarness />);
-    await page.getByTestId('raise-prop').click();
+    await page.getByTestId('open-prop').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
@@ -1281,7 +1281,7 @@ test.describe('reconcileOpen — a controlled panel', () => {
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
     // Still usable, which a stuck reconciliation would not be.
-    await page.getByTestId('raise-prop').click();
+    await page.getByTestId('open-prop').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('2');
   });
@@ -1291,7 +1291,7 @@ test.describe('reconcileOpen — a controlled panel', () => {
     page,
   }) => {
     await mount(<ReconcileOpenHarness />);
-    await page.getByTestId('raise-prop').click();
+    await page.getByTestId('open-prop').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('reconciliations')).toHaveText('open');
 

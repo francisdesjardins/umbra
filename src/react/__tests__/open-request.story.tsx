@@ -19,7 +19,7 @@ export function OpenRequestHarness() {
   const dialog = useDialog<void, 'ok'>({
     id: 'asked',
     onOpenRequest: (payload: unknown, { context }: OpenRequest) => {
-      const from = context?.source ?? 'anonyme';
+      const from = context?.source ?? 'anonymous';
       if (
         typeof payload !== 'object' ||
         payload === null ||
@@ -37,7 +37,7 @@ export function OpenRequestHarness() {
         <div style={{ padding: '1rem', display: 'grid', gap: '.5rem' }}>
           <span data-testid="accepted">{accepted === null ? '—' : String(accepted)}</span>
           <button {...action('ok')} data-testid="close">
-            Fermer
+            Close
           </button>
         </div>
       );
@@ -55,7 +55,7 @@ export function OpenRequestHarness() {
         }}
         type="button"
       >
-        L’avertissement ouvre le sien
+        Open it directly, without asking
       </button>
       {dialog.Dialog}
     </div>
@@ -84,7 +84,10 @@ function Caller() {
       <button
         data-testid="ask-invalid"
         onClick={() => {
-          dialogManager.requestOpen('asked', { payload: 'oups', context: { source: 'mfa1' } });
+          dialogManager.requestOpen('asked', {
+            payload: 'not an object',
+            context: { source: 'mfa1' },
+          });
         }}
         type="button"
       >

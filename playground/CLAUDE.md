@@ -150,20 +150,10 @@ decides where a new example goes:
 | `/design-system`   | Penumbra, read live from the token sheet — never restated |
 | `/api`             | Generated reference — a map, then a page per category     |
 | `/stories`         | Live `*.story.tsx` harnesses from the CT suite            |
-| `/warzone`         | Unlisted scratch surface, empty on purpose — see below    |
 
-## `/warzone` is empty, and stays empty
-
-**Unlisted** — a menu entry that rewards a click with nothing teaches every visitor that one item is
-not for them. Type the route.
-
-A scratch surface for building a flow against the core and watching it behave: a reproduction, an
-arrangement nobody has tried. It starts becoming a demonstration the moment it explains itself, so
-what lands there is temporary by construction — prove the point, then take it apart. Anything worth
-keeping graduates to a real route with a card and a `codeSamples` entry.
-
-It renders the still `UmbraMoon`, so **`RootLayout` suppresses `PeekingMoon` here** as on `/`: a
-mascot whose joke is hiding cannot share a screen with a full-size twin.
+**`PeekingMoon` is suppressed on two of them**, for reasons that do not generalise: `/` already
+shows the same moon still, and `/stories` portals panels to the body edges where a mascot reads as
+a fixture misbehaving. `RootLayout` holds the pair.
 
 ## The API reference is generated
 

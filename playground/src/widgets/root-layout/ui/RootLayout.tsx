@@ -61,11 +61,12 @@ const ResponsiveShell = () => {
 };
 
 export const RootLayout = () => {
-  // Suppressed on the two routes already showing the same moon still, at 78% of its column: a
-  // hider beside a full-size twin, arriving 1.5s late, reads as a stray render rather than a joke.
-  const hasStillMoon = useRouterState({
+  // Two reasons, one flag: `/` already shows the same moon still, so a hider beside a full-size
+  // twin reads as a stray render; `/stories` opens panels at the card edges, where a mascot
+  // reads as a fixture misbehaving.
+  const hidesPeekingMoon = useRouterState({
     select: (state) => {
-      return state.location.pathname === '/' || state.location.pathname === '/warzone';
+      return state.location.pathname === '/' || state.location.pathname === '/stories';
     },
   });
 
@@ -75,7 +76,7 @@ export const RootLayout = () => {
     <>
       <ResponsiveShell />
       {/* z-index 1200, below the 1300+ the manager assigns dialogs, so it never covers a panel. */}
-      {!hasStillMoon && <PeekingMoon />}
+      {!hidesPeekingMoon && <PeekingMoon />}
     </>
   );
 };

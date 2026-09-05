@@ -157,17 +157,17 @@ export function MultiRaiseHarness() {
       >
         Open all three
       </button>
-      <button
-        data-testid="mr-toggle-policy"
-        onClick={() => {
-          setPolicyOn((previous) => {
-            return !previous;
-          });
-        }}
-        type="button"
-      >
-        Toggle the policy
-      </button>
+      <label>
+        <input
+          checked={policyOn}
+          data-testid="mr-toggle-policy"
+          onChange={(event) => {
+            setPolicyOn(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        Priority policy
+      </label>
       <span data-testid="mr-policy">{policyOn ? 'on' : 'off'}</span>
       {low.Dialog}
       {mid.Dialog}
@@ -222,17 +222,17 @@ export function LatePolicyFocusHarness() {
       >
         Open it
       </button>
-      <button
-        data-testid="lp-toggle-policy"
-        onClick={() => {
-          setPolicyOn((previous) => {
-            return !previous;
-          });
-        }}
-        type="button"
-      >
-        Install the policy
-      </button>
+      <label>
+        <input
+          checked={policyOn}
+          data-testid="lp-toggle-policy"
+          onChange={(event) => {
+            setPolicyOn(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        Priority policy
+      </label>
       <span data-testid="lp-policy">{policyOn ? 'on' : 'off'}</span>
       {only.Dialog}
     </div>

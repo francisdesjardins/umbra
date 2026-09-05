@@ -54,16 +54,17 @@ export function StructuralToggleHarness() {
       >
         Open
       </button>
-      <button
-        data-testid="toggle-portal"
-        onClick={() => {
-          setPortal((p) => {
-            return !p;
-          });
-        }}
-      >
-        Toggle Portal
-      </button>
+      <label>
+        <input
+          checked={portal}
+          data-testid="toggle-portal"
+          onChange={(event) => {
+            setPortal(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        Portaled
+      </label>
       <span data-testid="is-visible">{isVisible ? 'open' : 'closed'}</span>
       <span data-testid="last-reason">{lastReason}</span>
       {Dialog}

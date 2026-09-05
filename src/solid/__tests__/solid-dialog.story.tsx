@@ -49,8 +49,9 @@ function SolidRoot({ app }: { readonly app: () => JSX.Element }) {
 
 /**
  * The same root **inside a shadow root** — a widget keeping the host page's CSS out, and the case
- * where `adoptedStyleSheets` does not cross and `document.activeElement` answers with the host. Its
- * own component rather than a prop, because the mount target is the whole subject.
+ * where `adoptedStyleSheets` does not cross (so the sheet is adopted per root instead) and
+ * `document.activeElement` answers with the host. Its own component rather than a prop, because the
+ * mount target is the whole subject.
  */
 function SolidShadowRoot({ app }: { readonly app: () => JSX.Element }) {
   const hostRef = useRef<HTMLDivElement>(null);

@@ -86,22 +86,17 @@ export function ReconcileOpenHarness() {
 
   return (
     <div>
-      <button
-        data-testid="raise-prop"
-        onClick={() => {
-          setOpen(true);
-        }}
-      >
-        open = true
-      </button>
-      <button
-        data-testid="lower-prop"
-        onClick={() => {
-          setOpen(false);
-        }}
-      >
-        open = false
-      </button>
+      <label>
+        <input
+          checked={open}
+          data-testid="open-prop"
+          onChange={(event) => {
+            setOpen(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        The open prop is up
+      </label>
       <button
         data-testid="open-behind-its-back"
         onClick={() => {

@@ -11,6 +11,129 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-04
 
+### Changed — a harness that flips a boolean now says so with a checkbox
+
+`/stories` is public, so a visitor reads the fixtures as an interface before reading them as
+assertions — and not one of the 175 held a checkbox. Every stateful control was a `<button>`, with
+the state in a sibling `<span>` or, for `toggle-portal`, nowhere at all. Seven were the wrong
+element: four two-way toggles, and three pairs (`open = true` / `open = false`, Raise / Lower) that
+spell one boolean as two push buttons. Each is now an `<input type="checkbox">` in a `<label>`,
+same `data-testid`, no inline styling — the fixtures stay unstyled, which is the property that
+makes "what you press here is what the assertions press" true.
+
+The single toggles cost no test line. Playwright's `dispatchEvent('click')` builds a real
+`MouseEvent`, whose activation behaviour toggles a checkbox, and React maps a checkbox's `onChange`
+onto the click event — so the six sites that dispatch rather than click keep doing so, for the
+reason they always did: under a policy the control is beneath a modal backdrop, and two of them
+assert a caret offset a real click would move. The three collapsed pairs trade two testids for one
+and `.click()` for `.check()` / `.uncheck()`, which is idempotent where `onClose` has already
+lowered the prop.
+
+`lp-toggle-policy` was labelled "Install the policy" over a handler that toggles, so a second press
+silently uninstalled what the label promised to install.
+
+### Changed — the harness dialogs are sized and bounded for the human trying them
+
+A fixture's dialog is whatever its content makes it, and a one-word dialog is a one-word box: on
+`/stories` that reads as a glitch rather than a demo. A floor rather than a size —
+`min-width: min(280px, 100%)`, the number `story-styles.ts` already picked for the interior, so the
+two agree instead of the content's floor being clamped away by a narrower dialog. The seven
+harnesses that size themselves deliberately keep their shape.
+
+`show()` paints no `::backdrop` — platform law — so 46 of the harness dialogs opened with nothing
+between them and the page, landing on the card looking like text overlapping text. They have a
+scrim now, and it is painted rather than rendered: an outer `box-shadow` with a `100vmax` spread
+sits outside the border box, never hit-tests, and is clipped by any ancestor that clips. That one
+declaration answers both arrangements the way `dialogPlacement().backdrop` describes them — a
+contained panel sits inside `SurfaceCard`'s `overflow: clip`, so its scrim stops at the card it
+belongs to; a portaled one is a child of `<body>` with nothing to clip it, so its scrim covers the
+viewport — and it reads the same `--dialog-backdrop` the native one does, so a modal and a
+non-modal in one theme are the same shade.
+
+The scrim then exposed the older half of the same defect: **102 of the 157** harness dialogs had no
+surface at all. The library writes `background: transparent` inline because the box belongs to the
+caller, and a fixture rendering a bare fragment never fills it — so the panel was a hole, the page
+showing through it undimmed with the card's own paragraph running across the middle. They take
+`Canvas` now, the exact colour `story-styles.ts` puts on the interiors that do fill their box, so
+the 55 that already had one show no seam.
+
+Painting it is what keeps the harnesses honest. A scrim element in the tree would take the clicks
+`NonModalClickOutside`, `ControlledPanel` and `VanillaContained`'s click-through exist to prove;
+this one leaves `elementFromPoint` beside an open panel answering with the card's own heading.
+
+Both are declared from outside the fixtures, keyed off `data-dialog-type` — the documented styling
+contract — and scoped to the route by an attribute the page sets, because a harness dialog is
+portaled to `document.body` where no CSS module reaches it. `border` needs `!important` for the
+reason the reduced-motion rule does: the library writes `border: none` inline on every dialog.
+
+The ring is what set the spacing, in both places it lands. It is 2px at 2px offset, so it spends
+the first 4px of any gap: the card's control row had 8px and a focused button drew its ring onto
+its neighbour, and a dialog interior had **none** — a harness interior is markup rather than a
+layout, so its buttons arrive as flex-column siblings and the ring landed on the control above.
+The row gained a step; the interior's focusables take a margin, because those interiors are block,
+inline and flex by turns and only margin reaches all three.
+
+No radius on the panel edge, deliberately. A slide panel is flush with the edge it slid from, and
+rounding the flush side reads as a mistake — worse once it holds a scrollbar the curve clips.
+Nothing in the DOM tells a slide from a centred panel, `data-dialog-type` being the whole styling
+contract and `template` belonging to the manager rather than the element, so the shape stays square
+rather than guessed.
+
+`PeekingMoon` is suppressed here too, for a reason unlike the two routes that already suppress it:
+they show the same moon still, while `/stories` portals non-modal panels to the body at whatever
+edge each arrangement puts them — a mascot sharing that margin reads as a fixture misbehaving, on
+the one page where a stray shape is a bug report. The flag it reads is named for what it decides
+now that having a still moon is no longer the only reason.
+
+### Fixed — a contained panel escaped its card and scrolled the page to the top
+
+Opening one of the contained non-modal harnesses jumped `/stories` to the top. The library places
+such a dialog in a wrapper of its own at `position: absolute; inset: 0`, which needs a positioned
+ancestor — the requirement its own documentation states. The story card had none, so the wrapper
+resolved against the initial containing block and measured **1910×945** over a card 400 wide: the
+panel opened centred in the viewport, and the opening focus landing inside it scrolled the document
+there. `StoryCard`'s content box is `position: relative` now, so the region a contained panel
+answers to is the card a visitor is reading. A harness that supplies its own host still wins, being
+the nearer ancestor.
+
+### Changed — a harness's layout no longer depends on whether its author wrapped the controls
+
+41 of the 175 return a fragment, so their buttons were flex items of the card's column and stacked
+vertically, while the 134 that wrap in a `<div>` got a row. Same card, two layouts, for a reason no
+visitor can see. The card's harness area is a wrapping row now, and a wrapped group takes its own
+line — the only block among the direct children, the rest being buttons, labels, readouts and the
+dialogs, which are all out of flow.
+
+### Removed — `/warzone`
+
+The scratch surface is gone, with its route, its page, its documentation and the smoke run's
+`EMPTY_BY_DESIGN` entry. `CONTRIBUTING.md` asked for reproductions built against it and now asks
+for one built against `yarn dev`.
+
+### Fixed — three cards described a harness the page does not render, and three claims were false
+
+`RovingToolbarHarness` carried `FocusContainmentHarness`'s prose, promising a `containFocus` prop
+it does not take; `MultiRaiseHarness` carried `StackPriorityHarness`'s, calling three dialogs two;
+`ReclaimWithoutClaimHarness` carried `ReclaimFocusHarness`'s, promising a `focusOnOpen` claim that
+is precisely what this one withholds — the defect it pins. One cause all three times: a harness
+that takes props is skipped by the registration gate, and its subject drifted onto the prop-free
+sibling in the same file. A sweep of all 175 against their sources found no fourth, and every
+`codeKey` resolves to a file holding the component it names.
+
+Three claims were simply untrue. The stacked-dialogs trio was said in three places to declare
+`Enter` on all three levels; the slide panel declares none, which is why the third Escape dismisses
+it rather than acting. A card offered `{...controller.confirm()}`, an API this library has never
+had, beside code reading `action('confirm')`. And `onOpenRequest` was said to validate the caller's
+claimed source, which it records but never gates on.
+
+Six places also still said a `<dialog>` in a shadow root "falls back to the UA backdrop".
+`ensureDialogStyles` adopts the sheet per **root**, and three CT suites assert the library's own
+`rgba(0, 0, 0, 0.7)` inside one.
+
+The `open-request` harness was also the one fixture written in French — `Fermer`, `anonyme`,
+`L'avertissement ouvre le sien`. Nothing asserted on those labels, and the page they render on is
+English.
+
 ### Fixed — the platform's own close button left the library holding an open dialog
 
 `<form method="dialog">` is how HTML closes a `<dialog>`, and a headless library is exactly the

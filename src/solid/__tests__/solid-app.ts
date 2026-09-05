@@ -1182,24 +1182,25 @@ function ReconcileApp(): Built {
     'div',
     null,
     h(
-      'button',
-      {
-        'data-testid': 'raise',
-        onClick: () => {
-          setOpen(true);
+      'label',
+      null,
+      h('input', {
+        type: 'checkbox',
+        'data-testid': 'signal-toggle',
+        // A function-valued prop is what makes `h` wire this reactively, and `checked` is a
+        // boolean property rather than an attribute — a `setAttribute` would set the default
+        // checkedness and stop tracking the signal after the first toggle.
+        checked: () => {
+          return open();
         },
-      },
-      'Raise'
-    ),
-    h(
-      'button',
-      {
-        'data-testid': 'lower',
-        onClick: () => {
-          setOpen(false);
+        onChange: (event: Event) => {
+          const input = event.currentTarget;
+          if (input instanceof HTMLInputElement) {
+            setOpen(input.checked);
+          }
         },
-      },
-      'Lower'
+      }),
+      'The signal is up'
     ),
     h(
       'button',

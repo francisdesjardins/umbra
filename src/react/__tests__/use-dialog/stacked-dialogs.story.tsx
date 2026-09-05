@@ -9,7 +9,8 @@ import { dialogStyle } from '../../../__tests__/story-styles.js';
  * Three dialogs of different kinds, stacked, each rendered inside the one below it — not a
  * contrivance: a dialog in the top layer swallows every click outside itself, so whatever opens a
  * second dialog lives in the first one's `render`, and every event in the inner one bubbles through
- * the outer. All three declare `Enter`, the overlap under test: only the level in front hears it.
+ * the outer. The dialog and the message dialog both declare `Enter` — the overlap under test: only the
+ * level in front hears it. The panel declares none, so the third Escape dismisses it.
  * The log records what closed, in order, so a dismiss key can be shown to unwind one per press.
  */
 export function StackedDialogsHarness() {

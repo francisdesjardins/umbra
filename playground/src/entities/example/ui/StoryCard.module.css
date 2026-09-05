@@ -1,8 +1,14 @@
+/* `position: relative` is the sized, positioned host a *contained* non-modal dialog needs. Without
+   one the library's `inset: 0` wrapper resolves against the initial containing block and the panel
+   opens centred in the viewport — measured at 1910×945 over a card 400 wide — which then scrolls
+   the page to the top the moment the opening focus lands in it. Every harness that supplies its own
+   host still wins, being the nearer positioned ancestor. */
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: var(--app-space-6);
+  position: relative;
 }
 
 .titleRow {
@@ -34,22 +40,32 @@
 
 /* Harnesses are unstyled test fixtures so assertions press what you press; presentation
    is applied from out here rather than by prettifying the fixtures. */
+/* A row, not a column, so a harness's layout stops depending on whether its author happened to
+   wrap the controls: 41 of the 175 return a fragment, and their buttons were flex items of this
+   column while the other 134 got a row from their own `<div>`. Same reading either way now.
+
+   The gap is a step up from the usual because the ring spends the first 4px of it — `body
+   :focus-visible` is 2px at 2px offset — and a focused button in a `--app-space-2` row drew its
+   ring onto its neighbour. `position: relative` is above, on `.content`, where a contained dialog
+   needs the whole card rather than this strip. */
 .harness {
   margin-top: auto;
   padding-top: var(--app-space-4);
   border-top: 1px solid var(--app-divider);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-3);
 }
 
-/* Harness controls are plain text nodes; a wrapping flex row makes them legible. */
+/* The one block among the direct children (the others are button, span, label and the dialogs,
+   which are all out of flow) — a group its author wrapped keeps its own line. */
 .harness > div {
+  flex-basis: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--app-space-2);
+  gap: var(--app-space-3);
 }
 
 .harness button {
@@ -76,8 +92,10 @@
   cursor: not-allowed;
 }
 
-/* The state readouts a test asserts on, as monospace pills so they read as distinct. */
-.harness span[data-testid] {
+/* The state readouts a test asserts on, as monospace pills so they read as distinct. `<output>` is
+   the same readout with the element the store harnesses reached for. */
+.harness span[data-testid],
+.harness output[data-testid] {
   font-family: monospace;
   font-size: var(--app-text-xs);
   padding: 2px 6px;
@@ -97,4 +115,29 @@
   border: 1px solid var(--app-control-border);
   background: var(--app-paper);
   color: var(--app-text);
+}
+
+/* A harness that flips a boolean says so with a checkbox, and the label is the row: 2.5.8 asks a
+   24px target, which the text gives it. */
+.harness label {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  min-height: 24px;
+  font-size: var(--app-text-sm);
+  cursor: pointer;
+}
+
+/* Out of the control rule above — its padding and border would draw a box around the box. Amber is
+   a fill here, not ink, so `--app-flame` is the right token. */
+.harness input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: var(--app-flame);
+  cursor: pointer;
 }

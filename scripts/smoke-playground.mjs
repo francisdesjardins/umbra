@@ -694,9 +694,9 @@ report(routes.length > 0, { label: `discovered ${String(routes.length)} routes f
 // Two routes with the same `<h1>` means one page served twice — the backstop for `gotoRoute`.
 const titleByRoute = new Map();
 
-// `cards > 0` is the "rendered its content" signal; the scratch surface is empty on purpose, and
-// still held to reaching, one `<h1>`, and no console error.
-const EMPTY_BY_DESIGN = new Set(['/warzone']);
+// `cards > 0` is the "rendered its content" signal. Every route has content now; the set stays
+// because a route that renders nothing on purpose is a decision this list is the place to record.
+const EMPTY_BY_DESIGN = new Set();
 
 for (const route of routes) {
   errors.length = 0;

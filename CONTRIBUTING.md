@@ -44,8 +44,8 @@ written for exactly this purpose — the short list that comes up most:
 
 ## Issues
 
-A reproduction beats a description: the playground's `/warzone` route exists to build one
-against, and its source is the shape a good issue attaches. For accessibility findings, say which
+A reproduction beats a description: `yarn dev` gives you every binding wired against the real
+library, and a page built from an existing example is the shape a good issue attaches. For accessibility findings, say which
 engine and which assistive technology — the matrix records claims per engine, and a report that
 names one is actionable the day it arrives.
 

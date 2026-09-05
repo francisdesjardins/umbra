@@ -679,9 +679,10 @@ export function VanillaOpenRequestHarness() {
 }
 
 /**
- * A `<dialog>` in a shadow root. `adoptedStyleSheets` does not cross the boundary, so the library's
- * `dialog::backdrop` never applies; `document.activeElement` answers with the *host*, so a
- * document-scoped focus check concludes focus left. React only makes the host; inside is plain DOM.
+ * A `<dialog>` in a shadow root. `adoptedStyleSheets` does not cross the boundary, so the sheet is
+ * adopted per *root* and the library's `dialog::backdrop` reaches here too;
+ * `document.activeElement` answers with the *host*, so a document-scoped focus check concludes
+ * focus left. React only makes the host; inside is plain DOM.
  */
 export function VanillaShadowRootHarness() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -1106,16 +1107,17 @@ export function VanillaShadowStackHarness() {
       >
         Open the light one over it
       </button>
-      <button
-        data-testid="toggle-policy"
-        onClick={() => {
-          setPolicyOn((previous) => {
-            return !previous;
-          });
-        }}
-      >
-        Toggle the policy
-      </button>
+      <label>
+        <input
+          checked={policyOn}
+          data-testid="toggle-policy"
+          onChange={(event) => {
+            setPolicyOn(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        Priority policy
+      </label>
       <span data-testid="policy">{policyOn ? 'on' : 'off'}</span>
       <span data-testid="native-closes">{closes}</span>
       <span data-testid="open-when-closed">{openWhenClosed}</span>
@@ -1373,22 +1375,17 @@ export function VanillaReconcileHarness() {
       <span data-testid="wanted">{wanted ? 'true' : 'false'}</span>
       <span data-testid="open-count">{openCount}</span>
       <span data-testid="asked">{asked.join(',')}</span>
-      <button
-        data-testid="raise"
-        onClick={() => {
-          setWanted(true);
-        }}
-      >
-        Raise
-      </button>
-      <button
-        data-testid="lower"
-        onClick={() => {
-          setWanted(false);
-        }}
-      >
-        Lower
-      </button>
+      <label>
+        <input
+          checked={wanted}
+          data-testid="wanted-toggle"
+          onChange={(event) => {
+            setWanted(event.target.checked);
+          }}
+          type="checkbox"
+        />
+        The caller wants it open
+      </label>
       <button
         data-testid="open-behind-its-back"
         onClick={() => {

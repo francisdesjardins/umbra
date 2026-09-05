@@ -113,6 +113,7 @@ import { ExampleGrid, ExampleSection, StoryCard } from '@/entities/example';
 import { sectionSlug } from '@/shared/lib/section-slug';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { SectionNav } from '@/shared/ui/SectionNav';
+import { useEffect } from 'react';
 import type { ComponentType } from 'react';
 import {
   BasicActionsHarness,
@@ -244,7 +245,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'One Escape, one dialog',
         description:
-          'A non-modal panel holding a dialog holding a message dialog, each rendered inside the one below it. All three declare Enter. Press Enter: only the dialog in front acts. Press Escape three times: the stack unwinds one dialog per press, front to back, and the log records the order.',
+          'A non-modal panel holding a dialog holding a message dialog, each rendered inside the one below it. The dialog and the message dialog both declare Enter; the panel declares none. Press Enter: only the level in front acts. Press Escape three times: the stack unwinds one per press, front to back, and the log records the order.',
         component: StackedDialogsHarness,
         codeKey: 'story-stacked-dialogs',
       },
@@ -270,9 +271,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-esc-without-focus',
       },
       {
-        title: 'Tab wraps inside the panel, or walks out of it',
+        title: 'Tab wraps past a toolbar the browser stops on once',
         description:
-          'Three stops with containFocus as a prop, so the same panel walks out when it is off and wraps when it is on. The outside button sits before the panel deliberately: with a forward Tab that has somewhere to go, "left the dialog" and "left the page" stop looking identical to document.activeElement.',
+          'A roving-tabindex toolbar inside a contained panel, which no harness of ordinary buttons can show: button:not([disabled]) collects all three arrow-key stops while the browser stops on one, and they sit after the real last stop — so "the last one" never matches and the wrap never fires. The outside button sits before the panel deliberately, so a forward Tab that has somewhere to go tells "left the dialog" apart from "left the page".',
         component: RovingToolbarHarness,
         codeKey: 'story-focus-containment',
       },
@@ -319,9 +320,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-opening-focus-foreground',
       },
       {
-        title: 'Taking the keyboard back, with a claim to aim at',
+        title: 'Taking the keyboard back, with nothing to aim at',
         description:
-          'The reclaim in the shape where focusOnOpen exists: the only way to tell "handed back where focus was" from "re-honoured the claim" is to have a claim and put focus somewhere else first.',
+          'The shape a shell produces: a panel opens underneath a dialog and its show() takes the keyboard, which reclaimFocus undoes. Neither button here claims focusOnOpen, which is what pins the defect — a reclaim aimed only at that marker falls through to dialog.focus(), which an open <dialog> refuses, leaving the keyboard on <body>.',
         component: ReclaimWithoutClaimHarness,
         codeKey: 'story-opening-focus-foreground',
       },
@@ -426,7 +427,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A React dialog inside a shadow root',
         description:
-          'A web component hosting a React tree, or a widget mounted to keep the host page’s CSS out. Both things a shadow boundary breaks fail quietly rather than throwing: adoptedStyleSheets does not cross it, so the dialog falls back to the UA backdrop, and document.activeElement answers with the host.',
+          'A web component hosting a React tree, or a widget mounted to keep the host page’s CSS out. Both things a shadow boundary breaks fail quietly rather than throwing: adoptedStyleSheets does not cross it, which is why the sheet is adopted per root so the library’s backdrop reaches here too, and document.activeElement answers with the host.',
         component: ShadowRootHarness,
         codeKey: 'story-shadow-root',
       },
@@ -557,9 +558,9 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-open-event-element',
       },
       {
-        title: 'Two modal dialogs racing for the front',
+        title: 'Three modal dialogs, and a policy that arrives late',
         description:
-          'The panel’s showModal() lands after the warning’s, so the platform paints it in front and the warning falls under its backdrop. The no-policy half is the baseline: a reorder that never happens, so the policy half is measured against something rather than asserted alone.',
+          'They open high → mid → low on a timer, so the last to arrive belongs at the bottom and the plan is two raises rather than one. Ticking the policy reorders what is already painted rather than what opens next — a path that stops at syncStackOrder’s document guard in Node, so only a browser runs it.',
         component: MultiRaiseHarness,
         codeKey: 'story-stack-priority-extra',
       },
@@ -903,7 +904,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'Callable Action — No Handler',
         description:
-          'Spread {...controller.confirm()} with no handler auto-closes with the action reason.',
+          "Spread {...action('confirm')} with no handler and the action auto-closes with its own reason — the reason names the action and is what onClose receives.",
         component: DialogActionBasicHarness,
         codeKey: 'story-action-action-basic',
       },
@@ -1070,7 +1071,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'A hand-written <dialog> inside a shadow root',
         description:
-          'Both things the boundary breaks fail quietly. adoptedStyleSheets does not cross it, so the library’s dialog::backdrop never applies; document.activeElement answers with the host, so a document-scoped focus check concludes focus left. React makes the host and nothing inside it.',
+          'Both things the boundary breaks fail quietly. adoptedStyleSheets does not cross it, so the sheet is adopted per root and the library’s dialog::backdrop reaches here too; document.activeElement answers with the host, so a document-scoped focus check concludes focus left. React makes the host and nothing inside it.',
         component: VanillaShadowRootHarness,
         codeKey: 'story-vanilla-shadow-root',
       },
@@ -1166,7 +1167,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'The same Solid root, mounted inside a shadow root',
         description:
-          'Its own component rather than a prop, because the mount target is the whole subject. adoptedStyleSheets does not cross the boundary, so the library’s dialog::backdrop never applies, and document.activeElement answers with the host. The shadow is reused across a remount — attachShadow throws on a host that already has one.',
+          'Its own component rather than a prop, because the mount target is the whole subject. adoptedStyleSheets does not cross the boundary, so the sheet is adopted per root and the library’s dialog::backdrop reaches here too, and document.activeElement answers with the host. The shadow is reused across a remount — attachShadow throws on a host that already has one.',
         component: SolidShadowRootHarness,
         codeKey: 'story-solid-shadow-root',
       },
@@ -1332,7 +1333,7 @@ const STORY_GROUPS: readonly StoryGroup[] = [
       {
         title: 'An open the dialog may refuse',
         description:
-          'requestOpen() asks instead of instructing: the request reaches the dialog’s own code, which validates the payload and the caller’s claimed source before agreeing. A refusal moves nothing — no flash, no open/close pair for anything watching. The other button uses open(), which does not ask.',
+          'requestOpen() asks instead of instructing: the request reaches the dialog’s own code, which validates the payload before agreeing and records the caller’s claimed source either way. A refusal moves nothing — no flash, no open/close pair for anything watching. The other button uses open(), which does not ask.',
         component: OpenRequestHarness,
         codeKey: 'story-open-request',
       },
@@ -1512,10 +1513,21 @@ const TOTAL_STORIES = STORY_GROUPS.reduce((total, group) => {
 }, 0);
 
 export const StoriesPage = () => {
+  // A harness dialog is portaled to document.body, outside this subtree, so a CSS module cannot
+  // reach it — `app.css` keys this route's dialog sizing and the non-modal panel's edge off the
+  // attribute instead. Removed on the way out: the smoke run walks every route in one page.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-stories', '');
+    return () => {
+      root.removeAttribute('data-stories');
+    };
+  }, []);
+
   return (
     <PageLayout
       title="Test Harnesses"
-      description={`The ${String(TOTAL_STORIES)} fixtures the Playwright component suite drives, rendered live and grouped by the symptom that sends you looking — focus, keyboard, dismissal, layering. They are deliberately unstyled: what you press here is exactly what the assertions press, with nothing in between. For the same behaviours dressed like the rest of the site, see the sections above.`}
+      description={`The ${String(TOTAL_STORIES)} fixtures the Playwright component suite drives, rendered live and grouped by the symptom that sends you looking — focus, keyboard, dismissal, layering. Press anything: every control here is the one an assertion presses, and each card names what its harness is trying to prove. The fixtures carry no styling of their own — the spacing, the sizing and the edge around a non-modal panel are this page's, added so the behaviour is legible to a person and not only to a test. For the same behaviours dressed like the rest of the site, see the sections above.`}
     >
       <SectionNav sections={NAV_SECTIONS} />
 

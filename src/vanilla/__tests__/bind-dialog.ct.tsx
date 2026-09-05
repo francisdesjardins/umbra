@@ -742,11 +742,11 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     await mount(<VanillaReconcileHarness />);
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
-    await page.getByTestId('raise').click();
+    await page.getByTestId('wanted-toggle').check();
     await expect(page.getByTestId('phase')).toHaveText('open');
     await expect(page.getByTestId('open-count')).toHaveText('1');
 
-    await page.getByTestId('lower').click();
+    await page.getByTestId('wanted-toggle').uncheck();
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     await page.getByTestId('open-behind-its-back').click();
@@ -757,7 +757,7 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
 
   test('lowering the flag during the exit asks for nothing', async ({ mount, page }) => {
     await mount(<VanillaReconcileHarness />);
-    await page.getByTestId('raise').click();
+    await page.getByTestId('wanted-toggle').check();
     await expect(page.getByTestId('asked')).toHaveText('open');
 
     await page.getByTestId('close-and-lower').click();
