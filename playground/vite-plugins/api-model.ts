@@ -74,6 +74,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
       'UnregisteredDialogInfo',
       'StackPriority',
       'StackDialog',
+      'OpenGate',
+      'OpenAttempt',
       'DialogPhase',
       'DialogStoreSnapshot',
       'CloseResult',

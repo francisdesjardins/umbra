@@ -418,11 +418,15 @@ export const OPTION_ROWS: readonly OptionRow[] = [
   {
     option: 'onOpenRequest',
     enforcement: 'RUNTIME',
-    note: 'The asking door: refusal is explicit through `request.refuse(reason)`, acceptance is the default because the manager cannot infer it — React’s open is asynchronous.',
+    note: 'The asking door: refusal is explicit through `request.refuse(reason)`, acceptance is the default because the manager cannot infer it — React’s open is asynchronous. It answers **second**: `dialogManager.gate` runs before the registry is consulted, so an ask the gate refuses never reaches this handler — and an ask it admits arrives at the gate again as an `instruct` when the handler opens, a refusal there being reported to the asker rather than resolving as an accept whose close never comes.',
     references: [
       {
         file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
         title: 'a refused request reports why, and nothing opens',
+      },
+      {
+        file: 'src/core/__tests__/dialog-runtime.test.ts',
+        title: 'reports the refusal to the asker instead of an accept whose close never comes',
       },
     ],
   },
@@ -957,6 +961,38 @@ export const BINDING_ROWS: readonly BindingRow[] = [
         {
           file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
           title: 'the policy puts it in front of a light-DOM dialog opened later',
+        },
+      ],
+    },
+  },
+  {
+    capability: 'gate (the open policy)',
+    react: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/react/__tests__/use-dialog.ct.tsx',
+          title:
+            'refuses the dialog’s own open(), which is the door a manager-only gate would miss',
+        },
+      ],
+    },
+    solid: {
+      state: 'works',
+      references: [
+        {
+          file: 'src/solid/__tests__/solid-dialog.ct.tsx',
+          title: 'is inherited by this binding, and refuses its own open()',
+        },
+      ],
+    },
+    vanilla: {
+      state: 'works',
+      note: 'The clearest of the three: the controller never renders, so `controller.open()` is the only door and nothing else is watching. It is also the one binding with an open the gate deliberately does not reach — adopting a `<dialog open>` the server sent, where the element is open already and a refusal would leave the store disagreeing with the DOM.',
+      references: [
+        {
+          file: 'src/vanilla/__tests__/bind-dialog.ct.tsx',
+          title: 'refuses the controller’s own open, and opens once the policy is lifted',
         },
       ],
     },

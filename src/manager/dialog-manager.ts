@@ -15,6 +15,7 @@ import { ensureDialogStyles } from '../core/dialog-styles.js';
 import { raiseDialog, stampZIndex } from '../core/dialog-lifecycle.js';
 import { DISMISS_REASON } from '../core/dismiss-reason.js';
 import { createLockOwner, lockBodyScroll, unlockBodyScroll } from './scroll-lock.js';
+import { refusalFor, type OpenAttempt, type OpenGate } from './open-gate.js';
 import { orderStack, planRaises, type StackPriority } from './stack-order.js';
 import type {
   DialogInfo,
@@ -207,9 +208,9 @@ export type OpenRequestOutcome<TData = unknown, TReason extends string = string>
   | {
       readonly accepted: false;
       /**
-       * Why. Either whatever the handler passed to `refuse`, or one of the manager's own:
-       * `'not-registered'` (no such dialog) or `'accepts-none'` (registered, but it declared no
-       * `onOpenRequest`, so it never agreed to be opened from outside).
+       * Why. Either whatever the handler passed to `refuse`, or what the gate returned, or one of
+       * the manager's own: `'not-registered'` (no such dialog) or `'accepts-none'` (registered, but
+       * it declared no `onOpenRequest`, so it never agreed to be opened from outside).
        */
       readonly reason: string;
     };
@@ -240,11 +241,14 @@ export type RegisterOptions = {
 /**
  * Events emitted by the dialog manager.
  *
- * Two pairs, and they answer different questions. `open` / `close` are about a dialog on screen;
- * `register` / `unregister` are about one existing at all — which is what a caller outside the
- * component tree cannot otherwise know, since {@link DialogLookup.exists} answers "now" and nothing
- * answered "tell me when". A dialog behind a code-split route is registered when its component
- * mounts, so an imperative `open` before that lands on nothing.
+ * Two pairs and a singleton, and they answer different questions. `open` / `close` are about a
+ * dialog on screen; `register` / `unregister` are about one existing at all — which is what a
+ * caller outside the component tree cannot otherwise know, since {@link DialogLookup.exists}
+ * answers "now" and nothing answered "tell me when". A dialog behind a code-split route is
+ * registered when its component mounts, so an imperative `open` before that lands on nothing.
+ *
+ * `refuse` has no pair because a refused open has no second half: it is the audit trail for
+ * {@link DialogManager.gate}, and the only report some of the doors can make.
  */
 export type DialogManagerEvent =
   | {
@@ -282,7 +286,24 @@ export type DialogManagerEvent =
       readonly type: 'unregister';
       /** The dialog's id. */
       readonly id: string;
-    };
+    }
+  | ({
+      /**
+       * Fires when the gate installed by {@link DialogManager.gate} refused an open — every
+       * decision it makes against a dialog, in one stream, which is what makes an audit log a
+       * subscriber rather than a subsystem.
+       *
+       * **It is also the only report a refused `open()` makes** on the hook and controller
+       * bindings: that door returns a promise it has to settle, so a caller listening for nothing
+       * sees a dialog that quietly did not appear.
+       *
+       * The attempt itself rather than a copy of its fields, so `cause` keeps `context` honest
+       * here the way {@link OpenAttempt} does at the gate.
+       */
+      readonly type: 'refuse';
+      /** The reason the gate gave. */
+      readonly reason: string;
+    } & OpenAttempt);
 
 /**
  * Subscriber callback type for dialog manager events.
@@ -417,13 +438,13 @@ export type DialogManager = {
   /**
    * Open a dialog imperatively by id. Unconditional — see {@link DialogManager.requestOpen}.
    *
-   * @returns Whether a dialog was there to open. **`false` is the only report this door makes**,
-   * and it is the answer to the one way an instruct fails: the id names no *registered* dialog, so
-   * nothing happened. That is not a rare mistake to guard against — a dialog behind a code-split
-   * route is registered when its component mounts, and a service, router guard or deep link firing
-   * before that is the ordinary case. Every other door already answered (`openAndWait` resolves
-   * `[Error, null]`, `requestOpenAndWait` refuses with `'not-registered'`); this one only warned,
-   * and warnings are silent until `setLogLevel`.
+   * @returns Whether the dialog opened. **`false` is the only report this door makes**, and it
+   * covers both ways an instruct fails: the id names no *registered* dialog, or the gate refused.
+   * Neither is a rare mistake to guard against — a dialog behind a code-split route is registered
+   * when its component mounts, and a service, router guard or deep link firing before that is the
+   * ordinary case. Every other door already answered (`openAndWait` resolves `[Error, null]`,
+   * `requestOpenAndWait` refuses with a reason); this one only warned, and warnings are silent
+   * until `setLogLevel`. Which of the two it was is on the `refuse` event when it was the gate.
    *
    * To open one that has not arrived yet, listen for it — `subscribe` reports `register`, and the
    * dialog is openable by the time that lands.
@@ -467,8 +488,8 @@ export type DialogManager = {
    *
    * {@link DialogManager.requestOpen} tells the owner and walks away; this waits for the decision,
    * which is what a caller across a boundary needs — a refusal it never hears is a dead end. All
-   * three refusals (no such dialog, no handler, an explicit `refuse`) arrive here as a reason
-   * rather than only in the console. Acceptance is the default; the handler may be `async`.
+   * four refusals (the gate, no such dialog, no handler, an explicit `refuse`) arrive here as a
+   * reason rather than only in the console. Acceptance is the default; the handler may be `async`.
    *
    * **Two signatures, and both constrain the payload identically** — the pair exists for the
    * *return*, which is `DataOf`/`ReasonOf` for a declared id and open for any other. Constraining
@@ -591,6 +612,78 @@ export type DialogManager = {
    */
   syncStackOrder(shownId?: string): void;
 
+  /**
+   * Decide which opens are allowed at all, above every door that opens one.
+   *
+   * The other policy this manager takes. `prioritize` orders the dialogs that opened; this one
+   * runs **before** any of them do — an allow/deny list, a cap on how many may be stacked, a
+   * time window, a kill switch — and it lives here rather than in each dialog because that is the
+   * difference between a policy and a hundred call sites agreeing. A dialog's own
+   * `onOpenRequest` answers for *that* dialog and only on the asking door; this answers for all
+   * of them on all of them, and it is consulted first.
+   *
+   * **Every door**: `open`, `openAndWait`, `requestOpen` and `requestOpenAndWait` here, and a
+   * dialog's own `open()` / `openAndWait()` in every binding. Nothing routes around it, which is
+   * the only thing that makes a cap or a kill switch true. What it cannot refuse is a `<dialog
+   * open>` in server-rendered markup that `umbra/vanilla` adopts: the element is already open, so
+   * refusing would leave the store disagreeing with the DOM.
+   *
+   * **Refusal is explicit and acceptance is the default** — return a reason to refuse, return
+   * nothing to open — and a gate that throws admits, logged, since one policy in front of every
+   * dialog is a bad place for an exception. It is a policy layer, not a security boundary.
+   *
+   * **An ask this gate admits arrives again as an instruct**, the owner accepting by calling its
+   * own `open()` — so a policy that counts reads {@link OpenAttempt}’s `cause`. Refusing that second
+   * attempt refuses the ask: `requestOpenAndWait` reports it rather than resolving as an accept.
+   *
+   * **A refused open is silent by design**, so subscribe to `refuse` and you have the audit log:
+   * `open(id)` returns `false`, `openAndWait` resolves `[Error, null]`, `requestOpenAndWait`
+   * refuses with the reason, and a dialog's own `open()` simply resolves having opened nothing. A
+   * controlled surface refused this way stays closed until its `open` prop changes, since
+   * `reconcileOpen` reads a phase that never moved.
+   *
+   * One policy for the whole manager, opt-in, dormant until called, and replaced rather than
+   * stacked by a second call — and *whole manager* is the word to read twice. A component that
+   * installs one refuses every dialog registered with that instance, not only its own, so a
+   * surface that should govern a subtree scopes itself with a `DialogManagerProvider` the way
+   * the harnesses do.
+   *
+   * @returns A disposer removing the policy. It does nothing if a later `gate` already replaced it.
+   *
+   * @example
+   * // Once, at start-up. Nothing opens during checkout, and never more than two at a time.
+   * dialogManager.gate(({ id, cause }) => {
+   *   if (store.isCheckingOut && id !== 'checkout:confirm') {
+   *     return 'checkout-in-progress';
+   *   }
+   *   if (cause === 'instruct' && dialogManager.lookup().getOpen().length >= 2) {
+   *     return 'too-many-open';
+   *   }
+   * });
+   *
+   * @example
+   * // The audit log is a subscriber, not a subsystem.
+   * dialogManager.subscribe((event) => {
+   *   if (event.type === 'refuse') {
+   *     void audit.record(event.id, event.reason, event.context?.source);
+   *   }
+   * });
+   */
+  gate(gate: OpenGate): () => void;
+
+  /**
+   * Put one open to the gate, and record the answer — the refusal reason, or `undefined`.
+   *
+   * Public only because the doors are not all the manager's: a dialog's own `open()` is the
+   * binding's, and a gate it could route around would make {@link DialogManager.gate}'s cap and
+   * kill switch decorative. It emits the `refuse` event when it refuses, so calling it is an act
+   * rather than a question — `lookup()` is where a question belongs.
+   *
+   * **Not `askGate`**: *ask* is spent on `requestOpen`, the door {@link OpenAttempt}'s `cause`
+   * spells `'ask'`, and one act per word means it cannot also name this one.
+   */
+  consultGate(attempt: OpenAttempt): string | undefined;
+
   /** Base z-index for dialog stacking. */
   readonly zIndexBase: number;
 
@@ -696,6 +789,8 @@ export function createDialogManager(): DialogManager {
   let openSequence = 0;
   /** The stack policy, when one was installed — see `prioritize`. Absent means open order. */
   let priority: StackPriority | undefined;
+  /** The open policy, when one was installed — see `gate`. Absent means every open proceeds. */
+  let openGate: OpenGate | undefined;
   /**
    * The top layer as this manager last left it, front-most last — the modal dialogs whose elements
    * are open, in paint order.
@@ -1021,6 +1116,32 @@ export function createDialogManager(): DialogManager {
     };
   }
 
+  function gate(next: OpenGate): () => void {
+    openGate = next;
+    log('Open gate installed');
+
+    return () => {
+      if (openGate !== next) {
+        // A later `gate` owns the policy now, and this disposer must not lift it behind its back.
+        return;
+      }
+      openGate = undefined;
+      log('Open gate removed');
+    };
+  }
+
+  function consultGate(attempt: OpenAttempt): string | undefined {
+    const refusal = refusalFor(openGate, attempt);
+    if (refusal === undefined) {
+      return undefined;
+    }
+    // Debug rather than a warning: a policy refusing is the policy working, and a rate limit would
+    // otherwise fill the console with its own successes. The event is the channel that matters.
+    log('Open refused by the gate', { id: attempt.id, cause: attempt.cause, reason: refusal });
+    emit({ ...attempt, type: 'refuse', reason: refusal });
+    return refusal;
+  }
+
   // ── Registration ──────────────────────────────────────────────────────────
 
   /**
@@ -1253,6 +1374,16 @@ export function createDialogManager(): DialogManager {
     request: OpenRequest
   ): Promise<OpenRequestOutcome> {
     const source = request.context?.source;
+    // Before the registry is consulted and before any resolver is registered: the gate is above
+    // the library, so it reads no library state — and a refusal here must leave nothing waiting.
+    const refusal = consultGate({
+      id,
+      cause: 'ask',
+      ...(request.context !== undefined && { context: request.context }),
+    });
+    if (refusal !== undefined) {
+      return { accepted: false, reason: refusal };
+    }
     const entry = registry.get(id);
     if (!entry) {
       log.warn('Open request refused (not registered)', { id, source });
@@ -1282,12 +1413,30 @@ export function createDialogManager(): DialogManager {
       },
     };
 
-    log('Open requested from outside', { id, source });
-    await entry.onOpenRequest(request.payload, dispatch);
+    // The owner accepts by calling its own `open()`, which reaches the gate again as an instruct. So
+    // an ask admitted here can still be refused, and the asker must hear it rather than get an accept
+    // whose close never comes — heard, not inferred, for the reason `refuse` is explicit.
+    const gated: { reason: string | null } = { reason: null };
+    const hearRefusal: DialogManagerSubscriber = (event) => {
+      if (event.type === 'refuse' && event.id === id && event.cause === 'instruct') {
+        gated.reason ??= event.reason;
+      }
+    };
+    listeners.add(hearRefusal);
 
-    if (answer.reason !== null) {
-      log('Open request refused by the dialog', { id, source, reason: answer.reason });
-      return { accepted: false, reason: answer.reason };
+    log('Open requested from outside', { id, source });
+    try {
+      await entry.onOpenRequest(request.payload, dispatch);
+    } finally {
+      listeners.delete(hearRefusal);
+    }
+
+    // The owner's own word first: a handler that refused and then tried to open anyway said what
+    // it meant with the door it was given.
+    const refused = answer.reason ?? gated.reason;
+    if (refused !== null) {
+      log('Open request refused by the dialog', { id, source, reason: refused });
+      return { accepted: false, reason: refused };
     }
     return { accepted: true, closed };
   }
@@ -1298,6 +1447,10 @@ export function createDialogManager(): DialogManager {
   function openAndWait<TId extends RegisteredDialogId>(id: TId): Promise<AwaitedCloseOf<TId>>;
   function openAndWait(id: DialogId): Promise<AwaitedClose<unknown>>;
   function openAndWait(id: string): Promise<AwaitedClose<unknown>> {
+    const refusal = consultGate({ id, cause: 'instruct' });
+    if (refusal !== undefined) {
+      return Promise.resolve([new Error(`Open of "${id}" was refused: ${refusal}`), null]);
+    }
     const entry = registry.get(id);
     if (!entry) {
       log.warn('Open skipped (not registered)', { id });
@@ -1331,6 +1484,9 @@ export function createDialogManager(): DialogManager {
     unregister,
 
     open(id: string): boolean {
+      if (consultGate({ id, cause: 'instruct' }) !== undefined) {
+        return false;
+      }
       const entry = registry.get(id);
       if (!entry) {
         log.warn('Open skipped (not registered)', { id });
@@ -1363,6 +1519,8 @@ export function createDialogManager(): DialogManager {
 
     prioritize,
     syncStackOrder,
+    gate,
+    consultGate,
 
     zIndexBase,
 

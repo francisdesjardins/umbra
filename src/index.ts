@@ -43,6 +43,10 @@ export type {
 // Both halves of `dialogManager.prioritize`: an app declares such a policy in its own module.
 export type { StackDialog, StackPriority } from './manager/stack-order.js';
 
+// The same for `dialogManager.gate`, the manager's other policy — and `OpenAttempt` twice over,
+// being what a `refuse` event is built from as well as what the policy reads.
+export type { OpenAttempt, OpenGate } from './manager/open-gate.js';
+
 // The vocabulary the manager's own surface speaks: a consumer who can name `DialogInfo` but not
 // `DialogPhase` cannot write the annotation it requires. The hook-shaped types beside them describe
 // rendering, so they stay on a binding.

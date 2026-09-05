@@ -9,6 +9,71 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-05
+
+### Added — `dialogManager.gate`, one policy in front of every door
+
+The manager already took a policy for _which dialog is in front_; it took none for _whether one
+opens at all_. Every refusal it had was the dialog's own — `onOpenRequest`, declared per dialog and
+consulted only on the asking door — so an allow list, a cap on how many may be stacked, a time
+window or a kill switch was a rule a hundred call sites had to agree on rather than a rule stated
+once above them. `gate((attempt) => reason | void)` is that statement: return a reason to refuse,
+return nothing to open, one policy per manager, replaced rather than stacked, disposer returned the
+way `prioritize` returns one.
+
+**It reaches every door, and that is the whole design rather than a detail.** A gate wired only
+into the manager's imperative doors would have passed a suite and left `useDialog().open()` — the
+way dialogs actually open — walking straight past it, which makes a cap advisory and a kill switch
+false. So `createDialogRuntime` now takes the manager as a gate host and asks it too, which is why
+the three bindings each changed a line and why each has a component test pressing its own door.
+
+The state machine did not change: `beginOpen` is documented as unconditional and stays that way.
+The gate sits _above_ it, so nothing that reaches the store was refused, and `umbra/vanilla`
+adopting a `<dialog open>` the server sent is deliberately past it — the element is open already,
+and refusing there would leave the store disagreeing with the DOM.
+
+**A refused open is quiet by construction**, so the decisions are a stream rather than a return
+value: `subscribe` gained a `refuse` event carrying the attempt and the reason, which is an audit
+log without a subsystem behind it. `open(id)` returns `false`, `openAndWait` takes its
+`[Error, null]` branch — a fourth way into it, and the only one decided before a close resolver
+exists — `requestOpenAndWait` refuses with the reason, and a dialog's own `open()` resolves having
+opened nothing.
+
+`OpenAttempt` is a union on `cause` rather than a record with an optional field: only an ask
+carries a caller's `context`, an instruct having crossed no boundary and having nobody to quote,
+and spelling that as a union is what stops the library constructing one on the wrong door. The
+inapplicable half stays present as `never` — `DialogVariant`'s own spelling — so a policy still
+reads `attempt.context` without narrowing first.
+
+**An ask the gate admits arrives a second time as an instruct**, because the owner accepts by
+calling its own `open()` — and a policy that counts is told to read that door. Refused there, the
+first version handed the asker `accepted: true` and a `closed` promise nothing could settle: the
+dead end `requestOpenAndWait` exists to remove, reintroduced by the feature meant to sit above it.
+The dispatcher now listens for its own `refuse` event for the duration of the handler and reports
+what it hears, rather than reading a phase — which is what the asking door already refuses to do,
+React's accept being asynchronous.
+
+**`consultGate`, not `askGate`.** _Ask_ is spent on `requestOpen` and on the `cause` that spells
+it, so one file would have used the word for two acts — the collision the vocabulary table exists
+to catch, and it was found by reading `consultGate({ cause: 'ask' })` back.
+
+**, not .** _Ask_ is spent on and on the that spells
+it, so one file would have used the word for two acts — the collision the vocabulary table exists
+to catch, found by reading back.
+
+**A gate is the manager’s, and the playground proved how far that reaches.** The React harness
+first installed its policy on whatever manager the context handed it — fine under a component test,
+where each test gets its own — and on `/stories`, where 178 harnesses share one, it refused every
+dialog on the page including the code viewer. It has its own `DialogManagerProvider` now, and `gate`
+says so: the reach is the instance, not the component that called it.
+
+Two decisions worth stating because they could each have gone the other way. **A gate that throws
+admits**, logged: one policy sits in front of every dialog in the app, and a bug in it taking the
+whole surface down is a worse failure than an open that should have been refused — this is a policy
+layer over a UI, not a security boundary, the disclaimer `OpenRequestContext` already carries. And
+**an empty reason still refuses**; only `undefined` opens, so nothing a policy returns by accident
+reads as consent.
+
 ## 2026-09-04
 
 ### Changed — a harness that flips a boolean now says so with a checkbox

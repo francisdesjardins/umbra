@@ -103,7 +103,7 @@ export function useDialog<TData = void, TReason extends string = string>(
       box.element = node;
     };
 
-    const runtime = createDialogRuntime<TData, TReason>(dialogId, getDialog);
+    const runtime = createDialogRuntime<TData, TReason>({ dialogId, getDialog, manager });
 
     return { ...runtime, backdropPress: createBackdropPressGuard(), getDialog, setDialog };
   });

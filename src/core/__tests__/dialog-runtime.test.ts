@@ -6,6 +6,7 @@ import { setLogLevel } from '../../utils/logger.js';
 import {
   answerBackdropClick,
   createDialogRuntime,
+  type OpenGateHost,
   resolveDialogOptions,
   resolvePortalHost,
   shouldDismissOnBackdropClick,
@@ -27,6 +28,17 @@ test.afterEach(() => {
 /** No element to walk: these tests are the runtime's own logic, and Node has no `<dialog>`. */
 const noDialog = () => {
   return null;
+};
+
+/**
+ * A runtime over a fresh manager, so a test with nothing to say about the open gate does not have
+ * to say it — and one that does hands in a manager it installed a policy on.
+ */
+const runtimeFor = <TData = void, TReason extends string = string>(
+  dialogId: string,
+  manager: OpenGateHost = createDialogManager()
+) => {
+  return createDialogRuntime<TData, TReason>({ dialogId, getDialog: noDialog, manager });
 };
 
 test.describe('resolveDialogOptions', () => {
@@ -111,7 +123,7 @@ test.describe('resolveDialogOptions', () => {
 
 test.describe('createDialogRuntime', () => {
   test('open() settles when prepare does, not when the dialog is shown', async () => {
-    const { store, open } = createDialogRuntime('runtime-open', noDialog);
+    const { store, open } = runtimeFor('runtime-open');
 
     let settled = false;
     const opening = open().then(() => {
@@ -127,7 +139,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('openAndWait() registers its resolver before requesting the open', async () => {
-    const { store, openAndWait } = createDialogRuntime<string, 'save'>('runtime-wait', noDialog);
+    const { store, openAndWait } = runtimeFor<string, 'save'>('runtime-wait');
 
     // The close lands *inside* the open — the window a resolver added on the next line would miss.
     const closed = openAndWait();
@@ -140,7 +152,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('the handle closes with the reason and payload it is given', () => {
-    const { store, handle } = createDialogRuntime<number, 'ok'>('runtime-handle', noDialog);
+    const { store, handle } = runtimeFor<number, 'ok'>('runtime-handle');
     store.beginOpen();
 
     handle.close('ok', 7);
@@ -149,7 +161,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('the handle defaults to dismiss, which is the library’s own reason', () => {
-    const { store, handle } = createDialogRuntime('runtime-default', noDialog);
+    const { store, handle } = runtimeFor('runtime-default');
     store.beginOpen();
 
     handle.close();
@@ -158,7 +170,7 @@ test.describe('createDialogRuntime', () => {
   });
 
   test('an action closes through the engine, with the action’s own reason', async () => {
-    const { store, engine } = createDialogRuntime<string, 'confirm'>('runtime-engine', noDialog);
+    const { store, engine } = runtimeFor<string, 'confirm'>('runtime-engine');
     store.beginOpen();
 
     // `bindClose` is wired inside the runtime, which is why nothing has to be handed in.
@@ -168,12 +180,41 @@ test.describe('createDialogRuntime', () => {
 
     expect(store.getSnapshot().closeResult).toEqual({ reason: 'confirm', data: 'from-action' });
   });
+
+  test('a dialog’s own open() is refused by the manager’s gate, and settles anyway', async () => {
+    // The door a manager-only gate would miss, and the one every hook and controller calls: a cap
+    // or a kill switch is only true if this one asks too.
+    const manager = createDialogManager();
+    manager.gate(() => {
+      return 'kill-switch';
+    });
+    const { store, open } = runtimeFor('runtime-gated', manager);
+
+    // Settled, not rejected: `open()`'s promise is documented as one that cannot hang.
+    await open();
+
+    expect(store.getSnapshot().phase).toBe('closed');
+  });
+
+  test('a refused openAndWait() takes the error branch instead of waiting for a close', async () => {
+    const manager = createDialogManager();
+    manager.gate(() => {
+      return 'too-many-open';
+    });
+    const { store, openAndWait } = runtimeFor('runtime-gated-wait', manager);
+
+    const [error, result] = await openAndWait();
+
+    expect(error?.message).toContain('too-many-open');
+    expect(result).toBeNull();
+    expect(store.getSnapshot().phase).toBe('closed');
+  });
 });
 
 test.describe('teardownDialog', () => {
   test('closes an open dialog and reports it through onClose', () => {
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-open', noDialog);
+    const { store } = runtimeFor('teardown-open');
     dm.register('teardown-open', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 
@@ -196,7 +237,7 @@ test.describe('teardownDialog', () => {
 
   test('a dialog torn down while open still reports its close to a waiter', async () => {
     const dm = createDialogManager();
-    const { store, openAndWait } = createDialogRuntime('teardown-waiting', noDialog);
+    const { store, openAndWait } = runtimeFor('teardown-waiting');
     dm.register('teardown-waiting', { store, template: 'dialog', nonModal: false });
 
     const closed = openAndWait();
@@ -219,7 +260,7 @@ test.describe('teardownDialog', () => {
     // Why `abandon()` is unconditional: a resolver answers the *next* close, so one queued on a
     // dialog that never reopens stays pending for the life of the process.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-closed', noDialog);
+    const { store } = runtimeFor('teardown-closed');
     dm.register('teardown-closed', { store, template: 'dialog', nonModal: false });
 
     const closed = new Promise<readonly [Error | null, unknown]>((resolve) => {
@@ -269,7 +310,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   };
 
   test('a non-modal dialog has no backdrop to click', () => {
-    const { store } = createDialogRuntime('backdrop-non-modal', noDialog);
+    const { store } = runtimeFor('backdrop-non-modal');
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
         dialog: boxed,
@@ -287,7 +328,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // Drawing an action flips the default — both halves, because the default is the subtlety.
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-default', noDialog);
+      const { store } = runtimeFor('backdrop-default');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -324,7 +365,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('an explicit `true` opts a dialog with actions back in', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-explicit', noDialog);
+      const { store } = runtimeFor('backdrop-explicit');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -350,7 +391,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
     // The shared gate the dismiss key and click-outside also ask, reached after the first two.
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-running', noDialog);
+      const { store } = runtimeFor('backdrop-running');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -373,7 +414,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   });
 
   test('a closed dialog never dismisses, whatever the pointer did', () => {
-    const { store } = createDialogRuntime('backdrop-closed', noDialog);
+    const { store } = runtimeFor('backdrop-closed');
     expect(store.getSnapshot().phase).toBe('closed');
     expect(
       shouldDismissOnBackdropClick(onBackdrop, {
@@ -391,7 +432,7 @@ test.describe('shouldDismissOnBackdropClick', () => {
   test('and the geometry still decides, last', () => {
     const frames = installFakeFrames();
     try {
-      const { store } = createDialogRuntime('backdrop-geometry', noDialog);
+      const { store } = runtimeFor('backdrop-geometry');
       store.beginOpen();
       store.scheduleOpenTransition();
       frames.flush();
@@ -431,7 +472,7 @@ test.describe('teardownDialog reports a failing onClose', () => {
   test('logs instead of losing an error thrown during cleanup', async () => {
     // Teardown has nobody left to catch a throwing `onClose`; `fireAndForget` logs it instead.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime<void, 'save'>('teardown-throws', noDialog);
+    const { store } = runtimeFor<void, 'save'>('teardown-throws');
     dm.register('teardown-throws', { store, template: 'dialog', nonModal: false });
 
     store.setOnClose(() => {
@@ -474,7 +515,7 @@ test.describe('teardownDialog reports through onError', () => {
   test('an onClose that throws on unmount reaches onError, like one that throws on close', async () => {
     // The gap: `onClose` failures reached `onError` on the close path but not on unmount.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-on-error', noDialog);
+    const { store } = runtimeFor('teardown-on-error');
     dm.register('teardown-on-error', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
     store.setOnClose(() => {
@@ -500,7 +541,7 @@ test.describe('teardownDialog reports through onError', () => {
   test('a clean unmount reports nothing', async () => {
     // Failures only — a consumer wiring a reporter must not get an event per normal unmount.
     const dm = createDialogManager();
-    const { store } = createDialogRuntime('teardown-quiet', noDialog);
+    const { store } = runtimeFor('teardown-quiet');
     dm.register('teardown-quiet', { store, template: 'dialog', nonModal: false });
     store.beginOpen();
 
@@ -580,7 +621,7 @@ test.describe('answerBackdropClick', () => {
   const onBackdrop = { target: surface, currentTarget: surface, clientX: 0, clientY: 0 };
 
   const opened = (id: string) => {
-    const runtime = createDialogRuntime<void, 'save'>(id, noDialog);
+    const runtime = runtimeFor<void, 'save'>(id);
     runtime.store.beginOpen();
     // The director's two calls, by hand: nothing here drives a lifecycle, and a dialog still
     // `'opening'` would pass the assertions below for the wrong reason.
@@ -647,5 +688,29 @@ test.describe('answerBackdropClick', () => {
     });
 
     expect(store.getSnapshot().phase).toBe('open');
+  });
+});
+
+test.describe('an ask whose open is then refused', () => {
+  test('reports the refusal to the asker instead of an accept whose close never comes', async () => {
+    // The two-door path: the ask is admitted, the owner accepts by calling its own `open()`, and
+    // that is a second attempt through the door a cap is told to read. Without this the asker gets
+    // `accepted: true` and a `closed` nothing can settle.
+    const manager = createDialogManager();
+    manager.gate((attempt) => {
+      return attempt.cause === 'instruct' ? 'capped' : undefined;
+    });
+    const { store, open } = runtimeFor('asked-then-capped', manager);
+    manager.register('asked-then-capped', {
+      store,
+      onOpenRequest: async () => {
+        await open();
+      },
+    });
+
+    const outcome = await manager.requestOpenAndWait('asked-then-capped');
+
+    expect(outcome).toEqual({ accepted: false, reason: 'capped' });
+    expect(store.getSnapshot().phase).toBe('closed');
   });
 });

@@ -26,6 +26,7 @@ import {
   SolidOutletHarness,
   SolidSlideHarness,
   SolidStackPriorityHarness,
+  SolidGateHarness,
 } from './solid-dialog.story';
 
 /**
@@ -704,5 +705,19 @@ test.describe('umbra/solid — moveFocus', () => {
         return document.activeElement?.getAttribute('data-testid');
       })
     ).toBe('solid-mf-field');
+  });
+});
+
+test.describe('the open gate (Solid)', () => {
+  test('is inherited by this binding, and refuses its own open()', async ({ mount, page }) => {
+    await mount(<SolidGateHarness />);
+
+    await page.getByTestId('solid-gate-open').click();
+    await expect(page.getByTestId('solid-gate-refusal')).toHaveText('kill-switch:instruct');
+    await expect(page.locator('dialog[data-dialog-id="solid-gated"]')).not.toBeVisible();
+
+    await page.getByTestId('solid-gate-lift').click();
+    await page.getByTestId('solid-gate-open').click();
+    await expect(page.locator('dialog[data-dialog-id="solid-gated"]')).toBeVisible();
   });
 });

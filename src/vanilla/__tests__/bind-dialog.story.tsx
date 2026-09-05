@@ -1773,3 +1773,79 @@ export function VanillaRestoreFocusToHarness() {
     </>
   );
 }
+
+/**
+ * The open gate over a controller: the door here is `controller.open()`, which no manager method
+ * sits in front of. A kill switch that this one walks past is not a kill switch, and the controller
+ * is the binding where that is easiest to believe — it never renders, so nothing else is watching.
+ */
+export function VanillaGateHarness() {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [controller, setController] = useState<Bound<'close'> | null>(null);
+  const [lift, setLift] = useState<(() => void) | null>(null);
+  const [refusal, setRefusal] = useState('none');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const manager = createDialogManager();
+    const bound = bindDialog<void, 'close'>({
+      id: 'vanilla-gated',
+      dialog,
+      ariaLabel: 'Vanilla gated',
+      manager,
+    });
+
+    const remove = manager.gate(() => {
+      return 'kill-switch';
+    });
+    const unsubscribe = manager.subscribe((event) => {
+      if (event.type === 'refuse') {
+        setRefusal(`${event.reason}:${event.cause}`);
+      }
+    });
+
+    setController(bound);
+    // The disposer, held so the test can prove the gate lifts as well as refuses.
+    setLift(() => {
+      return remove;
+    });
+
+    return () => {
+      unsubscribe();
+      remove();
+      bound.destroy();
+      setController(null);
+      setLift(null);
+    };
+  }, []);
+
+  return (
+    <>
+      <span data-testid="refusal">{refusal}</span>
+      <button
+        data-testid="open"
+        onClick={() => {
+          void controller?.open();
+        }}
+      >
+        Open
+      </button>
+      <button
+        data-testid="lift"
+        onClick={() => {
+          lift?.();
+        }}
+      >
+        Lift the gate
+      </button>
+
+      <dialog ref={dialogRef}>
+        <p>Gated content</p>
+      </dialog>
+    </>
+  );
+}

@@ -81,10 +81,11 @@ export function bindDialog<TData = void, TReason extends string = string>(
   const getDialog: GetDialog = () => {
     return dialog;
   };
-  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>({
     dialogId,
-    getDialog
-  );
+    getDialog,
+    manager,
+  });
 
   // Absent options skip rather than empty, so an audit still sees an unnamed dialog and an
   // `aria-labelledby` in the caller's markup survives. A function, because `aria-busy` moves.
@@ -198,6 +199,8 @@ export function bindDialog<TData = void, TReason extends string = string>(
   // honest (see above), so a modal one is closed instead.
   if (dialog.open) {
     if (resolved.isNonModal) {
+      // Past the gate on purpose, and the one open that is: the element is already open, so a
+      // refusal would leave the store disagreeing with the DOM rather than keeping a dialog shut.
       log('Adopting a dialog that was already open', { id: dialogId });
       store.beginOpen();
       store.scheduleOpenTransition();

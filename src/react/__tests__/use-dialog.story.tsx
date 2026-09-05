@@ -46,3 +46,4 @@ export { FocusUnderAnotherDialogHarness } from './use-dialog/focus-under-another
 export { ContainedOverlayHarness } from './use-dialog/contained-overlay.story.js';
 export { VolatileKeyDownHarness } from './use-dialog/volatile-keydown.story.js';
 export { ShadowRootHarness } from './use-dialog/shadow-root.story.js';
+export { OpenGateHarness } from './use-dialog/open-gate.story';

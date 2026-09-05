@@ -13,6 +13,7 @@ import type { DismissCause } from './dismiss-reason.js';
 import type { DialogId } from './registry.js';
 import type { HotkeyDef } from '../actions/types.js';
 import type { DialogManager } from '../manager/dialog-manager.js';
+import type { OpenAttempt } from '../manager/open-gate.js';
 import type { DialogStore } from './dialog-store.js';
 import type {
   AwaitedClose,
@@ -109,6 +110,29 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
 // ── The runtime ──────────────────────────────────────────────────────────────
 
 /**
+ * What {@link createDialogRuntime} needs of a manager: the one question its doors ask before an
+ * open starts.
+ *
+ * Declared as the requirement rather than derived from `DialogManager`, the way the manager's own
+ * `RegisteredStore` is — and here it also keeps this module's import of the manager type-only,
+ * which is what stops the two from forming a cycle. A method, so a manager narrowing nothing still
+ * satisfies it.
+ */
+export type OpenGateHost = {
+  consultGate(attempt: OpenAttempt): string | undefined;
+};
+
+/** What every binding hands {@link createDialogRuntime} — one object, the way the director takes its own. */
+export type DialogRuntimeOptions = {
+  /** The dialog this runtime is for. */
+  readonly dialogId: DialogId;
+  /** Asked per event rather than held, for the reason `DialogDomContext` gives. */
+  readonly getDialog: GetDialog;
+  /** The manager, as the gate host — a binding passes the one it registers with. */
+  readonly manager: OpenGateHost;
+};
+
+/**
  * The dialog's state and the three doors onto it, built once per dialog.
  *
  * The engine is created here rather than handed in, so it can be wired straight to this dialog's
@@ -120,10 +144,11 @@ export function resolveDialogOptions(options: UnresolvedDialogOptions): Resolved
  * them be used as effect dependencies (the compiler cannot memoize them: it treats the store as
  * opaque).
  */
-export function createDialogRuntime<TData = void, TReason extends string = string>(
-  dialogId: DialogId,
-  getDialog: GetDialog
-) {
+export function createDialogRuntime<TData = void, TReason extends string = string>({
+  dialogId,
+  getDialog,
+  manager,
+}: DialogRuntimeOptions) {
   const store = createDialogStore<TData, TReason>(dialogId);
   const engine = createActionEngine<TData, TReason>(dialogId);
   /**
@@ -144,6 +169,12 @@ export function createDialogRuntime<TData = void, TReason extends string = strin
   // The store decides which branch settles the promise (start / join an in-flight open / resolve
   // immediately) — it owns the state machine, so it owns the rule.
   const open = (): Promise<void> => {
+    // Above the state machine rather than in it, so `beginOpen` stays unconditional and never
+    // hears about a refused open. Settled, never rejected: this promise is documented as one that
+    // cannot hang. The `refuse` event is where a refusal is legible.
+    if (manager.consultGate({ id: dialogId, cause: 'instruct' }) !== undefined) {
+      return Promise.resolve();
+    }
     return new Promise((resolve) => {
       store.beginOpen(resolve);
     });
@@ -158,6 +189,11 @@ export function createDialogRuntime<TData = void, TReason extends string = strin
    * `dialog-store.test.ts` and by `open-and-wait.story.tsx`.
    */
   const openAndWait = (): Promise<AwaitedClose<TData, TReason>> => {
+    // Before the resolver, or a refusal leaves one waiting for a close that cannot come.
+    const refusal = manager.consultGate({ id: dialogId, cause: 'instruct' });
+    if (refusal !== undefined) {
+      return Promise.resolve([new Error(`Open of "${dialogId}" was refused: ${refusal}`), null]);
+    }
     const closed = new Promise<AwaitedClose<TData, TReason>>((resolve) => {
       store.addCloseResolver(resolve);
     });

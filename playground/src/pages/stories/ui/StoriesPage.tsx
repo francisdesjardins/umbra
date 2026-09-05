@@ -85,6 +85,7 @@ import {
   SolidShadowRootHarness,
   SolidSlideHarness,
   SolidStackPriorityHarness,
+  SolidGateHarness,
 } from 'umbra/solid/__tests__/solid-dialog.story';
 import {
   VanillaBasicHarness,
@@ -101,6 +102,7 @@ import {
   VanillaNoHostHarness,
   VanillaNonModalOptionsHarness,
   VanillaOpenRequestHarness,
+  VanillaGateHarness,
   VanillaPortalHarness,
   VanillaPrepareFailureHarness,
   VanillaReconcileHarness,
@@ -163,6 +165,7 @@ import {
   PortalNonModalOptInHarness,
   PortalOptInHarness,
   ReopenSettlesHarness,
+  OpenGateHarness,
   BackdropHitTestHarness,
   KeyPassthroughHarness,
   StableIdentityHarness,
@@ -768,6 +771,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-use-dialog-reopen-settles',
       },
       {
+        title: 'The open gate, refusing a dialog’s own open()',
+        description:
+          'dialogManager.gate is one policy above every door, so the cap, the allow list and the kill switch are true rather than advisory — this card presses the door a manager-only gate would miss. The policy is re-installed by an effect whose cleanup is its disposer, because the compiler forbids writing to a useState value and a gate closing over one would read a stale flag.',
+        component: OpenGateHarness,
+        codeKey: 'story-use-dialog-open-gate',
+      },
+      {
         title: 'Stable Identity',
         description:
           'open/openAndWait/handle keep the same reference across re-renders and a full open/close cycle — no ref dance needed to use them in effects.',
@@ -1069,6 +1079,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
         codeKey: 'story-vanilla-open-request',
       },
       {
+        title: 'The open gate over a controller',
+        description:
+          'The door here is controller.open(), which no manager method sits in front of — so this is where a gate wired only into the manager would be walked past. Lifting the policy through the disposer opens the same dialog with nothing else changed.',
+        component: VanillaGateHarness,
+        codeKey: 'story-vanilla-gate',
+      },
+      {
         title: 'A hand-written <dialog> inside a shadow root',
         description:
           'Both things the boundary breaks fail quietly. adoptedStyleSheets does not cross it, so the sheet is adopted per root and the library’s dialog::backdrop reaches here too; document.activeElement answers with the host, so a document-scoped focus check concludes focus left. React makes the host and nothing inside it.',
@@ -1268,6 +1285,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'Inherited through the wholesale re-export, so nothing would fail if a binding stopped reaching it — binding-parity.test.ts compares export names. Two silent breakers: the policy is installed at setup, a Solid body running once, so onCleanup owns the disposer; and the sizes are strings, since applyStyle writes them verbatim and a bare 300 type-checks, emits nothing, and stops the dialogs overlapping.',
         component: SolidStackPriorityHarness,
         codeKey: 'story-solid-stack-priority',
+      },
+      {
+        title: 'The open gate, inherited by Solid',
+        description:
+          'Nothing in src/solid implements it, which is the point: the policy is the manager’s and the binding’s own open() asks it like every other door. The signal is read inside the gate rather than re-installing one per change, so onCleanup owns a single disposer.',
+        component: SolidGateHarness,
+        codeKey: 'story-solid-gate',
       },
       {
         title: 'The same two dialogs with no policy at all',

@@ -24,6 +24,7 @@ import {
   VanillaShadowStackHarness,
   VanillaUnbindHarness,
   VanillaServerOpenHarness,
+  VanillaGateHarness,
 } from './bind-dialog.story';
 
 /**
@@ -887,5 +888,22 @@ test.describe('umbra/vanilla — moveFocus', () => {
         return document.activeElement?.getAttribute('data-testid');
       })
     ).toBe('v-mf-field');
+  });
+});
+
+test.describe('the open gate (vanilla)', () => {
+  test('refuses the controller’s own open, and opens once the policy is lifted', async ({
+    mount,
+    page,
+  }) => {
+    await mount(<VanillaGateHarness />);
+
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('refusal')).toHaveText('kill-switch:instruct');
+    await expect(page.getByTestId('dialog-vanilla-gated')).not.toBeVisible();
+
+    await page.getByTestId('lift').click();
+    await page.getByTestId('open').click();
+    await expect(page.getByTestId('dialog-vanilla-gated')).toBeVisible();
   });
 });

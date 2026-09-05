@@ -11,7 +11,7 @@ Framework-agnostic core, with React, Solid and vanilla bindings over it.
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Solid](https://img.shields.io/badge/Solid-1.9-2c4f7c?style=flat-square&logo=solid&logoColor=white)](https://www.solidjs.com/)
 [![Unit coverage](https://img.shields.io/badge/unit_coverage-97%25-3fb950?style=flat-square)](#development)
-[![Component coverage](https://img.shields.io/badge/component_coverage-93%25-3fb950?style=flat-square)](#development)
+[![Component coverage](https://img.shields.io/badge/component_coverage-92%25-3fb950?style=flat-square)](#development)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-f59e0b?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat-square)](./LICENSE)
 
@@ -67,6 +67,7 @@ yours and outlives the controller.
 - **Type-safe** — Strict TypeScript with `exactOptionalPropertyTypes`, generics for close data and form values
 - **Native `<dialog>`** — Renders inline by default; opt-in `portal: true` for `createPortal`, automatic z-index stacking
 - **Who is in front is a decision, not a race** — `dialogManager.prioritize((dialog) => number)` installs one project-wide rule, so "every drawer under every alert" is stated once instead of being settled by whichever `showModal()` landed last. Modality is a fact no policy can touch: the top layer paints above ordinary content and no `z-index` reaches between them
+- **Whether a dialog opens at all is a policy too** — `dialogManager.gate((attempt) => reason | void)` sits in front of every door, including a dialog’s own `open()`, so an allow list, a cap on how many may be stacked, a time window or a kill switch is stated once above the dialogs rather than agreed by a hundred call sites. Refusal is explicit and acceptance is the default; each refusal reaches `subscribe` as a `refuse` event, which is the whole of an audit log. A policy layer, not a security boundary — a gate that throws admits, logged, rather than taking every dialog in the app down with it
 - **When the `open` is a prop** — a dialog it owns cannot close itself, because the boolean upstream would put it straight back. `reconcileOpen(phase, open)` puts the dialog wherever the prop says, reconciled on every pass rather than reacted to; `onDismissRequest` turns every dismissal — the key, a backdrop click, a click outside a panel, each naming itself — into a report to the owner, with every gate above it — which key, an action claiming it, where the pointer landed, `prepare`, which dialog is in front — still the library's
 - **Content that isn't ready yet** — `prepare(signal)` runs alongside the entrance animation and gates `isPreparing` and the promise `open()` returns; its `AbortSignal` fires when the dialog closes, so a dialog dismissed while it loads drops the work it started
 - **Non-modal panels, positioned honestly** — `dialogPlacement` ships from the core as a table of CSS, so every binding puts a panel in the same place: `portal: true` anchors it to the viewport, `portal: false` contains it in a library-owned wrapper immune to a transformed ancestor hijacking the containing block
@@ -367,10 +368,11 @@ See **[API.md](API.md)** for the complete API documentation covering:
 - `createStore` / `StoreContract` — the zero-dependency reactive cell the library runs on, and the shape a binding consumes
 - `dialogManager` — Imperative open/close, and the `lookup` query API
 - `prioritize` — who is in front, as one project-wide rule, and the three costs of reordering a modal dialog
+- `gate` — whether an open happens at all, as one project-wide rule in front of every door
 - `openAndWait()` — Go-style async result: open, and resolve with how it closed — on a hook, and on `dialogManager` for code with no component
 - `requestOpen` / `requestOpenAndWait` — ask a dialog you do not own, and hear the answer
 - `dialog:open` / `dialog:close` — DOM lifecycle events, heard across bundles
-- `subscribe` — the same two moments plus `register` / `unregister`, so an imperative open can wait for a dialog behind a code-split route
+- `subscribe` — the same two moments plus `register` / `unregister`, so an imperative open can wait for a dialog behind a code-split route, and `refuse`, so a gate’s decisions are readable
 - `normalizeError` — turn whatever was thrown into an `Error`
 - Hotkey system (`Key`, `HotkeyDef`, `matchesHotkey`, `formatHotkeyLabel` for a label a person reads, `formatAriaKeyshortcuts` for the value the DOM takes)
 - Debug logging
@@ -425,11 +427,11 @@ yarn verify:all      # lint + type-check + build + package checks, against the b
 ```
 
 **Two coverage numbers, because there are two test projects and neither can measure the other's
-half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.78%**
+half.** `yarn test:unit:coverage` measures the framework-free core in Node (c8) — **96.92%**
 statements — and its exclude list is the statement of what a Node process can reach, not a way to
 flatter the number. `yarn test:component:coverage` measures what that list leaves out: the three
 bindings and the DOM-only modules, in a real browser (istanbul, opt-in because instrumenting costs
-~45% of the run) — **92.55%** statements over 57 files. Both measured 2026-09-04, and re-measured
+~45% of the run) — **92.20%** statements over 58 files. Both measured 2026-09-05, and re-measured
 together or not at all: one number moved without the other is two projects being compared across
 different days. `yarn coverage:update` is that rule made mechanical: it runs both commands and
 rewrites this paragraph, the badges above and CLAUDE.md's copy in one move — still a snapshot, not

@@ -1550,3 +1550,66 @@ export const SolidMoveFocusApp = (): JSX.Element => {
 export const SolidRestoreFocusToApp = (): JSX.Element => {
   return el(h(DialogManagerProvider, null, RestoreFocusToApp));
 };
+
+/**
+ * The open gate, through the binding that inherits it rather than implementing it — the door being
+ * this dialog's own `open()`. A signal drives the policy, so the same button proves both halves:
+ * refused while it is armed, opening once it is not.
+ */
+function GateApp(): Built {
+  const [armed, setArmed] = createSignal(true);
+  const [refusal, setRefusal] = createSignal('none');
+
+  const dialog = useDialog<void, 'close'>({
+    id: 'solid-gated',
+    ariaLabel: 'Solid gated',
+    render: () => {
+      return el(h('div', null, h('p', null, 'Gated content')));
+    },
+  });
+
+  // One policy for the manager's life; the signal is read inside it, so nothing is re-installed.
+  onCleanup(
+    dialog.dialogManager.gate(() => {
+      return armed() ? 'kill-switch' : undefined;
+    })
+  );
+  onCleanup(
+    dialog.dialogManager.subscribe((event) => {
+      if (event.type === 'refuse') {
+        setRefusal(`${event.reason}:${event.cause}`);
+      }
+    })
+  );
+
+  return h(
+    'div',
+    null,
+    text(refusal, 'solid-gate-refusal'),
+    h(
+      'button',
+      {
+        'data-testid': 'solid-gate-open',
+        onClick: () => {
+          void dialog.open();
+        },
+      },
+      'Open'
+    ),
+    h(
+      'button',
+      {
+        'data-testid': 'solid-gate-lift',
+        onClick: () => {
+          setArmed(false);
+        },
+      },
+      'Lift the gate'
+    ),
+    dialog.Dialog
+  );
+}
+
+export const SolidGateApp = (): JSX.Element => {
+  return el(h(DialogManagerProvider, null, GateApp));
+};

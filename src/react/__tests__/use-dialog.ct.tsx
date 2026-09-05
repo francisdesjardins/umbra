@@ -43,6 +43,7 @@ import {
   LateTitleHarness,
   OutletLabelHarness,
   VolatileKeyDownHarness,
+  OpenGateHarness,
   ShadowRootHarness,
   RenderPhaseHarness,
 } from './use-dialog.story';
@@ -1396,5 +1397,38 @@ test.describe('the phase a render can see', () => {
     await expect(component.getByTestId('hook-visible')).toHaveText('visible');
     await expect(component.getByTestId('hook-phase')).toHaveText('closed');
     await expect(component.getByTestId('hook-visible')).toHaveText('gone');
+  });
+});
+
+test.describe('the open gate', () => {
+  test('refuses the dialog’s own open(), which is the door a manager-only gate would miss', async ({
+    mount,
+  }) => {
+    const component = await mount(<OpenGateHarness />);
+
+    await component.getByTestId('open').click();
+
+    // Nothing on screen, and the refusal reached the event stream with the door it came through.
+    await expect(component.getByTestId('refusal')).toHaveText('kill-switch:instruct');
+    await expect(component.page().getByTestId('dialog-gated')).not.toBeVisible();
+
+    await component.getByTestId('lift').click();
+    await component.getByTestId('open').click();
+
+    await expect(component.page().getByTestId('dialog-gated')).toBeVisible();
+  });
+
+  test('a refused openAndWait() takes its error branch rather than waiting for a close', async ({
+    mount,
+  }) => {
+    const component = await mount(<OpenGateHarness />);
+
+    // The other awaiting door: it must settle, and on the branch that says the open never happened.
+    await component.getByTestId('open-and-wait').click();
+    await expect(component.getByTestId('awaited')).toHaveText('error');
+
+    await component.getByTestId('lift').click();
+    await component.getByTestId('open-and-wait').click();
+    await expect(component.page().getByTestId('dialog-gated')).toBeVisible();
   });
 });

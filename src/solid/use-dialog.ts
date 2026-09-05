@@ -76,10 +76,11 @@ export function useDialog<TData = void, TReason extends string = string>(
     return dialog;
   };
 
-  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>(
+  const { store, engine, open, openAndWait, handle } = createDialogRuntime<TData, TReason>({
     dialogId,
-    getDialog
-  );
+    getDialog,
+    manager,
+  });
 
   const snapshot = fromStore(store);
   const actionState = fromStore(engine);

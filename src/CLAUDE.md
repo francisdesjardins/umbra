@@ -61,8 +61,8 @@ an action's `onClick` take the whole press with `preventDefault()` and return `v
 being a second protocol for what the DOM already has. **`onClose` is a notification** and the only
 one — its result is ignored, because the close has happened.
 
-**`prepare` is awaited, not a gate.** A gate says no — `canDismiss`, `ActionGate`, `DismissGate` —
-and `prepare` cannot: `syncOpenSequence` shows the dialog and schedules the phase's frame **before**
+**`prepare` is awaited, not a gate.** A gate says no — `canDismiss`, `ActionGate`, `DismissGate`,
+`OpenGate` — and `prepare` cannot: `syncOpenSequence` shows the dialog and schedules the phase's frame **before**
 starting it, so the dialog reaches `'open'` either way and one that throws is logged and settles
 like any other. What waits on it is `open()`'s promise, `isPreparing` and therefore `aria-busy`,
 `dismissWhilePreparing`, and the labelling diagnostic.
@@ -80,7 +80,8 @@ a namespace), and in front of `dialog` (`a modal dialog` is correct English; `a 
 how you find out a pattern went too far).
 
 Two near-misses kept on purpose, so the next pass does not re-open them: `ActionGate`/`DismissGate`
-are "gate" in two senses and the alternatives cost more than the ambiguity; `DialogRenderArgs` and
+are "gate" in two senses — a port and an inputs shape — and the alternatives cost more than the
+ambiguity, while `OpenGate` is the refusing act itself and adds no third; `DialogRenderArgs` and
 `BaseRenderContext` are one shape under two words because the alias is the seam
 `SlideDialogRenderContext` intersects.
 
@@ -205,7 +206,7 @@ restating any of it here is how the two drift.
 | `useDialog`            | [react/use-dialog.tsx](react/use-dialog.tsx), [solid/use-dialog.ts](solid/use-dialog.ts)                                                                                                 |
 | The state machine      | [core/dialog-store.ts](core/dialog-store.ts) — one method per transition                                                                                                                 |
 | The lifecycle sequence | [core/dialog-director.ts](core/dialog-director.ts) — who asks the `attach*` functions, in what order                                                                                     |
-| The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, the doors, the asking door                                                                                            |
+| The manager            | [manager/dialog-manager.ts](manager/dialog-manager.ts) — registry, the doors, the asking door, and [manager/open-gate.ts](manager/open-gate.ts) in front of them all                     |
 | The stack order        | [manager/stack-order.ts](manager/stack-order.ts) + `raiseDialog` in [core/dialog-lifecycle.ts](core/dialog-lifecycle.ts)                                                                 |
 | Body scroll lock       | [manager/scroll-lock.ts](manager/scroll-lock.ts), modal only, over [manager/lock-ledger.ts](manager/lock-ledger.ts) — claim-per-owner, which is what makes two managers on one page safe |
 | Provider / reactive    | `{react,solid}/dialog-manager-context`, `{react,solid}/use-dialog-manager`                                                                                                               |
@@ -490,10 +491,11 @@ assertions plus `@ts-expect-error` checks that the variant's mutual exclusion an
 rejection are real, so flattening a derived type into an equivalent-looking literal fails there.
 `verify:package` re-checks the same guarantees against the published `.d.ts`.
 
-- `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`). Three things take the
+- `openAndWait()` — Go-style `[error, result]` tuple (`AwaitedClose<TData>`). Four things take the
   `[Error, null]` branch: `store.abandon()`, an id nobody registered, and — since a resolver
   registered mid-exit would otherwise be handed a close it did not cause — a dialog already
-  `'closing'`. The rule is `addCloseResolver`'s, so every awaiting door inherits it.
+  `'closing'`. Those three are `addCloseResolver`'s rule, so every awaiting door inherits them. The
+  fourth is an open `dialogManager.gate` refused, decided _before_ a resolver exists at all.
 - No `as` casts — `Extract<Source, Target>` to narrow, `satisfies` to prevent widening
 
 ## Generated docs

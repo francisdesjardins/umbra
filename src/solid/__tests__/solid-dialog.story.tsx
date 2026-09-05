@@ -22,6 +22,7 @@ import {
   SolidClaimlessReclaimApp,
   SolidPrepareFailureApp,
   SolidStackPriorityApp,
+  SolidGateApp,
   SolidSlideApp,
   SolidMoveFocusApp,
   SolidRestoreFocusToApp,
@@ -171,4 +172,9 @@ export function SolidMoveFocusHarness() {
 
 export function SolidRestoreFocusToHarness() {
   return <SolidRoot app={SolidRestoreFocusToApp} />;
+}
+
+/** The open gate inherited by this binding — see the app for why the signal lives inside the policy. */
+export function SolidGateHarness() {
+  return <SolidRoot app={SolidGateApp} />;
 }

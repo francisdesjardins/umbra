@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { installFakeFrames, type FrameControl } from '../../__tests__/fake-frames.js';
 import { createDialogRuntime } from '../../core/dialog-runtime.js';
 import { DISMISS_REASON } from '../../core/dismiss-reason.js';
+import { createDialogManager } from '../../manager/dialog-manager.js';
 
 /**
  * The signal an action handler is given, and the one close that does not fire it.
@@ -23,8 +24,12 @@ test.afterEach(() => {
 
 /** A runtime with no element behind it: none of these paths reads the DOM. */
 const runtime = () => {
-  return createDialogRuntime<string, 'save' | 'other'>('signal-test', () => {
-    return null;
+  return createDialogRuntime<string, 'save' | 'other'>({
+    dialogId: 'signal-test',
+    getDialog: () => {
+      return null;
+    },
+    manager: createDialogManager(),
   });
 };
 

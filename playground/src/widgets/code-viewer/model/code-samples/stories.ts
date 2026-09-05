@@ -21,6 +21,7 @@ import storyUseDialogPortalNonModalDefaultSrc from 'umbra/react/__tests__/use-di
 import storyUseDialogPortalNonModalOptInSrc from 'umbra/react/__tests__/use-dialog/portal-non-modal-opt-in.story.tsx?raw';
 import storyUseDialogDismissWhilePreparingSrc from 'umbra/react/__tests__/use-dialog/dismiss-while-preparing.story.tsx?raw';
 import storyUseDialogReopenSettlesSrc from 'umbra/react/__tests__/use-dialog/reopen-settles.story.tsx?raw';
+import storyUseDialogOpenGateSrc from 'umbra/react/__tests__/use-dialog/open-gate.story.tsx?raw';
 import storyUseDialogStableIdentitySrc from 'umbra/react/__tests__/use-dialog/stable-identity.story.tsx?raw';
 import storyUseDialogBackdropHitTestSrc from 'umbra/react/__tests__/use-dialog/backdrop-hit-test.story.tsx?raw';
 import storyOutletPaintTimingSrc from 'umbra/react/__tests__/dialog-outlet/outlet-paint-timing.story.tsx?raw';
@@ -134,6 +135,7 @@ const SOLID_CARDS: ReadonlyArray<readonly [key: string, names: readonly string[]
   ['story-solid-dismiss-request', ['DismissRequestApp']],
   ['story-solid-contained', ['ContainedApp']],
   ['story-solid-stack-priority', ['stackPriorityApp', 'SolidStackPriorityApp']],
+  ['story-solid-gate', ['GateApp', 'SolidGateApp']],
   ['story-solid-open-order', ['stackPriorityApp', 'SolidOpenOrderApp']],
   ['story-solid-non-modal-options', ['NonModalOptionsApp']],
   ['story-solid-reconcile', ['ReconcileApp']],
@@ -152,6 +154,7 @@ const VANILLA_CARDS: ReadonlyArray<readonly [key: string, exportName: string]> =
   ['story-vanilla-no-host', 'VanillaNoHostHarness'],
   ['story-vanilla-destroy', 'VanillaDestroyHarness'],
   ['story-vanilla-open-request', 'VanillaOpenRequestHarness'],
+  ['story-vanilla-gate', 'VanillaGateHarness'],
   ['story-vanilla-dismiss-request', 'VanillaDismissRequestHarness'],
   ['story-vanilla-shadow-root', 'VanillaShadowRootHarness'],
   ['story-vanilla-restore-on-unbind', 'VanillaRestoreOnUnbindHarness'],
@@ -201,6 +204,7 @@ export const stories: Record<string, string> = {
   'story-use-dialog-dismiss-while-preparing-disabled': storyUseDialogDismissWhilePreparingSrc,
   'story-use-dialog-dismiss-while-preparing-default': storyUseDialogDismissWhilePreparingSrc,
   'story-use-dialog-reopen-settles': storyUseDialogReopenSettlesSrc,
+  'story-use-dialog-open-gate': storyUseDialogOpenGateSrc,
   'story-use-dialog-stable-identity': storyUseDialogStableIdentitySrc,
   'story-use-dialog-backdrop-hit-test': storyUseDialogBackdropHitTestSrc,
   'story-outlet-paint-timing': storyOutletPaintTimingSrc,
