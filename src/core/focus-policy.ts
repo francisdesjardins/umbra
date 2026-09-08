@@ -128,7 +128,8 @@ export function focusStep(dialog: HTMLDialogElement, forwards: boolean): boolean
   const from = active instanceof HTMLElement ? candidates.indexOf(active) : -1;
 
   // Nothing inside holds it, so there is no step to take from anywhere — the end the caller is
-  // walking towards is the answer.
+  // walking towards is the answer. `fromEnd` is a scan origin, not this function's direction, which
+  // is why the two spellings meet at a `!` here rather than being one word.
   if (from === -1) {
     return focusFirstAvailable(dialog, !forwards);
   }

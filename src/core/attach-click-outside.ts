@@ -57,11 +57,11 @@ export function attachClickOutside(
 
     // Read here rather than at the press: the gesture is judged when it finishes, so an action
     // that started under it still suppresses the dismissal.
-    const snap = store.getSnapshot();
+    const snapshot = store.getSnapshot();
     if (
       !canDismiss({
-        phase: snap.phase,
-        isPreparing: snap.isPreparing,
+        phase: snapshot.phase,
+        isPreparing: snapshot.isPreparing,
         dismissWhilePreparing,
         hasRunningAction: engine.aggregated().hasRunningAction,
       })

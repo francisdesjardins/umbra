@@ -91,7 +91,7 @@ export type StyleWrite = {
   /**
    * What was applied last time, so its leftovers can be removed. Omit on first application.
    *
-   * The chaining idiom is what this is for: `applied = applyStyle(el, { next, previous: applied })`
+   * The chaining idiom is what this is for: `applied = applyStyle(element, { next, previous: applied })`
    * keeps the bookkeeping to one expression, which is why {@link applyStyle} returns `next`.
    */
   readonly previous?: DialogStyle | undefined;

@@ -118,12 +118,16 @@ export function useDialog<TData = void, TReason extends string = string>(
   // hydration's first pass read the identical freshly-closed dialog. Required rather than optional —
   // `useSyncExternalStore` throws without a third argument, taking the server render of any page
   // that mounts a dialog down with it.
-  const snap = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
-  const actionSnap = useSyncExternalStore(engine.subscribe, engine.getSnapshot, engine.getSnapshot);
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const actionSnapshot = useSyncExternalStore(
+    engine.subscribe,
+    engine.getSnapshot,
+    engine.getSnapshot
+  );
 
   // The only place an action is ever declared; built per render, over that render's snapshot.
   const action = createActionFactory(engine, () => {
-    return actionSnap;
+    return actionSnapshot;
   });
 
   // Annotated, not inferred: un-annotated, the fallback and the caller's `DialogAnimation` stay a
@@ -144,8 +148,8 @@ export function useDialog<TData = void, TReason extends string = string>(
   useEffect(() => {
     director.sync(
       lifecyclePass({
-        phase: snap.phase,
-        isPreparing: snap.isPreparing,
+        phase: snapshot.phase,
+        isPreparing: snapshot.isPreparing,
         options,
         variant: resolved,
         timing: { primaryProperty, exitDuration },
@@ -234,12 +238,12 @@ export function useDialog<TData = void, TReason extends string = string>(
   const renderContent = () => {
     return runDeclarationWindow(engine, () => {
       return render({
-        isPreparing: snap.isPreparing,
-        phase: snap.phase,
+        isPreparing: snapshot.isPreparing,
+        phase: snapshot.phase,
         handle,
         action,
-        hasRunningAction: actionSnap.hasRunningAction,
-        error: actionSnap.error,
+        hasRunningAction: actionSnapshot.hasRunningAction,
+        error: actionSnapshot.error,
       });
     });
   };
@@ -251,7 +255,7 @@ export function useDialog<TData = void, TReason extends string = string>(
       {...dialogAttributes({
         dialogId,
         nonModal: isNonModal,
-        isPreparing: snap.isPreparing,
+        isPreparing: snapshot.isPreparing,
         ariaLabel,
         ariaLabelledBy,
         ariaDescribedBy,
@@ -259,10 +263,14 @@ export function useDialog<TData = void, TReason extends string = string>(
       })}
       onClick={handleBackdropClick}
       onPointerDown={backdropPress.press}
-      style={getDialogAnimationStyles(snap.phase, { animation, customStyle: styleProp, placement })}
+      style={getDialogAnimationStyles(snapshot.phase, {
+        animation,
+        customStyle: styleProp,
+        placement,
+      })}
     >
       {/* Content wrapper — see `DIALOG_CONTENT_STYLE`, which both bindings read. */}
-      <div style={DIALOG_CONTENT_STYLE}>{snap.phase !== 'closed' && renderContent()}</div>
+      <div style={DIALOG_CONTENT_STYLE}>{snapshot.phase !== 'closed' && renderContent()}</div>
     </dialog>
   );
 
@@ -323,15 +331,15 @@ export function useDialog<TData = void, TReason extends string = string>(
 
   return {
     open,
-    isVisible: snap.phase !== 'closed',
-    phase: snap.phase,
-    isPreparing: snap.isPreparing,
+    isVisible: snapshot.phase !== 'closed',
+    phase: snapshot.phase,
+    isPreparing: snapshot.isPreparing,
     Dialog,
     openAndWait,
     handle,
     action,
-    hasRunningAction: actionSnap.hasRunningAction,
-    error: actionSnap.error,
+    hasRunningAction: actionSnapshot.hasRunningAction,
+    error: actionSnapshot.error,
     dialogManager: manager,
   };
 }

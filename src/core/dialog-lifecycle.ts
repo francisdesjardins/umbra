@@ -20,7 +20,7 @@ const transitionsDisabledCache = new WeakMap<HTMLDialogElement, boolean>();
 
 /**
  * Measure whether transitions are effectively disabled (e.g. `transition: none !important`) and
- * cache it for {@link checkTransitionsDisabled}. Called once per open, so the reflow it costs is
+ * cache it for {@link areTransitionsDisabled}. Called once per open, so the reflow it costs is
  * paid outside the closing sequence.
  */
 export function refreshTransitionsDisabled(dialog: HTMLDialogElement): boolean {
@@ -35,7 +35,7 @@ export function refreshTransitionsDisabled(dialog: HTMLDialogElement): boolean {
  * most recent {@link refreshTransitionsDisabled}. Measures on the spot if the element has never
  * been refreshed, so a caller reaching here first is still correct — only slower.
  */
-export function checkTransitionsDisabled(dialog: HTMLDialogElement): boolean {
+export function areTransitionsDisabled(dialog: HTMLDialogElement): boolean {
   return transitionsDisabledCache.get(dialog) ?? refreshTransitionsDisabled(dialog);
 }
 
@@ -471,7 +471,7 @@ export function runCloseSequence(
     return undefined;
   }
 
-  if (checkTransitionsDisabled(dialog)) {
+  if (areTransitionsDisabled(dialog)) {
     finishOnce('no-transition');
     return undefined;
   }

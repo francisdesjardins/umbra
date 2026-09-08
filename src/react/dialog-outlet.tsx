@@ -118,7 +118,7 @@ export function DialogOutlet({ children }: { readonly children: ReactNode }) {
   });
 
   // Server-readable for the reason on `useDialog`: the outlet's store is built above and holds no DOM.
-  const snap = useSyncExternalStore(
+  const snapshot = useSyncExternalStore(
     init.store.subscribe,
     init.store.getSnapshot,
     init.store.getSnapshot
@@ -127,7 +127,7 @@ export function DialogOutlet({ children }: { readonly children: ReactNode }) {
   return (
     <DialogOutletContext value={init.ctx}>
       {children}
-      {Array.from(snap.dialogs.entries(), ([id, node]) => {
+      {Array.from(snapshot.dialogs.entries(), ([id, node]) => {
         return <Fragment key={id}>{node}</Fragment>;
       })}
     </DialogOutletContext>

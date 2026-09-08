@@ -83,7 +83,7 @@ export function useDialog<TData = void, TReason extends string = string>(
   });
 
   const snapshot = fromStore(store);
-  const actionState = fromStore(engine);
+  const actionSnapshot = fromStore(engine);
 
   // A render effect, so the element is stamped at creation, before anything can insert or show it.
   // `aria-busy` is why it is an effect at all — the rest of the table is fixed.
@@ -129,7 +129,7 @@ export function useDialog<TData = void, TReason extends string = string>(
     placed = host;
   }
 
-  const baseAction = createActionFactory(engine, actionState);
+  const baseAction = createActionFactory(engine, actionSnapshot);
 
   // The core factory plus the expiry a fine-grained renderer owes it: the owner is whatever scope
   // drew the button, so one that disappears takes its declaration with it. `typeof baseAction`
@@ -152,10 +152,10 @@ export function useDialog<TData = void, TReason extends string = string>(
     return snapshot().isPreparing;
   };
   const hasRunningAction = () => {
-    return actionState().hasRunningAction;
+    return actionSnapshot().hasRunningAction;
   };
   const currentError = () => {
-    return actionState().error;
+    return actionSnapshot().error;
   };
   const isVisible = createMemo(() => {
     return snapshot().phase !== 'closed';

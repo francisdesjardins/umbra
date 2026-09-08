@@ -3,7 +3,7 @@ import { createActionEngine, type ActionEngineSnapshot } from '../../actions/act
 import { createActionFactory } from '../action-factory.js';
 import type { ActionClickEvent } from '../../actions/types.js';
 
-// The `action` factory — one function, two bindings, no DOM. `readState` is the design under test:
+// The `action` factory — one function, two bindings, no DOM. `getSnapshot` is the design under test:
 // engine state read through a binding-supplied callback (React's store value, Solid's signal),
 // which is what makes the three live props getters. Assertable with neither framework present.
 
@@ -75,7 +75,7 @@ test.describe('the props an action returns', () => {
 
 test.describe('the live props', () => {
   test('read the snapshot the binding supplies, not the engine directly', () => {
-    // Why `readState` is a parameter: swap its return and the *same* props object reports anew.
+    // Why `getSnapshot` is a parameter: swap its return and the *same* props object reports anew.
     const engine = createActionEngine<void>('live');
     let snapshot: ActionEngineSnapshot = idle;
     const action = createActionFactory(engine, () => {
@@ -169,7 +169,7 @@ test.describe('isRunning', () => {
   });
 
   test('tracks a real run, not just a swapped snapshot', async () => {
-    // The others drive `readState` by hand; this runs a real handler, so the writes are real.
+    // The others drive `getSnapshot` by hand; this runs a real handler, so the writes are real.
     const engine = createActionEngine<void, 'ok'>('real-run');
     const action = createActionFactory(engine, engine.getSnapshot);
     const gate = deferred();

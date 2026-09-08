@@ -2062,7 +2062,7 @@ export const WCAG_ROWS: readonly WcagRow[] = [
     name: 'Animation from Interactions',
     level: 'AAA',
     state: 'no-by-design',
-    why: 'Animations are defaults the caller replaces, and the off-switch is one CSS rule — `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — which the close path *measures* and short-circuits on (`checkTransitionsDisabled`, re-read on the `closing` pass so the verdict is the **exit**’s and not the entrance’s), so a reduced-motion dialog closes immediately instead of waiting for a `transitionend` that never comes. The playground ships that rule; a consumer writes it once. AAA rather than AA, listed because honouring it costs one declaration.',
+    why: 'Animations are defaults the caller replaces, and the off-switch is one CSS rule — `@media (prefers-reduced-motion: reduce) { dialog { transition: none !important } }` — which the close path *measures* and short-circuits on (`areTransitionsDisabled`, re-read on the `closing` pass so the verdict is the **exit**’s and not the entrance’s), so a reduced-motion dialog closes immediately instead of waiting for a `transitionend` that never comes. The playground ships that rule; a consumer writes it once. AAA rather than AA, listed because honouring it costs one declaration.',
   },
   {
     criterion: '2.4.3',

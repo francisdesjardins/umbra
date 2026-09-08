@@ -11,6 +11,36 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-08
 
+### Changed — one act, one word, in the core's own vocabulary
+
+An audit of the internal names, against the rule `src/CLAUDE.md` already states. Five were one act
+under two words, and the strongest was a collision inside a single file: `createActionFactory` took
+a parameter called `readState` that every call site passes `getSnapshot` to, while `ActionState` in
+the same module means one action's idle/running/error. `state` cannot be both the whole snapshot and
+one action's, so the parameter is `getSnapshot` — the word the store contract has always used. Its
+doc keeps the sentence explaining why it is a parameter at all: React passes a
+`useSyncExternalStore` value and Solid a signal accessor, so it is not simply `engine.getSnapshot`.
+
+With it: `opts` → `options` (seven uses in the one function that abbreviated it), `snap` →
+`snapshot` (the core was split against itself, and React spelled it the short way throughout),
+`def` → `hotkey`, and an `el` in a public `@example` that illustrated a parameter named
+`element`. Solid's `actionState` and React's `actionSnap` are both `actionSnapshot` now — the same
+collision as `readState`, reached by the same argument, and `binding-parity.test.ts` diffs export
+names rather than locals so nothing would have caught it.
+
+`checkTransitionsDisabled` → `areTransitionsDisabled`. It is a predicate, and the house style for
+those is `is*` / `should*` / `can*` / `owns*` / `names*`; `check` was the only one of its kind.
+`are*` is the plural of `is`, not a sixth prefix. `refreshTransitionsDisabled` beside it keeps its
+name — a lone verb naming its act, like `stampZIndex` or `settleOpeningFocus`.
+
+Two left alone on purpose, so the next audit does not re-open them. `s` in `dialog-store.ts`'s
+updaters matches the documented example in `store/create-store.ts`, and diverging would make
+`store/CLAUDE.md` wrong. And `fromEnd` is **not** `forwards`: one names where a scan starts, the
+other which way a step goes, which is the vocabulary table's row — the `!forwards` between them
+reads like one axis under two spellings, but unifying them only moves the `!` to
+`attachFocusContainment`, where `event.shiftKey` reads as an end rather than a direction. That
+sentence is now the comment at the call site.
+
 ### Changed — the component suite moved to Playwright's stories model
 
 `@playwright/experimental-ct-react` is frozen. Playwright announced it in 1.62 — "the experimental

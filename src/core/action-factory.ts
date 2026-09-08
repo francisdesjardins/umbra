@@ -35,34 +35,34 @@ type DeclareAction<TData, TReason extends string> = (
  * spreads it inside a tracking scope, so reading `disabled` subscribes that attribute to the engine.
  *
  * @param engine - The dialog's action engine; `declare` and `run` go here.
- * @param readState - The engine's state *as the binding sees it*: React's `useSyncExternalStore`
+ * @param getSnapshot - The engine's state *as the binding sees it*: React's `useSyncExternalStore`
  *   value, Solid a signal accessor — the reason this is a parameter rather than a call inside.
  *
  * @internal Not part of the public API.
  */
 export function createActionFactory<TData, TReason extends string = string>(
   engine: ActionEngine<TData, TReason>,
-  readState: () => ActionEngineSnapshot
+  getSnapshot: () => ActionEngineSnapshot
 ): ActionFactory<TData, TReason> {
   /**
    * One action's state, as the binding currently sees it. Hoisted out of the factory because
    * `isRunning` asks the same question from outside any single action's props.
    */
   const stateOf = (reason: string): ActionState => {
-    return readState().states[reason] ?? IDLE;
+    return getSnapshot().states[reason] ?? IDLE;
   };
 
   const declare: DeclareAction<TData, TReason> = (reason, handlerOrOptions) => {
-    const opts = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
-    const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : opts?.onAction;
+    const options = typeof handlerOrOptions === 'function' ? undefined : handlerOrOptions;
+    const handler = typeof handlerOrOptions === 'function' ? handlerOrOptions : options?.onAction;
     const effective = handler ?? autoClose;
-    const onClickBefore = opts?.onClick;
-    const hotkey = opts?.hotkey;
+    const onClickBefore = options?.onClick;
+    const hotkey = options?.hotkey;
 
     engine.declare(reason, hotkey);
 
     return {
-      type: opts?.type ?? 'button',
+      type: options?.type ?? 'button',
       // Not a getter: the reason is the action's identity and cannot change for a given button, and
       // the focus restore has to be able to find it again — see `ActionButtonProps`.
       'data-action-reason': reason,
@@ -81,17 +81,17 @@ export function createActionFactory<TData, TReason extends string = string>(
       // Includes *this* action: a running button that stays clickable re-enters its own handler
       // on a double click, which for a submit means submitting twice.
       get disabled() {
-        return readState().hasRunningAction || (opts?.disabled ?? false);
+        return getSnapshot().hasRunningAction || (options?.disabled ?? false);
       },
       get 'aria-busy'() {
         return stateOf(reason).isRunning;
       },
       ...(hotkey !== undefined && { 'aria-keyshortcuts': formatAriaKeyshortcuts(hotkey) }),
-      ...(opts?.focusOnOpen === true && { 'data-focus-on-open': true }),
+      ...(options?.focusOnOpen === true && { 'data-focus-on-open': true }),
     };
   };
 
-  // Assigned rather than declared alongside the props: `isRunning` reads the same `readState`
+  // Assigned rather than declared alongside the props: `isRunning` reads the same `getSnapshot`
   // the live props do, so a binding that tracks one tracks the other — React re-renders on the
   // snapshot it already subscribes to, Solid subscribes the one expression that called this.
   // Neither binding contributes a line.

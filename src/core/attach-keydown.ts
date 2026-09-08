@@ -22,10 +22,10 @@ const log = createLogger('dialog:keydown');
  * inside this one lives in this subtree, and clicking its button from here would fire the action
  * of a dialog that is not even in front.
  */
-function clickHotkeyButton(dialog: HTMLElement, def: HotkeyDef): void {
+function clickHotkeyButton(dialog: HTMLElement, hotkey: HotkeyDef): void {
   const button = queryOwn(
     dialog,
-    `[aria-keyshortcuts="${CSS.escape(formatAriaKeyshortcuts(def))}"]`
+    `[aria-keyshortcuts="${CSS.escape(formatAriaKeyshortcuts(hotkey))}"]`
   );
   button?.focus();
   button?.click();
