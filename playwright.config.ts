@@ -8,7 +8,19 @@ import { defineConfig, devices } from '@playwright/test';
  * Compiler at `target: '19'` and the `umbra` alias, so the bundle a test exercises is the one the
  * demo runs rather than a second pipeline configured to match.
  */
-const GALLERY_URL = 'http://localhost:3000/stories?gallery=1';
+const withCoverage = process.env['CT_COVERAGE'] === '1';
+
+/**
+ * A coverage run gets its **own** server, on its own port.
+ *
+ * The instrumenter is a plugin in the playground's Vite, switched on by `CT_COVERAGE=1` — so a dev
+ * server already up on 3000 was started without it, and reusing that one produces a report with no
+ * counters in it at all rather than a low number. That is the quiet failure
+ * `scripts/ct-coverage-report.mjs` exists to name, and this is the arrangement that stops it: a
+ * separate port, never reused, so the two servers cannot be mistaken for each other.
+ */
+const PORT = withCoverage ? 3101 : 3000;
+const GALLERY_URL = `http://localhost:${String(PORT)}/stories?gallery=1`;
 
 /**
  * What one component test may take, and it is a **contention** budget rather than a behaviour one.
@@ -107,10 +119,11 @@ export default defineConfig({
     // has always had, and it costs about a second across the whole project.
   },
   // Reused when one is already up — the dev server on :3000 is usually the one being worked in.
+  // Never for coverage: see `PORT`.
   webServer: {
-    command: 'yarn dev',
+    command: withCoverage ? `yarn dev --port ${String(PORT)} --strictPort` : 'yarn dev',
     url: GALLERY_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI && !withCoverage,
     timeout: 120 * 1000,
   },
   projects: [
