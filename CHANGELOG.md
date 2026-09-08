@@ -11,6 +11,17 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-08
 
+### Fixed — a unit-only run started a dev server it never opened
+
+The stories model put the playground behind a `webServer`, and Playwright's is config-level rather
+than per project: `yarn test:unit` waited for the gallery to answer before running 652 tests that
+open no page. The wait itself is minor — 1.9s measured cold to first response, and nothing here where
+:3000 is reused — and it is not the reason. A unit run that a broken playground can fail is a unit
+run reporting on something it does not test, and every shard in CI starts that server from cold. The
+projects are named on the command line by every script that selects one, so the config reads its own
+`--project` flags and serves nothing when the selection is `unit` alone — the table's "no browser"
+is true of the run again, not only of the tests.
+
 ### Changed — one act, one word, in the core's own vocabulary
 
 An audit of the internal names, against the rule `src/CLAUDE.md` already states. Five were one act

@@ -23,6 +23,30 @@ const PORT = withCoverage ? 3101 : 3000;
 const GALLERY_URL = `http://localhost:${String(PORT)}/stories?gallery=1`;
 
 /**
+ * Whether this run needs the playground served at all, and only the browser projects do.
+ *
+ * `webServer` is config-level rather than per project, so a unit-only run would start Vite and wait
+ * for the gallery before running tests that never open a page. The wait is small — **1.9s** measured
+ * cold to first response, and nothing at all here, where :3000 is up to be reused — so the reason is
+ * the other one: a unit run that a broken playground can fail is a unit run reporting on something it
+ * does not test. Every script that selects a project names it on the command line, so a selection of
+ * `unit` alone is the one case that can skip the server; no selection, or `--ui` where the reader
+ * picks a project later, serves.
+ */
+const selectedProjects = process.argv.flatMap((arg, index) => {
+  if (arg.startsWith('--project=')) {
+    return [arg.slice('--project='.length)];
+  }
+  return arg === '--project' ? [process.argv[index + 1] ?? ''] : [];
+});
+const needsServer =
+  selectedProjects.length === 0 ||
+  process.argv.includes('--ui') ||
+  selectedProjects.some((project) => {
+    return project !== 'unit';
+  });
+
+/**
  * What one component test may take, and it is a **contention** budget rather than a behaviour one.
  *
  * A browser test locally shares the machine with `cpus/2` siblings, and Playwright's actionability
@@ -119,13 +143,17 @@ export default defineConfig({
     // has always had, and it costs about a second across the whole project.
   },
   // Reused when one is already up — the dev server on :3000 is usually the one being worked in.
-  // Never for coverage: see `PORT`.
-  webServer: {
-    command: withCoverage ? `yarn dev --port ${String(PORT)} --strictPort` : 'yarn dev',
-    url: GALLERY_URL,
-    reuseExistingServer: !process.env.CI && !withCoverage,
-    timeout: 120 * 1000,
-  },
+  // Never for coverage: see `PORT`. Absent entirely for a unit-only run: see `needsServer`.
+  ...(needsServer
+    ? {
+        webServer: {
+          command: withCoverage ? `yarn dev --port ${String(PORT)} --strictPort` : 'yarn dev',
+          url: GALLERY_URL,
+          reuseExistingServer: !process.env.CI && !withCoverage,
+          timeout: 120 * 1000,
+        },
+      }
+    : {}),
   projects: [
     {
       name: 'unit',
