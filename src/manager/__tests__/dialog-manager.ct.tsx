@@ -1,26 +1,8 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  DialogVariantHarness,
-  DialogVariantLookupHarness,
-  DomEventHarness,
-  EventSubscribeHarness,
-  ImperativeHarness,
-  LookupCollectionHarness,
-  LookupFindHarness,
-  LookupForegroundHarness,
-  LookupUnregisteredHarness,
-  MultiDialogHarness,
-  NoProviderHarness,
-  ProviderIsolationHarness,
-  ScrollLockHarness,
-  ScrollLockBothOpenHarness,
-  ScrollLockTwoManagersHarness,
-  UnregisteredNoOpHarness,
-} from './dialog-manager.story';
 
 test.describe('dialogManager', () => {
   test('open() opens a registered dialog', async ({ mount, page }) => {
-    await mount(<ImperativeHarness />);
+    await mount('ImperativeHarness');
     await expect(page.getByTestId('has-open')).toHaveText('no');
     await page.getByRole('button', { name: 'Open via Manager' }).click();
     await expect(page.getByTestId('dialog-dm-imperative')).toBeVisible();
@@ -28,7 +10,7 @@ test.describe('dialogManager', () => {
   });
 
   test('close() closes an open dialog with controller reason', async ({ mount, page }) => {
-    await mount(<ImperativeHarness />);
+    await mount('ImperativeHarness');
     await page.getByRole('button', { name: 'Open via Manager' }).click();
     await expect(page.getByTestId('dialog-dm-imperative')).toBeVisible();
     await page.getByRole('button', { name: 'Close', exact: true }).click();
@@ -37,7 +19,7 @@ test.describe('dialogManager', () => {
   });
 
   test('close() with explicit reason records the given reason', async ({ mount, page }) => {
-    await mount(<ImperativeHarness />);
+    await mount('ImperativeHarness');
     await page.getByRole('button', { name: 'Open via Manager' }).click();
     await page.getByRole('button', { name: 'Force Close via Manager' }).click();
     await expect(page.getByTestId('has-open')).toHaveText('no');
@@ -45,7 +27,7 @@ test.describe('dialogManager', () => {
   });
 
   test('hasAnyOpen updates reactively via useDialogManager', async ({ mount, page }) => {
-    await mount(<ImperativeHarness />);
+    await mount('ImperativeHarness');
     await expect(page.getByTestId('has-open')).toHaveText('no');
     await page.getByRole('button', { name: 'Open via Manager' }).click();
     await expect(page.getByTestId('has-open')).toHaveText('yes');
@@ -54,7 +36,7 @@ test.describe('dialogManager', () => {
   });
 
   test('dialog can be opened and closed multiple times imperatively', async ({ mount, page }) => {
-    await mount(<ImperativeHarness />);
+    await mount('ImperativeHarness');
     await page.getByRole('button', { name: 'Open via Manager' }).click();
     await page.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByTestId('has-open')).toHaveText('no');
@@ -66,7 +48,7 @@ test.describe('dialogManager', () => {
   });
 
   test('subscribe receives open then close events in order', async ({ mount, page }) => {
-    await mount(<EventSubscribeHarness />);
+    await mount('EventSubscribeHarness');
     await expect(page.getByTestId('events')).toHaveText('');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
@@ -74,14 +56,14 @@ test.describe('dialogManager', () => {
   });
 
   test('subscribe receives correct close reason in event', async ({ mount, page }) => {
-    await mount(<EventSubscribeHarness />);
+    await mount('EventSubscribeHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('events')).toContainText('close:dm-events');
   });
 
   test('openCount and foreground update as dialogs open and close', async ({ mount, page }) => {
-    await mount(<MultiDialogHarness />);
+    await mount('MultiDialogHarness');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
     await expect(page.getByTestId('top-dialog')).toHaveText('');
 
@@ -104,7 +86,7 @@ test.describe('dialogManager', () => {
   });
 
   test('stackOrder reflects open order', async ({ mount, page }) => {
-    await mount(<MultiDialogHarness />);
+    await mount('MultiDialogHarness');
 
     await page.getByRole('button', { name: 'Open First' }).click();
     await expect(page.getByTestId('stack-order')).toHaveText('dm-first');
@@ -123,7 +105,7 @@ test.describe('dialogManager', () => {
     mount,
     page,
   }) => {
-    await mount(<DomEventHarness />);
+    await mount('DomEventHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev:dialog');
   });
@@ -132,7 +114,7 @@ test.describe('dialogManager', () => {
     mount,
     page,
   }) => {
-    await mount(<DomEventHarness />);
+    await mount('DomEventHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await page.getByRole('button', { name: 'Close Dialog' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('close:dom-ev:dialog:ok');
@@ -142,7 +124,7 @@ test.describe('dialogManager', () => {
     mount,
     page,
   }) => {
-    await mount(<DomEventHarness />);
+    await mount('DomEventHarness');
     await page.getByRole('button', { name: 'Open Slide' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-slide:slide');
     await page.getByRole('button', { name: 'Close Slide' }).click();
@@ -153,7 +135,7 @@ test.describe('dialogManager', () => {
     mount,
     page,
   }) => {
-    await mount(<DomEventHarness />);
+    await mount('DomEventHarness');
     await page.getByRole('button', { name: 'Open Message' }).click();
     await expect(page.getByTestId('dom-events')).toContainText('open:dom-ev-message:message');
     await page.getByRole('button', { name: 'Close Message' }).click();
@@ -161,7 +143,7 @@ test.describe('dialogManager', () => {
   });
 
   test('open and close on an unregistered id are silent no-ops', async ({ mount, page }) => {
-    await mount(<UnregisteredNoOpHarness />);
+    await mount('UnregisteredNoOpHarness');
     await page.getByRole('button', { name: 'Try Unregistered' }).click();
     await expect(page.getByTestId('error')).toHaveText('');
     await expect(page.locator('dialog')).toHaveCount(0);
@@ -170,7 +152,7 @@ test.describe('dialogManager', () => {
 
 test.describe('DialogManagerProvider', () => {
   test('dialogs in separate providers are isolated from each other', async ({ mount, page }) => {
-    await mount(<ProviderIsolationHarness />);
+    await mount('ProviderIsolationHarness');
 
     await expect(page.getByTestId('count-A')).toHaveText('0');
     await expect(page.getByTestId('count-B')).toHaveText('0');
@@ -188,7 +170,7 @@ test.describe('DialogManagerProvider', () => {
   });
 
   test('opening in scope B does not affect scope A', async ({ mount, page }) => {
-    await mount(<ProviderIsolationHarness />);
+    await mount('ProviderIsolationHarness');
 
     await page.getByRole('button', { name: 'Open B' }).click();
     await expect(page.getByTestId('count-B')).toHaveText('1');
@@ -198,7 +180,7 @@ test.describe('DialogManagerProvider', () => {
   });
 
   test('works without a provider (static singleton fallback)', async ({ mount, page }) => {
-    await mount(<NoProviderHarness />);
+    await mount('NoProviderHarness');
     await expect(page.getByTestId('has-open')).toHaveText('no');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
@@ -213,7 +195,7 @@ test.describe('DialogManagerProvider', () => {
 
 test.describe('lookup', () => {
   test('lookup(id) returns DialogInfo for closed registered dialogs', async ({ mount, page }) => {
-    await mount(<LookupFindHarness />);
+    await mount('LookupFindHarness');
 
     await page.getByRole('button', { name: 'Query Closed' }).click();
     await expect(page.getByTestId('result')).toContainText('a-exists:true');
@@ -227,7 +209,7 @@ test.describe('lookup', () => {
     mount,
     page,
   }) => {
-    await mount(<LookupFindHarness />);
+    await mount('LookupFindHarness');
 
     // Open A, then query from inside it
     await page.getByRole('button', { name: 'Open A' }).click();
@@ -245,7 +227,7 @@ test.describe('lookup', () => {
   });
 
   test('lookup(id) returns null-object default for unregistered ids', async ({ mount, page }) => {
-    await mount(<LookupUnregisteredHarness />);
+    await mount('LookupUnregisteredHarness');
 
     await page.getByRole('button', { name: 'Query Unknown' }).click();
     await expect(page.getByTestId('result')).toContainText('exists:false');
@@ -257,7 +239,7 @@ test.describe('lookup', () => {
   });
 
   test('lookup().getOpen/getClosed/counts reflect registry state', async ({ mount, page }) => {
-    await mount(<LookupCollectionHarness />);
+    await mount('LookupCollectionHarness');
 
     // Open A, then open B from inside A
     await page.getByRole('button', { name: 'Open A' }).click();
@@ -274,7 +256,7 @@ test.describe('lookup', () => {
     mount,
     page,
   }) => {
-    await mount(<LookupForegroundHarness />);
+    await mount('LookupForegroundHarness');
 
     await page.getByRole('button', { name: 'Open A' }).click();
 
@@ -300,7 +282,7 @@ test.describe('lookup', () => {
 
 test.describe('modal / non-modal', () => {
   test('the dialog fields update when a modal dialog opens and closes', async ({ mount, page }) => {
-    await mount(<DialogVariantHarness />);
+    await mount('DialogVariantHarness');
     await expect(page.getByTestId('has-dialog')).toHaveText('no');
     await expect(page.getByTestId('dialog-count')).toHaveText('0');
 
@@ -319,7 +301,7 @@ test.describe('modal / non-modal', () => {
     mount,
     page,
   }) => {
-    await mount(<DialogVariantHarness />);
+    await mount('DialogVariantHarness');
     await expect(page.getByTestId('has-non-modal')).toHaveText('no');
 
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
@@ -336,7 +318,7 @@ test.describe('modal / non-modal', () => {
   });
 
   test('a dialog and a non-modal dialog track independently', async ({ mount, page }) => {
-    await mount(<DialogVariantHarness />);
+    await mount('DialogVariantHarness');
 
     // Open the non-modal first — it is clickable behind the modal one
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
@@ -362,7 +344,7 @@ test.describe('modal / non-modal', () => {
   });
 
   test('getOpen() filters by variant', async ({ mount, page }) => {
-    await mount(<DialogVariantLookupHarness />);
+    await mount('DialogVariantLookupHarness');
 
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await page.getByRole('button', { name: 'Open Dialog' }).click();
@@ -382,7 +364,7 @@ test.describe('modal / non-modal', () => {
 // A bare `overflow: hidden` removes a classic scrollbar, widening the viewport by ~15px.
 test.describe('dialogManager — scroll lock', () => {
   test('opening a dialog locks scrolling without shifting the layout', async ({ mount, page }) => {
-    await mount(<ScrollLockHarness />);
+    await mount('ScrollLockHarness');
 
     const marker = page.getByTestId('right-marker');
     const before = await marker.boundingBox();
@@ -438,7 +420,7 @@ test.describe('dialogManager — scroll lock', () => {
     mount,
     page,
   }) => {
-    await mount(<ScrollLockHarness />);
+    await mount('ScrollLockHarness');
     const fixedMarker = page.getByTestId('fixed-marker');
     const before = await fixedMarker.boundingBox();
 
@@ -453,7 +435,7 @@ test.describe('dialogManager — scroll lock', () => {
   });
 
   test('a non-modal dialog never locks scrolling', async ({ mount, page }) => {
-    await mount(<ScrollLockHarness />);
+    await mount('ScrollLockHarness');
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('dialog-scroll-lock-non-modal')).toBeVisible();
 
@@ -469,7 +451,7 @@ test.describe('dialogManager — scroll lock', () => {
     mount,
     page,
   }) => {
-    await mount(<ScrollLockHarness />);
+    await mount('ScrollLockHarness');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-scroll-lock')).toBeVisible();
@@ -496,7 +478,7 @@ test.describe('dialogManager — scroll lock', () => {
   });
 
   test('a second manager does not release a lock it never took', async ({ mount, page }) => {
-    await mount(<ScrollLockTwoManagersHarness />);
+    await mount('ScrollLockTwoManagersHarness');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-two-managers')).toBeVisible();
@@ -515,7 +497,7 @@ test.describe('dialogManager — scroll lock', () => {
   }) => {
     // Why the owners are a `Set`: with both managers holding the lock, a shared boolean would let
     // the first to close release it, scrolling the body behind a dialog still on screen.
-    await mount(<ScrollLockBothOpenHarness />);
+    await mount('ScrollLockBothOpenHarness');
 
     await page.getByTestId('open-outer').click();
     await expect(page.getByTestId('dialog-both-open-outer')).toBeVisible();

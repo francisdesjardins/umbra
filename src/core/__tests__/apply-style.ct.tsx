@@ -1,9 +1,4 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  AsymmetricKeyframesHarness,
-  NameTranslationHarness,
-  UndefinedClearsHarness,
-} from './apply-style.story';
 
 // `applyStyle` — the one way the library writes a style object onto an element, and a root export
 // userland may use. The clearing half is on trial: neither shipped animation exercises it (both
@@ -11,7 +6,7 @@ import {
 
 test.describe('applyStyle', () => {
   test('clears a property the next style no longer carries', async ({ mount, page }) => {
-    await mount(<AsymmetricKeyframesHarness />);
+    await mount('AsymmetricKeyframesHarness');
     const target = page.getByTestId('target-el');
 
     await expect(target).toHaveCSS('opacity', '0');
@@ -25,7 +20,7 @@ test.describe('applyStyle', () => {
   });
 
   test('an explicit undefined removes rather than writing "undefined"', async ({ mount, page }) => {
-    await mount(<UndefinedClearsHarness />);
+    await mount('UndefinedClearsHarness');
     const target = page.getByTestId('target-el');
 
     await expect(target).toHaveCSS('opacity', '0.25');
@@ -37,7 +32,7 @@ test.describe('applyStyle', () => {
   });
 
   test('translates camelCase, vendor prefixes and custom properties', async ({ mount, page }) => {
-    await mount(<NameTranslationHarness />);
+    await mount('NameTranslationHarness');
     const target = page.getByTestId('target-el');
 
     // A missed translation is silent: `setProperty` ignores an unknown name, the value stays put.

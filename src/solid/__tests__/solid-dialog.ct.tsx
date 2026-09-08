@@ -1,33 +1,6 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
-import {
-  SolidBasicHarness,
-  SolidMoveFocusHarness,
-  SolidRestoreFocusToHarness,
-  SolidClaimlessReclaimHarness,
-  SolidFailedActionHarness,
-  SolidPrepareFailureHarness,
-  SolidShadowRootHarness,
-  SolidBusyHarness,
-  SolidContainedHarness,
-  SolidLabellingHarness,
-  SolidDisposalHarness,
-  SolidLiveStateHarness,
-  SolidOutletDisposalHarness,
-  SolidPortalHarness,
-  SolidPortalHostHarness,
-  SolidDismissRequestHarness,
-  SolidDeclarationHarness,
-  SolidMessageHarness,
-  SolidNonModalOptionsHarness,
-  SolidReconcileHarness,
-  SolidOpenOrderHarness,
-  SolidOutletHarness,
-  SolidSlideHarness,
-  SolidStackPriorityHarness,
-  SolidGateHarness,
-} from './solid-dialog.story';
 
 /**
  * `umbra/solid`, against a real browser and a real `<dialog>` — deliberately the same assertions
@@ -37,13 +10,13 @@ import {
 
 test.describe('useDialog (Solid)', () => {
   test('dialog is initially closed', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-solid-basic')).not.toBeVisible();
   });
 
   test('opens when open() is called, and reaches the top layer', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -54,7 +27,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('an action closes with its own reason', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
     await page.getByRole('button', { name: 'Cancel' }).click();
 
@@ -63,7 +36,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('Escape dismisses', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-basic')).toBeVisible();
 
@@ -75,7 +48,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('an action hotkey runs the same path its button does', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-basic')).toBeVisible();
 
@@ -85,7 +58,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('focusOnOpen claims the opening focus', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByRole('button', { name: 'Confirm' })).toBeFocused();
@@ -93,7 +66,7 @@ test.describe('useDialog (Solid)', () => {
 
   test('the dialog carries its accessible name and its busy state', async ({ mount, page }) => {
     // Solid writes both itself; the name never changes, `aria-busy` does — hence a render effect.
-    await mount(<SolidBusyHarness />);
+    await mount('SolidBusyHarness');
     await page.getByTestId('open-busy').click();
 
     const dialog = page.locator('dialog[data-dialog-id="solid-busy"]');
@@ -110,7 +83,7 @@ test.describe('useDialog (Solid)', () => {
     mount,
     page,
   }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
 
     // Nothing re-renders: captured instead of tracked, this getter would be stuck at open time.
@@ -126,7 +99,7 @@ test.describe('useDialog (Solid)', () => {
     page,
   }) => {
     // Solid re-wraps the core factory, so a forwarding arrow would leave `isRunning` behind.
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('confirm-running')).toHaveText('no');
@@ -142,7 +115,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('isPreparing is live while prepare runs', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open-slow').click();
 
     await expect(page.getByTestId('preparing')).toHaveText('preparing');
@@ -150,7 +123,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('openAndWait resolves with how it closed', async ({ mount, page }) => {
-    await mount(<SolidBasicHarness />);
+    await mount('SolidBasicHarness');
     await page.getByTestId('open-and-wait').click();
     await page.getByRole('button', { name: 'Cancel' }).click();
 
@@ -163,7 +136,7 @@ test.describe('useDialog (Solid)', () => {
   }) => {
     // React expires a declaration by re-running `render`; here nothing re-runs, so the engine
     // learns only from the factory's `onCleanup`. Backdrop dismissal makes that observable.
-    await mount(<SolidDeclarationHarness />);
+    await mount('SolidDeclarationHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-declaration')).toBeVisible();
 
@@ -178,7 +151,7 @@ test.describe('useDialog (Solid)', () => {
   });
 
   test('an outlet renders the dialog and Dialog becomes null', async ({ mount, page }) => {
-    await mount(<SolidOutletHarness />);
+    await mount('SolidOutletHarness');
     await expect(page.getByTestId('dialog-slot')).toHaveText('null');
 
     await page.getByTestId('open').click();
@@ -189,7 +162,7 @@ test.describe('useDialog (Solid)', () => {
 
 test.describe('template hooks (Solid)', () => {
   test('useSlideDialog hands the direction to its render context', async ({ mount, page }) => {
-    await mount(<SolidSlideHarness />);
+    await mount('SolidSlideHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('direction')).toHaveText('right');
@@ -201,7 +174,7 @@ test.describe('template hooks (Solid)', () => {
     page,
   }) => {
     // `mergeProps`, not a spread: a spread freezes every getter, so `isPreparing` never returns.
-    await mount(<SolidSlideHarness />);
+    await mount('SolidSlideHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('slide-preparing')).toHaveText('preparing');
@@ -210,7 +183,7 @@ test.describe('template hooks (Solid)', () => {
 
   test('the manager hooks are live from outside the panel', async ({ mount, page }) => {
     // `useDialogManager` returns getters, `useLookup` an accessor; both have to stay live.
-    await mount(<SolidSlideHarness />);
+    await mount('SolidSlideHarness');
     await expect(page.getByTestId('open-count')).toHaveText('0');
     await expect(page.getByTestId('foreground')).toHaveText('none');
     await expect(page.getByTestId('lookup-type')).toHaveText('none');
@@ -227,7 +200,7 @@ test.describe('template hooks (Solid)', () => {
     mount,
     page,
   }) => {
-    await mount(<SolidMessageHarness />);
+    await mount('SolidMessageHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('dialog-solid-message')).toContainText('Message body');
@@ -243,7 +216,7 @@ test.describe('what Solid does on the way out', () => {
   // paths measured at zero executions before these tests existed.
 
   test('a disposed dialog unregisters itself from the manager', async ({ mount, page }) => {
-    await mount(<SolidDisposalHarness />);
+    await mount('SolidDisposalHarness');
     await expect(page.getByTestId('registration')).toHaveText('registered');
 
     await page.getByTestId('unmount').click();
@@ -253,7 +226,7 @@ test.describe('what Solid does on the way out', () => {
 
   test('disposing it while open closes it and leaves no dialog behind', async ({ mount, page }) => {
     // React's own regression once: a missed teardown dependency orphaned an open top-layer dialog.
-    await mount(<SolidDisposalHarness />);
+    await mount('SolidDisposalHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-disposal')).toBeVisible();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -268,7 +241,7 @@ test.describe('what Solid does on the way out', () => {
 
   test('an outlet forgets a dialog that was disposed inside it', async ({ mount, page }) => {
     // Without `outlet.unregister` the outlet keeps rendering a dialog whose graph is gone.
-    await mount(<SolidOutletDisposalHarness />);
+    await mount('SolidOutletDisposalHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-outlet-disposal')).toBeVisible();
 
@@ -286,7 +259,7 @@ test.describe('umbra/solid — a dismissal this binding must report', () => {
     mount,
     page,
   }) => {
-    await mount(<SolidDismissRequestHarness />);
+    await mount('SolidDismissRequestHarness');
     await page.getByTestId('open').click();
 
     const dialog = page.locator('dialog[data-dialog-id="solid-dismiss-request"]');
@@ -303,7 +276,7 @@ test.describe('umbra/solid — a dismissal this binding must report', () => {
 test.describe('placement (Solid)', () => {
   test('portal: true mounts the dialog itself and leaves Dialog null', async ({ mount, page }) => {
     // The one place the hook surfaces differ: Solid owns the element, mounts it, returns `null`.
-    await mount(<SolidPortalHarness />);
+    await mount('SolidPortalHarness');
     await expect(page.getByTestId('dialog-slot')).toHaveText('null');
 
     await page.getByTestId('open').click();
@@ -320,7 +293,7 @@ test.describe('placement (Solid)', () => {
   // A host the caller names, resolved once at mount — so it has to exist by then. That is the
   // arrangement `PortalTarget` describes, and the one this binding can honour.
   test('a portal host of the caller’s own is where the dialog lands', async ({ mount, page }) => {
-    await mount(<SolidPortalHostHarness />);
+    await mount('SolidPortalHostHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-solid-portal-host')).toBeVisible();
 
@@ -334,7 +307,7 @@ test.describe('placement (Solid)', () => {
 
   test('a contained non-modal panel gets a positioned host of its own', async ({ mount, page }) => {
     // A library-owned wrapper, positioned against — the branch immune to a transformed ancestor.
-    await mount(<SolidContainedHarness />);
+    await mount('SolidContainedHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('dialog-solid-contained')).toBeVisible();
@@ -354,7 +327,7 @@ test.describe('placement (Solid)', () => {
   }) => {
     // The copy for the trigger *outside* the dialog. Getters over signals, so reaching the return
     // and staying live once there are two claims and the type system checks only the first.
-    await mount(<SolidLiveStateHarness />);
+    await mount('SolidLiveStateHarness');
     await expect(page.getByTestId('outer-preparing')).toHaveText('ready');
     await expect(page.getByTestId('outer-running')).toHaveText('idle');
     await expect(page.getByTestId('outer-error')).toHaveText('none');
@@ -399,7 +372,7 @@ test.describe('the labelling diagnostic (Solid)', () => {
   test('reports a reference that points at no element', async ({ mount, page }) => {
     const warnings = warningsOn(page);
 
-    await mount(<SolidLabellingHarness />);
+    await mount('SolidLabellingHarness');
     await page.getByTestId('open-dangling').click();
     await expect(page.locator('dialog[data-dialog-id="solid-dangling"]')).toBeVisible();
     await page.waitForTimeout(300);
@@ -411,7 +384,7 @@ test.describe('the labelling diagnostic (Solid)', () => {
   test('says nothing about a name its prepare had not rendered yet', async ({ mount, page }) => {
     const warnings = warningsOn(page);
 
-    await mount(<SolidLabellingHarness />);
+    await mount('SolidLabellingHarness');
     await page.getByTestId('open-late').click();
     await expect(page.getByTestId('solid-late-pending')).toBeVisible();
     await page.waitForTimeout(300);
@@ -427,7 +400,7 @@ test.describe('the labelling diagnostic (Solid)', () => {
 test.describe('prioritize (Solid)', () => {
   test('without a policy the dialog that opened last is in front', async ({ mount, page }) => {
     // The baseline: a reorder that never happened and one not needed look the same from outside.
-    await mount(<SolidOpenOrderHarness />);
+    await mount('SolidOpenOrderHarness');
     await page.getByTestId('solid-sp-open-warning').click();
     await page.getByTestId('solid-sp-open-panel').click();
     await expect(page.locator('dialog[data-dialog-id="solid-sp-panel"]')).toBeVisible();
@@ -440,7 +413,7 @@ test.describe('prioritize (Solid)', () => {
   });
 
   test('the policy is inherited by this binding too', async ({ mount, page }) => {
-    await mount(<SolidStackPriorityHarness />);
+    await mount('SolidStackPriorityHarness');
     await page.getByTestId('solid-sp-open-warning').click();
     await page.getByTestId('solid-sp-open-panel').click();
     await expect(page.locator('dialog[data-dialog-id="solid-sp-panel"]')).toBeVisible();
@@ -464,7 +437,7 @@ test.describe('prioritize (Solid)', () => {
  */
 test.describe('umbra/solid — the options only React had exercised', () => {
   test('containFocus wraps Tab inside a non-modal panel', async ({ mount, page }) => {
-    await mount(<SolidNonModalOptionsHarness />);
+    await mount('SolidNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -483,7 +456,7 @@ test.describe('umbra/solid — the options only React had exercised', () => {
   });
 
   test('a custom dismissKey closes it, and Escape does not', async ({ mount, page }) => {
-    await mount(<SolidNonModalOptionsHarness />);
+    await mount('SolidNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -499,7 +472,7 @@ test.describe('umbra/solid — the options only React had exercised', () => {
   });
 
   test('dismissOnClickOutside closes it on a click in the page', async ({ mount, page }) => {
-    await mount(<SolidNonModalOptionsHarness />);
+    await mount('SolidNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -513,7 +486,7 @@ test.describe('umbra/solid — the options only React had exercised', () => {
   });
 
   test('a close aborts the prepare it was waiting on', async ({ mount, page }) => {
-    await mount(<SolidNonModalOptionsHarness />);
+    await mount('SolidNonModalOptionsHarness');
     await page.getByTestId('open-held').click();
     await expect(page.getByTestId('prepare-outcome')).toHaveText('running');
 
@@ -525,7 +498,7 @@ test.describe('umbra/solid — the options only React had exercised', () => {
   });
 
   test('onOpenRequest can refuse, and the refusal carries its reason', async ({ mount, page }) => {
-    await mount(<SolidNonModalOptionsHarness />);
+    await mount('SolidNonModalOptionsHarness');
     await page.getByTestId('request').click();
 
     await expect(page.getByTestId('request-outcome')).toHaveText('refused: solid said no');
@@ -541,7 +514,7 @@ test.describe('umbra/solid — focus after a failed action', () => {
     // The discriminating arrangement: the opening focus is `other` (first focusable, no claim), so
     // a restore that falls to its floor is visible as *not* landing on `fail`. Solid replaces the
     // button when the action's state changes, so the coordinator re-queries `[data-action-reason]`.
-    await mount(<SolidFailedActionHarness />);
+    await mount('SolidFailedActionHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('other')).toBeFocused();
@@ -563,7 +536,7 @@ test.describe('umbra/solid — reconcileOpen', () => {
     mount,
     page,
   }) => {
-    await mount(<SolidReconcileHarness />);
+    await mount('SolidReconcileHarness');
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     await page.getByTestId('signal-toggle').check();
@@ -581,7 +554,7 @@ test.describe('umbra/solid — reconcileOpen', () => {
   });
 
   test('lowering the signal during the exit asks for nothing', async ({ mount, page }) => {
-    await mount(<SolidReconcileHarness />);
+    await mount('SolidReconcileHarness');
     await page.getByTestId('signal-toggle').check();
     await expect(page.getByTestId('asked')).toHaveText('open');
 
@@ -597,7 +570,7 @@ test.describe('a dialog inside a shadow root (Solid)', () => {
   test('gets the library backdrop and its opening focus', async ({ mount, page }) => {
     // The whole app in a shadow root, as a widget keeping the host page's CSS out. Two quiet
     // failures: `adoptedStyleSheets` stops at the boundary and `document.activeElement` is the host.
-    await mount(<SolidShadowRootHarness />);
+    await mount('SolidShadowRootHarness');
     await page.getByTestId('open').click();
 
     await expect
@@ -630,7 +603,7 @@ test.describe('a dialog inside a shadow root (Solid)', () => {
  */
 test.describe('a dialog that claimed no opening focus (Solid)', () => {
   test('gets the keyboard back when a panel opens underneath', async ({ mount, page }) => {
-    const component = await mount(<SolidClaimlessReclaimHarness />);
+    const component = await mount('SolidClaimlessReclaimHarness');
     await component.getByTestId('solid-open-both').click();
 
     await expect(page.locator('dialog[data-dialog-id="solid-claimless"]')).toBeVisible();
@@ -652,7 +625,7 @@ test.describe('onError (Solid)', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<SolidPrepareFailureHarness />);
+    const component = await mount('SolidPrepareFailureHarness');
     await component.getByTestId('solid-pf-open').click();
 
     await expect(page.locator('dialog[data-dialog-id="solid-prepare-failure"]')).toBeVisible();
@@ -674,7 +647,7 @@ test.describe('umbra/solid — restoreFocusTo', () => {
   test('the close lands on the row the panel was showing', async ({ mount, page }) => {
     // Solid replaces nothing here, but the callback is asked at the close for the same reason it
     // is on React: the row it names is re-queried, never a node captured when the panel opened.
-    await mount(<SolidRestoreFocusToHarness />);
+    await mount('SolidRestoreFocusToHarness');
 
     await page.getByTestId('solid-rft-row-0').focus();
     await page.keyboard.press('Enter');
@@ -693,7 +666,7 @@ test.describe('umbra/solid — moveFocus', () => {
   test('the handle walks the panel’s own controls', async ({ mount, page }) => {
     // The same runtime every binding shares, asked through Solid's handle — a walk that reaches
     // the field proves the scan, not only the action button a page-level scan would have found.
-    await mount(<SolidMoveFocusHarness />);
+    await mount('SolidMoveFocusHarness');
     await page.getByTestId('solid-mf-open').click();
     await expect(page.locator('dialog[data-dialog-id="solid-move-focus"]')).toBeVisible();
 
@@ -710,7 +683,7 @@ test.describe('umbra/solid — moveFocus', () => {
 
 test.describe('the open gate (Solid)', () => {
   test('is inherited by this binding, and refuses its own open()', async ({ mount, page }) => {
-    await mount(<SolidGateHarness />);
+    await mount('SolidGateHarness');
 
     await page.getByTestId('solid-gate-open').click();
     await expect(page.getByTestId('solid-gate-refusal')).toHaveText('kill-switch:instruct');

@@ -1,14 +1,27 @@
 import babel from '@rolldown/plugin-babel';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 // `.ts` and not extensionless: Vite's native config loader (the coming default) resolves the
 // specifier as written, and `allowImportingTsExtensions` is what makes the compiler agree.
 import { apiModelPlugin } from './vite-plugins/api-model.ts';
 import { mfeUmbraPlugin } from './vite-plugins/mfe-umbra.ts';
+import { ctCoverage } from '../scripts/vite-plugin-ct-coverage.mjs';
 
 // Set VITE_HASH_ROUTER=true to build for file:// (no server needed)
 const hashRouter = process.env['VITE_HASH_ROUTER'] === 'true';
+
+/**
+ * Component-test coverage, opt-in through `CT_COVERAGE=1` — and it lives here because this is the
+ * bundler the component suite runs on. A component test's subject runs in the browser, so c8 has no
+ * Node process to measure: the source is instrumented on the way in, counters land on
+ * `window.__coverage__`, and `src/__tests__/ct-coverage.ts` reads them back per test. Off by
+ * default; instrumentation costs about 45% of a run and the numbers are only wanted when asked for.
+ *
+ * **Before the compiler, deliberately** — both are `enforce: 'pre'`, so this array is the order and
+ * the instrumenter needs the file as written for its counters to land on source lines.
+ */
+const coveragePlugins: Plugin[] = process.env['CT_COVERAGE'] === '1' ? [ctCoverage()] : [];
 
 export default defineConfig({
   base: hashRouter ? './' : '/',
@@ -19,6 +32,7 @@ export default defineConfig({
     // Excluding costs nothing: the root `tsconfig.json` sets `jsx: react-jsx`, so esbuild still emits
     // the automatic runtime, and Fast Refresh over the library's own source is not what anyone edits.
     react({ exclude: [/src\/react\//, /ssr-worker/] }),
+    ...coveragePlugins,
     babel({
       // The compiler decides what a component is by naming convention, so `BasicApp` in the Solid
       // binding reads as one: left in, it gets `react/compiler-runtime` injected and throws

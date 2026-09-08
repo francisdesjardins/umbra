@@ -1,14 +1,8 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  UseLookupForegroundHarness,
-  UseLookupHarness,
-  UseLookupPreparingHarness,
-  UseLookupUnregisteredHarness,
-} from './use-lookup.story';
 
 test.describe('useLookup', () => {
   test('reactively reflects dialog open/close state', async ({ mount, page }) => {
-    await mount(<UseLookupHarness />);
+    await mount('UseLookupHarness');
 
     await expect(page.getByTestId('exists')).toHaveText('true');
     await expect(page.getByTestId('is-visible')).toHaveText('false');
@@ -24,7 +18,7 @@ test.describe('useLookup', () => {
   });
 
   test('returns null-object default for unregistered ids', async ({ mount, page }) => {
-    await mount(<UseLookupUnregisteredHarness />);
+    await mount('UseLookupUnregisteredHarness');
 
     await expect(page.getByTestId('exists')).toHaveText('false');
     await expect(page.getByTestId('is-visible')).toHaveText('false');
@@ -34,7 +28,7 @@ test.describe('useLookup', () => {
   });
 
   test('a watcher outside the dialog can tell "open" from "ready"', async ({ mount, page }) => {
-    await mount(<UseLookupPreparingHarness />);
+    await mount('UseLookupPreparingHarness');
     await expect(page.getByTestId('is-preparing')).toHaveText('false');
 
     await page.getByRole('button', { name: 'Open' }).click();
@@ -55,7 +49,7 @@ test.describe('useLookup', () => {
     mount,
     page,
   }) => {
-    await mount(<UseLookupPreparingHarness />);
+    await mount('UseLookupPreparingHarness');
 
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('is-preparing')).toHaveText('true');
@@ -70,7 +64,7 @@ test.describe('useLookup', () => {
   });
 
   test('foreground tracking updates reactively across stacked dialogs', async ({ mount, page }) => {
-    await mount(<UseLookupForegroundHarness />);
+    await mount('UseLookupForegroundHarness');
 
     await expect(page.getByTestId('a-open')).toHaveText('false');
     await expect(page.getByTestId('b-open')).toHaveText('false');

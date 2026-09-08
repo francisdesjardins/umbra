@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 /**
  * Every component test takes its `test` from the coverage fixture: [ct-coverage.ts](ct-coverage.ts)
  * reads `window.__coverage__` before the page closes, so a file importing `test` from
- * `@playwright/experimental-ct-react` passes while contributing **nothing** — a report wrong
+ * `@playwright/test` passes while contributing **nothing** — a report wrong
  * rather than merely low. Five of sixteen once did, including the only tests of `raiseDialog`,
  * `reclaimFocus` and the opening-focus decline, all on `.c8rc.json`'s exclude list too, so the
  * component report was their only possible measurement. A test, not a lint rule, because the
@@ -39,7 +39,7 @@ test.describe('CT coverage wiring', () => {
   test('none of them import test from the runner directly', () => {
     const unwired = componentTests
       .filter((path) => {
-        return /import\s*\{[^}]*\btest\b[^}]*\}\s*from\s*'@playwright\/experimental-ct-react'/.test(
+        return /import\s*\{[^}]*\btest\b[^}]*\}\s*from\s*'@playwright\/test'/.test(
           readFileSync(path, 'utf8')
         );
       })

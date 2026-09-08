@@ -1,6 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { CloseRestoreRingHarness } from './close-focus-ring.story.js';
 
 // A close destroys the element holding the keyboard, so where it lands is the library's to announce
 // — and the platform's own restore rings by input modality, which would let the way in decide
@@ -229,7 +228,7 @@ const CASES = [
 
 for (const { closeVia, closeWith, nonModal, openWith, title } of CASES) {
   test(title, async ({ mount, page }) => {
-    await mount(<CloseRestoreRingHarness closeVia={closeVia} nonModal={nonModal} />);
+    await mount('CloseRestoreRingHarness', { closeVia: closeVia, nonModal: nonModal });
 
     await press(page, { gesture: openWith, testId: 'trigger' });
     await expect(page.locator(DIALOG)).toBeVisible();

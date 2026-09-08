@@ -1,10 +1,9 @@
-import { expect, test } from '@playwright/experimental-ct-react';
-import { UseAnnouncerHarness } from './use-announcer.story';
+import { expect, test } from 'umbra/__tests__/ct-coverage.js';
 
 test.describe('useAnnouncer', () => {
   test('the region exists, empty, before it has anything to say', async ({ mount }) => {
     // A live region announces *changes*, so one born holding its text is missed.
-    const component = await mount(<UseAnnouncerHarness />);
+    const component = await mount('UseAnnouncerHarness');
     const region = component.getByRole('status');
 
     await expect(region).toBeAttached();
@@ -12,7 +11,7 @@ test.describe('useAnnouncer', () => {
   });
 
   test('an announcement lands in the region', async ({ mount }) => {
-    const component = await mount(<UseAnnouncerHarness />);
+    const component = await mount('UseAnnouncerHarness');
 
     await component.getByTestId('announce').click();
 
@@ -21,7 +20,7 @@ test.describe('useAnnouncer', () => {
 
   test('the same message twice is two changes, not none', async ({ mount, page }) => {
     // `announce` clears and rewrites a frame later; without it "Saved" → "Saved" never changes.
-    const component = await mount(<UseAnnouncerHarness />);
+    const component = await mount('UseAnnouncerHarness');
     await expect(component.getByRole('status')).toBeAttached();
     await page.evaluate(() => {
       const region = document.querySelector('[role="status"]');

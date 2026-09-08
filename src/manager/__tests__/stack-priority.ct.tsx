@@ -1,11 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import { focusedDialogId, frontDialogId, paintedStackOrder } from '../../__tests__/stack-probe.js';
-import {
-  LatePolicyFocusHarness,
-  MultiRaiseHarness,
-  StackPriorityHarness,
-} from './stack-priority.story.js';
 
 /**
  * `prioritize` in a real top layer, the only place the claim can be checked — the manager's own
@@ -15,7 +10,7 @@ import {
  */
 
 test('without a policy the dialog that opened last is in front', async ({ mount, page }) => {
-  const component = await mount(<StackPriorityHarness withPolicy={false} />);
+  const component = await mount('StackPriorityHarness', { withPolicy: false });
 
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
@@ -32,7 +27,7 @@ test('with a policy the high-priority dialog stays in front of a later open', as
   mount,
   page,
 }) => {
-  const component = await mount(<StackPriorityHarness withPolicy={true} />);
+  const component = await mount('StackPriorityHarness', { withPolicy: true });
 
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
@@ -52,7 +47,7 @@ test('being in front means being the one the mouse and the keyboard reach', asyn
   mount,
   page,
 }) => {
-  const component = await mount(<StackPriorityHarness withPolicy={true} />);
+  const component = await mount('StackPriorityHarness', { withPolicy: true });
 
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
@@ -69,7 +64,7 @@ test('being in front means being the one the mouse and the keyboard reach', asyn
 });
 
 test('the raise leaves focus in the dialog it put in front', async ({ mount, page }) => {
-  const component = await mount(<StackPriorityHarness withPolicy={true} />);
+  const component = await mount('StackPriorityHarness', { withPolicy: true });
 
   await component.getByTestId('open-warning').click();
   await component.getByTestId('open-panel').click();
@@ -88,7 +83,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<MultiRaiseHarness />);
+    const component = await mount('MultiRaiseHarness');
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await expect(component.getByTestId('mr-policy')).toHaveText('on');
 
@@ -111,7 +106,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
   });
 
   test('installing the policy reorders what is already on screen', async ({ mount, page }) => {
-    const component = await mount(<MultiRaiseHarness />);
+    const component = await mount('MultiRaiseHarness');
 
     // Opened with no policy at all, so the last one in is in front — `mr-low`.
     await component.getByTestId('mr-open-all').click();
@@ -139,7 +134,7 @@ test.describe('three dialogs, and a policy that arrives late', () => {
   });
 
   test('and removing it puts the paint order back', async ({ mount, page }) => {
-    const component = await mount(<MultiRaiseHarness />);
+    const component = await mount('MultiRaiseHarness');
     await component.getByTestId('mr-toggle-policy').dispatchEvent('click');
     await component.getByTestId('mr-open-all').click();
     await expect(page.locator('dialog[data-dialog-id="mr-low"]')).toBeVisible();
@@ -195,7 +190,7 @@ test.describe('what a late install costs', () => {
   };
 
   test('a late install lifts only what the order needs', async ({ mount, page }) => {
-    const component = await mount(<MultiRaiseHarness />);
+    const component = await mount('MultiRaiseHarness');
 
     // Opened with no policy at all — high, then mid, then low — so the top layer is open order and
     // the policy wants the exact reverse: an arrangement it genuinely has to change.
@@ -231,7 +226,7 @@ test.describe('what a late install costs', () => {
 
 test.describe('a policy installed under an open dialog', () => {
   test('does not move the caret out of the field it was in', async ({ mount, page }) => {
-    const component = await mount(<LatePolicyFocusHarness />);
+    const component = await mount('LatePolicyFocusHarness');
     await component.getByTestId('lp-open').click();
     await expect(page.locator('dialog[data-dialog-id="lp-only"]')).toBeVisible();
 

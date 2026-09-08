@@ -1,8 +1,4 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  OpenEventInDocumentHarness,
-  OpenEventInShadowHarness,
-} from './open-event-element.story.js';
 
 /**
  * `dialog:open` carries the `<dialog>` it is announcing.
@@ -12,7 +8,7 @@ import {
  */
 
 test('the open event carries the dialog element', async ({ mount }) => {
-  const component = await mount(<OpenEventInDocumentHarness />);
+  const component = await mount('OpenEventInDocumentHarness');
   await component.getByTestId('open').click();
 
   await expect(component.getByTestId('seen')).toHaveText(/"isTheDialog":true/);
@@ -22,7 +18,7 @@ test('the open event carries the dialog element', async ({ mount }) => {
 });
 
 test('it carries one a document query cannot reach, inside a shadow root', async ({ mount }) => {
-  const component = await mount(<OpenEventInShadowHarness />);
+  const component = await mount('OpenEventInShadowHarness');
   await component.getByTestId('open').click();
 
   await expect(component.getByTestId('seen')).toHaveText(/"isTheDialog":true/);

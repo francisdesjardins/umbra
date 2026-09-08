@@ -1,6 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { PortalHostGeometryHarness } from './portal-host-geometry.story.js';
 
 // `portal` names a destination two ways — `true` for `document.body`, a function for a host of your
 // own — and both are portals. The contained arrangement is `portal: false` and nothing else, which
@@ -19,7 +18,7 @@ test.describe('a slide panel and where it is positioned from', () => {
     mount,
     page,
   }) => {
-    await mount(<PortalHostGeometryHarness named />);
+    await mount('PortalHostGeometryHarness', { named: true });
     await page.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -30,7 +29,7 @@ test.describe('a slide panel and where it is positioned from', () => {
     mount,
     page,
   }) => {
-    await mount(<PortalHostGeometryHarness named={false} />);
+    await mount('PortalHostGeometryHarness', { named: false });
     await page.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 

@@ -1,9 +1,4 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  ControlledClickOutsideHarness,
-  ControlledDialogHarness,
-  ControlledPanelHarness,
-} from './dismiss-request.story.js';
 
 // `onDismissRequest` — every user-initiated dismissal handed to the owner instead of closing on it.
 // Each test here would fail on the un-optioned behaviour. The three doors are asserted separately
@@ -22,7 +17,7 @@ const SETTLED_MS = 600;
 
 test.describe('a modal dialog whose Escape is a request', () => {
   test('reports the press and stays open', async ({ mount, page }) => {
-    const component = await mount(<ControlledDialogHarness />);
+    const component = await mount('ControlledDialogHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -34,7 +29,7 @@ test.describe('a modal dialog whose Escape is a request', () => {
   });
 
   test('closes on the press the owner acts on, and not before', async ({ mount, page }) => {
-    const component = await mount(<ControlledDialogHarness />);
+    const component = await mount('ControlledDialogHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -53,7 +48,7 @@ test.describe('a modal dialog whose Escape is a request', () => {
 test.describe('a non-modal panel whose Escape is a request', () => {
   test('hears the press from outside itself', async ({ mount, page }) => {
     // Not a dialog-level listener: a panel outside the top layer does not keep focus.
-    const component = await mount(<ControlledPanelHarness />);
+    const component = await mount('ControlledPanelHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -68,7 +63,7 @@ test.describe('a non-modal panel whose Escape is a request', () => {
   test('a declined press is left travelling', async ({ mount, page }) => {
     // Why the return value exists: the window listener captures, so a press it takes is one the
     // page never sees. Both halves from one harness, or "the page saw it" passes on a dead one.
-    const component = await mount(<ControlledPanelHarness />);
+    const component = await mount('ControlledPanelHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -89,7 +84,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
   test('reports the click and stays open', async ({ mount, page }) => {
     // The harness draws no actions, so `dismissOnBackdropClick` defaults to `true` — this dialog
     // would close itself here, and a controlled owner would put it straight back.
-    const component = await mount(<ControlledDialogHarness />);
+    const component = await mount('ControlledDialogHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -106,7 +101,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
     page,
   }) => {
     // One handler, three doors: worth nothing if they all arrive under one word.
-    const component = await mount(<ControlledDialogHarness />);
+    const component = await mount('ControlledDialogHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(MODAL)).toBeVisible();
 
@@ -119,7 +114,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
   });
 
   test('closes on the backdrop click the owner acts on', async ({ mount, page }) => {
-    const component = await mount(<ControlledDialogHarness />);
+    const component = await mount('ControlledDialogHarness');
     await component.getByTestId('open').click();
     await component.getByTestId('allow').click();
 
@@ -131,7 +126,7 @@ test.describe('a modal dialog whose backdrop click is a request', () => {
 
 test.describe('a non-modal panel whose click-outside is a request', () => {
   test('reports the click and stays open', async ({ mount, page }) => {
-    const component = await mount(<ControlledClickOutsideHarness />);
+    const component = await mount('ControlledClickOutsideHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(OUTSIDE_PANEL)).toBeVisible();
 
@@ -145,7 +140,7 @@ test.describe('a non-modal panel whose click-outside is a request', () => {
   test('a click inside the panel is not a dismissal at all', async ({ mount, page }) => {
     // The gate before the door, asserted here so "the owner heard it" cannot pass by hearing
     // everything.
-    const component = await mount(<ControlledClickOutsideHarness />);
+    const component = await mount('ControlledClickOutsideHarness');
     await component.getByTestId('open').click();
     await expect(page.locator(OUTSIDE_PANEL)).toBeVisible();
 

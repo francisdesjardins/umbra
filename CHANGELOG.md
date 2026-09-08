@@ -9,6 +9,65 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-08
+
+### Changed — the component suite moved to Playwright's stories model
+
+`@playwright/experimental-ct-react` is frozen. Playwright announced it in 1.62 — "the experimental
+packages will no longer be updated" — and 1.63 shipped without one: `@playwright/experimental-ct-react@1.63.0`
+is a 404, latest stable 1.62.1. This repo pinned that against `@playwright/test@1.63.0`, which is
+two `playwright-core` copies, and a lockfile-faithful install could not run **a single test** —
+`Error: No tests found`, unit included, because loading the config loaded Playwright twice. It had
+been passing only on a stale `node_modules` that predated a full install. So this was not an upgrade
+anyone chose; it was the floor giving way.
+
+**The suite has no bundler of its own now.** The page is the playground's, served by the playground's
+Vite — which already applied the React Compiler at `target: '19'` with the same Solid exclusion, so
+the guarantee that the suite exercises _compiled_ source survived the move without a line. What went
+with it: `ctViteConfig`, `ctPort`, the two `ctCacheDir`s and `playwright/index.tsx`, whose
+`beforeMount` wrapper is now the gallery's own `DialogManagerProvider`. The coverage instrumenter
+moved to `playground/vite.config.ts`, before the compiler, for the reason it was before it there.
+
+**A test mounts by id**: `mount('BasicHarness')` against `/stories?gallery=1`. 421 call sites
+changed shape and nothing else — 418 on one line, three multi-line that the first survey's pattern
+missed — and 216 harness imports went with them, since a spec no longer names the component it
+mounts.
+
+**The ids are typed, because a string nobody can see is a typo waiting.** Playwright declares
+`interface Stories {}` with `StoryId = keyof Stories | (string & {})` — declaration merging, the
+same door `DialogRegistry` opens for dialog ids. `yarn story-ids` fills it from the story files, so
+a call site offers all 196 and each story's props are checked against its own signature. The union's
+second half still lets a typo compile, so `story-ids.test.ts` closes that: every mounted id names a
+harness, and every harness is in the registry.
+
+Four things this turned up, each of which had to be fixed rather than worked around:
+
+**The app owned `#root`, and so does the fixture.** Playwright scopes the Locator `mount` returns to
+`#root`; the playground mounted its router there. The demo is on `#app` now — two references in the
+whole repo.
+
+**A static import runs whether or not its branch does.** `main.tsx` forked on `?gallery` while still
+importing the router at the top, so every test page loaded the app's whole graph — and
+`ThemeProvider` writes `--form-bg` inline on `:root` at _import_, which outranks the stylesheet rule
+a template's dark mode keys on. One test measured exactly that and went red. Both branches import
+dynamically now, and the app boots from `app/bootstrap.tsx`.
+
+**The gallery discovers harnesses lazily.** An eager `import.meta.glob` was the obvious first cut and
+cost twice the wall clock plus every module-level side effect in the app on every page; the
+generated loaders are one `import()` per id.
+
+**`reuseContext: true` is in the migration guide and is wrong here.** The manager is a module
+singleton, so a shared context carries one test's registrations into the next: six harnesses went
+red on their _second_ interaction. A context per test is the isolation this suite always had.
+
+### Fixed — `@types/node` was reaching TypeScript by accident
+
+Removing the experimental package took automatic `@types` discovery with it: 35 files failed with
+`Cannot find name 'node:fs'` while the package sat complete on disk, and a clean `node_modules`
+reproduced it. `types: ["node"]` states the dependency the tests always had. `scripts/vite-plugin-ct-coverage.mjs`
+gained a `.d.mts` for the same reason — it was an implicit `any` that only stayed invisible while
+`playwright.config.ts` was the sole importer, the root `tsconfig` including `src/**` and nothing else.
+
 ## 2026-09-05
 
 ### Added — `dialogManager.gate`, one policy in front of every door

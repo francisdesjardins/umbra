@@ -1,23 +1,14 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  AlignSlideHarness,
-  BasicSlideHarness,
-  ContainedPositioningSlideHarness,
-  DirectionSlideHarness,
-  MultiDirectionSlideHarness,
-  NonModalEscHotkeySlideHarness,
-  OpenAndWaitSlideHarness,
-} from './use-slide-dialog.story';
 
 test.describe('useSlideDialog', () => {
   test('dialog is initially closed', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-slide-basic')).not.toBeVisible();
   });
 
   test('opens from specified direction', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
@@ -25,13 +16,13 @@ test.describe('useSlideDialog', () => {
   });
 
   test('passes direction to render context', async ({ mount, page }) => {
-    await mount(<DirectionSlideHarness />);
+    await mount('DirectionSlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('direction')).toHaveText('right');
   });
 
   test('closes with reason via handle.close()', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Close Panel' }).click();
@@ -40,7 +31,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('closes with reason "dismiss" on Escape key', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     await page.keyboard.press('Escape');
@@ -49,7 +40,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('openAndWait resolves with close reason', async ({ mount, page }) => {
-    await mount(<OpenAndWaitSlideHarness />);
+    await mount('OpenAndWaitSlideHarness');
     await page.getByRole('button', { name: 'Open and Wait' }).click();
     await expect(page.getByTestId('status')).toHaveText('waiting');
     await page.getByRole('button', { name: 'Close' }).click();
@@ -57,7 +48,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('supports all four directions', async ({ mount, page }) => {
-    await mount(<MultiDirectionSlideHarness />);
+    await mount('MultiDirectionSlideHarness');
 
     for (const dir of ['Left', 'Right', 'Top', 'Bottom'] as const) {
       await page.getByRole('button', { name: `Open ${dir}` }).click();
@@ -71,7 +62,7 @@ test.describe('useSlideDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<NonModalEscHotkeySlideHarness />);
+    await mount('NonModalEscHotkeySlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('dialog-non-modal-esc-hotkey-slide')).toBeVisible();
 
@@ -84,7 +75,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('can be opened and closed multiple times', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
 
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
@@ -102,7 +93,7 @@ test.describe('useSlideDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<ContainedPositioningSlideHarness />);
+    await mount('ContainedPositioningSlideHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     // Two layers had to move for this click to land: the host (`absolute; inset: 0` over the stage
@@ -119,7 +110,7 @@ test.describe('useSlideDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<ContainedPositioningSlideHarness direction="bottom" />);
+    await mount('ContainedPositioningSlideHarness', { direction: 'bottom' });
     await page.getByRole('button', { name: 'Open Panel' }).click();
 
     const dialog = page.getByTestId('dialog-contained-positioning-slide');
@@ -155,7 +146,7 @@ test.describe('useSlideDialog', () => {
       mount,
       page,
     }) => {
-      await mount(<ContainedPositioningSlideHarness direction={direction} />);
+      await mount('ContainedPositioningSlideHarness', { direction: direction });
       await page.getByRole('button', { name: 'Open Panel' }).click();
 
       const dialog = page.getByTestId('dialog-contained-positioning-slide');
@@ -215,7 +206,7 @@ test.describe('useSlideDialog', () => {
       mount,
       page,
     }) => {
-      await mount(<AlignSlideHarness direction={direction} align={align} />);
+      await mount('AlignSlideHarness', { direction: direction, align: align });
       await page.getByRole('button', { name: 'Open Panel' }).click();
 
       const dialog = page.getByTestId('dialog-align-slide');
@@ -255,7 +246,7 @@ test.describe('useSlideDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<AlignSlideHarness direction="right" align="center" />);
+    await mount('AlignSlideHarness', { direction: 'right', align: 'center' });
 
     // Record the rendered x every frame: a real slide passes through many positions.
     await page.getByRole('button', { name: 'Open Panel' }).click();
@@ -308,7 +299,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('align defaults to stretch — panel fills the cross axis', async ({ mount, page }) => {
-    await mount(<AlignSlideHarness direction="right" align="stretch" />);
+    await mount('AlignSlideHarness', { direction: 'right', align: 'stretch' });
     await page.getByRole('button', { name: 'Open Panel' }).click();
 
     const dialog = page.getByTestId('dialog-align-slide');
@@ -325,7 +316,7 @@ test.describe('useSlideDialog', () => {
   });
 
   test('uses dynamic viewport units (dvh/dvw) for dialog sizing', async ({ mount, page }) => {
-    await mount(<BasicSlideHarness />);
+    await mount('BasicSlideHarness');
     await page.getByRole('button', { name: 'Open Panel' }).click();
     await expect(page.getByTestId('dialog-slide-basic')).toBeVisible();
     const style = await page.getByTestId('dialog-slide-basic').getAttribute('style');

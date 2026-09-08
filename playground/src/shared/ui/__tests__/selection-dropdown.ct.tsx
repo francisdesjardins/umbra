@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/experimental-ct-react';
-import { SelectionDropdownHarness } from './selection-dropdown.story';
+import { expect, test } from 'umbra/__tests__/ct-coverage.js';
 
 /**
  * `SelectionDropdown` — the one assertion the browser cannot make for itself. `appearance: none`
@@ -13,13 +12,13 @@ const OPAQUE = /^rgb\(\d+, \d+, \d+\)$/;
 
 for (const scheme of ['light', 'dark'] as const) {
   test(`the control paints an opaque background in ${scheme} mode`, async ({ mount }) => {
-    const c = await mount(<SelectionDropdownHarness scheme={scheme} />);
+    const c = await mount('SelectionDropdownHarness', { scheme: scheme });
 
     await expect(c.getByTestId('dropdown')).toHaveCSS('background-color', OPAQUE);
   });
 
   test(`its options paint one too in ${scheme} mode`, async ({ mount, page }) => {
-    await mount(<SelectionDropdownHarness scheme={scheme} />);
+    await mount('SelectionDropdownHarness', { scheme: scheme });
 
     // Not `toHaveCSS` — an <option> is not a visible box, so the locator never settles.
     const background = await page
@@ -36,7 +35,7 @@ for (const scheme of ['light', 'dark'] as const) {
 test('the two schemes do not paint the same background', async ({ mount, page }) => {
   // A token that failed to resolve falls back identically in both, which every assertion above
   // would still pass. One mount, because a second into the same container is refused.
-  await mount(<SelectionDropdownHarness scheme="light" />);
+  await mount('SelectionDropdownHarness', { scheme: 'light' });
   const select = page.locator('select');
   const read = (scheme: 'light' | 'dark') => {
     return select.evaluate((el, mode) => {

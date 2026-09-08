@@ -1,6 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { NonModalCloseRestoreHarness } from './non-modal-close-focus.story.js';
 
 // Where the keyboard goes when a non-modal panel closes. The close steps restore the element
 // focused before the open for `show()` too, but only while focus is still inside at close time —
@@ -18,7 +17,7 @@ async function focused(page: Page): Promise<string> {
 
 test.describe('closing a non-modal panel', () => {
   test('hands the keyboard back to the trigger that opened it', async ({ mount, page }) => {
-    const component = await mount(<NonModalCloseRestoreHarness closeVia="handle" />);
+    const component = await mount('NonModalCloseRestoreHarness', { closeVia: 'handle' });
 
     // Open from the keyboard, so the trigger is the focused element `show()` records.
     await component.getByTestId('trigger').focus();
@@ -37,7 +36,7 @@ test.describe('closing a non-modal panel', () => {
     // The path that loses the platform's restore: the button is `disabled` while its action
     // settles, Chromium blurs a disabled element, and by `close()` the keyboard is on `<body>` —
     // outside the dialog, so the condition fails. Red on Chromium, green on Firefox and WebKit.
-    const component = await mount(<NonModalCloseRestoreHarness closeVia="action" />);
+    const component = await mount('NonModalCloseRestoreHarness', { closeVia: 'action' });
 
     await component.getByTestId('trigger').focus();
     await page.keyboard.press('Enter');

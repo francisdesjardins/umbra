@@ -1,14 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import {
-  EditableContentHarness,
-  EditableOnlyHarness,
-  FocusContainmentHarness,
-  FramedContentHarness,
-  HiddenStopHarness,
-  NestedPanelScanHarness,
-  RovingToolbarHarness,
-} from './focus-containment.story.js';
 
 /**
  * `containFocus` — the Tab wrap a non-modal dialog does not get from the browser. Asserted on
@@ -28,7 +19,7 @@ async function focused(page: Page): Promise<string> {
 test.describe('a non-modal dialog with containFocus off', () => {
   test('lets Tab walk out of it — which is what show() means', async ({ mount, page }) => {
     // The negative half: without it the panel is ordinary page content and the keyboard leaves.
-    const component = await mount(<FocusContainmentHarness containFocus={false} />);
+    const component = await mount('FocusContainmentHarness', { containFocus: false });
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -41,7 +32,7 @@ test.describe('a non-modal dialog with containFocus off', () => {
 
 test.describe('a non-modal dialog with containFocus on', () => {
   test('wraps Tab from the last stop back to the first', async ({ mount, page }) => {
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -52,7 +43,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
   });
 
   test('wraps Shift+Tab from the first stop back to the last', async ({ mount, page }) => {
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
 
     await page.getByTestId('inside-first').focus();
@@ -63,7 +54,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
 
   test('leaves an ordinary Tab between two stops alone', async ({ mount, page }) => {
     // The listener must be inert everywhere but the two ends, or it fights the browser inside.
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
 
     await page.getByTestId('inside-first').focus();
@@ -76,7 +67,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
     // Clicking non-focusable content focuses the nearest *click-focusable* ancestor — an open
     // `<dialog>` — from where the browser may skip the subtree. `inside-first` discriminates: this
     // Chromium *does* descend, so unhandled, focus reaches the start marker and wraps backwards.
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -89,7 +80,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
   });
 
   test('sends Shift+Tab to the far end from that same click', async ({ mount, page }) => {
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -102,7 +93,7 @@ test.describe('a non-modal dialog with containFocus on', () => {
   test('does not pull focus back once something outside has taken it', async ({ mount, page }) => {
     // The deliberate limit: this answers Tab, it does not enforce focus. A `focusin` enforcer
     // would pass this test and fight every legitimate focus target beyond the dialog.
-    const component = await mount(<FocusContainmentHarness containFocus />);
+    const component = await mount('FocusContainmentHarness', { containFocus: true });
     await component.getByTestId('open').click();
 
     await page.getByTestId('outside').focus();
@@ -115,7 +106,7 @@ test.describe('what counts as a stop', () => {
   test('an element the browser skips is not the end of the dialog', async ({ mount, page }) => {
     // Measured in a real application: a roving-tabindex toolbar contributes elements the selector
     // matches and the browser never stops on, so the "last" compared against is unreachable.
-    const component = await mount(<RovingToolbarHarness />);
+    const component = await mount('RovingToolbarHarness');
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-dialog-id="focus-containment-toolbar"]')).toBeVisible();
 
@@ -128,7 +119,7 @@ test.describe('what counts as a stop', () => {
   test('a frame at the end does not let the keyboard out through it', async ({ mount, page }) => {
     // A press inside an `<iframe>` reaches no listener in the parent, so a `keydown` approach
     // cannot answer it — the marker is reached by the browser rather than told about.
-    const component = await mount(<FramedContentHarness />);
+    const component = await mount('FramedContentHarness');
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-dialog-id="focus-containment-frame"]')).toBeVisible();
 
@@ -144,7 +135,7 @@ test.describe('what counts as a stop', () => {
     page,
   }) => {
     // `display: none`, not `disabled`: the selector already drops a disabled control.
-    const component = await mount(<HiddenStopHarness />);
+    const component = await mount('HiddenStopHarness');
     await component.getByTestId('open').click();
     await component.getByTestId('hide-middle').click();
 
@@ -157,7 +148,7 @@ test.describe('what counts as a stop', () => {
   test('a contenteditable region is a stop, and the wrap lands on it', async ({ mount, page }) => {
     // An editable region is a Tab stop with no `tabindex`, `href` or control tag. Discriminating on
     // every engine: missing from the scan, the wrap's only candidate is where the press started.
-    const component = await mount(<EditableContentHarness />);
+    const component = await mount('EditableContentHarness');
     await component.getByTestId('open').click();
     await expect(page.locator('dialog[data-dialog-id="focus-containment-editable"]')).toBeVisible();
 
@@ -173,7 +164,7 @@ test.describe('what counts as a stop', () => {
   }) => {
     // The unconditional half: a dead-space click focuses the `<dialog>` element and with nothing
     // for the scan to find the recovery declines. Chromium and Firefox descend; WebKit sticks.
-    const component = await mount(<EditableOnlyHarness />);
+    const component = await mount('EditableOnlyHarness');
     await component.getByTestId('open').click();
     await expect(
       page.locator('dialog[data-dialog-id="focus-containment-editable-only"]')
@@ -197,9 +188,10 @@ test.describe('the dead-space click, whatever containFocus says', () => {
     mount,
     page,
   }) => {
-    const component = await mount(
-      <FocusContainmentHarness containFocus={false} nonModal={false} />
-    );
+    const component = await mount('FocusContainmentHarness', {
+      containFocus: false,
+      nonModal: false,
+    });
     await component.getByTestId('open').click();
     await expect(page.locator(PANEL)).toBeVisible();
 
@@ -216,9 +208,10 @@ test.describe('the dead-space click, whatever containFocus says', () => {
       const shape = `${nonModal ? 'non-modal' : 'dialog'}, containFocus=${String(containFocus)}`;
 
       test(`Tab reaches the content — ${shape}`, async ({ mount, page }) => {
-        const component = await mount(
-          <FocusContainmentHarness containFocus={containFocus} nonModal={nonModal} />
-        );
+        const component = await mount('FocusContainmentHarness', {
+          containFocus: containFocus,
+          nonModal: nonModal,
+        });
         await component.getByTestId('open').click();
         await expect(page.locator(PANEL)).toBeVisible();
 
@@ -231,9 +224,10 @@ test.describe('the dead-space click, whatever containFocus says', () => {
       });
 
       test(`Shift+Tab reaches the far end — ${shape}`, async ({ mount, page }) => {
-        const component = await mount(
-          <FocusContainmentHarness containFocus={containFocus} nonModal={nonModal} />
-        );
+        const component = await mount('FocusContainmentHarness', {
+          containFocus: containFocus,
+          nonModal: nonModal,
+        });
         await component.getByTestId('open').click();
         await expect(page.locator(PANEL)).toBeVisible();
 
@@ -256,7 +250,7 @@ test.describe('the recovery scan and a dialog nested inside this one', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<NestedPanelScanHarness />);
+    const component = await mount('NestedPanelScanHarness');
     await component.getByTestId('open-outer').click();
     await expect(page.locator('dialog[data-dialog-id="nested-scan-outer"]')).toBeVisible();
 

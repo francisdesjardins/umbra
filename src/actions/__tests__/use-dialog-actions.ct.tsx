@@ -1,39 +1,18 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { ConsoleMessage, Page } from '@playwright/test';
-import {
-  ActionLoggingHarness,
-  ReasonSourceHarness,
-  SpreadContractHarness,
-  DomSafeSpreadHarness,
-  HotkeyWhilePreparingHarness,
-  BasicActionsHarness,
-  DefinitionActionsHarness,
-  DismissKeyActionCollisionHarness,
-  ErrorActionsHarness,
-  FocusRestorationHarness,
-  HotkeyActionsHarness,
-  DialogActionBasicHarness,
-  DialogActionCustomHandlerHarness,
-  DialogActionHotkeyHarness,
-  DialogActionMultipleHarness,
-  VanillaAriaKeyshortcutsHarness,
-  BrokenAriaKeyshortcutsHarness,
-  FocusOnOpenHarness,
-  ActionIsRunningHarness,
-} from './use-dialog-actions.story';
 
 /** Distinctive close payload — must never appear in a captured log line. */
 const SENTINEL_PAYLOAD = 'SENTINEL_PAYLOAD_9271';
 
 test.describe('actions declared by use', () => {
   test('dialog is initially closed', async ({ mount, page }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-ctrl-basic')).not.toBeVisible();
   });
 
   test('opens dialog with action buttons', async ({ mount, page }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-basic')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toBeVisible();
@@ -41,7 +20,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('closes with reason "confirm" via action', async ({ mount, page }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -49,7 +28,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('closes with reason "cancel" via action', async ({ mount, page }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -60,7 +39,7 @@ test.describe('actions declared by use', () => {
     mount,
     page,
   }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Increment' }).click();
     await page.getByRole('button', { name: 'Increment' }).click();
@@ -70,7 +49,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('error state is populated when action handler throws', async ({ mount, page }) => {
-    await mount(<ErrorActionsHarness />);
+    await mount('ErrorActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('error-msg')).toHaveText('');
     await page.getByRole('button', { name: 'Bad Action' }).click();
@@ -78,7 +57,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('Enter hotkey triggers confirm action', async ({ mount, page }) => {
-    await mount(<HotkeyActionsHarness />);
+    await mount('HotkeyActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Enter');
@@ -87,7 +66,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('Escape hotkey triggers cancel action instead of dismiss', async ({ mount, page }) => {
-    await mount(<HotkeyActionsHarness />);
+    await mount('HotkeyActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await page.keyboard.press('Escape');
@@ -96,7 +75,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('standalone store with inline controller works', async ({ mount, page }) => {
-    await mount(<DefinitionActionsHarness />);
+    await mount('DefinitionActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('def-is-visible')).toHaveText('closed');
@@ -104,7 +83,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('standalone store method updates state reactively', async ({ mount, page }) => {
-    await mount(<DefinitionActionsHarness />);
+    await mount('DefinitionActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Increment' }).click();
     await expect(page.getByTestId('def-count')).toHaveText('1');
@@ -113,7 +92,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('can be opened and closed multiple times', async ({ mount, page }) => {
-    await mount(<BasicActionsHarness />);
+    await mount('BasicActionsHarness');
 
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -125,7 +104,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('action buttons have aria-keyshortcuts when hotkey is declared', async ({ mount, page }) => {
-    await mount(<HotkeyActionsHarness />);
+    await mount('HotkeyActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
@@ -144,7 +123,7 @@ test.describe('actions declared by use', () => {
   }) => {
     // Both halves in one test: `Enter`/`Escape` serialise identically either way, so only a
     // modified hotkey catches a stale spelling in the attribute or in the dispatch selector.
-    await mount(<HotkeyActionsHarness />);
+    await mount('HotkeyActionsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-hotkey')).toBeVisible();
 
@@ -158,7 +137,7 @@ test.describe('actions declared by use', () => {
   });
 
   test('focus returns inside the dialog after a failed action', async ({ mount, page }) => {
-    await mount(<FocusRestorationHarness />);
+    await mount('FocusRestorationHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-focus')).toBeVisible();
     await expect(page.getByTestId('ok-btn')).toBeFocused();
@@ -177,7 +156,7 @@ test.describe('actions declared by use', () => {
     mount,
     page,
   }) => {
-    await mount(<DismissKeyActionCollisionHarness />);
+    await mount('DismissKeyActionCollisionHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-ctrl-dismiss-collision')).toBeVisible();
 
@@ -190,7 +169,7 @@ test.describe('actions declared by use', () => {
 
 test.describe('callable actions', () => {
   test('no-handler callable closes dialog with action reason', async ({ mount, page }) => {
-    await mount(<DialogActionBasicHarness />);
+    await mount('DialogActionBasicHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-action-basic')).toBeVisible();
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -199,7 +178,7 @@ test.describe('callable actions', () => {
   });
 
   test('cancel action closes with reason "cancel"', async ({ mount, page }) => {
-    await mount(<DialogActionBasicHarness />);
+    await mount('DialogActionBasicHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -210,7 +189,7 @@ test.describe('callable actions', () => {
     mount,
     page,
   }) => {
-    await mount(<DialogActionCustomHandlerHarness />);
+    await mount('DialogActionCustomHandlerHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('confirm-btn')).toHaveAttribute('data-loading', 'true');
@@ -220,7 +199,7 @@ test.describe('callable actions', () => {
   });
 
   test('sibling action is disabled while another runs', async ({ mount, page }) => {
-    await mount(<DialogActionMultipleHarness />);
+    await mount('DialogActionMultipleHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByTestId('confirm-btn').click();
     await expect(page.getByTestId('is-running')).toHaveText('true');
@@ -228,7 +207,7 @@ test.describe('callable actions', () => {
   });
 
   test('aria-keyshortcuts forwarded through render prop', async ({ mount, page }) => {
-    await mount(<DialogActionHotkeyHarness />);
+    await mount('DialogActionHotkeyHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-action-hotkey')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
@@ -242,7 +221,7 @@ test.describe('callable actions', () => {
   });
 
   test('hotkey triggers action via callable', async ({ mount, page }) => {
-    await mount(<DialogActionHotkeyHarness />);
+    await mount('DialogActionHotkeyHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -255,7 +234,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaAriaKeyshortcutsHarness />);
+    await mount('VanillaAriaKeyshortcutsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-vanilla-aria')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).toHaveAttribute(
@@ -272,7 +251,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaAriaKeyshortcutsHarness />);
+    await mount('VanillaAriaKeyshortcutsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -283,7 +262,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     mount,
     page,
   }) => {
-    await mount(<BrokenAriaKeyshortcutsHarness />);
+    await mount('BrokenAriaKeyshortcutsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('dialog-broken-aria')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Confirm' })).not.toHaveAttribute(
@@ -298,7 +277,7 @@ test.describe('custom button wrapper aria-keyshortcuts', () => {
     mount,
     page,
   }) => {
-    await mount(<BrokenAriaKeyshortcutsHarness />);
+    await mount('BrokenAriaKeyshortcutsHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     // Without aria-keyshortcuts neither hotkey dispatches, and Escape still routes to the action
     // path rather than native dismiss — so the dialog stays open on both.
@@ -340,7 +319,7 @@ test.describe('action lifecycle logging', () => {
       messages.push(msg);
     });
 
-    await mount(<ActionLoggingHarness payload={SENTINEL_PAYLOAD} />);
+    await mount('ActionLoggingHarness', { payload: SENTINEL_PAYLOAD });
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
@@ -368,7 +347,7 @@ test.describe('action lifecycle logging', () => {
       messages.push(msg);
     });
 
-    await mount(<ActionLoggingHarness payload={SENTINEL_PAYLOAD} />);
+    await mount('ActionLoggingHarness', { payload: SENTINEL_PAYLOAD });
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Fail' }).click();
 
@@ -386,14 +365,14 @@ test.describe('action identity and payload', () => {
     mount,
     page,
   }) => {
-    await mount(<ReasonSourceHarness />);
+    await mount('ReasonSourceHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByTestId('reason-source-last')).toHaveText('close');
   });
 
   test("an action's declared payload reaches onClose", async ({ mount, page }) => {
-    await mount(<ReasonSourceHarness />);
+    await mount('ReasonSourceHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByTestId('reason-source-last')).toHaveText('save');
@@ -401,7 +380,7 @@ test.describe('action identity and payload', () => {
   });
 
   test('an action that closes bare carries no payload', async ({ mount, page }) => {
-    await mount(<ReasonSourceHarness />);
+    await mount('ReasonSourceHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByTestId('reason-source-id')).toHaveText('none');
@@ -411,7 +390,7 @@ test.describe('action identity and payload', () => {
     mount,
     page,
   }) => {
-    await mount(<HotkeyWhilePreparingHarness />);
+    await mount('HotkeyWhilePreparingHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('preparing-flag')).toHaveText('opening');
 
@@ -422,7 +401,7 @@ test.describe('action identity and payload', () => {
   });
 
   test('clicking the same action while prepare is running works', async ({ mount, page }) => {
-    await mount(<HotkeyWhilePreparingHarness />);
+    await mount('HotkeyWhilePreparingHarness');
     await page.getByRole('button', { name: 'Open' }).click();
     await expect(page.getByTestId('preparing-flag')).toHaveText('opening');
 
@@ -439,7 +418,7 @@ test.describe('the props an action spreads onto a button', () => {
         warnings.push(m.text());
       }
     });
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
     // Sample mid-action: `loading` is false at rest and React omits it, so rest proves nothing.
     await page.getByTestId('slow-btn').click();
@@ -462,7 +441,7 @@ test.describe('the props an action spreads onto a button', () => {
   });
 
   test('the running state is readable from CSS on a plain button', async ({ mount, page }) => {
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
 
     const button = page.getByTestId('slow-btn');
@@ -487,7 +466,7 @@ test.describe('the props an action spreads onto a button', () => {
         warnings.push(m.text());
       }
     });
-    await mount(<DomSafeSpreadHarness />);
+    await mount('DomSafeSpreadHarness');
     await page.getByRole('button', { name: 'Open Dom Spread' }).click();
 
     const dom = page.getByTestId('dom-btn');
@@ -511,14 +490,14 @@ test.describe('the props an action spreads onto a button', () => {
   });
 
   test('do not submit a surrounding form', async ({ mount, page }) => {
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
     await page.getByTestId('slow-btn').click();
     await expect(page.getByTestId('submits')).toHaveText('0');
   });
 
   test('prevent re-entering the action that is already running', async ({ mount, page }) => {
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
 
     await page.getByTestId('slow-btn').click();
@@ -541,7 +520,7 @@ test.describe('the props an action spreads onto a button', () => {
     mount,
     page,
   }) => {
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
     await expect(page.getByTestId('guarded-btn')).toBeDisabled();
 
@@ -550,7 +529,7 @@ test.describe('the props an action spreads onto a button', () => {
   });
 
   test('a composed onClick runs first and can veto the action', async ({ mount, page }) => {
-    await mount(<SpreadContractHarness />);
+    await mount('SpreadContractHarness');
     await page.getByRole('button', { name: 'Open Spread' }).click();
 
     await page.getByTestId('veto-btn').click();
@@ -596,7 +575,7 @@ test.describe('focusOnOpen', () => {
     page,
   }) => {
     // The input is first in the DOM and what showModal() picks unaided, so Cancel is not luck.
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
 
@@ -611,7 +590,7 @@ test.describe('focusOnOpen', () => {
     // The opening click is pointer input, so modality alone draws no ring. `focusVisible` is what
     // draws it; the blur only makes the re-focus take. Green here because CI's engines read the
     // flag — below Chrome 145 / Safari 18.4 they do not, which the matrix carries as `enhancing`.
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect(page.getByTestId('foo-is-visible')).toHaveText('open');
 
@@ -640,7 +619,7 @@ test.describe('focusOnOpen', () => {
     page,
     browserName,
   }) => {
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await dropFocusVisible(page);
 
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
@@ -653,7 +632,7 @@ test.describe('focusOnOpen', () => {
   });
 
   test('without the flag, a keyboard-opened dialog still rings', async ({ mount, page }) => {
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await dropFocusVisible(page);
 
     // A fresh mount, no pointer input yet, so the browser has concluded nothing else. Not a Tab:
@@ -668,7 +647,7 @@ test.describe('focusOnOpen', () => {
 
   test('a failed action leaves focus on the button that ran it', async ({ mount, page }) => {
     // The claimed button decides where the dialog opens; after a failure, whoever ran the action.
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect
       .poll(() => {
@@ -694,7 +673,7 @@ test.describe('focus after a failed action follows the button that ran it', () =
     page,
   }) => {
     // Focus starts on Cancel; failing from Confirm must leave focus there, not argue it back.
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
     await expect
       .poll(() => {
@@ -726,7 +705,7 @@ test.describe('the restore after a failed action announces itself', () => {
     // Mouse-driven on purpose: the button is `disabled` while its action runs, so focus is on
     // `<body>` when it settles and the library puts it back from nowhere. A keyboard failure would
     // carry the ring through input modality and pass whatever the library does.
-    await mount(<FocusOnOpenHarness />);
+    await mount('FocusOnOpenHarness');
     await page.getByRole('button', { name: 'Open Focus Dialog' }).click();
 
     await page.getByTestId('foo-confirm').click();
@@ -752,7 +731,7 @@ test.describe('action.isRunning — the per-action question, away from the butto
     page,
   }) => {
     // Header, field and cancel readout all sit outside the props of the action that is running.
-    await mount(<ActionIsRunningHarness />);
+    await mount('ActionIsRunningHarness');
     await page.getByRole('button', { name: 'Open' }).click();
 
     await expect(page.getByTestId('status')).toHaveText('idle');

@@ -1,7 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { NonModalClickOutsideHarness } from '../../react/__tests__/use-dialog/non-modal-click-outside.story.js';
-import { BackdropHitTestHarness } from '../../react/__tests__/use-dialog/backdrop-hit-test.story.js';
 
 /**
  * Both dismissal surfaces, driven by a finger.
@@ -34,7 +32,7 @@ test.describe('a panel dismissed by a finger', () => {
   test('a tap outside dismisses it @touch', async ({ mount, page }) => {
     // The pair completes on a tap the way it does on a click — the whole question this device
     // answers, since the dismissal waits for a release that a finger might never give.
-    await mount(<NonModalClickOutsideHarness />);
+    await mount('NonModalClickOutsideHarness');
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -45,7 +43,7 @@ test.describe('a panel dismissed by a finger', () => {
   });
 
   test('a tap inside leaves it open @touch', async ({ mount, page }) => {
-    await mount(<NonModalClickOutsideHarness />);
+    await mount('NonModalClickOutsideHarness');
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -62,7 +60,7 @@ test.describe('a panel dismissed by a finger', () => {
     // The shape a mouse never makes: press outside, drag back in, and the browser takes the
     // pointer away as a pan — `pointerdown` then `pointercancel`, no release. The dismissal must
     // not fire, and the cancel must leave nothing armed for the next release to claim.
-    await mount(<NonModalClickOutsideHarness />);
+    await mount('NonModalClickOutsideHarness');
     await page.getByRole('button', { name: 'Open Non-Modal' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -88,7 +86,7 @@ test.describe('a panel dismissed by a finger', () => {
 
 test.describe('a modal backdrop tapped by a finger', () => {
   test('a tap on the backdrop dismisses it @touch', async ({ mount, page }) => {
-    await mount(<BackdropHitTestHarness />);
+    await mount('BackdropHitTestHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -101,7 +99,7 @@ test.describe('a modal backdrop tapped by a finger', () => {
   test('a tap on the content does not @touch', async ({ mount, page }) => {
     // The press guard reads the same target test on a touch `pointerdown` as on a mouse one, and
     // this is where a wrong answer would show: the click a tap synthesises reports the `<dialog>`.
-    await mount(<BackdropHitTestHarness />);
+    await mount('BackdropHitTestHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 

@@ -149,11 +149,26 @@ decides where a new example goes:
 | `/ui-templates`    | Copy-paste index: Vanilla / Shared                        |
 | `/design-system`   | Penumbra, read live from the token sheet — never restated |
 | `/api`             | Generated reference — a map, then a page per category     |
-| `/stories`         | Live `*.story.tsx` harnesses from the CT suite            |
+| `/stories`         | Live `*.story.tsx` harnesses, and the suite’s gallery     |
 
 **`PeekingMoon` is suppressed on two of them**, for reasons that do not generalise: `/` already
 shows the same moon still, and `/stories` portals panels to the body edges where a mascot reads as
 a fixture misbehaving. `RootLayout` holds the pair.
+
+## `/stories` is also the component suite's gallery
+
+Playwright's stories model ships no bundler: the page is the app's, so **this** Vite builds what the
+tests exercise — the React Compiler, the `umbra` alias and the instrumenter (`CT_COVERAGE=1`) are
+configured here once.
+
+**`?gallery` renders no app**, and both branches of `main.tsx` import **dynamically** — a static one
+runs whether or not its branch does, and the router's graph reaching a test page is how
+`ThemeProvider` pinned `--form-bg` inline on `:root`, outranking a template's dark mode. The app
+boots from `app/bootstrap.tsx` into `#app`, the gallery from `pages/stories/model/gallery.ts` into
+`#root`, where Playwright scopes its Locator.
+
+**Generated, not listed**: `yarn story-ids` writes the typed `Stories` augmentation and one lazy
+loader per id.
 
 ## The API reference is generated
 

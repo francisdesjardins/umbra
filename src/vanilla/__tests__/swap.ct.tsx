@@ -1,5 +1,4 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import { VanillaSwapHarness } from './swap.story.js';
 
 /**
  * `umbra/vanilla` over markup somebody else replaces — the hypermedia case, where the library's
@@ -17,7 +16,7 @@ test.describe('a dialog whose markup is swapped underneath it', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaSwapHarness />);
+    await mount('VanillaSwapHarness');
     await expect(page.getByTestId('swap-binds')).toHaveText('1');
 
     await page.getByTestId('swap-naive').click();
@@ -40,7 +39,7 @@ test.describe('a dialog whose markup is swapped underneath it', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaSwapHarness />);
+    await mount('VanillaSwapHarness');
 
     await page.getByTestId('swap-rebind').click();
     await expect(page.getByTestId('swap-binds')).toHaveText('2');
@@ -62,7 +61,7 @@ test.describe('a dialog whose markup is swapped underneath it', () => {
    * being ordered in the stack, or opened by id, forever after.
    */
   test('the retired controller leaves nothing behind in the registry', async ({ mount, page }) => {
-    await mount(<VanillaSwapHarness />);
+    await mount('VanillaSwapHarness');
     await expect(page.getByTestId('swap-registered')).toHaveText('1');
 
     await page.getByTestId('swap-rebind').click();

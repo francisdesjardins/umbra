@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/experimental-ct-react';
+import { test as base } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -47,4 +47,4 @@ export const test = base.extend<{ coverage: void }>({
   ],
 });
 
-export { expect } from '@playwright/experimental-ct-react';
+export { expect } from '@playwright/test';

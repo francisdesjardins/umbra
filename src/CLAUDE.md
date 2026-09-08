@@ -565,7 +565,14 @@ State management lives in [store/](store/) — a hand-rolled reactive cell (a `S
 
 ## Testing Details
 
-Tests are auto-wrapped in `<DialogManagerProvider>` via [playwright/index.tsx](../playwright/index.tsx), so each gets isolated state. That wrapper is **React's**: a Solid harness wraps itself in Solid's, or its dialogs register with the module-level singleton and leak between tests.
+**A component test mounts a harness by id** — `mount('BasicHarness')` — against the gallery the
+playground serves at `/stories?gallery=1`. `yarn story-ids` generates the `Stories` augmentation, so
+a call site offers the list and checks its props, and
+[story-ids.test.ts](__tests__/story-ids.test.ts) fails on an id naming no harness — which the
+`keyof Stories | (string & {})` union cannot. Each mount is wrapped in `<DialogManagerProvider>` by
+[the gallery](../playground/src/pages/stories/model/gallery.ts), so each test gets isolated state.
+That wrapper is **React's**: a Solid harness wraps itself in Solid's, or its dialogs register with
+the module-level singleton and leak between tests.
 
 **Solid harnesses** ([solid/\_\_tests\_\_/](solid/__tests__/)) are a Solid root hosted inside a React CT story: the story renders a `<div>`, calls Solid's `render` into it from an effect, and returns the disposer as the cleanup. They are written with `h` rather than JSX, so no Solid compiler enters the CT bundle — and nothing is lost, because hyperscript detects the getters an action's props carry and spreads them reactively, exactly as compiled JSX would.
 

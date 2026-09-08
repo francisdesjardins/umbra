@@ -1,31 +1,6 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
 import { frontDialogId } from '../../__tests__/stack-probe.js';
-import {
-  VanillaBasicHarness,
-  VanillaMoveFocusHarness,
-  VanillaRestoreFocusToHarness,
-  VanillaBusyHarness,
-  VanillaClaimlessReclaimHarness,
-  VanillaContainedHarness,
-  VanillaDestroyHarness,
-  VanillaDismissRequestHarness,
-  VanillaExplicitHostHarness,
-  VanillaFailingActionHarness,
-  VanillaNoHostHarness,
-  VanillaNonModalOptionsHarness,
-  VanillaOpenRequestHarness,
-  VanillaPortalHarness,
-  VanillaPrepareFailureHarness,
-  VanillaReconcileHarness,
-  VanillaLabellingHarness,
-  VanillaRestoreOnUnbindHarness,
-  VanillaShadowRootHarness,
-  VanillaShadowStackHarness,
-  VanillaUnbindHarness,
-  VanillaServerOpenHarness,
-  VanillaGateHarness,
-} from './bind-dialog.story';
 
 /**
  * `umbra/vanilla`, against a real browser and a `<dialog>` the caller wrote — deliberately the same
@@ -35,7 +10,7 @@ import {
 
 test.describe('bindDialog', () => {
   test('leaves the caller’s dialog closed until asked', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
     await expect(page.getByTestId('dialog-vanilla-basic')).not.toBeVisible();
   });
@@ -44,7 +19,7 @@ test.describe('bindDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('is-visible')).toHaveText('open');
@@ -62,7 +37,7 @@ test.describe('bindDialog', () => {
   });
 
   test('a bound action closes with its own reason', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
     await page.getByRole('button', { name: 'Cancel' }).click();
 
@@ -71,7 +46,7 @@ test.describe('bindDialog', () => {
   });
 
   test('an action’s hotkey runs the same path its button does', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await page.keyboard.press('Enter');
@@ -80,7 +55,7 @@ test.describe('bindDialog', () => {
   });
 
   test('Escape defers to the action that claimed it', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await page.keyboard.press('Escape');
@@ -93,7 +68,7 @@ test.describe('bindDialog', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByRole('button', { name: 'Confirm' })).toBeFocused();
@@ -101,7 +76,7 @@ test.describe('bindDialog', () => {
 
   test('a running action is pushed onto every bound button', async ({ mount, page }) => {
     // No renderer: `bindAction` writes `disabled` / `data-loading` (CSS) / `aria-busy` (AT) itself.
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -121,7 +96,7 @@ test.describe('bindDialog', () => {
   });
 
   test('isActionRunning answers for one action, off the button', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open').click();
 
     await expect(page.getByTestId('confirm-running')).toHaveText('no');
@@ -136,7 +111,7 @@ test.describe('bindDialog', () => {
   });
 
   test('openAndWait resolves with how it closed', async ({ mount, page }) => {
-    await mount(<VanillaBasicHarness />);
+    await mount('VanillaBasicHarness');
     await page.getByTestId('open-and-wait').click();
     await page.getByRole('button', { name: 'Cancel' }).click();
 
@@ -148,7 +123,7 @@ test.describe('bindDialog', () => {
     page,
   }) => {
     // The unbind is how a caller retires an action, and `hasActions()` gates backdrop dismissal.
-    await mount(<VanillaUnbindHarness />);
+    await mount('VanillaUnbindHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('dialog-vanilla-unbind')).toBeVisible();
 
@@ -166,7 +141,7 @@ test.describe('bindDialog', () => {
     // `bindAction` disables the button from a subscriber registered ahead of the focus coordinator,
     // so `activeElement` at action start is already blurred. Plain markup: the shadow root it was
     // found in was never the cause.
-    await mount(<VanillaFailingActionHarness />);
+    await mount('VanillaFailingActionHarness');
     await page.getByTestId('open').click();
 
     // The opening focus is Cancel, so a pass here cannot be "focus never moved".
@@ -182,7 +157,7 @@ test.describe('bindDialog', () => {
     page,
   }) => {
     // Quiet failures: `adoptedStyleSheets` stops at the boundary, `document.activeElement` is the host.
-    await mount(<VanillaShadowRootHarness />);
+    await mount('VanillaShadowRootHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -209,7 +184,7 @@ test.describe('bindDialog', () => {
  */
 test.describe('bindDialog — contained placement', () => {
   test('positions the panel against the dialog’s parent by default', async ({ mount, page }) => {
-    await mount(<VanillaContainedHarness />);
+    await mount('VanillaContainedHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -249,7 +224,7 @@ test.describe('bindDialog — contained placement', () => {
 
   test('the host overlays its region without becoming a hit target', async ({ mount, page }) => {
     // The host is an `inset: 0` sheet over the region even closed; `pointerEvents: none` saves it.
-    await mount(<VanillaContainedHarness />);
+    await mount('VanillaContainedHarness');
     await expect(page.getByTestId('host')).toHaveAttribute(
       'data-dialog-container',
       'vanilla-contained'
@@ -275,7 +250,7 @@ test.describe('bindDialog — contained placement', () => {
   });
 
   test('positions against an explicit host rather than the parent', async ({ mount, page }) => {
-    await mount(<VanillaExplicitHostHarness />);
+    await mount('VanillaExplicitHostHarness');
     await page.getByTestId('open').click();
 
     // The parent is `wrapper` and the named host its grandparent, so the default branch cannot pass.
@@ -287,7 +262,7 @@ test.describe('bindDialog — contained placement', () => {
   });
 
   test('degrades rather than throwing when there is no host at all', async ({ mount, page }) => {
-    await mount(<VanillaNoHostHarness />);
+    await mount('VanillaNoHostHarness');
 
     await page.getByTestId('probe').click();
     await expect(page.getByTestId('phase')).toHaveText('closed');
@@ -299,7 +274,7 @@ test.describe('bindDialog — contained placement', () => {
   test('portal places without relocating', async ({ mount, page }) => {
     // Narrower here: moving the caller's markup would take its ids, stylesheet scope and listeners,
     // so `portal: true` only selects `fixed` — the caller owns whether that reaches the viewport.
-    await mount(<VanillaPortalHarness />);
+    await mount('VanillaPortalHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -355,7 +330,7 @@ test.describe('bindDialog — contained placement', () => {
  */
 test.describe('bindDialog — subscription and teardown', () => {
   test('destroy unregisters the dialog and stops the subscription', async ({ mount, page }) => {
-    await mount(<VanillaDestroyHarness />);
+    await mount('VanillaDestroyHarness');
     await expect(page.getByTestId('registered')).toHaveText('yes');
 
     await page.getByTestId('open').click();
@@ -374,7 +349,7 @@ test.describe('bindDialog — subscription and teardown', () => {
 /** `onOpenRequest` through the controller — forwarded to the manager, not reimplemented. */
 test.describe('bindDialog — open requests', () => {
   test('an accepted request opens the dialog', async ({ mount, page }) => {
-    await mount(<VanillaOpenRequestHarness />);
+    await mount('VanillaOpenRequestHarness');
     await page.getByTestId('ask-nicely').click();
 
     await expect(page.getByTestId('outcome')).toHaveText('accepted');
@@ -383,7 +358,7 @@ test.describe('bindDialog — open requests', () => {
 
   test('a refused request reports why, and nothing opens', async ({ mount, page }) => {
     // Refusal is explicit where acceptance is the default, so this branch proves the handler ran.
-    await mount(<VanillaOpenRequestHarness />);
+    await mount('VanillaOpenRequestHarness');
     await page.getByTestId('ask-rudely').click();
 
     await expect(page.getByTestId('outcome')).toHaveText('refused:wrong payload');
@@ -397,7 +372,7 @@ test.describe('bindDialog — open requests', () => {
  */
 test.describe('bindDialog — what teardown hands back', () => {
   test('unbinding restores the caller’s button, mid-action included', async ({ mount, page }) => {
-    await mount(<VanillaRestoreOnUnbindHarness />);
+    await mount('VanillaRestoreOnUnbindHarness');
     await page.getByTestId('open').click();
 
     const slow = page.getByTestId('slow-action');
@@ -430,7 +405,7 @@ test.describe('bindDialog — what teardown hands back', () => {
     page,
   }) => {
     // `destroy()` unsubscribes first, so nothing clears `aria-busy` off the surviving element.
-    await mount(<VanillaBusyHarness />);
+    await mount('VanillaBusyHarness');
     await page.getByTestId('open').click();
 
     const dialog = page.locator('dialog[data-dialog-id="vanilla-busy"]');
@@ -441,7 +416,7 @@ test.describe('bindDialog — what teardown hands back', () => {
   });
 
   test('aria-busy clears when prepare settles', async ({ mount, page }) => {
-    await mount(<VanillaBusyHarness />);
+    await mount('VanillaBusyHarness');
     await page.getByTestId('open').click();
 
     const dialog = page.locator('dialog[data-dialog-id="vanilla-busy"]');
@@ -464,7 +439,7 @@ test.describe('bindDialog — a dismissal the owner answers', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<VanillaDismissRequestHarness />);
+    const component = await mount('VanillaDismissRequestHarness');
     await component.getByTestId('open').click();
 
     const dialog = page.locator('dialog[data-dialog-id="vanilla-dismiss-request"]');
@@ -492,7 +467,7 @@ test.describe('bindDialog — the labelling diagnostic', () => {
   test('reports a reference the caller’s markup gets wrong', async ({ mount, page }) => {
     const warnings = labellingWarnings(page);
 
-    await mount(<VanillaLabellingHarness />);
+    await mount('VanillaLabellingHarness');
     await page.getByTestId('open-broken').click();
     await expect(page.locator('dialog[data-dialog-id="vanilla-broken-label"]')).toBeVisible();
     await page.waitForTimeout(300);
@@ -505,7 +480,7 @@ test.describe('bindDialog — the labelling diagnostic', () => {
     // Never fires in the playground now, so this is its only end-to-end exercise.
     const warnings = labellingWarnings(page);
 
-    await mount(<VanillaLabellingHarness />);
+    await mount('VanillaLabellingHarness');
     await page.getByTestId('open-nameless').click();
     await expect(page.locator('dialog[data-dialog-id="vanilla-nameless"]')).toBeVisible();
     await page.waitForTimeout(300);
@@ -558,7 +533,7 @@ test.describe('a shadow-root dialog in a stack', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<VanillaShadowStackHarness />);
+    const component = await mount('VanillaShadowStackHarness');
     await component.getByTestId('toggle-policy').click();
     await expect(component.getByTestId('policy')).toHaveText('on');
 
@@ -581,7 +556,7 @@ test.describe('a shadow-root dialog in a stack', () => {
   });
 
   test('keeps the keyboard when something opens over it', async ({ mount, page }) => {
-    const component = await mount(<VanillaShadowStackHarness />);
+    const component = await mount('VanillaShadowStackHarness');
     await component.getByTestId('toggle-policy').click();
     await component.getByTestId('open-shadow-front').click();
     await expect
@@ -618,7 +593,7 @@ test.describe('a shadow-root dialog in a stack', () => {
   });
 
   test('a policy installed over it keeps the caret where it was', async ({ mount, page }) => {
-    const component = await mount(<VanillaShadowStackHarness />);
+    const component = await mount('VanillaShadowStackHarness');
     await component.getByTestId('open-shadow-front').click();
     await page.locator('#shadow-note').click();
     await page.locator('#shadow-note').fill('typed in a shadow root');
@@ -662,7 +637,7 @@ test.describe('a shadow-root dialog in a stack', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<VanillaShadowStackHarness />);
+    const component = await mount('VanillaShadowStackHarness');
     await component.getByTestId('toggle-policy').click();
     await component.getByTestId('open-shadow-front').click();
     await expect(component.getByTestId('native-closes')).toHaveText('0');
@@ -683,7 +658,7 @@ test.describe('a shadow-root dialog in a stack', () => {
  */
 test.describe('bindDialog — the options only React had exercised', () => {
   test('containFocus wraps Tab inside the panel', async ({ mount, page }) => {
-    await mount(<VanillaNonModalOptionsHarness />);
+    await mount('VanillaNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -701,7 +676,7 @@ test.describe('bindDialog — the options only React had exercised', () => {
   });
 
   test('a custom dismissKey closes it, and Escape does not', async ({ mount, page }) => {
-    await mount(<VanillaNonModalOptionsHarness />);
+    await mount('VanillaNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -716,7 +691,7 @@ test.describe('bindDialog — the options only React had exercised', () => {
   });
 
   test('dismissOnClickOutside closes it on a click in the page', async ({ mount, page }) => {
-    await mount(<VanillaNonModalOptionsHarness />);
+    await mount('VanillaNonModalOptionsHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -740,7 +715,7 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaReconcileHarness />);
+    await mount('VanillaReconcileHarness');
     await expect(page.getByTestId('phase')).toHaveText('closed');
 
     await page.getByTestId('wanted-toggle').check();
@@ -757,7 +732,7 @@ test.describe('bindDialog — reconcileOpen from the snapshot', () => {
   });
 
   test('lowering the flag during the exit asks for nothing', async ({ mount, page }) => {
-    await mount(<VanillaReconcileHarness />);
+    await mount('VanillaReconcileHarness');
     await page.getByTestId('wanted-toggle').check();
     await expect(page.getByTestId('asked')).toHaveText('open');
 
@@ -792,7 +767,7 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
 
   test('a non-modal one is adopted where it stands', async ({ mount, page }) => {
     // Without adoption the store starts `closed` and the first pass writes `display: none` over it.
-    const component = await mount(<VanillaServerOpenHarness nonModal />);
+    const component = await mount('VanillaServerOpenHarness', { nonModal: true });
 
     await expect(component.getByTestId('phase')).toHaveText('open');
     expect(await state(page)).toBe('open=true shown=true');
@@ -803,7 +778,7 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
     page,
   }) => {
     // Only script reaches the top layer, so a served `open` is a *non-modal* open with no backdrop.
-    const component = await mount(<VanillaServerOpenHarness nonModal={false} />);
+    const component = await mount('VanillaServerOpenHarness', { nonModal: false });
 
     await expect(component.getByTestId('phase')).toHaveText('closed');
     expect(await state(page)).toBe('open=false shown=false');
@@ -816,7 +791,7 @@ test.describe('bindDialog — a dialog the server rendered open', () => {
  */
 test.describe('bindDialog — a dialog that claimed no opening focus', () => {
   test('gets the keyboard back when a panel opens underneath', async ({ mount, page }) => {
-    const component = await mount(<VanillaClaimlessReclaimHarness />);
+    const component = await mount('VanillaClaimlessReclaimHarness');
     await component.getByTestId('open-both').click();
 
     await expect(page.locator('dialog[data-dialog-id="vanilla-claimless"]')).toBeVisible();
@@ -838,7 +813,7 @@ test.describe('bindDialog — onError', () => {
     mount,
     page,
   }) => {
-    const component = await mount(<VanillaPrepareFailureHarness />);
+    const component = await mount('VanillaPrepareFailureHarness');
     await component.getByTestId('vpf-open').click();
 
     await expect(page.locator('dialog[data-dialog-id="vanilla-prepare-failure"]')).toBeVisible();
@@ -860,7 +835,7 @@ test.describe('umbra/vanilla — restoreFocusTo', () => {
     // No render pass here, so the selection lives on the page — and the callback is still asked at
     // the close, on markup the library never wrote. Opened by click: WebKit focuses the row without
     // activating it on Enter.
-    await mount(<VanillaRestoreFocusToHarness />);
+    await mount('VanillaRestoreFocusToHarness');
 
     await page.getByTestId('v-rft-row-0').click();
     const panel = page.locator('dialog[data-dialog-id="vanilla-restore-focus-to"]');
@@ -876,7 +851,7 @@ test.describe('umbra/vanilla — restoreFocusTo', () => {
 
 test.describe('umbra/vanilla — moveFocus', () => {
   test('the handle walks the panel’s own controls', async ({ mount, page }) => {
-    await mount(<VanillaMoveFocusHarness />);
+    await mount('VanillaMoveFocusHarness');
     await page.getByTestId('v-mf-open').click();
     await expect(page.locator('dialog[data-dialog-id="vanilla-move-focus"]')).toBeVisible();
 
@@ -896,7 +871,7 @@ test.describe('the open gate (vanilla)', () => {
     mount,
     page,
   }) => {
-    await mount(<VanillaGateHarness />);
+    await mount('VanillaGateHarness');
 
     await page.getByTestId('open').click();
     await expect(page.getByTestId('refusal')).toHaveText('kill-switch:instruct');

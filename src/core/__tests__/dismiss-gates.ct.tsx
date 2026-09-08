@@ -1,6 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { DismissGatesHarness, InertEscapeHarness } from './dismiss-gates.story.js';
 
 // The cascade every dismissal runs, from the outside. Each gate refuses for its own reason, and a
 // refusal that reads like the next one along is what makes them worth separating.
@@ -14,7 +13,7 @@ async function openPanel(page: Page): Promise<void> {
 
 test.describe('a key the caller keeps', () => {
   test('onKeyDown sees the press before the hotkey runs', async ({ mount, page }) => {
-    await mount(<DismissGatesHarness />);
+    await mount('DismissGatesHarness');
     await openPanel(page);
 
     await page.getByTestId('slow-action').focus();
@@ -27,7 +26,7 @@ test.describe('a key the caller keeps', () => {
   test('and preventDefault in it stops the hotkey', async ({ mount, page }) => {
     // The documented door out, and the only one a caller has: content that answers a key itself
     // must be able to keep it, and nothing else in the cascade can express that.
-    await mount(<DismissGatesHarness swallowKeys />);
+    await mount('DismissGatesHarness', { swallowKeys: true });
     await openPanel(page);
 
     await page.getByTestId('slow-action').focus();
@@ -46,7 +45,7 @@ test.describe('a dismissal an action is holding', () => {
     page,
   }) => {
     // Read at the release, so the gate answers for the gesture rather than for its press.
-    await mount(<DismissGatesHarness />);
+    await mount('DismissGatesHarness');
     await openPanel(page);
 
     await page.getByTestId('slow-action').click();
@@ -65,7 +64,7 @@ test.describe('a dismissal an action is holding', () => {
     // `pointercancel` is what a scroll claiming the gesture produces, and it arrives *instead of*
     // the release the dismissal waits for — so the armed press has to be dropped rather than left
     // for whatever release comes next.
-    await mount(<DismissGatesHarness />);
+    await mount('DismissGatesHarness');
     await openPanel(page);
 
     const box = await page.getByTestId('outside').boundingBox();
@@ -91,7 +90,7 @@ test.describe('a dismiss key that is not Escape', () => {
   }) => {
     // The native `cancel` fires for Escape whatever the dialog declares, and it is always
     // prevented: the browser closing the element behind the store is the failure to rule out.
-    await mount(<InertEscapeHarness />);
+    await mount('InertEscapeHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('visible')).toHaveText('open');
 

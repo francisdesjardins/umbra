@@ -63,7 +63,8 @@ yarn coverage:update    # Run both coverage measurements and rewrite README + CL
 
 ## Testing
 
-Playwright for unit + component tests (`playwright.config.ts`).
+Playwright for unit + component tests (`playwright.config.ts`). A component test mounts a harness
+**by id** against the playground gallery at `/stories?gallery=1`.
 
 ```bash
 yarn test                    # All tests (unit + component)
@@ -75,11 +76,11 @@ yarn test:component:coverage # Component tests with coverage (istanbul, see belo
 
 The three that are not coverage runs have a `:ui` variant that opens the Playwright UI.
 
-| Suffix        | Purpose                                 |
-| ------------- | --------------------------------------- |
-| `*.test.ts`   | Unit tests — pure functions, no browser |
-| `*.ct.tsx`    | Component tests — Playwright CT         |
-| `*.story.tsx` | Harness components imported by CT tests |
+| Suffix        | Purpose                                   |
+| ------------- | ----------------------------------------- |
+| `*.test.ts`   | Unit tests — pure functions, no browser   |
+| `*.ct.tsx`    | Component tests — mounted by id           |
+| `*.story.tsx` | Harnesses the component tests mount by id |
 
 **Two tags move a test off the default projects and onto one that can answer it**, and both are
 config-level rather than a condition inside a test, so a run says plainly what it covered.
@@ -128,9 +129,7 @@ artifact nobody opens costs the component job ~45% more runtime. Do not re-add i
 moves under an enterprise **and** something renders the result.
 
 **Every way the CT report has failed has failed quietly**, so each failure mode is documented where
-it bites and `scripts/ct-coverage-report.mjs` prints them all when it finds nothing. The one in no
-file: editing the instrumenter invalidates neither CT cache, so delete `playwright/.cache-coverage/`
-by hand.
+it bites and `scripts/ct-coverage-report.mjs` prints them all when it finds nothing.
 
 ### Top-layer rule
 

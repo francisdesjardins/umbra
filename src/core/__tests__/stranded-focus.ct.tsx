@@ -1,6 +1,5 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
 import type { Page } from '@playwright/test';
-import { StrandedFocusHarness } from './stranded-focus.story.js';
 
 /** Whoever holds focus, named by its test id — `none` when the keyboard is on the page. */
 const focused = (page: Page) => {
@@ -31,7 +30,7 @@ test.describe('a control that disables itself', () => {
    */
   test('gets the keyboard back when it comes back @focus-dependent', async ({ mount, page }) => {
     await page.bringToFront();
-    await mount(<StrandedFocusHarness />);
+    await mount('StrandedFocusHarness');
     await page.getByTestId('stranded-open').click();
     await expect(page.getByTestId('stranded-work')).toBeVisible();
 
@@ -62,7 +61,7 @@ test.describe('a control that disables itself', () => {
    * "saving…" on the confirm button, where the next Enter commits the dialog.
    */
   test('is not answered by moving focus to some other control', async ({ mount, page }) => {
-    await mount(<StrandedFocusHarness />);
+    await mount('StrandedFocusHarness');
     await page.getByTestId('stranded-open').click();
     await page.getByTestId('stranded-work').press('Enter');
     await expect(page.getByTestId('stranded-work')).toBeDisabled();
@@ -76,7 +75,7 @@ test.describe('a control that disables itself', () => {
    * carries its destination, so nothing may drag it back.
    */
   test('leaves an ordinary move between controls alone', async ({ mount, page }) => {
-    await mount(<StrandedFocusHarness />);
+    await mount('StrandedFocusHarness');
     await page.getByTestId('stranded-open').click();
     await expect(page.getByTestId('stranded-work')).toBeVisible();
 

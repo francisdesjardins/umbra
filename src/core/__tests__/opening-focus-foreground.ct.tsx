@@ -1,10 +1,4 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  OpeningFocusForegroundHarness,
-  ReclaimFocusHarness,
-  ReclaimWithoutClaimHarness,
-  ShadowReclaimWithoutClaimHarness,
-} from './opening-focus-foreground.story.js';
 
 /**
  * The opening focus defers to the foreground: a dialog opening underneath must not take the
@@ -15,7 +9,7 @@ test('a panel opening underneath does not take focus from the dialog in front', 
   mount,
   page,
 }) => {
-  const component = await mount(<OpeningFocusForegroundHarness />);
+  const component = await mount('OpeningFocusForegroundHarness');
   await component.getByTestId('off-open-interruption').click();
   const interruption = page.locator('dialog[data-dialog-id="off-interruption"]');
   await expect(interruption).toBeVisible();
@@ -40,7 +34,7 @@ test('a panel opening underneath does not take focus from the dialog in front', 
 
 test('the same panel takes its opening focus when nothing is in front', async ({ mount, page }) => {
   // The other half, or the fix would just be "never focus a non-modal dialog".
-  const component = await mount(<OpeningFocusForegroundHarness />);
+  const component = await mount('OpeningFocusForegroundHarness');
   await component.getByTestId('off-open-panel-alone').click();
   await expect(page.locator('dialog[data-dialog-id="off-panel"]')).toBeVisible();
 
@@ -53,7 +47,7 @@ test.describe('taking the focus back', () => {
     page,
   }) => {
     // A non-modal panel arriving underneath: nothing is re-shown, so only the reclaim can restore.
-    const component = await mount(<ReclaimFocusHarness behindIsModal={false} />);
+    const component = await mount('ReclaimFocusHarness', { behindIsModal: false });
     await component.getByTestId('rf-open-front').click();
     // Its own claim, honoured on the opening — the state the reclaim must not simply repeat.
     await expect(page.getByTestId('rf-front-claimed')).toBeFocused();
@@ -77,7 +71,7 @@ test.describe('taking the focus back', () => {
     // fixes**: a raise *re-records* the platform's previously-focused element, so the front
     // dialog's native close hands the keyboard back into the one behind. Measured, not deduced —
     // it passes against the implementation predating the reclaim, over a three-link chain.
-    const component = await mount(<ReclaimFocusHarness behindIsModal={true} />);
+    const component = await mount('ReclaimFocusHarness', { behindIsModal: true });
     await component.getByTestId('rf-open-front').click();
     await page.getByTestId('rf-schedule').click();
     await expect(page.locator('dialog[data-dialog-id="rf-behind"]')).toBeVisible();
@@ -94,7 +88,7 @@ test.describe('taking the focus back', () => {
   });
 
   test('and its hotkeys work, which is what the focus is for', async ({ mount, page }) => {
-    const component = await mount(<ReclaimFocusHarness behindIsModal={true} />);
+    const component = await mount('ReclaimFocusHarness', { behindIsModal: true });
     await component.getByTestId('rf-open-front').click();
     await page.getByTestId('rf-schedule').click();
     await expect(page.locator('dialog[data-dialog-id="rf-behind"]')).toBeVisible();
@@ -113,7 +107,7 @@ test.describe('a dialog that claimed no opening focus still gets its keyboard ba
   test('a panel opening underneath does not leave focus on the body', async ({ mount, page }) => {
     // The defect: `reclaimFocus` aimed only at a `focusOnOpen` marker then fell through to
     // `dialog.focus()`, which an open `<dialog>` refuses — keyboard on `<body>`, Tab reaching none.
-    const component = await mount(<ReclaimWithoutClaimHarness />);
+    const component = await mount('ReclaimWithoutClaimHarness');
     await component.getByTestId('open-both').click();
 
     await expect(page.locator('dialog[data-dialog-id="reclaim-no-claim"]')).toBeVisible();
@@ -134,7 +128,7 @@ test.describe('a dialog that claimed no opening focus still gets its keyboard ba
   }) => {
     // Asked of the `document`, a shadow root answers with the *host*, so the confirmation fails on
     // a candidate that took focus and the scan walks on to the last control. Read via the root.
-    const component = await mount(<ShadowReclaimWithoutClaimHarness />);
+    const component = await mount('ShadowReclaimWithoutClaimHarness');
     await component.getByTestId('shadow-open-both').click();
 
     await expect(page.locator('dialog[data-dialog-id="shadow-reclaim-no-claim"]')).toBeVisible();
@@ -159,7 +153,7 @@ test.describe('the opening focus announces itself', () => {
     // `showModal()` picks the first focusable under the modality of the click that opened the
     // dialog — so on Chromium and Firefox the focus is real and the ring is not: 2.4.7 with a
     // working Enter key. Asserted on whatever holds focus; the pick is the platform's business.
-    const component = await mount(<ReclaimWithoutClaimHarness />);
+    const component = await mount('ReclaimWithoutClaimHarness');
     await component.getByTestId('open-both').click();
 
     await expect(page.locator('dialog[data-dialog-id="reclaim-no-claim"]')).toBeVisible();

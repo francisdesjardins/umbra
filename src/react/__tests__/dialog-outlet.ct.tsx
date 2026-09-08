@@ -1,17 +1,8 @@
 import { expect, test } from '../../__tests__/ct-coverage.js';
-import {
-  NoOutletHarness,
-  OutletBasicHarness,
-  OutletPaintTimingHarness,
-  OutletMultiHarness,
-  OutletNestedHarness,
-  OutletNullDialogHarness,
-  OutletTeardownHarness,
-} from './dialog-outlet.story';
 
 test.describe('DialogOutlet', () => {
   test('renders dialog via outlet without {Dialog} in JSX', async ({ mount, page }) => {
-    await mount(<OutletBasicHarness />);
+    await mount('OutletBasicHarness');
     await expect(page.getByTestId('is-visible')).toHaveText('closed');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
@@ -21,7 +12,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('close works through outlet', async ({ mount, page }) => {
-    await mount(<OutletBasicHarness />);
+    await mount('OutletBasicHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
 
@@ -31,19 +22,19 @@ test.describe('DialogOutlet', () => {
   });
 
   test('dialog.Dialog is null when outlet is present', async ({ mount, page }) => {
-    await mount(<OutletNullDialogHarness />);
+    await mount('OutletNullDialogHarness');
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
   });
 
   test('dialog.Dialog is still null after opening inside outlet', async ({ mount, page }) => {
-    await mount(<OutletNullDialogHarness />);
+    await mount('OutletNullDialogHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-is-null')).toHaveText('yes');
     await expect(page.getByTestId('dialog-outlet-null-check')).toBeVisible();
   });
 
   test('without outlet — standard {Dialog} behaviour', async ({ mount, page }) => {
-    await mount(<NoOutletHarness />);
+    await mount('NoOutletHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-no-outlet')).toBeVisible();
@@ -54,7 +45,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('multiple dialogs in one outlet all render', async ({ mount, page }) => {
-    await mount(<OutletMultiHarness />);
+    await mount('OutletMultiHarness');
 
     await page.getByRole('button', { name: 'Open A' }).click();
     await expect(page.getByTestId('is-visible-a')).toHaveText('open');
@@ -71,7 +62,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('nested outlet — inner dialog renders via inner outlet', async ({ mount, page }) => {
-    await mount(<OutletNestedHarness />);
+    await mount('OutletNestedHarness');
 
     await page.getByRole('button', { name: 'Open Inner' }).click();
     await expect(page.getByTestId('is-visible-inner')).toHaveText('open');
@@ -82,7 +73,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('nested outlet — outer dialog renders via outer outlet', async ({ mount, page }) => {
-    await mount(<OutletNestedHarness />);
+    await mount('OutletNestedHarness');
 
     await page.getByRole('button', { name: 'Open Outer' }).click();
     await expect(page.getByTestId('is-visible-outer')).toHaveText('open');
@@ -93,7 +84,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('escape closes dialog rendered via outlet', async ({ mount, page }) => {
-    await mount(<OutletBasicHarness />);
+    await mount('OutletBasicHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
     await expect(page.getByTestId('is-opening')).toHaveText('false');
@@ -104,7 +95,7 @@ test.describe('DialogOutlet', () => {
   });
 
   test('can open and close multiple times via outlet', async ({ mount, page }) => {
-    await mount(<OutletBasicHarness />);
+    await mount('OutletBasicHarness');
 
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('dialog-outlet-basic')).toBeVisible();
@@ -124,7 +115,7 @@ test.describe('DialogOutlet — paint timing', () => {
     mount,
     page,
   }) => {
-    await mount(<OutletPaintTimingHarness />);
+    await mount('OutletPaintTimingHarness');
     await page.getByRole('button', { name: 'Open Dialog' }).click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
 
@@ -141,7 +132,7 @@ test.describe('DialogOutlet — teardown', () => {
   test('a dialog that unmounts while open is dropped from the outlet', async ({ mount, page }) => {
     // A dialog whose component goes away must unregister, or the outlet keeps rendering a
     // `<dialog>` for a hook that no longer exists — on screen, in the top layer, driven by nothing.
-    await mount(<OutletTeardownHarness />);
+    await mount('OutletTeardownHarness');
     await page.getByTestId('open').click();
     await expect(page.getByTestId('is-visible')).toHaveText('open');
     await expect(page.getByTestId('dialog-outlet-teardown')).toBeVisible();

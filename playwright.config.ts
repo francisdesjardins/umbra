@@ -1,45 +1,14 @@
-import { defineConfig, devices } from '@playwright/experimental-ct-react';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
-import { ctCoverage } from './scripts/vite-plugin-ct-coverage.mjs';
-import { reactCompiler } from './scripts/vite-plugin-react-compiler.mjs';
+import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Component-test coverage, opt-in through `CT_COVERAGE=1`.
+ * Where the component suite mounts, and it is the playground's own dev server.
  *
- * The unit project measures itself with c8 (V8 coverage of a Node process). A component test has
- * no Node process to measure — the code under test runs in the browser, in a bundle Vite built —
- * so the source is instrumented on the way in instead, and each test reads the counters back out
- * of its own page. Off by default: instrumentation is a real cost on every CT run, and the
- * numbers are only wanted when someone is asking about them.
- *
- * Read once: the flag decides four things below, and four independent reads of an environment
- * variable is four chances for them to answer differently.
+ * The suite has no bundler of its own any more: `/stories` exposes `window.mount` over the same
+ * harnesses it shows a reader, built by the playground's Vite — which already applies the React
+ * Compiler at `target: '19'` and the `umbra` alias, so the bundle a test exercises is the one the
+ * demo runs rather than a second pipeline configured to match.
  */
-const withCoverage = process.env['CT_COVERAGE'] === '1';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped by design; the Vite plugin shape is widened below anyway
-const coveragePlugins: any[] = withCoverage ? [ctCoverage()] : [];
-
-// @playwright/experimental-ct-core bundles its own Vite version whose Plugin
-// type diverges from the project's Vite 8 beta. The plugin is runtime-compatible;
-// only the TypeScript signatures differ, so we widen the type here.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const vitePlugins: any[] = [
-  react(),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- widened above, same reason
-  ...coveragePlugins,
-  // After coverage, deliberately: both are `enforce: 'pre'`, so this array is the order, and the
-  // instrumenter needs the file as written for its counters to land without a source map.
-  //
-  // The compiler is applied here rather than through a plugin option because neither wiring that
-  // looks right actually works: `react({ babel: … })` is the pre-rolldown form and silently
-  // transforms nothing, and `@rolldown/plugin-babel` — which the library build uses — has no
-  // effect inside the Vite that Playwright's component runner bundles. A suite that exercises
-  // uncompiled source while the package ships compiled output is not testing the package.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- a .mjs plugin, untyped like the one above
-  reactCompiler({ target: '19' }),
-];
+const GALLERY_URL = 'http://localhost:3000/stories?gallery=1';
 
 /**
  * What one component test may take, and it is a **contention** budget rather than a behaviour one.
@@ -127,41 +96,22 @@ export default defineConfig({
   reporter: [['html', { outputFolder: 'playwright-report' }]],
   use: {
     trace: 'on-first-retry',
-    ctPort: 3100,
-    // One cache per bundle *shape*, and it is not a nicety. Playwright keys its CT build on the
-    // Playwright and Vite versions and a hash of the sources — not on the plugin list — so
-    // toggling CT_COVERAGE alone leaves the previous bundle in place: coverage runs produce no
-    // counters at all, and the report says `.nyc_output` is empty rather than that anything is
-    // wrong. Two directories means each build is valid on its own terms and switching costs one
-    // rebuild instead of a wrong answer.
-    //
-    // One edge survives, because Playwright's freshness check walks the *component sources*: an
-    // edit to `scripts/vite-plugin-ct-coverage.mjs` alone does not invalidate anything, so
-    // changing the instrumenter means deleting `playwright/.cache-coverage/` by hand.
-    ctCacheDir: withCoverage ? 'playwright/.cache-coverage' : 'playwright/.cache',
-    ctViteConfig: {
-      // Keep pre-bundled deps in a dedicated dir separate from the dev-server cache.
-      // CI pipelines can cache node_modules/.vite-ct between runs for faster startup.
-      cacheDir: withCoverage ? 'node_modules/.vite-ct-coverage' : 'node_modules/.vite-ct',
-      // The playground's harnesses reach the library the way a user does — `umbra/react`, per
-      // its own rule against deep relative climbs into `src/` — and this build is the only one
-      // that has to resolve that without the playground's Vite config. There is no
-      // `node_modules/umbra`: the root workspace is not linked under its own name, and
-      // `import.meta.resolve('umbra/react')` from `playground/` answers ERR_MODULE_NOT_FOUND.
-      // It resolved anyway, through Vite's own lookup, and a green suite resting on that is a
-      // green suite one resolver change from disappearing — it went red here once already and a
-      // `yarn install` put it back with nothing to point at. Stated now, matching the alias
-      // `playground/vite.config.ts` has always had.
-      resolve: {
-        alias: { umbra: resolve(import.meta.dirname, 'src') },
-      },
-      optimizeDeps: {
-        // Explicitly pre-bundle React so it is processed once and cached rather
-        // than re-transformed on every cold start.
-        include: ['react', 'react-dom'],
-      },
-      plugins: vitePlugins,
-    },
+    baseURL: GALLERY_URL,
+    // A cached response shadowing a fresh bundle is the one failure mode that reads as a flaky
+    // test rather than a stale page, and the playground registers no worker of its own to lose.
+    serviceWorkers: 'block',
+    // **Not `reuseContext`**, which the migration guide suggests for speed. The manager is a
+    // module singleton, so a shared context carries one test's registrations into the next: the
+    // provider-isolation and DOM-event harnesses went red on their *second* interaction, which is
+    // exactly what a leaked registry looks like. A context per test is the isolation this suite
+    // has always had, and it costs about a second across the whole project.
+  },
+  // Reused when one is already up — the dev server on :3000 is usually the one being worked in.
+  webServer: {
+    command: 'yarn dev',
+    url: GALLERY_URL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
   projects: [
     {
