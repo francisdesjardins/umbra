@@ -11,6 +11,16 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-08
 
+### Fixed — the coverage run shared its dependency cache with the dev server
+
+Giving it its own port was half the isolation. Vite's dependency optimizer _deletes and rewrites_
+`node_modules/.vite` when a server starts, so the second one up hands the first one's already-open
+pages chunk URLs that no longer exist: the run reports `error loading dynamically imported module`,
+then `ERR_CONNECTION_REFUSED` once the older server gives up, and neither message names a dev server
+as the cause. Ten component tests died that way with a `yarn coverage:update` running beside an
+ordinary `yarn test` — which is the ordinary case here, a dev server always being up. The coverage
+server takes `node_modules/.vite-coverage`; the plain one keeps Vite's default, unchanged.
+
 ### Fixed — two config files sat outside every type-checked program
 
 `playwright.config.ts` and `vite.config.esm.ts` live beside `src/`, and the root program's

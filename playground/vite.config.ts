@@ -21,10 +21,14 @@ const hashRouter = process.env['VITE_HASH_ROUTER'] === 'true';
  * **Before the compiler, deliberately** — both are `enforce: 'pre'`, so this array is the order and
  * the instrumenter needs the file as written for its counters to land on source lines.
  */
-const coveragePlugins: Plugin[] = process.env['CT_COVERAGE'] === '1' ? [ctCoverage()] : [];
+const withCoverage = process.env['CT_COVERAGE'] === '1';
+const coveragePlugins: Plugin[] = withCoverage ? [ctCoverage()] : [];
 
 export default defineConfig({
   base: hashRouter ? './' : '/',
+  // A cache of its own, like the port: Vite's dep optimizer deletes and rewrites this directory at
+  // startup, so two servers sharing it hand each other's open pages chunk URLs that no longer exist.
+  cacheDir: withCoverage ? 'node_modules/.vite-coverage' : 'node_modules/.vite',
   plugins: [
     // Fast Refresh is kept off the modules a Worker imports. Its preamble reads `window`, which a
     // Worker has not got, so anything reaching `umbra/react` from one died on import — and `worker.
