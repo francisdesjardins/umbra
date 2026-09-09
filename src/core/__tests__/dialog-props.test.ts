@@ -55,6 +55,24 @@ test.describe('dialogAttributes', () => {
     expect(attributes.role).toBeUndefined();
   });
 
+  test('is exactly this table — a ninth key would be a change nobody asked for', () => {
+    // `toStrictEqual`: the assertions around it each name a key and would pass with an extra one
+    // beside them, and `toEqual` counts an `undefined` property as absent — the distinction the
+    // aria fields turn on. Names written out, not read off the function.
+    expect(
+      dialogAttributes({ dialogId: 'exact', nonModal: false, isPreparing: false })
+    ).toStrictEqual({
+      'data-dialog-id': 'exact',
+      'data-testid': 'dialog-exact',
+      'data-dialog-type': 'dialog',
+      'aria-busy': 'false',
+      'aria-label': undefined,
+      'aria-labelledby': undefined,
+      'aria-describedby': undefined,
+      role: undefined,
+    });
+  });
+
   test('passes the caller’s name and role through untouched', () => {
     expect(
       dialogAttributes({

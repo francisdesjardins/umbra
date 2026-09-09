@@ -5,6 +5,11 @@
  * A binding builds the element; it should not also be deciding what `data-dialog-type` is called
  * or re-deriving when a click counts as a backdrop click. Both are answers, and a second binding
  * that answered them slightly differently would break the styling contract for one of them.
+ *
+ * **Not the element's whole surface.** `data-dialog-z` is {@link stampZIndex}'s and stays there: it
+ * moves when the stack reorders, which restamps every open dialog without one of them re-rendering,
+ * and a table a binding spreads cannot express that. `dialog-attributes.ct.tsx` asserts both halves
+ * together, which is the only place that sees the surface whole.
  */
 
 /** What a binding knows about the dialog it is about to render. */

@@ -11,6 +11,25 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-09
 
+### Added — the dialog's attribute set, asserted as a set
+
+Every test that touches these attributes names one and asserts it, which proves that key and says
+nothing about the rest: a ninth attribute, or an `aria-label=""` sitting beside a correct
+`aria-labelledby`, passed all of them. `dialog-attributes.ct.tsx` reads the whole library-owned set
+off the element in **all three bindings** and compares it whole. Of the table's eight keys only
+`aria-busy` had ever been asserted at the element in Solid and `umbra/vanilla`, and
+`data-dialog-type: 'non-modal'` — the selector every panel stylesheet reaches for — was asserted in
+none of the three.
+
+It found the ninth on its first run. `data-dialog-z` is `stampZIndex`'s rather than the table's,
+and stays there on purpose — it moves when the stack reorders, which restamps every open dialog
+without one of them re-rendering, and a table a binding spreads at render cannot express that. The
+fault was the claim, not the split: `dialog-props.ts` opened with _what goes on the `<dialog>`
+element_ and meant some of it. It now names the other writer and why, and the spec is the one place
+that sees the surface whole. `dialog-props.test.ts` gained the same claim about the function itself, with
+`toStrictEqual` — `toEqual` counts an `undefined` property as absent, which is the exact
+distinction the aria fields turn on.
+
 ### Fixed — a Solid harness threw on every disposal, and nothing was watching
 
 `solid-js/h` turns a **zero-argument function prop into an accessor** when the target is a
