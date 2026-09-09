@@ -11,6 +11,18 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-09
 
+### Changed — the modality test holds the property, not the mechanism
+
+Two of the three assertions it shipped with pinned _how_ the teardown happens — the element left
+closed, `data-dialog-type` flipping while the element did not follow — which reads as a promise the
+library never made, and would be the first thing to delete if the live switch that prompted it were
+ever built. Its reasoning also leaned on a middle state nobody had reproduced.
+
+What is left is the half that outlives any future handling of the change: the open is **answered
+exactly once**, and the promise `openAndWait` returned settles rather than hanging. The mechanism
+stays where a fact about behaviour belongs — the `nonModal` row of the matrix, which cites the
+narrower title now.
+
 ### Fixed — two facts in the README, and a gate for the column that rots
 
 A pass over every checkable claim in it. Two were wrong. `yarn check` is what CI runs across

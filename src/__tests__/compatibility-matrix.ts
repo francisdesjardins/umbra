@@ -610,7 +610,7 @@ export const OPTION_ROWS: readonly OptionRow[] = [
       },
       {
         file: 'src/react/__tests__/modality-switch.ct.tsx',
-        title: 'flipping the option closes the dialog rather than switching it',
+        title: 'answers the open exactly once',
       },
     ],
   },
