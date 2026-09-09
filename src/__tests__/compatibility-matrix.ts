@@ -602,11 +602,15 @@ export const OPTION_ROWS: readonly OptionRow[] = [
     option: 'nonModal',
     excludes: ['dismissOnBackdropClick when true', 'dismissOnClickOutside when false'],
     enforcement: 'TYPE',
-    note: '**The one pair the checker holds.** `DialogVariant` is a discriminated union, so the wrong dismissal option for the variant is a compile error rather than an option that is silently read by nobody.',
+    note: '**The one pair the checker holds.** `DialogVariant` is a discriminated union, so the wrong dismissal option for the variant is a compile error rather than an option that is silently read by nobody. It is also read **once per open**: changing it under a dialog that is already open closes that dialog as a `dismiss` rather than switching it, since the two variants render different trees and the top layer is enterable only through a `showModal()` an open element cannot be asked for.',
     references: [
       {
         file: 'src/core/__tests__/type-model.test.ts',
         title: 'the documented variant combinations are the ones that compile',
+      },
+      {
+        file: 'src/react/__tests__/modality-switch.ct.tsx',
+        title: 'flipping the option closes the dialog rather than switching it',
       },
     ],
   },

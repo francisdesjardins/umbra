@@ -11,6 +11,21 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-09
 
+### Documented — modality is read once per open, and now something says so
+
+Asked whether a dialog could be promoted from non-modal to modal while open, the honest first move
+was to find out what changing `nonModal` does today. It closes the dialog: the two variants render
+different trees — a contained panel sits in a library-owned wrapper, a modal one does not — and the
+top layer is enterable only through a `showModal()` an open element cannot be asked for twice.
+
+The behaviour is **coherent**, which is worth stating plainly since the suspicion that opened this
+was the opposite. `onClose` reports `dismiss`, which `DismissReason` already documents as
+covering teardown; `openAndWait` settles once rather than stranding its owner; no half-switched
+state survives. What was missing was any statement of it, and anything holding it — a refactor that
+stopped the close would leave a non-modal element whose dismiss handling had swapped to the modal
+path, and Escape would answer to nobody. `modality-switch.ct.tsx` holds it now, the `nonModal` row
+of the matrix says it, and `/stories` shows it.
+
 ### Added — the dialog's attribute set, asserted as a set
 
 Every test that touches these attributes names one and asserts it, which proves that key and says

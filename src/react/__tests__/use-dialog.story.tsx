@@ -1,6 +1,7 @@
 export { BasicHarness } from './use-dialog/basic.story';
 export { OnOpenAbortHarness } from './use-dialog/on-open-abort.story';
 export { AccessibleNameHarness } from './use-dialog/accessible-name.story';
+export { ModalitySwitchHarness } from './use-dialog/modality-switch.story';
 export { BusyWhilePreparingHarness } from './use-dialog/busy-while-preparing.story';
 export { RenderPhaseHarness } from './use-dialog/render-phase.story';
 export { PrepareFailureHarness } from './use-dialog/prepare-failure.story';

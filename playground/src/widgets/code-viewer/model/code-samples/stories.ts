@@ -49,6 +49,7 @@ import storyVanillaBindSrc from 'umbra/vanilla/__tests__/bind-dialog.story.tsx?r
 import storySolidAppSrc from 'umbra/solid/__tests__/solid-app.ts?raw';
 import storySolidDialogSrc from 'umbra/solid/__tests__/solid-dialog.story.tsx?raw';
 import storyAccessibleNameSrc from 'umbra/react/__tests__/use-dialog/accessible-name.story.tsx?raw';
+import storyModalitySwitchSrc from 'umbra/react/__tests__/use-dialog/modality-switch.story.tsx?raw';
 import storyBusyWhilePreparingSrc from 'umbra/react/__tests__/use-dialog/busy-while-preparing.story.tsx?raw';
 import storyRenderPhaseSrc from 'umbra/react/__tests__/use-dialog/render-phase.story.tsx?raw';
 import storyStylingSurfaceSrc from 'umbra/react/__tests__/use-dialog/styling-surface.story.tsx?raw';
@@ -229,6 +230,7 @@ export const stories: Record<string, string> = {
   'story-opening-focus-foreground': storyOpeningFocusSrc,
   'story-vanilla-swap': storyVanillaSwapSrc,
   'story-accessible-name': storyAccessibleNameSrc,
+  'story-modality-switch': storyModalitySwitchSrc,
   'story-busy-while-preparing': storyBusyWhilePreparingSrc,
   'story-render-phase': storyRenderPhaseSrc,
   'story-styling-surface': storyStylingSurfaceSrc,

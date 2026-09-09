@@ -177,6 +177,7 @@ import {
   FocusUnderAnotherDialogHarness,
   EscWithoutFocusHarness,
   AccessibleNameHarness,
+  ModalitySwitchHarness,
   BusyWhilePreparingHarness,
   RenderPhaseHarness,
   StylingSurfaceHarness,
@@ -599,6 +600,13 @@ const STORY_GROUPS: readonly StoryGroup[] = [
           'ariaLabel, ariaLabelledBy and role reach the <dialog>. A dialog with no accessible name is announced as just "dialog" — the library cannot invent one, so it omits the attribute entirely rather than shipping an empty string an audit would miss.',
         component: AccessibleNameHarness,
         codeKey: 'story-accessible-name',
+      },
+      {
+        title: 'Modality is read once per open',
+        description:
+          'nonModal is not a live switch. The two variants render different trees and the top layer is enterable only through a showModal() an open element cannot be asked for twice, so flipping the option under an open dialog closes it as a dismiss rather than promoting it. Press Flip and the panel goes away — the behaviour is coherent, and this is where it is stated.',
+        component: ModalitySwitchHarness,
+        codeKey: 'story-modality-switch',
       },
       {
         title: 'aria-busy while prepare runs',
