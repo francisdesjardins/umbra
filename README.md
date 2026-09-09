@@ -406,6 +406,7 @@ setLogLevel('*');
 | `dialog:lifecycle`     | prepare, showModal, labelling checks |
 | `dialog:keydown`       | ESC dismiss, user onKeyDown          |
 | `dialog:click-outside` | Click-outside for non-modal dialogs  |
+| `dialog:native-close`  | A close the element made unasked     |
 | `outlet`               | DialogOutlet registration            |
 | `action`               | Action start/end, state changes      |
 
@@ -422,7 +423,7 @@ yarn type-check      # TypeScript strict check
 yarn test            # Unit + component tests
 yarn lint            # oxlint (type-aware)
 yarn format          # Prettier
-yarn check           # type-check + lint + format + docs — what CI runs, in four jobs
+yarn check           # type-check + lint + format + docs — what CI runs, across three jobs
 yarn verify:all      # lint + type-check + build + package checks, against the built artifact
 ```
 

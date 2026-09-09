@@ -11,6 +11,25 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-09
 
+### Fixed — two facts in the README, and a gate for the column that rots
+
+A pass over every checkable claim in it. Two were wrong. `yarn check` is what CI runs across
+**three** jobs rather than four — `lint` carries `format:check` as well, then `type-check`, then
+`docs` — and the debug-logging table was missing `dialog:native-close`, a namespace `setLogLevel`
+switches on and nothing named.
+
+The rest held, including the entry-point table checked against the **built** artifact rather than
+`src/`: every name resolves, each binding re-exports the root wholesale, and `bindAction` is a
+member of the controller rather than a second export. The action prop set is the eight fields it
+claims with the two right ones optional, the browser floor matches `browserslist` exactly, the
+WCAG chapter's _fifteen criteria_ is fifteen, and the component coverage figure is what a clean
+1392-test run measures.
+
+`log-namespaces.test.ts` holds that table now, in both directions — a namespace the code emits and
+the table omits is invisible, one the table names and nothing emits answers with silence.
+`doc-budget` already checked the `yarn` scripts the public documents name; this is the same rot in
+the other column.
+
 ### Documented — modality is read once per open, and now something says so
 
 Asked whether a dialog could be promoted from non-modal to modal while open, the honest first move
