@@ -11,6 +11,19 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-08
 
+### Fixed — two config files sat outside every type-checked program
+
+`playwright.config.ts` and `vite.config.esm.ts` live beside `src/`, and the root program's
+`include` stopped at `src/**` — so `tsc`, the editor and `oxlint --type-aware` alike read them as
+untyped and judged nothing in them. `tsconfig.node.json` named them and no script ever ran it: a
+file that looks like a gate and is not one, which is the shape `tsconfig.registry.json`'s own
+comment warns about. They are in the root program now, and `rootDir` is out of it — that setting
+belongs to the three configs that emit, and each already states its own.
+
+It found two breaches of rules the rest of the repo is held to: `workers: undefined` under
+`exactOptionalPropertyTypes`, and four `process.env.CI` under `noPropertyAccessFromIndexSignature`.
+`workers` is `'50%'` now, which is Playwright's own default spelled out rather than a new number.
+
 ### Fixed — a unit-only run started a dev server it never opened
 
 The stories model put the playground behind a `webServer`, and Playwright's is config-level rather

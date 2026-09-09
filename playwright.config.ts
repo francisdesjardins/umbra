@@ -9,6 +9,7 @@ import { defineConfig, devices } from '@playwright/test';
  * demo runs rather than a second pipeline configured to match.
  */
 const withCoverage = process.env['CT_COVERAGE'] === '1';
+const IS_CI = Boolean(process.env['CI']);
 
 /**
  * A coverage run gets its **own** server, on its own port.
@@ -126,9 +127,10 @@ export default defineConfig({
   // `timeout` on each, which is where the reason lives.
   timeout: 10 * 1000,
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: IS_CI,
+  retries: IS_CI ? 2 : 0,
+  // `'50%'` **is** Playwright's default, spelled out — the `cpus/2` the comments above assume.
+  workers: IS_CI ? 1 : '50%',
   reporter: [['html', { outputFolder: 'playwright-report' }]],
   use: {
     trace: 'on-first-retry',
@@ -149,7 +151,7 @@ export default defineConfig({
         webServer: {
           command: withCoverage ? `yarn dev --port ${String(PORT)} --strictPort` : 'yarn dev',
           url: GALLERY_URL,
-          reuseExistingServer: !process.env.CI && !withCoverage,
+          reuseExistingServer: !IS_CI && !withCoverage,
           timeout: 120 * 1000,
         },
       }

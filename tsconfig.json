@@ -29,9 +29,10 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  // The config files sit beside `src/`, not in it — outside the program they are untyped to `tsc`,
+  // the editor and `oxlint --type-aware` alike. `rootDir` is emit's, and this program is `noEmit`.
+  "include": ["src/**/*", "playwright.config.ts", "vite.config.esm.ts"],
   "exclude": ["node_modules", "dist", "tests", "playground"]
 }
