@@ -104,6 +104,15 @@
   color: var(--app-text);
 }
 
+/* The asterisk the floor chip carries. Secondary rather than an opacity, for the reason the moon
+   row states: a shade of the text colour measures, a transparency of it does not. */
+.floorNote {
+  margin: var(--app-space-2) 0 0;
+  font-size: var(--app-text-xs);
+  line-height: var(--app-lh-body);
+  color: var(--app-text-secondary);
+}
+
 .ctaRow {
   display: flex;
   flex-wrap: wrap;
@@ -171,8 +180,18 @@
   line-height: var(--app-lh-relaxed);
   font-weight: 700;
   display: flex;
-  align-items: center;
+  /* Not centred: a title that wraps to two lines leaves a centred mark floating beside the break
+     instead of reading as the bullet of the first line. */
+  align-items: flex-start;
   gap: var(--app-space-2);
+}
+
+/* The mark, put back on the first line's own centre. Half the difference between the line box and
+   the mark, derived rather than measured once — only the 16px is a constant, and it is the `size`
+   the page passes `MoonPhase`. */
+.nextTitle > svg {
+  flex: none;
+  margin-top: calc((var(--app-text-base) * var(--app-lh-relaxed) - 16px) / 2);
 }
 
 .nextBody {
@@ -245,9 +264,14 @@
   margin-top: var(--app-space-2);
 }
 
+/* A grid rather than a wrapping row, because there are four cards and wrapping is not
+   deterministic: a flex basis wide enough for tablet widths left the fourth card alone on a row of
+   its own at desktop. Two columns and no third breakpoint — four across fits, but only by wrapping
+   two of the titles onto a second line, which unseats the mark beside them. */
 @media (min-width: 600px) {
   .nextRow {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

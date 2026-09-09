@@ -11,6 +11,35 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-09
 
+### Added — the landing page names what it was already demonstrating
+
+A pass over the playground's home page, which had no factual errors and two silences. The dialog on
+it is declared in `DialogRegistry` — which is _why_ its `onClose` switch reads `result.data.remember`
+without a guard — and the snippet beside it shows the per-call-site form: both halves of a headline
+feature, demonstrated and unnamed. `prioritize` and `gate`, the two rules that sit above a whole
+project rather than at a call site, appeared nowhere. Neither did the browser floor.
+
+All three are on the page now, and the floor carries the asterisk it needs: every focus _move_ is
+inside it, but the **ring** on a focus the library made asks for `FocusOptions.focusVisible` —
+Chrome 145 and Safari 18.4, an `enhancing` row rather than a floor one. Below it modality decides,
+and WebKit rings either way.
+
+A fourth tile points at `/interop`, the demo the README's own blurb leads with: four bundles sharing
+one manager across React, Solid, vanilla and a web component. Four tiles wrap, so the row is a
+two-column grid rather than a wrapping flex row — a basis wide enough for tablet widths left the
+fourth alone on a row of its own at desktop, and four across only fits by breaking two titles.
+
+Two layout defects surfaced doing it, both older than the fourth tile: a title that wrapped left its
+mark floating beside the break rather than reading as the first line's bullet, and the mark sat
+6.5px above the text's own centre. The offset is derived from the type scale now rather than
+guessed.
+
+### Changed — the export gate reads the landing page too
+
+Its two snippets are hand-written strings rather than a `?raw` import of real source, so a rename
+leaves the first code a visitor reads naming an export that is gone. One entry in a list that
+already existed, rather than a gate of its own.
+
 ### Changed — the modality test holds the property, not the mechanism
 
 Two of the three assertions it shipped with pinned _how_ the teardown happens — the element left

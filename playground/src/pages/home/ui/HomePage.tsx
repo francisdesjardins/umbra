@@ -163,6 +163,13 @@ export const HomePage = () => {
             nothing: a controller for a &lt;dialog&gt; you wrote yourself. Zero UI components either
             way: the markup, the animation and the styling stay yours.
           </p>
+          <p className={styles['heroBody']}>
+            Two rules sit above every dialog in a project rather than at each call site:{' '}
+            <code>prioritize</code> decides who is in front, <code>gate</code> decides whether an
+            open happens at all. And an app that declares its dialogs in one interface gets its ids
+            checked and its close payloads correlated — the dialog on this page is declared that
+            way, which is why the <code>switch</code> in the snippet below is exhaustive.
+          </p>
 
           {lastClose ? <span className={styles['lastClose']}>onClose → {lastClose}</span> : null}
 
@@ -175,7 +182,17 @@ export const HomePage = () => {
             {/* "Measured" is the claim, not "accessible": the README's Accessibility chapter and
                 the WCAG rows of the compatibility matrix cite the test behind each cell. */}
             <span className={styles['chip']}>WCAG 2.2 · measured</span>
+            {/* Derived from what the code calls, not picked — the accounting is in the README. */}
+            <span className={styles['chip']}>Chrome 110 · Safari 16.4 · Firefox 115 *</span>
           </div>
+          {/* The floor is what the library *calls*; this is the one thing it *asks* for and does
+              not require. Numbers from the enhancing row in the compatibility matrix. */}
+          <p className={styles['floorNote']}>
+            * Every focus move is in that floor. The <em>ring</em> on a focus the library made asks
+            for <code>FocusOptions.focusVisible</code> — Chrome 145, Safari 18.4. Below it modality
+            decides: a dialog opened from the keyboard still rings, one opened by pointer does not,
+            except on WebKit, which rings either way.
+          </p>
 
           <div className={styles['ctaRow']}>
             <AppButton
@@ -241,6 +258,12 @@ export const HomePage = () => {
               phase: 'last-quarter',
               title: 'API reference',
               body: 'Generated from the source, so it cannot drift from the code.',
+            },
+            {
+              to: '/interop',
+              phase: 'waning-gibbous',
+              title: 'One manager, four bundles',
+              body: 'React, Solid, vanilla and a web component sharing a single stack.',
             },
             // `satisfies`, so each `phase` narrows to its literal instead of widening to `string`.
           ] satisfies readonly { to: string; phase: Phase; title: string; body: string }[]

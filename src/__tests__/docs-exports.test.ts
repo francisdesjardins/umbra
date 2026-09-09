@@ -14,7 +14,13 @@ import { collectExports } from './collect-exports.js';
 const SRC_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = resolve(SRC_ROOT, '..');
 
-const DOCS = ['README.md', 'API.md'] as const;
+/**
+ * The playground's landing page is in the list because its two snippets are **hand-written strings**
+ * rather than a `?raw` import of real source, so a rename leaves the first code a visitor reads
+ * naming an export that is gone. The pattern below only matches `umbra` specifiers, so the file's
+ * own imports of everything else are skipped.
+ */
+const DOCS = ['README.md', 'API.md', 'playground/src/pages/home/ui/HomePage.tsx'] as const;
 
 /**
  * `import { a, type B } from '<specifier>';` — the type marker and the names, for **all four**
