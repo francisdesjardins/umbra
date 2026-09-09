@@ -9,6 +9,18 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-09
+
+### Fixed — a Solid harness threw on every disposal, and nothing was watching
+
+`solid-js/h` turns a **zero-argument function prop into an accessor** when the target is a
+component: it calls the function on read and hands back the result. So a `dispose` callback passed
+bare fired the moment `props.dispose` was read and returned `undefined`, which threw as
+`props.dispose is not a function` — _after_ doing the work, which is why three disposal tests passed
+green while the page logged an unhandled `TypeError` on every run. The callback rides on an object
+now, which `h` leaves as a value. Element props were never affected: `h` exempts `on*` there, so
+every `onClick` in the harness is an ordinary handler.
+
 ## 2026-09-08
 
 ### Fixed — the coverage run shared its dependency cache with the dev server
