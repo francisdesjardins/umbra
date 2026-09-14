@@ -62,21 +62,6 @@
   margin: 0;
 }
 
-/* ========== Section ========== */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--content-spacing-sm);
-}
-
-.sectionTitle {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  line-height: 1.57;
-  color: var(--content-text-secondary);
-  margin: 0;
-}
-
 /* ========== Alert ========== */
 .alert {
   display: flex;
@@ -136,39 +121,6 @@
   background: var(--content-alert-error-bg);
   color: var(--content-alert-error-text);
   border: 1px solid rgba(176, 0, 32, 0.08);
-}
-
-/* ========== DetailList ========== */
-.detailList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.detailListItem {
-  display: flex;
-  align-items: center;
-  gap: var(--content-spacing-sm);
-  padding-block: 8px;
-}
-
-.detailListDense .detailListItem {
-  padding-block: 4px;
-}
-
-/* A fixed slot, not `gap` alone, so text columns align whether or not a row has an icon. */
-.detailListIcon {
-  flex: 0 0 auto;
-  min-width: 32px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.detailListText {
-  font-size: var(--font-size-sm);
-  line-height: 1.6;
-  color: var(--content-text-primary);
-  margin: 0;
 }
 
 /* ========== ContentTransition ========== */

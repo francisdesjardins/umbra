@@ -4,8 +4,6 @@
  */
 import templateUtilScrollRegionSrc from '@/entities/dialog-template/ui/shared/scroll-region.ts?raw';
 import templateUtilTokensSrc from '@/entities/dialog-template/ui/shared/tokens.ts?raw';
-import templateUtilTypesSrc from '@/entities/dialog-template/ui/shared/types.ts?raw';
-import templateUtilLoadingOverlaySrc from '@/entities/dialog-template/ui/shared/LoadingOverlay.tsx?raw';
 import vanillaMsgDefaultLayoutSrc from '@/entities/dialog-template/ui/vanilla/message-dialog/components/VanillaDefaultLayout.tsx?raw';
 import vanillaMsgContainerSrc from '@/entities/dialog-template/ui/vanilla/message-dialog/components/VanillaContainer.tsx?raw';
 import vanillaMsgHeaderSrc from '@/entities/dialog-template/ui/vanilla/message-dialog/components/VanillaHeader.tsx?raw';
@@ -41,21 +39,20 @@ import vanillaPanelPanelFooterSrc from '@/entities/dialog-template/ui/vanilla/pa
 import vanillaPanelDividerSrc from '@/entities/dialog-template/ui/vanilla/panel-dialog/components/VanillaPanelDivider.tsx?raw';
 import vanillaPanelStylesSrc from '@/entities/dialog-template/ui/vanilla/panel-dialog/styles.module.css?raw';
 import vanillaSharedButtonSrc from '@/entities/dialog-template/ui/vanilla/shared/VanillaButton.tsx?raw';
-import vanillaSharedAlertSrc from '@/entities/dialog-template/ui/vanilla/shared/Alert.tsx?raw';
-import vanillaSharedAlertContentSrc from '@/entities/dialog-template/ui/vanilla/shared/content/AlertContent.tsx?raw';
+import vanillaSharedIconButtonSrc from '@/entities/dialog-template/ui/vanilla/shared/VanillaIconButton.tsx?raw';
+import vanillaSharedButtonRowSrc from '@/entities/dialog-template/ui/vanilla/shared/ButtonRow.tsx?raw';
+import vanillaSharedAlertSrc from '@/entities/dialog-template/ui/vanilla/shared/content/AlertContent.tsx?raw';
 import vanillaSharedHeadingSrc from '@/entities/dialog-template/ui/vanilla/shared/content/Heading.tsx?raw';
 import vanillaSharedMessageSrc from '@/entities/dialog-template/ui/vanilla/shared/content/Message.tsx?raw';
 import vanillaSharedDetailSrc from '@/entities/dialog-template/ui/vanilla/shared/content/Detail.tsx?raw';
 import vanillaSharedHintSrc from '@/entities/dialog-template/ui/vanilla/shared/content/Hint.tsx?raw';
-import vanillaSharedSectionSrc from '@/entities/dialog-template/ui/vanilla/shared/content/Section.tsx?raw';
-import vanillaSharedDetailListSrc from '@/entities/dialog-template/ui/vanilla/shared/content/DetailList.tsx?raw';
 import vanillaSharedContentTransitionSrc from '@/entities/dialog-template/ui/vanilla/shared/content/ContentTransition.tsx?raw';
 import vanillaSharedOverflowContainerSrc from '@/entities/dialog-template/ui/vanilla/shared/content/OverflowContainer.tsx?raw';
 import vanillaSharedOverflownTypographySrc from '@/entities/dialog-template/ui/vanilla/shared/content/OverflownTypography.tsx?raw';
 import vanillaSharedStylesSrc from '@/entities/dialog-template/ui/vanilla/shared/content/styles.module.css?raw';
+import vanillaSharedButtonRowStylesSrc from '@/entities/dialog-template/ui/vanilla/shared/ButtonRow.module.css?raw';
 import sharedComponentCodeBlockSrc from '@/shared/ui/CodeBlock/CodeBlock.tsx?raw';
 import sharedComponentViewCodeButtonSrc from '@/shared/ui/ViewCodeButton/ViewCodeButton.tsx?raw';
-import sharedComponentLoadingButtonSrc from '@/shared/ui/LoadingButton/LoadingButton.tsx?raw';
 import sharedLibUseQuerySrc from '@/shared/lib/use-query.ts?raw';
 import sharedLibUseFormSrc from '@/shared/lib/use-form.ts?raw';
 import sharedLibUseAnnouncerSrc from '@/shared/lib/use-announcer.tsx?raw';
@@ -69,8 +66,6 @@ import sharedComponentResultDisplaySrc from '@/shared/ui/ResultDisplay/ResultDis
 export const templates: Record<string, string> = {
   'template-util-scroll-region': templateUtilScrollRegionSrc,
   'template-util-tokens': templateUtilTokensSrc,
-  'template-util-types': templateUtilTypesSrc,
-  'template-util-loading-overlay': templateUtilLoadingOverlaySrc,
   'vanilla-msg-default-layout': vanillaMsgDefaultLayoutSrc,
   'vanilla-msg-container': vanillaMsgContainerSrc,
   'vanilla-msg-header': vanillaMsgHeaderSrc,
@@ -106,21 +101,20 @@ export const templates: Record<string, string> = {
   'vanilla-panel-divider': vanillaPanelDividerSrc,
   'vanilla-panel-styles': vanillaPanelStylesSrc,
   'vanilla-shared-button': vanillaSharedButtonSrc,
+  'vanilla-shared-icon-button': vanillaSharedIconButtonSrc,
+  'vanilla-shared-button-row': vanillaSharedButtonRowSrc,
   'vanilla-shared-alert': vanillaSharedAlertSrc,
-  'vanilla-shared-alert-content': vanillaSharedAlertContentSrc,
   'vanilla-shared-heading': vanillaSharedHeadingSrc,
   'vanilla-shared-message': vanillaSharedMessageSrc,
   'vanilla-shared-detail': vanillaSharedDetailSrc,
   'vanilla-shared-hint': vanillaSharedHintSrc,
-  'vanilla-shared-section': vanillaSharedSectionSrc,
-  'vanilla-shared-detail-list': vanillaSharedDetailListSrc,
   'vanilla-shared-content-transition': vanillaSharedContentTransitionSrc,
   'vanilla-shared-overflow-container': vanillaSharedOverflowContainerSrc,
   'vanilla-shared-overflown-typography': vanillaSharedOverflownTypographySrc,
   'vanilla-shared-styles': vanillaSharedStylesSrc,
+  'vanilla-shared-button-row-styles': vanillaSharedButtonRowStylesSrc,
   'shared-component-code-block': sharedComponentCodeBlockSrc,
   'shared-component-view-code-button': sharedComponentViewCodeButtonSrc,
-  'shared-component-loading-button': sharedComponentLoadingButtonSrc,
   'shared-lib-use-query': sharedLibUseQuerySrc,
   'shared-lib-use-form': sharedLibUseFormSrc,
   'shared-lib-use-announcer': sharedLibUseAnnouncerSrc,

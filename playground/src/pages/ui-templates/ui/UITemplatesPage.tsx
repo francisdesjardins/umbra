@@ -86,18 +86,18 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
       'Button (forwards aria-keyshortcuts — required for hotkeys) and the content atoms the families render inside their layouts.',
     items: [
       { name: 'Button', codeKey: 'vanilla-shared-button' },
+      { name: 'IconButton', codeKey: 'vanilla-shared-icon-button' },
+      { name: 'ButtonRow', codeKey: 'vanilla-shared-button-row' },
       { name: 'Alert', codeKey: 'vanilla-shared-alert' },
-      { name: 'AlertContent', codeKey: 'vanilla-shared-alert-content' },
       { name: 'Heading', codeKey: 'vanilla-shared-heading' },
       { name: 'Message', codeKey: 'vanilla-shared-message' },
       { name: 'Detail', codeKey: 'vanilla-shared-detail' },
-      { name: 'DetailList', codeKey: 'vanilla-shared-detail-list' },
       { name: 'Hint', codeKey: 'vanilla-shared-hint' },
-      { name: 'Section', codeKey: 'vanilla-shared-section' },
       { name: 'OverflownTypography', codeKey: 'vanilla-shared-overflown-typography' },
       { name: 'OverflowContainer', codeKey: 'vanilla-shared-overflow-container' },
       { name: 'ContentTransition', codeKey: 'vanilla-shared-content-transition' },
       { name: 'styles.module.css', codeKey: 'vanilla-shared-styles' },
+      { name: 'ButtonRow.module.css', codeKey: 'vanilla-shared-button-row-styles' },
     ],
   },
 ];
@@ -130,8 +130,6 @@ const TEMPLATE_SHARED_GROUP: TemplateGroup = {
   items: [
     { name: 'useScrollRegion', codeKey: 'template-util-scroll-region' },
     { name: 'tokens', codeKey: 'template-util-tokens' },
-    { name: 'types', codeKey: 'template-util-types' },
-    { name: 'LoadingOverlay', codeKey: 'template-util-loading-overlay' },
   ],
 };
 
@@ -142,7 +140,6 @@ const PLAYGROUND_GROUP: TemplateGroup = {
   items: [
     { name: 'CodeBlock', codeKey: 'shared-component-code-block' },
     { name: 'ViewCodeButton', codeKey: 'shared-component-view-code-button' },
-    { name: 'LoadingButton', codeKey: 'shared-component-loading-button' },
     { name: 'ResultDisplay', codeKey: 'shared-component-result-display' },
   ],
 };
