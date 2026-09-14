@@ -21,7 +21,7 @@ Two places reach it: the microfrontend frame, which has no build step at all (se
 is a scope**: the React Compiler decides what a component is by naming convention, so `BasicApp` in
 the Solid binding reads as one and gets `react/compiler-runtime` injected — "Invalid hook call" the
 moment Solid runs it. `vite.config.ts` excludes `src/solid/` from the babel pass, mirroring
-`scripts/vite-plugin-react-compiler.mjs`.
+`vite.config.esm.ts`.
 
 ## The microfrontend frame (`public/mfe/` + `mfe-src/` + `vite-plugins/mfe-umbra.ts`)
 

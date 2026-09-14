@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // The compatibility matrix, rendered into API.md between its markers. The table lives once as data
 // in `src/__tests__/compatibility-matrix.ts`; `compatibility-matrix.test.ts` fails when the two
-// disagree. Written through prettier, which owns this repo's markdown layout (padded columns,
+// disagree. Written through the formatter, which owns this repo's markdown layout (padded columns,
 // `*em*` → `_em_`) — raw output left `API.md` dirty every run, and a `--list` run once rewrote it.
 // Usage:
 //   node scripts/render-matrix.mjs           # write the block if it changed
@@ -11,8 +11,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as prettier from 'prettier';
 import { renderMatrix, worklist } from '../src/__tests__/compatibility-matrix.ts';
+import { formatAs } from './oxfmt.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DOC = resolve(ROOT, 'API.md');
@@ -73,8 +73,7 @@ if (start === -1 || end < start) {
 }
 
 const spliced = `${doc.slice(0, start + BEGIN.length)}\n\n${renderMatrix().trim()}\n\n${doc.slice(end)}`;
-const options = await prettier.resolveConfig(DOC);
-const next = await prettier.format(spliced, { ...options, filepath: DOC });
+const next = await formatAs(DOC, spliced);
 
 if (next === doc) {
   console.log('compatibility matrix: API.md is up to date');

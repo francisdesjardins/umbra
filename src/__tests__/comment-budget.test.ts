@@ -23,7 +23,8 @@ const LINE_BUDGET = 50;
 const JSDOC_BUDGET = 120;
 
 /** A directive is machinery, not prose, so it neither counts nor joins the block above it. */
-const DIRECTIVE = /^\s*(?:\/\/|\/\*)\s*(?:oxlint-|eslint-|@ts-|prettier-|\/\s*<reference|biome-)/;
+const DIRECTIVE =
+  /^\s*(?:\/\/|\/\*)\s*(?:oxlint-|oxfmt-|eslint-|@ts-|prettier-|\/\s*<reference|biome-)/;
 
 /** Section rails (`── Placement ──`) are structure, and a rule against them would only move them. */
 const RAIL = /[\u2500-\u257f]{2,}/;

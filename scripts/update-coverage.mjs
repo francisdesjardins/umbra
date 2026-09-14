@@ -2,15 +2,15 @@
 // The coverage pair, measured and written down in one move: the rule is "re-measure both or
 // neither", and holding it by hand drifted README.md and CLAUDE.md apart twice, in both directions.
 // The replacements below are anchored on the surrounding prose and must match exactly once each, so
-// a reworded paragraph fails loudly instead of leaving a stale number. The write goes through
-// prettier, which owns this repository's markdown layout.
+// a reworded paragraph fails loudly instead of leaving a stale number. The write goes through the
+// formatter, which owns this repository's markdown layout.
 // Usage: `yarn coverage:update` — run both coverage commands, rewrite README.md and CLAUDE.md.
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as prettier from 'prettier';
+import { formatAs } from './oxfmt.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -65,8 +65,7 @@ const rewrite = async (relative, edits) => {
     }
     next = next.replace(pattern, replacement);
   }
-  const options = await prettier.resolveConfig(path);
-  next = await prettier.format(next, { ...options, filepath: path });
+  next = await formatAs(path, next);
   if (next === original) {
     console.log(`coverage: ${relative} already up to date`);
     return;

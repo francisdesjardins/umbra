@@ -1,7 +1,7 @@
 /**
  * One top-level declaration cut out of a `?raw` module, so a code panel about a single harness shows
  * that harness rather than the sixteen hundred lines it shares a file with. Line-anchored rather
- * than parsed: prettier already guarantees the only grammar this needs — a top-level declaration at
+ * than parsed: the formatter already guarantees the only grammar this needs — a top-level declaration at
  * column 0 with its doc comment directly above — and a real parser in the viewer would be a second
  * compiler shipped to read source it already has as text.
  *

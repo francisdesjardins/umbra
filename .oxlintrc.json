@@ -10,7 +10,7 @@
   // makes a rule that silently stops existing visible in a diff. Categories are deliberately not
   // used — `-D suspicious` alone reports 2 725 findings from rules nobody chose.
   //
-  // Formatting is prettier's, not a lint rule's. `arrow-parens` is dropped for that reason;
+  // Formatting is oxfmt's, not a lint rule's. `arrow-parens` is dropped for that reason;
   // `arrow-body-style` and `curly` stay because they change what the code *means* to read, not how
   // it is spaced.
   "plugins": ["react", "typescript", "unicorn"],
@@ -170,7 +170,7 @@
     },
     {
       // Build and test configuration: Node rather than the browser, and stdout is the contract.
-      "files": ["vite.config.ts", "vite.config.esm.ts", "playwright.config.ts", "playwright/**"],
+      "files": ["vite.config.esm.ts", "playwright.config.ts"],
       "env": { "node": true },
       "rules": {
         "no-console": "off"

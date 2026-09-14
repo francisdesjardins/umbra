@@ -1,13 +1,13 @@
 {
   "name": "umbra-playground",
   "version": "0.0.0",
-  "description": "Interactive demo app and reference template implementations for umbra. Not published.",
   "private": true,
+  "description": "Interactive demo app and reference template implementations for umbra. Not published.",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:file": "cross-env VITE_HASH_ROUTER=true vite build",
+    "build:file": "VITE_HASH_ROUTER=true vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -26,7 +26,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "cross-env": "10.1.0",
+    "rolldown": "^1.2.8",
     "vite": "^8.3.0"
   }
 }

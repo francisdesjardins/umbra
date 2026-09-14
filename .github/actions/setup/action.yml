@@ -1,0 +1,36 @@
+name: Setup
+description: Node 24 through Corepack, and the node_modules the install job cached.
+
+# The six jobs that run outside the Playwright container opened with the same four steps, and a
+# repeated block is a block that drifts: the Node version, the cache key and the Corepack call have
+# to agree across every job or the cache silently misses and each job installs from scratch.
+#
+# **The checkout stays in the job.** A local action is read out of the workspace, so the runner has
+# to have cloned the repo before this file can be found at all.
+#
+# **Not used by the container jobs.** They run as an unprivileged user, where `corepack enable`
+# fails with EACCES, and they resolve the vendored Yarn out of `.yarnrc.yml` instead — see the
+# comments on those jobs.
+
+runs:
+  using: composite
+  steps:
+    - run: corepack enable
+      shell: bash
+    - uses: actions/setup-node@v6
+      with:
+        node-version: '24'
+        cache: 'yarn'
+    - name: Restore node_modules
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+    # Every job installs on a miss, rather than only the install job, so an evicted cache is an
+    # install rather than a job failing on a missing binary — which reads as a broken repo.
+    # --immutable is the `npm ci` equivalent: it fails if yarn.lock would change.
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: yarn install --immutable
+      shell: bash

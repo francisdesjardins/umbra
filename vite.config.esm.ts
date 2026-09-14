@@ -13,13 +13,6 @@ function stripJSDoc(): Plugin {
 }
 
 export default defineConfig({
-  server: {
-    allowedHosts: ['.ngrok-free.app', '.ngrok.io'],
-    fs: {
-      strict: false,
-      allow: ['..'],
-    },
-  },
   plugins: [
     react(),
     // The compiler goes through `@rolldown/plugin-babel`, the same way the playground runs it.

@@ -6,9 +6,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=JSON.parse(d).tool_input.file_path;require('child_process').execSync('yarn prettier --write --ignore-unknown '+JSON.stringify(f),{stdio:'inherit'})})\"",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const f=JSON.parse(d).tool_input.file_path;require('child_process').execSync('yarn oxfmt --no-error-on-unmatched-pattern '+JSON.stringify(f),{stdio:'inherit'})})\"",
             "timeout": 30,
-            "statusMessage": "Formatting with Prettier"
+            "statusMessage": "Formatting with oxfmt"
           }
         ]
       }

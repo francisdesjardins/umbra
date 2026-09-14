@@ -131,7 +131,13 @@ export default defineConfig({
   retries: IS_CI ? 2 : 0,
   // `'50%'` **is** Playwright's default, spelled out — the `cpus/2` the comments above assume.
   workers: IS_CI ? 1 : '50%',
-  reporter: [['html', { outputFolder: 'playwright-report' }]],
+  // The HTML report carries the trace, and `list` is what a CI log can show: with the HTML reporter
+  // alone a red job prints a count and nothing about which test failed, so reading a failure begins
+  // with downloading an artifact. CI only — locally the HTML report opens itself, and `list` over
+  // five engines is 2 300 lines nobody asked for.
+  reporter: IS_CI
+    ? [['list'], ['html', { outputFolder: 'playwright-report' }]]
+    : [['html', { outputFolder: 'playwright-report' }]],
   use: {
     trace: 'on-first-retry',
     baseURL: GALLERY_URL,

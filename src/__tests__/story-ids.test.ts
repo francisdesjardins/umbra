@@ -19,7 +19,7 @@ function declaredIds(): Set<string> {
   const declared = new Set<string>();
   for (const file of ['src/__tests__/story-ids.d.ts', 'playground/src/__tests__/story-ids.d.ts']) {
     const source = readFileSync(resolve(REPO, file), 'utf8');
-    // The parenthesis is prettier's — the generator emits its shape so a regenerate leaves a clean
+    // The parenthesis is the formatter's — the generator emits its shape so a regenerate leaves a clean
     // tree, and this tolerates both so the gate is not what breaks when a formatter changes its mind.
     for (const match of source.matchAll(/^ {4}([A-Za-z0-9_]+): \(?typeof import\(/gm)) {
       declared.add(match[1] as string);

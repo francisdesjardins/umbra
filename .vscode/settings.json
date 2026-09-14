@@ -7,7 +7,7 @@
     ]
   },
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit",
     "source.organizeImports": "explicit"
@@ -17,11 +17,11 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  // oxlint only. oxc ships a formatter too and enables it by default, but prettier is this repo's
-  // formatter and `yarn format:check` is the gate — a second formatter in the editor can only
-  // disagree with it, and it would cover the JS/TS half of what prettier already does for md,
-  // json, yaml and css.
-  "oxc.enable.oxfmt": false,
+  // One extension for both halves: the language server formats through the same `oxfmt` binary in
+  // `node_modules` that `yarn format:check` gates on, reading the same `.oxfmtrc.json`, so the
+  // editor and the gate cannot disagree. It registers for md, json, yaml, css and toml as well as
+  // ts/tsx, which is why nothing else is needed beside it.
+  "oxc.enable.oxfmt": true,
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "search.exclude": {

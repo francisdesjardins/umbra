@@ -1,10 +1,8 @@
 node_modules/
 dist/
-docs/api/
 *.tsbuildinfo
 coverage/
 .nyc_output/
-.playwright-targeted-output.txt
 playwright-report/
 test-results/
 .vite/
@@ -16,7 +14,6 @@ pnpm-debug.log*
 lerna-debug.log*
 .vscode/*
 !.vscode/settings.json
-!.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 .claude/settings.local.json

@@ -11,6 +11,63 @@ package `@yourorg/dialog`; it is `umbra` now.)
 
 ## 2026-09-14
 
+### Changed — one formatter, and it is oxfmt
+
+Prettier is gone. `oxfmt` reads a `.oxfmtrc.json` translated one-for-one from `.prettierrc.json`
+and formats the same tree, which puts the formatter and the linter on the same toolchain — the
+editor now runs one extension for both halves instead of two that could disagree.
+
+**Measured before it was decided, because the risk was the documents rather than the code.** 649
+files, 6 divergent — and all six are the same shape: a union that Prettier 3.9 wrapped onto one
+line, split one member per line. Every markdown file matched byte for byte, `CHANGELOG.md` and
+`API.md` included, which is what made this a swap rather than a reformat: the matrix test asserts
+`API.md` against freshly rendered output and passed without the table being touched.
+`yarn format:check` went from 8.7s to 1.6s.
+
+**Four call sites formatted through the Node API rather than the CLI**, and the two APIs differ in
+one way that matters: `prettier.format` threw on input it could not parse, and oxfmt returns the
+original text with the diagnostics beside it. A caller written against the old shape reads an
+unparsable `@example` as one that needed no formatting — so `scripts/oxfmt.mjs` raises, and it is
+also the one place that knows where the config file is, since oxfmt ships no `resolveConfig`.
+
+`sortPackageJson` is on, which is oxfmt's default and was the only option worth taking rather than
+neutralising: it orders both manifests and it deduplicated a `keywords` entry on its first run.
+
+### Changed — the CI jobs share one setup, and the lint job is as strict as the local gate
+
+Six jobs opened with the same five steps, and `yarn lint` ran there without `--deny-warnings` while
+`yarn check` and `yarn verify:all` both used it — a CI looser than the gate it stands in for.
+`.github/actions/setup` now carries the checkout, Node 24 through Corepack, and the cache, and every
+job installs when the cache missed rather than only the install job: a downstream job that restored
+nothing ran against an absent `node_modules` and failed as a missing binary, which reads as a broken
+repo rather than as an evicted cache. The key gained `runner.os`.
+
+`component-focus` is a CI leg now. It needs one worker — a browser dispatches `blur` and `focusout`
+only while the document holds the focus — and being local-only meant a suite nothing ran. The
+Playwright reporter gained `list` beside `html`, because a red job printed a count and nothing about
+which test failed, so reading a failure began with downloading an artifact.
+
+### Removed — tooling that no longer answers for anything
+
+`scripts/vite-plugin-react-compiler.mjs` had no importer: both configs reach the compiler through
+`@rolldown/plugin-babel` and `reactCompilerPreset`, and three comments still pointed at it as if it
+were the library build's copy of the scoping. The build config carried a `server:` block, which a
+config used only by `vite build` never reads. `preview` previewed a library `dist/` as a site, and
+`test:shard` was the one script with no caller.
+
+`rimraf` and `cross-env` are gone: Node has `fs.rmSync`, and Yarn 4's portable shell runs
+`VAR=x cmd` on Windows — proven by building the hash-router bundle without it and finding the
+relative base in the output. `npm-check-updates` was a devDependency for an occasional command,
+which `yarn dlx` covers. `@types/node` came down to the major the `engines` field and CI actually
+run. `rolldown` stays at the root, where it is `@rolldown/plugin-babel`'s peer, and is now declared
+in the playground too, where `mfe-umbra.ts` imports it directly.
+
+Three agent-instruction files — `.instructions.md` and two `copilot-instructions.md` — all opened by
+calling this a "Headless React dialog library", which stopped being true when the root became
+framework-agnostic. Nothing gated them against the three `CLAUDE.md` files they duplicated, so they
+could only drift further. `scripts/fetch-fonts.mjs` wrote to two absolute `D:/workspace/...` paths
+and now derives them, and the phantom `tests` directory left both `tsconfig` exclude lists.
+
 ### Added — the component suite watches the page for an exception nobody caught
 
 A test asserts what it looks at, so an exception thrown _after_ the work it measures leaves every

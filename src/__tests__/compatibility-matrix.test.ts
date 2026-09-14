@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
-import * as prettier from 'prettier';
+import { formatAs } from '../../scripts/oxfmt.mjs';
 import {
   BINDING_ROWS,
   FLOOR_ROWS,
@@ -45,15 +45,15 @@ const BEGIN = '<!-- BEGIN COMPATIBILITY MATRIX -->';
 const END = '<!-- END COMPATIBILITY MATRIX -->';
 
 /**
- * The rendered block, formatted exactly as `yarn docs:matrix` writes it. Through prettier rather
- * than raw, because prettier owns this repo's markdown layout — column padding, `*em*` → `_em_` —
+ * The rendered block, formatted exactly as `yarn docs:matrix` writes it. Through the formatter
+ * rather than raw, because it owns this repo's markdown layout — column padding, `*em*` → `_em_` —
  * and the script formats before writing, so a pass means running `docs:matrix` changes nothing.
  */
 async function renderedBlock(): Promise<string> {
-  const formatted = await prettier.format(`${BEGIN}\n\n${renderMatrix().trim()}\n\n${END}\n`, {
-    ...(await prettier.resolveConfig(resolve(REPO_ROOT, 'API.md'))),
-    filepath: 'API.md',
-  });
+  const formatted = await formatAs(
+    resolve(REPO_ROOT, 'API.md'),
+    `${BEGIN}\n\n${renderMatrix().trim()}\n\n${END}\n`
+  );
   return formatted.slice(BEGIN.length, formatted.lastIndexOf(END)).trim();
 }
 
@@ -227,7 +227,7 @@ test.describe('the compatibility matrix', () => {
    * The check both gates above assume and neither makes: a row is only documentation if it renders
    * as one. Two rows on one line satisfy every search that looks for a name — the text is all
    * there — and markdown draws the surplus cells into the row above, so the second row is simply
-   * not on the page. Nothing else notices: prettier pads columns rather than counting them, and a
+   * not on the page. Nothing else notices: the formatter pads columns rather than counting them, and a
    * reader who does not already know the option is missing has no reason to look.
    *
    * Every hand-written document with tables, not just `API.md`, because the failure is the file

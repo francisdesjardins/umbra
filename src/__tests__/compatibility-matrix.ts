@@ -22,7 +22,13 @@
 
 /** One cell's verdict. See the table in this module's doc comment. */
 export type CellState =
-  'works' | 'works-untested' | 'partial' | 'blocked' | 'no-platform' | 'no-by-design' | 'n-a';
+  | 'works'
+  | 'works-untested'
+  | 'partial'
+  | 'blocked'
+  | 'no-platform'
+  | 'no-by-design'
+  | 'n-a';
 
 /**
  * How strongly a constraint is held — and it is a second dimension because it decides whether a cell
@@ -1866,8 +1872,8 @@ export const PLATFORM_ROWS: readonly PlatformRow[] = [
     fact: 'nothing in the repo still needs TypeScript 6',
     state: 'blocked',
     recheck: {
-      what: 'typedoc’s `typescript` peer range — `typedoc@0.28.20` still declares `5.0.x || … || 6.0.x`, so the pin is the range rather than a stale entry. There is nothing else to try until it moves.',
-      measured: '2026-08-25',
+      what: 'typedoc’s `typescript` peer range — `typedoc@0.28.20` is still latest and still declares `5.0.x || … || 6.0.x`, so the pin is the range rather than a stale entry. A `1.0.0-dev` line has opened on npm; that is where the range would move first.',
+      measured: '2026-09-14',
     },
     why: 'The linter runs on the TS 7 compiler through tsgolint. `typescript@6.0.3` remains for **typedoc alone**, whose two remaining jobs are `docs:check` and the JSON model behind the playground’s `/api` page — the HTML half is gone. TS 7 ships an API (`typescript/unstable/sync`) and it is **most of the way there**: exports, doc comments, `@example` tags, `typeToString` and `emitter.printNode` all work, and a lazy declaration node inflates through `resolve()`. Three measured blockers remain, and the middle one is the surprise: the resolved node exposes **no child traversal** (`children` is `undefined`, and no `forEachChild` is exported), so a syntax-level check like `notExported` cannot be written; walking the resolved _type graph_ instead is semantically the wrong question — it reports **0** findings against typedoc’s 10 allowances, because an alias resolves away; and the server **panics** rather than throwing on an unsupported checker call, so preconditions must be guarded rather than probed. So the `/api` model is the nearer half of this, not the validator. **Re-measured 2026-08-14: unchanged.** `typedoc@0.28.20` still declares `typescript: "5.0.x || … || 6.0.x"`, so the pin is not a stale one to drop — it is the peer range, and the cell is blocked on typedoc rather than on this repo. Check that range first; there is nothing else to try until it moves.',
   },

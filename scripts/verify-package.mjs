@@ -7,7 +7,8 @@
  * the React binding re-exports the root; the promised inference survives into the `.d.ts` (the
  * `DocumentEventMap` augmentation, `DialogInfo`'s `exists` discrimination, the typed close payload,
  * a payload declared once on an action and *inferred* at the dialog), each with a matching
- * `@ts-expect-error` so a widened type fails too. Run after `yarn build`; in `prepublishOnly`.
+ * `@ts-expect-error` so a widened type fails too. Run after `yarn build`, by `yarn verify:all`
+ * and by CI's build job.
  */
 import { execFileSync } from 'node:child_process';
 import {

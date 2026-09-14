@@ -6,17 +6,17 @@ This file configures VS Code agent automation for the umbra project via two hook
 
 **Trigger:** After every `Edit`/`Write` tool call (e.g., creating or editing a file)
 
-**What it does:** Runs Prettier on the edited file to enforce code formatting
+**What it does:** Runs oxfmt on the edited file to enforce code formatting
 
 ```bash
-yarn prettier --write --ignore-unknown <file>
+yarn oxfmt --no-error-on-unmatched-pattern <file>
 ```
 
 **Why:** Ensures consistent formatting without the agent needing to think about it. Formatter runs in isolation, so the agent can focus on logic, not style.
 
 **Timeout:** 30 seconds per file
 
-**Status message:** "Formatting with Prettier"
+**Status message:** "Formatting with oxfmt"
 
 ---
 
@@ -102,8 +102,8 @@ Agent runs yarn build
 File written to src/foo.tsx
         ↓
 PostToolUse Hook
-  ├─ Prettier runs → src/foo.tsx formatted
-  └─ Status: "Formatting with Prettier"
+  ├─ oxfmt runs → src/foo.tsx formatted
+  └─ Status: "Formatting with oxfmt"
         ↓
 Agent's turn ends
         ↓
@@ -173,8 +173,8 @@ Example:
 
 **"PostToolUse hook timed out"**
 
-- Prettier is taking >30 seconds (unlikely)
-- File is very large and Prettier is slow
+- oxfmt is taking >30 seconds (unlikely)
+- File is very large and oxfmt is slow
 - Fix: Increase `timeout` to 60
 
 **"Stop hook failed: tsc --noEmit"**

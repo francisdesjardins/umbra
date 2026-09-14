@@ -56,7 +56,7 @@ yarn type-check         # TypeScript checking
 yarn lint:fix           # Lint and auto-fix
 yarn format             # Format code
 yarn docs:examples      # Format, type-check and lint every JSDoc @example (part of `yarn check`)
-yarn docs:examples:fix  # Rewrite those examples through prettier, in place
+yarn docs:examples:fix  # Rewrite those examples through the formatter, in place
 yarn verify:all         # Full validation (lint + type-check + build + package checks)
 yarn coverage:update    # Run both coverage measurements and rewrite README + CLAUDE.md + badges
 ```
@@ -109,7 +109,7 @@ made the number lie in a specific way: a line only WebKit reaches (the caret res
 clicked button never gives) is perfectly tested and was counted as missed. Measured: six such lines,
 0.28 points, for twice the wall clock on a command nobody runs in CI. `component-focus` is still
 out — it needs one worker, and serialising the whole run to reach a handful of lines is the trade
-that is not worth it. Measured 2026-09-08: **92.25% over 60 files**, against unit's **96.92%**. Never add them; re-measure both or neither — **and the
+that is not worth it. Measured 2026-09-14: **92.14% over 60 files**, against unit's **96.93%**. Never add them; re-measure both or neither — **and the
 pair is quoted twice**, here and in [README.md](README.md#development), which also carries two
 badges from it. Moving one copy is how the README came to be two points behind, which is why
 **`yarn coverage:update` does the whole move**: both measurements, both documents, both badges, one

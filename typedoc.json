@@ -6,7 +6,7 @@
   // here is `docs:check` — the two validations below — and the JSON model behind the playground's
   // `/api` page.
   "entryPoints": ["src/index.ts", "src/react.ts", "src/solid.ts", "src/vanilla.ts"],
-  "name": "Dialog Manager",
+  "name": "umbra",
   "excludePrivate": true,
   "excludeInternal": true,
   "excludeExternals": true,

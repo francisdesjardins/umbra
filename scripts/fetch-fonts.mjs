@@ -4,10 +4,12 @@
  * files be preloaded from the same origin, which is what removes the swap entirely.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT_DIR = 'D:/workspace/francisdesjardins/2025/dialogManager/playground/public/fonts';
-const CSS_OUT =
-  'D:/workspace/francisdesjardins/2025/dialogManager/playground/src/app/styles/fonts.css';
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT_DIR = resolve(ROOT, 'playground/public/fonts');
+const CSS_OUT = resolve(ROOT, 'playground/src/app/styles/fonts.css');
 
 // No italic axis for Newsreader: it dresses h1–h3 and the wordmark, none of which are italic, and
 // the face costs 147 kB. Every <em> on the site is body copy, which is Geist.

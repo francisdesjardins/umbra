@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 // ── The JSDoc examples are code, so they are held to the code gates ──────────
 // Extracts every `@example` under `src/` (`@internal` modules included, not just the entry points),
-// writes each as a module under `scripts/examples/generated/`, and runs prettier, `tsc` and oxlint
+// writes each as a module under `scripts/examples/generated/`, and runs oxfmt, `tsc` and oxlint
 // over them — nothing else looks inside a comment, and two examples here were wrong when written.
 // The type pass runs twice: the first reports the free identifiers an example assumes (`store`,
 // `api`), the second declares them `any`, so what remains is misuse of *this library*.
 //
 // Usage:
 //   node scripts/check-examples.mjs          # check (exit 1 on any failure)
-//   node scripts/check-examples.mjs --fix    # rewrite examples through prettier, then check
+//   node scripts/check-examples.mjs --fix    # rewrite examples through the formatter, then check
 //   node scripts/check-examples.mjs --keep   # leave the generated modules for inspection
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as prettier from 'prettier';
+import { formatAs } from './oxfmt.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'src');
@@ -125,14 +125,14 @@ function collectExamples() {
 // ── Format ───────────────────────────────────────────────────────────────────
 
 /**
- * Format one example with the repo's prettier config. `null` when prettier cannot parse it, which
- * is not a failure: a few are deliberately elliptical (`useDialog({ ... })`) or show sibling JSX
- * call sites, and the normalisation below type-checks them anyway.
+ * Format one example with the repo's formatter config. `null` when it cannot be parsed, which is
+ * not a failure: a few are deliberately elliptical (`useDialog({ ... })`) or show sibling JSX call
+ * sites, and the normalisation below type-checks them anyway. The name is the one the example is
+ * about to be written under, so the parser matches the file the `tsc` pass will read.
  */
-async function formatExample(example, options) {
+async function formatExample(example) {
   try {
-    const formatted = await prettier.format(example.code, { ...options, parser: 'typescript' });
-    return formatted.trimEnd();
+    return (await formatAs(`${example.module}.tsx`, example.code)).trimEnd();
   } catch {
     return null;
   }
@@ -436,9 +436,8 @@ const byModule = new Map(
   })
 );
 
-const prettierOptions = (await prettier.resolveConfig(join(SRC, 'index.ts'))) ?? {};
 for (const example of examples) {
-  example.formatted = await formatExample(example, prettierOptions);
+  example.formatted = await formatExample(example);
 }
 
 const unformatted = examples.filter((example) => {

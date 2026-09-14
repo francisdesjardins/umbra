@@ -506,7 +506,7 @@ signature mentions but the entry point does not export is a real gap — it is h
 found, so adding to `intentionallyNotExported` is a decision rather than a fix. Every validation
 choice is in [typedoc.json](../typedoc.json) with its reason.
 
-**`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — prettier,
+**`yarn docs:examples` holds the `@example` blocks to the same gates as the code** — oxfmt,
 `tsc`, oxlint — by extracting each to a real module under `scripts/examples/generated/`;
 [the script](../scripts/check-examples.mjs) carries the two non-obvious parts.
 
@@ -531,8 +531,7 @@ caught by [api-categories.test.ts](../playground/src/__tests__/api-categories.te
 
 **The wiring is by hand and the obvious form does nothing** — `react({ babel: … })` is accepted under
 this Vite and transforms nothing. That, the `src/react/` scoping and the externals predicate are
-documented where they are configured: [vite.config.esm.ts](../vite.config.esm.ts) and
-[scripts/vite-plugin-react-compiler.mjs](../scripts/vite-plugin-react-compiler.mjs).
+documented where they are configured: [vite.config.esm.ts](../vite.config.esm.ts).
 
 **One grep tells you which state you are in**: a compiled `use-dialog.js` opens with `c(…)` and
 imports `react/compiler-runtime`. `verify:package` asserts that against the built artifact, and
