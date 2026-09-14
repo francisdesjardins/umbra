@@ -15,7 +15,7 @@ const hashRouter = process.env['VITE_HASH_ROUTER'] === 'true';
  * Component-test coverage, opt-in through `CT_COVERAGE=1` — and it lives here because this is the
  * bundler the component suite runs on. A component test's subject runs in the browser, so c8 has no
  * Node process to measure: the source is instrumented on the way in, counters land on
- * `window.__coverage__`, and `src/__tests__/ct-coverage.ts` reads them back per test. Off by
+ * `window.__coverage__`, and `src/__tests__/ct-test.ts` reads them back per test. Off by
  * default; instrumentation costs about 45% of a run and the numbers are only wanted when asked for.
  *
  * **Before the compiler, deliberately** — both are `enforce: 'pre'`, so this array is the order and

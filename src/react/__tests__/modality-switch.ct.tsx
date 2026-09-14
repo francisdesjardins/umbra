@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 /**
  * Changing `nonModal` under a dialog that is already open answers the open — exactly once.

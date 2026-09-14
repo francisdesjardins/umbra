@@ -1,4 +1,4 @@
-import { expect, test } from 'umbra/__tests__/ct-coverage.js';
+import { expect, test } from 'umbra/__tests__/ct-test.js';
 
 /**
  * `useForm` — the stand-in the two `/ui-integrations` form cards share. Asserted here are the

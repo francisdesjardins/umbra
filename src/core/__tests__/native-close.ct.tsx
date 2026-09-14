@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 // `<form method="dialog">` is the platform's own close button, and it runs the element's close
 // steps without asking anything. The library's state is a second copy of "is this open", so the

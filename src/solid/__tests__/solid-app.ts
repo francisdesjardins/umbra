@@ -325,20 +325,11 @@ function MessageApp(): Built {
 }
 
 /**
- * A callback handed to a component through `solid-js/h`, carried on an object rather than passed
- * bare. `h` turns a **zero-argument function prop into an accessor** — it calls it on read and
- * returns the result — so a bare callback fires on `props.dispose` and hands back `undefined`,
- * which throws the moment it is called. Element props are safe: `h` exempts `on*` there, so every
- * `onClick` below is an ordinary handler.
- */
-type Disposer = { readonly dispose: () => void };
-
-/**
  * The binding's three pieces of `onCleanup` work: unregistering from the manager, retiring the outlet
  * entry, removing a portaled element from `document.body`. A child function disposes them, since
  * hyperscript re-runs it and disposes the owner of the branch it replaces — Solid's unmount.
  */
-function DisposalInner(props: { readonly disposer: Disposer }): Built {
+function DisposalInner(props: { readonly dispose: () => void }): Built {
   const dialog = useDialog<void, 'ok'>({
     id: 'solid-disposal',
     ariaLabel: 'Solid disposal',
@@ -354,7 +345,7 @@ function DisposalInner(props: { readonly disposer: Disposer }): Built {
             {
               'data-testid': 'unmount-from-inside',
               onClick: () => {
-                props.disposer.dispose();
+                props.dispose();
               },
             },
             'Unmount from inside'
@@ -385,6 +376,16 @@ function DisposalApp(): Built {
   const [mounted, setMounted] = createSignal(true);
   const info = useLookup('solid-disposal');
 
+  /**
+   * Handed down as a **getter**, which is also how Solid spells a prop read live: `h` turns a
+   * component prop whose descriptor holds a zero-argument function `value` into an accessor and
+   * calls it on read, and a getter descriptor has no `value` to rewrite. Element props are exempt
+   * where the name starts with `on`, so `onClick` takes the same function bare.
+   */
+  const unmount = () => {
+    setMounted(false);
+  };
+
   return h(
     'div',
     null,
@@ -398,9 +399,7 @@ function DisposalApp(): Built {
       'button',
       {
         'data-testid': 'unmount',
-        onClick: () => {
-          setMounted(false);
-        },
+        onClick: unmount,
       },
       'Unmount'
     ),
@@ -408,10 +407,8 @@ function DisposalApp(): Built {
       return mounted()
         ? el(
             h(DisposalInner, {
-              disposer: {
-                dispose: () => {
-                  setMounted(false);
-                },
+              get dispose() {
+                return unmount;
               },
             })
           )
@@ -421,7 +418,7 @@ function DisposalApp(): Built {
 }
 
 /** The same disposal, one level down: the outlet has to forget it too. */
-function OutletDisposalInner(props: { readonly disposer: Disposer }): Built {
+function OutletDisposalInner(props: { readonly dispose: () => void }): Built {
   const dialog = useDialog<void, 'ok'>({
     id: 'solid-outlet-disposal',
     ariaLabel: 'Solid outlet disposal',
@@ -436,7 +433,7 @@ function OutletDisposalInner(props: { readonly disposer: Disposer }): Built {
             {
               'data-testid': 'unmount-from-inside',
               onClick: () => {
-                props.disposer.dispose();
+                props.dispose();
               },
             },
             'Unmount from inside'
@@ -461,6 +458,10 @@ function OutletDisposalInner(props: { readonly disposer: Disposer }): Built {
 function OutletDisposalApp(): Built {
   const [mounted, setMounted] = createSignal(true);
 
+  const unmount = () => {
+    setMounted(false);
+  };
+
   return h(
     'div',
     null,
@@ -468,9 +469,7 @@ function OutletDisposalApp(): Built {
       'button',
       {
         'data-testid': 'unmount',
-        onClick: () => {
-          setMounted(false);
-        },
+        onClick: unmount,
       },
       'Unmount'
     ),
@@ -478,10 +477,8 @@ function OutletDisposalApp(): Built {
       return mounted()
         ? el(
             h(OutletDisposalInner, {
-              disposer: {
-                dispose: () => {
-                  setMounted(false);
-                },
+              get dispose() {
+                return unmount;
               },
             })
           )

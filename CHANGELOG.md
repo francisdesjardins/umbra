@@ -9,6 +9,47 @@ behind a decision lives here and nowhere else. Entries are left as written — a
 its own past is a story, not a record. (Which is why entries before 2026-08-04 still name the
 package `@yourorg/dialog`; it is `umbra` now.)
 
+## 2026-09-14
+
+### Added — the component suite watches the page for an exception nobody caught
+
+A test asserts what it looks at, so an exception thrown _after_ the work it measures leaves every
+assertion green — which is how a harness could throw on every disposal for as long as it did. The CT
+`test` now carries a second automatic fixture beside coverage: it listens on `pageerror` for the
+life of the test and fails it on anything that arrives, stack included, so a red in CI names the
+file rather than only the sentence. `pageerror` carries an unhandled rejection too, on all three
+engines — measured rather than assumed.
+
+**No opt-out**, because nothing needs one: 460 tests over Chromium, Gecko and WebKit, both touch
+projects and the focus-serialised one are green with the guard on. A test that wants an exception
+catches it in the page and asserts on what it caught. Proof the guard is not inert: with the bare
+callback restored in the Solid harness, two of the three disposal tests go red — the third never
+reads the prop.
+
+`ct-test-wiring.test.ts` is what holds every file to that import, and it scanned `src` alone, so the
+playground's five component tests complied with nothing keeping them there. It reads both roots now,
+and its vacuity check is per root rather than a total the library's own files would carry alone.
+Its failure message names both losses: coverage discarded, and a page nobody is watching.
+
+### Changed — the Solid harness hands its disposer down as a getter
+
+The wrapper object that carried the callback past `solid-js/h` is gone; the prop is spelled
+`get dispose()` and the two components take `dispose` bare again. `h` rewrites a component prop
+whose descriptor holds a zero-argument function `value` into an accessor and calls it on read — a
+getter descriptor has no `value` to rewrite, so it is passed through untouched, and it is the
+spelling Solid already uses for a prop read live. One type and one level of indirection less for the
+same protection.
+
+Both forms pass every component test, which is the whole argument for the fixture above: the one
+that measured them apart was a page listening on `pageerror` through both harnesses’
+unmount-from-inside — bare callback, `props.dispose is not a function` on both; getter, nothing.
+
+### Changed — the CT fixture is named for what it carries
+
+`ct-coverage.ts` held one fixture and named it; it holds two, so it is `ct-test.ts`, and the gate
+over it `ct-test-wiring.test.ts`. The three files whose names are still about coverage alone keep
+them — the instrumenting plugin, the reset and the report — since that is all any of them does.
+
 ## 2026-09-09
 
 ### Added — the landing page names what it was already demonstrating

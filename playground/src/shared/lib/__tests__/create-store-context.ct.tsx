@@ -1,4 +1,4 @@
-import { expect, test } from 'umbra/__tests__/ct-coverage.js';
+import { expect, test } from 'umbra/__tests__/ct-test.js';
 
 test.describe('createStoreContext', () => {
   test('consumers under one Provider share the same store', async ({ mount }) => {

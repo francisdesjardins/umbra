@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { Page } from '@playwright/test';
 
 // The cascade every dismissal runs, from the outside. Each gate refuses for its own reason, and a

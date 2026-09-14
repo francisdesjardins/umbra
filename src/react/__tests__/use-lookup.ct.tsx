@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 test.describe('useLookup', () => {
   test('reactively reflects dialog open/close state', async ({ mount, page }) => {

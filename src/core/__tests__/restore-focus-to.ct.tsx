@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { Page } from '@playwright/test';
 
 // Where the close hands the keyboard back when the opener is the wrong answer. The variants reach

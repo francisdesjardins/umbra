@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 test.describe('useSlideDialog', () => {
   test('dialog is initially closed', async ({ mount, page }) => {

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import { focusedDialogId, frontDialogId, paintedStackOrder } from '../../__tests__/stack-probe.js';
 
 /**

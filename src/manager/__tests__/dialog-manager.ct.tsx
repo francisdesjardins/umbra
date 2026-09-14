@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 test.describe('dialogManager', () => {
   test('open() opens a registered dialog', async ({ mount, page }) => {

@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 test.describe('DialogOutlet', () => {
   test('renders dialog via outlet without {Dialog} in JSX', async ({ mount, page }) => {

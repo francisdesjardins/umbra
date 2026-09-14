@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { Page } from '@playwright/test';
 
 // `portal` names a destination two ways — `true` for `document.body`, a function for a host of your

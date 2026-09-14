@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 // `onDismissRequest` — every user-initiated dismissal handed to the owner instead of closing on it.
 // Each test here would fail on the un-optioned behaviour. The three doors are asserted separately

@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 // The dismiss key over an overlay that answers it itself. A non-modal dialog listens at the window
 // in capture, which is what makes the key work wherever focus is — and what would take it away.

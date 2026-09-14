@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { Page } from '@playwright/test';
 
 // Where the keyboard goes when a non-modal panel closes. The close steps restore the element

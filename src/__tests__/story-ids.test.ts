@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
  * `yarn story-ids` writes gives a reader the list and checks each story's props — but the union's
  * second half means a **typo still compiles**, silently, into a test that fails at run time with
  * "Unknown story". That is the hole this closes, and it is a test rather than a lint rule for the
- * reason `ct-coverage-wiring` is: the claim is about two sets agreeing, not about one line.
+ * reason `ct-test-wiring` is: the claim is about two sets agreeing, not about one line.
  */
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 

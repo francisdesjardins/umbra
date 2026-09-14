@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 // A caller's failing `onClose` is not the dialog's problem, and it is not the dialog's to hide
 // either: it runs detached, so `onError` is the only place it can surface.

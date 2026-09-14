@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { Page } from '@playwright/test';
 
 // A close destroys the element holding the keyboard, so where it lands is the library's to announce

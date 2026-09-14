@@ -1,4 +1,4 @@
-import { expect, test } from 'umbra/__tests__/ct-coverage.js';
+import { expect, test } from 'umbra/__tests__/ct-test.js';
 
 /**
  * `SelectionDropdown` — the one assertion the browser cannot make for itself. `appearance: none`

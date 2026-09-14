@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 // `applyStyle` — the one way the library writes a style object onto an element, and a root export
 // userland may use. The clearing half is on trial: neither shipped animation exercises it (both

@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 import type { ConsoleMessage, Page } from '@playwright/test';
 
 /** Distinctive close payload — must never appear in a captured log line. */

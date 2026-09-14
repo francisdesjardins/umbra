@@ -1,4 +1,4 @@
-import { expect, test } from 'umbra/__tests__/ct-coverage.js';
+import { expect, test } from 'umbra/__tests__/ct-test.js';
 
 test.describe('useAnnouncer', () => {
   test('the region exists, empty, before it has anything to say', async ({ mount }) => {

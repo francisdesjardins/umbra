@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 /**
  * `umbra/vanilla` over markup somebody else replaces — the hypermedia case, where the library's

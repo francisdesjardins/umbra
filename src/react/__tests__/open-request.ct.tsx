@@ -1,4 +1,4 @@
-import { expect, test } from '../../__tests__/ct-coverage.js';
+import { expect, test } from '../../__tests__/ct-test.js';
 
 /**
  * `onOpenRequest` in the browser: the owner's own state decides, nothing reaches the screen unless
