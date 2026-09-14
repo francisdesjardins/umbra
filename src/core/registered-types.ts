@@ -56,7 +56,8 @@ export type RegisteredActionFactory<TId> = {
       ? [
           reason: TReason,
           handlerOrOptions?:
-            ((close: (data?: undefined) => void) => void | Promise<void>) | ActionOptions<void>,
+            | ((close: (data?: undefined) => void) => void | Promise<void>)
+            | ActionOptions<void>,
         ]
       : [
           reason: TReason,
@@ -84,7 +85,8 @@ export type RegisteredRenderArgs<TId> = Omit<
 
 /** What `openAndWait` resolves with for a declared id. */
 export type AwaitedCloseOf<TId> =
-  readonly [error: null, result: CloseOf<TId>] | readonly [error: Error, result: null];
+  | readonly [error: null, result: CloseOf<TId>]
+  | readonly [error: Error, result: null];
 
 /**
  * Options for a declared id.

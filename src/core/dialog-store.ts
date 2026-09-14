@@ -43,9 +43,11 @@ export function createDialogStore<TData = unknown, TReason extends string = stri
        */
       let prepareController: AbortController | null = null;
       let onCloseCallback:
-        ((result: CloseResult<TData, TReason>) => void | Promise<void>) | undefined;
+        | ((result: CloseResult<TData, TReason>) => void | Promise<void>)
+        | undefined;
       let restoreFocusToCallback:
-        ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined) | undefined;
+        | ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined)
+        | undefined;
 
       /** Resolve and drop every pending `open()` promise. */
       const flushOpenResolvers = (): void => {

@@ -66,7 +66,13 @@ export type DialogAnimation<TStyle extends DialogStyle = DialogStyle> = {
   readonly exitDuration?: number | undefined;
   /** CSS transition-property value. Default: 'opacity' */
   readonly transitionProperty?:
-    'opacity' | 'transform' | 'opacity, transform' | 'all' | 'none' | (string & {}) | undefined;
+    | 'opacity'
+    | 'transform'
+    | 'opacity, transform'
+    | 'all'
+    | 'none'
+    | (string & {})
+    | undefined;
 };
 
 // ── Dialog Handle ───────────────────────────────────────────────────────────────
@@ -549,7 +555,8 @@ export type UseDialogBaseOptions<
    * ```
    */
   readonly restoreFocusTo?:
-    ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined) | undefined;
+    | ((result: CloseResult<TData, TReason>) => HTMLElement | null | undefined)
+    | undefined;
   /**
    * One of **your** callbacks threw, and the library caught it rather than let it escape.
    *

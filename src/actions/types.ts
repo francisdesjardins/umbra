@@ -139,7 +139,8 @@ export type ActionOptions<TData = never> = {
    * dialog goes away under a handler still running.
    */
   readonly onAction?:
-    ((close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>) | undefined;
+    | ((close: ActionCloseFn<TData>, run: ActionRunContext) => void | Promise<void>)
+    | undefined;
   /** Runs first; call `preventDefault()` to stop the action from running. */
   readonly onClick?: ((event: ActionClickEvent) => void) | undefined;
   /** An extra reason to disable, or-ed with the action's own. */
