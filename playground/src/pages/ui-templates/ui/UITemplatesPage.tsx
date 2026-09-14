@@ -95,7 +95,6 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
       { name: 'Hint', codeKey: 'vanilla-shared-hint' },
       { name: 'OverflownTypography', codeKey: 'vanilla-shared-overflown-typography' },
       { name: 'OverflowContainer', codeKey: 'vanilla-shared-overflow-container' },
-      { name: 'ContentTransition', codeKey: 'vanilla-shared-content-transition' },
       { name: 'styles.module.css', codeKey: 'vanilla-shared-styles' },
       { name: 'ButtonRow.module.css', codeKey: 'vanilla-shared-button-row-styles' },
     ],
@@ -109,13 +108,14 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
 const PATTERNS_GROUP: TemplateGroup = {
   title: 'Patterns the library does not ship',
   description:
-    'Async coordination and draft-style updates are user-land: the library owns dialogs and a reactive cell, and nothing in it needs a mutex. These are the implementations the examples on this site actually run, tested alongside the library — copy them into your project and own them.',
+    'Async coordination, content transitions and draft-style updates are user-land: the library owns dialogs and a reactive cell, and nothing in it needs a mutex. These are the implementations the examples on this site actually run, tested alongside the library — copy them into your project and own them.',
   items: [
     { name: 'AsyncState + runAsync', codeKey: 'shared-lib-async-state' },
     { name: 'safeAwait', codeKey: 'shared-lib-safe-await' },
     { name: 'createMutex', codeKey: 'shared-lib-mutex' },
     { name: 'createSingleFlight', codeKey: 'shared-lib-single-flight' },
     { name: 'createImmerStore', codeKey: 'shared-lib-immer-store' },
+    { name: 'ContentTransition', codeKey: 'vanilla-shared-content-transition' },
     { name: 'useQuery (stand-in)', codeKey: 'shared-lib-use-query' },
     { name: 'useForm (stand-in)', codeKey: 'shared-lib-use-form' },
     { name: 'useAnnouncer', codeKey: 'shared-lib-use-announcer' },
