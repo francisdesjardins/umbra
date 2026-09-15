@@ -73,7 +73,10 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
     items: [
       { name: 'PanelContainer', codeKey: 'vanilla-panel-panel-container' },
       { name: 'PanelHeader', codeKey: 'vanilla-panel-panel-header' },
-      { name: 'HeaderActionLayout', codeKey: 'vanilla-panel-header-action-layout' },
+      {
+        name: 'HeaderActionLayout',
+        codeKey: 'vanilla-panel-header-action-layout',
+      },
       { name: 'PanelContent', codeKey: 'vanilla-panel-panel-content' },
       { name: 'PanelFooter', codeKey: 'vanilla-panel-panel-footer' },
       { name: 'Divider', codeKey: 'vanilla-panel-divider' },
@@ -93,10 +96,19 @@ const VANILLA_GROUPS: readonly TemplateGroup[] = [
       { name: 'Message', codeKey: 'vanilla-shared-message' },
       { name: 'Detail', codeKey: 'vanilla-shared-detail' },
       { name: 'Hint', codeKey: 'vanilla-shared-hint' },
-      { name: 'OverflownTypography', codeKey: 'vanilla-shared-overflown-typography' },
-      { name: 'OverflowContainer', codeKey: 'vanilla-shared-overflow-container' },
+      {
+        name: 'OverflownTypography',
+        codeKey: 'vanilla-shared-overflown-typography',
+      },
+      {
+        name: 'OverflowContainer',
+        codeKey: 'vanilla-shared-overflow-container',
+      },
       { name: 'styles.module.css', codeKey: 'vanilla-shared-styles' },
-      { name: 'ButtonRow.module.css', codeKey: 'vanilla-shared-button-row-styles' },
+      {
+        name: 'ButtonRow.module.css',
+        codeKey: 'vanilla-shared-button-row-styles',
+      },
     ],
   },
 ];
@@ -188,7 +200,10 @@ const TemplateGroupSection = ({ title, description, items }: TemplateGroup) => {
 
 // Vanilla first, and it is the tab that opens: the library ships no UI, so the zero-dependency set
 // is the one a reader should meet before the one that needs a component library.
-const FLAVOR_TABS: readonly { readonly value: Flavor; readonly label: string }[] = [
+const FLAVOR_TABS: readonly {
+  readonly value: Flavor;
+  readonly label: string;
+}[] = [
   { value: 'vanilla', label: 'Vanilla' },
   { value: 'shared', label: 'Shared' },
 ];
